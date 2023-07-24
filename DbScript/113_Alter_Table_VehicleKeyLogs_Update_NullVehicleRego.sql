@@ -1,0 +1,1 @@
+UPDATE VehicleKeyLogs SET VehicleRego = 'N/A' WHERE VehicleRego IS NULL

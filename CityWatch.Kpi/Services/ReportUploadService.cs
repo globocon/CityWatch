@@ -1,0 +1,87 @@
+﻿using CityWatch.Common.Models;
+using CityWatch.Common.Services;
+using CityWatch.Data.Models;
+using CityWatch.Data.Providers;
+using CityWatch.Kpi.Helpers;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace CityWatch.Kpi.Services
+{
+    public interface IReportUploadService
+    {
+        Task<bool> ProcessUpload(DateTime reportFromDate);
+    }
+
+    public class ReportUploadService : IReportUploadService
+    {
+        private readonly IClientDataProvider _clientDataProvider;
+        private readonly IReportGenerator _reportGenerator;
+        private readonly IDropboxService _dropboxUploadService;
+        private readonly IImportJobDataProvider _importJobDataProvider;
+        private readonly IImportDataService _importDataService;
+        private readonly Settings _settings;
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly ILogger<ReportUploadService> _logger;
+        private readonly string _reportRootDir;
+
+        public ReportUploadService(IWebHostEnvironment webHostEnvironment,
+            IClientDataProvider clientDataProvider,
+            IReportGenerator reportGenerator,
+            IDropboxService dropboxUploadService,
+            IImportJobDataProvider importJobDataProvider,
+            IImportDataService importDataService,
+            IOptions<Settings> settings,
+            ILogger<ReportUploadService> logger)
+        {
+            _webHostEnvironment = webHostEnvironment;
+            _clientDataProvider = clientDataProvider;
+            _reportGenerator = reportGenerator;
+            _dropboxUploadService = dropboxUploadService;
+            _importJobDataProvider = importJobDataProvider;
+            _importDataService= importDataService;
+            _settings = settings.Value;
+            _logger = logger;
+            _reportRootDir = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf");
+        }
+
+        public async Task<bool> ProcessUpload(DateTime reportFromDate)
+        {
+            var dropboxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken, 
+                _settings.DropboxRefreshToken, _settings.DropboxUserEmail);            
+
+            var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSettings().Where(x => !string.IsNullOrEmpty(x.DropboxImagesDir));
+            foreach (var clientSiteKpiSetting in clientSiteKpiSettings)
+            {
+                try
+                {
+                    var serviceLog = new KpiDataImportJob()
+                    {
+                        ClientSiteId = clientSiteKpiSetting.ClientSiteId,
+                        ReportDate = reportFromDate,
+                        CreatedDate = DateTime.Now,
+                    };
+                    var jobId = _importJobDataProvider.SaveKpiDataImportJob(serviceLog);
+                    await _importDataService.Run(jobId);
+
+                    var fileName = _reportGenerator.GeneratePdfReport(clientSiteKpiSetting.ClientSiteId, reportFromDate, reportFromDate.AddMonths(1).AddDays(-1));
+                    var fileToUpload = Path.Combine(_reportRootDir, "Output", fileName);
+                    var dbxFilePath = $"{clientSiteKpiSetting.DropboxImagesDir}/FLIR - Wand Recordings - IRs - Daily Logs/{reportFromDate.Date.Year}/{reportFromDate.Date:yyyyMM} - {reportFromDate.Date.ToString("MMMM").ToUpper()} DATA/x - Site KPI Telematics & Statistics/{clientSiteKpiSetting.ClientSite.Name} - Daily KPI Reports - {reportFromDate.Date:MMM yyyy}.pdf";
+                    
+                    await _dropboxUploadService.Upload(dropboxSettings, fileToUpload, dbxFilePath);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex.StackTrace);
+                }
+            }
+
+            return true;
+        }
+    }
+}

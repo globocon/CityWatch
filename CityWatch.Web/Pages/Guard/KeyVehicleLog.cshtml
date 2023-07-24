@@ -1,0 +1,202 @@
+﻿@page
+@using CityWatch.Web.Services
+@model CityWatch.Web.Pages.Guard.KeyVehicleLogModel
+@inject IViewDataService viewDataService
+@{
+    ViewData["title"] = "CityWatch Security | Vehicle And Key Log";
+    ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.VehicleAndKeyLog;
+}
+<input type="hidden" asp-for="@Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId" />
+<input type="hidden" asp-for="@Model.KeyVehicleLog.GuardLogin.Id" />
+<input type="hidden" asp-for="@Model.KeyVehicleLog.ClientSiteLogBook.Date" asp-format="{0:yyyy-MM-dd HH:mm:ss}" />
+<div id="loader" style="z-index: 99999"></div>
+<div class="row">
+    <div class="col-md-8">
+        <i class="fa fa-calendar mr-2 text-secondary" aria-hidden="true"></i><b>Log Book Date: </b>@DateTime.Today.ToString("dd MMM yyyy (dddd)").ToUpper()
+    </div>
+    <div class="col-md-4 text-right">
+        <a class="btn btn-outline-primary" id="btn_kvl_pdf_download" href="SiteLogPdf?id=@Model.KeyVehicleLog.ClientSiteLogBookId&t=vl" target="_blank">Download Pdf</a>
+    </div>
+</div>
+<div class="row my-2">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between">
+                <b>Site & Guard Details</b>
+                <i class="fa fa-chevron-up text-black-50" aria-hidden="true" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne"></i>
+            </div>
+            <div id="collapseOne" class="collapse multi-collapse show">
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="d-flex flex-sm-row flex-column flex-sm-wrap">
+                            <span class="mr-1"><b>Client Site: </b>@Model.KeyVehicleLog.ClientSiteLogBook.ClientSite.Name | </span>
+                            <span><b>Client Type: </b>@Model.KeyVehicleLog.ClientSiteLogBook.ClientSite.ClientType.Name</span>
+                        </li>
+                        <li>
+                            <b>Address: </b>@(Model.KeyVehicleLog.ClientSiteLogBook.ClientSite.Address ?? "N/A")
+                        </li>
+                        <li>
+                            <b>Landline: </b>@(Model.KeyVehicleLog.ClientSiteLogBook.ClientSite.LandLine ?? "N/A")
+                        </li>
+                        <li class="d-flex flex-sm-row flex-column flex-sm-wrap">
+                            @{
+                                var clientSmartWands = Model.ViewDataService.GetClientSiteSmartWands(Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId);
+                            }
+                            @Html.Raw("<b class=\"mr-1\">Smart WANDs: </b>" + (clientSmartWands.Any() ? string.Join(" ", clientSmartWands.Select(z => $"<span class=\"mr-1\">{z.SmartWandId} : {z.PhoneNumber},</span>")) : "N/A"))
+                        </li>
+                    </ul>
+                    <hr />
+                    <p class="mb-2">
+                        <b>Guard Name: </b>@Model.KeyVehicleLog.GuardLogin.Guard.Name ; <b>Initials: </b>@Model.KeyVehicleLog.GuardLogin.Guard.Initial ; <b>Smart WAND: </b>@(Model.KeyVehicleLog.GuardLogin.SmartWand?.SmartWandId ?? "N/A") ;  <b>Position: </b>@(Model.KeyVehicleLog.GuardLogin.Position?.Name ?? "N/A")
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-8 text-left">
+        <div class="d-flex flex-row">
+            <label class="col-form-label mr-2" style="width: 100px">Filter Records</label>
+            <div class="mx-2">
+                <div class="dropdown kvl-rec-filter">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
+                        <i class="fa fa-circle text-primary mr-2"></i>Show All Entries
+                    </button>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="#" data-val="0"><i class="fa fa-circle text-primary mr-2"></i>Show All Entries</a>
+                        <a class="dropdown-item" href="#" data-val="1"><i class="fa fa-circle text-success mr-2"></i>Open (On Site / Key Out)</a>
+                        <a class="dropdown-item" href="#" data-val="3"><i class="fa fa-circle text-warning mr-2"></i>Pending (Bookings / Request)</a>
+                        <a class="dropdown-item" href="#" data-val="2"><i class="fa fa-circle text-danger mr-2"></i>Closed (Exit Site / Key In)</a>
+                    </div>
+                    <input type="hidden" value="0" id="kvl_status_filter" />
+                </div>
+            </div>
+            <label class="col-form-label mx-2">Search</label>
+            <input type="text" class="form-control ml-2" style="width: 240px" id="search_kvl_log" />
+        </div>
+    </div>
+    <div class="col-md-4 text-right">
+        <input type="hidden" asp-for="@Model.KeyVehicleLog.ClientSiteLogBookId" />
+        <label class="col-form-label mx-2">Total Events: <span id="total_events"></span></label>
+        <button type="button" class="btn btn-primary ml-2" id="add_new_vehicle_and_key_log"><i class="fa fa-plus mr-2"></i>Add Entry</button>
+    </div>
+</div>
+<div class="row mt-2">
+    <div class="col-md-12">
+        <table class="table table-bordered table-sm" width="100%" id="vehicle_key_daily_log">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th colspan="5"><center>Clocks</center></th>
+                    <th rowspan="2"><center>ID No / Vehicle Rego</center></th>
+                    <th rowspan="2"><center>ID / Plate</center></th>
+                    <th rowspan="2"><center>Company Name</center></th>
+                    <th colspan="2"><center>Vehicle Description</center></th>
+                    <th rowspan="2"><center>Key / Card Scan</center></th>
+                    <th rowspan="2" hidden></th>
+                    <th rowspan="2" hidden></th>
+                    <th rowspan="2"></th>
+                </tr>
+                <tr>
+                    <th></th>
+                    <th>Initial Call</th>
+                    <th>Entry Time</th>
+                    <th>Sent In Time </th>
+                    <th>Exit Time</th>
+                    <th>Time Slot No</th>
+                    <th>Truck Config</th>
+                    <th>Trailer Type</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</div>
+<div class="modal" tabindex="-1" role="dialog" id="vkl-modal">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add a new log book entry</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <partial name="_KeyVehicleLogPopup" for="@Model.KeyVehicleLog" />
+            </div>
+            <div class="modal-footer justify-content-start">
+                <button class="btn btn-success" id="save_new_vehicle_and_key_log">Save Entry</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<partial name="_PrintManualDocketPopup" />
+
+<!--    Vehicle Profiles Modal -->
+<div class="modal" tabindex="-1" role="dialog" id="kvl-profiles-modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-gear mr-2" aria-hidden="true"></i>Visitor Profiles. ID No / Vehicle Rego : <span id="kvl-profile-title-rego"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-2">
+                    <div class="col-md-12">
+                        <small class="form-text text-primary mb-1">
+                            <i class="fa fa-info-circle mr-1"></i>Click any row below to copy Company Name and Person Type. Then click Add Record.
+                        </small>
+                        <div class="form-inline">                            
+                            <label>Create a new record with Person Name:</label>
+                            <input class="form-control mx-2" type="text" id="driver_name" value="Unknown" />
+                            <button class="btn btn-success" id="btn_duplicate_profile">Add Record</button>
+                        </div>
+                        <div class="validation-summary-errors my-1" asp-validation-summary="All" id="duplicate_profile_status"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <table class="table table-bordered" width="100%" id="key_vehicle_log_profiles">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" hidden></th>
+                                    <th rowspan="2"><center>ID / Plate</center></th>
+                                    <th rowspan="2"><center>Company Name</center></th>
+                                    <th colspan="2"><center>Individual</center></th>
+                                    <th rowspan="2"></th>
+                                </tr>
+                                <tr>
+                                    <th>Person Name</th>
+                                    <th>Person Type</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="logbook-kvl-expiry-modal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="logbookKvlExpiryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-exclamation-circle text-warning mr-2"></i>Warning: Logbook Expired</h5>
+            </div>
+            <div class="modal-body">
+                <p>A new day started and this logbook (KV) expired. Click Ok to create a new book for @DateTime.Today.AddDays(1).ToString("dd MMM yyyy")</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="btn_confirm_kvl_logbook_expiry">Ok</button>
+            </div>
+        </div>
+    </div>
+</div>
+<partial name="_MessagePopup" />
+@Html.AntiForgeryToken()
+@section PageHeader {
+    <h3 class="text-center">KEY, VEHICLE & VISITOR PORTAL</h3>
+}

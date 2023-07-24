@@ -1,0 +1,8 @@
+CREATE TABLE dbo.AppConfigurations
+(
+	Id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
+	[Name]  VARCHAR(50) NOT NULL,
+	[Value] VARCHAR(1024) NOT NULL,
+	UNIQUE ([Name])
+)
+GO

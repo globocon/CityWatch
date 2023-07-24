@@ -1,0 +1,162 @@
+﻿@using CityWatch.Data.Models;
+@using CityWatch.Web.Helpers;
+@using CityWatch.Web.Services;
+@inject IViewDataService viewDataService
+@model CityWatch.Web.Pages.Admin.AuditSiteLogModel
+
+<form id="form_kvl_auditlog_request" method="post" class="border-bottom">
+    <div class="form-row">
+        <div class="form-group col-md-2">
+            <label class="mx-1">From Date</label>
+            <input type="date" class="form-control" id="vklAudtitFromDate" />
+        </div>
+        <div class="form-group col-md-2">
+            <label class="mx-1" for="vklAudtitToDate">To Date</label>
+            <input type="date" class="form-control" id="vklAudtitToDate">
+        </div>
+        <div class="form-group col-md-2">
+            <label class="mx-1">Client Type</label>
+            <select class="form-control" multiple="multiple" id="vklClientType">
+                @foreach (var clientType in viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
+                {
+                    <option value="@clientType.Name">@clientType.Name</option>
+                }
+            </select>
+        </div>
+        <div class="form-group col-md-2">
+            <label class="mx-1">Client Site</label>
+            <select class="form-control mx-1" multiple="multiple" id="vklClientSiteId"></select>
+        </div>
+        <div class="form-group col-md-3">
+            <label class="mx-1">&nbsp;</label>
+            <div>
+                <button type="button" class="btn btn-primary mx-1" id="btnGenerateVklAuditReport">View Report</button>
+                <button type="button" class="btn btn-primary" id="btnDownloadVklAuditZip">Download Zip</button>
+            </div>
+        </div>
+    </div>
+    <div class="card mb-2">
+        <div id="collapseOne" class="collapse multi-collapse">
+            <div class="card-body">
+                <div class="form-row">
+                    <input type="hidden" asp-for="@Model.KeyVehicleLogAuditLogRequest.ClientSiteId" />
+                    <input type="hidden" asp-for="@Model.KeyVehicleLogAuditLogRequest.LogBookType" />
+                    <input type="hidden" asp-for="@Model.KeyVehicleLogAuditLogRequest.LogFromDate" />
+                    <input type="hidden" asp-for="@Model.KeyVehicleLogAuditLogRequest.LogToDate" />
+                    <div class="form-group col-md-2">
+                        <label>ID No. / Car or Truck Rego.</label>
+                        <input type="text" class="form-control" asp-for="@Model.KeyVehicleLogAuditLogRequest.VehicleRego" />
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label>Company Name</label>
+                        <input type="text" class="form-control" asp-for="@Model.KeyVehicleLogAuditLogRequest.CompanyName" />
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label>Individuals Name</label>
+                        <input type="text" class="form-control" asp-for="@Model.KeyVehicleLogAuditLogRequest.PersonName" />
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label>Type of Individual</label>
+                        <select asp-for="@Model.KeyVehicleLogAuditLogRequest.PersonType" class="form-control" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.IndividualType)"></select>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label>Entry Reason</label>
+                        <select asp-for="@Model.KeyVehicleLogAuditLogRequest.EntryReason" class="form-control" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.EntryReason)"></select>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label>Product</label>
+                        <select class="form-control" asp-for="@Model.KeyVehicleLogAuditLogRequest.Product">
+                            @foreach (var item in viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.ProductType))
+                            {
+                                var productValue = string.IsNullOrEmpty(item.Value) ? string.Empty : item.Text;
+                                <option value="@productValue">@item.Text</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-2">
+                        <label>Vehicle Config</label>
+                        <select asp-for="@Model.KeyVehicleLogAuditLogRequest.TruckConfig" class="form-control" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.VehicleConfig)"></select>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label>Trailer Type</label>
+                        <select asp-for="@Model.KeyVehicleLogAuditLogRequest.TrailerType" class="form-control" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.TrailerType)">
+                        </select>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label>Site POC</label>
+                        <select class="form-control" asp-for="@Model.KeyVehicleLogAuditLogRequest.ClientSitePocId">
+                            <option value="">Select</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label class="mx-1">Site Location</label>
+                        <select class="form-control" asp-for="@Model.KeyVehicleLogAuditLogRequest.ClientSiteLocationId">
+                            <option value="">Select</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label class="mx-1">Key #</label>
+                        <select class="form-control" asp-for="@Model.KeyVehicleLogAuditLogRequest.KeyNo"></select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer bg-white">
+            <a type="button" class="btn btn-outline-primary" data-toggle="collapse" href="#collapseOne" role="button" aria-expanded="false" aria-controls="collapseOne">
+                <i class="fa fa-chevron-up mr-1" aria-hidden="true" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne"></i>
+                More Filters
+            </a>
+            <button type="button" class="btn btn-outline-primary" id="btn_reset_vklfilter">
+                <i class="fa fa-times mr-1" aria-hidden="true"></i>
+                Reset Filters
+            </button>
+        </div>
+    </div>
+</form>
+<div class="row mt-3">
+    <div class="col-md-12">
+        <table class="table table-bordered table-sm" width="100%" id="vkl_site_log">
+            <thead>
+                <tr>
+                    <th style="display:none"></th>
+                    <th></th>
+                    <th colspan="4"><center>Clocks</center></th>
+                    <th rowspan="2"><center>ID No / Vehicle Rego</center></th>
+                    <th rowspan="2"><center>ID / Plate</center></th>
+                    <th colspan="2"><center>Vehicle Description</center></th>
+                    <th colspan="4"><center>Trailers Rego or ISO</center></th>
+                    <th rowspan="2"><center>Key / Card Scan</center></th>
+                    <th rowspan="2"><center>Company Name</center></th>
+                    <th colspan="3"><center>Individual</center></th>
+                    <th rowspan="2"><center>Site POC</center></th>
+                    <th rowspan="2"><center>Site Location</center></th>
+                    <th rowspan="2"><center>Purpose Of Entry</center></th>
+                    <th colspan="3"><center>Weight</center></th>
+                    <th style="min-width: 250px" rowspan="2"><center>Notes</center></th>
+                </tr>
+                <tr>
+                    <th style="display:none"></th>
+                    <th>Client Site</th>
+                    <th>Initial Call</th>
+                    <th>Entry Time</th>
+                    <th>Exit Time</th>
+                    <th>Time Slot No</th>
+                    <th>Truck Config</th>
+                    <th>Trailer Type</th>
+                    <th>1</th>
+                    <th>2</th>
+                    <th>3</th>
+                    <th>4</th>
+                    <th>Name</th>
+                    <th>Mobile No:</th>
+                    <th>Type</th>
+                    <th>In Gross (t)</th>
+                    <th>Out Net (t)</th>
+                    <th>Tare (t)</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</div>

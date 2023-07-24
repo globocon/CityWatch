@@ -1,0 +1,106 @@
+﻿@page
+@using CityWatch.Data.Models
+@using CityWatch.Web.Helpers
+@using CityWatch.Web.Services;
+@model CityWatch.Web.Pages.Admin.AuditSiteLogModel
+@inject IViewDataService viewDataService
+@{
+    ViewData["Title"] = "CityWatch Security | Audit Site Logs";
+    ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.AuditSiteLogs;
+}
+<div class="full-width">
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="guard-log-tab" data-toggle="tab" href="#guardLog" role="tab" aria-controls="guardLog" aria-selected="true">Guard Logs</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="vehicle-key-log-tab" data-toggle="tab" href="#keyVehicleLog" role="tab" aria-controls="keyVehicleLog" aria-selected="false">Key & Vehicle Logs</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="key-vehicle-log-profile-tab" data-toggle="tab" href="#keyVehicleLogProfile" role="tab" aria-controls="keyVehicleLogProfile" aria-selected="false">Visitor Profiles</a>
+        </li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane fade show active py-3" id="guardLog" role="tabpanel" aria-labelledby="guard-log-tab">
+            <partial name="_DailyGuardAuditSiteLog"></partial>
+        </div>
+        <div class="tab-pane fade py-3" id="keyVehicleLog" role="tabpanel" aria-labelledby="vehicle-key-log-tab">
+            <partial name="_KeyVehicleAuditSiteLog" model="Model"></partial>
+        </div>
+        <div class="tab-pane fade py-3" id="keyVehicleLogProfile" role="tabpanel" aria-labelledby="key-vehicle-log-profile-tab">
+            <partial name="_VisitorProfileAuditSiteLog"></partial>
+        </div>
+    </div>
+</div>
+<div class="modal" tabindex="-1" data-backdrop="static" data-keyboard="false" role="dialog" id="auditlog-zip-modal">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Audit Site Logs Download</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="auditlog-zip-msg"><i class="fa fa-circle-o-notch fa-spin mr-2" aria-hidden="true"></i>Generating zip file. Please wait ...</p>
+                <a style="display:none" class="btn btn-success" id="btn-auditlog-zip-download" href="#">Download Zip</a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-------------------   Vehicle Log Profiles Modal  ------------------------------>
+<div class="modal" tabindex="-1" role="dialog" id="kvl-profiles-audit-modal">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Visitor Profile</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="div_profile_settings"></div>
+            </div>
+            <div class="modal-footer justify-content-start">
+                <button type="button" class="btn btn-primary" id="btn_update_kvl_profile">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!----------------- Guard Details Modal -------------------->
+<div class="modal fade" id="guardInfoModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="guardInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered  modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-vcard-o mr-2"></i>Guard Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <ul class="list-unstyled col-md-12">
+                        <li class="row">
+                            <label class="col-md-5 col-form-label">Guard Name: </label>
+                            <label class="col-form-label" id="lbl_guard_name"></label>
+                        </li>
+                        <li class="row">                           
+                            <label class="col-md-5 col-form-label">Security No: </label>
+                            <label class="col-form-label" id="lbl_guard_security_no"></label>
+                        </li>
+                        <li class="row">
+                            <label class="col-md-5 col-form-label">State: </label>
+                            <label class="col-form-label" id="lbl_guard_state"></label>
+                        </li>
+                        <li class="row">
+                            <label class="col-md-5 col-form-label">Provider:</label>
+                            <label class="col-form-label" id="lbl_guard_provider"></label>
+                        </li>
+                    </ul>
+                </div>
+            </div>            
+        </div>
+    </div>
+</div>
+<partial name="_MessagePopup" />
+@Html.AntiForgeryToken()

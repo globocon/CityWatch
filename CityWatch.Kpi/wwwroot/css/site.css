@@ -1,0 +1,146 @@
+﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+a.navbar-brand {
+  white-space: normal;
+  text-align: center;
+  word-break: break-all;
+}
+
+/* Provide sufficient contrast against white background */
+a {
+  color: #0366d6;
+}
+
+.btn-primary {
+  color: #fff;
+  background-color: #1b6ec2;
+  border-color: #1861ac;
+}
+
+.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+  color: #fff;
+  background-color: #1b6ec2;
+  border-color: #1861ac;
+}
+
+/* Sticky footer styles
+-------------------------------------------------- */
+html {
+  font-size: 14px;
+}
+@media (min-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+.border-top {
+  border-top: 1px solid #e5e5e5;
+}
+.border-bottom {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.box-shadow {
+  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+}
+
+button.accept-policy {
+  font-size: 1rem;
+  line-height: inherit;
+}
+
+/* Sticky footer styles
+-------------------------------------------------- */
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    /* Margin bottom by footer height */
+    margin-bottom: 60px;
+}
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  white-space: nowrap;
+  line-height: 60px; /* Vertically center the text there */
+}
+
+a.cws-footer-link,
+a.cws-footer-link :hover,
+a.cws-footer-link :visited {
+    color: #EA6326;
+    text-decoration: none;
+}
+
+.cell-below-limit {
+    background-color: #ffcccc;
+}
+
+.cell-has-ir {
+    background-color: #feff9a;
+}
+
+.cell-fire-alarm {
+    background-color: #ffdab3;
+}
+
+.cell-avg-above-limit {
+    background-color: #96e3ac;
+}
+
+.cell-avg-below-limit {
+    background-color: #ffcccc;
+}
+
+#loader {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    background: rgba(0,0,0,0.5) url(../images/loading.gif) no-repeat center center;
+    z-index: 10000;
+}
+
+.w-80px {
+    width: 80px;
+}
+
+.col-thermal {
+    -ms-flex: 0 0 12%;
+    flex: 0 0 12%;
+    max-width: 12%;
+}
+
+
+.custom-switch.patrol-frequency-switch .custom-control-label::before,
+.custom-switch.cover-style-switch .custom-control-label::before {
+    color: #fff;
+    border-color: #17a2b8;
+    background-color: #17a2b8;
+}
+
+.custom-switch.patrol-frequency-switch .custom-control-label::after,
+.custom-switch.cover-style-switch .custom-control-label::after {
+    background-color: #fff;
+}
+
+.custom-switch.patrol-frequency-switch .custom-control-input:checked ~ .custom-control-label::before,
+.custom-switch.cover-style-switch .custom-control-input:checked ~ .custom-control-label::before {
+    color: #fff;
+    border-color: #007bff;
+    background-color: #007bff;
+}
+
+.header-target-text {
+    white-space: pre-line;
+    font-size: 70% !important;
+    font-weight: 400 !important;
+}

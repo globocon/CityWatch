@@ -1,0 +1,1 @@
+ALTER TABLE Users ADD CONSTRAINT UQ_User_Name UNIQUE (UserName)

@@ -1,0 +1,16 @@
+{
+  "name": "citywatch.kpi",
+  "version": "1.0.0",
+  "description": "Citywatch Kpi Dashboard",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "CRIBSON Technologies Pvt Ltd",
+  "license": "ISC",
+  "dependencies": {
+    "convert-svg-to-png": "^0.6.4",
+    "d3": "^6.7.0",
+    "jsdom": "^19.0.0"
+  }
+}

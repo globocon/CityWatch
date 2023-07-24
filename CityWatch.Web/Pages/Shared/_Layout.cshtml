@@ -1,0 +1,116 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewBag.Title</title>
+    <link rel="icon" type="image/x-icon" href="~/favicon.ico">    
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />    
+    <link rel="stylesheet" href="~/lib/jquery-editable-select/dist/jquery-editable-select.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/gijgo@1.9.13/css/gijgo.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.min.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-multiselect/css/bootstrap-multiselect.min.css" /> 
+    <link rel="stylesheet" href="~/lib/select2/css/select2.min.css" />
+    <link rel="stylesheet" href="~/lib/ttskch/select2-bootstrap4-theme/dist/select2-bootstrap4.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <script>
+        function getGpsAsHyperLink(value) {
+            const gps = value.split(',');
+            let lat = gps[0];
+            let lon = gps[1];
+            let latDir = (lat >= 0 ? "N" : "S");
+            lat = Math.abs(lat);
+            let latMinPart = ((lat - Math.trunc(lat) / 1) * 60);
+            let latSecPart = ((latMinPart - Math.trunc(latMinPart) / 1) * 60);
+            let lonDir = (lon >= 0 ? "E" : "W");
+            lon = Math.abs(lon);
+            let lonMinPart = ((lon - Math.trunc(lon) / 1) * 60);
+            let lonSecPart = ((lonMinPart - Math.trunc(lonMinPart) / 1) * 60);
+            let latitude = Math.trunc(lat) + "." + Math.trunc(latMinPart) + "" + Math.trunc(latSecPart) + '\u00B0 ' + latDir;
+            let longitude = Math.trunc(lon) + "." + Math.trunc(lonMinPart) + "" + Math.trunc(lonSecPart) + '\u00B0 ' + lonDir;
+            let loc = latitude + ' ' + longitude;
+            return '<a href="https://www.google.com/maps?q=' + value + '" target="_blank">' + loc + '</a>';
+        }
+    </script>
+</head>
+<body class="d-flex flex-column">
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom mb-3">
+            <div class="container">
+                <a class="navbar-brand" href="https://www.citywatchsecurity.com.au" target="_blank">
+                    <img src="~/images/CWSLogo.png" alt="cws logo" height="60px"/>
+                </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse"
+                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex">
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item"></li>
+                    </ul>
+                </div>
+                @if (IsSectionDefined("PageHeader"))
+                {
+                    @RenderSection("PageHeader");
+                }
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <p class="mx-auto ml-md-3">
+                        <span class="d-block">Hello @User.Identity.Name</span>
+                        <a href="@Url.Page("/Account/Logout")" class="btn btn-sm btn-primary"><i class="fa fa-sign-out mr-2"></i>Log Out</a>
+                    </p>
+                }
+            </div>
+        </nav>
+    </header>
+
+    <div class="container flex-fill">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+    <div class="container d-flex flex-column flex-md-row pb-5">
+        @if (IsSectionDefined("ProductLogo"))
+        {
+            @RenderSection("ProductLogo")
+        }
+        <img src="~/images/ISOv3.jpg" alt="iso certification" height="80px" class="ml-md-auto"/>
+    </div>
+
+    <footer class="border-top footer text-muted">                   
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 d-flex flex-wrap justify-content-center">
+                    @Html.Raw(CityWatch.Web.Helpers.SiteMenuHelper.GetMenuHtml(ViewBag.PageName))
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    &copy; @DateTime.Today.Year - <a href="https://citywatchsecurity.com.au" target="_blank" class="cws-footer-link">CityWatch Security</a> | Ver @System.Reflection.Assembly.GetExecutingAssembly().GetName().Version
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery-editable-select/dist/jquery-editable-select.min.js"></script>
+    <script src="https://unpkg.com/gijgo@1.9.13/js/gijgo.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+    <script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js"></script>
+    <script src="~/lib/bootstrap-multiselect/js/bootstrap-multiselect.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-3-typeahead/4.0.2/bootstrap3-typeahead.min.js"></script>
+    <script src="~/lib/select2/js/select2.min.js"></script>
+    <script src="~/lib/d3/d3.min.js"></script>
+    <script src="~/js/reports.js" asp-append-version="true"></script>
+    <script src="~/js/guardlog.js" asp-append-version="true"></script>
+    <script src="~/js/keyvehiclelog.js" asp-append-version="true"></script>
+    <script src="~/js/radiocheck.js" asp-append-version="true"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

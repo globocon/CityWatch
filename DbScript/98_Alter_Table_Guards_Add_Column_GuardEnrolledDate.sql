@@ -1,0 +1,2 @@
+ALTER TABLE dbo.Guards
+ADD DateEnrolled DATETIME NULL

@@ -1,0 +1,10 @@
+Create Table dbo.ClientSiteRadioStatus
+(
+	Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	ClientSiteId INT NOT NULL FOREIGN KEY REFERENCES ClientSites(Id),
+	CheckDate DATETIME NOT NULL,
+	Check1 VARCHAR(50) NULL,
+	Check2 VARCHAR(50) NULL,
+	Check3 VARCHAR(50) NULL,
+)
+GO

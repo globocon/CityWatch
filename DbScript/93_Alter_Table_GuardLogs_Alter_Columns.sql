@@ -1,0 +1,7 @@
+ALTER TABLE dbo.GuardLogs
+ADD IrEntryType INT NULL
+GO
+
+ALTER TABLE dbo.GuardLogs
+ALTER COLUMN GuardLoginId INT NULL
+GO

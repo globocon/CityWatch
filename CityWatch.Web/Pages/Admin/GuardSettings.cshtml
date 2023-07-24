@@ -1,0 +1,171 @@
+﻿@page
+@using CityWatch.Web.Helpers
+@using CityWatch.Data.Models
+@model CityWatch.Web.Pages.Admin.GuardSettingsModel
+@{
+    ViewData["Title"] = "CityWatch Security | Guard Settings";
+    ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.GuardSettings;
+}
+<div>
+    <ul class="nav nav-tabs" id="guardSettingsTab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="guard_tab" data-toggle="tab" href="#guard" role="tab" aria-controls="guard" aria-selected="true">Guards1</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="gs-settings-tab" data-toggle="tab" href="#gsSettings" role="tab" aria-controls="gsSettings" aria-selected="false">Site Settings</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="kvl-fields-tab" data-toggle="tab" href="#kvlFields" role="tab" aria-controls="kvlFields" aria-selected="false">Key & Vehicle Fields</a>
+        </li>
+    </ul>
+    <div class="tab-content" id="guardSettingsTabContent">
+        <div class="tab-pane fade show active py-3" id="guard" role="tabpanel" aria-labelledby="guard-tab">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group row">
+                        <div class="col-md-2 offset-md-10 text-right">
+                            <button class="btn btn-success mb-3" id="btn_add_guard_top"><i class="fa fa-plus mr-2"></i>Add Guard</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <table id="guard_settings" class="table table-bordered" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Security No</th>
+                                <th>Initial</th>
+                                <th>State</th>
+                                <th>Provider</th>
+                                <th>Sites</th>
+                                <th>Active</th>
+                                <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 mt-2 text-left">
+                    <button class="btn btn-success mb-3" id="btn_add_guard_bottom"><i class="fa fa-plus mr-2"></i>Add Guard</button>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade py-3" id="gsSettings" role="tabpanel" aria-labelledby="gs-settings-tab">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group row">
+                        <label class="col-form-label col-md-2">Filter by Client Type</label>
+                        <div class="col-md-5">
+                            <select class="form-control" id="gl_client_type" asp-items="@Model.ViewDataService.GetUserClientTypes(AuthUserHelper.LoggedInUserId)"></select>
+                        </div>
+                        <div class="input-group offset-md-1 col-md-4">
+                            <input type="text" id="search_sites_guard_settings" class="form-control" placeholder="Search Client Site">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-primary" id="btnSearchSitesOnDailyGuard"><i class="fa fa-search"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <table class="table" id="gl_site_settings"></table>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade py-3" id="kvlFields" role="tabpanel" aria-labelledby="kvl-fields-tab">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group row">
+                        <label class="col-form-label col-md-2">Select a Field Type</label>
+                        <div class="col-md-5">
+                            <select class="form-control" id="kvl_fields_types" asp-items="@Html.GetEnumSelectList<KvlFieldType>()">
+                                <option value="">None</option>                                
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="text-right">
+                        <button class="btn btn-success mb-3" id="add_kvl_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                    </div>                    
+                </div>
+                <div class="col-md-12">
+                    <table class="table" id="tbl_kvl_fields"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="addGuardModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="addGuardModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add/Edit guard</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <form id="frm_add_guard">
+                            <input type="hidden" id="Guard_Id" name="Guard.Id" />
+                            <div class="form-group row">
+                                <label class="col-md-3 col-form-label">Guard Name</label>
+                                <div class="col-md-8">
+                                    <input type="text" class="form-control" id="Guard_Name" name="Guard.Name">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-md-3 col-form-label">Security No</label>
+                                <div class="col-md-8">
+                                    <input type="text" class="form-control" id="Guard_SecurityNo" name="Guard.SecurityNo">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-md-3 col-form-label">Intial</label>
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control" id="Guard_Initial" name="Guard.Initial">
+                                </div>
+                                <label class="col-md-1 col-form-label">State</label>
+                                <div class="col-md-4">
+                                    <select id="Guard_State" name="Guard.State" asp-items="@Model.ViewDataService.LicenseStates" class="form-control"></select>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-md-3 col-form-label">Provider</label>
+                                <div class="col-md-8">
+                                    <input type="text" class="form-control" id="Guard_Provider" name="Guard.Provider">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-md-3 col-form-label">Is Active</label>
+                                <div class="col-md-1">
+                                    <input type="checkbox" class="form-control" id="cbIsActive">
+                                    <input type="hidden" id="Guard_IsActive" name="Guard.IsActive">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="col-md-12">
+                                    <div asp-validation-summary="All" id="glValidationSummary"></div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-start">
+                <button type="button" class="btn btn-primary" id="btn_save_guard">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+<partial name="_KeySiteSettingsPopup" />
+<partial name="_GuardSiteSettings" />
+@Html.AntiForgeryToken()

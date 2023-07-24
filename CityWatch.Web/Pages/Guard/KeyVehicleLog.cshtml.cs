@@ -1,0 +1,449 @@
+using CityWatch.Common.Models;
+using CityWatch.Common.Services;
+using CityWatch.Data.Helpers;
+using CityWatch.Data.Models;
+using CityWatch.Data.Providers;
+using CityWatch.Web.Helpers;
+using CityWatch.Web.Models;
+using CityWatch.Web.Services;
+using MailKit.Net.Smtp;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using MimeKit;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using IO = System.IO;
+
+namespace CityWatch.Web.Pages.Guard
+{
+    public class KeyVehicleLogModel : PageModel
+    {
+        private readonly IGuardLogDataProvider _guardLogDataProvider;
+        public readonly IClientDataProvider _clientDataProvider;
+        public readonly IGuardDataProvider _guardDataProvider;
+        private readonly IViewDataService _viewDataService;
+        private readonly IWebHostEnvironment _WebHostEnvironment;
+        private readonly IKeyVehicleLogDocketGenerator _keyVehicleLogDocketGenerator;
+        private readonly IDropboxService _dropboxUploadService;
+        private readonly EmailOptions _emailOptions;
+        private readonly Settings _settings;
+        private readonly ILogger<KeyVehicleLogModel> _logger;
+
+        public KeyVehicleLogModel(IWebHostEnvironment webHostEnvironment,
+            IGuardLogDataProvider guardLogDataProvider,
+            IClientDataProvider clientDataProvider,
+            IGuardDataProvider guardDataProvider,
+            IViewDataService viewDataService,
+            IKeyVehicleLogDocketGenerator keyVehicleLogDocketGenerator,
+            IOptions<EmailOptions> emailOptions,
+            IOptions<Settings> settings,
+            IDropboxService dropboxService,
+            ILogger<KeyVehicleLogModel> logger)
+        {
+            _guardLogDataProvider = guardLogDataProvider;
+            _clientDataProvider = clientDataProvider;
+            _guardDataProvider = guardDataProvider;
+            _viewDataService = viewDataService;
+            _WebHostEnvironment = webHostEnvironment;
+            _keyVehicleLogDocketGenerator = keyVehicleLogDocketGenerator;
+            _dropboxUploadService = dropboxService;
+            _emailOptions = emailOptions.Value;
+            _settings = settings.Value;
+            _logger = logger;
+        }
+
+        [BindProperty]
+        public KeyVehicleLog KeyVehicleLog { get; set; }
+
+        public IViewDataService ViewDataService { get { return _viewDataService; } }
+
+        public void OnGet()
+        {
+            KeyVehicleLog = GetKeyVehicleLog();
+        }
+
+        public JsonResult OnGetKeyVehicleLogs(int logbookId, KvlStatusFilter kvlStatusFilter)
+        {
+            var results = _viewDataService.GetKeyVehicleLogs(logbookId, kvlStatusFilter)
+                .OrderByDescending(z => z.Detail.Id)
+                .ThenByDescending(z => z.Detail.EntryTime);
+            return new JsonResult(results);
+        }
+
+        public IActionResult OnGetKeyVehicleLog(int id)
+        {
+            var keyVehicleLog = GetKeyVehicleLog();
+            if (id != 0)
+            {
+                var keyVehicleLogInDb = _guardLogDataProvider.GetKeyVehicleLogById(id);
+                if (keyVehicleLogInDb != null)
+                {
+                    keyVehicleLog = keyVehicleLogInDb;
+                    ViewData["KeyVehicleLog_Attachments"] = _viewDataService.GetKeyVehicleLogAttachments(
+                        IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), keyVehicleLogInDb.ReportReference?.ToString())
+                        .ToList();
+                    ViewData["KeyVehicleLog_Keys"] = _viewDataService.GetKeyVehicleLogKeys(keyVehicleLogInDb).ToList();
+                    ViewData["KeyVehicleLog_AuditHistory"] = _viewDataService.GetKeyVehicleLogAuditHistory(keyVehicleLogInDb).ToList();
+                }
+            }
+
+            return new PartialViewResult
+            {
+                ViewName = "_KeyVehicleLogPopup",
+                ViewData = new ViewDataDictionary<KeyVehicleLog>(ViewData, keyVehicleLog)
+            };
+        }
+
+        public JsonResult OnPostSaveKeyVehicleLog()
+        {
+            var results = new List<ValidationResult>();
+            if (!Validator.TryValidateObject(KeyVehicleLog, new ValidationContext(KeyVehicleLog), results, true))
+                return new JsonResult(new { success = false, errors = results.Select(z => z.ErrorMessage) });
+
+            var success = true;
+            var message = "success";
+            try
+            {
+                _guardLogDataProvider.SaveKeyVehicleLog(KeyVehicleLog);
+                var vehicleKeyLogProfile = new KeyVehicleLogProfile(KeyVehicleLog);
+                if (!_guardLogDataProvider.GetKeyVehicleLogProfiles(KeyVehicleLog.VehicleRego).Any(z => z.Equals(vehicleKeyLogProfile)))
+                {
+                    vehicleKeyLogProfile.CreatedLogId = KeyVehicleLog.Id;
+                    _guardLogDataProvider.SaveKeyVehicleLogProfile(vehicleKeyLogProfile);
+                }
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnPostDeleteKeyVehicleLog(int Id)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _guardLogDataProvider.DeleteKeyVehicleLog(Id);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+            return new JsonResult(new { status, message });
+        }
+
+        public JsonResult OnGetProfileByRego(string truckRego)
+        {
+           return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego).OrderBy(z => z, new KeyVehicleLogProfileViewModelComparer()));
+        }
+
+        public JsonResult OnGetProfileById(int id)
+        {
+            return new JsonResult(_guardLogDataProvider.GetKeyVehicleLogProfile(id));
+        }
+
+        public JsonResult OnGetClientSiteKeyDescription(int keyId, int clientSiteId)
+        {
+            return new JsonResult(_viewDataService.GetClientSiteKeyDescription(keyId, clientSiteId));
+        }
+
+        public JsonResult OnGetIsVehicleOnsite(int logbookId, string vehicleRego)
+        {
+            return new JsonResult(_viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open).Any(x => x.Detail.VehicleRego == vehicleRego));
+        }
+
+        public JsonResult OnGetIsKeyAllocated(int logbookId, string keyNo)
+        {
+            return new JsonResult(_viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open).Where(z => !string.IsNullOrEmpty(z.Detail.KeyNo)).Select(z => z.Detail.KeyNo).Any(x => x.Contains(keyNo)));
+        }
+
+        public JsonResult OnGetClientSiteKeys(int clientSiteId, string searchKeyNo, string searchKeyDesc)
+        {
+            return new JsonResult(_viewDataService.GetClientSiteKeys(clientSiteId, searchKeyNo, searchKeyDesc));
+        }
+
+        public JsonResult OnPostUpload()
+        {
+            var success = false;
+            var files = Request.Form.Files;
+            var reportReference = Request.Form["report_reference"].ToString();
+            if (files.Count == 1)
+            {
+                var file = files[0];
+                if (file.Length > 0)
+                {
+                    try
+                    {
+                        var uploadFileName = IO.Path.GetFileName(file.FileName);
+
+                        var folderPath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", reportReference);
+                        if (!IO.Directory.Exists(folderPath))
+                            IO.Directory.CreateDirectory(folderPath);
+                        using (var stream = IO.File.Create(IO.Path.Combine(folderPath, uploadFileName)))
+                        {
+                            file.CopyTo(stream);
+                        }
+                        success = true;
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                }
+            }
+
+            return new JsonResult(new { attachmentId = Request.Form["attach_id"], success });
+        }
+
+        public JsonResult OnPostDeleteAttachment(string reportReference, string fileName)
+        {
+            var success = false;
+            if (!string.IsNullOrEmpty(reportReference) && !string.IsNullOrEmpty(fileName))
+            {
+                var filePath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", reportReference, fileName);
+                if (IO.File.Exists(filePath))
+                {
+                    try
+                    {
+                        IO.File.Delete(filePath);
+                        success = true;
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            }
+            return new JsonResult(success);
+        }
+
+        public JsonResult OnGetCompanyNames(string companyNamePart)
+        {
+            return new JsonResult(_viewDataService.GetCompanyAndSenderNames(companyNamePart).ToList());
+        }
+
+        public JsonResult OnGetVehicleRegos(string regoPart)
+        {
+            return new JsonResult(_guardLogDataProvider.GetVehicleRegos(regoPart).ToList());
+        }
+
+        public async Task<JsonResult> OnPostGenerateManualDocket(int id, ManualDocketReason option, string otherReason, string stakeholderEmails, int clientSiteId)
+        {
+            var fileName = string.Empty;
+
+            try
+            {
+                fileName = _keyVehicleLogDocketGenerator.GeneratePdfReport(id, GetManualDocketReason(option, otherReason));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.StackTrace);
+            }
+
+            if (string.IsNullOrEmpty(fileName))
+                return new JsonResult(new { fileName, message = "Failed to generate pdf", statusCode = -1 });
+
+            var statusCode = 0;
+            if (!string.IsNullOrEmpty(stakeholderEmails))
+            {
+                try
+                {
+                    var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(id);
+                    SendEmail(keyVehicleLog.VehicleRego, stakeholderEmails, fileName);
+                }
+                catch (Exception ex)
+                {
+                    statusCode += -2;
+                    _logger.LogError(ex.StackTrace);
+                }
+            }
+
+            try
+            {
+                await UploadToDropbox(clientSiteId, fileName);
+            }
+            catch (Exception ex)
+            {
+                statusCode += -3;
+                _logger.LogError(ex.StackTrace);
+            }
+
+            return new JsonResult(new { fileName = @Url.Content($"~/Pdf/Output/{fileName}"), statusCode });
+        }
+
+        public JsonResult OnPostResetClientSiteLogBook(int clientSiteId, int guardLoginId)
+        {
+            var exMessage = new StringBuilder();
+            try
+            {
+                var currentGuardLogin = _guardDataProvider.GetGuardLoginById(guardLoginId);
+                var currentGuardLoginOffDutyActual = currentGuardLogin.OffDuty;
+                var logOffDateTime = GuardLogBookHelper.GetLogOffDateTime();
+
+                _guardDataProvider.UpdateGuardOffDuty(guardLoginId, logOffDateTime);
+
+                var newLogBookId = _viewDataService.GetNewClientSiteLogBookId(clientSiteId, LogBookType.VehicleAndKeyLog);
+                if (newLogBookId <= 0)
+                    throw new InvalidOperationException("Failed to get client site log book");
+
+                var newGuardLoginId = _viewDataService.GetNewGuardLoginId(currentGuardLogin, currentGuardLoginOffDutyActual, newLogBookId);
+                if (newGuardLoginId <= 0)
+                    throw new InvalidOperationException("Failed to login");
+
+                _viewDataService.CopyOpenLogbookEntriesFromPreviousDay(currentGuardLogin.ClientSiteLogBookId, newLogBookId, newGuardLoginId);
+
+                HttpContext.Session.SetInt32("LogBookId", newLogBookId);
+                HttpContext.Session.SetInt32("GuardLoginId", newGuardLoginId);
+
+                return new JsonResult(new { success = true, newLogBookId, newLogBookDate = DateTime.Today.ToString("dd MMM yyyy"), guardLoginId });
+            }
+
+            catch (Exception ex)
+            {
+                exMessage.AppendFormat("Error: {0}. ", ex.Message);
+
+                if (ex.InnerException != null &&
+                    ex.InnerException is SqlException &&
+                    ex.InnerException.Message.StartsWith("Violation of UNIQUE KEY constraint"))
+                {
+                    exMessage.Append("Attempt to create duplicate log book on same date. ");
+                }
+                exMessage.Append("Please logout and login again.");
+            }
+
+            return new JsonResult(new { success = false, message = exMessage.ToString() });
+        }
+
+        private KeyVehicleLog GetKeyVehicleLog()
+        {
+            int? logBookId = HttpContext.Session.GetInt32("LogBookId");
+            if (logBookId == null)
+                throw new InvalidOperationException("Session timeout due to user inactivity. Failed to get client site log book");
+
+            int? guardLoginId = HttpContext.Session.GetInt32("GuardLoginId");
+            if (guardLoginId == null)
+                throw new InvalidOperationException("Session timeout due to user inactivity. Failed to get guard details");
+
+            var clientSiteLogBook = _clientDataProvider.GetClientSiteLogBooks().SingleOrDefault(z => z.Id == logBookId && z.Type == LogBookType.VehicleAndKeyLog);
+            var guardLogin = _guardDataProvider.GetGuardLoginById(guardLoginId.Value);
+            KeyVehicleLog ??= new KeyVehicleLog()
+            {
+                ClientSiteLogBookId = logBookId.Value,
+                ClientSiteLogBook = clientSiteLogBook,
+                GuardLoginId = guardLoginId.Value,
+                GuardLogin = guardLogin,
+                ReportReference = Guid.NewGuid()
+            };
+            return KeyVehicleLog;
+        }
+
+        public JsonResult OnPostDuplicateKeyVehicleLogProfile(int id, string personName)
+        {
+            var success = true;
+            var message = "success";
+            try
+            {
+                if (id == 0 || string.IsNullOrEmpty(personName))
+                    throw new ArgumentNullException("Invalid parameters");
+
+                var vehicleKeyLogProfile = _guardLogDataProvider.GetKeyVehicleLogProfile(id);
+
+                if (_guardLogDataProvider.GetKeyVehicleLogProfiles(vehicleKeyLogProfile.VehicleRego, personName).Any())
+                    throw new ApplicationException("Visitor profile with same detials already exists");
+
+                vehicleKeyLogProfile.Id = 0;
+                vehicleKeyLogProfile.PersonName = personName;
+                _guardLogDataProvider.SaveKeyVehicleLogProfile(vehicleKeyLogProfile);
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
+        private async Task UploadToDropbox(int clientSiteId, string fileName)
+        {
+            var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientSiteId) ??
+                throw new ArgumentException($"ClientSiteKpiSettings missing for this client site");
+
+            var siteBasePath = clientSiteKpiSettings.DropboxImagesDir;
+            if (string.IsNullOrEmpty(siteBasePath))
+                throw new ArgumentException($"Dropbox directory missing for this client site");
+
+            var fileToUpload = Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName);
+            var dayPathFormat = clientSiteKpiSettings.IsWeekendOnlySite ? "yyyyMMdd - ddd" : "yyyyMMdd";
+            var dbxFilePath = $"{siteBasePath}/FLIR - Wand Recordings - IRs - Daily Logs/{DateTime.Today.Date.Year}/{DateTime.Today.Date:yyyyMM} - {DateTime.Today.Date.ToString("MMMM").ToUpper()} DATA/{DateTime.Today.Date.ToString(dayPathFormat).ToUpper()}/{fileName}";
+            var dropBoxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken,
+                                                        _settings.DropboxRefreshToken, _settings.DropboxUserEmail);
+
+            await _dropboxUploadService.Upload(dropBoxSettings, fileToUpload, dbxFilePath);
+        }
+
+        private void SendEmail(string vehicleRego, string toAddresses, string fileName)
+        {
+            var fromAddress = _emailOptions.FromAddress.Split('|');
+            var messageHtml = "Please find attached Manual Docket PrintOut";
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+
+            if (!string.IsNullOrEmpty(toAddresses))
+            {
+                foreach (var address in toAddresses.Split(","))
+                {
+                    if (CommonHelper.IsValidEmail(address))
+                        message.To.Add(new MailboxAddress(string.Empty, address.Trim()));
+                }
+            }
+
+            var builder = new BodyBuilder()
+            {
+                HtmlBody = messageHtml
+            };
+            builder.Attachments.Add(Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
+            message.Body = builder.ToMessageBody();
+            message.Subject = $"Manual Docket PrintOut for ID No / Car or Truck Rego: {vehicleRego}";
+
+            using (var client = new SmtpClient())
+            {
+                client.Connect(_emailOptions.SmtpServer, _emailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                if (!string.IsNullOrEmpty(_emailOptions.SmtpUserName) &&
+                    !string.IsNullOrEmpty(_emailOptions.SmtpPassword))
+                    client.Authenticate(_emailOptions.SmtpUserName, _emailOptions.SmtpPassword);
+                client.Send(message);
+                client.Disconnect(true);
+            }
+        }
+
+        private static string GetManualDocketReason(ManualDocketReason reason, string otherReason)
+        {
+            switch (reason)
+            {
+                case ManualDocketReason.Other:
+                    return $"Other: {otherReason}";
+                case ManualDocketReason.NoComms:
+                    return "Weighbridge Down = No Comms";
+                case ManualDocketReason.PhysicalRepair:
+                    return "Weighbridge Down = Physical Repair";
+                default:
+                    return string.Empty;
+            }
+        }
+    }
+}

@@ -1,0 +1,386 @@
+﻿@using CityWatch.Data.Models;
+@using CityWatch.Web.Services;
+@model CityWatch.Data.Models.KeyVehicleLog
+@inject IViewDataService viewDataService
+@inject IClientSiteViewDataService clientViewDataService
+<input type="hidden" asp-for="@Model.ClientSiteLogBook.ClientSiteId" />
+<input type="hidden" id="kvlActionIsEdit" value="" />
+<div class="row" style="display:none" id="kvl_status_pd">
+    <div class="col-md-12">
+        <div class="alert alert-warning" role="alert">
+            <i class="fa fa-exclamation-triangle mr-2"></i>Previous Day Entry
+        </div>
+    </div>
+</div>
+<form id="form_new_vehicle_and_key_log">
+    <input type="hidden" asp-for="@Model.ClientSiteLogBookId" />
+    <input type="hidden" asp-for="@Model.GuardLoginId" />
+    <input type="hidden" asp-for="@Model.Id" />
+    <input type="hidden" asp-for="@Model.ReportReference" />
+    <input type="hidden" asp-for="@Model.ActiveGuardLoginId" />
+    <input type="hidden" asp-for="@Model.IsPreviousDayEntry" />
+    @{
+        var kvlAttachments = ViewData["KeyVehicleLog_Attachments"] as List<string>;
+        var kvlAttachmentsCount = kvlAttachments != null ? kvlAttachments.Count : 0;
+        var kvlKeys = ViewData["KeyVehicleLog_Keys"] as List<ClientSiteKey>;
+        var kvlKeysCount = kvlKeys != null ? kvlKeys.Count : 0;
+        var kvlAuditHistory = ViewData["KeyVehicleLog_AuditHistory"] as List<KeyVehicleLogAuditHistory>;
+    }
+    <div class="row">
+        <div class="col-md-6 border-right">            
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <label>Initial Call <br />(or Request)</label>
+                    <div class="input-group">
+                        <input type="time" class="form-control w-75" id="new_log_initial_call">
+                        <div class="input-group-append">
+                            <button type="button" class="input-group-text px-2 bg-light" id="clear_initialcall_time"><i class="fa fa-trash text-danger"></i></button>
+                        </div>
+                    </div>
+                    <input type="datetime-local" asp-for="@Model.InitialCallTime" hidden />
+                </div>
+                <div class="form-group col-md-3">
+                    <label style="padding-top:22px">Entry Time</label>
+                    <div class="input-group">
+                        <input type="time" class="form-control w-75" id="new_log_entry_time">
+                        <div class="input-group-append">
+                            <button type="button" class="input-group-text px-2 bg-light" id="clear_entry_time"><i class="fa fa-trash text-danger"></i></button>
+                        </div>
+                    </div>
+                    <input type="datetime-local" asp-for="@Model.EntryTime" hidden />
+                </div>
+                <div class="form-group col-md-3">
+                    <label>Sent In Time <br />(if delayed)</label>
+                    <div class="input-group">
+                        <input type="time" class="form-control w-75" id="new_log_sent_in_time">
+                        <div class="input-group-append">
+                            <button type="button" class="input-group-text px-2 bg-light" id="clear_sentin_time"><i class="fa fa-trash text-danger"></i></button>
+                        </div>
+                    </div>
+                    <input type="datetime-local" asp-for="@Model.SentInTime" hidden />
+                </div>
+                <div class="form-group col-md-3">
+                    <label style="padding-top:22px">Exit Time</label>
+                    <div class="input-group">
+                        <input type="time" class="form-control w-75" id="new_log_exit_time">
+                        <div class="input-group-append">
+                            <button type="button" class="input-group-text px-2 bg-light" id="clear_exit_time"><i class="fa fa-trash text-danger"></i></button>
+                        </div>
+                    </div>
+                    <input type="datetime-local" asp-for="@Model.ExitTime" hidden />
+                </div>
+            </div>            
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="vehicle-details-tab" data-toggle="tab" data-target="#vehicle-details" role="tab" aria-controls="vehicle-details" aria-selected="true">
+                        <i class="fa fa-truck mr-2"></i>Vehicle
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="key-details-tab" data-toggle="tab" data-target="#key-details" role="tab" aria-controls="key-details" aria-selected="false">
+                        <i class="fa fa-key mr-2"></i>Keys<span class="badge badge-primary ml-2">@kvlKeysCount</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane fade show active p-2" id="vehicle-details" role="tabpanel" aria-labelledby="vehicle-details-tab">
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label>ID No. / Car or Truck Rego.</label>
+                            <input class="form-control" type="text" asp-for="@Model.VehicleRego" autocomplete="off" />
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>ID / Plate (State or AU)</label>
+                            <select class="form-control" disabled id="kvl_list_plates" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.Plate)">
+                            </select>
+                            <input type="hidden" asp-for="@Model.PlateId" />
+                        </div>
+                        <div class="form-group col-md-4">
+                            <div class="d-flex flex-row justify-content-between">
+                                <label id="lblIsTimeSlotNo">Time Slot No.</label>
+                                <div class="custom-control custom-switch duty-day-switch">
+                                    <input type="checkbox" class="custom-control-input" id="cbIsTimeSlotNo">
+                                    <label class="custom-control-label" for="cbIsTimeSlotNo"></label>
+                                    <input hidden asp-for="@Model.IsTimeSlotNo" />
+                                </div>
+                            </div>
+                            <input type="text" class="form-control" asp-for="@Model.TimeSlotNo">
+                        </div>               
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label>Vehicle Config</label>
+                            <select asp-for="@Model.TruckConfig" class="form-control" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.VehicleConfig)"></select>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>Trailer Type</label>
+                            <select asp-for="@Model.TrailerType" class="form-control" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.TrailerType)"></select>
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label>Max Weight</label>
+                            <input class="form-control" type="number" asp-for="@Model.MaxWeight" min="0" />
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label>Reels</label>
+                            <input class="form-control" type="number" asp-for="@Model.Reels"/>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label>Trailer 1 Rego. <br />or ISO + Seals</label>
+                            <input class="form-control" type="text" asp-for="@Model.Trailer1Rego" />
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label>Trailer 2 Rego. <br />or ISO + Seals</label>
+                            <input class="form-control" type="text" asp-for="@Model.Trailer2Rego" />
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label>Trailer 3 Rego. <br />or ISO + Seals</label>
+                            <input class="form-control" type="text" asp-for="@Model.Trailer3Rego" />
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label>Trailer 4 Rego. <br />or ISO + Seals</label>
+                            <input class="form-control" type="text" asp-for="@Model.Trailer4Rego" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-2">
+                            <label>Weight In <span id="weight_in_term">@Model.InWeightTerm</span> (t)</label>
+                            <input class="form-control" type="number" asp-for="@Model.InWeight" min="0" />
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label>Weight Out <br /><span id="weight_out_term">@Model.OutWeightTerm</span> (t)</label>
+                            <input class="form-control" type="number" asp-for="@Model.OutWeight" min="0" />
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label>Weight Empty <br />Tare (t)</label>
+                            <input class="form-control" type="number" asp-for="@Model.TareWeight" min="0" style="width:70%" />
+                        </div>
+                        <div class="form-group col-md-5">
+                            <label>Contamination Deduction?</label>
+                            <div class="d-flex flex-row">
+                                <div class="d-flex flex-column">
+                                    <div class="form-check form-check-inline pb-2">
+                                        <label class="form-check-label font-weight-normal mr-2">Moisture</label>
+                                        <input type="checkbox" class="form-check-input" asp-for="@Model.MoistureDeduction">
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <label class="form-check-label font-weight-normal mr-2">Rubbish</label>
+                                        <input type="checkbox" class="form-check-input" asp-for="@Model.RubbishDeduction">
+                                    </div>
+                                </div>
+                                <input disabled class="form-control" type="number" asp-for="@Model.DeductionPercentage" style="width:30%">
+                                <span class="d-block ml-2 pt-2">%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade p-2" id="key-details" role="tabpanel" aria-labelledby="key-details-tab">
+                    <div class="form-row">
+                        <div class="form-group input-group col-md-4">
+                            <label>Key Txt Search</label>
+                            <div class="input-group">
+                                <input type="text" id="search_key" class="form-control" placeholder="Search">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-outline-primary" id="btn_search_key"><i class="fa fa-search"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>Key # Search</label>
+                            <input type="hidden" asp-for="@Model.KeyNo" />
+                            <select class="form-control" id="list_clientsite_keys">
+                                <option></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <table id="kvl-keys-list" class="table table-bordered table-sm">
+                            <tr>
+                                <th>Key #</th>
+                                <th>Key Description</th>
+                                <th></th>
+                            </tr>
+                            @if (kvlKeys != null)
+                            {
+                                foreach (var clientSiteKey in kvlKeys)
+                                {
+                                    <tr>
+                                        <td>@clientSiteKey.KeyNo</td>
+                                        <td>@clientSiteKey.Description</td>
+                                        <td><i class="fa fa-trash-o text-danger btn-delete-kvl-Key" title="Delete" style="cursor: pointer;"></i></td>
+                                    </tr>
+                                }
+                            }
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label>Company Name</label>
+                    <input class="form-control" type="text" asp-for="@Model.CompanyName" autocomplete="off" />
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Individuals Name</label>
+                    @{
+                        var personName = @Model.PersonName ?? "Unknown";
+                    }
+                    <input class="form-control" type="text" value="@personName" asp-for="@Model.PersonName" />
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Type of Individual</label>
+                    <select asp-for="@Model.PersonType" class="form-control" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.IndividualType)"></select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label>Mobile Number</label>
+                    @{
+                        var mobileNumber = @Model.MobileNumber ?? "+61 (0) ";
+                    }
+                    <input class="form-control" value="@mobileNumber" type="text" asp-for="@Model.MobileNumber" />
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Entry Reason</label>
+                    <select asp-for="@Model.EntryReason" class="form-control" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.EntryReason)"></select>
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Product</label>
+                    <select class="form-control" id="list_product" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.ProductType, true)"></select>
+                    <input type="hidden" asp-for="@Model.Product" />
+                </div>
+            </div>
+            <div class="form-row">                
+                <div class="form-group col-md-4">
+                    <label>Customer Ref</label>
+                    <input class="form-control" type="text" asp-for="@Model.CustomerRef"/>
+                </div>
+                <div class="form-group col-md-4">
+                    <label>WVI</label>
+                    <input class="form-control" type="text" asp-for="@Model.Wvi"/>
+                </div>
+                <div class="form-group col-md-4">
+                    <div class="d-flex flex-row justify-content-between">
+                        <label id="lblIsSender">Sender</label>
+                        <div class="custom-control custom-switch duty-day-switch">
+                            <input type="checkbox" class="custom-control-input" id="cbIsSender">
+                            <label class="custom-control-label" for="cbIsSender"></label>
+                            <input hidden asp-for="@Model.IsSender"/>
+                        </div>
+                    </div>
+                    <input type="text" class="form-control" asp-for="@Model.Sender">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class=" form-group col-md-4">
+                    <label>Site POC</label>
+                    <select class="form-control" asp-for="@Model.ClientSitePocId" asp-items="@clientViewDataService.GetClientSitePocs(new int[] { Model.ClientSiteLogBook.ClientSiteId })">
+                    </select>
+                </div>
+                <div class=" form-group col-md-4">
+                    <label>Site Location</label>
+                    <select class="form-control" asp-for="@Model.ClientSiteLocationId" asp-items="@clientViewDataService.GetClientSiteLocations(new int[] { Model.ClientSiteLogBook.ClientSiteId })">
+                    </select>
+                </div>
+            </div>
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="kvl-notes-tab" data-toggle="tab" data-target="#kvl-notes" role="tab" aria-controls="kvl-notes" aria-selected="true">
+                        <i class="fa fa-pencil-square-o mr-2"></i>Notes
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="kvl-attachments-tab" data-toggle="tab" data-target="#kvl-attachments" role="tab" aria-controls="kvl-attachments" aria-selected="false">
+                        <i class="fa fa-upload mr-2"></i>Attachments<span class="badge badge-primary ml-2" id="kvl_attachments_count">@kvlAttachmentsCount</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="kvl-auditlog-tab" data-toggle="tab" data-target="#kvl-auditlog" role="tab" aria-controls="kvl-auditlog" aria-selected="false">
+                        <i class="fa fa-history mr-2"></i>
+                        Audit Log
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane fade show active p-2" id="kvl-notes" role="tabpanel" aria-labelledby="kvl-notes-tab">
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <label>Notes</label>
+                            <textarea class="form-control" rows="5" maxlength="512" asp-for="@Model.Notes"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade p-2" id="kvl-attachments" role="tabpanel" aria-labelledby="kvl-attachments-tab">
+                    <div class="row mt-5 mt-md-3">
+                        <div class="col">
+                            <i class="text-muted">Click Browse and select one or more files (.jpg, .jpeg, .png, .bmp)</i>
+                            <div class="custom-file mt-3">
+                                <input type="file" id="kvl_attachment_upload" name="media" class="custom-file-input" accept=".jpg, .jpeg, .png, .bmp" multiple>
+                                <label class="custom-file-label" for="kvl_attachment_upload">Choose file(s) to upload</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-6">
+                            <ul id="kvl-attachment-list" class="list-group d-block w-auto pt-2">
+                                @if (kvlAttachments != null)
+                                {
+                                    var index = 0;
+                                    foreach (var fileName in kvlAttachments)
+                                    {
+                                        <li class="list-group-item" id="attach_@index" data-index="@index">
+                                            @fileName
+                                            <i class="fa fa-trash-o ml-2 text-danger btn-delete-kvl-attachment" title="Delete" style="cursor: pointer;"></i>
+                                        </li>
+                                        index++;
+                                    }
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade p-2" id="kvl-auditlog" role="tabpanel" aria-labelledby="kvl-auditlog-tab">
+                    <div class="row">
+                        <div class="col-md-12">
+                            @if (!Model.ClientSiteLogBook.ClientSite.DataCollectionEnabled)
+                            {
+                                <p class="mt-3"><i class="fa fa-exclamation-triangle mr-2 text-warning"></i>Data Retention & Audit Functions are disabled for this client site</p>
+                            }
+                            else
+                            {
+                                <table class="table table-bordered table-sm" width="100%" id="key_vehicle_log_audit_history">
+                                    <thead>
+                                        <tr>
+                                            <th width="35%">Audit Date</th>
+                                            <th width="15%">Guard Initial</th>
+                                            <th width="50%">Audit Message</th>
+                                        </tr>
+                                    </thead>
+                                    @if (kvlAuditHistory != null)
+                                    {
+                                        foreach (var auditHistory in kvlAuditHistory)
+                                        {
+                                            <tr>
+                                                <td>@auditHistory.AuditTime.ToString("dd MMM yyyy @ HH:mm")</td>
+                                                <td>@auditHistory.GuardLogin.Guard.Initial</td>
+                                                <td>@auditHistory.AuditMessage</td>
+                                            </tr>
+                                        }
+                                    }
+                                </table>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div asp-validation-summary="All" id="validation-summary"></div>
+        </div>
+    </div>
+</form>

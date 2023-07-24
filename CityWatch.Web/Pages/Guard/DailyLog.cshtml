@@ -1,0 +1,181 @@
+﻿@page
+@model CityWatch.Web.Pages.Guard.DailyLogModel
+@{
+    ViewData["Title"] = "CityWatch Security | Guard Daily Log";
+    ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.DailyGuardLog;
+}
+<div id="loader"></div>
+<div class="row">
+    <div class="col-md-8">
+        <div>
+            <b>Log Book Date: </b>@DateTime.Today.ToString("dd MMM yyyy (dddd)").ToUpper()
+        </div>
+    </div>
+    <div class="col-md-4 text-right">
+        <a class="btn btn-primary" href="#" id="guard_offduty">Off Duty</a>
+        <a class="btn btn-outline-primary" href="SiteLogPdf?id=@Model.GuardLog.ClientSiteLogBookId&t=gl" target="_blank">Download Pdf</a>
+    </div>
+</div>
+<div class="row my-2">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between">
+                <b>Site & Guard Details</b>
+                <i class="fa fa-chevron-up text-black-50" aria-hidden="true" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne"></i>
+            </div>
+            <div id="collapseOne" class="collapse multi-collapse show">
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="d-flex flex-sm-row flex-column flex-sm-wrap">
+                            <span class="mr-1"><b>Client Site: </b>@Model.GuardLog.ClientSiteLogBook.ClientSite.Name | </span>
+                            <span><b>Client Type: </b>@Model.GuardLog.ClientSiteLogBook.ClientSite.ClientType.Name</span>
+                        </li>
+                        <li>
+                            <b>Address: </b>@(Model.GuardLog.ClientSiteLogBook.ClientSite.Address ?? "N/A")
+                        </li>
+                        <li>
+                            <b>Landline: </b>@(Model.GuardLog.ClientSiteLogBook.ClientSite.LandLine ?? "N/A")
+                        </li>
+                        <li class="d-flex flex-sm-row flex-column flex-sm-wrap">
+                            @{
+                                var clientSmartWands = Model.ViewDataService.GetClientSiteSmartWands(Model.GuardLog.ClientSiteLogBook.ClientSiteId);
+                            }
+                            @Html.Raw("<b class=\"mr-1\">Smart WANDs: </b>" + (clientSmartWands.Any() ? string.Join(" ", clientSmartWands.Select(z => $"<span class=\"mr-1\">{z.SmartWandId} : {z.PhoneNumber},</span>")) : "N/A"))
+                        </li>
+                    </ul>
+                    <hr />
+                    <p class="mb-2">
+                        <b>Guard Name: </b>@Model.GuardLog.GuardLogin.Guard.Name ;
+                        <b>Initials: </b>@Model.GuardLog.GuardLogin.Guard.Initial ;
+                        <b>Smart WAND: </b>@(Model.GuardLog.GuardLogin.SmartWand?.SmartWandId ?? "N/A") ;
+                        <b>Position: </b>@(Model.GuardLog.GuardLogin.Position?.Name ?? "N/A")
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="row my-2">  
+            <div class="col-lg-6 pr-2 mb-2">
+                <table class="table" id="custom_field_log" style="display:none"></table>
+            </div>
+            <div class="col-lg-6 pl-2">
+                <table class="table" id="patrol_cars_log" style="display:none"></table>
+            </div>
+        </div>
+        <div class="card my-2" id="card_new_entry">
+            <div class="card-header d-flex justify-content-between">
+                <b>Add a new log book entry</b>
+                <i class="fa fa-chevron-up text-black-50" aria-hidden="true" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo"></i>
+            </div>
+            <div id="collapseTwo" class="collapse multi-collapse show">
+                <div class="card-body">
+                    <form id="form_newlog">
+                        <div class="form-group row">
+                            <label for="new_event_time" class="col-md-2 col-md-2-tight col-form-label">Event Time</label>
+                            <div class="col-md-2 col-md-2-tight">
+                                <input type="time" class="form-control" id="new_log_time" value="@DateTime.Now.ToString("hh:mm")">
+                                <input type="hidden" asp-for="@Model.GuardLog.EventDateTime" />
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="new_event_notes" class="col-md-2 col-md-2-tight col-form-label">Event / Notes</label>
+                            <div class="col-md-10">
+                                <textarea class="form-control" rows="4" asp-for="@Model.GuardLog.Notes" onPaste="return false"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="col-md-10 offset-md-2">
+                                <div asp-validation-summary="All" id="validation-summary"></div>
+                            </div>
+                        </div>
+                        <input type="hidden" asp-for="@Model.GuardLog.ClientSiteLogBookId" />
+                        <input type="hidden" asp-for="@Model.GuardLog.ClientSiteLogBook.Date" asp-format="{0:yyyy-MM-dd HH:mm:ss}" />
+                        <input type="hidden" asp-for="@Model.GuardLog.GuardLoginId" />
+                        <input type="hidden" asp-for="@Model.GuardLog.GuardLogin.GuardId" />
+                        <input type="hidden" asp-for="@Model.GuardLog.ClientSiteLogBook.ClientSite.Id" />
+                        <input type="hidden" name="isEditable" value="@((Model.GuardLog.GuardLogin.UserId != 0).ToString().ToLower())" />
+                        <input type="hidden" id="previousLogBookId" value="@ViewData["PreviousLogBookId"]" />
+                        <input type="hidden" id="previousLogBookDateString" value="@ViewData["PreviousLogBookDateString"]" />
+                    </form>
+                </div>
+                <div class="card-footer bg-white">
+                    <button class="btn btn-primary" id="add_new_log"><i class="fa fa-plus mr-2"></i>Add Entry</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mt-2">
+    <div class="col-md-12">
+        <table class="table" id="guard_daily_log"></table>
+    </div>
+</div>
+<div class="row mt-2" id="wrapper_previous_day_log">
+    <div class="col-md-12">
+        <h6>Previous Day Logs</h6>
+        <table class="table" id="guard_daily_log_previous_day"></table>
+    </div>
+</div>
+<div class="row mt-2">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between">
+                <b>Do's & Dont's</b>
+                <i class="fa fa-chevron-up text-black-50" aria-hidden="true" data-toggle="collapse" data-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree"></i>
+            </div>
+            <div id="collapseThree" class="collapse multi-collapse show">
+                <div class="card-body row">
+                    <div class="col-md-6">
+                        <h3 class="text-success">Do's</h3>
+                        <ul class="list-unstyled">
+                            <li><i class="fa fa-check text-success mr-2"></i>Smart WAND checked and is online / no damage</li>
+                            <li><i class="fa fa-check text-success mr-2"></i>PC / Laptop Checked; Dropbox checked / sync ok</li>
+                            <li><i class="fa fa-check text-success mr-2"></i>CCTV checked and is working / active</li>
+                            <li><i class="fa fa-check text-success mr-2"></i>All radios working and on charge</li>
+                            <li><i class="fa fa-check text-success mr-2"></i>Printer ok, tonner ok, paper level is ok</li>
+                            <li><i class="fa fa-check text-success mr-2"></i>Gatehouse is neat and tidy; rubbish removed</li>
+                            <li><i class="fa fa-check text-success mr-2"></i>Turnstile checked; all ok</li>
+                            <li><i class="fa fa-check text-success mr-2"></i>Site Boom Gates/main gate working</li>
+                            <li><i class="fa fa-check text-success mr-2"></i>Fire panel + ASE + VESDA appears ok</li>
+                            <li><i class="fa fa-check text-success mr-2"></i>Consumables such as Toilet paper / Fly Spray / Handwash etc all ok</li>
+                            <li><i class="fa fa-check text-success mr-2"></i>Write in logbook within 2 hours of last entry</li>
+                            <li><i class="fa fa-check text-success mr-2"></i>Ensure entries are trueful</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h3 class="text-danger">Dont's</h3>
+                        <ul class="list-unstyled">
+                            <li><i class="fa fa-times text-danger mr-2"></i>I started my shift</li>
+                            <li><i class="fa fa-times text-danger mr-2"></i>I ended my shift</li>
+                            <li><i class="fa fa-times text-danger mr-2"></i>I went on patrol</li>
+                            <li><i class="fa fa-times text-danger mr-2"></i>I completed an Incident Report</li>
+                            <li><i class="fa fa-times text-danger mr-2"></i>Code 20 "Welfare" check</li>
+                            <li><i class="fa fa-times text-danger mr-2"></i>Write in logbook longer than 2 hours after last entry</li>
+                            <li><i class="fa fa-times text-danger mr-2"></i>Write any false or misleading entries</li>
+                            <li><i class="fa fa-times text-danger mr-2"></i>Mention you are doing a handover / next guard onsite</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="logbook-expiry-modal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="logbookExpiryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-exclamation-circle text-warning mr-2"></i>Warning: Logbook Expired</h5>
+            </div>
+            <div class="modal-body">
+                <p>A new day started and this logbook (LB) expired. Click Ok to create a new book for @DateTime.Today.AddDays(1).ToString("dd MMM yyyy")</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="btn_confirm_logbook_expiry">Ok</button>
+            </div>
+        </div>
+    </div>
+</div>
+<partial name="_MessagePopup" />
+@Html.AntiForgeryToken()
+@section PageHeader {
+    <h3 class="text-center">LOGBOOK PORTAL</h3>
+}

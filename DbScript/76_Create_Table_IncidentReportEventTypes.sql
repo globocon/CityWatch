@@ -1,0 +1,6 @@
+CREATE TABLE dbo.IncidentReportEventTypes
+(
+	Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	ReportId  INT NOT NULL FOREIGN KEY REFERENCES IncidentReports(Id),
+	EventType INT NOT NULL
+)

@@ -1,0 +1,144 @@
+﻿@page
+@using CityWatch.Data.Models
+@using CityWatch.Web.Helpers
+@model CityWatch.Web.Pages.Guard.LoginModel
+@{
+    ViewData["Title"] = "CityWatch Security | Guard Daily Log";
+    ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.DailyGuardLog;       
+}
+<div id="loader"></div>
+<div class="m-auto p-4">
+    <div class="m-auto card p-5 col-sm-10 col-md-7 col-lg-7">
+        <form id="frmGuardLogin">
+            <input type="hidden" asp-for="@Model.GuardLogin.Id" />
+            <input type="hidden" asp-for="@Model.GuardLogin.Guard.Id" />
+            <input type="hidden" asp-for="@Model.LogBookType" />
+            <div class="form-row">
+                <div class="form-group col-md-12">
+                    <div class="d-flex flex-sm-row flex-column justify-content-between">
+                        <label asp-for="@Model.GuardLogin.Guard.SecurityNo">Security License No</label>
+                        <div>
+                            <input type="checkbox" class="form-check-input" asp-for="@Model.GuardLogin.IsNewGuard" title="Tick if you are new guard" />
+                            <label title="Tick if you are new guard">New Guard?</label>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <input class="form-control" asp-for="@Model.GuardLogin.Guard.SecurityNo">
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-primary" id="btnGetGuardDetails" title="Get guard details"><i class="fa fa-search mr-2"></i><span class="d-none d-md-inline-flex">Search</span></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row pb-2">
+                <div id="guardSearchResult" class="text-muted col-md-12" style="font-size:0.9rem">
+                    Enter Security License No and click Search
+                </div>
+            </div>
+            <div class="form-row" style="display:none" id="divNewGuard">
+                <div class="form-group col-md-6">
+                    <label>Full Name</label>
+                    <input type="text" class="form-control" asp-for="@Model.GuardLogin.Guard.Name" />
+                </div>
+                <div class="form-group col-md-3">
+                    <label>Initials</label>
+                    <input type="text" class="form-control" asp-for="@Model.GuardLogin.Guard.Initial" />
+                </div>
+                <div class="form-group col-md-3">
+                    <label>State</label>
+                    <select class="form-control" asp-for="@Model.GuardLogin.Guard.State" asp-items="@Model.ViewDataService.States"></select>
+                </div>
+            </div>
+            <div style="display:none" id="guardLoginDetails">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="GuardLogin_ClientType">Client Type</label>
+                        <select class="form-control" id="GuardLogin_ClientType" asp-items="@Model.ViewDataService.GetUserClientTypes(AuthUserHelper.LoggedInUserId)" disabled></select>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label asp-for="@Model.GuardLogin.ClientSiteName">Client Site</label>
+                        <select class="form-control" asp-for="@Model.GuardLogin.ClientSiteName" disabled>
+                            <option value="">Select</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <div class="d-flex flex-row justify-content-between">
+                            <label>Smart Wand</label>
+                            <div>
+                                <input type="checkbox" class="form-check-input" asp-for="@Model.GuardLogin.IsPosition" />
+                                <label>Or Position</label>
+                            </div>
+                        </div>
+                        <select class="form-control" asp-for="@Model.GuardLogin.SmartWandOrPosition" style="font-family: 'FontAwesome', Inter, sans-serif;" disabled>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>On Duty</label>
+                        <input type="time" class="form-control" id="GuardLogin_OnDuty_Time" disabled />
+                        <input type="datetime" class="form-control" asp-for="@Model.GuardLogin.OnDuty" hidden />
+                        <div class="d-flex flex-row">
+                            <div class="custom-control custom-switch form-control-sm duty-day-switch" hidden>
+                                <input type="checkbox" class="custom-control-input" id="onDutyIsToday">
+                                <label class="custom-control-label" for="onDutyIsToday">
+                                    <span id="lblOnDutyToday" class="small">Today</span>/<span id="lblOnDutyYesterday" class="small">Yesterday</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>Off Duty</label>
+                        <input type="time" class="form-control" id="GuardLogin_OffDuty_Time" disabled />
+                        <input type="datetime" class="form-control" asp-for="@Model.GuardLogin.OffDuty" hidden />
+                        <div class="d-flex flex-row">
+                            <div class="custom-control custom-switch form-control-sm duty-day-switch">
+                                <input type="checkbox" class="custom-control-input" id="offDutyIsToday">
+                                <label class="custom-control-label" for="offDutyIsToday">
+                                    <span id="lblOffDutyToday" class="small">Today</span>/<span id="lblOffDutyTomorrow" class="small">Tomorrow</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col-md-12 mb-3">
+                        <i class="fa fa-clock-o mr-2"></i>Duty Time: <span id="guardShiftDayTime" class="text-primary">N/A</span>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <div asp-validation-summary="All" id="glValidationSummary"></div>
+                        <button type="button" id="btnGuardLogin" class="btn btn-primary">Enter Log Book</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="modal fade" id="alert-wand-in-use-modal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="alertWandInUseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-exclamation-circle text-warning mr-2"></i>Warning</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                The selected SMART Wand is already in use. Are you sure want to continue?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" id="btn_confrim_wand_use">Yes</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+<partial name="_MessagePopup" />
+@Html.AntiForgeryToken()
+@section PageHeader {
+    <h3 class="text-center">
+        @(Model.LogBookType == LogBookType.DailyGuardLog ? "LOGBOOK PORTAL" : "KEY, VEHICLE & VISITOR PORTAL")
+    </h3>
+}

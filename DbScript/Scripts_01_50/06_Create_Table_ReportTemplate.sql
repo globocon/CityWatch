@@ -1,0 +1,6 @@
+CREATE TABLE [dbo].[ReportTemplates]
+(
+	[Id] INT NOT NULL PRIMARY KEY,
+	[Path] VARCHAR(1024) NOT NULL,
+	[LastUpdated] DATETIME NOT NULL
+);

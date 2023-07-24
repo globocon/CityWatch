@@ -1,0 +1,1 @@
+INSERT INTO ReportTemplates VALUES (1, '/wwwroot/Pdf/Template', GETDATE())

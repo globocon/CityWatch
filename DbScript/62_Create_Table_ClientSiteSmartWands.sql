@@ -1,0 +1,8 @@
+CREATE TABLE dbo.ClientSiteSmartWands
+(
+	Id int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	ClientSiteId int NOT NULL FOREIGN KEY REFERENCES dbo.ClientSites(Id) ON DELETE CASCADE,
+	SmartWandId VARCHAR(25) NOT NULL,
+	PhoneNumber VARCHAR(25) NOT NULL,
+	CONSTRAINT UQ_SmartWandId UNIQUE(SmartWandId)
+)

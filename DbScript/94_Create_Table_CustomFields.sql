@@ -1,0 +1,18 @@
+
+CREATE TABLE dbo.ClientSiteCustomFields 
+(
+	Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	ClientSiteId INT NOT NULL FOREIGN KEY REFERENCES ClientSites(Id),
+	[Name] VARCHAR(25) NOT NULL,
+	TimeSlot CHAR(5) NOT NULL,
+)
+GO
+
+CREATE TABLE dbo.CustomFieldLogs
+(
+	Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	CustomFieldId  INT NOT NULL FOREIGN KEY REFERENCES ClientSiteCustomFields(Id) ON DELETE CASCADE,
+	ClientSiteLogBookId INT NOT NULL FOREIGN KEY REFERENCES ClientSiteLogBooks(Id),
+	DayValue decimal(9,2) NULL
+)
+GO

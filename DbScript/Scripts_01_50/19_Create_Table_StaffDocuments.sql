@@ -1,0 +1,6 @@
+CREATE TABLE [dbo].[StaffDocuments]
+(
+	[Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY ,
+	[FileName] VARCHAR(1024) NOT NULL,
+	[LastUpdated] DATETIME NOT NULL
+);

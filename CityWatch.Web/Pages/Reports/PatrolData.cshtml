@@ -1,0 +1,160 @@
+﻿@page
+@using CityWatch.Web.Helpers
+@using CityWatch.Web.Services
+@using CityWatch.Data.Enums;
+@model CityWatch.Web.Pages.Reports.PatrolDataModel
+@{
+    ViewData["Title"] = "CityWatch Security | Alarm Response";
+    ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.PatrolData;
+}
+<div id="loader-p"></div>
+<div class="full-width">
+    <form id="frm_patrol_report_request">
+        <div class="form-row">
+            <div class="form-group col-md-2">
+                <label class="mx-1" asp-for="@Model.ReportRequest.FromDate"></label>
+                <input type="date" class="form-control" asp-for="@Model.ReportRequest.FromDate" />
+            </div>
+            <div class="form-group col-md-2">
+                <label class="mx-1" asp-for="@Model.ReportRequest.ToDate"></label>
+                <input type="date" class="form-control" asp-for="@Model.ReportRequest.ToDate" />
+            </div>
+            <div class="form-group col-md-2">
+                <label class="mx-1" asp-for="@Model.ReportRequest.DataFilter"></label>
+                <select class="form-control" asp-for="@Model.ReportRequest.DataFilter" asp-items="Html.GetEnumSelectList<PatrolDataFilter>()"></select>
+            </div>
+            <div class="form-group col-md-4">
+                <label class="mx-1">&nbsp;</label>
+                <div>
+                    <button type="button" class="btn btn-primary mx-1" id="btnPatrolReportSumbit">Generate Report</button>
+                    <a href="#" target="_blank" class="btn btn-outline-secondary mx-1" id="btnExportExcel">Download Excel</a>
+                </div>
+            </div>
+        </div>
+        <div class="form-row" id="patrol_report_controls" style="display:none;">
+            <div class="form-group col-md-2">
+                <label class="font-weight-normal" asp-for="@Model.ReportRequest.ClientTypes">Client Type</label>
+                <select class="form-control" multiple="multiple" asp-for="@Model.ReportRequest.ClientTypes">
+                    @foreach (var item in Model.ViewDataService.GetUserClientTypes(AuthUserHelper.LoggedInUserId))
+                    {
+                        if (item.Text == "Select") continue;
+                        <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group col-md-2">
+                <label class="font-weight-normal" asp-for="@Model.ReportRequest.ClientSites">Client Site</label>
+                <div class="d-block">
+                    <select id="ReportRequest_ClientSites" name="ReportRequest.ClientSites" class="form-control" multiple="multiple"></select>
+                </div>
+            </div>
+            <div class="form-group col-md-2">
+                <label class="font-weight-normal" asp-for="@Model.ReportRequest.Position">Position</label>
+                <select asp-for="@Model.ReportRequest.Position" class="form-control">
+                    @foreach (var item in Model.ViewDataService.GetOfficerPositions())
+                    {
+                        if (item.Text == "Select") item.Text = "All";
+                        <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                    }
+                </select>
+            </div>
+        </div>
+    </form>
+    <ul class="nav nav-tabs" id="patrol-data-tabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="pd-report-tab" data-toggle="tab" href="#pd-report" role="tab" aria-controls="pd-report" aria-selected="true">Report</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="pd-chart-tab" data-toggle="tab" href="#pd-chart" role="tab" aria-controls="pd-chart" aria-selected="false">Chart</a>
+        </li>
+    </ul>
+    <div class="tab-content pt-3">
+        <div class="tab-pane active" id="pd-report" role="tabpanel" aria-labelledby="pd-report-tab">
+            <div id="monthly_patrol_data_wrapper">
+                <table id="monthly_patrol_data" class="table table-bordered table-sm" width="100%">
+                    <thead>
+                        <tr>
+                            <th>Day</th>
+                            <th>Date</th>
+                            <th>Control Room Job No</th>
+                            <th>Site</th>
+                            <th>Address</th>
+                            <th>Desp. Time</th>
+                            <th>Arrival</th>
+                            <th>Depart</th>
+                            <th>CWS SNo.</th>
+                            <th>Total Mins on Site</th>
+                            <th>Resp. Time</th>
+                            <th>Alarm</th>
+                            <th>Patrol Att.</th>
+                            <th>Action Taken</th>
+                            <th>Notified By</th>
+                            <th>Bill To</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="tab-pane" id="pd-chart" role="tabpanel" aria-labelledby="pd-chart-tab">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            IR Records Percentage By Site
+                            <div class="float-right">Total Site Count: <span id="count_by_site"></span></div>
+                        </div>
+                        <div class="card-body">
+                            <svg width="500" height="200" id="pie_chart_ir_by_site"></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            IR Records Percentage By Area/Ward
+                            <div class="float-right">Total Area/Ward Count: <span id="count_by_area_ward"></span></div>
+                        </div>
+                        <div class="card-body">
+                            <svg width="400" height="200" id="pie_chart_ir_by_areaward"></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            IR Records Percentage By Colour Code
+                            <div class="float-right">Total Color Code Count: <span id="count_color_code"></span></div>
+                        </div>
+                        <div class="card-body">
+                            <svg width="400" height="200" id="pie_chart_ir_by_colorcode"></svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            IR Event Type Quantity
+                            <div class="float-right">Total IR Count:  <span id="count_by_ir"></span></div>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex flex-row align-items-center">
+                                <div class="col-md-6">
+                                    <svg width="650" height="300" id="pie_chart_by_ireventype_quantity"></svg>
+                                </div>
+                                <div class="col-md-6">
+                                    <svg width="550" height="300" id="bar_chart_by_ireventype_quantity"></svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@Html.AntiForgeryToken()
+@section PageHeader {
+    <h3 class="text-center">PATROL DATA</h3>
+}

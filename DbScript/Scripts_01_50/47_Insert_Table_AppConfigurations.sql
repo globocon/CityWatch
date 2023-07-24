@@ -1,0 +1,1 @@
+INSERT INTO dbo.AppConfigurations VALUES('LastUsedIrSn', '0')

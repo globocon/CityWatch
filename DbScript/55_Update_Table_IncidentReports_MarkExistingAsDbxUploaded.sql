@@ -1,0 +1,1 @@
+UPDATE dbo.IncidentReports SET DbxUploaded = 1

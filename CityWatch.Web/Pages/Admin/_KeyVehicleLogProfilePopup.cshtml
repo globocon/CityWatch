@@ -1,0 +1,98 @@
+﻿@using CityWatch.Data.Models;
+@using CityWatch.Web.Services;
+@model CityWatch.Data.Models.KeyVehicleLogProfile
+@inject IViewDataService viewDataService
+<form id="frm_edit_kvl_profile">
+    <input type="hidden" asp-for="@Model.Id" />
+    <div class="row">
+        <div class="col-md-6 border-right">
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label>ID No. / Vehicle Rego.</label>
+                    <input class="form-control" disabled type="text" asp-for="@Model.VehicleRego" />
+                    <input type="hidden" id="VehicleRego" name="VehicleRego" value="@Model.VehicleRego" />
+                </div>
+                <div class="form-group col-md-4">
+                    <label>ID / Plate (State or AU)</label>
+                    <input type="hidden" asp-for="@Model.PlateId" />
+                    <select class="form-control" id="kvl_profile_list_plates" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.Plate)">
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label>Vehicle Config</label>
+                    <select class="form-control" asp-for="@Model.TruckConfig" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.VehicleConfig)">
+                    </select>
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Trailer Type</label>
+                    <select class="form-control" asp-for="@Model.TrailerType" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.TrailerType)">
+                    </select>
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Max Weight</label>
+                    <input class="form-control" type="number" asp-for="@Model.MaxWeight" min="0" />
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <label>Trailer 1 Rego. <br />or ISO</label>
+                    <input class="form-control" type="text" asp-for="@Model.Trailer1Rego" />
+                </div>
+                <div class="form-group col-md-3">
+                    <label>Trailer 2 Rego. <br />or ISO</label>
+                    <input class="form-control" type="text" asp-for="@Model.Trailer2Rego" />
+                </div>
+                <div class="form-group col-md-3">
+                    <label>Trailer 3 Rego. <br />or ISO</label>
+                    <input class="form-control" type="text" asp-for="@Model.Trailer3Rego" />
+                </div>
+                <div class="form-group col-md-3">
+                    <label>Trailer 4 Rego. <br />or ISO</label>
+                    <input class="form-control" type="text" asp-for="@Model.Trailer4Rego" />
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label>Company Name</label>
+                    <input class="form-control" type="text" asp-for="@Model.CompanyName" />
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Individuals Name</label>
+                    <input class="form-control" type="text" asp-for="@Model.PersonName" />
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Type of Individual</label>
+                    <select class="form-control" asp-for="@Model.PersonType" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.IndividualType)">
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label>Mobile Number</label>
+                    @{
+                        var mobileNumber = @Model.MobileNumber ?? "+61 (0) ";
+                    }
+                    <input class="form-control" value="@mobileNumber" type="text" asp-for="@Model.MobileNumber" />
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Entry Reason</label>
+                    <select class="form-control" asp-for="@Model.EntryReason" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.EntryReason)"></select>
+                </div>
+                <div class="form-group col-md-4">
+                    <input type="hidden" asp-for="@Model.Product" />
+                    <label>Product</label>
+                    <select class="form-control" id="list_product_profile" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.ProductType, true)"></select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div asp-validation-summary="All" id="kvl-profiles-validation-summary"></div>
+        </div>
+    </div>
+</form>

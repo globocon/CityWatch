@@ -1,0 +1,7 @@
+CREATE TABLE [dbo].[ClientSiteKpiNotes]
+(
+	[Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	SettingsId INT NOT NULL FOREIGN KEY REFERENCES ClientSiteKpiSettings(Id) ON DELETE CASCADE,
+	ForMonth DATE,
+    Notes VARCHAR(250)
+)

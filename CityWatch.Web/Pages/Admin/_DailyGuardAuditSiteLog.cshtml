@@ -1,0 +1,53 @@
+﻿@using CityWatch.Web.Helpers;
+@using CityWatch.Web.Services;
+@inject IViewDataService viewDataService
+<div class="row">
+    <div class="col-md-12">
+        <form method="post" class="border-bottom">
+            <div class="form-row">
+                <div class="form-group col-md-2">
+                    <label class="mx-1" for="dglClientType">Client Type</label>
+                    <select class="form-control" id="dglClientType">
+                        <option value="">Select</option>
+                        @foreach (var clientType in viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
+                        {
+                            <option value="@clientType.Id">@clientType.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group col-md-3">
+                    <label class="mx-1" for="dglClientSiteId">Client Site</label>
+                    <select class="form-control mx-1" id="dglClientSiteId"></select>
+                    <div class="form-check mt-1">
+                        <input type="checkbox" id="excludeSystemLog" class="form-check-input" />
+                        <label for="excludeSystemLog" class="form-check-label">Exclude System Logs</label>
+                    </div>
+                </div>
+                <div class="form-group col-md-2">
+                    <label class="mx-1" for="dglAudtitFromDate">From Date</label>
+                    <input type="date" class="form-control" id="dglAudtitFromDate" />
+                </div>
+                <div class="form-group col-md-2">
+                    <label class="mx-1" for="dglAudtitToDate">To Date</label>
+                    <input type="date" class="form-control" id="dglAudtitToDate">
+                </div>
+                <div class="form-group col-md-3">
+                    <label class="mx-1">&nbsp;</label>
+                    <div>
+                        <button type="button" class="btn btn-primary mx-1" id="btnGenerateDglAuditReport">View Report</button>
+                        <button type="button" class="btn btn-primary" id="btnDownloadDglAuditZip">Download Zip</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="my-2">
+            <button type="button" id="expand_dgl_audits" class="btn btn-light">Expand All</button>
+            <button type="button" id="collapse_dgl_audits" class="btn btn-light">Collapse All</button>
+        </div>
+        <table class="table" id="dgl_site_log"></table>
+    </div>
+</div>

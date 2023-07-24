@@ -1,0 +1,189 @@
+﻿@using CityWatch.Kpi.Services
+@model CityWatch.Data.Models.ClientSiteKpiSetting
+@inject IViewDataService ViewDataService;
+@{
+    var rowTitle = new string[6] { "", "Daily Employee Hours", "Patrol Frequency", "No Of Patrols", "Image Target", "Wand Scans Target" };
+}
+
+<ul class="nav nav-tabs" id="kpiSettingsTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <a class="nav-link active" id="kpi-settings-tab" data-toggle="tab" href="#siteKpiSettings" role="tab" aria-controls="siteKpiSettings" aria-selected="true">Site Settings</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link" id="notes-tab" data-toggle="tab" href="#notes" role="tab" aria-controls="notes">Notes</a>
+    </li>
+</ul>
+<div class="tab-content">
+    <div class="tab-pane active" id="siteKpiSettings" role="tabpanel" aria-labelledby="kpi-settings-tab">
+        <div class="container pt-3">
+            <form id="frm_site_settings">
+                <input type="hidden" asp-for="@Model.Id" />
+                <input type="hidden" asp-for="@Model.ClientSiteId" />
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="form-row my-2 pb-3">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input asp-for="@Model.IsThermalCameraSite" class="form-check-input">
+                                    <label class="form-check-label font-weight-bold" asp-for="@Model.IsThermalCameraSite">Thermal Camera Site</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check pl-0">
+                                    <input asp-for="@Model.IsWeekendOnlySite class=" form-check-input">
+                                    <label class="form-check-label font-weight-bold" asp-for="@Model.IsWeekendOnlySite">Weekend Only Site</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-8">
+                                <label class="form-label" asp-for="@Model.DropboxImagesDir"></label>
+                                <input class="form-control" asp-for="@Model.DropboxImagesDir">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label class="form-label" asp-for="@Model.KoiosClientSiteId"></label>
+                                <input class="form-control w-80px" asp-for="@Model.KoiosClientSiteId">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label class="form-label" asp-for="@Model.PhotoPointsPerPatrol"></label>
+                                <input class="form-control w-80px daily-img-target" asp-for="@Model.PhotoPointsPerPatrol">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label class="form-label" asp-for="@Model.WandPointsPerPatrol"></label>
+                                <input class="form-control w-80px daily-wand-target" asp-for="@Model.WandPointsPerPatrol">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label class="form-label" asp-for="@Model.TuneDowngradeBuffer"></label>
+                                <input type="number" min="1" class="form-control w-80px daily-img-target" asp-for="@Model.TuneDowngradeBuffer">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div>
+                            <h6 class="font-weight-bold">Site Image (200x112)</h6>
+                            @{
+                                var siteImage = !string.IsNullOrEmpty(Model.SiteImage) ? Model.SiteImage : "//via.placeholder.com/200x112.png?text=No Image";
+                            }
+                            <img src="@siteImage" width="200" height="112" id="img_site_image" class="img-fluid" />
+                            <input type="hidden" asp-for="@Model.SiteImage" value="@Model.SiteImage" />
+                        </div>
+                        <div class="mt-2">
+                            <label class="btn btn-sm btn-outline-primary">
+                                <i class="fa fa-upload mr-2"></i>Replace Image
+                                <input type="file" id="upload_site_image" accept=".jpg" hidden>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <hr />
+                <div class="row">
+                    <div class="col-md-12">
+                        @for (int rowIndex = 0; rowIndex < 6; rowIndex++)
+                        {
+                            <div class="form-row">
+                                <div class="col-md-2">
+                                    <label class="form-label">@rowTitle[rowIndex]</label>
+                                </div>
+                                @for (var colIndex = 0; colIndex < 7; colIndex++)
+                                {
+                                    <div class="col-md-1 mx-1">
+                                        @switch (rowIndex)
+                                        {
+                                            case 0:
+                                                <label class="form-label">@Model.ClientSiteDayKpiSettings[colIndex].WeekDay.ToString().Substring(0, 3)</label>
+                                                break;
+                                            case 1:
+                                                <input class="form-control mb-2" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].EmpHours">
+                                                break;
+                                            case 2:
+                                                <div class="custom-control custom-switch patrol-frequency-switch mb-3">
+                                                    <input type="checkbox" class="custom-control-input patrol-frequency" data-index="@colIndex"
+                                           id="@($"Chk_ClientSiteDayKpiSettings_{colIndex}_PatrolFrequency")" @(Convert.ToBoolean(Model.ClientSiteDayKpiSettings[colIndex].PatrolFrequency) ? "checked=checked" : "")>
+                                                    <label class="custom-control-label" for="@($"Chk_ClientSiteDayKpiSettings_{colIndex}_PatrolFrequency")">
+                                                        @(Convert.ToBoolean(Model.ClientSiteDayKpiSettings[colIndex].PatrolFrequency) ? "per day" : "per hr")
+                                                    </label>
+                                                    <input type="hidden" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].PatrolFrequency" />
+                                                </div>
+                                                break;
+                                            case 3:
+                                                <input class="form-control mb-2 patrols-count" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].NoOfPatrols" data-index="@colIndex">
+                                                break;
+                                            case 4:
+                                                <input class="form-control mb-2" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].ImagesTarget" readonly>
+                                                break;
+                                            case 5:
+                                                <input class="form-control mb-2" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].WandScansTarget" readonly>
+                                                break;
+                                        }
+                                        <input type="hidden" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].WeekDay" />
+                                        <input type="hidden" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].Id" />
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+                <hr />
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="form-row my-2">
+                            <div class="col-md-6">
+                                <h6 class="font-weight-bold d-inline">Site Statistics</h6>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label class="form-label" asp-for="@Model.ExpPatrolDuration"></label>
+                                <input class="form-control w-80px daily-wand-target" asp-for="@Model.ExpPatrolDuration">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label class="form-label" asp-for="@Model.MinPatrolFreq"></label>
+                                <input class="form-control w-80px daily-wand-target" asp-for="@Model.MinPatrolFreq">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label class="form-label" asp-for="@Model.MinImagesPerPatrol"></label>
+                                <input class="form-control w-80px daily-wand-target" asp-for="@Model.MinImagesPerPatrol">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-success" id="save_site_settings"><i class="fa fa-save mr-2"></i>Save Settings</button>
+            </form>
+        </div>
+    </div>
+    <div class="tab-pane" id="notes" role="tabpanel" aria-labelledby="notes-tab">
+        <div class="container pt-3">
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="note_month">Month</label>
+                            <select class="form-control" id="note_month" asp-items="@ViewDataService.GetMonthsInYear()"></select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="note_year">Year</label>
+                            <select class="form-control" id="note_year" asp-items="@ViewDataService.GetYears()"></select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <form id="frm_site_note">                                
+                                <textarea class="form-control" name="ClientSiteKpiNote.Notes" id="ClientSiteKpiNote_Notes" maxlength="512" rows="4">@Model.NotesForThisMonth.Notes</textarea>
+                                <span id="lblSiteNoteRemainingCount" class="mt-2 d-block small"></span>
+                                <input type="hidden" name="ClientSiteKpiNote.Id" id="ClientSiteKpiNote_Id" value="@Model.NotesForThisMonth.Id" />
+                                <input type="hidden" name="ClientSiteKpiNote.SettingsId" id="ClientSiteKpiNote_SettingsId" value="@Model.NotesForThisMonth.SettingsId"/>
+                                <input type="hidden" name="ClientSiteKpiNote.ForMonth" id="ClientSiteKpiNote_ForMonth" value="@Model.NotesForThisMonth.ForMonth"/>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="form-row mt-2">
+                        <button type="button" class="btn btn-outline-danger mr-2" id="delete_site_notes"><i class="fa fa-trash mr-2"></i>Delete</button>
+                        <button type="button" class="btn btn-success" id="save_site_notes"><i class="fa fa-save mr-2"></i>Save Notes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

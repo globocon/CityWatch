@@ -1,0 +1,12 @@
+CREATE TABLE dbo.KpiSendSchedules
+(
+	Id INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
+	ClientSiteId INT NOT NULL FOREIGN KEY References ClientSites(Id) ON DELETE CASCADE,
+	StartDate DATE NOT NULL,
+	EndDate DATE NOT NULL,	
+	Frequency INT NOT NULL,
+	[Time] CHAR(5),
+	EmailTo VARCHAR(5000) NULL,
+	NextRunOn DATETIME NOT NULL
+)
+GO

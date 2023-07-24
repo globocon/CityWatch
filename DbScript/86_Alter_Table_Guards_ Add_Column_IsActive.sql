@@ -1,0 +1,3 @@
+ALTER TABLE dbo.Guards 
+ADD  IsActive BIT NOT NULL DEFAULT 1
+GO

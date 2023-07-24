@@ -1,0 +1,135 @@
+﻿@page
+@model CityWatch.Kpi.Pages.Admin.SettingsModel
+@{
+}
+<div id="loader"></div>
+<div class="container-fluid" style="width:80%">
+    <ul class="nav nav-tabs" id="settingsTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="schedules-tab" data-toggle="tab" href="#schedules" role="tab" aria-controls="schedules" aria-selected="true">Schedules</a>
+        </li>
+        <li style="display:none" class="nav-item" role="presentation">
+            <a class="nav-link" id="service-log-tab" data-toggle="tab" href="#service-log" role="tab" aria-controls="service-log" aria-selected="true">Import Jobs</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="client-site-tab" data-toggle="tab" href="#site-settings" role="tab" aria-controls="site-settings" aria-selected="true">Client Site Settings</a>
+        </li>
+    </ul>
+
+    <div class="tab-content p-3">
+        <div class="tab-pane active" id="schedules" role="tabpanel" aria-labelledby="schedules-tab">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group row">
+                        <label class="col-form-label col-md-2">Filter by Cover Style</label>
+                        <div class="col-md-3">
+                            <select class="form-control" id="sel_schedule">
+                                <option value="0" selected>7-Day Schedules</option>
+                                <option value="1">Monthly Reports</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 offset-md-2 input-group">
+                            <input type="text" id="search_kw_client_site" class="form-control mb-3" placeholder="Search Client Site">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-primary mb-3" id="btnSearchClientSite" title="Press enter to search"><i class="fa fa-search"></i></button>
+                            </div>
+                        </div>
+                        <div class="col-md-2 text-right">
+                            <button class="btn btn-success mb-3 ml-2" id="add_kpi_schedule" data-toggle="modal" data-target="#schedule-modal"><i class="fa fa-plus mr-2"></i>Add Schedule</button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <table class="table" id="kpi_send_schedules"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="display:none" class="tab-pane" id="service-log" role="tabpanel" aria-labelledby="service-log-tab">
+            <div class="row">
+                <div class="col-md-12">
+                    <form method="post" id="frmRunService">
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label class="mx-1" for="clientType">Client Type</label>
+                                <select class="form-control mx-1" id="clientType" asp-items="@Model.ViewDataService.ClientTypes"></select>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label class="mx-1" asp-for="@Model.ReportRequest.ClientSiteId"></label>
+                                <select class="form-control mx-1" asp-for="@Model.ReportRequest.ClientSiteId">
+                                    <option value="">Select</option>
+                                </select>
+                                <span asp-validation-for="@Model.ReportRequest.ClientSiteId"></span>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label class="mx-1" for="month">Month</label>
+                                <select class="form-control mx-1" id="month" name="month" asp-items="@Model.ViewDataService.GetMonthsInYear()"></select>
+                            </div>
+                            <div class="form-group col-md-1">
+                                <label class="mx-1" for="year">Year</label>
+                                <select class="form-control mx-1" id="year" name="year" asp-items="@Model.ViewDataService.GetYears()"></select>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label class="mx-1">&nbsp;</label>
+                                <div>
+                                    <button type="button" class="btn btn-success" id="btnRunService"><i class="fa fa-gear mr-2"></i>Run Import Job</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <table class="table table-striped table-bordered" style="width:100%" id="kpi_import_jobs">
+                        <thead>
+                            <tr>
+                                <th>Request Id</th>
+                                <th>Client Site</th>
+                                <th>Month - Year</th>
+                                <th>Started At</th>
+                                <th>Completed At</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane" id="site-settings" role="tabpanel" aria-labelledby="client-site-tab">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group row">
+                        <label class="col-form-label col-md-2">Filter by Client Type</label>
+                        <div class="col-md-5">
+                            <select class="form-control" id="cs_client_type" asp-items="@Model.ViewDataService.ClientTypes"></select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <table class="table" id="kpi_client_site_settings"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<partial name="_SchedulePopup" />
+<!-- Client site kpi settings modal -->
+<div class="modal" tabindex="-1" role="dialog" id="kpi-settings-modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-gear" aria-hidden="true"></i> Edit Settings for <span id="client_site_name"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="div_site_settings"></div>
+            </div>
+        </div>
+    </div>
+</div>

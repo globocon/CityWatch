@@ -1,0 +1,33 @@
+﻿@page
+@model CityWatch.Web.Pages.LoginModel
+@{
+    ViewData["Title"] = "CityWatch Security | Login";
+    ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.Login;
+}
+
+<div class="m-auto p-4">
+    <div class="m-auto card box-shadow p-5 col-sm-10 col-md-7 col-lg-5">
+        <form method="post">
+            <div class="form-group">
+                <label asp-for="@Model.LoginUser.UserName"></label>
+                <input asp-for="@Model.LoginUser.UserName" class="form-control">
+                <span asp-validation-for="@Model.LoginUser.UserName"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="@Model.LoginUser.Password"></label>
+                <input asp-for="@Model.LoginUser.Password" class="form-control">
+                <span asp-validation-for="@Model.LoginUser.Password"></span>
+            </div>
+            <div asp-validation-summary="All"></div>
+            <button type="submit" class="btn btn-primary w-100 mt-3">Login</button>
+        </form>
+    </div>
+</div>
+@section PageHeader {
+    <h3 class="text-center">CLOUD PORTAL</h3>    
+}
+@section ProductLogo {
+    <a href="https://www.c4isystem.com/" target="_blank" class="text-center text-md-left">
+        <img src="~/images/c4ilogo.jpg" alt="c4i logo" />
+    </a>
+}

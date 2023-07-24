@@ -1,0 +1,41 @@
+﻿@using CityWatch.Web.Services;
+@inject IViewDataService viewDataService
+<div class="row">
+    <div class="col-md-12">
+        <form method="get" class="border-bottom">
+            <div class="form-row">
+                <div class="form-group col-md-2">
+                    <label class="mx-1">ID No / Vehicle Rego</label>
+                    <select class="form-control mx-1" id="kvlProfileRegos" asp-items="@viewDataService.VehicleRegos"></select>
+                </div>
+                <div class="col-md-2 offset-md-8 mt-4 text-right">
+                    <button class="btn btn-success mb-3" type="button" id="btn_add_vistor_profile">
+                        <i class="fa fa-plus mr-2"></i>Add Record
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="row mt-3">
+    <div class="col-md-12">
+        <table class="table table-bordered table-sm" width="100%" id="tbl-audit-kvl-profiles">
+            <thead>
+                <tr>
+                    <th rowspan="2"></th>
+                    <th rowspan="2"><center>ID No / Vehicle Rego</center></th>
+                    <th rowspan="2"><center>ID / Plate</center></th>
+                    <th rowspan="2"><center>Company Name</center></th>
+                    <th rowspan="2"><center>Individual Name</center></th>
+                    <th rowspan="2"><center>Client Site</center></th>
+                    <th colspan="2"><center>Vehicle Description</center></th>
+                    <th rowspan="2"></th>
+                </tr>
+                <tr>
+                    <th>Truck Config</th>
+                    <th>Trailer Type</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,2 @@
+ALTER TABLE [ClientSiteLogBooks]
+ADD DbxUploaded BIT NOT NULL DEFAULT 0

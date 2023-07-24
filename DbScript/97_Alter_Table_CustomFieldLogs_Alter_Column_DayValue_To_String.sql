@@ -1,0 +1,3 @@
+ALTER TABLE dbo.CustomFieldLogs
+ALTER COLUMN DayValue VARCHAR(25) NULL
+GO

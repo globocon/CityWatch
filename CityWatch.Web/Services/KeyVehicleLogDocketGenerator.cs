@@ -1,0 +1,580 @@
+﻿using CityWatch.Data.Helpers;
+using CityWatch.Data.Models;
+using CityWatch.Data.Providers;
+using CityWatch.Web.Helpers;
+using CityWatch.Web.Models;
+using iText.IO.Image;
+using iText.Kernel.Colors;
+using iText.Kernel.Geom;
+using iText.Kernel.Pdf;
+using iText.Layout;
+using iText.Layout.Borders;
+using iText.Layout.Element;
+using iText.Layout.Properties;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Options;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using IO = System.IO;
+
+namespace CityWatch.Web.Services
+{
+    public enum ManualDocketReason
+    {
+        Other,
+
+        NoComms,
+
+        PhysicalRepair
+    }
+
+    public interface IKeyVehicleLogDocketGenerator
+    {
+        string GeneratePdfReport(int keyVehicleLogId, string docketReason);
+    }
+    public class KeyVehicleLogDocketGenerator : IKeyVehicleLogDocketGenerator
+    {
+        private readonly IClientDataProvider _clientDataProvider;
+        private readonly IGuardLogDataProvider _guardLogDataProvider;
+        private readonly IGuardSettingsDataProvider _guardSettingsDataProvider;
+        private readonly string _reportRootDir;
+        private readonly string _imageRootDir;
+        private readonly Settings _settings;
+
+        private const float CELL_FONT_SIZE = 6f;
+        private const float CELL_FONT_SIZE_BIG = 10f;
+        private const string REPORT_DIR = "Output";
+        private const string COLOR_LIGHT_BLUE = "#d9e2f3";
+
+        public KeyVehicleLogDocketGenerator(IWebHostEnvironment webHostEnvironment,
+           IGuardLogDataProvider guardLogDataProvider,
+           IClientDataProvider clientDataProvider,
+           IGuardSettingsDataProvider guardSettingsDataProvider,
+           IOptions<Settings> settings)
+        {
+            _clientDataProvider = clientDataProvider;
+            _guardLogDataProvider = guardLogDataProvider;
+            _guardSettingsDataProvider = guardSettingsDataProvider;
+            _reportRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "Pdf");
+            _imageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
+            _settings = settings.Value;
+        }
+
+        public string GeneratePdfReport(int keyVehicleLogId, string docketReason)
+        {
+            var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(keyVehicleLogId);
+
+            if (keyVehicleLog == null)
+                return string.Empty;
+
+            var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
+            var keyVehicleLogViewModel = new KeyVehicleLogViewModel(keyVehicleLog, kvlFields);
+            var reportPdfPath = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{DateTime.Today:yyyyMMdd}_KeyVehicleLog_{keyVehicleLogId}_ManualDocket.pdf");
+
+            if (IO.File.Exists(reportPdfPath))
+                IO.File.Delete(reportPdfPath);
+
+            var pdfDoc = new PdfDocument(new PdfWriter(reportPdfPath));
+
+            pdfDoc.SetDefaultPageSize(PageSize.A4);
+            var doc = new Document(pdfDoc);
+            doc.SetMargins(15f, 30f, 40f, 30f);
+
+            doc.Add(CreateReportHeaderTable(keyVehicleLog.ClientSiteLogBook.ClientSiteId));
+            doc.Add(CreateSiteDetailsTable(keyVehicleLog));
+            doc.Add(CreateReportDetailsTable(keyVehicleLogViewModel));
+            doc.Add(GetKeyAndOtherDetailsTable(keyVehicleLogViewModel));
+            doc.Add(GetCustomerRefAndWviTable(keyVehicleLogViewModel));
+            doc.Add(CreateWeightandOtherDetailsTable(keyVehicleLogViewModel, docketReason));
+
+            doc.Close();
+            pdfDoc.Close();
+
+            return IO.Path.GetFileName(reportPdfPath);
+        }
+
+        private Table CreateReportHeaderTable(int clientSiteId)
+        {
+            var headerTable = new Table(UnitValue.CreatePercentArray(new float[] { 20, 50, 30 })).UseAllAvailableWidth();
+
+            var cwLogo = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "CWSLogoPdf.png")))
+                .SetHeight(30);
+            headerTable.AddCell(new Cell().Add(cwLogo).SetBorder(Border.NO_BORDER));
+
+            var reportTitle = new Cell()
+                .Add(new Paragraph().Add(new Text("Manual Docket")))
+                .SetFont(PdfHelper.GetPdfFont())
+                .SetFontSize(CELL_FONT_SIZE * 4f)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetBorder(Border.NO_BORDER);
+            headerTable.AddCell(reportTitle);
+
+            var cellSiteImage = new Cell().SetBorder(Border.NO_BORDER);
+            var imagePath = GetSiteImage(clientSiteId);
+            if (!string.IsNullOrEmpty(imagePath))
+            {
+                var siteImage = new Image(ImageDataFactory.Create(imagePath))
+                    .SetHeight(30)
+                    .SetHorizontalAlignment(HorizontalAlignment.RIGHT);
+                cellSiteImage.Add(siteImage);
+            }
+            headerTable.AddCell(cellSiteImage).SetBorder(Border.NO_BORDER);
+
+            return headerTable;
+        }
+
+        private static Table CreateSiteDetailsTable(KeyVehicleLog keyVehicleLog)
+        {
+            var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 5, 43, 10, 25, 5, 15 })).UseAllAvailableWidth().SetMarginTop(10);
+
+            siteDataTable.AddCell(GetSiteHeaderCell("Site:"));
+            var siteName = new Cell()
+                .Add(new Paragraph().Add(new Text(keyVehicleLog.ClientSiteLogBook.ClientSite.Name)
+                .SetFont(PdfHelper.GetPdfFont())))
+                .Add(new Paragraph().Add(new Text(keyVehicleLog.ClientSiteLogBook.ClientSite.Address ?? string.Empty)))
+                .SetFontSize(CELL_FONT_SIZE)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER);
+            siteDataTable.AddCell(siteName);
+
+            siteDataTable.AddCell(GetSiteHeaderCell("Date of Log:"));
+            siteDataTable.AddCell(GetSiteValueCell(keyVehicleLog.ClientSiteLogBook.Date.ToString("yyyy-MMM-dd-dddd")));
+
+            siteDataTable.AddCell(GetSiteHeaderCell("Guard Intials"));
+            siteDataTable.AddCell(GetSiteValueCell(keyVehicleLog.GuardLogin.Guard.Initial ?? string.Empty));
+
+            return siteDataTable;
+        }
+
+        private Table CreateReportDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        {
+            var outerTable = new Table(UnitValue.CreatePercentArray(new float[] { 78, 22 })).UseAllAvailableWidth().SetMarginTop(10);
+
+            var innerTable1 = new Table(1).UseAllAvailableWidth();
+
+            var cellClockDetails = new Cell()
+                                    .SetPaddingLeft(0)
+                                    .SetPaddingTop(0)
+                                    .SetBorder(Border.NO_BORDER)
+                                    .Add(GetClockDetailsTable(keyVehicleLogViewModel));
+            innerTable1.AddCell(cellClockDetails);
+
+            var cellCompanyDetails = new Cell()
+                                        .SetPaddingLeft(0)
+                                        .SetBorder(Border.NO_BORDER)
+                                        .Add(GetCompanyDetailsTable(keyVehicleLogViewModel));
+            innerTable1.AddCell(cellCompanyDetails);
+
+            var cellInnerTable1 = new Cell()
+                                    .SetPaddingLeft(0)
+                                    .SetPaddingTop(0)
+                                    .SetBorder(Border.NO_BORDER)
+                                    .Add(innerTable1);
+            outerTable.AddCell(cellInnerTable1);
+
+            var cellNotesTable = new Cell()
+                                    .SetPaddingRight(0)
+                                    .SetPaddingTop(0)
+                                    .SetBorder(Border.NO_BORDER)
+                                    .Add(GetNotesTable(keyVehicleLogViewModel));
+            outerTable.AddCell(cellNotesTable);
+
+            var cellVehicleDetails = new Cell(1, 2)
+                                        .SetPaddingLeft(0)
+                                        .SetPaddingTop(0)
+                                        .SetBorder(Border.NO_BORDER)
+                                        .Add(GetVehicleDetailsTable(keyVehicleLogViewModel));
+            outerTable.AddCell(cellVehicleDetails);
+
+            return outerTable;
+        }
+
+        private Table CreateWeightandOtherDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel, string docketReason)
+        {
+            var outerTable2 = new Table(UnitValue.CreatePercentArray(new float[] { 68, 32 })).UseAllAvailableWidth().SetMarginTop(10);
+
+            var innerTable2 = new Table(1).UseAllAvailableWidth();
+
+            var cellWeightDetailsTable = new Cell()
+                                            .SetPaddingLeft(0)
+                                            .SetPaddingTop(0)
+                                            .SetBorder(Border.NO_BORDER)
+                                            .Add(GetWeightDetailsTable(keyVehicleLogViewModel));
+            innerTable2.AddCell(cellWeightDetailsTable);
+
+            var otherDetailsTable = new Cell()
+                                        .SetPaddingLeft(0)
+                                        .SetPaddingTop(7)
+                                        .SetBorder(Border.NO_BORDER)
+                                        .Add(GetOtherDetailsTable(docketReason));
+            innerTable2.AddCell(otherDetailsTable);
+
+            var cellInnerTable2 = new Cell()
+                                    .SetPaddingLeft(0)
+                                    .SetPaddingTop(0)
+                                    .SetBorder(Border.NO_BORDER)
+                                    .Add(innerTable2);
+            outerTable2.AddCell(cellInnerTable2);
+
+            var cellSignDetails = new Cell()
+                                    .SetPaddingRight(0)
+                                    .SetPaddingTop(0)
+                                    .SetBorder(Border.NO_BORDER)
+                                    .Add(GetSignDetailsTable());
+            outerTable2.AddCell(cellSignDetails);
+
+            return outerTable2;
+        }
+        
+        private static Table GetClockDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        {
+            var clockDetails = new Table(UnitValue.CreatePercentArray(new float[] { 15, 15, 15, 15, 40})).UseAllAvailableWidth();
+
+            clockDetails.AddCell(GetHeaderCell("Clocks", 1, 5));
+
+            clockDetails.AddCell(GetHeaderCell("Intial Call"));
+            clockDetails.AddCell(GetHeaderCell("Entry Time"));
+            clockDetails.AddCell(GetHeaderCell("Sent In Time"));
+            clockDetails.AddCell(GetHeaderCell("Exit Time"));
+            var headerTimeSlotNo = keyVehicleLogViewModel.Detail.IsTimeSlotNo ? "Time Slot No." : "T-No. (Load)";
+            clockDetails.AddCell(GetHeaderCell(headerTimeSlotNo));
+
+            clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.InitialCallTime?.ToString("HH:mm")));
+            clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.EntryTime?.ToString("HH:mm")));
+            clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.SentInTime?.ToString("HH:mm")));
+            clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.ExitTime?.ToString("HH:mm")));
+            clockDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.TimeSlotNo));
+
+            return clockDetails;
+        }
+
+        private static Table GetCompanyDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        {
+            var companyDetails = new Table(UnitValue.CreatePercentArray(new float[] { 23, 10, 12, 10, 10, 12, 23 })).UseAllAvailableWidth();
+
+            companyDetails.AddCell(GetHeaderCell("Company Name", 2));
+
+            companyDetails.AddCell(GetHeaderCell("Individual", 1, 3));
+            companyDetails.AddCell(GetHeaderCell("Site", 1, 3));            
+
+            companyDetails.AddCell(GetHeaderCell("Name"));
+            companyDetails.AddCell(GetHeaderCell("Mobile No"));
+            companyDetails.AddCell(GetHeaderCell("Type"));
+            companyDetails.AddCell(GetHeaderCell("POC"));
+            companyDetails.AddCell(GetHeaderCell("Location"));
+            companyDetails.AddCell(GetHeaderCell("Purpose Of Entry"));
+
+            companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.CompanyName));
+            companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.PersonName));
+            companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.MobileNumber));
+            companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.PersonTypeText));
+            companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.ClientSitePoc?.Name)); 
+            companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.ClientSiteLocation?.Name));
+            companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.PurposeOfEntry));
+
+            return companyDetails;
+        }
+
+        private static Table GetNotesTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        {
+            var notesTable = new Table(1).UseAllAvailableWidth();
+
+            notesTable.AddCell(GetHeaderCell("Notes", textAlignment: TextAlignment.LEFT));
+            notesTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Notes, textAlignment: TextAlignment.LEFT, minHeight: 82));
+
+            return notesTable;
+        }
+
+        private static Table GetVehicleDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        {
+            var vehicleDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 10, 10, 20, 20, 10, 10, 10, 10 })).UseAllAvailableWidth().SetMarginTop(10);
+            vehicleDetailsTable.AddCell(GetHeaderCell("ID No / Vehicle Rego", 2));
+            vehicleDetailsTable.AddCell(GetHeaderCell("Plate", 2));
+            vehicleDetailsTable.AddCell(GetHeaderCell("Vehicle Description", 1, 2));
+            vehicleDetailsTable.AddCell(GetHeaderCell("Trailer Rego or ISO + Seals", 1, 4));
+
+            vehicleDetailsTable.AddCell(GetHeaderCell("Truck Config"));
+            vehicleDetailsTable.AddCell(GetHeaderCell("Trailer Type"));
+            vehicleDetailsTable.AddCell(GetHeaderCell("1"));
+            vehicleDetailsTable.AddCell(GetHeaderCell("2"));
+            vehicleDetailsTable.AddCell(GetHeaderCell("3"));
+            vehicleDetailsTable.AddCell(GetHeaderCell("4"));
+
+            vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.VehicleRego));
+            vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate));
+            vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.TruckConfigText));
+            vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.TrailerTypeText));
+            vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Trailer1Rego));
+            vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Trailer2Rego));
+            vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Trailer3Rego));
+            vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Trailer4Rego));
+
+            return vehicleDetailsTable;
+        }
+
+        private Table GetKeyAndOtherDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        {
+            var outerTable = new Table(UnitValue.CreatePercentArray(new float[] { 41, 41, 18 })).UseAllAvailableWidth().SetMarginTop(10);
+
+            var senderDetails = new Cell()
+                                    .SetPaddingLeft(0)
+                                    .SetPaddingTop(0)
+                                    .SetBorder(Border.NO_BORDER)
+                                    .Add(GetSenderDetailsTable(keyVehicleLogViewModel));
+            outerTable.AddCell(senderDetails);
+
+            var cellKeyDetails = new Cell()
+                                    .SetPaddingLeft(0)
+                                    .SetPaddingRight(0)
+                                    .SetPaddingTop(0)
+                                    .SetBorder(Border.NO_BORDER)
+                                    .Add(GetKeyDetailsTable(keyVehicleLogViewModel));
+            outerTable.AddCell(cellKeyDetails);
+
+            var cellReelsDetails = new Cell()
+                                    .SetPaddingRight(0)
+                                    .SetPaddingTop(0)
+                                    .SetBorder(Border.NO_BORDER)
+                                    .Add(GetReelsDetailsTable(keyVehicleLogViewModel));
+            outerTable.AddCell(cellReelsDetails);
+
+            return outerTable;
+        }
+
+        private static Table GetSenderDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        {
+            var senderDetailsTable = new Table(1).UseAllAvailableWidth();
+            var headerSender = keyVehicleLogViewModel.Detail.IsSender ? "Sender" : "Receiver";
+
+            senderDetailsTable.AddCell(GetHeaderCell(headerSender, textAlignment: TextAlignment.LEFT));
+            senderDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Sender, textAlignment: TextAlignment.LEFT));
+
+            return senderDetailsTable;
+        }
+
+        private Table GetKeyDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        {
+            var keyDetailsTable = new Table(1).UseAllAvailableWidth();
+
+            keyDetailsTable.AddCell(GetHeaderCell("Key / Card Scan", textAlignment: TextAlignment.LEFT));
+
+            keyDetailsTable.AddCell(GetDataCell(GetKeyDetailsCommaSeparated(keyVehicleLogViewModel.Detail), textAlignment: TextAlignment.LEFT));
+            
+            return keyDetailsTable;
+        }
+
+        private static Table GetReelsDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        {
+            var reelsDetailsTable = new Table(1).UseAllAvailableWidth();
+
+            reelsDetailsTable.AddCell(GetHeaderCell("Reels", textAlignment: TextAlignment.LEFT));
+
+            reelsDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Reels.ToString(), textAlignment: TextAlignment.LEFT));
+            
+            return reelsDetailsTable;
+        }
+
+        private static Table GetCustomerRefAndWviTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        {
+            var outerTable = new Table(UnitValue.CreatePercentArray(new float[] { 50, 50 })).UseAllAvailableWidth().SetMarginTop(10);
+
+            var cellCustomerRef = new Cell()
+                                    .SetPaddingLeft(0)
+                                    .SetPaddingTop(0)
+                                    .SetBorder(Border.NO_BORDER)
+                                    .Add(GetCustomerRefTable(keyVehicleLogViewModel));
+            outerTable.AddCell(cellCustomerRef);
+
+            var cellWviDetails = new Cell()
+                                    .SetPaddingRight(0)
+                                    .SetPaddingTop(0)
+                                    .SetBorder(Border.NO_BORDER)
+                                    .Add(GetWviDetailsTable(keyVehicleLogViewModel));
+            outerTable.AddCell(cellWviDetails);
+
+            return outerTable;
+        }
+
+        private static Table GetCustomerRefTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        {
+            var customerRefTable = new Table(1).UseAllAvailableWidth();
+
+            customerRefTable.AddCell(GetHeaderCell("Customer Ref", textAlignment: TextAlignment.LEFT));
+
+            customerRefTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.CustomerRef, textAlignment: TextAlignment.LEFT));
+            
+            return customerRefTable;
+        }
+
+        private static Table GetWviDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        {
+            var wviDetailsTable = new Table(1).UseAllAvailableWidth();
+
+            wviDetailsTable.AddCell(GetHeaderCell("WVI", textAlignment: TextAlignment.LEFT));
+
+            wviDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Wvi, textAlignment: TextAlignment.LEFT));
+            
+            return wviDetailsTable;
+        }
+
+        private Table GetWeightDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        {
+            var weightDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 15, 15, 15, 40, 15})).UseAllAvailableWidth();
+
+            weightDetailsTable.AddCell(GetHeaderCell("Weight", 1, 5));
+
+            weightDetailsTable.AddCell(GetHeaderCell("In Gross (t)"));
+            weightDetailsTable.AddCell(GetHeaderCell("Out Net (t)"));
+            weightDetailsTable.AddCell(GetHeaderCell("Tare (t)"));
+            weightDetailsTable.AddCell(GetHeaderCell("Contamination Deduction?"));
+            weightDetailsTable.AddCell(GetHeaderCell("Max (t)"));
+
+            weightDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.InWeight?.ToString(), cellFontSize: CELL_FONT_SIZE_BIG)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE));
+            weightDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.OutWeight?.ToString(), cellFontSize: CELL_FONT_SIZE_BIG)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE));
+            weightDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.TareWeight?.ToString(), cellFontSize: CELL_FONT_SIZE_BIG)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE));                
+            weightDetailsTable.AddCell(GetDeductionDetailsTable(keyVehicleLogViewModel));
+            weightDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.MaxWeight?.ToString(), cellFontSize: CELL_FONT_SIZE_BIG)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE));
+
+            return weightDetailsTable;
+        }
+
+        private Table GetDeductionDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        { 
+            var deductionDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 40, 25, 35 })).UseAllAvailableWidth();
+
+            deductionDetailsTable.AddCell(GetDataCell("Moisture", textAlignment: TextAlignment.RIGHT, 0).SetBorder(Border.NO_BORDER));
+
+            var iconChecked = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "icons", "checked.png"))).SetHeight(8);
+            var iconUnChecked = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "icons", "unchecked.png"))).SetHeight(8);
+
+            deductionDetailsTable.AddCell(new Cell().Add(keyVehicleLogViewModel.Detail.MoistureDeduction ? iconChecked : iconUnChecked).SetBorder(Border.NO_BORDER));
+
+            var cellDeductionPercentage = new Cell(2, 1)
+                .Add(new Paragraph().SetFontSize(CELL_FONT_SIZE)
+                .Add(new Text($"{keyVehicleLogViewModel.Detail.DeductionPercentage} %")))
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                .SetBorder(Border.NO_BORDER);
+            deductionDetailsTable.AddCell(cellDeductionPercentage);
+
+            deductionDetailsTable.AddCell(GetDataCell("Rubbish", textAlignment: TextAlignment.RIGHT, 0).SetBorder(Border.NO_BORDER));
+            
+            deductionDetailsTable.AddCell(new Cell().Add(keyVehicleLogViewModel.Detail.RubbishDeduction ? iconChecked : iconUnChecked).SetBorder(Border.NO_BORDER));
+
+            return deductionDetailsTable;
+        }
+
+        private static Table GetOtherDetailsTable(string docketReason)
+        {
+            var otherDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 40, 60 })).UseAllAvailableWidth().SetMarginTop(12);
+
+            otherDetailsTable.AddCell(GetHeaderCell("STMS Form \n(Outbound / pickup only)", textAlignment: TextAlignment.LEFT));
+            otherDetailsTable.AddCell(GetHeaderCell("Why was MANUAL Docket Created?", textAlignment: TextAlignment.LEFT));
+
+            otherDetailsTable.AddCell(GetDataCell("Y / NA", textAlignment: TextAlignment.CENTER, cellFontSize: CELL_FONT_SIZE_BIG)
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE));                
+            otherDetailsTable.AddCell(GetDataCell(docketReason, textAlignment: TextAlignment.LEFT)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                .SetHeight(10));
+
+            return otherDetailsTable;
+        }
+
+        private static Table GetSignDetailsTable()
+        {
+            var signDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 25, 75 })).UseAllAvailableWidth();
+
+            signDetailsTable.AddCell(GetHeaderCell("Loader"));
+            signDetailsTable.AddCell(GetDataCell("Name: \n\nSign:\n\n", textAlignment: TextAlignment.LEFT));
+
+            signDetailsTable.AddCell(GetHeaderCell("Dispatch"));
+            signDetailsTable.AddCell(GetDataCell("Name: \n\nSign:\n\n", textAlignment: TextAlignment.LEFT));
+
+            signDetailsTable.AddCell(GetHeaderCell("Driver"));
+            signDetailsTable.AddCell(GetDataCell("Name: \n\nSign:\n\n", textAlignment: TextAlignment.LEFT));
+
+            return signDetailsTable;
+        }
+
+        private static Cell GetSiteHeaderCell(string text)
+        {
+            return new Cell()
+                    .Add(new Paragraph().Add(new Text(text)))
+                    .SetFont(PdfHelper.GetPdfFont())
+                    .SetFontSize(CELL_FONT_SIZE)
+                    .SetTextAlignment(TextAlignment.CENTER)
+                    .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                    .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                    .SetBackgroundColor(WebColors.GetRGBColor(COLOR_LIGHT_BLUE));
+        }
+
+        private static Cell GetSiteValueCell(string text)
+        {
+            return new Cell()
+               .Add(new Paragraph().Add(new Text(text)))
+               .SetFont(PdfHelper.GetPdfFont())
+               .SetFontSize(CELL_FONT_SIZE)
+               .SetTextAlignment(TextAlignment.CENTER)
+               .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+               .SetVerticalAlignment(VerticalAlignment.MIDDLE);
+        }
+
+        private static Cell GetHeaderCell(string text, int rowSpan = 1, int colSpan = 1, TextAlignment textAlignment = TextAlignment.CENTER)
+        {
+            return new Cell(rowSpan, colSpan)
+                .Add(new Paragraph().Add(new Text(text)))
+                .SetFont(PdfHelper.GetPdfFont())
+                .SetFontSize(CELL_FONT_SIZE)
+                .SetTextAlignment(textAlignment)
+                .SetBackgroundColor(WebColors.GetRGBColor(COLOR_LIGHT_BLUE));
+        }
+
+        private static Cell GetDataCell(string text, TextAlignment textAlignment = TextAlignment.CENTER, float minHeight = 15, float cellFontSize = CELL_FONT_SIZE)
+        {
+            return new Cell(1, 1)
+                .Add(new Paragraph().SetFontSize(cellFontSize)
+                .Add(new Text(text ?? string.Empty)))
+                .SetTextAlignment(textAlignment)
+                .SetMinHeight(minHeight);
+        }
+
+        private string GetSiteImage(int clientSiteId)
+        {
+            var clientSiteSetting = _clientDataProvider.GetClientSiteKpiSetting(clientSiteId);
+            if (clientSiteSetting != null && !string.IsNullOrEmpty(clientSiteSetting.SiteImage))
+                return $"{new Uri(_settings.KpiWebUrl)}{clientSiteSetting.SiteImage}";
+            return string.Empty;
+        }
+
+        private string GetKeyDetailsCommaSeparated(KeyVehicleLog keyVehicleLog)
+        {
+            var clientSiteKeys = _guardSettingsDataProvider.GetClientSiteKeys(keyVehicleLog.ClientSiteLogBook.ClientSiteId);
+
+            if (string.IsNullOrEmpty(keyVehicleLog.KeyNo))
+                return string.Empty;
+
+            var listKeys = new List<string>();
+            var keys = keyVehicleLog.KeyNo.Split(';').Select(z => z.Trim());
+            foreach (var key in keys)
+            {
+                var description = clientSiteKeys.SingleOrDefault(z => z.KeyNo == key)?.Description ?? string.Empty;
+                listKeys.Add(key + " - " + description);
+            }
+            return string.Join("; ", listKeys);
+        }
+    }
+}

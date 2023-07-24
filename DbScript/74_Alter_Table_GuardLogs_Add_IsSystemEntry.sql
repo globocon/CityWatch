@@ -1,0 +1,2 @@
+ALTER TABLE GuardLogs
+ADD IsSystemEntry BIT NOT NULL DEFAULT 0

@@ -1,0 +1,242 @@
+﻿<!-- schedule modal -->
+<div class="modal" tabindex="-1" role="dialog" id="schedule-modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-calendar" aria-hidden="true"></i> Manage Schedule</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>            
+            <div class="modal-body p-2">
+                <ul class="nav nav-tabs" id="scheduleEditTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link active" id="scheduleSettingsTab" data-toggle="tab" href="#siteScheduleSettings" role="tab" aria-controls="siteScheduleSettings" aria-selected="true">Schedules</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="summaryNotesTab" data-toggle="tab" href="#summaryNotes" role="tab" aria-controls="summaryNotes" aria-selected="false">Summary Notes</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="summaryImageTab" data-toggle="tab" href="#summaryImage" role="tab" aria-controls="summaryImage" aria-selected="false">Summary Image</a>
+                    </li>
+                </ul>
+                <div class="tab-content p-2">
+                    <div class="tab-pane active" id="siteScheduleSettings" role="tabpanel" aria-labelledby="schedulesTab">
+                        <form id="frm_kpi_schedule">
+                            <input type="hidden" id="scheduleId" name="id" value="0">
+                            <input type="hidden" id="nextRunOn" name="nextRunOn" value="">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="clientTypeName">Client Type</label>
+                                        <select class="form-control" id="clientTypeName" name="clientTypeName">
+                                            @foreach (var item in Model.ViewDataService.ClientTypes)
+                                            {
+                                                <option value="@item.Value">@item.Text</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="clientSites">Client Site</label>
+                                        <select class="form-control" id="clientSites" name="clientSites">
+                                            <option>Select</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="selectedSites">Selected Client Sites <span class="badge badge-pill badge-info" id="selectedSitesCount">0</span></label>
+                                        <select class="form-control" id="selectedSites" name="selectedSites" multiple style="height: 220px"></select>
+                                        <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="editSelectedSite" title="Edit selected sites from the list"><i class="fa fa-pencil mr-2"></i>Edit Site</button>                                        
+                                        <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="removeSelectedSites" title="Remove selected sites from the list"><i class="fa fa-trash-o mr-2"></i>Remove Sites</button>
+                                    </div>
+                                    <div class="d-flex flex-row p-2">
+                                        <label class="mr-3">Cover Style:</label>
+                                        <label class="mr-2">7-Day</label>
+                                        <div class="custom-control custom-switch cover-style-switch">
+                                            <input type="checkbox" class="custom-control-input" id="cbCoverSheetType">
+                                            <label class="custom-control-label" for="cbCoverSheetType">Monthly</label>
+                                            <input type="hidden" id="coverSheetType" name="coverSheetType">
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-row p-2">
+                                        <label class="mr-3">Schedule is <span id="cbIsPausedStatus"></span> :</label>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="cbIsPaused">
+                                            <label class="custom-control-label" for="cbIsPaused"></label>
+                                            <input type="hidden" id="isPaused" name="isPaused">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="startDate">Start Date</label>
+                                        <input type="date" class="form-control" id="startDate" name="startDate">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="endDate">End Date</label>
+                                        <input type="date" class="form-control" id="endDate" name="endDate">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="frequency">Frequency</label>
+                                        <select class="form-control" id="frequency" name="frequency">
+                                            <option value="">Select</option>
+                                            <option value="0">Daily</option>
+                                            <option value="1">Weekly</option>
+                                            <option value="2">Monthly</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="time">Exec. Time</label>
+                                        <input type="time" class="form-control" id="time" name="time">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="emailTo">Email Recipients [CC] <i class="fa fa-info-circle text-info" title="Comma separated list of additional email recipients in CC"></i></label>
+                                        <textarea class="form-control" id="emailTo" name="emailTo" rows="3"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="emailTo">Email Recipients [BCC] <i class="fa fa-info-circle text-info" title="Comma separated list of additional email recipients in BCC"></i></label>
+                                        <textarea class="form-control" id="emailBcc" name="emailBcc" rows="3"></textarea>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="projectName">Project Name</label>
+                                        <input type="text" class="form-control" id="projectName" name="projectName" maxlength="50" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="summaryNote1">Notes 1</label>
+                                        <textarea class="form-control mt-2" id="summaryNote1" name="summaryNote1" rows="8" maxlength="2048"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="summaryNote2">Notes 2</label>
+                                        <textarea class="form-control mt-2" id="summaryNote2" name="summaryNote2" rows="8" maxlength="2048"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <ul id="sch-modal-validation" class="text-danger hide"></ul>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button type="button" id="btnSaveSchedule" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save Schedule</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="tab-pane" id="summaryNotes" role="tabpanel" aria-labelledby="summaryNotesTab">
+                        <div class="row mt-3">
+                            <div class="col-md-8">
+                                <div class="form-row">
+                                    <div class="form-group col-md-3">
+                                        <label for="summaryNoteMonth">Month</label>
+                                        <select class="form-control" id="summaryNoteMonth" asp-items="@Model.ViewDataService.GetMonthsInYear()"></select>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label for="summaryNoteYear">Year</label>
+                                        <select class="form-control" id="summaryNoteYear" asp-items="@Model.ViewDataService.GetYears()"></select>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-12">
+                                        <form id="frm_summary_note">
+                                            <textarea class="form-control" name="KpiSendScheduleSummaryNote.Notes" id="KpiSendScheduleSummaryNote_Notes" rows="10" maxlength="2048"></textarea>
+                                            <span id="lblRemainingCount" class="mt-2 d-block small"></span>
+                                            <input type="hidden" name="KpiSendScheduleSummaryNote.Id" id="KpiSendScheduleSummaryNote_Id" />
+                                            <input type="hidden" name="KpiSendScheduleSummaryNote.ScheduleId" id="KpiSendScheduleSummaryNote_ScheduleId" />
+                                            <input type="hidden" name="KpiSendScheduleSummaryNote.ForMonth" id="KpiSendScheduleSummaryNote_ForMonth" />
+                                        </form>
+                                    </div>
+                                </div>
+                                <div class="form-row mt-2">
+                                    <button type="button" class="btn btn-outline-danger mr-2" id="deleteScheduleSummaryNotes"><i class="fa fa-trash mr-2"></i>Delete</button>
+                                    <button type="button" class="btn btn-success" id="saveScheduleSummaryNotes"><i class="fa fa-save mr-2"></i>Save Notes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane" id="summaryImage" role="tabpanel" aria-labelledby="summaryImageTab">
+                        <div class="row mt-3">
+                            <div class="col-md-12">                              
+                                <div class="form-row">
+                                    <div class="form-group col-md-12">
+                                        <div class="col-md-12">
+                                            <table class="table table-bordered tbl-settings" id="tbl_summaryImage">
+                                                <thead>
+                                                    <tr>
+                                                        <th style="width:370px">File Name</th>
+                                                        <th style="width:370px">Date & Time Uploaded</th>
+                                                        <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="align-middle" id="summary_image"></td>
+                                                        <td class="align-middle" id="summary_image_updated"></td>
+                                                        <td class="text-center">
+                                                            <label class="btn btn-success mb-0">
+                                                                <form id="form_summary_image_upload" method="post">
+                                                                    <i class="fa fa-upload mr-2"></i>Replace
+                                                                    <input type="file" id="upload_summary_image" accept=".jpg" hidden>
+                                                                </form>
+                                                            </label>
+                                                            <a href="#" target="_blank" class="btn btn-outline-primary" id="download_summary_image"><i class="fa fa-download mr-2"></i>Download</a>
+                                                            <button class="btn btn-outline-primary btn-outline-danger" type="button" id="delete_summary_image"><i class="fa fa-trash mr-2"></i>Delete</button>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" tabindex="-1" role="dialog" id="run-schedule-modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Run Schedule</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label>Select report month and year</label>
+                        <div class="form-row">
+                            <div class="form-group col-md-8">
+                                <label class="mx-1" for="schRunMonth">Month</label>
+                                <select class="form-control mx-1" id="schRunMonth" asp-items="@Model.ViewDataService.GetMonthsInYear()"></select>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label class="mx-1" for="schRunYear">Year</label>
+                                <select class="form-control mx-1" id="schRunYear" asp-items="@Model.ViewDataService.GetYears()"></select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group mb-0">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="cbIgnoreRecipients">
+                            <label class="form-check-label" for="cbIgnoreRecipients">
+                                Ignore email recipients (CC & BCC)?
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer d-flex flex-column align-items-start">
+                <input type="hidden" value="" name="sch-id" id="sch-id" />
+                <button type="button" class="btn btn-primary" id="btnScheduleRun">Run Now</button>
+                <span id="schRunStatus" class="mt-2"></span>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,9 @@
+CREATE TABLE dbo.PatrolCarLogs
+(
+	Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	PatrolCarId INT NOT NULL FOREIGN KEY REFERENCES dbo.ClientSitePatrolCars(Id) ON DELETE CASCADE,
+	ClientSiteLogBookId  INT NOT NULL FOREIGN KEY REFERENCES dbo.ClientSiteLogBooks(Id),
+	Mileage DECIMAL(9,2) DEFAULT 0
+)
+
+
