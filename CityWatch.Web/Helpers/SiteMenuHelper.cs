@@ -66,14 +66,21 @@ namespace CityWatch.Web.Helpers
             if (pageName == PageNameHelper.ControlRoom)
             {
                 menuHtml.AppendLine("<div>");
-                menuHtml.AppendLine(@"<a href=""https://citywatch.koios.pl"" class=""nav-link py-0"" target=""_blank""><img src=""/images/wand-scanner-i.png"" alt=""smart wands icon"" class=""mr-2""/>Smart WANDs</a>");
+                menuHtml.AppendLine(@"<a href=""https://citywatch.koios.pl"" class=""nav-link py-0"" target=""_blank""><img src=""/images/wand-scanner-i.png"" alt=""smart wands icon"" class=""mr-2""/>Smart WANDs (SW)</a>");
                 menuHtml.AppendLine("</div>");
             }
 
             if (pageName == PageNameHelper.ControlRoom)
             {
                 menuHtml.AppendLine("<div>");
-                menuHtml.AppendLine(@"<a href=""/Radio/Check"" class=""nav-link py-0""><i class=""fa fa-user mr-2""></i>Radio Checklist</a>");
+                menuHtml.AppendLine(@"<a href=""#"" class=""nav-link py-0""><i class=""fa fa-map-marker mr-2"" aria-hidden=""true""></i>Radio PTToC (GPS)</a>");
+                menuHtml.AppendLine("</div>");
+            }
+
+            if (pageName == PageNameHelper.ControlRoom)
+            {
+                menuHtml.AppendLine("<div>");
+                menuHtml.AppendLine(@"<a href=""/Radio/Check"" class=""nav-link py-0""><i class=""fa fa-user mr-2""></i>Radio Checklist (RC)</a>");
                 menuHtml.AppendLine("</div>");
             }
 
@@ -88,7 +95,7 @@ namespace CityWatch.Web.Helpers
             {
                 var kpiWebUrl = IsDevEnv ? string.Empty : "//kpi.cws-ir.com";
                 menuHtml.AppendLine("<div>");
-                menuHtml.AppendFormat(@"<a href=""{0}"" class=""nav-link py-0"" target=""_blank""><i class=""fa fa-bar-chart mr-2""></i>KPI Telematics</a>", kpiWebUrl).AppendLine();
+                menuHtml.AppendFormat(@"<a href=""{0}"" class=""nav-link py-0"" target=""_blank""><i class=""fa fa-bar-chart mr-2""></i>Telematics (KPI)</a>", kpiWebUrl).AppendLine();
                 menuHtml.AppendLine("</div>");
             }
 
