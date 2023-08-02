@@ -26,6 +26,7 @@ namespace CityWatch.Kpi.Services
     public interface ISendScheduleService
     {
         Task<string> ProcessSchedule(KpiSendSchedule schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
+        byte[] ProcessDownload(KpiSendSchedule schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
     }
 
     public class SendScheduleService : ISendScheduleService
@@ -149,6 +150,93 @@ namespace CityWatch.Kpi.Services
             return statusLog.ToString();
         }
 
+
+        public byte[] ProcessDownload(KpiSendSchedule schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload)
+        {
+            var statusLog = new StringBuilder();
+            byte[] fileBytes = null;
+            try
+            {
+                statusLog.AppendFormat("Schedule {0} - Starting. ", schedule.Id);
+                var siteIds = schedule.KpiSendScheduleClientSites.Select(z => z.ClientSiteId);
+                var reportEndDate = reportStartDate.AddMonths(1).AddDays(-1);
+
+                var siteReportFileNames = new List<string>();
+                foreach (var siteId in siteIds)
+                {
+                    // Import Job
+                    var serviceLog = new KpiDataImportJob()
+                    {
+                        ClientSiteId = siteId,
+                        ReportDate = reportStartDate,
+                        CreatedDate = DateTime.Now,
+                    };
+                    var jobId = _importJobDataProvider.SaveKpiDataImportJob(serviceLog);
+                    //await _importDataService.Run(jobId);
+
+                    // Create Pdf Report
+                    var fileName = _kpiReportGenerator.GeneratePdfReport(siteId, reportStartDate, reportEndDate);
+                    if (string.IsNullOrEmpty(fileName))
+                    {
+                        statusLog.AppendFormat("Site {0} - Error creating pdf. ", siteId);
+                        continue;
+                    }
+
+                    siteReportFileNames.Add(Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
+                    statusLog.AppendFormat("Site {0} - Completed. ", siteId);
+                }
+
+                if (siteReportFileNames.Any())
+                {
+                    schedule.ProjectName = GetSchduleIdentifier(schedule);
+
+                    // Create summary page
+                    var summaryFileName = CreateSummaryReport(schedule, reportStartDate, reportEndDate);
+
+                    // Combine reports to a single pdf                    
+                    var reportFileName = $"{FileNameHelper.GetSanitizedFileNamePart(schedule.ProjectName)} - Daily KPI Reports - {reportStartDate:MMM} {reportStartDate.Year}.pdf";
+                    reportFileName = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", reportFileName);
+                    PdfHelper.CombinePdfReports(reportFileName, siteReportFileNames, summaryFileName);
+
+
+                    // Send Email
+                    //SendEmail(reportFileName, schedule, reportStartDate, ignoreRecipients);
+
+
+
+                    if (upload)
+                    {
+                        schedule.NextRunOn = KpiSendScheduleRunOnCalculator.GetNextRunOn(schedule);
+                        _kpiSchedulesDataProvider.SaveSendSchedule(schedule);
+
+                        if (!_webHostEnvironment.IsDevelopment())
+                            UploadReport(reportFileName, schedule, reportStartDate);
+                    }
+
+                    fileBytes = System.IO.File.ReadAllBytes(reportFileName);
+                    //// Cleanup files
+                    foreach (var fileName in siteReportFileNames)
+                    {
+                        if (File.Exists(fileName))
+                            File.Delete(fileName);
+                    }
+
+                    if (File.Exists(reportFileName))
+                        File.Delete(reportFileName);
+
+                    if (File.Exists(summaryFileName))
+                        File.Delete(summaryFileName);
+                }
+
+                statusLog.AppendFormat("Schedule {0} - Completed. ", schedule.Id);
+            }
+            catch (Exception ex)
+            {
+                statusLog.AppendFormat("Schedule {0} - Exception - {1}", schedule.Id, ex.Message);
+            }
+
+            return fileBytes;
+        }
         private bool UploadReport(string reportFileName, KpiSendSchedule schedule, DateTime reportDate)
         {
             var clientSiteIds = schedule.KpiSendScheduleClientSites.Select(z => z.ClientSiteId).ToArray();

@@ -340,6 +340,18 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(new { success });
         }
 
+        public IActionResult OnGetDownloadPdf(int scheduleId, int reportYear, int reportMonth, bool ignoreRecipients)
+        {
+            var schedule = _kpiSchedulesDataProvider.GetSendScheduleById(scheduleId);
+            if (schedule == null)
+                throw new ArgumentException("Schedule not found");
+            // Generate the PDF file
+            byte[] pdfBytes = _sendScheduleService.ProcessDownload(schedule, new DateTime(reportYear, reportMonth, 1), ignoreRecipients, false);
+            Response.Headers["Content-Disposition"] = "inline; filename=" + "CityWatch_Schedule_"+ reportYear + "_"+ reportMonth + "_Doc";
+            // Return the PDF file as a download
+            return File(pdfBytes, "application/pdf", "CityWatch_Schedule_"+ reportYear + "_"+ reportMonth + "_Doc.pdf");
+        }
+
         public JsonResult OnGetKpiSendScheduleSummaryNote(int scheduleId, int month, int year)
         {
             var kpiSendScheduleNotes = _kpiSchedulesDataProvider.GetSendScheduleById(scheduleId);
