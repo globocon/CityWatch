@@ -712,51 +712,6 @@ $(function () {
         });
     });
 
-
-    $('#btnScheduleDownload').on('click', function () {
-        $('#btnScheduleDownload').prop('disabled', true);
-        $('#schRunStatus').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i> Generating PDF. Please wait...');
-        $.ajax({
-            type: 'GET',
-            url: '/Admin/Settings?handler=DownloadPdf',
-            data: {
-                scheduleId: $('#sch-id').val(),
-                reportYear: $('#schRunYear').val(),
-                reportMonth: $('#schRunMonth').val(),
-                ignoreRecipients: $('#cbIgnoreRecipients').is(':checked'),
-            },
-            xhrFields: {
-                responseType: 'blob' // For handling binary data
-            },
-            success: function (data, textStatus, request) {
-                var contentDispositionHeader = request.getResponseHeader('Content-Disposition');
-                var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-                var matches = filenameRegex.exec(contentDispositionHeader);
-                var downloadedFileName = matches !== null && matches[1] ? matches[1].replace(/['"]/g, '') : fileName;
-                // Create a Blob with the PDF data and initiate the download
-                var blob = new Blob([data], { type: 'application/pdf' });
-                // Create a temporary anchor element to trigger the download
-                var url = window.URL.createObjectURL(blob);                
-                // Open the PDF in a new tab
-                var newTab = window.open(url, '_blank');
-                if (!newTab) {
-                    // If the new tab was blocked, fallback to downloading the file
-                    var a = document.createElement('a');
-                    a.href = url;
-                    a.download = downloadedFileName;
-                    a.click();
-                }
-            },
-            error: function () {
-                alert('Error while downloading the PDF.');
-            }
-        }).done(function (result) {
-            $('#btnScheduleDownload').prop('disabled', false);
-            const messageHtml = '';
-            $('#schRunStatus').html(messageHtml);
-        });
-    });
-
     // Import Jobs
     /* TODO: Remove KPI Import Jobs Function
     const gridImportJobs = $('#kpi_import_jobs').DataTable({
