@@ -1313,8 +1313,9 @@
             }).done(function (result) {
                 if (result.status) {
                     if (result.message !== '') {
-                        alert(result.message);
-                        location.reload(true);
+                        getC4Settings();
+                        showStatusNotification(true, 'Company details modified successfully');
+                        
                     }
                    
                 } else {

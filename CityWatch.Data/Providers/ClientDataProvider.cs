@@ -16,13 +16,8 @@ namespace CityWatch.Data.Providers
         List<ClientType> GetClientTypes();
         void SaveClientType(ClientType clientType);
         void DeleteClientType(int id);
-        void DeleteCoreSettings(int id);
         List<ClientSite> GetClientSites(int? typeId);
         void SaveClientSite(ClientSite clientSite);
-        void SaveCoreSettings(CompanyDetails companyDetails);
-        void SaveHomePageMessage(CompanyDetails companyDetails);
-        void SaveBannerMessage(CompanyDetails companyDetails);
-        void SaveEmailMessage(CompanyDetails companyDetails);
         void SaveCompanyDetails(CompanyDetails companyDetails);
         void DeleteClientSite(int id);
         List<ClientSiteKpiSetting> GetClientSiteKpiSettings();
@@ -177,7 +172,7 @@ namespace CityWatch.Data.Providers
 
         public ClientSiteKpiSetting GetClientSiteKpiSetting(int clientSiteId)
         {
-            var clientSiteKpiSetting =  _context.ClientSiteKpiSettings
+            var clientSiteKpiSetting = _context.ClientSiteKpiSettings
                 .Include(x => x.ClientSite)
                 .Include(x => x.ClientSite.ClientType)
                 .Include(x => x.ClientSiteDayKpiSettings)
@@ -194,7 +189,7 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.ClientSite.ClientType)
                 .Include(x => x.ClientSiteDayKpiSettings)
                 .Where(x => clientSiteIds.Contains(x.ClientSiteId))
-				.ToList();
+                .ToList();
 
             return clientSiteKpiSetting;
         }
@@ -208,7 +203,7 @@ namespace CityWatch.Data.Providers
 
             if (entityState == EntityState.Modified)
             {
-                _context.ClientSiteDayKpiSettings.UpdateRange(setting.ClientSiteDayKpiSettings);                
+                _context.ClientSiteDayKpiSettings.UpdateRange(setting.ClientSiteDayKpiSettings);
                 _context.SaveChanges();
             }
         }
@@ -224,7 +219,7 @@ namespace CityWatch.Data.Providers
             {
                 _context.ClientSiteKpiNotes.Add(note);
             }
-            else 
+            else
             {
                 var noteToUpdate = _context.ClientSiteKpiNotes.SingleOrDefault(z => z.Id == note.Id);
                 if (noteToUpdate != null)
@@ -240,7 +235,7 @@ namespace CityWatch.Data.Providers
         {
             return _context.ClientSiteLogBooks
                 .Include(x => x.ClientSite)
-                .Include(x => x.ClientSite.ClientType)                
+                .Include(x => x.ClientSite.ClientType)
                 .ToList();
         }
 
@@ -267,7 +262,7 @@ namespace CityWatch.Data.Providers
             {
                 var logBookToUpdate = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == logBook.Id);
                 if (logBookToUpdate != null)
-                { 
+                {
                     // nothing to update
                 }
             }
@@ -310,79 +305,40 @@ namespace CityWatch.Data.Providers
 
             }
         }
-        public void SaveCoreSettings(CompanyDetails companyDetails)
-        {
-            var templateToUpdate = _context.CompanyDetails.SingleOrDefault(x => x.Id == companyDetails.Id);
-            templateToUpdate.Name = companyDetails.Name;
-            templateToUpdate.Domain = companyDetails.Domain;
-            templateToUpdate.LastUploaded=DateTime.Now;
-            _context.SaveChanges();
-        }
-        public void DeleteCoreSettings(int id)
-        {
-            if (id == -1)
-                return;
 
-            var coreSettingsToDelete = _context.CompanyDetails.SingleOrDefault(x => x.Id == id);
-            if (coreSettingsToDelete == null)
-                throw new InvalidOperationException();
 
-            _context.CompanyDetails.Remove(coreSettingsToDelete);
-            _context.SaveChanges();
-        }
-        
-        public void SaveHomePageMessage(CompanyDetails companyDetails)
-        {
-            var templateToUpdate = _context.CompanyDetails.SingleOrDefault(x => x.Id == companyDetails.Id);
-            templateToUpdate.HomePageMessage = companyDetails.HomePageMessage;
-            templateToUpdate.MessageBarColour = companyDetails.MessageBarColour;
-            templateToUpdate.HomePageMessageUploadedOn = DateTime.Now;
-            _context.SaveChanges();
-        }
-        public void SaveBannerMessage(CompanyDetails companyDetails)
-        {
-            var templateToUpdate = _context.CompanyDetails.SingleOrDefault(x => x.Id == companyDetails.Id);
-            templateToUpdate.BannerMessage = companyDetails.BannerMessage;
-            templateToUpdate.MessageBarColour = companyDetails.MessageBarColour;
-            templateToUpdate.BannerMessageUploadedOn = DateTime.Now;
-            _context.SaveChanges();
-        }
-        public void SaveEmailMessage(CompanyDetails companyDetails)
-        {
-            var templateToUpdate = _context.CompanyDetails.SingleOrDefault(x => x.Id == companyDetails.Id);
-            templateToUpdate.EmailMessage = companyDetails.EmailMessage;
-            templateToUpdate.EmailMessageUploadedOn = DateTime.Now;
-            _context.SaveChanges();
-        }
-        
         public void SaveCompanyDetails(CompanyDetails companyDetails)
         {
             if (companyDetails.Id == 0)
             {
                 companyDetails.LastUploaded = DateTime.Now;
-                companyDetails.PrimaryLogoUploadedOn= DateTime.Now;
-                companyDetails.HomePageMessageUploadedOn= DateTime.Now;
-                companyDetails.BannerMessageUploadedOn= DateTime.Now;
-                companyDetails.EmailMessageUploadedOn= DateTime.Now;
-               
+                companyDetails.PrimaryLogoUploadedOn = DateTime.Now;
+                companyDetails.HomePageMessageUploadedOn = DateTime.Now;
+                companyDetails.BannerMessageUploadedOn = DateTime.Now;
+                companyDetails.EmailMessageUploadedOn = DateTime.Now;
+
                 _context.CompanyDetails.Add(companyDetails);
             }
-            else {
+            else
+            {
                 var templateToUpdate = _context.CompanyDetails.SingleOrDefault(x => x.Id == companyDetails.Id);
-                templateToUpdate.Name = companyDetails.Name;
-                templateToUpdate.Domain = companyDetails.Domain;
-                templateToUpdate.LastUploaded = DateTime.Now;
-                templateToUpdate.PrimaryLogoUploadedOn = DateTime.Now;
-                templateToUpdate.PrimaryLogoPath = companyDetails.PrimaryLogoPath;
-                templateToUpdate.HomePageMessage = companyDetails.HomePageMessage;
-                templateToUpdate.MessageBarColour = companyDetails.MessageBarColour;
-                templateToUpdate.HomePageMessageUploadedOn = DateTime.Now;
-                templateToUpdate.BannerLogoPath  = companyDetails.BannerLogoPath;
-                templateToUpdate.BannerMessage = companyDetails.BannerMessage;
-                templateToUpdate.BannerMessageUploadedOn = DateTime.Now;
-                templateToUpdate.Hyperlink = companyDetails.Hyperlink;
-                templateToUpdate.EmailMessage = companyDetails.EmailMessage;
-                templateToUpdate.EmailMessageUploadedOn = DateTime.Now;
+                if (templateToUpdate != null)
+                {
+                    templateToUpdate.Name = companyDetails.Name;
+                    templateToUpdate.Domain = companyDetails.Domain;
+                    templateToUpdate.LastUploaded = DateTime.Now;
+                    templateToUpdate.PrimaryLogoUploadedOn = DateTime.Now;
+                    templateToUpdate.PrimaryLogoPath = companyDetails.PrimaryLogoPath;
+                    templateToUpdate.HomePageMessage = companyDetails.HomePageMessage;
+                    templateToUpdate.MessageBarColour = companyDetails.MessageBarColour;
+                    templateToUpdate.HomePageMessageUploadedOn = DateTime.Now;
+                    templateToUpdate.BannerLogoPath = companyDetails.BannerLogoPath;
+                    templateToUpdate.BannerMessage = companyDetails.BannerMessage;
+                    templateToUpdate.BannerMessageUploadedOn = DateTime.Now;
+                    templateToUpdate.Hyperlink = companyDetails.Hyperlink;
+                    templateToUpdate.EmailMessage = companyDetails.EmailMessage;
+                    templateToUpdate.EmailMessageUploadedOn = DateTime.Now;
+                }
             }
             _context.SaveChanges();
         }
