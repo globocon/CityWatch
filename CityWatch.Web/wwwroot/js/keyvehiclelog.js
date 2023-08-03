@@ -1234,6 +1234,7 @@ $(function () {
                 otherReason: $('#otherReason').val(),
                 stakeholderEmails: $('#stakeholderEmail').val(),
                 clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),
+                blankNoteOnOrOff: $('#IsBlankNoteOn').val(),
             },
             type: 'POST',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -1320,4 +1321,10 @@ $(function () {
             $('#duplicate_profile_status').text('');
         });
     }
+    $('#chb_IsBlankNote').on('change', function () {
+        debugger;
+        const isChecked = $(this).is(':checked');
+        $('#lbl_BlankNotes').text(isChecked ? 'Blank Notes On' : 'Blank Notes Off'); lbl_BlankNotes
+        $('#IsBlankNoteOn').val(isChecked);
+    });
 });
