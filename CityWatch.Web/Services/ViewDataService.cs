@@ -4,6 +4,7 @@ using CityWatch.Web.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -50,6 +51,8 @@ namespace CityWatch.Web.Services
         List<SelectListItem> GetUserClientSites(string types = "");        
         List<object> GetAllUsersClientSiteAccess();
         List<object> GetUserClientSiteAccess(int userId);
+        List<object> GetAllCoreSettings(int companyId);
+
         List<ClientType> GetUserClientTypesHavingAccess(int? userId);
         List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm);
         DataTable PatrolDataToDataTable(List<DailyPatrolData> dailyPatrolData);
@@ -324,7 +327,43 @@ namespace CityWatch.Web.Services
             }
             return results;
         }
+        public List<object> GetAllCoreSettings(int companyId)
+        {
+            var results = new List<object>();
+            var coreSettings = _userDataProvider.GetCompanyDetails();
+            var currUserAccess = coreSettings.Where(x => x.Id == companyId);
+            foreach (var company in currUserAccess)
+            {
+                
 
+                results.Add(new
+                {
+                    company.Id,
+                    company.Name,
+                    company.Domain,
+                    company.LastUploaded,
+                    company.FormattedLastUploaded,
+                    company.PrimaryLogoPath,
+                    company.PrimaryLogoUploadedOn,
+                    company.FormattedPrimaryLogoUploaded,
+                    company.HomePageMessage,
+                    company.MessageBarColour,
+                    company.HomePageMessageUploadedOn,
+                    company.FormattedHomePageMessageUploaded,
+                    company.BannerMessage,
+                    company.Hyperlink,
+                    company.BannerMessageUploadedOn,
+                    company.FormattedBannerMessageUploaded,
+                    company.EmailMessage,
+                    company.EmailMessageUploadedOn,
+                    company.FormattedEmailMessageUploaded,
+                    company.BannerLogoPath,
+
+
+                });
+            }
+            return results;
+        }
         public List<object> GetUserClientSiteAccess(int userId)
         {
             var results = new List<object>();

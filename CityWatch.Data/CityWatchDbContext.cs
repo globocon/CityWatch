@@ -49,5 +49,6 @@ namespace CityWatch.Data
         public DbSet<ClientSiteKey> ClientSiteKeys { get; set; }
         public DbSet<KeyVehicleLogAuditHistory> KeyVehicleLogAuditHistory { get; set; }
         public DbSet<ClientSiteRadioStatus> ClientSiteRadioStatus { get; set; }
+        public DbSet<CompanyDetails> CompanyDetails { get; set; }
     }
 }
