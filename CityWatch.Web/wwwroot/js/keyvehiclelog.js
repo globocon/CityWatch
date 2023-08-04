@@ -1321,8 +1321,7 @@ $(function () {
             $('#duplicate_profile_status').text('');
         });
     }
-    $('#chb_IsBlankNote').on('change', function () {
-        debugger;
+    $('#chb_IsBlankNote').on('change', function () {       
         const isChecked = $(this).is(':checked');
         $('#lbl_BlankNotes').text(isChecked ? 'Blank Notes On' : 'Blank Notes Off'); lbl_BlankNotes
         $('#IsBlankNoteOn').val(isChecked);
