@@ -44,10 +44,10 @@ namespace CityWatch.Web.Pages.Admin
             return Page();
         }
 
-        public PartialViewResult OnGetKeyVehicleLogProfile(int profileId)
+        public PartialViewResult OnGetKeyVehicleLogProfile(int id)
         {
-            var keyVehicleLogProfile = _guardLogDataProvider.GetKeyVehicleLogProfile(profileId);
-            keyVehicleLogProfile ??= new KeyVehicleLogProfile() { Id = profileId };
+            var keyVehicleLogProfile = _guardLogDataProvider.GetKeyVehicleLogProfileWithPersonalDetails(id);
+            keyVehicleLogProfile ??= new KeyVehicleLogVisitorPersonalDetail() { Id = id, KeyVehicleLogProfile = new KeyVehicleLogProfile() };
 
             return Partial("_KeyVehicleLogProfilePopup", keyVehicleLogProfile);
         }
@@ -61,7 +61,7 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { records, total = dailyGuardLogs.Count });
         }
 
-        public JsonResult OnGetKeyVehicleSiteLogs(KeyVehicleLogAuditLogRequest keyVehicleLogAuditLogRequest)
+        public JsonResult OnPostKeyVehicleSiteLogs(KeyVehicleLogAuditLogRequest keyVehicleLogAuditLogRequest)
         {
             return new JsonResult(_auditLogViewDataService.GetKeyVehicleLogs(keyVehicleLogAuditLogRequest));
         }
@@ -105,7 +105,7 @@ namespace CityWatch.Web.Pages.Admin
 
             try
             {
-                zipFileName = _guardLogZipGenerator.GenerateZipFile(keyVehicleLogAuditLogRequest.ClientSiteIds, keyVehicleLogAuditLogRequest.LogFromDate, keyVehicleLogAuditLogRequest.LogToDate, LogBookType.VehicleAndKeyLog).Result;
+                zipFileName = _guardLogZipGenerator.GenerateZipFile(keyVehicleLogAuditLogRequest);
             }
             catch (Exception ex)
             {
@@ -124,13 +124,15 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego));
         }
 
-        public JsonResult OnPostUpdateKeyVehicleLogProfile(KeyVehicleLogProfile keyVehicleLogProfile)
+        public JsonResult OnPostUpdateKeyVehicleLogProfile(KeyVehicleLogVisitorPersonalDetail keyVehicleLogVisitorPersonalDetail)
         {
             var results = new List<ValidationResult>();
-            if (!Validator.TryValidateObject(keyVehicleLogProfile, new ValidationContext(keyVehicleLogProfile), results, true))
+            if (!Validator.TryValidateObject(keyVehicleLogVisitorPersonalDetail, new ValidationContext(keyVehicleLogVisitorPersonalDetail), results, true))
                 return new JsonResult(new { success = false, errors = results.Select(z => z.ErrorMessage) });
 
-            if (keyVehicleLogProfile.Id == 0 && _guardLogDataProvider.GetKeyVehicleLogProfiles(keyVehicleLogProfile.VehicleRego).Any(z => z.Equals(keyVehicleLogProfile)))
+            if (keyVehicleLogVisitorPersonalDetail.Id == 0 &&
+                _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(keyVehicleLogVisitorPersonalDetail.KeyVehicleLogProfile.VehicleRego)
+                                        .Any(z => z.Equals(keyVehicleLogVisitorPersonalDetail)))
             {
                 return new JsonResult(new { success = false, errors = new List<string>() { "Another entry with same attributes exists" } });
             }
@@ -139,7 +141,7 @@ namespace CityWatch.Web.Pages.Admin
             var message = "success";
             try
             {
-                _guardLogDataProvider.SaveKeyVehicleLogProfile(keyVehicleLogProfile);
+                _guardLogDataProvider.SaveKeyVehicleLogProfileWithPersonalDetail(keyVehicleLogVisitorPersonalDetail);
             }
             catch (Exception ex)
             {
@@ -155,7 +157,7 @@ namespace CityWatch.Web.Pages.Admin
             var message = "success";
             try
             {
-                _guardLogDataProvider.DeleteKeyVehicleLogProfile(id);
+                _guardLogDataProvider.DeleteKeyVehicleLogPersonalDetails(id);
             }
             catch (Exception ex)
             {

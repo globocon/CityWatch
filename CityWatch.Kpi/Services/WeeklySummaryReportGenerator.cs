@@ -57,7 +57,7 @@ namespace CityWatch.Kpi.Services
 
             var clientSiteIds = schedule.KpiSendScheduleClientSites.Select(z => z.ClientSiteId).ToArray();
             var summaryData = _viewDataService.GetKpiReportData(clientSiteIds, fromDate, toDate);
-            var totalSitePrinted = CreateSummaryTable(summaryData, doc, toDate);
+            var totalSitePrinted = CreateSummaryTable(summaryData, doc, toDate, schedule.IsHrTimerPaused);
 
             if (totalSitePrinted > MAX_SITES_PER_PAGE_FOR_FOOTER)
                 doc.Add(new AreaBreak());
@@ -146,7 +146,7 @@ namespace CityWatch.Kpi.Services
             table.AddHeaderCell(new Paragraph().Add("Notes")).SetBackgroundColor(WebColors.GetRGBColor(CELL_HEADER_BLUE)).SetFontSize(CELL_FONT_SIZE);
         }
 
-        private int CreateSummaryTable(List<DailyKpiResult> summaryData, Document doc, DateTime toDate)
+        private int CreateSummaryTable(List<DailyKpiResult> summaryData, Document doc, DateTime toDate, bool isHrTimerPaused)
         {
             var totalSitePrinted = 0;
             var tableWidth = UnitValue.CreatePercentArray(new float[] { 21, 9, 6, 9, 9, 5, 5, 5, 31 });
@@ -192,7 +192,7 @@ namespace CityWatch.Kpi.Services
                             table.AddCell(new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(dailySiteData.Date.Day.ToString())));
                             table.AddCell(GetKpiImageStatusCell(dailySiteData));
                             table.AddCell(GetKpiWandScanStatusCell(dailySiteData));
-                            table.AddCell(GetKpiDailyLogTimerCell(dailySiteData));
+                            table.AddCell(GetKpiDailyLogTimerCell(dailySiteData, isHrTimerPaused));
                             table.AddCell(new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(dailySiteData.IncidentCount.ToString())));
                             table.AddCell(new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(string.IsNullOrEmpty(dailySiteData.HasFireOrAlarm) ? "0" : "1")));
                         }
@@ -299,26 +299,14 @@ namespace CityWatch.Kpi.Services
             return new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).SetFontColor(WebColors.GetRGBColor(color)).Add(new Paragraph(text));
         }
 
-        private Cell GetKpiDailyLogTimerCell(DailyKpiResult dailyKpiResult)
+        private Cell GetKpiDailyLogTimerCell(DailyKpiResult dailyKpiResult, bool isHrTimerPaused)
         {
-            string text;
+            string text = "-";
             var bgColor = COLOR_WHITE;
-            if (!dailyKpiResult.IsAcceptableLogFreq.HasValue)
+            if (!isHrTimerPaused && dailyKpiResult.IsAcceptableLogFreq.HasValue)
             {
-                text = "-";
-            }
-            else
-            {
-                if (dailyKpiResult.IsAcceptableLogFreq.Value)
-                {
-                    text = "< 2hr";
-                    bgColor = CELL_BG_GREEN;
-                }
-                else
-                {
-                    text = "> 2hr";
-                    bgColor = CELL_BG_RED;
-                }
+                bgColor = dailyKpiResult.IsAcceptableLogFreq.Value ? CELL_BG_GREEN : CELL_BG_RED;
+                text = dailyKpiResult.IsAcceptableLogFreq.Value ? "< 2hr" : "> 2hr";
             }
             return new Cell().SetBackgroundColor(WebColors.GetRGBColor(bgColor)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).SetFontColor(WebColors.GetRGBColor("#000000")).Add(new Paragraph(text));
         }

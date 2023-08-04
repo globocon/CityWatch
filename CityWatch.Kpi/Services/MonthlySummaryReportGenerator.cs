@@ -100,7 +100,7 @@ namespace CityWatch.Kpi.Services
 
             var clientSiteIds = schedule.KpiSendScheduleClientSites.Select(z => z.ClientSiteId).ToArray();
             var monthlyKpiReportData = _viewDataService.GetMonthlyKpiReportData(clientSiteIds, fromDate, toDate);
-            var totalSitePrinted = CreateSummaryTable(monthlyKpiReportData, doc, fromDate);
+            var totalSitePrinted = CreateSummaryTable(monthlyKpiReportData, doc, fromDate, schedule.IsHrTimerPaused);
 
             if (totalSitePrinted > MAX_SITES_PER_PAGE_FOR_FOOTER)
                 doc.Add(new AreaBreak());
@@ -380,7 +380,7 @@ namespace CityWatch.Kpi.Services
             doc.Add(isoV3Image);
         }
 
-        private int CreateSummaryTable(Dictionary<int, MonthlyKpiResult> monthlyKpiReportData, Document doc, DateTime fromDate)
+        private int CreateSummaryTable(Dictionary<int, MonthlyKpiResult> monthlyKpiReportData, Document doc, DateTime fromDate, bool isHrTimerPaused)
         {
             var tableWidth = UnitValue.CreatePercentArray(new float[] { 21, 8, 8, 8, 8, 8, 8, 8, 23 });
             var table = new Table(tableWidth).UseAllAvailableWidth();
@@ -420,8 +420,9 @@ namespace CityWatch.Kpi.Services
 
                     if (row == 0)
                     {
-                        table.AddCell(new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).Add(new Paragraph($"{shiftFilledVsRoster:0.00} %")));
-                        table.AddCell(new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).Add(new Paragraph($"{logReportsVsRoster:0.00} %")));
+                        table.AddCell(new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).Add(new Paragraph($"{shiftFilledVsRoster.GetValueOrDefault():0.00} %")));
+                        var logReportsVsRosterValue = isHrTimerPaused ? 0 : logReportsVsRoster.GetValueOrDefault();
+                        table.AddCell(new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).Add(new Paragraph($"{logReportsVsRosterValue:0.00} %")));
                         table.AddCell(new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(guardCompetency)));
                         table.AddCell(new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).Add(new Paragraph($"{kpiForFlir.GetValueOrDefault():0.00} %")));
                         table.AddCell(new Cell().SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).SetTextAlignment(TextAlignment.CENTER).SetPadding(0).SetFontSize(CELL_FONT_SIZE).Add(new Paragraph($"{kpiForWand.GetValueOrDefault():0.00} %")));
@@ -430,9 +431,15 @@ namespace CityWatch.Kpi.Services
                     }
                     else if (row == 1)
                     {
-                        CreateKpiStatusCell(table, shiftFilledVsRoster >= 100 ? PASS_TEXT : FAIL_TEXT, shiftFilledVsRoster >= 100 ? COLOR_PASS : COLOR_FAIL);
-                        CreateKpiStatusCell(table, uploadGuardLogEnabled ? (logReportsVsRoster >= 100 ? PASS_TEXT : FAIL_TEXT) : "N/A",
-                                                   uploadGuardLogEnabled ? (logReportsVsRoster >= 100 ? COLOR_PASS : COLOR_FAIL) : COLOR_DEFAULT);
+                        var logReportsVsRosterStatus = "N/A";
+                        var logReportsVsRosterColor = COLOR_DEFAULT;
+                        if (!isHrTimerPaused)
+                        {
+                            logReportsVsRosterStatus = uploadGuardLogEnabled ? (logReportsVsRoster.HasValue ? (logReportsVsRoster >= 100 ? PASS_TEXT : FAIL_TEXT) : "N/A") : "N/A";
+                            logReportsVsRosterColor = uploadGuardLogEnabled ? (logReportsVsRoster.HasValue ? (logReportsVsRoster >= 100 ? COLOR_PASS : COLOR_FAIL) : COLOR_DEFAULT) : COLOR_DEFAULT;
+                        }
+                        CreateKpiStatusCell(table, shiftFilledVsRoster.HasValue ? (shiftFilledVsRoster >= 100 ? PASS_TEXT : FAIL_TEXT) : "N/A", shiftFilledVsRoster.HasValue ? (shiftFilledVsRoster >= 100 ? COLOR_PASS : COLOR_FAIL) : COLOR_DEFAULT);
+                        CreateKpiStatusCell(table, logReportsVsRosterStatus, logReportsVsRosterColor);
                         CreateKpiStatusCell(table, string.Empty, string.Empty);
                         CreateKpiStatusCell(table, kpiForFlir.HasValue ? (kpiForFlir >= 100 ? PASS_TEXT : FAIL_TEXT) : "N/A", kpiForFlir.HasValue ? (kpiForFlir >= 100 ? COLOR_PASS : COLOR_FAIL) : COLOR_DEFAULT);
                         CreateKpiStatusCell(table, kpiForWand.HasValue ? (kpiForWand >= 100 ? PASS_TEXT : FAIL_TEXT) : "N/A", kpiForWand.HasValue ? (kpiForWand >= 100 ? COLOR_PASS : COLOR_FAIL) : COLOR_DEFAULT);

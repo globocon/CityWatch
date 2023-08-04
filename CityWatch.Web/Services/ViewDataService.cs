@@ -4,7 +4,6 @@ using CityWatch.Web.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -61,7 +60,7 @@ namespace CityWatch.Web.Services
         bool CheckWandIsInUse(int smartWandId, int? guardId);
         List<ClientSiteSmartWand> GetSmartWands(string siteName, int? guardId);
         List<ClientSiteSmartWand> GetClientSiteSmartWands(int clientSiteId);
-        List<GuardViewModel> GetGuards();        
+        List<GuardViewModel> GetGuards();
         List<KeyVehicleLogViewModel> GetKeyVehicleLogs(int logBookId, KvlStatusFilter kvlStatusFilter);
         List<SelectListItem> GetKeyVehicleLogFieldsByType(KvlFieldType type, bool withoutSelect = false);
         List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRego(string truckRego);
@@ -533,12 +532,14 @@ namespace CityWatch.Web.Services
         public List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRego(string truckRego)
         {
             var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
-            var profiles = _guardLogDataProvider.GetKeyVehicleLogProfiles(truckRego);
-            var kvls = _guardLogDataProvider.GetKeyVehicleLogByIds(profiles.Select(z => z.CreatedLogId).ToArray());
+            var profiles = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(truckRego);
+            var createdLogIds = profiles.Select(z => z.KeyVehicleLogProfile.CreatedLogId).Where(z => z > 0).ToArray();
+            var kvls = _guardLogDataProvider.GetKeyVehicleLogByIds(createdLogIds);
             foreach (var profile in profiles)
             {
-                profile.KeyVehicleLog = kvls.SingleOrDefault(z => z.Id == profile.CreatedLogId);
+                profile.KeyVehicleLogProfile.KeyVehicleLog = kvls.SingleOrDefault(z => z.Id == profile.KeyVehicleLogProfile.CreatedLogId);
             }
+
             return profiles.Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
         }
 

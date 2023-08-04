@@ -116,12 +116,15 @@ namespace CityWatch.Web.Pages.Guard
             try
             {
                 _guardLogDataProvider.SaveKeyVehicleLog(KeyVehicleLog);
-                var vehicleKeyLogProfile = new KeyVehicleLogProfile(KeyVehicleLog);
-                if (!_guardLogDataProvider.GetKeyVehicleLogProfiles(KeyVehicleLog.VehicleRego).Any(z => z.Equals(vehicleKeyLogProfile)))
+
+                var kvlPersonalDetail = new KeyVehicleLogVisitorPersonalDetail(KeyVehicleLog);
+                var personalDetails = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(KeyVehicleLog.VehicleRego);
+                if (!personalDetails.Any() || !personalDetails.Any(z => z.Equals(kvlPersonalDetail)))
                 {
-                    vehicleKeyLogProfile.CreatedLogId = KeyVehicleLog.Id;
-                    _guardLogDataProvider.SaveKeyVehicleLogProfile(vehicleKeyLogProfile);
+                    kvlPersonalDetail.KeyVehicleLogProfile.CreatedLogId = KeyVehicleLog.Id;
+                    _guardLogDataProvider.SaveKeyVehicleLogProfileWithPersonalDetail(kvlPersonalDetail);
                 }
+                _guardLogDataProvider.SaveKeyVehicleLogProfileNotes(KeyVehicleLog.VehicleRego, KeyVehicleLog.Notes);
             }
             catch (Exception ex)
             {
@@ -147,14 +150,30 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { status, message });
         }
 
+        public JsonResult OnPostKeyVehicleLogQuickExit(int Id)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _guardLogDataProvider.KeyVehicleLogQuickExit(Id);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+            return new JsonResult(new { status, message });
+        }
+
         public JsonResult OnGetProfileByRego(string truckRego)
         {
-           return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego).OrderBy(z => z, new KeyVehicleLogProfileViewModelComparer()));
+            return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego).OrderBy(z => z, new KeyVehicleLogProfileViewModelComparer()));
         }
 
         public JsonResult OnGetProfileById(int id)
         {
-            return new JsonResult(_guardLogDataProvider.GetKeyVehicleLogProfile(id));
+            return new JsonResult(_guardLogDataProvider.GetKeyVehicleLogProfileWithPersonalDetails(id));
         }
 
         public JsonResult OnGetClientSiteKeyDescription(int keyId, int clientSiteId)
@@ -164,7 +183,19 @@ namespace CityWatch.Web.Pages.Guard
 
         public JsonResult OnGetIsVehicleOnsite(int logbookId, string vehicleRego)
         {
-            return new JsonResult(_viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open).Any(x => x.Detail.VehicleRego == vehicleRego));
+            var isOpenInThisSite = _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open).Any(x => x.Detail.VehicleRego == vehicleRego);
+            if (isOpenInThisSite)
+                return new JsonResult(new { status = 1 });
+
+            var keyVehicleLogFromOtherSite = _guardLogDataProvider.GetOpenKeyVehicleLogsByVehicleRego(vehicleRego)
+                    .Where(z => z.ClientSiteLogBookId != logbookId)
+                    .FirstOrDefault();
+
+            if (keyVehicleLogFromOtherSite != null)
+                return new JsonResult(new { status = 2, clientSite = keyVehicleLogFromOtherSite.ClientSiteLogBook.ClientSite.Name });
+
+
+            return new JsonResult(new { status = 0});
         }
 
         public JsonResult OnGetIsKeyAllocated(int logbookId, string keyNo)
@@ -242,13 +273,13 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(_guardLogDataProvider.GetVehicleRegos(regoPart).ToList());
         }
 
-        public async Task<JsonResult> OnPostGenerateManualDocket(int id, ManualDocketReason option, string otherReason, string stakeholderEmails, int clientSiteId,string blankNoteOnOrOff)
+        public async Task<JsonResult> OnPostGenerateManualDocket(int id, ManualDocketReason option, string otherReason, string stakeholderEmails, int clientSiteId)
         {
             var fileName = string.Empty;
 
             try
             {
-                fileName = _keyVehicleLogDocketGenerator.GeneratePdfReport(id, GetManualDocketReason(option, otherReason), blankNoteOnOrOff);
+                fileName = _keyVehicleLogDocketGenerator.GeneratePdfReport(id, GetManualDocketReason(option, otherReason));
             }
             catch (Exception ex)
             {
@@ -356,26 +387,30 @@ namespace CityWatch.Web.Pages.Guard
         {
             var success = true;
             var message = "success";
+            int kvlProfileId = 0;
             try
             {
                 if (id == 0 || string.IsNullOrEmpty(personName))
                     throw new ArgumentNullException("Invalid parameters");
 
-                var vehicleKeyLogProfile = _guardLogDataProvider.GetKeyVehicleLogProfile(id);
-
-                if (_guardLogDataProvider.GetKeyVehicleLogProfiles(vehicleKeyLogProfile.VehicleRego, personName).Any())
+                var vehicleKeyLogProfile = _guardLogDataProvider.GetKeyVehicleLogProfileWithPersonalDetails(id);
+                if (_guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(vehicleKeyLogProfile.KeyVehicleLogProfile.VehicleRego, personName).Any())
                     throw new ApplicationException("Visitor profile with same detials already exists");
 
-                vehicleKeyLogProfile.Id = 0;
-                vehicleKeyLogProfile.PersonName = personName;
-                _guardLogDataProvider.SaveKeyVehicleLogProfile(vehicleKeyLogProfile);
+                kvlProfileId = _guardLogDataProvider.SaveKeyVehicleLogVisitorPersonalDetail(new KeyVehicleLogVisitorPersonalDetail()
+                {
+                    ProfileId = vehicleKeyLogProfile.ProfileId,
+                    CompanyName = vehicleKeyLogProfile.CompanyName,
+                    PersonType = vehicleKeyLogProfile.PersonType,
+                    PersonName = personName
+                });
             }
             catch (Exception ex)
             {
                 success = false;
                 message = ex.Message;
             }
-            return new JsonResult(new { success, message });
+            return new JsonResult(new { success, message, kvlProfileId });
         }
 
         private async Task UploadToDropbox(int clientSiteId, string fileName)

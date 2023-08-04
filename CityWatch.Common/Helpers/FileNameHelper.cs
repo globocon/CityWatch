@@ -15,5 +15,17 @@ namespace CityWatch.Common.Helpers
 
             return fileNamePart;
         }
+
+        public static string GetSanitizedDropboxFileNamePart(string fileNamePart)
+        {
+            if (!string.IsNullOrEmpty(fileNamePart))
+            {
+                char[] invalidChars = new char[] { ']', '[' };
+                foreach (var item in invalidChars)
+                    fileNamePart = fileNamePart.Replace(item, '_');
+            }
+
+            return fileNamePart;
+        }
     }
 }
