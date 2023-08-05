@@ -94,7 +94,6 @@ namespace CityWatch.Web.Pages.Guard
                         IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), keyVehicleLogInDb.ReportReference?.ToString())
                         .ToList();
                     ViewData["KeyVehicleLog_Keys"] = _viewDataService.GetKeyVehicleLogKeys(keyVehicleLogInDb).ToList();
-                    ViewData["KeyVehicleLog_AuditHistory"] = _viewDataService.GetKeyVehicleLogAuditHistory(keyVehicleLogInDb.VehicleRego).ToList();
                 }
             }
 

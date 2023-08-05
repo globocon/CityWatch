@@ -31,6 +31,9 @@ namespace CityWatch.Data.Models
 
         public DateTime AuditTime { get; set; }
 
+        [NotMapped]
+        public string AuditTimeString { get { return AuditTime.ToString("dd MMM yyyy @ HH:mmm"); } }
+
         public string AuditMessage { get; set; }
 
         public bool IsCreate { get; set; }

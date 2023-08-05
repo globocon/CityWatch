@@ -432,6 +432,8 @@ $(function () {
             $('#Sender').val(result.sender);
             $('#lblIsSender').text(result.isSender ? 'Sender' : 'Reciever');
             $('#cbIsSender').prop('checked', result.isSender);
+
+            loadAuditHistory(result.keyVehicleLogProfile.vehicleRego);
         });
         $('#kvl-profiles-modal').modal('hide');
     }
@@ -494,14 +496,24 @@ $(function () {
         });
     }
 
+    let gridAuditHistory;   
+    function loadAuditHistory(item) {
+        $.ajax({
+            url: '/Guard/KeyVehicleLog?handler=AuditHistory&vehicleRego=' + item,
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (result) {
+            $('#key_vehicle_log_audit_history').DataTable().clear().rows.add(result).draw();
+        });
+    }
+
     function bindKvlPopupEvents(isEdit) {
 
         if (!isEdit) {
             $('#IsTimeSlotNo').val(true);
             $('#cbIsTimeSlotNo').prop('checked', true);
             $('#IsSender').val(true);
-            $('#cbIsSender').prop('checked', true);
-            getAuditHistory($('#VehicleRego').val());
+            $('#cbIsSender').prop('checked', true);            
         }
         else {
             let isTimeSlot = $('#IsTimeSlotNo').val().toLowerCase() === 'true';
@@ -511,6 +523,7 @@ $(function () {
             let isSender = $('#IsSender').val().toLowerCase() === 'true';
             $('#lblIsSender').text(isSender ? 'Sender' : 'Reciever');
             $('#cbIsSender').prop('checked', isSender);
+            loadAuditHistory($('#VehicleRego').val());
         }
 
         $('#cbIsTimeSlotNo').on('change', function () {
@@ -925,32 +938,26 @@ $(function () {
                             $('#kvl-profiles-modal').modal('show');
                         }
                     });
-                }
-                getAuditHistory(item);
+                }                
             }
-        });
-
-        function getAuditHistory(item) {
-            $.ajax({
-                url: '/Guard/KeyVehicleLog?handler=AuditHistory&vehicleRego=' + item,
-                type: 'GET',
-                dataType: 'json',
-            }).done(function (result) {
-                gridAuditHistory.clear().rows.add(result).draw();
+        });        
+        
+        if (!gridAuditHistory) {
+            $('#key_vehicle_log_audit_history').DataTable({
+                autoWidth: false,
+                paging: true,
+                ordering: false,
+                info: false,
+                searching: false,
+                pageLength: 10,
+                data: [],
+                columns: [
+                    { data: 'auditTimeString', width: '32%' },
+                    { data: 'guardLogin.guard.initial', width: '15%' },
+                    { data: 'auditMessage' },
+                ],
             });
         }
-        let gridAuditHistory = $('#key_vehicle_log_audit_history').DataTable({
-            paging: true,
-            ordering: false,
-            info: false,
-            searching: false,
-            data: [],
-            columns: [
-                { data: 'auditTime' },
-                { data: 'guardLogin.guard.initial' },
-                { data: 'auditMessage' },
-            ],
-        });
     }
 
     /****** Key Vehicle Log Profile in Audit Site Log *******/

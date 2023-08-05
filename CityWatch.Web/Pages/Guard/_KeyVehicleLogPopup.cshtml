@@ -24,7 +24,6 @@
         var kvlAttachmentsCount = kvlAttachments != null ? kvlAttachments.Count : 0;
         var kvlKeys = ViewData["KeyVehicleLog_Keys"] as List<ClientSiteKey>;
         var kvlKeysCount = kvlKeys != null ? kvlKeys.Count : 0;
-        var kvlAuditHistory = ViewData["KeyVehicleLog_AuditHistory"] as List<KeyVehicleLogAuditHistory>;
     }
     <div class="row">
         <div class="col-md-6 border-right">            
@@ -358,18 +357,7 @@
                                             <th width="15%">Guard Initial</th>
                                             <th width="50%">Audit Message</th>
                                         </tr>
-                                    </thead>
-                                    @if (kvlAuditHistory != null)
-                                    {
-                                        foreach (var auditHistory in kvlAuditHistory)
-                                        {
-                                            <tr>
-                                                <td>@auditHistory.AuditTime.ToString("dd MMM yyyy @ HH:mm")</td>
-                                                <td>@auditHistory.GuardLogin.Guard.Initial</td>
-                                                <td>@auditHistory.AuditMessage</td>
-                                            </tr>
-                                        }
-                                    }
+                                    </thead>                                    
                                 </table>
                             }
                         </div>
