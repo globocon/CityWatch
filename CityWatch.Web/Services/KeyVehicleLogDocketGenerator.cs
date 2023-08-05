@@ -31,7 +31,7 @@ namespace CityWatch.Web.Services
 
     public interface IKeyVehicleLogDocketGenerator
     {
-        string GeneratePdfReport(int keyVehicleLogId, string docketReason);
+        string GeneratePdfReport(int keyVehicleLogId, string docketReason, string serialNo);
     }
     public class KeyVehicleLogDocketGenerator : IKeyVehicleLogDocketGenerator
     {
@@ -61,16 +61,18 @@ namespace CityWatch.Web.Services
             _settings = settings.Value;
         }
 
-        public string GeneratePdfReport(int keyVehicleLogId, string docketReason)
+        public string GeneratePdfReport(int keyVehicleLogId, string docketReason, string serialNo)
         {
             var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(keyVehicleLogId);
+
+            _guardLogDataProvider.SaveDocketSerialNo(keyVehicleLogId, serialNo);
 
             if (keyVehicleLog == null)
                 return string.Empty;
 
             var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
             var keyVehicleLogViewModel = new KeyVehicleLogViewModel(keyVehicleLog, kvlFields);
-            var reportPdfPath = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{DateTime.Today:yyyyMMdd}_KeyVehicleLog_{keyVehicleLogId}_ManualDocket.pdf");
+            var reportPdfPath = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{keyVehicleLog.GuardLogin.ClientSite.Name}_SN{serialNo}.pdf");
 
             if (IO.File.Exists(reportPdfPath))
                 IO.File.Delete(reportPdfPath);
@@ -127,7 +129,7 @@ namespace CityWatch.Web.Services
 
         private static Table CreateSiteDetailsTable(KeyVehicleLog keyVehicleLog)
         {
-            var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 5, 43, 10, 25, 5, 15 })).UseAllAvailableWidth().SetMarginTop(10);
+            var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 5, 40, 10, 23, 5, 8, 4, 8 })).UseAllAvailableWidth().SetMarginTop(10);
 
             siteDataTable.AddCell(GetSiteHeaderCell("Site:"));
             var siteName = new Cell()
@@ -144,6 +146,9 @@ namespace CityWatch.Web.Services
 
             siteDataTable.AddCell(GetSiteHeaderCell("Guard Intials"));
             siteDataTable.AddCell(GetSiteValueCell(keyVehicleLog.GuardLogin.Guard.Initial ?? string.Empty));
+
+            siteDataTable.AddCell(GetSiteHeaderCell("S/No:"));
+            siteDataTable.AddCell(GetSiteValueCell(keyVehicleLog.DocketSerialNo ?? string.Empty));
 
             return siteDataTable;
         }
