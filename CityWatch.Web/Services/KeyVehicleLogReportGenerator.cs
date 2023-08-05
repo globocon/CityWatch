@@ -72,6 +72,9 @@ namespace CityWatch.Web.Services
 
             var keyVehicleLogs = _viewDataService.GetKeyVehicleLogs(clientSiteLogBookId, kvlStatusFilter);
 
+            if (keyVehicleLogs.Count == 0)
+                return string.Empty;
+
             return GeneratePdf(clientsiteLogBook, keyVehicleLogs);
         }
 
