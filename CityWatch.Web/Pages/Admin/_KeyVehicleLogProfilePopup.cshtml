@@ -5,6 +5,9 @@
 <form id="frm_edit_kvl_profile">
     <input type="hidden" asp-for="@Model.Id" />
     <input type="hidden" asp-for="@Model.KeyVehicleLogProfile.Id" />
+    @{
+        var kvlAuditHistory = ViewData["KeyVehicleLog_AuditHistory"] as List<KeyVehicleLogAuditHistory>;
+    }
     <div class="row">
         <div class="col-md-6 border-right">
             <div class="form-row">
@@ -89,10 +92,53 @@
                     <select class="form-control" id="list_product_profile" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.ProductType, true)"></select>
                 </div>
             </div>
-            <div class="form-row">
-                <div class="form-group col-md-12">
-                    <label>Notes</label>
-                    <textarea class="form-control" rows="5" maxlength="4096" asp-for="@Model.KeyVehicleLogProfile.Notes"></textarea>
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="kvl-notes-tab" data-toggle="tab" data-target="#kvl-notes" role="tab" aria-controls="kvl-notes" aria-selected="true">
+                        <i class="fa fa-pencil-square-o mr-2"></i>Notes
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="kvl-auditlog-tab" data-toggle="tab" data-target="#kvl-auditlog" role="tab" aria-controls="kvl-auditlog" aria-selected="false">
+                        <i class="fa fa-history mr-2"></i>
+                        Audit Log
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane fade show active p-2" id="kvl-notes" role="tabpanel" aria-labelledby="kvl-notes-tab">
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <label>Notes</label>
+                            <textarea class="form-control" rows="5" maxlength="4096" asp-for="@Model.KeyVehicleLogProfile.Notes"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade p-2" id="kvl-auditlog" role="tabpanel" aria-labelledby="kvl-auditlog-tab">
+                <div class="row">
+                    <div class="col-md-12">
+                        <table class="table table-bordered table-sm" width="100%" id="key_vehicle_log_audit_history">
+                            <thead>
+                                <tr>
+                                    <th width="35%">Audit Date</th>
+                                    <th width="15%">Guard Initial</th>
+                                    <th width="50%">Audit Message</th>
+                                </tr>
+                            </thead>
+                            @if (kvlAuditHistory != null)
+                            {
+                                foreach (var auditHistory in kvlAuditHistory)
+                                {
+                                    <tr>
+                                        <td>@auditHistory.AuditTime.ToString("dd MMM yyyy @ HH:mm")</td>
+                                        <td>@auditHistory.GuardLogin.Guard.Initial</td>
+                                        <td>@auditHistory.AuditMessage</td>
+                                    </tr>
+                                }
+                            }
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

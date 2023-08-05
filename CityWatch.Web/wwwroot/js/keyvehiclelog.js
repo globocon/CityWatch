@@ -501,6 +501,7 @@ $(function () {
             $('#cbIsTimeSlotNo').prop('checked', true);
             $('#IsSender').val(true);
             $('#cbIsSender').prop('checked', true);
+            getAuditHistory($('#VehicleRego').val());
         }
         else {
             let isTimeSlot = $('#IsTimeSlotNo').val().toLowerCase() === 'true';
@@ -925,7 +926,30 @@ $(function () {
                         }
                     });
                 }
+                getAuditHistory(item);
             }
+        });
+
+        function getAuditHistory(item) {
+            $.ajax({
+                url: '/Guard/KeyVehicleLog?handler=AuditHistory&vehicleRego=' + item,
+                type: 'GET',
+                dataType: 'json',
+            }).done(function (result) {
+                gridAuditHistory.clear().rows.add(result).draw();
+            });
+        }
+        let gridAuditHistory = $('#key_vehicle_log_audit_history').DataTable({
+            paging: true,
+            ordering: false,
+            info: false,
+            searching: false,
+            data: [],
+            columns: [
+                { data: 'auditTime' },
+                { data: 'guardLogin.guard.initial' },
+                { data: 'auditMessage' },
+            ],
         });
     }
 
