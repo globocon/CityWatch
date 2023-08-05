@@ -76,8 +76,8 @@ namespace CityWatch.Web.Pages.Guard
         public JsonResult OnGetKeyVehicleLogs(int logbookId, KvlStatusFilter kvlStatusFilter)
         {
             var results = _viewDataService.GetKeyVehicleLogs(logbookId, kvlStatusFilter)
-                .OrderByDescending(z => z.Detail.Id)
-                .ThenByDescending(z => z.Detail.EntryTime);
+                .OrderByDescending(z => z.Detail.EntryTime)
+                .ThenByDescending(z => z.Detail.Id);
             return new JsonResult(results);
         }
 
