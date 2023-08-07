@@ -1179,7 +1179,7 @@
             dataType: 'json'
         }).done(function (data) {
             
-            for (var i = 0; i <= data.length; i++) {
+            for (var i = 0; i < data.length; i++) {
                 $('#txt_CompanyId').val(data[i].id);
                 $('#txt_CompanyName').val(data[i].name);
                 $("#txt_CompanyDomain").val(data[i].domain);
