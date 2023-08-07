@@ -23,6 +23,7 @@ namespace CityWatch.Data.Providers
         List<IncidentReportPosition> GetPositions();
         void SavePostion(IncidentReportPosition incidentReportPosition);
         void DeletePosition(int id);
+        void CrPrimaryLogoUpload(DateTime dateTimeUploaded, string primaryLogoPath);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -229,6 +230,14 @@ namespace CityWatch.Data.Providers
                 throw new InvalidOperationException();
 
             _context.IncidentReportPositions.Remove(positionToDelete);
+            _context.SaveChanges();
+        }
+         
+        public void CrPrimaryLogoUpload(DateTime dateTimeUploaded, string primaryLogoPath)
+        {
+            var templateToUpdate = _context.CompanyDetails.Single();
+            templateToUpdate.PrimaryLogoUploadedOn = dateTimeUploaded;
+            templateToUpdate.PrimaryLogoPath= primaryLogoPath;
             _context.SaveChanges();
         }
     }

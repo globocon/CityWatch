@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
 
 namespace CityWatch.Data.Providers
 {
@@ -17,6 +18,7 @@ namespace CityWatch.Data.Providers
         void DeleteClientType(int id);
         List<ClientSite> GetClientSites(int? typeId);
         void SaveClientSite(ClientSite clientSite);
+        void SaveCompanyDetails(CompanyDetails companyDetails);
         void DeleteClientSite(int id);
         List<ClientSiteKpiSetting> GetClientSiteKpiSettings();
         ClientSiteKpiSetting GetClientSiteKpiSetting(int clientSiteId);
@@ -201,7 +203,7 @@ namespace CityWatch.Data.Providers
 
             if (entityState == EntityState.Modified)
             {
-                _context.ClientSiteDayKpiSettings.UpdateRange(setting.ClientSiteDayKpiSettings);                
+                _context.ClientSiteDayKpiSettings.UpdateRange(setting.ClientSiteDayKpiSettings);
                 _context.SaveChanges();
             }
         }
@@ -217,7 +219,7 @@ namespace CityWatch.Data.Providers
             {
                 _context.ClientSiteKpiNotes.Add(note);
             }
-            else 
+            else
             {
                 var noteToUpdate = _context.ClientSiteKpiNotes.SingleOrDefault(z => z.Id == note.Id);
                 if (noteToUpdate != null)
@@ -233,7 +235,7 @@ namespace CityWatch.Data.Providers
         {
             return _context.ClientSiteLogBooks
                 .Include(x => x.ClientSite)
-                .Include(x => x.ClientSite.ClientType)                
+                .Include(x => x.ClientSite.ClientType)
                 .ToList();
         }
 
@@ -260,7 +262,7 @@ namespace CityWatch.Data.Providers
             {
                 var logBookToUpdate = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == logBook.Id);
                 if (logBookToUpdate != null)
-                { 
+                {
                     // nothing to update
                 }
             }
@@ -302,6 +304,43 @@ namespace CityWatch.Data.Providers
             {
 
             }
+        }
+
+
+        public void SaveCompanyDetails(CompanyDetails companyDetails)
+        {
+            if (companyDetails.Id == 0)
+            {
+                companyDetails.LastUploaded = DateTime.Now;
+                companyDetails.PrimaryLogoUploadedOn = DateTime.Now;
+                companyDetails.HomePageMessageUploadedOn = DateTime.Now;
+                companyDetails.BannerMessageUploadedOn = DateTime.Now;
+                companyDetails.EmailMessageUploadedOn = DateTime.Now;
+
+                _context.CompanyDetails.Add(companyDetails);
+            }
+            else
+            {
+                var templateToUpdate = _context.CompanyDetails.SingleOrDefault(x => x.Id == companyDetails.Id);
+                if (templateToUpdate != null)
+                {
+                    templateToUpdate.Name = companyDetails.Name;
+                    templateToUpdate.Domain = companyDetails.Domain;
+                    templateToUpdate.LastUploaded = DateTime.Now;
+                    templateToUpdate.PrimaryLogoUploadedOn = DateTime.Now;
+                    templateToUpdate.PrimaryLogoPath = companyDetails.PrimaryLogoPath;
+                    templateToUpdate.HomePageMessage = companyDetails.HomePageMessage;
+                    templateToUpdate.MessageBarColour = companyDetails.MessageBarColour;
+                    templateToUpdate.HomePageMessageUploadedOn = DateTime.Now;
+                    templateToUpdate.BannerLogoPath = companyDetails.BannerLogoPath;
+                    templateToUpdate.BannerMessage = companyDetails.BannerMessage;
+                    templateToUpdate.BannerMessageUploadedOn = DateTime.Now;
+                    templateToUpdate.Hyperlink = companyDetails.Hyperlink;
+                    templateToUpdate.EmailMessage = companyDetails.EmailMessage;
+                    templateToUpdate.EmailMessageUploadedOn = DateTime.Now;
+                }
+            }
+            _context.SaveChanges();
         }
     }
 }

@@ -85,7 +85,7 @@ namespace CityWatch.Web.Services
             doc.Add(CreateSiteDetailsTable(keyVehicleLog));
             doc.Add(CreateReportDetailsTable(keyVehicleLogViewModel));
             doc.Add(GetKeyAndOtherDetailsTable(keyVehicleLogViewModel));
-            doc.Add(GetCustomerRefAndWviTable(keyVehicleLogViewModel));
+            doc.Add(GetCustomerRefAndVwiTable(keyVehicleLogViewModel));
             doc.Add(CreateWeightandOtherDetailsTable(keyVehicleLogViewModel, docketReason));
 
             doc.Close();
@@ -376,7 +376,7 @@ namespace CityWatch.Web.Services
             return reelsDetailsTable;
         }
 
-        private static Table GetCustomerRefAndWviTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        private static Table GetCustomerRefAndVwiTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
         {
             var outerTable = new Table(UnitValue.CreatePercentArray(new float[] { 50, 50 })).UseAllAvailableWidth().SetMarginTop(10);
 
@@ -387,12 +387,12 @@ namespace CityWatch.Web.Services
                                     .Add(GetCustomerRefTable(keyVehicleLogViewModel));
             outerTable.AddCell(cellCustomerRef);
 
-            var cellWviDetails = new Cell()
+            var cellVwiDetails = new Cell()
                                     .SetPaddingRight(0)
                                     .SetPaddingTop(0)
                                     .SetBorder(Border.NO_BORDER)
-                                    .Add(GetWviDetailsTable(keyVehicleLogViewModel));
-            outerTable.AddCell(cellWviDetails);
+                                    .Add(GetVwiDetailsTable(keyVehicleLogViewModel));
+            outerTable.AddCell(cellVwiDetails);
 
             return outerTable;
         }
@@ -408,15 +408,15 @@ namespace CityWatch.Web.Services
             return customerRefTable;
         }
 
-        private static Table GetWviDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        private static Table GetVwiDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
         {
-            var wviDetailsTable = new Table(1).UseAllAvailableWidth();
+            var vwiDetailsTable = new Table(1).UseAllAvailableWidth();
 
-            wviDetailsTable.AddCell(GetHeaderCell("WVI", textAlignment: TextAlignment.LEFT));
+            vwiDetailsTable.AddCell(GetHeaderCell("VWI", textAlignment: TextAlignment.LEFT));
 
-            wviDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Wvi, textAlignment: TextAlignment.LEFT));
+            vwiDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Vwi, textAlignment: TextAlignment.LEFT));
             
-            return wviDetailsTable;
+            return vwiDetailsTable;
         }
 
         private Table GetWeightDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)

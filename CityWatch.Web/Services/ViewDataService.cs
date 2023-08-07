@@ -50,6 +50,8 @@ namespace CityWatch.Web.Services
         List<SelectListItem> GetUserClientSites(string types = "");        
         List<object> GetAllUsersClientSiteAccess();
         List<object> GetUserClientSiteAccess(int userId);
+        List<object> GetAllCoreSettings(int companyId);
+
         List<ClientType> GetUserClientTypesHavingAccess(int? userId);
         List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm);
         DataTable PatrolDataToDataTable(List<DailyPatrolData> dailyPatrolData);
@@ -58,7 +60,7 @@ namespace CityWatch.Web.Services
         bool CheckWandIsInUse(int smartWandId, int? guardId);
         List<ClientSiteSmartWand> GetSmartWands(string siteName, int? guardId);
         List<ClientSiteSmartWand> GetClientSiteSmartWands(int clientSiteId);
-        List<GuardViewModel> GetGuards();        
+        List<GuardViewModel> GetGuards();
         List<KeyVehicleLogViewModel> GetKeyVehicleLogs(int logBookId, KvlStatusFilter kvlStatusFilter);
         List<SelectListItem> GetKeyVehicleLogFieldsByType(KvlFieldType type, bool withoutSelect = false);
         List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRego(string truckRego);
@@ -324,7 +326,43 @@ namespace CityWatch.Web.Services
             }
             return results;
         }
+        public List<object> GetAllCoreSettings(int companyId)
+        {
+            var results = new List<object>();
+            var coreSettings = _userDataProvider.GetCompanyDetails();
+            var currUserAccess = coreSettings.Where(x => x.Id == companyId);
+            foreach (var company in currUserAccess)
+            {
+                
 
+                results.Add(new
+                {
+                    company.Id,
+                    company.Name,
+                    company.Domain,
+                    company.LastUploaded,
+                    company.FormattedLastUploaded,
+                    company.PrimaryLogoPath,
+                    company.PrimaryLogoUploadedOn,
+                    company.FormattedPrimaryLogoUploaded,
+                    company.HomePageMessage,
+                    company.MessageBarColour,
+                    company.HomePageMessageUploadedOn,
+                    company.FormattedHomePageMessageUploaded,
+                    company.BannerMessage,
+                    company.Hyperlink,
+                    company.BannerMessageUploadedOn,
+                    company.FormattedBannerMessageUploaded,
+                    company.EmailMessage,
+                    company.EmailMessageUploadedOn,
+                    company.FormattedEmailMessageUploaded,
+                    company.BannerLogoPath,
+
+
+                });
+            }
+            return results;
+        }
         public List<object> GetUserClientSiteAccess(int userId)
         {
             var results = new List<object>();
@@ -494,12 +532,14 @@ namespace CityWatch.Web.Services
         public List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRego(string truckRego)
         {
             var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
-            var profiles = _guardLogDataProvider.GetKeyVehicleLogProfiles(truckRego);
-            var kvls = _guardLogDataProvider.GetKeyVehicleLogByIds(profiles.Select(z => z.CreatedLogId).ToArray());
+            var profiles = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(truckRego);
+            var createdLogIds = profiles.Select(z => z.KeyVehicleLogProfile.CreatedLogId).Where(z => z > 0).ToArray();
+            var kvls = _guardLogDataProvider.GetKeyVehicleLogByIds(createdLogIds);
             foreach (var profile in profiles)
             {
-                profile.KeyVehicleLog = kvls.SingleOrDefault(z => z.Id == profile.CreatedLogId);
+                profile.KeyVehicleLogProfile.KeyVehicleLog = kvls.SingleOrDefault(z => z.Id == profile.KeyVehicleLogProfile.CreatedLogId);
             }
+
             return profiles.Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
         }
 

@@ -9,6 +9,7 @@ namespace CityWatch.Data.Providers
     public interface IUserDataProvider
     {
         List<User> GetUsers(bool includeAdminUsers = false);
+        List<CompanyDetails> GetCompanyDetails();
         void SaveUser(User user);
         void UpdateUserStatus(int id, bool deleted);
         List<UserClientSiteAccess> GetUserClientSiteAccess(int? userId);
@@ -68,6 +69,10 @@ namespace CityWatch.Data.Providers
             var userToDelete = _context.Users.SingleOrDefault(x => x.Id == id) ?? throw new InvalidOperationException();
             userToDelete.IsDeleted = deleted;
             _context.SaveChanges();
+        }
+        public List<CompanyDetails> GetCompanyDetails()
+        {
+            return _context.CompanyDetails.ToList();
         }
     }
 }

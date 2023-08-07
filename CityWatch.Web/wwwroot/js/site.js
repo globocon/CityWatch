@@ -1160,7 +1160,176 @@
     }
 
     const showModal = function (message) {
+        
         $('#msg-modal .modal-body p').html(message);
         $('#msg-modal').modal();
-    }      
+    }   
+    /*****C4i Core Settings *****/
+   
+    getC4Settings();
+    
+    
+    function getC4Settings() {
+
+        const option = 1;
+       
+        $.ajax({
+            url: '/Admin/Settings?handler=CoreSettings&companyId=' + option,
+            type: 'GET',
+            dataType: 'json'
+        }).done(function (data) {
+            
+            for (var i = 0; i <= data.length; i++) {
+                $('#txt_CompanyId').val(data[i].id);
+                $('#txt_CompanyName').val(data[i].name);
+                $("#txt_CompanyDomain").val(data[i].domain);
+                $("#txt_HomePageMessage").val(data[i].homePageMessage);
+                $("#txt_color").val(data[i].messageBarColour);
+                $("#txt_BannerMessage").val(data[i].bannerMessage);
+                $("#txt_HyplerLink").val(data[i].hyperlink);
+                $("#txt_EmailMessage").val(data[i].emailMessage);
+                $("#img_PrimaryLogo").attr('src', data[i].primaryLogoPath);
+                $("#img_BannerLogo").attr('src', data[i].bannerLogoPath);
+            }
+            
+           
+            data.map(function (clientType) {
+                $('#sel_client_type').append('<option value="' + clientType.id + '">' + clientType.name + '</option>');
+            });
+            
+        });
+    }
+    
+       
+        $('#cr_primarylogo_upload').on('change', function () {
+            
+            const file = $(this).get(0).files.item(0);
+            const fileExtn = file.name.split('.').pop();
+            // if (!fileExtn || fileExtn !== 'jpg' || fileExtn !=='JPG' || fileExtn !=='jpeg' || fileExtn !=='JPEG') {
+            if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'png' && fileExtn !== 'PNG' && fileExtn !== 'GIF' && fileExtn !== 'gif')) {
+                showModal('Unsupported file type. Please upload a .jpg/.jpeg file');
+                return false;
+            }
+            const prlogopath = $("#img_PrimaryLogo").prop('src');
+            const fileForm = new FormData();
+            fileForm.append('file', file);
+            fileForm.append('prlogopath', prlogopath);
+            $.ajax({
+                url: '/Admin/Settings?handler=CrPrimaryLogoUpload',
+                type: 'POST',
+                data: fileForm,
+                processData: false,
+                contentType: false,
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+            }).done(function (data) {
+                
+                if (data.success)
+                    
+                    var result = prlogopath.lastIndexOf("/");
+                var newfile = data.filepath;
+                var result1 = newfile.lastIndexOf("/");
+                var substr = prlogopath.substring(0, result + 1);
+                
+                var substr2 = newfile.substring( result1 + 1);
+                substr = substr + "cr_primarylogo.JPG";
+                $("#img_PrimaryLogo").attr('src', substr);
+                
+            }).fail(function () {
+                showStatusNotification(false, 'Something went wrong');
+            }).always(function () {
+              
+            });
+        });
+        
+    
+   
+    $('#cr_bannerlogo_upload').on('change', function () {
+        
+        const file = $(this).get(0).files.item(0);
+        const fileExtn = file.name.split('.').pop();
+        // if (!fileExtn || fileExtn !== 'jpg' || fileExtn !=='JPG' || fileExtn !=='jpeg' || fileExtn !=='JPEG') {
+        if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'png' && fileExtn !== 'PNG' && fileExtn !== 'GIF' && fileExtn !== 'gif')) {
+            showModal('Unsupported file type. Please upload a .jpg/.jpeg file');
+            return false;
+        }
+        const prlogopath = $("#img_BannerLogo").prop('src');
+        const fileForm = new FormData();
+        fileForm.append('file', file);
+        fileForm.append('prlogopath', prlogopath);
+        $.ajax({
+            url: '/Admin/Settings?handler=CrBinaryLogoUpload',
+            type: 'POST',
+            data: fileForm,
+            processData: false,
+            contentType: false,
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+        }).done(function (data) {
+            
+            if (data.success)
+
+                var result = prlogopath.lastIndexOf("/");
+            var newfile = data.filepath;
+            var result1 = newfile.lastIndexOf("/");
+            var substr = prlogopath.substring(0, result + 1);
+
+            var substr2 = newfile.substring(result1 + 1);
+            substr = substr + "cr_bannerlogo.JPG";
+            $("#img_BannerLogo").attr('src', substr);
+            
+            
+            
+        }).fail(function () {
+            showStatusNotification(false, 'Something went wrong');
+        }).always(function () {
+            
+        });
+    });
+  
+
+ 
+  
+    $("#btn_CompanySave").on("click", function () {
+        
+        var companyId = parseInt($("#txt_CompanyId").val());
+        if (ValidateCompany(true)) {
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            var obj = {
+                Id: companyId,
+                Name: $("#txt_CompanyName").val(),
+                Domain: $("#txt_CompanyDomain").val(),
+                PrimaryLogoPath: $("#img_PrimaryLogo").prop('src'),
+                BannerLogoPath: $("#img_BannerLogo").prop('src'),
+                HomePageMessage: $("#txt_HomePageMessage").val(),
+                MessageBarColour: $("#txt_color").val(),
+                BannerMessage: $("#txt_BannerMessage").val(),
+                Hyperlink: $("#txt_HyplerLink").val(),
+                EmailMessage: $("#txt_EmailMessage").val()
+            }
+            $.ajax({
+                url: '/Admin/Settings?handler=CompanyDetails',
+                data: {'company':obj},
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function (result) {
+                if (result.status) {
+                    if (result.message !== '') {
+                        getC4Settings();
+                        showStatusNotification(true, 'Company details modified successfully');
+                        
+                    }
+                   
+                } else {
+                    displayGuardValidationSummary(result.message);
+                }
+            });
+        }
+    });
+    function ValidateCompany() {
+        
+        if ($("#txt_CompanyName").val() == "") {
+            showModal('Company name is required');
+            return false;
+        }
+        return true;
+    }
 });

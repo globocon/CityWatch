@@ -25,7 +25,7 @@ namespace CityWatch.Kpi.Services
 {
     public interface IReportGenerator
     {
-        string GeneratePdfReport(int clientSiteId, DateTime fromDate, DateTime toDate);
+        string GeneratePdfReport(int clientSiteId, DateTime fromDate, DateTime toDate, bool isHrTimerPaused = false);
     }
 
     public class ReportGenerator : IReportGenerator
@@ -72,7 +72,7 @@ namespace CityWatch.Kpi.Services
                 IO.Directory.CreateDirectory(_graphImageRootDir);
         }
 
-        public string GeneratePdfReport(int clientSiteId, DateTime fromDate, DateTime toDate)
+        public string GeneratePdfReport(int clientSiteId, DateTime fromDate, DateTime toDate, bool isHrTimerPaused)
         {
             var _clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(clientSiteId);
             if (_clientSiteKpiSetting == null)
@@ -90,7 +90,7 @@ namespace CityWatch.Kpi.Services
             doc.Add(headerTable);
 
             var monthlyData = _viewDataService.GetKpiReportData(_clientSiteKpiSetting.ClientSiteId, fromDate, toDate);
-            var tableData = CreateReportData(_clientSiteKpiSetting, fromDate, monthlyData.DailyKpiResults);
+            var tableData = CreateReportData(_clientSiteKpiSetting, fromDate, monthlyData.DailyKpiResults, isHrTimerPaused);
             CreateReportDataSummary(tableData, monthlyData);
             var tableSiteStats = CreateSiteStatsData(_clientSiteKpiSetting, monthlyData, fromDate);
             
@@ -242,7 +242,7 @@ namespace CityWatch.Kpi.Services
             return headerTable;
         }
 
-        private Table CreateReportData(ClientSiteKpiSetting clientSiteKpiSetting, DateTime fromDate, List<DailyKpiResult> dailyKpiResults)
+        private Table CreateReportData(ClientSiteKpiSetting clientSiteKpiSetting, DateTime fromDate, List<DailyKpiResult> dailyKpiResults, bool isHrTimerPaused)
         {
             var colWidth = new float[] { 2, 10, 8, 8, 9, 9, 9, 9, 12, 8, 8, 8 };
             var table = new Table(UnitValue.CreatePercentArray(colWidth)).UseAllAvailableWidth();
@@ -251,7 +251,7 @@ namespace CityWatch.Kpi.Services
                         
             foreach (var item in dailyKpiResults)
             {
-                CreateDataRow(table, item, clientSiteKpiSetting);
+                CreateDataRow(table, item, clientSiteKpiSetting, isHrTimerPaused);
             }
 
             return table;
@@ -356,7 +356,7 @@ namespace CityWatch.Kpi.Services
             table.AddCell(CreateHeaderCell("FIRE or ALARMS"));
         }
 
-        private void CreateDataRow(Table table, DailyKpiResult item, ClientSiteKpiSetting clientSiteKpiSetting)
+        private void CreateDataRow(Table table, DailyKpiResult item, ClientSiteKpiSetting clientSiteKpiSetting, bool isHrTimerPaused)
         {
             // Date
             table.AddCell(CreateDataCell(item.DayOfDate.ToString()));
@@ -420,7 +420,7 @@ namespace CityWatch.Kpi.Services
             cellColor = string.Empty;
             cellHasBg = false;
             cellValue = "-";
-            if (item.IsAcceptableLogFreq.HasValue)
+            if (!isHrTimerPaused && item.IsAcceptableLogFreq.HasValue)
             {
                 cellColor = item.IsAcceptableLogFreq.Value ? CELL_BG_GREEN : CELL_BG_RED;
                 cellValue = item.IsAcceptableLogFreq.Value ? "< 2hr" : "> 2hr";

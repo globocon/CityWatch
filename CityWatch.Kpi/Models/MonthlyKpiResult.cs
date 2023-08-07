@@ -155,23 +155,29 @@ namespace CityWatch.Kpi.Models
             }
         }
 
-        public decimal ShiftFilledVsRosterPercentage
+        public decimal? ShiftFilledVsRosterPercentage
         {
             get
             {
-                if (_dailyKpiResults
-                    .Where(z => z.EffectiveEmployeeHours.HasValue && z.EffectiveEmployeeHours.Value > 0)
-                    .All(z => z.ImageCount.GetValueOrDefault() > 0 && z.WandScanCount.GetValueOrDefault() > 0))
+                var data = _dailyKpiResults.Where(z => z.EffectiveEmployeeHours.HasValue && z.EffectiveEmployeeHours.Value > 0);
+
+                if (data.All(z => z.ImageCount.GetValueOrDefault() == 0 && z.WandScanCount.GetValueOrDefault() == 0))
+                    return null;
+
+                if (data.All(z => z.ImageCount.GetValueOrDefault() > 0 && z.WandScanCount.GetValueOrDefault() > 0))
                     return 100M;
 
                 return decimal.Zero;
             }
         }
 
-        public decimal LogReportsVsRosterPercentage
+        public decimal? LogReportsVsRosterPercentage
         {
             get
             {
+                if (_dailyKpiResults.Select(z => z.IsAcceptableLogFreq).All(z => !z.HasValue))
+                    return null;
+
                 var dailyAcceptableLogFreq = _dailyKpiResults.Select(z => z.IsAcceptableLogFreq).Where(z => z.HasValue);
                 var totalCount = dailyAcceptableLogFreq.Count();
                 if (totalCount > 0)                    

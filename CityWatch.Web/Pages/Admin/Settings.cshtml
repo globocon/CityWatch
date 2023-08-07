@@ -38,6 +38,9 @@
         <li class="nav-item" @hideTabStyle>
             <a class="nav-link" id="uca-tab" data-toggle="tab" href="#uca" role="tab" aria-controls="uca" aria-selected="false">Access Control</a>
         </li>
+        <li class="nav-item" @hideTabStyle>
+            <a class="nav-link" id="c4isettings-tab" data-toggle="tab" href="#c4isettings" role="tab" aria-controls="c4isettings" aria-selected="false">C4i Core</a>
+        </li>
     </ul>
     <div class="tab-content" id="settingsTabContent">
         <div class="tab-pane fade show active py-3" id="ctype" role="tabpanel" aria-labelledby="ctype-tab">
@@ -222,16 +225,127 @@
                 </div>
             </div>
         </div>
+        <div class="tab-pane fade py-3" id="c4isettings" role="tabpanel" aria-labelledby="c4isettings-tab" @hideTabStyle>
+            <form id="form_CompanyDetails"  >
+                <div class="form-group row">
+                    
+                    <div class="col-md-4">
+                        <input type="hidden" id="txt_CompanyId" class="form-control" />
+                    </div>
+                   
+                </div>
+                <div class="form-group row">
+                    <label class="col-form-label col-md-2">Company Name</label>
+                    <div class="col-md-4">
+                        <input type="text" id="txt_CompanyName" class="form-control" name="CompanyDetails.Name"  />
+                    </div>
+                    <label class="col-form-label col-md-1">Domain</label>
+                    <div class="col-md-4">
+                        <input type="text" id="txt_CompanyDomain" class="form-control" name="CompanyDetails.Domain" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-form-label col-md-2">Primary Logo</label>
+                    <div class="col-md-4">
+                        <a class="navbar-brand" href="https://www.citywatchsecurity.com.au" target="_blank">
+                            <img id="img_PrimaryLogo" height="60px" src="~/images/CWSLogo.png" />
+                        </a>
+                        
+
+                        <label class="btn btn-success mb-0">
+                            <form id="form_cs_primarylogo" method="post">
+                                <i class="fa fa-upload mr-2"></i>Replace
+                                <input type="file" id="cr_primarylogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.gif,.GIF" hidden />
+                            </form>
+                        </label>
+                    </div>
+                    <label class="col-form-label col-md-2">Banner Logo</label>
+                    <div class="col-md-4">
+                        <a class="navbar-brand" href="https://www.citywatchsecurity.com.au" target="_blank">
+                            <img id="img_BannerLogo" height="60px" src="~/images/ISOv3.jpg" />
+                        </a>
+                        <label class="btn btn-success mb-0">
+                            <form id="form_cs_primarylogo" method="post">
+                                <i class="fa fa-upload mr-2"></i>Replace
+                                <input type="file" id="cr_bannerlogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.GIF,.gif" hidden />
+                            </form>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-form-label col-md-2">Home Page Message</label>
+                    <div class="col-md-4">
+                        <textarea id="txt_HomePageMessage" class="form-control"></textarea>
+                    </div>
+                    <label class="col-form-label col-md-2">Message Bar Colour</label>
+                    <div class="col-md-4">
+                        <input type="color" id="txt_color" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-form-label col-md-2">Banner Message</label>
+                    <div class="col-md-4">
+                        <textarea id="txt_BannerMessage" class="form-control"></textarea>
+                    </div>
+                    <label class="col-form-label col-md-2">Hyperlink</label>
+                    <div class="col-md-4">
+                        <input type="text" id="txt_HyplerLink" class="form-control" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-form-label col-md-2">Email Message</label>
+                    <div class="col-md-10">
+                        <textarea id="txt_EmailMessage" class=" form-control"></textarea>
+                    </div>
+                
+                </div>
+                <div class="form-group row">
+                    <label class="col-form-label col-md-2">Software License</label>
+                    <div class="col-md-2">
+                        <select id="drp_swlicense" disabled="disabled">
+                            <option value="1" >Gold</option>
+                            <option value="2">Silver</option>
+                            <option value="3">Bronze</option>
+                        </select>
+                       
+                    </div>
+                    <label class="col-form-label col-md-2">Type</label>
+                    <div class="col-md-2">
+                        <select id="drp_type" disabled="disabled">
+                            <option value="1">Annual</option>
+                            <option value="2">Monthly</option>
+                            <option value="3">Perpectual</option>
+                        </select>
+                        
+                    </div>
+                    <label class="col-form-label col-md-2">Expires</label>
+                    <div class="col-md-2">
+                        <input type="date" id="txt_ExpiryDate" value="30-06-2050" disabled="disabled"  />
+                        
+                    </div>
+
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-10">
+                        <button class="btn btn-success" id="btn_CompanySave">Save</button>
+                    </div>
+
+                </div>
+            </form>
+        </div>
         <div class="tab-pane fade py-3" id="uca" role="tabpanel" aria-labelledby="uca-tab" @hideTabStyle>
             <div class="row">
-                <div class="col-md-12">
+                <div class="col-md-12 justify-content-center" >
                     <table class="table" id="user_client_access"></table>
                 </div>
             </div>
         </div>
     </div>
+    
 </div>
+
 <!-- modal popup -->
+
 <div class="modal" tabindex="-1" role="dialog" id="msg-modal">
   <div class="modal-dialog" role="document">
     <div class="modal-content">

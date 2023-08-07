@@ -44,10 +44,16 @@ namespace CityWatch.Data
         public DbSet<CustomFieldLog> CustomFieldLogs { get; set; }
         public DbSet<ClientSitePoc> ClientSitePocs { get; set; }
         public DbSet<ClientSiteLocation> ClientSiteLocations { get; set; }
-        public DbSet<KeyVehicleLogProfile> KeyVehicleLogProfiles { get; set; }
         public DbSet<KeyVehcileLogField> KeyVehcileLogFields { get; set; }
         public DbSet<ClientSiteKey> ClientSiteKeys { get; set; }
         public DbSet<KeyVehicleLogAuditHistory> KeyVehicleLogAuditHistory { get; set; }
         public DbSet<ClientSiteRadioStatus> ClientSiteRadioStatus { get; set; }
+        public DbSet<KeyVehicleLogProfile> KeyVehicleLogVisitorProfiles { get; set; }
+        public DbSet<KeyVehicleLogVisitorPersonalDetail> KeyVehicleLogVisitorPersonalDetails { get; set; }
+        public DbSet<GuardLicense> GuardLicenses { get; set; }
+        public DbSet<GuardCompliance> GuardCompliances { get; set; }
+        public DbSet<ClientSiteActivityStatus> ClientSiteActivityStatus { get; set;}
+        public DbSet<ClientSiteRadioCheck> ClientSiteRadioChecks { get; set; }
+        public DbSet<CompanyDetails> CompanyDetails { get; set; }
     }
 }

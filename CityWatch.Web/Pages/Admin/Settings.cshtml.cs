@@ -3,6 +3,7 @@ using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Services;
+using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -42,7 +43,9 @@ namespace CityWatch.Web.Pages.Admin
 
         [BindProperty]
         public FeedbackTemplate FeedbackTemplate { get; set; }
-        
+        [BindProperty]
+        public CompanyDetails CompanyDetails { get; set; }
+
         [BindProperty]
         public ReportTemplate ReportTemplate { get; set; }
 
@@ -480,6 +483,107 @@ namespace CityWatch.Web.Pages.Admin
                 message = ex.Message;
             }
             return new JsonResult(new { success, message });
+
+        }
+        public IActionResult OnGetCoreSettings(int companyId)
+        {
+            var template = _viewDataService.GetAllCoreSettings(companyId);
+            return new JsonResult(template);
+        }
+     
+     
+        public JsonResult OnPostCrPrimaryLogoUpload()
+        {
+            var success = false;
+            var message = "Uploaded successfully";
+            var dateTimeUpdated = DateTime.Now;
+            var files = Request.Form.Files;
+            var filepath="";
+            if (files.Count == 1)
+            {
+                var file = files[0];
+                
+               
+               
+                if (file.Length > 0)
+                {
+                    try
+                    {
+                        if (Path.GetExtension(file.FileName) != ".JPG" && Path.GetExtension(file.FileName) != ".jpg" && Path.GetExtension(file.FileName) != ".JPEG" && Path.GetExtension(file.FileName) != ".jpeg" && Path.GetExtension(file.FileName) != ".png" && Path.GetExtension(file.FileName) != ".PNG" && Path.GetExtension(file.FileName) != ".GIF" && Path.GetExtension(file.FileName) != ".gif")
+                            throw new ArgumentException("Unsupported file type");
+
+                        var reportRootDir = Path.Combine(_webHostEnvironment.WebRootPath, "Images");
+                         filepath = Path.Combine(reportRootDir, "cr_primarylogo.JPG");
+                        using (var stream = System.IO.File.Create(Path.Combine(reportRootDir, "cr_primarylogo.JPG")))
+                        {
+                            file.CopyTo(stream);
+                        }
+                        
+                        success = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        message = ex.Message;
+                    }
+                }
+            }
+
+            return new JsonResult(new { success, message, dateTimeUpdated = dateTimeUpdated.ToString("dd MMM yyyy @ HH:mm"), filepath });
+        }
+        public JsonResult OnPostCrBinaryLogoUpload()
+        {
+            var success = false;
+            var message = "Uploaded successfully";
+            var dateTimeUpdated = DateTime.Now;
+            var files = Request.Form.Files;
+            var filepath = "";
+            if (files.Count == 1)
+            {
+                var file = files[0];
+
+
+
+                if (file.Length > 0)
+                {
+                    try
+                    {
+                        if (Path.GetExtension(file.FileName) != ".JPG" && Path.GetExtension(file.FileName) != ".jpg" && Path.GetExtension(file.FileName) != ".JPEG" && Path.GetExtension(file.FileName) != ".jpeg" && Path.GetExtension(file.FileName) != ".png" && Path.GetExtension(file.FileName) != ".PNG" && Path.GetExtension(file.FileName) != ".gif" && Path.GetExtension(file.FileName) != ".GIF")
+                            throw new ArgumentException("Unsupported file type");
+
+                        var reportRootDir = Path.Combine(_webHostEnvironment.WebRootPath, "Images");
+                        filepath = Path.Combine(reportRootDir, "cr_bannerlogo.JPG");
+                        using (var stream = System.IO.File.Create(Path.Combine(reportRootDir, "cr_bannerlogo.JPG")))
+                        {
+                            file.CopyTo(stream);
+                        }
+
+                        success = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        message = ex.Message;
+                    }
+                }
+            }
+
+            return new JsonResult(new { success, message, dateTimeUpdated = dateTimeUpdated.ToString("dd MMM yyyy @ HH:mm"), filepath });
+        }
+       
+        public JsonResult OnPostCompanyDetails(Data.Models.CompanyDetails company)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.SaveCompanyDetails(company);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
         }
     }
 }

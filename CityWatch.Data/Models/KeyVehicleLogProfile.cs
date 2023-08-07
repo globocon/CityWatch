@@ -6,7 +6,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CityWatch.Data.Models
 {
-    public class KeyVehicleLogProfile : IEquatable<KeyVehicleLogProfile>, IValidatableObject
+    [Table("KeyVehicleLogVisitorProfiles")]
+    public class KeyVehicleLogProfile
     {
         public KeyVehicleLogProfile()
         { }
@@ -18,10 +19,7 @@ namespace CityWatch.Data.Models
             Trailer2Rego = keyVehicleLog.Trailer2Rego;
             Trailer3Rego = keyVehicleLog.Trailer3Rego;
             Trailer4Rego = keyVehicleLog.Trailer4Rego;
-            PlateId = keyVehicleLog.PlateId;
-            CompanyName = keyVehicleLog.CompanyName;
-            PersonName = keyVehicleLog.PersonName;
-            PersonType = keyVehicleLog.PersonType;
+            PlateId = keyVehicleLog.PlateId;            
             MobileNumber = keyVehicleLog.MobileNumber;
             Product = keyVehicleLog.Product;
             TruckConfig = keyVehicleLog.TruckConfig;
@@ -53,12 +51,6 @@ namespace CityWatch.Data.Models
 
         public decimal? MaxWeight { get; set; }
 
-        public string CompanyName { get; set; }
-
-        public string PersonName { get; set; }
-
-        public int? PersonType { get; set; }
-
         public string MobileNumber { get; set; }
 
         public string Product { get; set; }
@@ -75,27 +67,6 @@ namespace CityWatch.Data.Models
         [ForeignKey("CreatedLogId")]
         public KeyVehicleLog KeyVehicleLog { get; set; }
 
-        public bool Equals(KeyVehicleLogProfile other)
-        {
-            return (string.Compare(PersonName, other.PersonName, true) == 0) &&
-                    (string.Compare(CompanyName, other.CompanyName, true) == 0) &&
-                    (PersonType == other.PersonType);
-        }
-
-        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-        {
-            var errors = new List<ValidationResult>();
-
-            if (string.IsNullOrEmpty(VehicleRego))
-                errors.Add(new ValidationResult("ID No or Vehicle Registration is required"));
-
-            if (!PlateId.HasValue)
-                errors.Add(new ValidationResult("State of ID / Plate is required"));
-
-            if (!PersonType.HasValue)
-                errors.Add(new ValidationResult("Type of Individual is required"));
-
-            return errors;
-        }
+        public string Notes { get; set; }
     }
 }

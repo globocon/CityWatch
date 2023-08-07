@@ -1,13 +1,22 @@
+using CityWatch.Common.Helpers;
+using CityWatch.Common.Models;
+using CityWatch.Common.Services;
+using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Services;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace CityWatch.Web.Pages.Admin
 {
@@ -20,6 +29,10 @@ namespace CityWatch.Web.Pages.Admin
         private readonly IConfigDataProvider _configDataProvider;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly IGuardSettingsDataProvider _guardSettingsDataProvider;
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IDropboxService _dropboxUploadService;
+        private readonly Settings _settings;
+        private readonly string _reportRootDir;
 
         public GuardSettingsModel(IViewDataService viewDataService,
              IClientSiteWandDataProvider clientSiteWandDataProvider,
@@ -27,7 +40,10 @@ namespace CityWatch.Web.Pages.Admin
              IGuardDataProvider guardDataProvider,
              IConfigDataProvider configDataProvider,
              IGuardLogDataProvider guardLogDataProvider,
-             IGuardSettingsDataProvider guardSettingsDataProvider)
+             IGuardSettingsDataProvider guardSettingsDataProvider,
+             IWebHostEnvironment webHostEnvironment,
+             IDropboxService dropboxUploadService,
+             IOptions<Settings> settings)
         {
             _viewDataService = viewDataService;
             _clientSiteWandDataProvider = clientSiteWandDataProvider;
@@ -36,6 +52,10 @@ namespace CityWatch.Web.Pages.Admin
             _configDataProvider = configDataProvider;
             _guardLogDataProvider = guardLogDataProvider;
             _guardSettingsDataProvider = guardSettingsDataProvider;
+            _webHostEnvironment = webHostEnvironment;
+            _dropboxUploadService = dropboxUploadService;
+            _settings = settings.Value;
+            _reportRootDir = Path.Combine(_webHostEnvironment.WebRootPath);
         }
 
         public IViewDataService ViewDataService { get { return _viewDataService; } }
@@ -198,7 +218,6 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
 
-
         public void OnPostSaveSiteEmail(int siteId, string siteEmail, bool enableLogDump, string landLine, string guardEmailTo)
         {
             var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(z => z.Id == siteId);
@@ -229,10 +248,11 @@ namespace CityWatch.Web.Pages.Admin
             var message = "Success";
             var guardInitals = guard.Initial;
             var initalsUsed = string.Empty;
+            var guardId = 0;
 
             try
             {
-                _guardDataProvider.SaveGuard(guard, out initalsUsed);
+                guardId = _guardDataProvider.SaveGuard(guard, out initalsUsed);
             }
             catch (Exception ex)
             {
@@ -251,7 +271,9 @@ namespace CityWatch.Web.Pages.Admin
             {
                 status,
                 message,
-                initalsChangedMessage = initalsUsed != guardInitals ? $"Guard with initials {guardInitals} already exists. So initals changed to {initalsUsed}" : string.Empty
+                initalsChangedMessage = initalsUsed != guardInitals ? $"Guard with initials {guardInitals} already exists. So initals changed to {initalsUsed}" : string.Empty,
+                initalsUsed,
+                guardId
             });
         }
 
@@ -427,7 +449,7 @@ namespace CityWatch.Web.Pages.Admin
             var message = string.Empty;
             try
             {
-                var existingField = _guardLogDataProvider.GetKeyVehicleLogFields(true).SingleOrDefault(z => z.TypeId == record.TypeId && z.Name == record.Name);                
+                var existingField = _guardLogDataProvider.GetKeyVehicleLogFields(true).SingleOrDefault(z => z.TypeId == record.TypeId && z.Name == record.Name);
                 if (existingField != null)
                 {
                     if (existingField.IsDeleted)
@@ -483,6 +505,235 @@ namespace CityWatch.Web.Pages.Admin
                 message = ex.Message;
             }
             return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnGetGuardLicense(int guardId)
+        {
+            return new JsonResult(_guardDataProvider.GetGuardLicenses(guardId));
+        }
+
+        public JsonResult OnPostSaveGuardLicense(GuardLicense guardLicense)
+        {
+            ModelState.Remove("guardLicense.Id");
+            if (!ModelState.IsValid)
+            {
+                return new JsonResult(new
+                {
+                    status = false,
+                    message = ModelState.Where(x => x.Value.Errors.Count > 0)
+                                .Select(x => string.Join(',', x.Value.Errors.Select(y => y.ErrorMessage)))
+                });
+            }
+
+            var status = true;
+            var dbxUploaded = true;
+            var message = "Success";
+
+            try
+            {
+                dbxUploaded = UploadGuardLicenseToDropbox(guardLicense);
+                _guardDataProvider.SaveGuardLicense(guardLicense);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = ex.Message;
+                if (ex.InnerException != null &&
+                    ex.InnerException is SqlException &&
+                    ex.InnerException.Message.StartsWith("Violation of UNIQUE KEY constraint"))
+                {
+                    message = "License number already exists";
+                }
+            }
+
+            return new JsonResult(new { status, dbxUploaded, message });
+        }
+
+        public JsonResult OnPostDeleteGuardLicense(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _guardDataProvider.DeleteGuardLicense(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnGetGuardCompliances(int guardId)
+        {
+            return new JsonResult(_guardDataProvider.GetGuardCompliances(guardId));
+        }
+
+        public JsonResult OnPostSaveGuardCompliance(GuardCompliance guardCompliance)
+        {
+            ModelState.Remove("guardCompliance.Id");
+            if (!ModelState.IsValid)
+            {
+                return new JsonResult(new
+                {
+                    status = false,
+                    message = ModelState.Where(x => x.Value.Errors.Count > 0)
+                                .Select(x => string.Join(',', x.Value.Errors.Select(y => y.ErrorMessage)))
+                });
+            }
+
+            var status = true;
+            var dbxUploaded = true;
+            var message = "Success";
+
+            try
+            {
+                dbxUploaded = UploadGuardComplianceToDropbox(guardCompliance);
+                _guardDataProvider.SaveGuardCompliance(guardCompliance);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = ex.Message;
+                if (ex.InnerException != null &&
+                    ex.InnerException is SqlException &&
+                    ex.InnerException.Message.StartsWith("Violation of UNIQUE KEY constraint"))
+                {
+                    message = "Reference number already exists";
+                }
+            }
+            return new JsonResult(new { status, dbxUploaded, message });
+        }
+
+        public JsonResult OnPostDeleteGuardCompliance(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _guardDataProvider.DeleteGuardCompliance(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnPostUploadGuardAttachment()
+        {
+            var success = true;
+            var files = Request.Form.Files;
+            var guardId = Request.Form["guardId"];
+            var fileName = string.Empty;
+
+            try
+            {
+                if (files.Count == 1)
+                {
+                    var file = files[0];
+                    fileName = file.FileName;
+                    var guardUploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "Guards", guardId);
+                    if (!Directory.Exists(guardUploadDir))
+                        Directory.CreateDirectory(guardUploadDir);
+
+                    using var stream = System.IO.File.Create(Path.Combine(guardUploadDir, fileName));
+                    file.CopyTo(stream);
+                }
+
+            }
+            catch
+            {
+                success = false;
+            }
+            return new JsonResult(new { success, fileName });
+        }
+
+        public IActionResult OnGetGuardLicenseAndCompliance(int guardId)
+        {
+            ViewData["Guard_Id"] = guardId;
+            ViewData["Guard_License"] = _guardDataProvider.GetGuardLicenses(guardId);
+            ViewData["Guard_Compliance"] = _guardDataProvider.GetGuardCompliances(guardId);
+
+            return new PartialViewResult
+            {
+                ViewName = "_GuardAdditionalDetails",
+                ViewData = new ViewDataDictionary(ViewData)
+            };
+        }
+
+        public JsonResult OnPostDeleteGuardAttachment(int id, char type)
+        {
+            var status = true;
+
+            try
+            {
+                if (type == 'l')
+                {
+                    var license = _guardDataProvider.GetGuardLicense(id);
+                    license.FileName = string.Empty;
+                    _guardDataProvider.SaveGuardLicense(license);
+                }
+                else if (type == 'c')
+                {
+                    var compliance = _guardDataProvider.GetGuardCompliance(id);
+                    compliance.FileName = string.Empty;
+                    _guardDataProvider.SaveGuardCompliance(compliance);
+                }
+            }
+            catch (Exception)
+            {
+                status = false;
+            }
+
+            return new JsonResult(new { status });
+        }
+
+        private bool UploadGuardLicenseToDropbox(GuardLicense guardLicense)
+        {
+            guardLicense.Guard = _guardDataProvider.GetGuards().SingleOrDefault(z => z.Id == guardLicense.GuardId);
+            var existingGuardLicense = _guardDataProvider.GetGuardLicense(guardLicense.Id);
+            if ((guardLicense.Id == 0 && string.IsNullOrEmpty(guardLicense.FileName)) ||
+                (guardLicense.Id != 0 && existingGuardLicense.FileName == guardLicense.FileName))
+                return true;
+
+            var fileToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards", guardLicense.GuardId.ToString(), guardLicense.FileName);
+            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardLicense.Guard)}/{guardLicense.LicenseNo}/{guardLicense.FileName}");
+            return UpoadDocumentToDropbox(fileToUpload, dbxFilePath);
+        }
+
+        private bool UploadGuardComplianceToDropbox(GuardCompliance guardCompliance)
+        {
+            guardCompliance.Guard = _guardDataProvider.GetGuards().SingleOrDefault(z => z.Id == guardCompliance.GuardId);
+            var existingGuardCompliance = _guardDataProvider.GetGuardCompliance(guardCompliance.Id);
+            if ((guardCompliance.Id == 0 && string.IsNullOrEmpty(guardCompliance.FileName)) ||
+                (guardCompliance.Id != 0 && existingGuardCompliance.FileName == guardCompliance.FileName))
+                return true;
+
+            var fileToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards", guardCompliance.GuardId.ToString(), guardCompliance.FileName);
+            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardCompliance.Guard)}/{guardCompliance.ReferenceNo}/{guardCompliance.FileName}");
+            return UpoadDocumentToDropbox(fileToUpload, dbxFilePath);
+        }
+
+        private bool UpoadDocumentToDropbox(string fileToUpload, string dbxFilePath)
+        {
+            var dropboxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken,
+                                                        _settings.DropboxRefreshToken, _settings.DropboxUserEmail);
+
+            bool uploaded = false;
+            try
+            {
+                uploaded = Task.Run(() => _dropboxUploadService.Upload(dropboxSettings, fileToUpload, dbxFilePath)).Result;
+                if (uploaded && System.IO.File.Exists(fileToUpload))
+                    System.IO.File.Delete(fileToUpload);
+            }
+            catch
+            {
+            }
+
+            return uploaded;
         }
     }
 }

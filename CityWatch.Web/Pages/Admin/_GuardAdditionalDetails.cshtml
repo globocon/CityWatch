@@ -1,0 +1,84 @@
+﻿@using CityWatch.Data.Helpers;
+@using CityWatch.Data.Models;
+@using CityWatch.Web.Services;
+@inject IViewDataService viewDataService
+@{
+    var guardId = ViewData["Guard_Id"];
+    var guardLicenses = ViewData["Guard_License"] as List<GuardLicense>;
+    var guardCompliances = ViewData["Guard_Compliance"] as List<GuardCompliance>;
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" data-toggle="tab" href="@($"#guard_{guardId}_licenses")" role="tab" aria-controls="guard_licenses" aria-selected="true">Licenses</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="@($"#guard_{guardId}_compliances")" role="tab" aria-controls="guard_compliances" aria-selected="false">Compliances</a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane fade show active py-3" id="@($"guard_{guardId}_licenses")" role="tabpanel" aria-labelledby="licenses-tab">
+                <div class="col-md-12 mt-2 ml-1">
+                    <table id="tbl_guard_licenses" class="table table-bordered table-sm" width="100%">
+                        <thead>
+                            <tr>
+                                <th>License No</th>
+                                <th>Type</th>
+                                <th>Expiry Date</th>
+                                <th>Reminder 1</th>
+                                <th>Reminder 2</th>
+                                <th>File</th>
+                            </tr>
+                        </thead>
+                        @if (guardLicenses != null)
+                        {
+                            foreach (var guardLicense in guardLicenses)
+                            {
+                                <tr>
+                                    <td>@guardLicense.LicenseNo</td>
+                                    <td>@guardLicense.LicenseTypeText</td>
+                                    <td>@guardLicense.ExpiryDate?.ToString("dd MMM yyyy")</td>
+                                    <td>@guardLicense.Reminder1</td>
+                                    <td>@guardLicense.Reminder2</td>
+                                    <td><a href="@guardLicense.FileUrl" target="_blank">@guardLicense.FileName</a></td>
+                                </tr>
+                            }
+                        }
+                    </table>
+                </div>
+            </div>
+            <div class="tab-pane fade py-3" id="@($"guard_{guardId}_compliances")" role="tabpanel" aria-labelledby="compliances_tab">
+                <div class="col-md-12 mt-2 ml-1">
+                    <table id="tbl_guard_compliances" class="table table-bordered table-sm" width="100%">
+                        <thead>
+                            <tr>
+                                <th>Reference No</th>
+                                <th>Description</th>
+                                <th>Expiry Date</th>
+                                <th>Reminder 1</th>
+                                <th>Reminder 2</th>
+                                <th>File</th>
+                            </tr>
+                        </thead>
+                        @if (guardCompliances != null)
+                        {
+                            foreach (var guardCompliance in guardCompliances)
+                            {
+                                <tr>
+                                    <td>@guardCompliance.ReferenceNo</td>
+                                    <td>@guardCompliance.Description</td>
+                                    <td>@guardCompliance.ExpiryDate?.ToString("dd MMM yyyy")</td>
+                                    <td>@guardCompliance.Reminder1</td>
+                                    <td>@guardCompliance.Reminder2</td>
+                                    <td><a href="@guardCompliance.FileUrl" target="_blank">@guardCompliance.FileName</a></td>
+                                </tr>
+                            }
+                        }
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

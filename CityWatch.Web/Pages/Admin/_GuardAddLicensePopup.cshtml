@@ -1,0 +1,69 @@
+﻿@using CityWatch.Data.Models;
+<div class="modal fade" id="addGuardLicenseModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="addLicenceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add/Edit License</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="frm_add_license">
+                    <input type="hidden" id="GuardLicense_Id" name="GuardLicense.Id" />
+                    <input type="hidden" id="GuardLicense_GuardId" name="GuardLicense.GuardId" />
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label class="form-label">License No</label>
+                            <input type="text" class="form-control" id="GuardLicense_LicenseNo" name="GuardLicense.LicenseNo">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label class="form-label">License Type</label>
+                            <select class="form-control" id="GuardLicense_LicenseType" name="GuardLicense.LicenseType" asp-items="@Html.GetEnumSelectList<GuardLicenseType>().OrderBy(z => z.Text)">
+                                <option value="">Select</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label class="form-label">Expiry Date</label>
+                            <input type="date" class="form-control" id="GuardLicense_ExpiryDate" name="GuardLicense.ExpiryDate" min="@DateTime.Today.ToString("yyyy-MM-dd")">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label class="form-label">Reminder 1</label>
+                            <input type="number" class="form-control" id="GuardLicense_Reminder1" name="GuardLicense.Reminder1" min="1" max="365">
+
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label class="form-label">Reminder 2</label>
+                            <input type="number" class="form-control" id="GuardLicense_Reminder2" name="GuardLicense.Reminder2" min="1" max="365">
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <label class="form-label">License Document: <span id="guardLicense_fileName">None</span></label>
+                            <p class="mt-2">
+                                <input type="hidden" id="GuardLicense_FileName" name="GuardLicense.FileName" />
+                                <label class="btn btn-sm btn-outline-primary mb-0">
+                                    <i class="fa fa-upload mr-2"></i>Upload
+                                    <input type="file" id="upload_license_file" accept=".jpg, .jpeg, .png, .bmp, .pdf" hidden>
+                                </label>
+                                <button type="button" class="btn btn-sm btn-outline-danger" id="delete_license_file"><i class="fa fa-trash mr-2"></i>Delete</button>
+                                <small class="form-text text-muted">
+                                    Upload a file with extension .jpg, .jpeg, .png, .bmp, .pdf
+                                </small>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div asp-validation-summary="All" id="licenseValidationSummary"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-start">
+                <button type="button" class="btn btn-primary" id="btn_save_guard_license">Save License</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -48,6 +48,8 @@ namespace CityWatch.Kpi.Models
 
         public string EmailBcc { get; set; }
 
+        public bool IsHrTimerPaused { get; set; }
+
         public static KpiSendSchedule ToDataModel(KpiSendScheduleViewModel viewModel)
         {
             return new KpiSendSchedule()
@@ -65,7 +67,8 @@ namespace CityWatch.Kpi.Models
                 SummaryNote1 = viewModel.SummaryNote1,
                 SummaryNote2 = viewModel.SummaryNote2,
                 CoverSheetType = viewModel.CoverSheetType,
-                EmailBcc = viewModel.EmailBcc
+                EmailBcc = viewModel.EmailBcc,
+                IsHrTimerPaused = viewModel.IsHrTimerPaused
             };
         }
 
@@ -88,7 +91,8 @@ namespace CityWatch.Kpi.Models
                 SummaryNote1 = dataModel.SummaryNote1,
                 SummaryNote2 = dataModel.SummaryNote2,
                 CoverSheetType = dataModel.CoverSheetType,
-                EmailBcc = dataModel.EmailBcc
+                EmailBcc = dataModel.EmailBcc,
+                IsHrTimerPaused = dataModel.IsHrTimerPaused
             };
         }
     }
