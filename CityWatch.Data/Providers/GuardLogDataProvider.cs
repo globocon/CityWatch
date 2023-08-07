@@ -37,6 +37,7 @@ namespace CityWatch.Data.Providers
         List<string> GetVehicleRegos(string regoStart = null);
         List<string> GetCompanyNames(string companyNameStart);
         List<string> GetSenderNames(string senderNameStart);
+        KeyVehicleLogProfile GetKeyVehicleLogVisitorProfile(string truckRego);
         List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetails(string truckRego);
         List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetails(string truckRego, string personName);
         KeyVehicleLogVisitorPersonalDetail GetKeyVehicleLogProfileWithPersonalDetails(int id);
@@ -49,6 +50,7 @@ namespace CityWatch.Data.Providers
         void SaveKeyVehicleLogField(KeyVehcileLogField field);
         void DeleteKeyVehicleLogField(int id);
         List<KeyVehicleLogAuditHistory> GetAuditHistory(int id);
+        void SaveKeyVehicleLogAuditHistory(KeyVehicleLogAuditHistory keyVehicleLogAuditHistory);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -198,17 +200,13 @@ namespace CityWatch.Data.Providers
 
         public void SaveKeyVehicleLog(KeyVehicleLog keyVehicleLog)
         {
-            KeyVehicleLogAuditHistory keyVehicleLogAuditHistory = null;
-
             if (keyVehicleLog.Id == 0)
             {
-                keyVehicleLogAuditHistory = new KeyVehicleLogAuditHistory(keyVehicleLog, null);
                 _context.KeyVehicleLogs.Add(keyVehicleLog);
             }
             else
             {
                 var keyVehicleLogToUpdate = _context.KeyVehicleLogs.SingleOrDefault(x => x.Id == keyVehicleLog.Id);
-                keyVehicleLogAuditHistory = new KeyVehicleLogAuditHistory(keyVehicleLog, keyVehicleLogToUpdate);
 
                 keyVehicleLogToUpdate.InitialCallTime = keyVehicleLog.InitialCallTime;
                 keyVehicleLogToUpdate.EntryTime = keyVehicleLog.EntryTime;
@@ -248,8 +246,6 @@ namespace CityWatch.Data.Providers
                 keyVehicleLogToUpdate.IsSender = keyVehicleLog.IsSender;
             }
             _context.SaveChanges();
-
-            SaveKeyVehicleLogAuditHistory(keyVehicleLog.Id, keyVehicleLogAuditHistory);
         }
 
         public void SaveDocketSerialNo(int id, string serialNo)
@@ -451,6 +447,12 @@ namespace CityWatch.Data.Providers
                 .SingleOrDefault(z => z.Id == id);
         }
 
+        public KeyVehicleLogProfile GetKeyVehicleLogVisitorProfile(string truckRego)
+        {
+            return _context.KeyVehicleLogVisitorProfiles
+                            .SingleOrDefault(z => z.VehicleRego == truckRego);
+        }
+
         public List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetails(string truckRego)
         {
             return _context.KeyVehicleLogVisitorPersonalDetails
@@ -469,7 +471,8 @@ namespace CityWatch.Data.Providers
         public int SaveKeyVehicleLogProfileWithPersonalDetail(KeyVehicleLogVisitorPersonalDetail kvlVisitorPersonalDetail)
         {
             kvlVisitorPersonalDetail.ProfileId = SaveKeyVehicleLogProfile(kvlVisitorPersonalDetail.KeyVehicleLogProfile);
-            return SaveKeyVehicleLogVisitorPersonalDetail(kvlVisitorPersonalDetail);
+            SaveKeyVehicleLogVisitorPersonalDetail(kvlVisitorPersonalDetail);
+            return kvlVisitorPersonalDetail.ProfileId;
         }
 
         public int SaveKeyVehicleLogVisitorPersonalDetail(KeyVehicleLogVisitorPersonalDetail keyVehicleLogVisitorPersonalDetail)
@@ -571,17 +574,16 @@ namespace CityWatch.Data.Providers
         public List<KeyVehicleLogAuditHistory> GetAuditHistory(int id)
         {
             return _context.KeyVehicleLogAuditHistory
-                .Where(z => z.KeyVehicleLogId == id)
+                .Where(z => z.ProfileId == id)
                 .Include(z => z.GuardLogin)
                 .ThenInclude(z => z.Guard)
                 .ToList();
         }
 
-        private void SaveKeyVehicleLogAuditHistory(int keyVehicleLogId, KeyVehicleLogAuditHistory keyVehicleLogAuditHistory)
+        public void SaveKeyVehicleLogAuditHistory(KeyVehicleLogAuditHistory keyVehicleLogAuditHistory)
         {
             if (keyVehicleLogAuditHistory != null)
             {
-                keyVehicleLogAuditHistory.KeyVehicleLogId = keyVehicleLogId;
                 _context.KeyVehicleLogAuditHistory.Add(keyVehicleLogAuditHistory);
                 _context.SaveChanges();
             }

@@ -81,8 +81,8 @@ namespace CityWatch.Web.Pages.Guard
         public JsonResult OnGetKeyVehicleLogs(int logbookId, KvlStatusFilter kvlStatusFilter)
         {
             var results = _viewDataService.GetKeyVehicleLogs(logbookId, kvlStatusFilter)
-                .OrderByDescending(z => z.Detail.Id)
-                .ThenByDescending(z => z.Detail.EntryTime);
+                .OrderByDescending(z => z.Detail.EntryTime)
+                .ThenByDescending(z => z.Detail.Id);
             return new JsonResult(results);
         }
 
@@ -99,7 +99,6 @@ namespace CityWatch.Web.Pages.Guard
                         IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), keyVehicleLogInDb.ReportReference?.ToString())
                         .ToList();
                     ViewData["KeyVehicleLog_Keys"] = _viewDataService.GetKeyVehicleLogKeys(keyVehicleLogInDb).ToList();
-                    ViewData["KeyVehicleLog_AuditHistory"] = _viewDataService.GetKeyVehicleLogAuditHistory(keyVehicleLogInDb).ToList();
                 }
             }
 
@@ -108,6 +107,11 @@ namespace CityWatch.Web.Pages.Guard
                 ViewName = "_KeyVehicleLogPopup",
                 ViewData = new ViewDataDictionary<KeyVehicleLog>(ViewData, keyVehicleLog)
             };
+        }
+
+        public JsonResult OnGetAuditHistory(string vehicleRego)
+        {
+            return new JsonResult(_viewDataService.GetKeyVehicleLogAuditHistory(vehicleRego).ToList());
         }
 
         public JsonResult OnPostSaveKeyVehicleLog()
@@ -120,15 +124,15 @@ namespace CityWatch.Web.Pages.Guard
             var message = "success";
             try
             {
+                KeyVehicleLogAuditHistory keyVehicleLogAuditHistory = null;
+                keyVehicleLogAuditHistory = GetKvlAuditHistory(KeyVehicleLog);
                 _guardLogDataProvider.SaveKeyVehicleLog(KeyVehicleLog);
 
-                var kvlPersonalDetail = new KeyVehicleLogVisitorPersonalDetail(KeyVehicleLog);
-                var personalDetails = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(KeyVehicleLog.VehicleRego);
-                if (!personalDetails.Any() || !personalDetails.Any(z => z.Equals(kvlPersonalDetail)))
-                {
-                    kvlPersonalDetail.KeyVehicleLogProfile.CreatedLogId = KeyVehicleLog.Id;
-                    _guardLogDataProvider.SaveKeyVehicleLogProfileWithPersonalDetail(kvlPersonalDetail);
-                }
+                var profileId = GetKvlProfileId(KeyVehicleLog);
+                keyVehicleLogAuditHistory.ProfileId = profileId;
+                keyVehicleLogAuditHistory.KeyVehicleLogId = KeyVehicleLog.Id;
+                _guardLogDataProvider.SaveKeyVehicleLogAuditHistory(keyVehicleLogAuditHistory);
+
                 _guardLogDataProvider.SaveKeyVehicleLogProfileNotes(KeyVehicleLog.VehicleRego, KeyVehicleLog.Notes);
             }
             catch (Exception ex)
@@ -485,6 +489,43 @@ namespace CityWatch.Web.Pages.Guard
                 default:
                     return string.Empty;
             }
+        }
+
+        private int GetKvlProfileId(KeyVehicleLog keyVehicleLog)
+        {
+            int profileId;
+            var kvlPersonalDetail = new KeyVehicleLogVisitorPersonalDetail(keyVehicleLog);
+            var personalDetails = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(keyVehicleLog.VehicleRego);
+            if (!personalDetails.Any() || !personalDetails.Any(z => z.Equals(kvlPersonalDetail)))
+            {
+                kvlPersonalDetail.KeyVehicleLogProfile.CreatedLogId = keyVehicleLog.Id;
+                profileId = _guardLogDataProvider.SaveKeyVehicleLogProfileWithPersonalDetail(kvlPersonalDetail);
+            }
+            else
+            {
+                var kvlVisitorProfile = _guardLogDataProvider.GetKeyVehicleLogVisitorProfile(kvlPersonalDetail.KeyVehicleLogProfile.VehicleRego);
+                profileId = kvlVisitorProfile.Id;
+            }
+
+            return profileId;
+        }
+
+        private KeyVehicleLogAuditHistory GetKvlAuditHistory(KeyVehicleLog keyVehicleLog)
+        {
+            var isNewKvlEntry = keyVehicleLog.Id == 0;
+            KeyVehicleLogAuditHistory keyVehicleLogAuditHistory;
+
+            if (isNewKvlEntry)
+            {
+                keyVehicleLogAuditHistory = new KeyVehicleLogAuditHistory(keyVehicleLog, null);
+            }
+            else
+            {
+                var keyVehicleLogToUpdate = _guardLogDataProvider.GetKeyVehicleLogById(keyVehicleLog.Id);
+                keyVehicleLogAuditHistory = new KeyVehicleLogAuditHistory(keyVehicleLog, keyVehicleLogToUpdate);
+            }
+
+            return keyVehicleLogAuditHistory;
         }
 
         private string GetNextDocketSequenceNumber(int id)
