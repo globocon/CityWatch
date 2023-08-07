@@ -724,6 +724,7 @@ $(function () {
         });
     });
 
+
     $('#btnScheduleDownload').on('click', function () {
         $('#btnScheduleDownload').prop('disabled', true);
         $('#schRunStatus').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i> Generating PDF. Please wait...');
@@ -767,6 +768,7 @@ $(function () {
             $('#schRunStatus').html(messageHtml);
         });
     });
+
 
     // Import Jobs
     /* TODO: Remove KPI Import Jobs Function
