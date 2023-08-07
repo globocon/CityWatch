@@ -1,3 +1,3 @@
 ALTER TABLE VehicleKeyLogs  
-ADD SerialNo Varchar(50) NULL
+ADD DocketSerialNo Varchar(50) NULL
 Go
