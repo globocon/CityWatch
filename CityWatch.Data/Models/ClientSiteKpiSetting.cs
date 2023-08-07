@@ -79,6 +79,42 @@ namespace CityWatch.Data.Models
             }
         }
 
+        private List<ClientSiteManningKpiSetting> _clientSiteManningKpiSettings;
+        private List<ClientSiteManningKpiSetting> _clientSiteManningPatrolCarKpiSettings;
+        [NotMapped]
+        public List<ClientSiteManningKpiSetting> ClientSiteManningGuardKpiSettings
+        {
+            get
+            {
+                if (_clientSiteManningKpiSettings == null || !_clientSiteManningKpiSettings.Any())
+                    _clientSiteManningKpiSettings = GetDefaultClientManningDayKpiSettings();
+                return _clientSiteManningKpiSettings;
+            }
+
+            set
+            {
+                
+                    _clientSiteManningKpiSettings = value;
+
+            }
+        }
+        [NotMapped]
+        public List<ClientSiteManningKpiSetting> ClientSiteManningPatrolCarKpiSettings
+        {
+            get
+            {
+                if (_clientSiteManningPatrolCarKpiSettings == null || !_clientSiteManningPatrolCarKpiSettings.Any())
+                    _clientSiteManningPatrolCarKpiSettings = GetDefaultClientManningDayKpiSettings();
+                return _clientSiteManningPatrolCarKpiSettings;
+            }
+
+            set
+            {
+               
+                    _clientSiteManningPatrolCarKpiSettings = value;
+            }
+        }
+
         public string ImageTargetText
         {
             get
@@ -148,6 +184,20 @@ namespace CityWatch.Data.Models
                 new ClientSiteDayKpiSetting() { WeekDay = DayOfWeek.Friday},
                 new ClientSiteDayKpiSetting() { WeekDay = DayOfWeek.Saturday},
                 new ClientSiteDayKpiSetting() { WeekDay = DayOfWeek.Sunday}
+            };
+        }
+
+        private List<ClientSiteManningKpiSetting> GetDefaultClientManningDayKpiSettings()
+        {
+            return new List<ClientSiteManningKpiSetting>
+            {
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Monday,DefaultValue=true},
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Tuesday,DefaultValue=true},
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Wednesday,DefaultValue=true},
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Thursday, DefaultValue = true},
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Friday, DefaultValue = true},
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Saturday, DefaultValue = true},
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Sunday, DefaultValue = true}
             };
         }
     }

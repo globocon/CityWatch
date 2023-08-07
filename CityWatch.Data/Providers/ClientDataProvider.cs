@@ -1,5 +1,6 @@
 ﻿using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
+using iText.StyledXmlParser.Jsoup.Safety;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -24,6 +25,7 @@ namespace CityWatch.Data.Providers
         ClientSiteKpiSetting GetClientSiteKpiSetting(int clientSiteId);
         List<ClientSiteKpiSetting> GetClientSiteKpiSetting(int[] clientSiteIds);
         void SaveClientSiteKpiSetting(ClientSiteKpiSetting setting);
+        void SaveClientSiteManningKpiSetting(ClientSiteKpiSetting setting);
         ClientSiteKpiNote GetClientSiteKpiNote(int id);
         int SaveClientSiteKpiNote(ClientSiteKpiNote note);
         List<ClientSiteLogBook> GetClientSiteLogBooks();
@@ -178,7 +180,11 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.ClientSiteDayKpiSettings)
                 .Include(x => x.Notes)
                 .SingleOrDefault(x => x.ClientSiteId == clientSiteId);
-
+            if (clientSiteKpiSetting != null)
+            {
+                clientSiteKpiSetting.ClientSiteManningGuardKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id && x.Type.ToLower() == "guard").ToList();
+                clientSiteKpiSetting.ClientSiteManningPatrolCarKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id && x.Type.ToLower() == "patrolcar").ToList();
+            }
             return clientSiteKpiSetting;
         }
 
@@ -341,6 +347,51 @@ namespace CityWatch.Data.Providers
                 }
             }
             _context.SaveChanges();
+        }
+
+        public void SaveClientSiteManningKpiSetting(ClientSiteKpiSetting setting)
+        {
+            if (setting != null)
+            {
+                var entityStateforGuard = !_context.ClientSiteManningKpiSettings.Any(x => x.SettingsId == setting.Id && x.Type == "guard") ? EntityState.Added : EntityState.Modified;
+                var entityStateforpatrolcar = !_context.ClientSiteManningKpiSettings.Any(x => x.SettingsId == setting.Id && x.Type == "patrolcar") ? EntityState.Added : EntityState.Modified;
+                setting.ClientSiteManningGuardKpiSettings.ForEach(x => { x.Type = "guard"; x.SettingsId = setting.Id; });
+                setting.ClientSiteManningPatrolCarKpiSettings.ForEach(x => { x.Type = "patrolcar"; x.SettingsId = setting.Id; });
+                //ClientSiteManningKpi Add and Update
+                if (entityStateforGuard == EntityState.Added)
+                {
+                    if (setting.ClientSiteManningGuardKpiSettings.Any())
+                    {
+                        _context.ClientSiteManningKpiSettings.AddRange(setting.ClientSiteManningGuardKpiSettings);
+                        _context.SaveChanges();
+                    }
+                }
+                else
+                {
+                    if (setting.ClientSiteManningGuardKpiSettings.Any())
+                    {
+                        _context.ClientSiteManningKpiSettings.UpdateRange(setting.ClientSiteManningGuardKpiSettings);
+                        _context.SaveChanges();
+                    }
+                }
+                //ManningPatrolCar Add and Update
+                if (entityStateforpatrolcar == EntityState.Added)
+                {
+                    if (setting.ClientSiteManningPatrolCarKpiSettings.Any())
+                    {
+                        _context.ClientSiteManningKpiSettings.AddRange(setting.ClientSiteManningPatrolCarKpiSettings);
+                        _context.SaveChanges();
+                    }
+                }
+                else
+                {
+                    if (setting.ClientSiteManningPatrolCarKpiSettings.Any() && setting.ClientSiteManningPatrolCarKpiSettings != null)
+                    {
+                        _context.ClientSiteManningKpiSettings.UpdateRange(setting.ClientSiteManningPatrolCarKpiSettings);
+                        _context.SaveChanges();
+                    }
+                }
+            }
         }
     }
 }

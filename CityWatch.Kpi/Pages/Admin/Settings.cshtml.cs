@@ -134,6 +134,23 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(success);
         }
 
+        public JsonResult OnPostClientSiteManningKpiSettings(ClientSiteKpiSetting clientSiteKpiSetting)
+        {
+            var success = true;
+            try
+            {
+                           
+                if(clientSiteKpiSetting!=null)
+                _clientDataProvider.SaveClientSiteManningKpiSetting(clientSiteKpiSetting);
+            }
+            catch
+            {
+                success = false;
+            }
+
+            return new JsonResult(success);
+        }
+
         public JsonResult OnPostUploadSiteImage()
         {
             var success = true;

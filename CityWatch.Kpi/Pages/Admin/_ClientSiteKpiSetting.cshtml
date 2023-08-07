@@ -3,11 +3,16 @@
 @inject IViewDataService ViewDataService;
 @{
     var rowTitle = new string[6] { "", "Daily Employee Hours", "Patrol Frequency", "No Of Patrols", "Image Target", "Wand Scans Target" };
+    var rowTitleManningGuard = new string[4] { "", "Start", "End", "Workers" };
+    var rowTitleManningPatrolCar = new string[4] { "", "Start", "End", "No of Patrols" };
 }
 
 <ul class="nav nav-tabs" id="kpiSettingsTab" role="tablist">
     <li class="nav-item" role="presentation">
         <a class="nav-link active" id="kpi-settings-tab" data-toggle="tab" href="#siteKpiSettings" role="tab" aria-controls="siteKpiSettings" aria-selected="true">Site Settings</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link" id="contracted-manning-tab" data-toggle="tab" href="#contractedmanningSettings" role="tab" aria-controls="contractedmanningSettings">Contracted Manning</a>
     </li>
     <li class="nav-item" role="presentation">
         <a class="nav-link" id="notes-tab" data-toggle="tab" href="#notes" role="tab" aria-controls="notes">Notes</a>
@@ -153,6 +158,118 @@
             </form>
         </div>
     </div>
+
+    @*New Tab for contracted-manning start*@
+    <div class="tab-pane" id="contractedmanningSettings" role="tabpanel" aria-labelledby="contracted-manning-tab">
+        <div class="container pt-3">
+            <form id="frm_site_manning_settings">
+                <input type="hidden" asp-for="@Model.Id" />
+                <input type="hidden" asp-for="@Model.ClientSiteId" />
+                <hr />
+                <div class="row">
+                    <div class="col-md-12">
+                        @for (int rowIndex = 0; rowIndex < 4; rowIndex++)
+                        {
+                            <div class="form-row">
+                                <div class="col-md-3">
+                                    @if (rowIndex == 0)
+                                    {
+                                        <label class="form-label">Position</label>
+                                    }
+                                     @if (rowIndex == 1)
+                                    {
+                                        <div class="form-group p-0">                                           
+                                            <select class="form-control" id="note_month" asp-items="@ViewDataService.GetMonthsInYear()"></select>
+                                        </div>
+                                    }                                   
+                                </div>
+                                 <div class="col-md-1 p-0">
+                                    <label class="form-label">@rowTitleManningGuard[rowIndex]</label>
+                                </div>
+                                @for (var colIndex = 0; colIndex < 7; colIndex++)
+                                {
+                                    <div class="col-md-1 mx-1">
+                                        @switch (rowIndex)
+                                        {
+                                            case 0:
+                                                <label class="form-label">@Model.ClientSiteManningGuardKpiSettings[colIndex].WeekDay.ToString().Substring(0, 3)</label>
+                                                break;
+                                            case 1:
+                                                <input class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursStart">
+                                                break;
+                                            case 2:
+                                                <input class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursEnd">
+                                                break;
+                                            case 3:
+                                                <input class="form-control mb-2 patrols-count" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].NoOfPatrols" data-index="@colIndex">
+                                                break;
+
+                                        }
+                                        <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].WeekDay" />
+                                        <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].Id" />
+                                       
+                                    </div>
+                                }
+                               
+                            </div>
+                        }
+                    </div>
+                </div>
+                <hr />
+                <div class="row">
+                    <div class="col-md-12">
+                        @for (int rowIndex = 0; rowIndex < 4; rowIndex++)
+                        {
+                            <div class="form-row">
+                                <div class="col-md-3">
+                                    @if (rowIndex == 0)
+                                    {
+                                        <label class="form-label">Position</label>
+                                    }
+                                    @if (rowIndex == 1)
+                                    {
+                                        <div class="form-group p-0">
+                                            <select class="form-control" id="note_month" asp-items="@ViewDataService.GetMonthsInYear()"></select>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="col-md-1 p-0">
+                                    <label class="form-label">@rowTitleManningPatrolCar[rowIndex]</label>
+                                </div>
+                                @for (var colIndex = 0; colIndex < 7; colIndex++)
+                                {
+                                    <div class="col-md-1 mx-1">
+                                        @switch (rowIndex)
+                                        {
+                                            case 0:
+                                                <label class="form-label">@Model.ClientSiteManningPatrolCarKpiSettings[colIndex].WeekDay.ToString().Substring(0, 3)</label>
+                                                break;
+                                            case 1:
+                                                <input class="form-control mb-2" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex].EmpHoursStart">
+                                                break;
+                                            case 2:
+                                                <input class="form-control mb-2" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex].EmpHoursEnd">
+                                                break;
+                                            case 3:
+                                                <input class="form-control mb-2 patrols-count" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex].NoOfPatrols" data-index="@colIndex">
+                                                break;
+
+                                        }
+                                        <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex].WeekDay" />
+                                        <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex].Id" />
+                                       
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+                <hr />
+                <button type="button" class="btn btn-success" id="save_site_manning_settings"><i class="fa fa-save mr-2"></i>Save Settings</button>
+            </form>
+        </div>
+    </div>
+    @*New Tab for contracted-manning end*@
     <div class="tab-pane" id="notes" role="tabpanel" aria-labelledby="notes-tab">
         <div class="container pt-3">
             <div class="row mt-3">

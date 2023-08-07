@@ -1008,6 +1008,21 @@ $(function () {
         }).fail(function () { });
     });
 
+
+    $('#div_site_settings').on('click', '#save_site_manning_settings', function () {
+        $.ajax({
+            url: '/admin/settings?handler=ClientSiteManningKpiSettings',
+            type: 'POST',
+            data: $('#frm_site_manning_settings').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            alert('Saved successfully');
+            $('#kpi-settings-modal').modal('hide');
+            gridClientSiteSettings.clear();
+            gridClientSiteSettings.reload({ type: $('#cs_client_type').val() });
+        }).fail(function () { });
+    });
+
     $('#search_kw_client_site').on('keyup', function (event) {
         // Enter key pressed
         if (event.keyCode === 13) {
@@ -1124,5 +1139,8 @@ $(function () {
                 $(this).show();
             });
         }
-    }    
+    }  
+
+
+
 });
