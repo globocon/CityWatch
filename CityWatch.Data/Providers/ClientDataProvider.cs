@@ -12,6 +12,16 @@ using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
 
 namespace CityWatch.Data.Providers
 {
+    public enum OfficerPositionFilterForManning
+    {
+        All = 0,
+
+        PatrolOnly = 1,
+
+        NonPatrolOnly = 2,
+
+        SecurityOnly = 3
+    }
     public interface IClientDataProvider
     {
         List<ClientType> GetClientTypes();
@@ -182,8 +192,8 @@ namespace CityWatch.Data.Providers
                 .SingleOrDefault(x => x.ClientSiteId == clientSiteId);
             if (clientSiteKpiSetting != null)
             {
-                clientSiteKpiSetting.ClientSiteManningGuardKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id && x.Type.ToLower() == "guard").ToList();
-                clientSiteKpiSetting.ClientSiteManningPatrolCarKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id && x.Type.ToLower() == "patrolcar").ToList();
+                clientSiteKpiSetting.ClientSiteManningGuardKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id && x.Type == OfficerPositionFilterForManning.SecurityOnly.ToString()).ToList();
+                clientSiteKpiSetting.ClientSiteManningPatrolCarKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id && x.Type == OfficerPositionFilterForManning.PatrolOnly.ToString()).ToList();
             }
             return clientSiteKpiSetting;
         }
@@ -353,10 +363,12 @@ namespace CityWatch.Data.Providers
         {
             if (setting != null)
             {
-                var entityStateforGuard = !_context.ClientSiteManningKpiSettings.Any(x => x.SettingsId == setting.Id && x.Type == "guard") ? EntityState.Added : EntityState.Modified;
-                var entityStateforpatrolcar = !_context.ClientSiteManningKpiSettings.Any(x => x.SettingsId == setting.Id && x.Type == "patrolcar") ? EntityState.Added : EntityState.Modified;
-                setting.ClientSiteManningGuardKpiSettings.ForEach(x => { x.Type = "guard"; x.SettingsId = setting.Id; });
-                setting.ClientSiteManningPatrolCarKpiSettings.ForEach(x => { x.Type = "patrolcar"; x.SettingsId = setting.Id; });
+                var position = OfficerPositionFilterForManning.SecurityOnly;
+                var check = position.ToString();
+                var entityStateforGuard = !_context.ClientSiteManningKpiSettings.Any(x => x.SettingsId == setting.Id && x.Type == OfficerPositionFilterForManning.SecurityOnly.ToString()) ? EntityState.Added : EntityState.Modified;
+                var entityStateforpatrolcar = !_context.ClientSiteManningKpiSettings.Any(x => x.SettingsId == setting.Id && x.Type == OfficerPositionFilterForManning.PatrolOnly.ToString()) ? EntityState.Added : EntityState.Modified;
+                setting.ClientSiteManningGuardKpiSettings.ForEach(x => { x.Type = OfficerPositionFilterForManning.SecurityOnly.ToString(); x.SettingsId = setting.Id; });
+                setting.ClientSiteManningPatrolCarKpiSettings.ForEach(x => { x.Type = OfficerPositionFilterForManning.PatrolOnly.ToString(); x.SettingsId = setting.Id; });
                 //ClientSiteManningKpi Add and Update
                 if (entityStateforGuard == EntityState.Added)
                 {

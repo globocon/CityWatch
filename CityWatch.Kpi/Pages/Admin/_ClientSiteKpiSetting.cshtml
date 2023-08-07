@@ -178,8 +178,8 @@
                                     }
                                      @if (rowIndex == 1)
                                     {
-                                        <div class="form-group p-0">                                           
-                                            <select class="form-control" id="note_month" asp-items="@ViewDataService.GetMonthsInYear()"></select>
+                                        <div class="form-group p-0">
+                                            <select asp-for="@Model.PositionGuard" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.SecurityOnly)" class="form-control"></select>
                                         </div>
                                     }                                   
                                 </div>
@@ -229,7 +229,7 @@
                                     @if (rowIndex == 1)
                                     {
                                         <div class="form-group p-0">
-                                            <select class="form-control" id="note_month" asp-items="@ViewDataService.GetMonthsInYear()"></select>
+                                            <select asp-for="@Model.PositionPatrolCar" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.PatrolOnly)" class="form-control"></select>
                                         </div>
                                     }
                                 </div>

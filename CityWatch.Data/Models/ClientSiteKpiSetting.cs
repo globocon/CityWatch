@@ -78,7 +78,10 @@ namespace CityWatch.Data.Models
                 _clientSiteDayKpiSettings = value;
             }
         }
-
+        [NotMapped]
+        public string PositionGuard { get; set; }
+        [NotMapped]
+        public string PositionPatrolCar { get; set; }
         private List<ClientSiteManningKpiSetting> _clientSiteManningKpiSettings;
         private List<ClientSiteManningKpiSetting> _clientSiteManningPatrolCarKpiSettings;
         [NotMapped]

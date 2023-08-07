@@ -5,8 +5,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+
 namespace CityWatch.Kpi.Services
 {
+
+    public enum OfficerPositionFilterManning
+    {
+        All = 0,
+
+        PatrolOnly = 1,
+
+        NonPatrolOnly = 2,
+
+        SecurityOnly = 3
+    }
     public interface IViewDataService
     {
         List<SelectListItem> ClientTypes { get; }
@@ -22,18 +34,23 @@ namespace CityWatch.Kpi.Services
         public Dictionary<int, MonthlyKpiResult> GetMonthlyKpiReportData(int[] clientSiteIds, DateTime fromDate, DateTime toDate);
 
         List<DailyKpiResult> GetKpiReportData(int[] clientSiteId, DateTime fromDate, DateTime toDate);
+        List<SelectListItem> GetOfficerPositions(OfficerPositionFilterManning positionFilter = OfficerPositionFilterManning.All);
     }
 
     public class ViewDataService : IViewDataService
     {
         private readonly IClientDataProvider _clientDataProvider;
         private readonly IKpiDataProvider _kpiDataProvider;
+        private readonly IConfigDataProvider _configDataProvider;
 
         public ViewDataService(IClientDataProvider clientDataProvider,
-            IKpiDataProvider kpiDataProvider)
+            IKpiDataProvider kpiDataProvider,
+            IConfigDataProvider configDataProvider
+            )
         {
             _clientDataProvider = clientDataProvider;
             _kpiDataProvider = kpiDataProvider;
+            _configDataProvider = configDataProvider;
         }
 
         public List<SelectListItem> ClientTypes
@@ -86,6 +103,24 @@ namespace CityWatch.Kpi.Services
                 months.Add(new SelectListItem(item.text, item.value.ToString(), selected));
             }
             return months;
+        }
+
+        public List<SelectListItem> GetOfficerPositions(OfficerPositionFilterManning positionFilter = OfficerPositionFilterManning.All)
+        {
+            var items = new List<SelectListItem>()
+            {
+                new SelectListItem("Select", "", true),
+            };
+            var officerPositions = _configDataProvider.GetPositions();
+            foreach (var officerPosition in officerPositions.Where(z => positionFilter == OfficerPositionFilterManning.All ||
+                 positionFilter == OfficerPositionFilterManning.PatrolOnly && z.IsPatrolCar ||
+                 positionFilter == OfficerPositionFilterManning.NonPatrolOnly && !z.IsPatrolCar ||
+                 positionFilter == OfficerPositionFilterManning.SecurityOnly && z.Name.Contains("Security")))
+            {
+                items.Add(new SelectListItem(officerPosition.Name, officerPosition.Name));
+            }
+
+            return items;
         }
 
         public MonthlyKpiResult GetKpiReportData(int clientSiteId, DateTime fromDate, DateTime toDate)
