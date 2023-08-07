@@ -242,7 +242,10 @@
             </div>
             <div class="modal-footer d-flex flex-column align-items-start">
                 <input type="hidden" value="" name="sch-id" id="sch-id" />
-                <button type="button" class="btn btn-primary" id="btnScheduleRun">Run Now</button>
+                <div class="btn-toolbar">
+                    <button type="button" class="btn btn-primary mr-3" id="btnScheduleRun">Run Now</button>
+                    <button id="btnScheduleDownload" class="btn btn-outline-primary ml-4"><i class="fa fa-download"></i> Download Now</button>
+                </div>
                 <span id="schRunStatus" class="mt-2"></span>
             </div>
         </div>
