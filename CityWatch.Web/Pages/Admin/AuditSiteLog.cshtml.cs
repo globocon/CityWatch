@@ -6,6 +6,7 @@ using CityWatch.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -44,12 +45,17 @@ namespace CityWatch.Web.Pages.Admin
             return Page();
         }
 
-        public PartialViewResult OnGetKeyVehicleLogProfile(int id)
+        public IActionResult OnGetKeyVehicleLogProfile(int id)
         {
             var keyVehicleLogProfile = _guardLogDataProvider.GetKeyVehicleLogProfileWithPersonalDetails(id);
             keyVehicleLogProfile ??= new KeyVehicleLogVisitorPersonalDetail() { Id = id, KeyVehicleLogProfile = new KeyVehicleLogProfile() };
+            ViewData["KeyVehicleLog_AuditHistory"] = _viewDataService.GetKeyVehicleLogAuditHistory(keyVehicleLogProfile.ProfileId).ToList();
 
-            return Partial("_KeyVehicleLogProfilePopup", keyVehicleLogProfile);
+            return new PartialViewResult
+            {
+                ViewName = "_KeyVehicleLogProfilePopup",
+                ViewData = new ViewDataDictionary<KeyVehicleLogVisitorPersonalDetail>(ViewData, keyVehicleLogProfile)
+            };
         }
 
         public JsonResult OnGetDailyGuardSiteLogs(int pageNo, int limit, int clientSiteId,
