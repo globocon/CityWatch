@@ -10,14 +10,17 @@ namespace CityWatch.Data.Providers
     {
         List<GuardLog> GetGuardLogs(int logBookId, DateTime logDate);
         List<GuardLog> GetGuardLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
+        GuardLog GetLatestGuardLog(int clientSiteId, int guardId);
         void SaveGuardLog(GuardLog guardLog);
         void DeleteGuardLog(int id);
+        List<KeyVehicleLog> GetOpenKeyVehicleLogsByVehicleRego(string vehicleRego);
         List<KeyVehicleLog> GetKeyVehicleLogs(int logBookId);
         List<KeyVehicleLog> GetKeyVehicleLogs(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate);
         KeyVehicleLog GetKeyVehicleLogById(int id);
         List<KeyVehicleLog> GetKeyVehicleLogByIds(int[] ids);
         void SaveKeyVehicleLog(KeyVehicleLog keyVehicleLog);
         void DeleteKeyVehicleLog(int id);
+        void KeyVehicleLogQuickExit(int id);
         List<PatrolCarLog> GetPatrolCarLogs(int logBookId);
         List<PatrolCarLog> GetPatrolCarLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate);
         void SavePatrolCarLog(PatrolCarLog patrolCarLog);
@@ -30,16 +33,16 @@ namespace CityWatch.Data.Providers
         List<CustomFieldLog> GetCustomFieldLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate);
         void SaveCustomFieldLogs(List<CustomFieldLog> customFieldLogs);
         void SaveCustomFieldLog(CustomFieldLog customFieldLog);
-        List<string> GetVehicleRegos();
-        List<string> GetVehicleRegos(string regoStart);
+        List<string> GetVehicleRegos(string regoStart = null);
         List<string> GetCompanyNames(string companyNameStart);
         List<string> GetSenderNames(string senderNameStart);
-        KeyVehicleLogProfile GetKeyVehicleLogProfile(int id);
-        List<KeyVehicleLogProfile> GetKeyVehicleLogProfiles();
-        List<KeyVehicleLogProfile> GetKeyVehicleLogProfiles(string truckRego);
-        List<KeyVehicleLogProfile> GetKeyVehicleLogProfiles(string truckRego, string personName);
-        void SaveKeyVehicleLogProfile(KeyVehicleLogProfile keyVehicleLogProfile);
-        void DeleteKeyVehicleLogProfile(int id);
+        List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetails(string truckRego);
+        List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetails(string truckRego, string personName);
+        KeyVehicleLogVisitorPersonalDetail GetKeyVehicleLogProfileWithPersonalDetails(int id);
+        int SaveKeyVehicleLogProfileWithPersonalDetail(KeyVehicleLogVisitorPersonalDetail keyVehicleLogProfile);
+        int SaveKeyVehicleLogVisitorPersonalDetail(KeyVehicleLogVisitorPersonalDetail keyVehicleLogVisitorPersonalDetail);
+        void SaveKeyVehicleLogProfileNotes(string truckRego, string notes);
+        void DeleteKeyVehicleLogPersonalDetails(int id);
         List<KeyVehcileLogField> GetKeyVehicleLogFields(bool includeDeleted = false);
         List<KeyVehcileLogField> GetKeyVehicleLogFieldsByType(KvlFieldType type);
         void SaveKeyVehicleLogField(KeyVehcileLogField field);
@@ -79,6 +82,24 @@ namespace CityWatch.Data.Providers
                 .ToList();
         }
 
+        public GuardLog GetLatestGuardLog(int clientSiteId, int guardId)
+        {
+            var latestGuardLogin = _context.GuardLogins
+                                    .Where(z => z.ClientSiteId == clientSiteId && z.GuardId == guardId)
+                                    .OrderByDescending(x => x.Id)
+                                    .FirstOrDefault();
+
+            if (latestGuardLogin != null)
+            {
+                return _context.GuardLogs.Where(z => z.GuardLoginId == latestGuardLogin.Id)
+                                            .OrderBy(z => z.Id)
+                                            .ThenBy(z => z.EventDateTime)
+                                            .LastOrDefault();
+            }
+
+            return null;
+        }
+
         public void SaveGuardLog(GuardLog guardLog)
         {
             // Insert new guardlog entry
@@ -113,6 +134,17 @@ namespace CityWatch.Data.Providers
 
             _context.Remove(guardLogToDelete);
             _context.SaveChanges();
+        }
+
+        public List<KeyVehicleLog> GetOpenKeyVehicleLogsByVehicleRego(string vehicleRego)
+        {
+            var results = _context.KeyVehicleLogs.Where(x => x.VehicleRego == vehicleRego && !x.ExitTime.HasValue && x.EntryTime >= DateTime.Today);
+                
+            results.Include(x => x.ClientSiteLogBook)
+                .ThenInclude(x => x.ClientSite)
+                .Load();
+
+            return results.ToList();
         }
 
         public List<KeyVehicleLog> GetKeyVehicleLogs(int logBookId)
@@ -210,7 +242,7 @@ namespace CityWatch.Data.Providers
                 keyVehicleLogToUpdate.IsTimeSlotNo = keyVehicleLog.IsTimeSlotNo;
                 keyVehicleLogToUpdate.Reels = keyVehicleLog.Reels;
                 keyVehicleLogToUpdate.CustomerRef = keyVehicleLog.CustomerRef;
-                keyVehicleLogToUpdate.Wvi = keyVehicleLog.Wvi;
+                keyVehicleLogToUpdate.Vwi = keyVehicleLog.Vwi;
                 keyVehicleLogToUpdate.Sender = keyVehicleLog.Sender;
                 keyVehicleLogToUpdate.IsSender = keyVehicleLog.IsSender;
             }
@@ -225,6 +257,16 @@ namespace CityWatch.Data.Providers
             if (keyVehicleLogToDelete != null)
             {
                 _context.Remove(keyVehicleLogToDelete);
+                _context.SaveChanges();
+            }
+        }
+
+        public void KeyVehicleLogQuickExit(int id)
+        {
+            var keyVehicleLog = _context.KeyVehicleLogs.SingleOrDefault(x => x.Id == id);
+            if (keyVehicleLog != null)
+            {
+                keyVehicleLog.ExitTime = DateTime.Now;
                 _context.SaveChanges();
             }
         }
@@ -359,19 +401,12 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
 
-        public List<string> GetVehicleRegos()
+        public List<string> GetVehicleRegos(string regoStart = null)
         {
-            return _context.KeyVehicleLogProfiles
-                .Select(z => z.VehicleRego)
-                .Distinct()
-                .OrderBy(z => z)
-                .ToList();
-        }
-
-        public List<string> GetVehicleRegos(string regoStart)
-        {
-            return _context.KeyVehicleLogProfiles
-                .Where(z => !string.IsNullOrEmpty(z.VehicleRego) && z.VehicleRego.Substring(0, regoStart.Length).ToLower() == regoStart.ToLower())
+            return _context.KeyVehicleLogVisitorProfiles
+                .Where(z => string.IsNullOrEmpty(regoStart) || 
+                            (!string.IsNullOrEmpty(z.VehicleRego) && 
+                                z.VehicleRego.Substring(0, regoStart.Length).ToLower() == regoStart.ToLower()))
                 .Select(z => z.VehicleRego)
                 .Distinct()
                 .OrderBy(z => z)
@@ -398,66 +433,81 @@ namespace CityWatch.Data.Providers
                 .ToList();
         }
 
-        public KeyVehicleLogProfile GetKeyVehicleLogProfile(int id)
+        public KeyVehicleLogVisitorPersonalDetail GetKeyVehicleLogProfileWithPersonalDetails(int id)
         {
-            return _context.KeyVehicleLogProfiles.SingleOrDefault(z => z.Id == id);
+            return _context.KeyVehicleLogVisitorPersonalDetails
+                .Include(z => z.KeyVehicleLogProfile)
+                .SingleOrDefault(z => z.Id == id);
         }
 
-        public List<KeyVehicleLogProfile> GetKeyVehicleLogProfiles(string truckRego)
+        public List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetails(string truckRego)
         {
-            return _context.KeyVehicleLogProfiles
-                .Where(z => string.IsNullOrEmpty(truckRego) || string.Equals(z.VehicleRego, truckRego))
+            return _context.KeyVehicleLogVisitorPersonalDetails
+                .Include(z => z.KeyVehicleLogProfile)
+                .Where(z => string.IsNullOrEmpty(truckRego) || string.Equals(z.KeyVehicleLogProfile.VehicleRego, truckRego))
                 .ToList();
         }
 
-        public List<KeyVehicleLogProfile> GetKeyVehicleLogProfiles(string truckRego, string personName)
+        public List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetails(string truckRego, string personName)
         {
-            return _context.KeyVehicleLogProfiles
-                .Where(z => string.Equals(z.VehicleRego, truckRego) && string.Equals(z.PersonName, personName))
+            return _context.KeyVehicleLogVisitorPersonalDetails
+                .Where(z => string.Equals(z.KeyVehicleLogProfile.VehicleRego, truckRego) && string.Equals(z.PersonName, personName))
                 .ToList();
         }
 
-        public List<KeyVehicleLogProfile> GetKeyVehicleLogProfiles()
+        public int SaveKeyVehicleLogProfileWithPersonalDetail(KeyVehicleLogVisitorPersonalDetail kvlVisitorPersonalDetail)
         {
-            return _context.KeyVehicleLogProfiles.OrderBy(x => x.PersonName).ToList();
+            kvlVisitorPersonalDetail.ProfileId = SaveKeyVehicleLogProfile(kvlVisitorPersonalDetail.KeyVehicleLogProfile);
+            return SaveKeyVehicleLogVisitorPersonalDetail(kvlVisitorPersonalDetail);
         }
 
-        public void SaveKeyVehicleLogProfile(KeyVehicleLogProfile keyVehicleLogProfile)
+        public int SaveKeyVehicleLogVisitorPersonalDetail(KeyVehicleLogVisitorPersonalDetail keyVehicleLogVisitorPersonalDetail)
         {
-            if (keyVehicleLogProfile.Id == 0)
+            var kvlPersonalDetailsToDb = _context.KeyVehicleLogVisitorPersonalDetails
+                                            .SingleOrDefault(z => z.Id == keyVehicleLogVisitorPersonalDetail.Id) ??
+                                            new KeyVehicleLogVisitorPersonalDetail();
+
+            kvlPersonalDetailsToDb.ProfileId = keyVehicleLogVisitorPersonalDetail.ProfileId;
+            kvlPersonalDetailsToDb.CompanyName = keyVehicleLogVisitorPersonalDetail.CompanyName;
+            kvlPersonalDetailsToDb.PersonName = keyVehicleLogVisitorPersonalDetail.PersonName;
+            kvlPersonalDetailsToDb.PersonType = keyVehicleLogVisitorPersonalDetail.PersonType;
+
+            if (kvlPersonalDetailsToDb.Id == 0)
             {
-                _context.KeyVehicleLogProfiles.Add(keyVehicleLogProfile);
-            }
-            else
-            {
-                var vehicleLogProfileToUpdate = _context.KeyVehicleLogProfiles.SingleOrDefault(x => x.Id == keyVehicleLogProfile.Id);
-                if (vehicleLogProfileToUpdate != null)
-                {
-                    vehicleLogProfileToUpdate.PlateId = keyVehicleLogProfile.PlateId;
-                    vehicleLogProfileToUpdate.Trailer1Rego = keyVehicleLogProfile.Trailer1Rego;
-                    vehicleLogProfileToUpdate.Trailer2Rego = keyVehicleLogProfile.Trailer2Rego;
-                    vehicleLogProfileToUpdate.Trailer3Rego = keyVehicleLogProfile.Trailer3Rego;
-                    vehicleLogProfileToUpdate.Trailer4Rego = keyVehicleLogProfile.Trailer4Rego;
-                    vehicleLogProfileToUpdate.TruckConfig = keyVehicleLogProfile.TruckConfig;
-                    vehicleLogProfileToUpdate.TrailerType = keyVehicleLogProfile.TrailerType;
-                    vehicleLogProfileToUpdate.MaxWeight = keyVehicleLogProfile.MaxWeight;
-                    vehicleLogProfileToUpdate.PersonName = keyVehicleLogProfile.PersonName;
-                    vehicleLogProfileToUpdate.CompanyName = keyVehicleLogProfile.CompanyName;
-                    vehicleLogProfileToUpdate.PersonType = keyVehicleLogProfile.PersonType;
-                    vehicleLogProfileToUpdate.MobileNumber = keyVehicleLogProfile.MobileNumber;
-                    vehicleLogProfileToUpdate.Product = keyVehicleLogProfile.Product;
-                    vehicleLogProfileToUpdate.EntryReason = keyVehicleLogProfile.EntryReason;
-                }
+                _context.KeyVehicleLogVisitorPersonalDetails.Add(kvlPersonalDetailsToDb);
             }
             _context.SaveChanges();
+
+            return kvlPersonalDetailsToDb.Id;
         }
 
-        public void DeleteKeyVehicleLogProfile(int id)
+        public void SaveKeyVehicleLogProfileNotes(string truckRego, string notes)
         {
-            var vehicleLogProfileToDelete = _context.KeyVehicleLogProfiles.SingleOrDefault(x => x.Id == id);
-            if (vehicleLogProfileToDelete != null)
+            var profileDetailsInDb = _context.KeyVehicleLogVisitorProfiles.SingleOrDefault(z => z.VehicleRego == truckRego);
+            if (profileDetailsInDb != null && !string.Equals(profileDetailsInDb.Notes, notes))
             {
-                _context.Remove(vehicleLogProfileToDelete);
+                profileDetailsInDb.Notes = notes;
+                _context.SaveChanges();
+            }
+        }
+
+        public void DeleteKeyVehicleLogPersonalDetails(int id)
+        {
+            var kvlPersonalDetailsToDelete = _context.KeyVehicleLogVisitorPersonalDetails.SingleOrDefault(x => x.Id == id);
+            if (kvlPersonalDetailsToDelete != null)
+            {
+                _context.KeyVehicleLogVisitorPersonalDetails.Remove(kvlPersonalDetailsToDelete);
+
+                var personalDetailsCount = _context.KeyVehicleLogVisitorPersonalDetails.Count(x => x.ProfileId == kvlPersonalDetailsToDelete.ProfileId);
+                if (personalDetailsCount == 1)
+                {
+                    var kvlProfileToDelete = _context.KeyVehicleLogVisitorProfiles.SingleOrDefault(x => x.Id == kvlPersonalDetailsToDelete.ProfileId);
+                    if (kvlProfileToDelete != null)
+                    {
+                        _context.KeyVehicleLogVisitorProfiles.Remove(kvlProfileToDelete);
+                    }
+                }
+
                 _context.SaveChanges();
             }
         }
@@ -524,6 +574,36 @@ namespace CityWatch.Data.Providers
                 _context.KeyVehicleLogAuditHistory.Add(keyVehicleLogAuditHistory);
                 _context.SaveChanges();
             }
+        }
+
+        private int SaveKeyVehicleLogProfile(KeyVehicleLogProfile keyVehicleLogProfile)
+        {
+            var kvlProfileToDb = _context.KeyVehicleLogVisitorProfiles.SingleOrDefault(z => z.VehicleRego == keyVehicleLogProfile.VehicleRego) ?? new KeyVehicleLogProfile();
+            kvlProfileToDb.VehicleRego = keyVehicleLogProfile.VehicleRego;
+            kvlProfileToDb.Trailer1Rego = keyVehicleLogProfile.Trailer1Rego;
+            kvlProfileToDb.Trailer2Rego = keyVehicleLogProfile.Trailer2Rego;
+            kvlProfileToDb.Trailer3Rego = keyVehicleLogProfile.Trailer3Rego;
+            kvlProfileToDb.Trailer4Rego = keyVehicleLogProfile.Trailer4Rego;
+            kvlProfileToDb.TruckConfig = keyVehicleLogProfile.TruckConfig;
+            kvlProfileToDb.TrailerType = keyVehicleLogProfile.TrailerType;
+            kvlProfileToDb.MaxWeight = keyVehicleLogProfile.MaxWeight;
+            kvlProfileToDb.MobileNumber = keyVehicleLogProfile.MobileNumber;
+            kvlProfileToDb.Product = keyVehicleLogProfile.Product;
+            kvlProfileToDb.EntryReason = keyVehicleLogProfile.EntryReason;
+            kvlProfileToDb.CreatedLogId = keyVehicleLogProfile.CreatedLogId;
+            kvlProfileToDb.PlateId = keyVehicleLogProfile.PlateId;
+            kvlProfileToDb.Sender = keyVehicleLogProfile.Sender;
+            kvlProfileToDb.IsSender = keyVehicleLogProfile.IsSender;
+            kvlProfileToDb.Notes = keyVehicleLogProfile.Notes;
+
+            if (kvlProfileToDb.Id == 0)
+            {
+                _context.KeyVehicleLogVisitorProfiles.Add(kvlProfileToDb);
+            }
+
+            _context.SaveChanges();
+
+            return kvlProfileToDb.Id;
         }
     }
 }

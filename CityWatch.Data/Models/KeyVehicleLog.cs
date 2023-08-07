@@ -84,7 +84,8 @@ namespace CityWatch.Data.Models
 
         public string CustomerRef { get; set; }
 
-        public string Wvi { get; set; }
+        [Column("Wvi")]
+        public string Vwi { get; set; }
 
         [HiddenInput]
         public bool IsSender { get; set; }

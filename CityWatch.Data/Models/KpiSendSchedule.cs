@@ -82,6 +82,8 @@ namespace CityWatch.Data.Models
 
         public string EmailBcc { get; set; }
 
+        public bool IsHrTimerPaused { get; set; }
+
         public List<KpiSendScheduleSummaryNote> KpiSendScheduleSummaryNotes { get; set; }
 
         public KpiSendScheduleSummaryNote NoteForThisMonth

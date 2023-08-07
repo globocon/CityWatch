@@ -58,6 +58,14 @@
                                         </div>
                                     </div>
                                     <div class="d-flex flex-row p-2">
+                                        <label class="mr-3">2 Hr Log Book is <span id="hrTimerIsPausedStatus"></span> :</label>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="hrTimerIsPaused">
+                                            <label class="custom-control-label" for="hrTimerIsPaused"></label>
+                                            <input type="hidden" id="isHrTimerPaused" name="isHrTimerPaused">
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-row p-2">
                                         <label class="mr-3">Schedule is <span id="cbIsPausedStatus"></span> :</label>
                                         <div class="custom-control custom-switch">
                                             <input type="checkbox" class="custom-control-input" id="cbIsPaused">
@@ -234,10 +242,7 @@
             </div>
             <div class="modal-footer d-flex flex-column align-items-start">
                 <input type="hidden" value="" name="sch-id" id="sch-id" />
-                <div class="btn-toolbar">
-                    <button type="button" class="btn btn-primary mr-3" id="btnScheduleRun">Run Now</button>
-                    <button id="btnScheduleDownload" class="btn btn-outline-primary ml-4"><i class="fa fa-download"></i> Download Now</button>
-                </div>
+                <button type="button" class="btn btn-primary" id="btnScheduleRun">Run Now</button>
                 <span id="schRunStatus" class="mt-2"></span>
             </div>
         </div>

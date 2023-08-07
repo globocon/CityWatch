@@ -33,9 +33,9 @@ namespace CityWatch.Web.Services
                 return Enumerable.Empty<SelectListItem>().ToList();
 
             return _clientDataProvider.GetClientSites(null)
-                    .Where(z => types.Contains(z.ClientType.Name))
-                    .Select(z => new SelectListItem(z.Name, z.Id.ToString()))
-                    .ToList();
+                .Where(z => types.Split(';').Contains(z.ClientType.Name))
+                .Select(z => new SelectListItem(z.Name, z.Id.ToString()))
+                .ToList();
         }
 
         public List<SelectListItem> GetClientSitePocs(int[] clientSiteIds)

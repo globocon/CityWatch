@@ -8,19 +8,22 @@ namespace CityWatch.Web.Models
     public class KeyVehicleLogProfileViewModel
     {
         private readonly KeyVehicleLogProfile _keyVehicleLogProfile;
-        private readonly List<KeyVehcileLogField> _keyVehicleLogFields;        
+        private readonly List<KeyVehcileLogField> _keyVehicleLogFields;
+        public readonly KeyVehicleLogVisitorPersonalDetail _vehicleLogVisitorPersonalDetail;
 
-        public KeyVehicleLogProfileViewModel(KeyVehicleLogProfile keyVehicleLogProfile, List<KeyVehcileLogField> keyVehcileLogFields)
+        public KeyVehicleLogProfileViewModel(KeyVehicleLogVisitorPersonalDetail keyVehicleLogVisitorPersonalDetail,
+            List<KeyVehcileLogField> keyVehicleLogFields)
         {
-            _keyVehicleLogProfile = keyVehicleLogProfile;
-            _keyVehicleLogFields = keyVehcileLogFields;            
+            _vehicleLogVisitorPersonalDetail = keyVehicleLogVisitorPersonalDetail;
+            _keyVehicleLogProfile = keyVehicleLogVisitorPersonalDetail.KeyVehicleLogProfile;
+            _keyVehicleLogFields = keyVehicleLogFields;
         }
 
-        public KeyVehicleLogProfile Detail
+        public KeyVehicleLogVisitorPersonalDetail Detail
         {
             get
             {
-                return _keyVehicleLogProfile;
+                return _vehicleLogVisitorPersonalDetail;
             }
         }
 
@@ -44,7 +47,7 @@ namespace CityWatch.Web.Models
         {
             get
             {
-                return _keyVehicleLogFields.SingleOrDefault(z => z.Id == _keyVehicleLogProfile.PersonType)?.Name;
+                return _keyVehicleLogFields.SingleOrDefault(z => z.Id == _vehicleLogVisitorPersonalDetail.PersonType)?.Name;
             }
         }
 
@@ -60,7 +63,7 @@ namespace CityWatch.Web.Models
         {
             get
             {
-                var entryPurposeOrProduct = Detail.Product;
+                var entryPurposeOrProduct = _keyVehicleLogProfile.Product;
 
                 if (!string.IsNullOrEmpty(entryPurposeOrProduct) && !string.IsNullOrEmpty(EntryReasonText))
                 {
@@ -95,7 +98,7 @@ namespace CityWatch.Web.Models
             {
                 return _keyVehicleLogProfile.KeyVehicleLog?.ClientSiteLogBook.ClientSite.Name;
             }
-        }        
+        }
     }
 
     public class KeyVehicleLogProfileViewModelComparer : IComparer<KeyVehicleLogProfileViewModel>

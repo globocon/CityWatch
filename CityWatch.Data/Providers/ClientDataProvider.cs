@@ -172,7 +172,7 @@ namespace CityWatch.Data.Providers
 
         public ClientSiteKpiSetting GetClientSiteKpiSetting(int clientSiteId)
         {
-            var clientSiteKpiSetting = _context.ClientSiteKpiSettings
+            var clientSiteKpiSetting =  _context.ClientSiteKpiSettings
                 .Include(x => x.ClientSite)
                 .Include(x => x.ClientSite.ClientType)
                 .Include(x => x.ClientSiteDayKpiSettings)
@@ -189,7 +189,7 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.ClientSite.ClientType)
                 .Include(x => x.ClientSiteDayKpiSettings)
                 .Where(x => clientSiteIds.Contains(x.ClientSiteId))
-                .ToList();
+				.ToList();
 
             return clientSiteKpiSetting;
         }

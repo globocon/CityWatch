@@ -98,7 +98,8 @@
                     </div>
                     <div class="form-group col-md-2">
                         <label class="mx-1">Key #</label>
-                        <select class="form-control" asp-for="@Model.KeyVehicleLogAuditLogRequest.KeyNo"></select>
+                        <select class="form-control" id="listKeyVehicleLogAuditLogRequestKeyNo"></select>
+                        <input type="hidden" asp-for="@Model.KeyVehicleLogAuditLogRequest.KeyNo" />
                     </div>
                 </div>
             </div>

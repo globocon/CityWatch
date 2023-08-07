@@ -3,7 +3,6 @@ using Dropbox.Api;
 using Dropbox.Api.Common;
 using Dropbox.Api.Files;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
