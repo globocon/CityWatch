@@ -22,6 +22,7 @@ using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using IO = System.IO;
 
@@ -29,6 +30,7 @@ namespace CityWatch.Web.Pages.Guard
 {
     public class KeyVehicleLogModel : PageModel
     {
+        private const string LAST_USED_DOCKET_SEQ_NO_CONFIG_NAME = "LastUsedDocketSn";
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         public readonly IClientDataProvider _clientDataProvider;
         public readonly IGuardDataProvider _guardDataProvider;
@@ -39,6 +41,7 @@ namespace CityWatch.Web.Pages.Guard
         private readonly EmailOptions _emailOptions;
         private readonly Settings _settings;
         private readonly ILogger<KeyVehicleLogModel> _logger;
+        private readonly IAppConfigurationProvider _appConfigurationProvider;
 
         public KeyVehicleLogModel(IWebHostEnvironment webHostEnvironment,
             IGuardLogDataProvider guardLogDataProvider,
@@ -49,7 +52,8 @@ namespace CityWatch.Web.Pages.Guard
             IOptions<EmailOptions> emailOptions,
             IOptions<Settings> settings,
             IDropboxService dropboxService,
-            ILogger<KeyVehicleLogModel> logger)
+            ILogger<KeyVehicleLogModel> logger,
+            IAppConfigurationProvider appConfigurationProvider)
         {
             _guardLogDataProvider = guardLogDataProvider;
             _clientDataProvider = clientDataProvider;
@@ -61,6 +65,7 @@ namespace CityWatch.Web.Pages.Guard
             _emailOptions = emailOptions.Value;
             _settings = settings.Value;
             _logger = logger;
+            _appConfigurationProvider = appConfigurationProvider;
         }
 
         [BindProperty]
@@ -283,7 +288,8 @@ namespace CityWatch.Web.Pages.Guard
 
             try
             {
-                fileName = _keyVehicleLogDocketGenerator.GeneratePdfReport(id, GetManualDocketReason(option, otherReason));
+                var serialNo = GetNextDocketSequenceNumber(id);
+                fileName = _keyVehicleLogDocketGenerator.GeneratePdfReport(id, GetManualDocketReason(option, otherReason), serialNo);
             }
             catch (Exception ex)
             {
@@ -520,6 +526,58 @@ namespace CityWatch.Web.Pages.Guard
             }
 
             return keyVehicleLogAuditHistory;
+        }
+
+        private string GetNextDocketSequenceNumber(int id)
+        {
+            var lastSequenceNumber = 0;
+            var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(id);
+            if (keyVehicleLog.DocketSerialNo != null)
+            {
+                var serialNo = keyVehicleLog.DocketSerialNo;
+                var sufix = Regex.Replace(serialNo, @"[^A-Z]+", String.Empty);
+                int index = GetSuffixNumber(sufix);
+                var numberSuffix = GetSequenceNumberSuffix(index);
+                var serialnumber = string.Join("", serialNo.ToCharArray().Where(Char.IsDigit));
+                return $"{serialnumber}-{numberSuffix}";
+            }
+
+            var configuration = _appConfigurationProvider.GetConfigurationByName(LAST_USED_DOCKET_SEQ_NO_CONFIG_NAME);
+            if (configuration != null)
+            {
+                lastSequenceNumber = int.Parse(configuration.Value);
+                lastSequenceNumber++;
+                configuration.Value = lastSequenceNumber.ToString();
+                _appConfigurationProvider.SaveConfiguration(configuration);
+            }
+            return lastSequenceNumber.ToString().PadLeft(5, '0');
+        }
+
+        private int GetSuffixNumber(string suffix)
+        {
+            int index = 0;
+            string alphabet = suffix.ToUpper();
+            for (int iChar = alphabet.Length - 1; iChar >= 0; iChar--)
+            {
+                char colPiece = alphabet[iChar];
+                int colNum = colPiece - 64;
+                index = index + colNum * (int)Math.Pow(26, alphabet.Length - (iChar + 1));
+            }
+            return index;
+        }
+
+        private string GetSequenceNumberSuffix(int index)
+        {
+            string value = "";
+            decimal number = index + 1;
+            while (number > 0)
+            {
+                decimal currentLetterNumber = (number - 1) % 26;
+                char currentLetter = (char)(currentLetterNumber + 65);
+                value = currentLetter + value;
+                number = (number - (currentLetterNumber + 1)) / 26;
+            }
+            return value;
         }
     }
 }

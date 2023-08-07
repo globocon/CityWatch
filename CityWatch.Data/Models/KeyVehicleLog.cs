@@ -29,6 +29,8 @@ namespace CityWatch.Data.Models
 
         public string TimeSlotNo { get; set; }
 
+        public string DocketSerialNo { get; set; }
+
         public string VehicleRego { get; set; }
 
         public string Trailer1Rego { get; set; }

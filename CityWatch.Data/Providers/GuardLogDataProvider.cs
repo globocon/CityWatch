@@ -18,6 +18,7 @@ namespace CityWatch.Data.Providers
         List<KeyVehicleLog> GetKeyVehicleLogs(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate);
         KeyVehicleLog GetKeyVehicleLogById(int id);
         List<KeyVehicleLog> GetKeyVehicleLogByIds(int[] ids);
+        void SaveDocketSerialNo(int id, string serialNo);
         void SaveKeyVehicleLog(KeyVehicleLog keyVehicleLog);
         void DeleteKeyVehicleLog(int id);
         void KeyVehicleLogQuickExit(int id);
@@ -245,6 +246,16 @@ namespace CityWatch.Data.Providers
                 keyVehicleLogToUpdate.IsSender = keyVehicleLog.IsSender;
             }
             _context.SaveChanges();
+        }
+
+        public void SaveDocketSerialNo(int id, string serialNo)
+        {
+            var keyVehicleLog = _context.KeyVehicleLogs.SingleOrDefault(i => i.Id == id);
+            if (keyVehicleLog != null)
+            {
+                keyVehicleLog.DocketSerialNo = serialNo;
+                _context.SaveChanges();
+            }
         }
 
         public void DeleteKeyVehicleLog(int id)
