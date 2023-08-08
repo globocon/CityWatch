@@ -77,6 +77,7 @@ namespace CityWatch.Web.Services
         string GetClientSiteKeyDescription(int KeyId, int clientSiteId);
         void CopyOpenLogbookEntriesFromPreviousDay(int previousDayLogBookId, int logBookId, int guardLoginId);
         IEnumerable<string> GetCompanyAndSenderNames(string startsWith);
+        IEnumerable<string> GetCompanyNames(string startsWith);
     }
 
     public class ViewDataService : IViewDataService
@@ -711,6 +712,12 @@ namespace CityWatch.Web.Services
 
             return companyNames.Concat(senderNames).Distinct().OrderBy(x => x).ToList();
         }
+
+        public IEnumerable<string> GetCompanyNames(string startsWith)
+        {
+            return _guardLogDataProvider.GetCompanyNames(startsWith);
+        }
+
         public List<ClientSite> GetNewUserClientSites()
         {
 
