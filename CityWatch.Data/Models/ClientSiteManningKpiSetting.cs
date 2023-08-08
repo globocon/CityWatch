@@ -11,11 +11,15 @@ namespace CityWatch.Data.Models
         public int Id { get; set; }
 
         public int SettingsId { get; set; }
-
+        
+        public int  PositionId { get; set; }
+        [ForeignKey("PositionId")]
+        [JsonIgnore]
         public DayOfWeek WeekDay { get; set; }
 
         [ForeignKey("SettingsId")]
         [JsonIgnore]
+       
         public ClientSiteKpiSetting ClientSiteKpiSetting { get; set; }      
 
         public int? NoOfPatrols { get; set; }

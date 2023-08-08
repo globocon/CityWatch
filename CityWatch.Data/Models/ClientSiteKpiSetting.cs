@@ -42,7 +42,8 @@ namespace CityWatch.Data.Models
         public int? MinPatrolFreq { get; set; }
 
         [Display(Name = "Minimum Images per patrol")]
-        public int? MinImagesPerPatrol { get; set; }
+        public int? MinImagesPerPatrol { get; set; }         
+       
 
         public List<ClientSiteKpiNote> Notes { get; set; }
 
@@ -78,6 +79,8 @@ namespace CityWatch.Data.Models
                 _clientSiteDayKpiSettings = value;
             }
         }
+        [NotMapped]
+        public int PositionId { get; set; }
         [NotMapped]
         public string PositionGuard { get; set; }
         [NotMapped]

@@ -117,7 +117,7 @@ namespace CityWatch.Kpi.Services
                  positionFilter == OfficerPositionFilterManning.NonPatrolOnly && !z.IsPatrolCar ||
                  positionFilter == OfficerPositionFilterManning.SecurityOnly && z.Name.Contains("Security")))
             {
-                items.Add(new SelectListItem(officerPosition.Name, officerPosition.Name));
+                items.Add(new SelectListItem(officerPosition.Name, officerPosition.Id.ToString()));
             }
 
             return items;

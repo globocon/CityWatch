@@ -1009,7 +1009,7 @@ $(function () {
     });
 
 
-    $('#div_site_settings').on('click', '#save_site_manning_settings', function () {
+    $('#div_site_settings').on('click', '#save_site_manning_settings', function () {        
         $.ajax({
             url: '/admin/settings?handler=ClientSiteManningKpiSettings',
             type: 'POST',
@@ -1022,6 +1022,43 @@ $(function () {
             gridClientSiteSettings.reload({ type: $('#cs_client_type').val() });
         }).fail(function () { });
     });
+
+    $('#div_site_settings').on('click', '#showDivButton', function () {
+        $("#hiddenDiv").toggle();
+    });
+
+
+    function handleCheckboxChange() {
+        // Get the status of chkGuard and chkPatrolCar
+        var chkGuard = $("#chkGuard").prop("checked");
+        var chkPatrolCar = $("#chkPatrolCar").prop("checked");       
+        if (chkGuard) {
+            $("#divGuard").show();
+
+        } else {
+            $("#divGuard").hide();
+        }
+        if (chkPatrolCar) {
+            $("#divPatrolCar").show();
+        } else {
+            $("#divPatrolCar").hide();
+        }
+        if (chkGuard || chkPatrolCar) {
+            $("#divbtn").show();
+        }
+        else {
+            $("#divbtn").hide();
+        }
+    }
+
+    // Attach the handleCheckboxChange function to the change event of both checkboxes
+    $('#div_site_settings').on('change', '#chkGuard', function () {
+        handleCheckboxChange();
+    });
+    $('#div_site_settings').on('change', '#chkPatrolCar', function () {
+        handleCheckboxChange();
+    });
+  
 
     $('#search_kw_client_site').on('keyup', function (event) {
         // Enter key pressed

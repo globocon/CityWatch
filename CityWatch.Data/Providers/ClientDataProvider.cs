@@ -14,13 +14,9 @@ namespace CityWatch.Data.Providers
 {
     public enum OfficerPositionFilterForManning
     {
-        All = 0,
-
         PatrolOnly = 1,
 
-        NonPatrolOnly = 2,
-
-        SecurityOnly = 3
+        SecurityOnly = 2
     }
     public interface IClientDataProvider
     {
@@ -192,8 +188,8 @@ namespace CityWatch.Data.Providers
                 .SingleOrDefault(x => x.ClientSiteId == clientSiteId);
             if (clientSiteKpiSetting != null)
             {
-                clientSiteKpiSetting.ClientSiteManningGuardKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id && x.Type == OfficerPositionFilterForManning.SecurityOnly.ToString()).ToList();
-                clientSiteKpiSetting.ClientSiteManningPatrolCarKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id && x.Type == OfficerPositionFilterForManning.PatrolOnly.ToString()).ToList();
+                clientSiteKpiSetting.ClientSiteManningGuardKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id && x.Type == ((int)OfficerPositionFilterForManning.SecurityOnly).ToString()).ToList();
+                clientSiteKpiSetting.ClientSiteManningPatrolCarKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id && x.Type == ((int)OfficerPositionFilterForManning.PatrolOnly).ToString()).ToList();
             }
             return clientSiteKpiSetting;
         }
@@ -365,42 +361,57 @@ namespace CityWatch.Data.Providers
             {
                 var position = OfficerPositionFilterForManning.SecurityOnly;
                 var check = position.ToString();
-                var entityStateforGuard = !_context.ClientSiteManningKpiSettings.Any(x => x.SettingsId == setting.Id && x.Type == OfficerPositionFilterForManning.SecurityOnly.ToString()) ? EntityState.Added : EntityState.Modified;
-                var entityStateforpatrolcar = !_context.ClientSiteManningKpiSettings.Any(x => x.SettingsId == setting.Id && x.Type == OfficerPositionFilterForManning.PatrolOnly.ToString()) ? EntityState.Added : EntityState.Modified;
-                setting.ClientSiteManningGuardKpiSettings.ForEach(x => { x.Type = OfficerPositionFilterForManning.SecurityOnly.ToString(); x.SettingsId = setting.Id; });
-                setting.ClientSiteManningPatrolCarKpiSettings.ForEach(x => { x.Type = OfficerPositionFilterForManning.PatrolOnly.ToString(); x.SettingsId = setting.Id; });
-                //ClientSiteManningKpi Add and Update
-                if (entityStateforGuard == EntityState.Added)
+                var entityStateforGuard = !_context.ClientSiteManningKpiSettings.Any(x => x.SettingsId == setting.Id && x.Type == ((int)OfficerPositionFilterForManning.SecurityOnly).ToString()) ? EntityState.Added : EntityState.Modified;
+                var entityStateforpatrolcar = !_context.ClientSiteManningKpiSettings.Any(x => x.SettingsId == setting.Id && x.Type == ((int)OfficerPositionFilterForManning.PatrolOnly).ToString()) ? EntityState.Added : EntityState.Modified;
+                var positionIdGuard = setting.ClientSiteManningGuardKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
+                var positionIdPatrolCar = setting.ClientSiteManningPatrolCarKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
+                if (positionIdGuard != null || positionIdPatrolCar != null)
                 {
-                    if (setting.ClientSiteManningGuardKpiSettings.Any())
+                    //ClientSiteManningKpi Add and Update
+                    if (positionIdGuard != null)
                     {
-                        _context.ClientSiteManningKpiSettings.AddRange(setting.ClientSiteManningGuardKpiSettings);
-                        _context.SaveChanges();
+                        setting.ClientSiteManningGuardKpiSettings.ForEach(x => { x.Type = ((int)OfficerPositionFilterForManning.SecurityOnly).ToString(); x.SettingsId = setting.Id; x.PositionId = positionIdGuard.PositionId; });
+                        if (entityStateforGuard == EntityState.Added)
+                        {
+                            if (setting.ClientSiteManningGuardKpiSettings.Any())
+                            {
+                                if (positionIdGuard != null)
+                                {
+                                    _context.ClientSiteManningKpiSettings.AddRange(setting.ClientSiteManningGuardKpiSettings);
+                                    _context.SaveChanges();
+
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (setting.ClientSiteManningGuardKpiSettings.Any())
+                            {
+                                _context.ClientSiteManningKpiSettings.UpdateRange(setting.ClientSiteManningGuardKpiSettings);
+                                _context.SaveChanges();
+                            }
+                        }
                     }
-                }
-                else
-                {
-                    if (setting.ClientSiteManningGuardKpiSettings.Any())
+                    if (positionIdPatrolCar != null)
                     {
-                        _context.ClientSiteManningKpiSettings.UpdateRange(setting.ClientSiteManningGuardKpiSettings);
-                        _context.SaveChanges();
-                    }
-                }
-                //ManningPatrolCar Add and Update
-                if (entityStateforpatrolcar == EntityState.Added)
-                {
-                    if (setting.ClientSiteManningPatrolCarKpiSettings.Any())
-                    {
-                        _context.ClientSiteManningKpiSettings.AddRange(setting.ClientSiteManningPatrolCarKpiSettings);
-                        _context.SaveChanges();
-                    }
-                }
-                else
-                {
-                    if (setting.ClientSiteManningPatrolCarKpiSettings.Any() && setting.ClientSiteManningPatrolCarKpiSettings != null)
-                    {
-                        _context.ClientSiteManningKpiSettings.UpdateRange(setting.ClientSiteManningPatrolCarKpiSettings);
-                        _context.SaveChanges();
+                        setting.ClientSiteManningPatrolCarKpiSettings.ForEach(x => { x.Type = ((int)OfficerPositionFilterForManning.PatrolOnly).ToString(); x.SettingsId = setting.Id; x.PositionId = positionIdPatrolCar.PositionId; });
+                        //ManningPatrolCar Add and Update
+                        if (entityStateforpatrolcar == EntityState.Added)
+                        {
+                            if (setting.ClientSiteManningPatrolCarKpiSettings.Any())
+                            {
+                                _context.ClientSiteManningKpiSettings.AddRange(setting.ClientSiteManningPatrolCarKpiSettings);
+                                _context.SaveChanges();
+                            }
+                        }
+                        else
+                        {
+                            if (setting.ClientSiteManningPatrolCarKpiSettings.Any() && setting.ClientSiteManningPatrolCarKpiSettings != null)
+                            {
+                                _context.ClientSiteManningKpiSettings.UpdateRange(setting.ClientSiteManningPatrolCarKpiSettings);
+                                _context.SaveChanges();
+                            }
+                        }
                     }
                 }
             }
