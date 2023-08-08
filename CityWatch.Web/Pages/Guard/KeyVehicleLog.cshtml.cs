@@ -557,11 +557,12 @@ namespace CityWatch.Web.Pages.Guard
         private static int GetSuffixNumber(string suffix)
         {
             int index = 0;
-            string alphabet = suffix.ToUpper();
+            // Start suffix from B
+            string alphabet = string.IsNullOrEmpty(suffix) ? "A" : suffix.ToUpper();
             for (int iChar = alphabet.Length - 1; iChar >= 0; iChar--)
             {
                 char colPiece = alphabet[iChar];
-                int colNum = colPiece - 65;
+                int colNum = colPiece - 64;
                 index += colNum * (int)Math.Pow(26, alphabet.Length - (iChar + 1));
             }
             return index;
@@ -574,7 +575,7 @@ namespace CityWatch.Web.Pages.Guard
             while (number > 0)
             {
                 decimal currentLetterNumber = (number - 1) % 26;
-                char currentLetter = (char)(currentLetterNumber + 66);
+                char currentLetter = (char)(currentLetterNumber + 65);
                 value = currentLetter + value;
                 number = (number - (currentLetterNumber + 1)) / 26;
             }
