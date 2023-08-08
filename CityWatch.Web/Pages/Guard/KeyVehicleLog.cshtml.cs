@@ -532,11 +532,11 @@ namespace CityWatch.Web.Pages.Guard
         {
             var lastSequenceNumber = 0;
             var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(id);
-            if (keyVehicleLog.DocketSerialNo != null)
+            if (!string.IsNullOrEmpty(keyVehicleLog.DocketSerialNo))
             {
                 var serialNo = keyVehicleLog.DocketSerialNo;
-                var sufix = Regex.Replace(serialNo, @"[^A-Z]+", String.Empty);
-                int index = GetSuffixNumber(sufix);
+                var suffix = Regex.Replace(serialNo, @"[^A-Z]+", string.Empty);
+                int index = GetSuffixNumber(suffix);
                 var numberSuffix = GetSequenceNumberSuffix(index);
                 var serialnumber = string.Join("", serialNo.ToCharArray().Where(Char.IsDigit));
                 return $"{serialnumber}-{numberSuffix}";
@@ -550,30 +550,31 @@ namespace CityWatch.Web.Pages.Guard
                 configuration.Value = lastSequenceNumber.ToString();
                 _appConfigurationProvider.SaveConfiguration(configuration);
             }
+
             return lastSequenceNumber.ToString().PadLeft(5, '0');
         }
 
-        private int GetSuffixNumber(string suffix)
+        private static int GetSuffixNumber(string suffix)
         {
             int index = 0;
             string alphabet = suffix.ToUpper();
             for (int iChar = alphabet.Length - 1; iChar >= 0; iChar--)
             {
                 char colPiece = alphabet[iChar];
-                int colNum = colPiece - 64;
-                index = index + colNum * (int)Math.Pow(26, alphabet.Length - (iChar + 1));
+                int colNum = colPiece - 65;
+                index += colNum * (int)Math.Pow(26, alphabet.Length - (iChar + 1));
             }
             return index;
         }
 
-        private string GetSequenceNumberSuffix(int index)
+        private static string GetSequenceNumberSuffix(int index)
         {
             string value = "";
             decimal number = index + 1;
             while (number > 0)
             {
                 decimal currentLetterNumber = (number - 1) % 26;
-                char currentLetter = (char)(currentLetterNumber + 65);
+                char currentLetter = (char)(currentLetterNumber + 66);
                 value = currentLetter + value;
                 number = (number - (currentLetterNumber + 1)) / 26;
             }

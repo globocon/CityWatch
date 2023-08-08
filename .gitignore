@@ -362,3 +362,4 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /CityWatch.Web/wwwroot/Pdf/FromDropbox
+/CityWatch.Web/wwwroot/Pdf/Output
