@@ -1,6 +1,7 @@
 ﻿using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Models;
+using MailKit.Search;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
@@ -69,6 +70,7 @@ namespace CityWatch.Web.Services
         IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistory(string vehicleRego);
         IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistory(int profileId);
         List<ClientSite> GetUserClientSites(string type, string searchTerm);
+        List<ClientSite> GetNewUserClientSites();
         List<ClientSiteKey> GetClientSiteKeys(int clientSiteId, string searchKeyNo, string searchKeyDesc);        
         int GetNewGuardLoginId(GuardLogin currentGuardLogin, DateTime? currentGuardLoginOffDutyActual, int newLogBookId);
         int GetNewClientSiteLogBookId(int clientSiteId, LogBookType logBookType);        
@@ -291,7 +293,7 @@ namespace CityWatch.Web.Services
             }
             return sites;
         }
-
+        
         public List<SelectListItem> GetFeedbackTemplatesByType(FeedbackType type)
         {
             var feedbackTemplates = _configDataProvider.GetFeedbackTemplates().Where(z => z.Type == type);
@@ -708,6 +710,14 @@ namespace CityWatch.Web.Services
             var senderNames = _guardLogDataProvider.GetSenderNames(startsWith);
 
             return companyNames.Concat(senderNames).Distinct().OrderBy(x => x).ToList();
+        }
+        public List<ClientSite> GetNewUserClientSites()
+        {
+
+            
+                var clientSites = _clientDataProvider.GetNewClientSites();
+           
+            return clientSites;
         }
     }
 }

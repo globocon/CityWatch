@@ -17,6 +17,7 @@ namespace CityWatch.Data.Providers
         void SaveClientType(ClientType clientType);
         void DeleteClientType(int id);
         List<ClientSite> GetClientSites(int? typeId);
+        List<ClientSite> GetNewClientSites();
         void SaveClientSite(ClientSite clientSite);
         void SaveCompanyDetails(CompanyDetails companyDetails);
         void DeleteClientSite(int id);
@@ -341,6 +342,15 @@ namespace CityWatch.Data.Providers
                 }
             }
             _context.SaveChanges();
+        }
+        public List<ClientSite> GetNewClientSites()
+        {
+            return _context.ClientSites
+                
+                .Include(x => x.ClientType)
+                .OrderBy(x => x.ClientType.Name)
+                .ThenBy(x => x.Name)
+                .ToList();
         }
     }
 }

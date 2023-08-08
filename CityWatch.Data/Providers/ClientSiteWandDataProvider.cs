@@ -9,6 +9,7 @@ namespace CityWatch.Data.Providers
     public interface IClientSiteWandDataProvider
     {
         List<ClientSiteSmartWand> GetClientSiteSmartWands();
+        List<ClientSiteSmartWand> GetClientSiteSmartWands(string searchTerms);
         void SaveClientSiteSmartWand(ClientSiteSmartWand clientSiteSmartWand);
         void DeleteClientSiteSmartWand(int id);
         List<ClientSitePatrolCar> GetClientSitePatrolCars(int clientSiteId);
@@ -29,6 +30,13 @@ namespace CityWatch.Data.Providers
         {
             return _dbContext.ClientSiteSmartWands
                 .Include(x => x.ClientSite)
+                .ToList();
+        }
+        public List<ClientSiteSmartWand> GetClientSiteSmartWands(string searchTerms )
+        {
+            return _dbContext.ClientSiteSmartWands
+                .Include(x => x.ClientSite)
+                .Where(x => (string.IsNullOrEmpty(searchTerms) || x.PhoneNumber.Contains(searchTerms)))
                 .ToList();
         }
 

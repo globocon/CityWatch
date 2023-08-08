@@ -282,14 +282,14 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(_guardLogDataProvider.GetVehicleRegos(regoPart).ToList());
         }
 
-        public async Task<JsonResult> OnPostGenerateManualDocket(int id, ManualDocketReason option, string otherReason, string stakeholderEmails, int clientSiteId)
+        public async Task<JsonResult> OnPostGenerateManualDocket(int id, ManualDocketReason option, string otherReason, string stakeholderEmails, int clientSiteId, string blankNoteOnOrOff)
         {
             var fileName = string.Empty;
 
             try
             {
                 var serialNo = GetNextDocketSequenceNumber(id);
-                fileName = _keyVehicleLogDocketGenerator.GeneratePdfReport(id, GetManualDocketReason(option, otherReason), serialNo);
+                fileName = _keyVehicleLogDocketGenerator.GeneratePdfReport(id, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, serialNo);
             }
             catch (Exception ex)
             {
