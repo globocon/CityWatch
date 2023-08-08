@@ -18,6 +18,12 @@
                         <ul class="list-unstyled">
                             <li class="py-2">
                                 <div class="form-check form-check-inline">
+                                    <input class="form-check-input print-docket-reason" type="checkbox" id="cbxProofOfDelivery" value="1" checked="checked">
+                                    <label class="form-check-label" for="cbxProofOfDelivery">Proof Of Delivery (Receipt)</label>
+                                </div>
+                            </li>
+                            <li class="py-2">
+                                <div class="form-check form-check-inline">
                                     <input class="form-check-input print-docket-reason" type="checkbox" id="cbxOther" value="0">
                                     <label class="form-check-label mr-2" for="cbxOther">Other</label>
                                     <select id="otherReason" disabled class="form-control" asp-items="@Model.ViewDataService.GetKeyVehicleLogFieldsByType(Data.Models.KvlFieldType.DocketReasons, true)"></select>
