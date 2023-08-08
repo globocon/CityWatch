@@ -1058,6 +1058,51 @@ $(function () {
     $('#div_site_settings').on('change', '#chkPatrolCar', function () {
         handleCheckboxChange();
     });
+
+    checkSelectedValue();
+    $('#div_site_settings').on('change', '#ClientSiteManningGuardKpiSettings_1__PositionId', function () {        
+        checkSelectedValue();
+    });
+    $('#div_site_settings').on('change', '#ClientSiteManningPatrolCarKpiSettings_1__PositionId', function () {
+        checkSelectedValue();
+    });
+
+    function checkSelectedValue() {
+        var selectedValueGuard = $("#ClientSiteManningGuardKpiSettings_1__PositionId").val();
+        var selectedValuePatrolCar = $("#ClientSiteManningPatrolCarKpiSettings_1__PositionId").val();
+        
+
+        if (selectedValueGuard === "") {
+            $('[id^="ClientSiteManningGuardKpiSettings"]').each(function () {
+                $(this).off();
+
+            });
+            $('input[name^="ClientSiteManningGuardKpiSettings"]').prop('disabled', true);
+        } else {
+            $('[id^="ClientSiteManningGuardKpiSettings"]').each(function () {
+                $(this).on();
+
+            });
+            $('input[name^="ClientSiteManningGuardKpiSettings"]').prop('disabled', false);
+        }
+
+
+        if (selectedValuePatrolCar === "") {
+            $('[id^="ClientSiteManningPatrolCarKpiSettings"]').each(function () {
+                $(this).off();
+
+            });
+            $('input[name^="ClientSiteManningPatrolCarKpiSettings"]').prop('disabled', true);
+        } else {
+            $('[id^="ClientSiteManningPatrolCarKpiSettings"]').each(function () {
+                $(this).on();
+
+            });
+            $('input[name^="ClientSiteManningPatrolCarKpiSettings"]').prop('disabled', false);
+        }
+      
+      
+    }
   
 
     $('#search_kw_client_site').on('keyup', function (event) {
@@ -1070,6 +1115,7 @@ $(function () {
     $('#btnSearchClientSite').on('click', function () {
         gridSchedules.reload({ type: $('#sel_schedule').val(), searchTerm: $('#search_kw_client_site').val() });
     });
+
 
     /***** KPI Send Schedule SummaryNotes *****/
     $('#saveScheduleSummaryNotes').on('click', function () {
