@@ -1225,17 +1225,27 @@ $(function () {
         $('#print-manual-docket-modal').modal('show')
         $('#printDocketForKvlId').val(data.detail.id);
     });
-
+    
+    $(".print-docket-reason:checkbox #cbxProofOfDelivery").prop("checked", true); 
     $('.print-docket-reason').on('change', function () {
+        
         $('#otherReason').val('');
         $('#otherReason').attr('disabled', true);
         $('#generate_kvl_docket_status').hide();
         $('#download_kvl_docket').hide();
         $('.print-docket-reason').prop('checked', false);
 
+        $(" #cbxProofOfDelivery").prop("checked", false); 
         $(this).prop('checked', true);
         if ($(this).val() === '0')
             $('#otherReason').attr('disabled', false);
+    });
+    $(" #cbxProofOfDelivery").on('change', function () {
+
+        debugger;
+        $('.print-docket-reason').prop('checked', false);
+
+     
     });
 
     $('#otherReason').attr('placeholder', 'Select Or Edit').editableSelect({
@@ -1243,8 +1253,7 @@ $(function () {
     }).on('select.editable-select', function (e, li) {
         $('#download_kvl_docket').hide();
     });
-    debugger;
-    $("#cbxProofOfDelivery").prop("checked", true);
+    
     $('#generate_kvl_docket').on('click', function () {
         $('#generate_kvl_docket_status').hide();
 
