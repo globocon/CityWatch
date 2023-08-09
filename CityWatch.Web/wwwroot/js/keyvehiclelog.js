@@ -1243,7 +1243,8 @@ $(function () {
     }).on('select.editable-select', function (e, li) {
         $('#download_kvl_docket').hide();
     });
-    
+    debugger;
+    $("#cbxProofOfDelivery").prop("checked", true);
     $('#generate_kvl_docket').on('click', function () {
         $('#generate_kvl_docket_status').hide();
 
