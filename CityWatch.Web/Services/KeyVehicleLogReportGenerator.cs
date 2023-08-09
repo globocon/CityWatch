@@ -84,6 +84,9 @@ namespace CityWatch.Web.Services
 
             var keyVehicleLogs = _auditLogViewDataService.GetKeyVehicleLogs(kvlAuditLogRequest).Where(z => z.Detail.GuardLogin.ClientSiteLogBookId == clientsiteLogBook.Id).ToList();
 
+            if (keyVehicleLogs.Count == 0)
+                return string.Empty;
+
             return GeneratePdf(clientsiteLogBook, keyVehicleLogs);
         }
 
