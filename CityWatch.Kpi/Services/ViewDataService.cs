@@ -1,4 +1,5 @@
-﻿using CityWatch.Data.Providers;
+﻿using CityWatch.Data.Models;
+using CityWatch.Data.Providers;
 using CityWatch.Kpi.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
@@ -18,6 +19,8 @@ namespace CityWatch.Kpi.Services
         List<SelectListItem> GetMonthsInYear();
 
         MonthlyKpiResult GetKpiReportData(int clientSiteId, DateTime fromDate, DateTime toDate);
+        
+        List<DailyKpiGuard> GetMonthlyKpiGuardData(int clientSiteId, DateTime fromDate, DateTime toDate);
 
         public Dictionary<int, MonthlyKpiResult> GetMonthlyKpiReportData(int[] clientSiteIds, DateTime fromDate, DateTime toDate);
 
@@ -28,12 +31,15 @@ namespace CityWatch.Kpi.Services
     {
         private readonly IClientDataProvider _clientDataProvider;
         private readonly IKpiDataProvider _kpiDataProvider;
+        private readonly IGuardDataProvider _guardDataProvider;
 
         public ViewDataService(IClientDataProvider clientDataProvider,
-            IKpiDataProvider kpiDataProvider)
+            IKpiDataProvider kpiDataProvider,
+            IGuardDataProvider guardDataProvider)
         {
             _clientDataProvider = clientDataProvider;
             _kpiDataProvider = kpiDataProvider;
+            _guardDataProvider = guardDataProvider;
         }
 
         public List<SelectListItem> ClientTypes
@@ -96,6 +102,13 @@ namespace CityWatch.Kpi.Services
             var dailyKpis = dailyClientSiteKpis.Select(x => new DailyKpiResult(x, clientSiteKpiSetting)).ToList();
 
             return new MonthlyKpiResult(clientSiteKpiSetting, dailyKpis);
+        }
+
+        public List<DailyKpiGuard> GetMonthlyKpiGuardData(int clientSiteId, DateTime fromDate, DateTime toDate)
+        {
+            var dailyClientSiteKpis = _kpiDataProvider.GetDailyClientSiteKpis(clientSiteId, fromDate, toDate).ToList();
+            var guardLogins = _guardDataProvider.GetGuardLogins(clientSiteId, fromDate, toDate).ToList();
+            return dailyClientSiteKpis.Select(z => new DailyKpiGuard(z, guardLogins.Where(y => y.OnDuty.Date == z.Date))).ToList();
         }
 
         public Dictionary<int, MonthlyKpiResult> GetMonthlyKpiReportData(int[] clientSiteIds, DateTime fromDate, DateTime toDate)

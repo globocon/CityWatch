@@ -99,6 +99,13 @@ namespace CityWatch.Kpi.Services
             tableLayout.AddCell(new Cell().SetBorder(iText.Layout.Borders.Border.NO_BORDER).Add(tableSiteStats));
             doc.Add(tableLayout);
 
+            doc.Add(new AreaBreak());
+
+            doc.Add(headerTable);
+            var monthlyGuardData = _viewDataService.GetMonthlyKpiGuardData(clientSiteId, fromDate, toDate);
+            var tableGuardData = CreateGuardReportData(monthlyGuardData, fromDate);
+            doc.Add(tableGuardData);
+
             doc.Close();
             pdfDoc.Close();
 
@@ -498,6 +505,77 @@ namespace CityWatch.Kpi.Services
                 _logger.LogError(ex.StackTrace);
             }
             return null;
+        }
+
+        private Table CreateGuardReportData(List<DailyKpiGuard> monthlyKpiGuardData, DateTime fromDate)
+        {
+            var kpiGuardTable = new Table(UnitValue.CreatePercentArray(new float[] { 2, 9, 8, 8, 9, 9, 2, 2, 2, 9, 9, 2, 2, 2, 9, 9, 2, 2, 2, })).UseAllAvailableWidth();
+            CreateGuardReportHeader(kpiGuardTable, fromDate);
+            foreach (var data in monthlyKpiGuardData)
+            {
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Date.ToString("dd"))));
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Date.ToString("dddd"))));
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.EmployeeHours?.ToString() ?? string.Empty)));
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.ActualEmployeeHours?.ToString() ?? string.Empty)));
+
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift1GuardName ?? string.Empty)));
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph("")));
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift1GuardHr.ToString())));
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift1GuardVisy.ToString())));
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift1GuardFire.ToString())));
+
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift2GuardName ?? string.Empty)));
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph("")));
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph("")));
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph("")));
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph("")));
+
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift3GuardName ?? string.Empty)));
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph("")));
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph("")));
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph("")));
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph("")));
+            }
+            return kpiGuardTable;
+        }
+
+        private void CreateGuardReportHeader(Table table, DateTime fromDate)
+        {
+            table.AddCell(new Cell(1, 4)
+                .SetFontSize(CELL_FONT_SIZE)
+                .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
+                .Add(new Paragraph().Add(new Text($"MONTH/YEAR: {fromDate.ToString("MMM").ToUpper()} {fromDate.Year}\n"))));
+            table.AddCell(new Cell(1, 5)
+                .SetFontSize(CELL_FONT_SIZE)
+                .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
+                .Add(new Paragraph().Add(new Text("Shift Block 1"))));
+            table.AddCell(new Cell(1, 5)
+                .SetFontSize(CELL_FONT_SIZE)
+                .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
+                .Add(new Paragraph().Add(new Text("Shift Block 2"))));
+            table.AddCell(new Cell(1, 5)
+                .SetFontSize(CELL_FONT_SIZE)
+                .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
+                .Add(new Paragraph().Add(new Text("Shift Block 3"))));
+            table.AddCell(CreateHeaderCell("Date"));
+            table.AddCell(CreateHeaderCell("Day"));
+            table.AddCell(CreateHeaderCell("Expected Hrs"));
+            table.AddCell(CreateHeaderCell("Hrs Change"));
+            table.AddCell(CreateHeaderCell("Guard Name"));
+            table.AddCell(CreateHeaderCell("Security No"));
+            table.AddCell(CreateHeaderCell("HR"));
+            table.AddCell(CreateHeaderCell("VISY"));
+            table.AddCell(CreateHeaderCell("FIRE"));
+            table.AddCell(CreateHeaderCell("Guard Name"));
+            table.AddCell(CreateHeaderCell("Security No"));
+            table.AddCell(CreateHeaderCell("HR"));
+            table.AddCell(CreateHeaderCell("VISY"));
+            table.AddCell(CreateHeaderCell("FIRE"));
+            table.AddCell(CreateHeaderCell("Guard Name"));
+            table.AddCell(CreateHeaderCell("Security No"));
+            table.AddCell(CreateHeaderCell("HR"));
+            table.AddCell(CreateHeaderCell("VISY"));
+            table.AddCell(CreateHeaderCell("FIRE"));
         }
     }
 }

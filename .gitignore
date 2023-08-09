@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /CityWatch.Web/wwwroot/Pdf/FromDropbox
 /CityWatch.Web/wwwroot/Pdf/Output
+/CityWatch.Kpi/wwwroot/Pdf/Output
