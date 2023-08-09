@@ -26,7 +26,9 @@ namespace CityWatch.Web.Services
 
         NoComms,
 
-        PhysicalRepair
+        PhysicalRepair,
+
+        POD
     }
 
     public interface IKeyVehicleLogDocketGenerator

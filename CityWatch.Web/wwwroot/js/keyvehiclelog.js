@@ -1217,6 +1217,7 @@ $(function () {
         $('#generate_kvl_docket_status').hide();
         $('#download_kvl_docket').hide();
         $('.print-docket-reason').prop('checked', false);
+        $('#cbxProofOfDelivery').prop('checked', true);
         $('#otherReason').val('');
         $('#otherReason').attr('disabled', true);
         $('#stakeholderEmail').val('');
@@ -1226,27 +1227,20 @@ $(function () {
         $('#printDocketForKvlId').val(data.detail.id);
     });
     
-    $(".print-docket-reason:checkbox #cbxProofOfDelivery").prop("checked", true); 
     $('.print-docket-reason').on('change', function () {
-        
+       
         $('#otherReason').val('');
         $('#otherReason').attr('disabled', true);
         $('#generate_kvl_docket_status').hide();
         $('#download_kvl_docket').hide();
         $('.print-docket-reason').prop('checked', false);
 
-        $(" #cbxProofOfDelivery").prop("checked", false); 
+        
         $(this).prop('checked', true);
         if ($(this).val() === '0')
             $('#otherReason').attr('disabled', false);
     });
-    $(" #cbxProofOfDelivery").on('change', function () {
-
-        debugger;
-        $('.print-docket-reason').prop('checked', false);
-
-     
-    });
+   
 
     $('#otherReason').attr('placeholder', 'Select Or Edit').editableSelect({
         effects: 'slide'
@@ -1362,9 +1356,11 @@ $(function () {
             $('#duplicate_profile_status').text('');
         });
     }
-    $('#chb_IsBlankNote').on('change', function () {       
+    $('#chb_IsBlankNote').on('change', function () {  
+        
         const isChecked = $(this).is(':checked');
         $('#lbl_BlankNotes').text(isChecked ? 'Blank Notes On' : 'Blank Notes Off'); lbl_BlankNotes
         $('#IsBlankNoteOn').val(isChecked);
+       
     });
 });
