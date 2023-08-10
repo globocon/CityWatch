@@ -519,22 +519,22 @@ namespace CityWatch.Kpi.Services
                 kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.ActualEmployeeHours?.ToString() ?? string.Empty)));
 
                 kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift1GuardName ?? string.Empty)));
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph("")));
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift1GuardSecurityNo ?? string.Empty)));
                 kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift1GuardHr.ToString())));
                 kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift1GuardVisy.ToString())));
                 kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift1GuardFire.ToString())));
 
                 kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift2GuardName ?? string.Empty)));
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph("")));
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph("")));
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph("")));
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph("")));
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift2GuardSecurityNo ?? string.Empty)));
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift2GuardHr.ToString())));
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift2GuardVisy.ToString())));
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift2GuardFire.ToString())));
 
                 kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift3GuardName ?? string.Empty)));
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph("")));
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph("")));
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph("")));
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph("")));
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift3GuardSecurityNo ?? string.Empty)));
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift3GuardHr.ToString())));
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift3GuardVisy.ToString())));
+                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift3GuardFire.ToString())));
             }
             return kpiGuardTable;
         }

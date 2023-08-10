@@ -133,7 +133,7 @@ namespace CityWatch.Data.Providers
                                             z.Type == LogBookType.DailyGuardLog)
                                     .Select(z => z.Id);
 
-            var guardLogins = _context.GuardLogins.Where(z => logbookIds.Contains(z.Id));
+            var guardLogins = _context.GuardLogins.Where(z => logbookIds.Contains(z.ClientSiteLogBookId));
 
             guardLogins.Include(z => z.Guard).Load();
 
