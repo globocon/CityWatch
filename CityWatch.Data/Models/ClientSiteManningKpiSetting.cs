@@ -9,9 +9,9 @@ namespace CityWatch.Data.Models
     {
         [Key]
         public int Id { get; set; }
-
+        [Required]
         public int SettingsId { get; set; }
-        
+        [Required]
         public int  PositionId { get; set; }
         [ForeignKey("PositionId")]
         [JsonIgnore]

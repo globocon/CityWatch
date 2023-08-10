@@ -5,8 +5,14 @@
     var rowTitle = new string[6] { "", "Daily Employee Hours", "Patrol Frequency", "No Of Patrols", "Image Target", "Wand Scans Target" };
     var rowTitleManningGuard = new string[4] { "", "Start", "End", "Workers" };
     var rowTitleManningPatrolCar = new string[4] { "", "Start", "End", "No of Patrols" };
+    var count = 0;
+    if (Model.ClientSiteManningGuardKpiSettings.Count != 0)    
+        count++;
+    if (Model.ClientSiteManningPatrolCarKpiSettings.Count != 0)
+        count++;
+    var check = count;
 }
-
+<div class="test">
 <ul class="nav nav-tabs" id="kpiSettingsTab" role="tablist">
     <li class="nav-item" role="presentation">
         <a class="nav-link active" id="kpi-settings-tab" data-toggle="tab" href="#siteKpiSettings" role="tab" aria-controls="siteKpiSettings" aria-selected="true">Site Settings</a>
@@ -163,17 +169,14 @@
     <div class="tab-pane" id="contractedmanningSettings" role="tabpanel" aria-labelledby="contracted-manning-tab">
         <div class="container pt-3">
             <div class="text-right"><button id="showDivButton" class="btn btn-success"><i class="fa fa-plus" aria-hidden="true"></i> Add Worker</button></div>
-            <div id="hiddenDiv" style="display: none;">
-                <label>
-                    Select Manning  Type :
-                </label>
-                <label class="ml-5"><input type="checkbox" id="chkGuard" class="form-check-input">Guard</label>
-                <label class="ml-5"><input type="checkbox" id="chkPatrolCar" class="form-check-input">Patrol Car</label>
-
+          
+           
+               
+              
                 <form id="frm_site_manning_settings">
                     <input type="hidden" asp-for="@Model.Id" />
                     <input type="hidden" asp-for="@Model.ClientSiteId" />
-
+                    <input type="hidden" id="hidCount" value="@count" />
                     <div id="divGuard" style="display: none;">
                         <hr />
                         <div class="row">
@@ -184,7 +187,15 @@
                                         <div class="col-md-3">
                                             @if (rowIndex == 0)
                                             {
-                                                <label class="form-label">Position</label>
+
+                                                <div class="d-flex flex-row justify-content-between">
+                                                    <label class="form-label">Position</label>
+                                                    <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
+                                                        <input type="checkbox" class="custom-control-input" id="positionfilterGuard" name="positionfilterGuard">
+                                                        <label class="custom-control-label" for="positionfilterGuard">Patrol Car</label>
+                                                    </div>
+                                                </div>
+
                                             }
                                             @if (rowIndex == 1)
                                             {
@@ -211,7 +222,7 @@
                                                         <input class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursEnd">
                                                         break;
                                                     case 3:
-                                                        <input class="form-control mb-2 patrols-count" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].NoOfPatrols" data-index="@colIndex">
+                                                        <input class="form-control mb-2 patrols-count" min="0" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].NoOfPatrols" data-index="@colIndex">
                                                         break;
 
                                                 }
@@ -237,7 +248,15 @@
                                         <div class="col-md-3">
                                             @if (rowIndex == 0)
                                             {
-                                                <label class="form-label">Position</label>
+
+                                                <div class="d-flex flex-row justify-content-between">
+                                                    <label class="form-label">Position</label>
+                                                    <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
+                                                    <input type="checkbox" class="custom-control-input" id="positionfilterPatrolCar" checked name="positionfilterPatrolCar">
+                                                        <label class="custom-control-label" for="positionfilterPatrolCar">Patrol Car</label>
+                                                    </div>
+                                                </div>
+
                                             }
                                             @if (rowIndex == 1)
                                             {
@@ -258,13 +277,13 @@
                                                         <label class="form-label">@Model.ClientSiteManningPatrolCarKpiSettings[colIndex].WeekDay.ToString().Substring(0, 3)</label>
                                                         break;
                                                     case 1:
-                                                        <input class="form-control mb-2" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex].EmpHoursStart">
+                                                    <input class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex].EmpHoursStart">
                                                         break;
                                                     case 2:
-                                                        <input class="form-control mb-2" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex].EmpHoursEnd">
+                                                    <input class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex].EmpHoursEnd">
                                                         break;
                                                     case 3:
-                                                        <input class="form-control mb-2 patrols-count" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex].NoOfPatrols" data-index="@colIndex">
+                                                        <input class="form-control mb-2 patrols-count" min="0" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex].NoOfPatrols" data-index="@colIndex">
                                                         break;
 
                                                 }
@@ -283,7 +302,7 @@
                         <button type="button" class="btn btn-success" id="save_site_manning_settings"><i class="fa fa-save mr-2"></i>Save Settings</button>
                     </div>
                 </form>
-            </div>
+         
         </div>
     </div>
     @*New Tab for contracted-manning end*@
@@ -320,4 +339,5 @@
             </div>
         </div>
     </div>
+</div>
 </div>

@@ -13,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
+
 namespace CityWatch.Kpi.Pages.Admin
 {
     public class SettingsModel : PageModel
@@ -110,8 +111,7 @@ namespace CityWatch.Kpi.Pages.Admin
         public PartialViewResult OnGetClientSiteKpiSettings(int siteId)
         {
             var clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
-            clientSiteKpiSetting ??= new ClientSiteKpiSetting() { ClientSiteId = siteId };
-            
+            clientSiteKpiSetting ??= new ClientSiteKpiSetting() { ClientSiteId = siteId };            
             return Partial("_ClientSiteKpiSetting", clientSiteKpiSetting);
         }
 
@@ -136,19 +136,48 @@ namespace CityWatch.Kpi.Pages.Admin
 
         public JsonResult OnPostClientSiteManningKpiSettings(ClientSiteKpiSetting clientSiteKpiSetting)
         {
-            var success = true;
+            var success = 0;
+            var clientSiteId = 0;
             try
             {
-                           
-                if(clientSiteKpiSetting!=null)
-                _clientDataProvider.SaveClientSiteManningKpiSetting(clientSiteKpiSetting);
+
+
+                if (clientSiteKpiSetting != null)
+                {
+                    if (clientSiteKpiSetting.Id != 0)
+                    {
+                        clientSiteId = clientSiteKpiSetting.ClientSiteId;
+                        var positionIdGuard = clientSiteKpiSetting.ClientSiteManningGuardKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
+                        var positionIdPatrolCar = clientSiteKpiSetting.ClientSiteManningPatrolCarKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
+
+                        if (positionIdGuard != null || positionIdPatrolCar != null)
+                        {
+                            success= _clientDataProvider.SaveClientSiteManningKpiSetting(clientSiteKpiSetting);
+                        }
+                        else
+                        {
+                            success = 3;
+                        }
+                    }
+                    else
+                    {
+                        success = 2;
+                    }
+
+                }
+                else
+                {
+                    success = 4;
+
+                }
+              
             }
             catch
             {
-                success = false;
+                success = 4;
             }
 
-            return new JsonResult(success);
+            return new JsonResult(new { success, clientSiteId });
         }
 
         public JsonResult OnPostUploadSiteImage()
@@ -446,5 +475,7 @@ namespace CityWatch.Kpi.Pages.Admin
 
             return new JsonResult(new { status, message });
         }
+
+        
     }
 }
