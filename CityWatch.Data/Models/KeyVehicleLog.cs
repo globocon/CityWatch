@@ -29,6 +29,8 @@ namespace CityWatch.Data.Models
 
         public string TimeSlotNo { get; set; }
 
+        public string DocketSerialNo { get; set; }
+
         public string VehicleRego { get; set; }
 
         public string Trailer1Rego { get; set; }
@@ -84,7 +86,8 @@ namespace CityWatch.Data.Models
 
         public string CustomerRef { get; set; }
 
-        public string Wvi { get; set; }
+        [Column("Wvi")]
+        public string Vwi { get; set; }
 
         [HiddenInput]
         public bool IsSender { get; set; }

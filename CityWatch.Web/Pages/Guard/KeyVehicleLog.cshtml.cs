@@ -22,6 +22,7 @@ using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using IO = System.IO;
 
@@ -29,6 +30,7 @@ namespace CityWatch.Web.Pages.Guard
 {
     public class KeyVehicleLogModel : PageModel
     {
+        private const string LAST_USED_DOCKET_SEQ_NO_CONFIG_NAME = "LastUsedDocketSn";
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         public readonly IClientDataProvider _clientDataProvider;
         public readonly IGuardDataProvider _guardDataProvider;
@@ -39,6 +41,7 @@ namespace CityWatch.Web.Pages.Guard
         private readonly EmailOptions _emailOptions;
         private readonly Settings _settings;
         private readonly ILogger<KeyVehicleLogModel> _logger;
+        private readonly IAppConfigurationProvider _appConfigurationProvider;
 
         public KeyVehicleLogModel(IWebHostEnvironment webHostEnvironment,
             IGuardLogDataProvider guardLogDataProvider,
@@ -49,7 +52,8 @@ namespace CityWatch.Web.Pages.Guard
             IOptions<EmailOptions> emailOptions,
             IOptions<Settings> settings,
             IDropboxService dropboxService,
-            ILogger<KeyVehicleLogModel> logger)
+            ILogger<KeyVehicleLogModel> logger,
+            IAppConfigurationProvider appConfigurationProvider)
         {
             _guardLogDataProvider = guardLogDataProvider;
             _clientDataProvider = clientDataProvider;
@@ -61,6 +65,7 @@ namespace CityWatch.Web.Pages.Guard
             _emailOptions = emailOptions.Value;
             _settings = settings.Value;
             _logger = logger;
+            _appConfigurationProvider = appConfigurationProvider;
         }
 
         [BindProperty]
@@ -76,8 +81,8 @@ namespace CityWatch.Web.Pages.Guard
         public JsonResult OnGetKeyVehicleLogs(int logbookId, KvlStatusFilter kvlStatusFilter)
         {
             var results = _viewDataService.GetKeyVehicleLogs(logbookId, kvlStatusFilter)
-                .OrderByDescending(z => z.Detail.Id)
-                .ThenByDescending(z => z.Detail.EntryTime);
+                .OrderByDescending(z => z.Detail.EntryTime)
+                .ThenByDescending(z => z.Detail.Id);
             return new JsonResult(results);
         }
 
@@ -94,7 +99,6 @@ namespace CityWatch.Web.Pages.Guard
                         IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), keyVehicleLogInDb.ReportReference?.ToString())
                         .ToList();
                     ViewData["KeyVehicleLog_Keys"] = _viewDataService.GetKeyVehicleLogKeys(keyVehicleLogInDb).ToList();
-                    ViewData["KeyVehicleLog_AuditHistory"] = _viewDataService.GetKeyVehicleLogAuditHistory(keyVehicleLogInDb).ToList();
                 }
             }
 
@@ -103,6 +107,11 @@ namespace CityWatch.Web.Pages.Guard
                 ViewName = "_KeyVehicleLogPopup",
                 ViewData = new ViewDataDictionary<KeyVehicleLog>(ViewData, keyVehicleLog)
             };
+        }
+
+        public JsonResult OnGetAuditHistory(string vehicleRego)
+        {
+            return new JsonResult(_viewDataService.GetKeyVehicleLogAuditHistory(vehicleRego).ToList());
         }
 
         public JsonResult OnPostSaveKeyVehicleLog()
@@ -115,13 +124,16 @@ namespace CityWatch.Web.Pages.Guard
             var message = "success";
             try
             {
+                KeyVehicleLogAuditHistory keyVehicleLogAuditHistory = null;
+                keyVehicleLogAuditHistory = GetKvlAuditHistory(KeyVehicleLog);
                 _guardLogDataProvider.SaveKeyVehicleLog(KeyVehicleLog);
-                var vehicleKeyLogProfile = new KeyVehicleLogProfile(KeyVehicleLog);
-                if (!_guardLogDataProvider.GetKeyVehicleLogProfiles(KeyVehicleLog.VehicleRego).Any(z => z.Equals(vehicleKeyLogProfile)))
-                {
-                    vehicleKeyLogProfile.CreatedLogId = KeyVehicleLog.Id;
-                    _guardLogDataProvider.SaveKeyVehicleLogProfile(vehicleKeyLogProfile);
-                }
+
+                var profileId = GetKvlProfileId(KeyVehicleLog);
+                keyVehicleLogAuditHistory.ProfileId = profileId;
+                keyVehicleLogAuditHistory.KeyVehicleLogId = KeyVehicleLog.Id;
+                _guardLogDataProvider.SaveKeyVehicleLogAuditHistory(keyVehicleLogAuditHistory);
+
+                _guardLogDataProvider.SaveKeyVehicleLogProfileNotes(KeyVehicleLog.VehicleRego, KeyVehicleLog.Notes);
             }
             catch (Exception ex)
             {
@@ -147,14 +159,30 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { status, message });
         }
 
+        public JsonResult OnPostKeyVehicleLogQuickExit(int Id)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _guardLogDataProvider.KeyVehicleLogQuickExit(Id);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+            return new JsonResult(new { status, message });
+        }
+
         public JsonResult OnGetProfileByRego(string truckRego)
         {
-           return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego).OrderBy(z => z, new KeyVehicleLogProfileViewModelComparer()));
+            return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego).OrderBy(z => z, new KeyVehicleLogProfileViewModelComparer()));
         }
 
         public JsonResult OnGetProfileById(int id)
         {
-            return new JsonResult(_guardLogDataProvider.GetKeyVehicleLogProfile(id));
+            return new JsonResult(_guardLogDataProvider.GetKeyVehicleLogProfileWithPersonalDetails(id));
         }
 
         public JsonResult OnGetClientSiteKeyDescription(int keyId, int clientSiteId)
@@ -164,7 +192,19 @@ namespace CityWatch.Web.Pages.Guard
 
         public JsonResult OnGetIsVehicleOnsite(int logbookId, string vehicleRego)
         {
-            return new JsonResult(_viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open).Any(x => x.Detail.VehicleRego == vehicleRego));
+            var isOpenInThisSite = _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open).Any(x => x.Detail.VehicleRego == vehicleRego);
+            if (isOpenInThisSite)
+                return new JsonResult(new { status = 1 });
+
+            var keyVehicleLogFromOtherSite = _guardLogDataProvider.GetOpenKeyVehicleLogsByVehicleRego(vehicleRego)
+                    .Where(z => z.ClientSiteLogBookId != logbookId)
+                    .FirstOrDefault();
+
+            if (keyVehicleLogFromOtherSite != null)
+                return new JsonResult(new { status = 2, clientSite = keyVehicleLogFromOtherSite.ClientSiteLogBook.ClientSite.Name });
+
+
+            return new JsonResult(new { status = 0});
         }
 
         public JsonResult OnGetIsKeyAllocated(int logbookId, string keyNo)
@@ -242,13 +282,14 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(_guardLogDataProvider.GetVehicleRegos(regoPart).ToList());
         }
 
-        public async Task<JsonResult> OnPostGenerateManualDocket(int id, ManualDocketReason option, string otherReason, string stakeholderEmails, int clientSiteId,string blankNoteOnOrOff)
+        public async Task<JsonResult> OnPostGenerateManualDocket(int id, ManualDocketReason option, string otherReason, string stakeholderEmails, int clientSiteId, string blankNoteOnOrOff)
         {
             var fileName = string.Empty;
 
             try
             {
-                fileName = _keyVehicleLogDocketGenerator.GeneratePdfReport(id, GetManualDocketReason(option, otherReason), blankNoteOnOrOff);
+                var serialNo = GetNextDocketSequenceNumber(id);
+                fileName = _keyVehicleLogDocketGenerator.GeneratePdfReport(id, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, serialNo);
             }
             catch (Exception ex)
             {
@@ -356,26 +397,30 @@ namespace CityWatch.Web.Pages.Guard
         {
             var success = true;
             var message = "success";
+            int kvlProfileId = 0;
             try
             {
                 if (id == 0 || string.IsNullOrEmpty(personName))
                     throw new ArgumentNullException("Invalid parameters");
 
-                var vehicleKeyLogProfile = _guardLogDataProvider.GetKeyVehicleLogProfile(id);
-
-                if (_guardLogDataProvider.GetKeyVehicleLogProfiles(vehicleKeyLogProfile.VehicleRego, personName).Any())
+                var vehicleKeyLogProfile = _guardLogDataProvider.GetKeyVehicleLogProfileWithPersonalDetails(id);
+                if (_guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(vehicleKeyLogProfile.KeyVehicleLogProfile.VehicleRego, personName).Any())
                     throw new ApplicationException("Visitor profile with same detials already exists");
 
-                vehicleKeyLogProfile.Id = 0;
-                vehicleKeyLogProfile.PersonName = personName;
-                _guardLogDataProvider.SaveKeyVehicleLogProfile(vehicleKeyLogProfile);
+                kvlProfileId = _guardLogDataProvider.SaveKeyVehicleLogVisitorPersonalDetail(new KeyVehicleLogVisitorPersonalDetail()
+                {
+                    ProfileId = vehicleKeyLogProfile.ProfileId,
+                    CompanyName = vehicleKeyLogProfile.CompanyName,
+                    PersonType = vehicleKeyLogProfile.PersonType,
+                    PersonName = personName
+                });
             }
             catch (Exception ex)
             {
                 success = false;
                 message = ex.Message;
             }
-            return new JsonResult(new { success, message });
+            return new JsonResult(new { success, message, kvlProfileId });
         }
 
         private async Task UploadToDropbox(int clientSiteId, string fileName)
@@ -444,6 +489,97 @@ namespace CityWatch.Web.Pages.Guard
                 default:
                     return string.Empty;
             }
+        }
+
+        private int GetKvlProfileId(KeyVehicleLog keyVehicleLog)
+        {
+            int profileId;
+            var kvlPersonalDetail = new KeyVehicleLogVisitorPersonalDetail(keyVehicleLog);
+            var personalDetails = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(keyVehicleLog.VehicleRego);
+            if (!personalDetails.Any() || !personalDetails.Any(z => z.Equals(kvlPersonalDetail)))
+            {
+                kvlPersonalDetail.KeyVehicleLogProfile.CreatedLogId = keyVehicleLog.Id;
+                profileId = _guardLogDataProvider.SaveKeyVehicleLogProfileWithPersonalDetail(kvlPersonalDetail);
+            }
+            else
+            {
+                var kvlVisitorProfile = _guardLogDataProvider.GetKeyVehicleLogVisitorProfile(kvlPersonalDetail.KeyVehicleLogProfile.VehicleRego);
+                profileId = kvlVisitorProfile.Id;
+            }
+
+            return profileId;
+        }
+
+        private KeyVehicleLogAuditHistory GetKvlAuditHistory(KeyVehicleLog keyVehicleLog)
+        {
+            var isNewKvlEntry = keyVehicleLog.Id == 0;
+            KeyVehicleLogAuditHistory keyVehicleLogAuditHistory;
+
+            if (isNewKvlEntry)
+            {
+                keyVehicleLogAuditHistory = new KeyVehicleLogAuditHistory(keyVehicleLog, null);
+            }
+            else
+            {
+                var keyVehicleLogToUpdate = _guardLogDataProvider.GetKeyVehicleLogById(keyVehicleLog.Id);
+                keyVehicleLogAuditHistory = new KeyVehicleLogAuditHistory(keyVehicleLog, keyVehicleLogToUpdate);
+            }
+
+            return keyVehicleLogAuditHistory;
+        }
+
+        private string GetNextDocketSequenceNumber(int id)
+        {
+            var lastSequenceNumber = 0;
+            var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(id);
+            if (!string.IsNullOrEmpty(keyVehicleLog.DocketSerialNo))
+            {
+                var serialNo = keyVehicleLog.DocketSerialNo;
+                var suffix = Regex.Replace(serialNo, @"[^A-Z]+", string.Empty);
+                int index = GetSuffixNumber(suffix);
+                var numberSuffix = GetSequenceNumberSuffix(index);
+                var serialnumber = string.Join("", serialNo.ToCharArray().Where(Char.IsDigit));
+                return $"{serialnumber}-{numberSuffix}";
+            }
+
+            var configuration = _appConfigurationProvider.GetConfigurationByName(LAST_USED_DOCKET_SEQ_NO_CONFIG_NAME);
+            if (configuration != null)
+            {
+                lastSequenceNumber = int.Parse(configuration.Value);
+                lastSequenceNumber++;
+                configuration.Value = lastSequenceNumber.ToString();
+                _appConfigurationProvider.SaveConfiguration(configuration);
+            }
+
+            return lastSequenceNumber.ToString().PadLeft(5, '0');
+        }
+
+        private static int GetSuffixNumber(string suffix)
+        {
+            int index = 0;
+            // Start suffix from B
+            string alphabet = string.IsNullOrEmpty(suffix) ? "A" : suffix.ToUpper();
+            for (int iChar = alphabet.Length - 1; iChar >= 0; iChar--)
+            {
+                char colPiece = alphabet[iChar];
+                int colNum = colPiece - 64;
+                index += colNum * (int)Math.Pow(26, alphabet.Length - (iChar + 1));
+            }
+            return index;
+        }
+
+        private static string GetSequenceNumberSuffix(int index)
+        {
+            string value = "";
+            decimal number = index + 1;
+            while (number > 0)
+            {
+                decimal currentLetterNumber = (number - 1) % 26;
+                char currentLetter = (char)(currentLetterNumber + 65);
+                value = currentLetter + value;
+                number = (number - (currentLetterNumber + 1)) / 26;
+            }
+            return value;
         }
     }
 }

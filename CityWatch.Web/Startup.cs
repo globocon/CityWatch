@@ -57,6 +57,9 @@ namespace CityWatch.Web
             services.AddScoped<IAuditLogViewDataService, AuditLogViewDataService>();
             services.AddScoped<IClientSiteViewDataService, ClientSiteViewDataService>();
             services.AddScoped<IClientSiteRadioStatusDataProvider, ClientSiteRadioStatusDataProvider>();
+            services.AddScoped<IGuardReminderService, GuardReminderService>();               
+            services.AddScoped<IClientSiteActivityStatusDataProvider, ClientSiteActivityStatusDataProvider>();
+            services.AddScoped<IRadioCheckViewDataService, RadioCheckViewDataService>();
 
             services.AddRazorPages(options => 
             {

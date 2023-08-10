@@ -73,7 +73,7 @@ namespace CityWatch.Web.Helpers
             if (pageName == PageNameHelper.ControlRoom)
             {
                 menuHtml.AppendLine("<div>");
-                menuHtml.AppendLine(@"<a href=""#"" class=""nav-link py-0""><i class=""fa fa-map-marker mr-2"" aria-hidden=""true""></i>Radio PTToC (GPS)</a>");
+                menuHtml.AppendLine(@"<a href=""https://wds-pr-wocausnz.anz.msiwoc.com/WebDispatcher/v5/index.html"" class=""nav-link py-0"" target=""_blank""><i class=""fa fa-map-marker mr-2"" aria-hidden=""true""></i>Radio PTToC (GPS)</a>");
                 menuHtml.AppendLine("</div>");
             }
 

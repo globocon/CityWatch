@@ -25,17 +25,18 @@ namespace CityWatch.Web.Services
     public interface IKeyVehicleLogReportGenerator
     {
         string GeneratePdfReport(int clientSiteLogBookId, KvlStatusFilter kvlStatusFilter = KvlStatusFilter.All);
+        string GeneratePdfReport(int clientSiteLogBookId, KeyVehicleLogAuditLogRequest kvlAuditLogRequest);
     }
 
     public class KeyVehicleLogReportGenerator : IKeyVehicleLogReportGenerator
     {
         private readonly IClientDataProvider _clientDataProvider;
         private readonly IViewDataService _viewDataService;
+        private readonly IAuditLogViewDataService _auditLogViewDataService;
         private readonly string _reportRootDir;
         private readonly string _imageRootDir;
         private readonly string _uploadsRootDir;
         private readonly Settings _settings;
-
         private const float CELL_FONT_SIZE = 6f;
         private const string REPORT_DIR = "Output";
         private const string COLOR_LIGHT_BLUE = "#d9e2f3";
@@ -50,6 +51,7 @@ namespace CityWatch.Web.Services
         public KeyVehicleLogReportGenerator(IWebHostEnvironment webHostEnvironment,
             IClientDataProvider clientDataProvider,
             IViewDataService viewDataService,
+            IAuditLogViewDataService auditLogViewDataService,
             IOptions<Settings> settings)
         {
             _clientDataProvider = clientDataProvider;
@@ -57,17 +59,39 @@ namespace CityWatch.Web.Services
             _imageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
             _uploadsRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "KvlUploads");
             _viewDataService = viewDataService;
+            _auditLogViewDataService = auditLogViewDataService;
             _settings = settings.Value;
         }
 
         public string GeneratePdfReport(int clientSiteLogBookId, KvlStatusFilter kvlStatusFilter)
         {
             var clientsiteLogBook = _clientDataProvider.GetClientSiteLogBooks().SingleOrDefault(z => z.Id == clientSiteLogBookId);
-            var keyVehicleLogs = _viewDataService.GetKeyVehicleLogs(clientSiteLogBookId, kvlStatusFilter);
 
             if (clientsiteLogBook == null)
                 return string.Empty;
 
+            var keyVehicleLogs = _viewDataService.GetKeyVehicleLogs(clientSiteLogBookId, kvlStatusFilter);
+
+            return GeneratePdf(clientsiteLogBook, keyVehicleLogs);
+        }
+
+        public string GeneratePdfReport(int clientSiteLogBookId, KeyVehicleLogAuditLogRequest kvlAuditLogRequest)
+        {
+            var clientsiteLogBook = _clientDataProvider.GetClientSiteLogBooks().SingleOrDefault(z => z.Id == clientSiteLogBookId);
+
+            if (clientsiteLogBook == null)
+                return string.Empty;
+
+            var keyVehicleLogs = _auditLogViewDataService.GetKeyVehicleLogs(kvlAuditLogRequest).Where(z => z.Detail.GuardLogin.ClientSiteLogBookId == clientsiteLogBook.Id).ToList();
+
+            if (keyVehicleLogs.Count == 0)
+                return string.Empty;
+
+            return GeneratePdf(clientsiteLogBook, keyVehicleLogs);
+        }
+
+        private string GeneratePdf(ClientSiteLogBook clientsiteLogBook, List<KeyVehicleLogViewModel> keyVehicleLogs)
+        {
             var version = "v" + Assembly.GetExecutingAssembly().GetName().Version.ToString();
             var reportPdf = GetReportPdfFilePath(clientsiteLogBook, version);
             var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
@@ -91,7 +115,7 @@ namespace CityWatch.Web.Services
             pdfDoc.Close();
 
             return IO.Path.GetFileName(reportPdf);
-        }       
+        }
 
         private string GetReportPdfFilePath(ClientSiteLogBook clientsiteLogBook, string version)
         {
@@ -111,7 +135,7 @@ namespace CityWatch.Web.Services
             var imagePath = GetSiteImage(clientsiteLogBook.ClientSiteId);
             if (!string.IsNullOrEmpty(imagePath))
             {
-                var siteImage = new Image(ImageDataFactory.Create(imagePath))                    
+                var siteImage = new Image(ImageDataFactory.Create(imagePath))
                     .SetHeight(30)
                     .SetHorizontalAlignment(HorizontalAlignment.CENTER);
                 cellSiteImage.Add(siteImage);
@@ -175,7 +199,7 @@ namespace CityWatch.Web.Services
         {
             var colDimensions = new float[] { 3, 3, 3, 3, 4, 5 /* = Car/Truck */, 3, 5, 5, 3, 3, 3, 3, 5 /* = Key/Card Scan*/, 6, 3, 7, 3, 3, 3, 7 /* = Purpose of Entry*/, 3, 3, 3, 8 };
             var reportDataTable = new Table(UnitValue.CreatePercentArray(colDimensions))
-                .UseAllAvailableWidth();                
+                .UseAllAvailableWidth();
 
             CreateReportHeader(reportDataTable);
 

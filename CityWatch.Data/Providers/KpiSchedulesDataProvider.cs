@@ -92,6 +92,7 @@ namespace CityWatch.Data.Providers
                 schedule.SummaryNote2 = sendSchedule.SummaryNote2;
                 schedule.CoverSheetType = sendSchedule.CoverSheetType;
                 schedule.EmailBcc = sendSchedule.EmailBcc;
+                schedule.IsHrTimerPaused = sendSchedule.IsHrTimerPaused;
 
                 if (updateClientSites)
                     schedule.KpiSendScheduleClientSites = sendSchedule.KpiSendScheduleClientSites;

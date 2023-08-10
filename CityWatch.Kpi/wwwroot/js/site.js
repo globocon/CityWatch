@@ -453,6 +453,9 @@ $(function () {
             $('#isPaused').val(data.isPaused);
             $('#cbIsPaused').prop('checked', !data.isPaused);
             $('#cbIsPausedStatus').html(data.isPaused ? 'Paused' : 'Active');
+            $('#isHrTimerPaused').val(data.isHrTimerPaused);
+            $('#hrTimerIsPaused').prop('checked', !data.isHrTimerPaused);
+            $('#hrTimerIsPausedStatus').html(data.isHrTimerPaused ? 'Paused' : 'Active');
             $.each(data.kpiSendScheduleClientSites, function (index, item) {
                 $('#selectedSites').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
                 updateSelectedSitesCount();
@@ -564,6 +567,9 @@ $(function () {
         $('#isPaused').val(false);
         $('#cbIsPaused').prop('checked', true);
         $('#cbIsPausedStatus').html('Active');
+        $('#isHrTimerPaused').val(false);
+        $('#hrTimerIsPaused').prop('checked', true);
+        $('#hrTimerIsPausedStatus').html('Active');
         $('#coverSheetType').val(0);
         $('#cbCoverSheetType').prop('checked', false);
         $('#projectName').val('');
@@ -580,6 +586,12 @@ $(function () {
         const isChecked = $(this).is(':checked');
         $('#cbIsPausedStatus').html(isChecked ? 'Active' : 'Paused');
         $('#isPaused').val(!isChecked);
+    });
+
+    $('#hrTimerIsPaused').on('change', function () {
+        const isChecked = $(this).is(':checked');
+        $('#hrTimerIsPausedStatus').html(isChecked ? 'Active' : 'Paused');
+        $('#isHrTimerPaused').val(!isChecked);
     });
 
     $('#cbCoverSheetType').on('change', function () {
@@ -758,6 +770,7 @@ $(function () {
             $('#schRunStatus').html(messageHtml);
         });
     });
+
 
     // Import Jobs
     /* TODO: Remove KPI Import Jobs Function

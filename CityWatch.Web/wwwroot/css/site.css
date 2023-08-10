@@ -410,22 +410,8 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
 
 /* -- radio check -- */
 
-#weekly_radio_checklist_wrapper .dataTable thead th,
-#weekly_radio_checklist_wrapper .dataTable thead td,
-#weekly_radio_checklist.dataTable thead th,
-#weekly_radio_checklist.dataTable thead td {
-    font-size: 0.9rem;
-    min-width: 55px;
-}
-
-#weekly_radio_checklist.dataTable tbody th,
-#weekly_radio_checklist.dataTable tbody td {
-    font-size: 0.9rem;
-    min-width: 55px;
-}
-
-tr.rc-header-row-2 th {
-    font-weight: 500 !important;
+.rc-client-status {
+    font-size: 1.25em;
 }
 
 /* -- */

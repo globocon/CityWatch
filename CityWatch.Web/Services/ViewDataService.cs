@@ -1,10 +1,10 @@
 ﻿using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Models;
+using MailKit.Search;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -61,14 +61,16 @@ namespace CityWatch.Web.Services
         bool CheckWandIsInUse(int smartWandId, int? guardId);
         List<ClientSiteSmartWand> GetSmartWands(string siteName, int? guardId);
         List<ClientSiteSmartWand> GetClientSiteSmartWands(int clientSiteId);
-        List<GuardViewModel> GetGuards();        
+        List<GuardViewModel> GetGuards();
         List<KeyVehicleLogViewModel> GetKeyVehicleLogs(int logBookId, KvlStatusFilter kvlStatusFilter);
         List<SelectListItem> GetKeyVehicleLogFieldsByType(KvlFieldType type, bool withoutSelect = false);
         List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRego(string truckRego);
         IEnumerable<string> GetKeyVehicleLogAttachments(string uploadsDir, string reportReference);
         IEnumerable<ClientSiteKey> GetKeyVehicleLogKeys(KeyVehicleLog keyVehicleLog);
-        IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistory(KeyVehicleLog keyVehicleLog);        
+        IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistory(string vehicleRego);
+        IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistory(int profileId);
         List<ClientSite> GetUserClientSites(string type, string searchTerm);
+        List<ClientSite> GetNewUserClientSites();
         List<ClientSiteKey> GetClientSiteKeys(int clientSiteId, string searchKeyNo, string searchKeyDesc);        
         int GetNewGuardLoginId(GuardLogin currentGuardLogin, DateTime? currentGuardLoginOffDutyActual, int newLogBookId);
         int GetNewClientSiteLogBookId(int clientSiteId, LogBookType logBookType);        
@@ -291,7 +293,7 @@ namespace CityWatch.Web.Services
             }
             return sites;
         }
-
+        
         public List<SelectListItem> GetFeedbackTemplatesByType(FeedbackType type)
         {
             var feedbackTemplates = _configDataProvider.GetFeedbackTemplates().Where(z => z.Type == type);
@@ -533,12 +535,14 @@ namespace CityWatch.Web.Services
         public List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRego(string truckRego)
         {
             var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
-            var profiles = _guardLogDataProvider.GetKeyVehicleLogProfiles(truckRego);
-            var kvls = _guardLogDataProvider.GetKeyVehicleLogByIds(profiles.Select(z => z.CreatedLogId).ToArray());
+            var profiles = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(truckRego);
+            var createdLogIds = profiles.Select(z => z.KeyVehicleLogProfile.CreatedLogId).Where(z => z > 0).ToArray();
+            var kvls = _guardLogDataProvider.GetKeyVehicleLogByIds(createdLogIds);
             foreach (var profile in profiles)
             {
-                profile.KeyVehicleLog = kvls.SingleOrDefault(z => z.Id == profile.CreatedLogId);
+                profile.KeyVehicleLogProfile.KeyVehicleLog = kvls.SingleOrDefault(z => z.Id == profile.KeyVehicleLogProfile.CreatedLogId);
             }
+
             return profiles.Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
         }
 
@@ -687,9 +691,15 @@ namespace CityWatch.Web.Services
             return Enumerable.Empty<ClientSiteKey>();
         }
 
-        public IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistory(KeyVehicleLog keyVehicleLog)
+        public IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistory(string vehicleRego)
         {
-            return _guardLogDataProvider.GetAuditHistory(keyVehicleLog.Id)
+            var kvlVisitorProfile = _guardLogDataProvider.GetKeyVehicleLogVisitorProfile(vehicleRego);
+            return GetKeyVehicleLogAuditHistory(kvlVisitorProfile.Id);
+        }
+
+        public IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistory(int profileId)
+        {
+            return _guardLogDataProvider.GetAuditHistory(profileId)
                 .OrderByDescending(z => z.Id)
                 .ThenByDescending(z => z.AuditTime);
         }
@@ -700,6 +710,14 @@ namespace CityWatch.Web.Services
             var senderNames = _guardLogDataProvider.GetSenderNames(startsWith);
 
             return companyNames.Concat(senderNames).Distinct().OrderBy(x => x).ToList();
+        }
+        public List<ClientSite> GetNewUserClientSites()
+        {
+
+            
+                var clientSites = _clientDataProvider.GetNewClientSites();
+           
+            return clientSites;
         }
     }
 }
