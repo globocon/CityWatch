@@ -55,7 +55,10 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-md-8 text-left">
+    <div class="col-md-2 text-left">
+        <button type="button" class="btn btn-primary ml-2" id="add_new_vehicle_and_key_log"><i class="fa fa-plus mr-2"></i>Add Entry</button>
+    </div>
+    <div class="col-md-7 text-left">
         <div class="d-flex flex-row">
             <label class="col-form-label mr-2" style="width: 100px">Filter Records</label>
             <div class="mx-2">
@@ -73,10 +76,15 @@
                 </div>
             </div>
             <label class="col-form-label mx-2">Search</label>
-            <input type="text" class="form-control ml-2" style="width: 240px" id="search_kvl_log" />
+            <div class="mx-2">
+                <input type="text" class="form-control ml-2" style="width: 240px" id="search_kvl_log" />
+            </div>
         </div>
+       
+        
     </div>
-    <div class="col-md-4 text-right">
+  
+    <div class="col-md-3 text-right">
         <input type="hidden" asp-for="@Model.KeyVehicleLog.ClientSiteLogBookId" />
         <label class="col-form-label mx-2">Total Events: <span id="total_events"></span></label>
         <button type="button" class="btn btn-primary ml-2" id="add_new_vehicle_and_key_log"><i class="fa fa-plus mr-2"></i>Add Entry</button>
