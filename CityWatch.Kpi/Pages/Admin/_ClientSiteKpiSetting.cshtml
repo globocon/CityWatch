@@ -242,11 +242,11 @@
                         <hr />
                         <div class="row">
                             <div class="col-md-12">
-                                @for (int rowIndex = 0; rowIndex < 4; rowIndex++)
+                                @for (int rowIndex2 = 0; rowIndex2 < 4; rowIndex2++)
                                 {
                                     <div class="form-row">
                                         <div class="col-md-3">
-                                            @if (rowIndex == 0)
+                                            @if (rowIndex2 == 0)
                                             {
 
                                                 <div class="d-flex flex-row justify-content-between">
@@ -258,37 +258,37 @@
                                                 </div>
 
                                             }
-                                            @if (rowIndex == 1)
+                                            @if (rowIndex2 == 1)
                                             {
                                                 <div class="form-group p-0">
-                                                    <select asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[rowIndex].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.PatrolOnly)" class="form-control"></select>
+                                                    <select asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[rowIndex2].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.PatrolOnly)" class="form-control"></select>
                                                 </div>
                                             }
                                         </div>
                                         <div class="col-md-1 p-0">
-                                            <label class="form-label">@rowTitleManningPatrolCar[rowIndex]</label>
+                                            <label class="form-label">@rowTitleManningPatrolCar[rowIndex2]</label>
                                         </div>
-                                        @for (var colIndex = 0; colIndex < 7; colIndex++)
+                                        @for (var colIndex2 = 0; colIndex2 < 7; colIndex2++)
                                         {
                                             <div class="col-md-1 mx-1">
-                                                @switch (rowIndex)
+                                                @switch (rowIndex2)
                                                 {
                                                     case 0:
-                                                        <label class="form-label">@Model.ClientSiteManningPatrolCarKpiSettings[colIndex].WeekDay.ToString().Substring(0, 3)</label>
+                                                        <label class="form-label">@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].WeekDay.ToString().Substring(0, 3)</label>
                                                         break;
                                                     case 1:
-                                                    <input class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex].EmpHoursStart">
+                                                    <input class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].EmpHoursStart">
                                                         break;
                                                     case 2:
-                                                    <input class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex].EmpHoursEnd">
+                                                        <input class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].EmpHoursEnd">
                                                         break;
                                                     case 3:
-                                                        <input class="form-control mb-2 patrols-count" min="0" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex].NoOfPatrols" data-index="@colIndex">
+                                                        <input class="form-control mb-2 patrols-count" min="0" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].NoOfPatrols" data-index="@colIndex2">
                                                         break;
 
                                                 }
-                                                <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex].WeekDay" />
-                                                <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex].Id" />
+                                                <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].WeekDay" />
+                                                <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].Id" />
 
                                             </div>
                                         }

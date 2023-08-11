@@ -189,8 +189,8 @@ namespace CityWatch.Data.Providers
                 .SingleOrDefault(x => x.ClientSiteId == clientSiteId);
             if (clientSiteKpiSetting != null)
             {
-                clientSiteKpiSetting.ClientSiteManningGuardKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id && x.Type == ((int)OfficerPositionFilterForManning.SecurityOnly).ToString()).ToList();
-                clientSiteKpiSetting.ClientSiteManningPatrolCarKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id && x.Type == ((int)OfficerPositionFilterForManning.PatrolOnly).ToString()).ToList();
+                clientSiteKpiSetting.ClientSiteManningGuardKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id && x.Type == ((int)OfficerPositionFilterForManning.SecurityOnly).ToString()).OrderBy(x => ((int)x.WeekDay + 6) % 7).ToList();
+                clientSiteKpiSetting.ClientSiteManningPatrolCarKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id && x.Type == ((int)OfficerPositionFilterForManning.PatrolOnly).ToString()).OrderBy(x => ((int)x.WeekDay + 6) % 7 ).ToList();
             }
             return clientSiteKpiSetting;
         }
