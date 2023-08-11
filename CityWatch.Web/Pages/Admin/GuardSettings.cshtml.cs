@@ -84,6 +84,8 @@ namespace CityWatch.Web.Pages.Admin
                     ClientSiteName = z.Name,
                     z.SiteEmail,
                     z.LandLine,
+                    z.DuressEmail,
+                    z.DuressSms,
                     SiteUploadDailyLog = z.UploadGuardLog,
                     z.GuardLogEmailTo,
                     z.DataCollectionEnabled,
@@ -218,7 +220,7 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
 
-        public void OnPostSaveSiteEmail(int siteId, string siteEmail, bool enableLogDump, string landLine, string guardEmailTo, string duressEmail, string duresssSms)
+        public void OnPostSaveSiteEmail(int siteId, string siteEmail, bool enableLogDump, string landLine, string guardEmailTo, string duresEmail, string duresSms)
         {
             var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(z => z.Id == siteId);
             if (clientSite != null)
@@ -227,8 +229,8 @@ namespace CityWatch.Web.Pages.Admin
                 clientSite.UploadGuardLog = enableLogDump;
                 clientSite.LandLine = landLine;
                 clientSite.GuardLogEmailTo = guardEmailTo;
-                clientSite.DuressEmail= duressEmail;
-                clientSite.DuressSms = duresssSms;
+                clientSite.DuressEmail= duresEmail;
+                clientSite.DuressSms = duresSms;
             }
 
             _clientDataProvider.SaveClientSite(clientSite);
