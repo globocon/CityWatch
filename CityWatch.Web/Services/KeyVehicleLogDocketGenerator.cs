@@ -129,7 +129,7 @@ namespace CityWatch.Web.Services
 
         private static Table CreateSiteDetailsTable(KeyVehicleLog keyVehicleLog)
         {
-            var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 5, 40, 10, 23, 5, 8, 4, 8 })).UseAllAvailableWidth().SetMarginTop(10);
+            var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 5, 38, 10, 23, 5, 8, 4, 10 })).UseAllAvailableWidth().SetMarginTop(10);
 
             siteDataTable.AddCell(GetSiteHeaderCell("Site:"));
             var siteName = new Cell()
@@ -148,7 +148,7 @@ namespace CityWatch.Web.Services
             siteDataTable.AddCell(GetSiteValueCell(keyVehicleLog.GuardLogin.Guard.Initial ?? string.Empty));
 
             siteDataTable.AddCell(GetSiteHeaderCell("S/No:"));
-            siteDataTable.AddCell(GetSiteValueCell(keyVehicleLog.DocketSerialNo ?? string.Empty));
+            siteDataTable.AddCell(GetSerialNoValueCell(keyVehicleLog.DocketSerialNo ?? string.Empty));
 
             return siteDataTable;
         }
@@ -541,6 +541,17 @@ namespace CityWatch.Web.Services
                .SetFont(PdfHelper.GetPdfFont())
                .SetFontSize(CELL_FONT_SIZE)
                .SetTextAlignment(TextAlignment.CENTER)
+               .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+               .SetVerticalAlignment(VerticalAlignment.MIDDLE);
+        }
+
+        private static Cell GetSerialNoValueCell(string text)
+        {
+            return new Cell()
+               .Add(new Paragraph().Add(new Text(text)))
+               .SetFont(PdfHelper.GetPdfFont())
+               .SetFontSize(CELL_FONT_SIZE_BIG)
+               .SetFontColor(WebColors.GetRGBColor("#FF323A"))
                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
                .SetVerticalAlignment(VerticalAlignment.MIDDLE);
         }
