@@ -915,6 +915,42 @@
         $('#auditlog-zip-modal').modal('show');
     });
 
+    function duressIsActive() {
+        $.ajax({
+            url: '/Guard/DailyLog?handler=DuressAlarmIsActive',
+            type: 'GET',
+            data: $('#form_newlog').serialize(),
+        }).done(function (result) {
+            if (result == true) {
+                document.getElementById("duress_status").textContent = "Active";
+                document.getElementById("duress_image").src = "/images/DuressButton.jpg";
+            }
+            else {
+                document.getElementById("duress_status").textContent = "Normal";
+                document.getElementById("duress_image").src = "/images/DuressButton_Inactive.jpg";
+            }
+        }).always(function () {
+        });
+    }
+
+    $('#duress_btn').on('click', function () {
+        $.ajax({
+            url: '/Guard/DailyLog?handler=SaveClientSiteLogBookDuress',
+            data: $('#form_newlog').serialize(),
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function () {
+            document.getElementById("duress_image").src = "/images/DuressButton.jpg";
+            duressIsActive();
+            gridGuardLog.clear();
+            gridGuardLog.reload();
+        });
+    });
+
+    $(document).ready(function () {
+        duressIsActive();
+    });
+
     //Vehicle key Log
 
     $('#btn_reset_vklfilter').on('click', function () {
@@ -1485,7 +1521,9 @@
                 siteEmail: $('#gs_site_email').val(),
                 enableLogDump: isUpdateDailyLog,
                 landLine: $('#gs_land_line').val(),
-                guardEmailTo: $('#gs_email_recipients').val()
+                guardEmailTo: $('#gs_email_recipients').val(),
+                duressEmail: $('#gs_duress_email').val(),
+                duresssSms: $('#gs_duress_sms').val()
             },
             headers: { 'RequestVerificationToken': token }
         }).done(function () {
