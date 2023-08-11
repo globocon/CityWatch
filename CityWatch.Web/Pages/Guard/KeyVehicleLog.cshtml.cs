@@ -551,7 +551,7 @@ namespace CityWatch.Web.Pages.Guard
                 _appConfigurationProvider.SaveConfiguration(configuration);
             }
 
-            return lastSequenceNumber.ToString().PadLeft(5, '0');
+            return lastSequenceNumber.ToString().PadLeft(6, '0');
         }
 
         private static int GetSuffixNumber(string suffix)
