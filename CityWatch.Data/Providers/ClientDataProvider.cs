@@ -181,7 +181,7 @@ namespace CityWatch.Data.Providers
 
         public ClientSiteKpiSetting GetClientSiteKpiSetting(int clientSiteId)
         {
-            var clientSiteKpiSetting =  _context.ClientSiteKpiSettings
+            var clientSiteKpiSetting = _context.ClientSiteKpiSettings
                 .Include(x => x.ClientSite)
                 .Include(x => x.ClientSite.ClientType)
                 .Include(x => x.ClientSiteDayKpiSettings)
@@ -202,7 +202,7 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.ClientSite.ClientType)
                 .Include(x => x.ClientSiteDayKpiSettings)
                 .Where(x => clientSiteIds.Contains(x.ClientSiteId))
-				.ToList();
+                .ToList();
 
             return clientSiteKpiSetting;
         }
@@ -386,11 +386,11 @@ namespace CityWatch.Data.Providers
                                 {
                                     if (setting.ClientSiteManningGuardKpiSettings.Any() && setting.ClientSiteManningGuardKpiSettings != null)
                                     {
-                                      
-                                            _context.ClientSiteManningKpiSettings.AddRange(setting.ClientSiteManningGuardKpiSettings);
-                                            _context.SaveChanges();
-                                            success = 1;
-                                        
+
+                                        _context.ClientSiteManningKpiSettings.AddRange(setting.ClientSiteManningGuardKpiSettings);
+                                        _context.SaveChanges();
+                                        success = 1;
+
                                     }
                                 }
                                 else
@@ -441,12 +441,12 @@ namespace CityWatch.Data.Providers
         public List<ClientSite> GetNewClientSites()
         {
             return _context.ClientSites
-                
+
                 .Include(x => x.ClientType)
                 .OrderBy(x => x.ClientType.Name)
                 .ThenBy(x => x.Name)
                 .ToList();
 
         }
-   
+    }
 }
