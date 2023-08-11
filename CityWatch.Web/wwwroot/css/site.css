@@ -415,3 +415,14 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
 }
 
 /* -- */
+/* -- for hide the scroll bar for select P7#85 start -- */
+
+#selstVehicleConfig {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+    #selstVehicleConfig::-webkit-scrollbar {
+        width: 1px;
+        background-color: transparent;
+    }
+/* -- for hide the scroll bar for select P7#85 End -- */
