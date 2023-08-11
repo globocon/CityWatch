@@ -42,7 +42,8 @@ namespace CityWatch.Data.Models
         public int? MinPatrolFreq { get; set; }
 
         [Display(Name = "Minimum Images per patrol")]
-        public int? MinImagesPerPatrol { get; set; }
+        public int? MinImagesPerPatrol { get; set; }         
+       
 
         public List<ClientSiteKpiNote> Notes { get; set; }
 
@@ -76,6 +77,47 @@ namespace CityWatch.Data.Models
             set
             {
                 _clientSiteDayKpiSettings = value;
+            }
+        }
+        [NotMapped]
+        public int PositionId { get; set; }
+        [NotMapped]
+        public string PositionGuard { get; set; }
+        [NotMapped]
+        public string PositionPatrolCar { get; set; }
+        private List<ClientSiteManningKpiSetting> _clientSiteManningKpiSettings;
+        private List<ClientSiteManningKpiSetting> _clientSiteManningPatrolCarKpiSettings;
+        [NotMapped]
+        public List<ClientSiteManningKpiSetting> ClientSiteManningGuardKpiSettings
+        {
+            get
+            {
+                if (_clientSiteManningKpiSettings == null || !_clientSiteManningKpiSettings.Any())
+                    _clientSiteManningKpiSettings = GetDefaultClientManningDayKpiSettings();
+                return _clientSiteManningKpiSettings;
+            }
+
+            set
+            {
+                
+                    _clientSiteManningKpiSettings = value;
+
+            }
+        }
+        [NotMapped]
+        public List<ClientSiteManningKpiSetting> ClientSiteManningPatrolCarKpiSettings
+        {
+            get
+            {
+                if (_clientSiteManningPatrolCarKpiSettings == null || !_clientSiteManningPatrolCarKpiSettings.Any())
+                    _clientSiteManningPatrolCarKpiSettings = GetDefaultClientManningDayKpiSettings();
+                return _clientSiteManningPatrolCarKpiSettings;
+            }
+
+            set
+            {
+               
+                    _clientSiteManningPatrolCarKpiSettings = value;
             }
         }
 
@@ -148,6 +190,20 @@ namespace CityWatch.Data.Models
                 new ClientSiteDayKpiSetting() { WeekDay = DayOfWeek.Friday},
                 new ClientSiteDayKpiSetting() { WeekDay = DayOfWeek.Saturday},
                 new ClientSiteDayKpiSetting() { WeekDay = DayOfWeek.Sunday}
+            };
+        }
+
+        private List<ClientSiteManningKpiSetting> GetDefaultClientManningDayKpiSettings()
+        {
+            return new List<ClientSiteManningKpiSetting>
+            {
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Monday,DefaultValue=true},
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Tuesday,DefaultValue=true},
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Wednesday,DefaultValue=true},
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Thursday, DefaultValue = true},
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Friday, DefaultValue = true},
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Saturday, DefaultValue = true},
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Sunday, DefaultValue = true}
             };
         }
     }
