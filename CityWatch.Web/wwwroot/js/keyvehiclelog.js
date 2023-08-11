@@ -218,7 +218,7 @@ $(function () {
         bindKvlPopupEvents(!params[0].isNewEntry);
     });
 
-    $('#add_new_vehicle_and_key_log').on('click', function () {
+    $('#add_new_vehicle_and_key_log,#add_new_vehicle_and_key_log_one').on('click', function () {
         loadVklPopup(0, true);
     });
 
