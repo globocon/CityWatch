@@ -109,7 +109,7 @@
                     <div class="form-row">
                         <div class="form-group col-md-4">
                             <label>Vehicle Config</label>
-                            <select asp-for="@Model.TruckConfig" class="form-control" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.VehicleConfig)"></select>
+                            <select asp-for="@Model.TruckConfig" id="selstVehicleConfig" class="form-control" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.VehicleConfig)"></select>
                         </div>
                         <div class="form-group col-md-4">
                             <label>Trailer Type</label>
