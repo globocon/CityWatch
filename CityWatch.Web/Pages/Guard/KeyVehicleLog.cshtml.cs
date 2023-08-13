@@ -274,6 +274,11 @@ namespace CityWatch.Web.Pages.Guard
 
         public JsonResult OnGetCompanyNames(string companyNamePart)
         {
+            return new JsonResult(_viewDataService.GetCompanyNames(companyNamePart).ToList());
+        }
+
+        public JsonResult OnGetCompanyAndSenderNames(string companyNamePart)
+        {
             return new JsonResult(_viewDataService.GetCompanyAndSenderNames(companyNamePart).ToList());
         }
 
