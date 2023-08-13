@@ -642,6 +642,7 @@ namespace CityWatch.Web.Pages.Admin
             }
             catch (Exception ex)
             {
+                status = false;
                 message = ex.Message;
             }
             return new JsonResult(new { status, dbxUploaded, message });
