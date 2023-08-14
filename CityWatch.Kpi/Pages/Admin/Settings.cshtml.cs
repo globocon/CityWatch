@@ -13,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
+
 namespace CityWatch.Kpi.Pages.Admin
 {
     public class SettingsModel : PageModel
@@ -110,8 +111,7 @@ namespace CityWatch.Kpi.Pages.Admin
         public PartialViewResult OnGetClientSiteKpiSettings(int siteId)
         {
             var clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
-            clientSiteKpiSetting ??= new ClientSiteKpiSetting() { ClientSiteId = siteId };
-            
+            clientSiteKpiSetting ??= new ClientSiteKpiSetting() { ClientSiteId = siteId };            
             return Partial("_ClientSiteKpiSetting", clientSiteKpiSetting);
         }
 
@@ -132,6 +132,52 @@ namespace CityWatch.Kpi.Pages.Admin
             }
 
             return new JsonResult(success);
+        }
+
+        public JsonResult OnPostClientSiteManningKpiSettings(ClientSiteKpiSetting clientSiteKpiSetting)
+        {
+            var success = 0;
+            var clientSiteId = 0;
+            try
+            {
+
+
+                if (clientSiteKpiSetting != null)
+                {
+                    if (clientSiteKpiSetting.Id != 0)
+                    {
+                        clientSiteId = clientSiteKpiSetting.ClientSiteId;
+                        var positionIdGuard = clientSiteKpiSetting.ClientSiteManningGuardKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
+                        var positionIdPatrolCar = clientSiteKpiSetting.ClientSiteManningPatrolCarKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
+
+                        if (positionIdGuard != null || positionIdPatrolCar != null)
+                        {
+                            success= _clientDataProvider.SaveClientSiteManningKpiSetting(clientSiteKpiSetting);
+                        }
+                        else
+                        {
+                            success = 3;
+                        }
+                    }
+                    else
+                    {
+                        success = 2;
+                    }
+
+                }
+                else
+                {
+                    success = 4;
+
+                }
+              
+            }
+            catch
+            {
+                success = 4;
+            }
+
+            return new JsonResult(new { success, clientSiteId });
         }
 
         public JsonResult OnPostUploadSiteImage()
@@ -418,6 +464,7 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(new { status, message });
         }
 
+
         public IActionResult OnGetDownloadPdf(int scheduleId, int reportYear, int reportMonth, bool ignoreRecipients)
         {
             var schedule = _kpiSchedulesDataProvider.GetSendScheduleById(scheduleId);
@@ -429,5 +476,6 @@ namespace CityWatch.Kpi.Pages.Admin
             // Return the PDF file as a download
             return File(pdfBytes, "application/pdf", "CityWatch_Schedule_" + reportYear + "_" + reportMonth + "_Doc.pdf");
         }
+
     }
 }

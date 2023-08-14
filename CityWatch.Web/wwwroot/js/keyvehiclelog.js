@@ -218,7 +218,7 @@ $(function () {
         bindKvlPopupEvents(!params[0].isNewEntry);
     });
 
-    $('#add_new_vehicle_and_key_log').on('click', function () {
+    $('#add_new_vehicle_and_key_log,#add_new_vehicle_and_key_log_one').on('click', function () {
         loadVklPopup(0, true);
     });
 
@@ -1248,6 +1248,7 @@ $(function () {
         $('#generate_kvl_docket_status').hide();
         $('#download_kvl_docket').hide();
         $('.print-docket-reason').prop('checked', false);
+        $('#cbxProofOfDelivery').prop('checked', true);
         $('#otherReason').val('');
         $('#otherReason').attr('disabled', true);
         $('#stakeholderEmail').val('');
@@ -1256,25 +1257,28 @@ $(function () {
         $('#print-manual-docket-modal').modal('show')
         $('#printDocketForKvlId').val(data.detail.id);
     });
-
+    
     $('.print-docket-reason').on('change', function () {
+       
         $('#otherReason').val('');
         $('#otherReason').attr('disabled', true);
         $('#generate_kvl_docket_status').hide();
         $('#download_kvl_docket').hide();
         $('.print-docket-reason').prop('checked', false);
 
+        
         $(this).prop('checked', true);
         if ($(this).val() === '0')
             $('#otherReason').attr('disabled', false);
     });
+   
 
     $('#otherReason').attr('placeholder', 'Select Or Edit').editableSelect({
         effects: 'slide'
     }).on('select.editable-select', function (e, li) {
         $('#download_kvl_docket').hide();
     });
-
+    
     $('#generate_kvl_docket').on('click', function () {
         $('#generate_kvl_docket_status').hide();
 
@@ -1383,9 +1387,11 @@ $(function () {
             $('#duplicate_profile_status').text('');
         });
     }
-    $('#chb_IsBlankNote').on('change', function () {       
+    $('#chb_IsBlankNote').on('change', function () {  
+        
         const isChecked = $(this).is(':checked');
         $('#lbl_BlankNotes').text(isChecked ? 'Blank Notes On' : 'Blank Notes Off'); lbl_BlankNotes
         $('#IsBlankNoteOn').val(isChecked);
+       
     });
 });

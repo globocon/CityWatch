@@ -491,6 +491,8 @@ namespace CityWatch.Web.Pages.Guard
                     return "Weighbridge Down = No Comms";
                 case ManualDocketReason.PhysicalRepair:
                     return "Weighbridge Down = Physical Repair";
+                case ManualDocketReason.POD:
+                    return "Proof Of Delivery (Receipt)";
                 default:
                     return string.Empty;
             }

@@ -813,8 +813,16 @@
 
     $('#dglClientType').on('change', function () {
         const clientTypeId = $(this).val();
-        const clientSiteControl = $('#dglClientSiteId');
+        const clientSiteControl = $('#dglClientSiteId');  
+        var selectedOption = $(this).find("option:selected");
+        var selectedText = selectedOption.text();       
+        $("#vklClientType").val(selectedText);
+        $("#vklClientType").multiselect("refresh");        
         gridsiteLog.clear();
+
+        const clientSiteControlvkl = $('#vklClientSiteId');
+        keyVehicleLogReport.clear().draw();
+        clientSiteControlvkl.html('');
 
         clientSiteControl.html('');
         $.ajax({
@@ -826,8 +834,26 @@
                 data.map(function (site) {
                     $('#dglClientSiteId').append(new Option(site.name, site.id, false, false));
                 });
+                /* vkl multiselect */
+                data.map(function (site) {
+                    clientSiteControlvkl.append('<option value="' + site.id + '">' + site.name + '</option>');
+                });
+                clientSiteControlvkl.multiselect('rebuild');
             }
         });
+
+        
+    });
+
+
+    $('#dglClientSiteId').on('change', function () { 
+        const clientTypeId = $(this).val();       
+        $("#vklClientSiteId").val(clientTypeId);
+        $("#vklClientSiteId").multiselect("refresh");
+       
+      
+
+
     });
 
     $('#btnGenerateDglAuditReport').on('click', function () {
