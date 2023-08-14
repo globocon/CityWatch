@@ -112,6 +112,7 @@ namespace CityWatch.Web.Services
             PdfDocument pdfDocument = new PdfDocument(new PdfReader(_TemplatePdf), new PdfWriter(reportPdf));
 
             PdfAcroForm acroForm = PdfAcroForm.GetAcroForm(pdfDocument, false);
+            
             acroForm.GetField("IR-NO9").SetValue("", false);
             acroForm.GetField("IR-NO").SetValue("", false);
             acroForm.GetField("IR-NO-BC").SetValue("", false);

@@ -521,7 +521,9 @@
     document.getElementById("Report_DateLocation_ShowIncidentLocationAddress").addEventListener('change', onShowLiveAddressChange);
     document.getElementById("Report_EventType_Other").addEventListener('change', onEventTypeOtherChange);
     document.getElementById("Report_EventType_SiteColour").addEventListener('change', onEventTypeSiteColourChange);
-
+    document.getElementById("Report_PlateLoadedNo").addEventListener('change', onPlateLoadedChange);
+    document.getElementById("Report_PlateLoadedYes").addEventListener('change', onPlateLoadedChange);
+   
     function onWindowLoad(event) {
         const autoCompleteLocation = new google.maps.places.Autocomplete(document.getElementById("Report_DateLocation_ClientAddress"), {
                 types: ['address'],
@@ -909,7 +911,24 @@
             if (gps === '') toggleClientGpsLink(false); 
             else toggleClientGpsLink(true, gps);
         }
-    }    
+    } 
+    
+    function onPlateLoadedChange(event) {
+        const yesPlateId = "Report_PlateLoadedYes";
+        const noPlateId = "Report_PlateLoadedNo";
+
+        if (this.id == yesPlateId && this.checked) {
+            document.getElementById(noPlateId).checked = false;
+        }
+
+        if (this.id == noPlateId && this.checked) {
+            document.getElementById(yesPlateId).checked = false;
+        }
+
+        if (!document.getElementById(yesPlateId).checked && !document.getElementById(noPlateId).checked) {
+            document.getElementById(noPlateId).checked = true;
+        }
+    }
 </script>
 <partial name="_MessagePopup" />
 @section scripts {
