@@ -274,6 +274,11 @@ namespace CityWatch.Web.Pages.Guard
 
         public JsonResult OnGetCompanyNames(string companyNamePart)
         {
+            return new JsonResult(_viewDataService.GetCompanyNames(companyNamePart).ToList());
+        }
+
+        public JsonResult OnGetCompanyAndSenderNames(string companyNamePart)
+        {
             return new JsonResult(_viewDataService.GetCompanyAndSenderNames(companyNamePart).ToList());
         }
 
@@ -553,7 +558,7 @@ namespace CityWatch.Web.Pages.Guard
                 _appConfigurationProvider.SaveConfiguration(configuration);
             }
 
-            return lastSequenceNumber.ToString().PadLeft(5, '0');
+            return lastSequenceNumber.ToString().PadLeft(6, '0');
         }
 
         private static int GetSuffixNumber(string suffix)
