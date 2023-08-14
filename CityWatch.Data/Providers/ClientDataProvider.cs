@@ -14,9 +14,13 @@ namespace CityWatch.Data.Providers
 {
     public enum OfficerPositionFilterForManning
     {
+        All = 0,
+
         PatrolOnly = 1,
 
-        SecurityOnly = 2
+        NonPatrolOnly = 2,
+
+        SecurityOnly = 3
     }
     public interface IClientDataProvider
     {
@@ -189,7 +193,7 @@ namespace CityWatch.Data.Providers
                 .SingleOrDefault(x => x.ClientSiteId == clientSiteId);
             if (clientSiteKpiSetting != null)
             {
-                clientSiteKpiSetting.ClientSiteManningGuardKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id && x.Type == ((int)OfficerPositionFilterForManning.SecurityOnly).ToString()).OrderBy(x => ((int)x.WeekDay + 6) % 7).ToList();
+                clientSiteKpiSetting.ClientSiteManningGuardKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id && x.Type == ((int)OfficerPositionFilterForManning.NonPatrolOnly).ToString()).OrderBy(x => ((int)x.WeekDay + 6) % 7).ToList();
                 clientSiteKpiSetting.ClientSiteManningPatrolCarKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id && x.Type == ((int)OfficerPositionFilterForManning.PatrolOnly).ToString()).OrderBy(x => ((int)x.WeekDay + 6) % 7 ).ToList();
             }
             return clientSiteKpiSetting;
@@ -371,7 +375,7 @@ namespace CityWatch.Data.Providers
                 {
                     if (setting.ClientSiteManningGuardKpiSettings.Any() || setting.ClientSiteManningPatrolCarKpiSettings.Any())
                     {
-                        var entityStateforGuard = !_context.ClientSiteManningKpiSettings.Any(x => x.SettingsId == setting.Id && x.Type == ((int)OfficerPositionFilterForManning.SecurityOnly).ToString()) ? EntityState.Added : EntityState.Modified;
+                        var entityStateforGuard = !_context.ClientSiteManningKpiSettings.Any(x => x.SettingsId == setting.Id && x.Type == ((int)OfficerPositionFilterForManning.NonPatrolOnly).ToString()) ? EntityState.Added : EntityState.Modified;
                         var entityStateforpatrolcar = !_context.ClientSiteManningKpiSettings.Any(x => x.SettingsId == setting.Id && x.Type == ((int)OfficerPositionFilterForManning.PatrolOnly).ToString()) ? EntityState.Added : EntityState.Modified;
                         var positionIdGuard = setting.ClientSiteManningGuardKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
                         var positionIdPatrolCar = setting.ClientSiteManningPatrolCarKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
@@ -381,7 +385,7 @@ namespace CityWatch.Data.Providers
                             if (positionIdGuard != null)
                             {
                                 //set the values for SettingsId and PositionId
-                                setting.ClientSiteManningGuardKpiSettings.ForEach(x => { x.Type = ((int)OfficerPositionFilterForManning.SecurityOnly).ToString(); x.SettingsId = setting.Id; x.PositionId = positionIdGuard.PositionId; });
+                                setting.ClientSiteManningGuardKpiSettings.ForEach(x => { x.Type = ((int)OfficerPositionFilterForManning.NonPatrolOnly).ToString(); x.SettingsId = setting.Id; x.PositionId = positionIdGuard.PositionId; });
                                 if (entityStateforGuard == EntityState.Added)
                                 {
                                     if (setting.ClientSiteManningGuardKpiSettings.Any() && setting.ClientSiteManningGuardKpiSettings != null)

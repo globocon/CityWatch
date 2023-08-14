@@ -1069,16 +1069,19 @@ $(function () {
         if (currentDiv === 1) {
             $('#positionfilterGuard').prop('disabled', false);
             $('#positionfilterPatrolCar').prop('disabled', false);
-            if (selectedValueGuard != "") {
+            if (selectedValueGuard != "" && selectedValuePatrolCar === "") {
                 $('#divGuard').show();
                 $('#divbtn').show();
-                $('#divPatrolCar').hide();
+                $('#divPatrolCar').show();
+                $('#positionfilterGuard').prop('disabled', true);
+                $('#positionfilterPatrolCar').prop('disabled', false);
             }
-            if (selectedValuePatrolCar != "") {
+            if (selectedValuePatrolCar != "" && selectedValueGuard === "") {
                 $('#divPatrolCar').show();
                 $('#divbtn').show();
-                $('#divGuard').hide();
-
+                $('#divGuard').show();
+                $('#positionfilterGuard').prop('disabled', false);
+                $('#positionfilterPatrolCar').prop('disabled', true);
             }
             if (selectedValueGuard != "" && selectedValuePatrolCar != "") {
                 $('#divPatrolCar').show();
@@ -1091,7 +1094,8 @@ $(function () {
                 $('#divPatrolCar').hide();
                 $('#divGuard').show();
                 $('#divbtn').show();
-
+                $('#positionfilterPatrolCar').prop('disabled', false);
+                $('#positionfilterGuard').prop('disabled', false);
 
             }
             currentDiv = 2;
@@ -1099,6 +1103,22 @@ $(function () {
             $('#divPatrolCar').show();
             $('#divGuard').show();
             $('#divbtn').show();
+           
+            if (selectedValueGuard != "" && selectedValuePatrolCar === "") {
+                $('#divGuard').show();
+                $('#divbtn').show();
+                $('#divPatrolCar').hide();
+                $('#positionfilterGuard').prop('disabled', false);
+                $('#positionfilterPatrolCar').prop('disabled', true);
+            }
+            if (selectedValuePatrolCar != "" && selectedValueGuard === "") {
+                $('#divPatrolCar').show();
+                $('#divbtn').show();
+                $('#divGuard').hide();
+                $('#positionfilterGuard').prop('disabled', true);
+                $('#positionfilterPatrolCar').prop('disabled', false);
+
+            }
             $('#positionfilterGuard').prop('disabled', true);
             $('#positionfilterPatrolCar').prop('disabled', true);
             currentDiv = 1;
@@ -1113,14 +1133,17 @@ $(function () {
         if (filter == 2) {
             $("#divGuard").show();
             $("#divPatrolCar").hide();
+            $('#divbtn').show(); 
             $('#positionfilterGuard').prop('checked', false);
             $('#positionfilterPatrolCar').prop('checked', true);
-
+            currentDiv = 1;
         } else {
+            $('#divbtn').show();
             $("#divGuard").hide();
-            $("#divPatrolCar").show();
+            $("#divPatrolCar").show(); 
             $('#positionfilterGuard').prop('checked', false);
             $('#positionfilterPatrolCar').prop('checked', true);
+            currentDiv = 1;
         }
     });
 
@@ -1133,12 +1156,13 @@ $(function () {
             $("#divPatrolCar").hide();
             $('#positionfilterGuard').prop('checked', false);
             $('#positionfilterPatrolCar').prop('checked', true);
-
+            currentDiv = 1;
         } else {
             $("#divGuard").hide();
             $("#divPatrolCar").show();
             $('#positionfilterGuard').prop('checked', false);
             $('#positionfilterPatrolCar').prop('checked', true);
+            currentDiv = 1;
         }
     });
    
