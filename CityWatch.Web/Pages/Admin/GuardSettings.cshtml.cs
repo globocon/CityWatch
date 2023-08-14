@@ -644,12 +644,6 @@ namespace CityWatch.Web.Pages.Admin
             {
                 status = false;
                 message = ex.Message;
-                if (ex.InnerException != null &&
-                    ex.InnerException is SqlException &&
-                    ex.InnerException.Message.StartsWith("Violation of UNIQUE KEY constraint"))
-                {
-                    message = "Reference number already exists";
-                }
             }
             return new JsonResult(new { status, dbxUploaded, message });
         }
