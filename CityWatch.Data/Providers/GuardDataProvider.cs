@@ -285,7 +285,8 @@ namespace CityWatch.Data.Providers
         {
             return _context.GuardCompliances
                 .Include(z => z.Guard)
-                .Where(x => x.GuardId == guardId).ToList();
+                .Where(x => x.GuardId == guardId)
+                .OrderBy(x => x.ReferenceNo).ToList();
         }
 
         public GuardCompliance GetGuardCompliance(int id)

@@ -876,7 +876,7 @@ $(function () {
             minLength: 3,
             source: function (request, response) {
                 $.ajax({
-                    url: '/Guard/KeyVehiclelog?handler=CompanyNames',
+                    url: '/Guard/KeyVehiclelog?handler=CompanyAndSenderNames',
                     data: { companyNamePart: request },
                     type: 'GET',
                     dataType: 'json',
