@@ -513,28 +513,28 @@ namespace CityWatch.Kpi.Services
             CreateGuardReportHeader(kpiGuardTable, fromDate);
             foreach (var data in monthlyKpiGuardData)
             {
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Date.ToString("dd"))));
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Date.ToString("dddd"))));
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.EmployeeHours?.ToString() ?? string.Empty)));
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.ActualEmployeeHours?.ToString() ?? string.Empty)));
+                kpiGuardTable.AddCell(CreateDataCell(data.Date.ToString("dd")));
+                kpiGuardTable.AddCell(CreateDataCell(data.Date.ToString("dddd")));
+                kpiGuardTable.AddCell(CreateDataCell(data.EmployeeHours?.ToString() ?? string.Empty));
+                kpiGuardTable.AddCell(CreateDataCell(data.ActualEmployeeHours?.ToString() ?? string.Empty));
 
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift1GuardName ?? string.Empty)));
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift1GuardSecurityNo ?? string.Empty)));
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift1GuardHr.ToString())));
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift1GuardVisy.ToString())));
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift1GuardFire.ToString())));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardName ?? string.Empty));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardSecurityNo ?? string.Empty));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardHr?.ToString() ?? string.Empty));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardVisy?.ToString() ?? string.Empty));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardFire?.ToString() ?? string.Empty));
 
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift2GuardName ?? string.Empty)));
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift2GuardSecurityNo ?? string.Empty)));
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift2GuardHr.ToString())));
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift2GuardVisy.ToString())));
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift2GuardFire.ToString())));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardName ?? string.Empty));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardSecurityNo ?? string.Empty));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardHr?.ToString() ?? string.Empty));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardVisy?.ToString() ?? string.Empty));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardFire?.ToString() ?? string.Empty));
 
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift3GuardName ?? string.Empty)));
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift3GuardSecurityNo ?? string.Empty)));
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift3GuardHr.ToString())));
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift3GuardVisy.ToString())));
-                kpiGuardTable.AddCell(new Cell().SetFontSize(CELL_FONT_SIZE).Add(new Paragraph(data.Shift3GuardFire.ToString())));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardName ?? string.Empty));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardSecurityNo ?? string.Empty));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardHr?.ToString() ?? string.Empty));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardVisy?.ToString() ?? string.Empty));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardFire?.ToString() ?? string.Empty));
             }
             return kpiGuardTable;
         }
