@@ -77,5 +77,7 @@ namespace CityWatch.Data.Models
 
             return seqPattern.IndexOf(SecurityNo) != -1 || regex.IsMatch(SecurityNo) || revPattern.IndexOf(SecurityNo) != -1;
         }
+        public string Mobile { get; set; }
+        public string Email { get; set; }
     }
 }

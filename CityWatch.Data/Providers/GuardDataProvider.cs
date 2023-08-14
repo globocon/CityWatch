@@ -74,6 +74,8 @@ namespace CityWatch.Data.Providers
                 }
                 updateGuard.State = guard.State;
                 updateGuard.Provider = guard.Provider;
+                updateGuard.Mobile = guard.Mobile;
+                updateGuard.Email = guard.Email;
             }
 
             _context.SaveChanges();
