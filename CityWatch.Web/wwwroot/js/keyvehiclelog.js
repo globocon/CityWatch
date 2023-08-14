@@ -378,6 +378,44 @@ $(function () {
         }
     }
 
+    function kvDuressIsActive() {
+        $.ajax({
+            url: '/Guard/KeyVehicleLog?handler=KvDuressAlarmIsActive',
+            type: 'GET',
+            data: { clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val() },
+        }).done(function (result) {
+            if (result == true) {
+                document.getElementById("kv_duress_status").textContent = "Active";
+                document.getElementById("kv_duress_image").src = "/images/DuressButton.jpg";
+            }
+            else {
+                document.getElementById("kv_duress_status").textContent = "Normal";
+                document.getElementById("kv_duress_image").src = "/images/DuressButton_Inactive.jpg";
+            }
+        }).always(function () {
+        });
+    }
+
+    $('#kv_duress_btn').on('click', function () {
+        $.ajax({
+            url: '/Guard/KeyVehicleLog?handler=SaveKvClientSiteLogBookDuress',
+            data: {
+                clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),
+                guardLoginId: $('#KeyVehicleLog_GuardLogin_Id').val()
+            },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function () {
+            document.getElementById("kv_duress_image").src = "/images/DuressButton.jpg";
+            kvDuressIsActive();
+            keyVehicleLog.ajax.reload();
+        });
+    });
+
+    $(document).ready(function () {
+        kvDuressIsActive();
+    });
+
     let gridKeyVehicleLogProfile = $('#key_vehicle_log_profiles').DataTable({
         paging: false,
         ordering: false,

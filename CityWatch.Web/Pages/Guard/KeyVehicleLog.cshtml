@@ -49,6 +49,10 @@
                     <p class="mb-2">
                         <b>Guard Name: </b>@Model.KeyVehicleLog.GuardLogin.Guard.Name ; <b>Initials: </b>@Model.KeyVehicleLog.GuardLogin.Guard.Initial ; <b>Smart WAND: </b>@(Model.KeyVehicleLog.GuardLogin.SmartWand?.SmartWandId ?? "N/A") ;  <b>Position: </b>@(Model.KeyVehicleLog.GuardLogin.Position?.Name ?? "N/A")
                     </p>
+                    <div class="float-right">
+                        <button type="button" class="btn" id="kv_duress_btn"><img src="~/images/DuressButton_Inactive.jpg" id="kv_duress_image" alt="Duress" width="120" height="120"></button>
+                        <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Status:<span id="kv_duress_status"></span></p>
+                    </div>
                 </div>
             </div>
         </div>

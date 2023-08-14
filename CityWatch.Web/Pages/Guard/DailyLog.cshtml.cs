@@ -330,27 +330,32 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { success = false, message = exMessage.ToString() });
         }
 
-        public JsonResult OnPostSaveClientSiteLogBookDuress(GuardLog guardLog)
+        public JsonResult OnPostSaveClientSiteLogBookDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId)
         {
             var status = true;
             var message = "Success";
             try
             {
-                guardLog.Notes = "DURESS ALARM ACTIVATED BY";
-                guardLog.IsSystemEntry = true;
-                guardLog.IrEntryType = Data.Enums.IrEntryType.Alarm;
-                guardLog.EventDateTime = DateTime.Now;
-                var clientSiteLogBookDuress = _guardLogDataProvider.GetLogBookDuress(guardLog.ClientSiteLogBookId);
-                if(clientSiteLogBookDuress != null)
+                var guardlog = new GuardLog()
                 {
-                   var isActive = clientSiteLogBookDuress.IsActive;
-                    if(isActive) 
+                    Notes = "DURESS ALARM ACTIVATED BY",
+                    IsSystemEntry = true,
+                    IrEntryType = Data.Enums.IrEntryType.Alarm,
+                    EventDateTime = DateTime.Now,
+                    ClientSiteLogBookId = logBookId,
+                    GuardLoginId = guardLoginId,
+                };
+                var clientSiteLogBookDuress = _guardLogDataProvider.GetLogBookDuress(clientSiteId);
+                if (clientSiteLogBookDuress != null)
+                {
+                    var isActive = clientSiteLogBookDuress.IsActive;
+                    if (isActive)
                     {
                         return new JsonResult(new { success = false, status = false });
                     }
                 }
-                _guardLogDataProvider.SaveGuardLog(guardLog);
-                _guardLogDataProvider.SaveClientSiteLogBookDuress(guardLog);
+                _guardLogDataProvider.SaveGuardLog(guardlog);
+                _guardLogDataProvider.SaveClientSiteLogBookDuress(clientSiteId, guardId);
             }
             catch (Exception ex)
             {
@@ -360,17 +365,13 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { status, message });
         }
 
-        public JsonResult OnGetDuressAlarmIsActive(GuardLog guardLog)
+        public JsonResult OnGetDuressAlarmIsActive(int clientSiteId)
         {
             bool isActive = false;
-            int logBookId = guardLog.ClientSiteLogBookId;
-            if (logBookId != 0)
+            var clientSiteLogBookDuress = _guardLogDataProvider.GetLogBookDuress(clientSiteId);
+            if (clientSiteLogBookDuress != null)
             {
-                var clientSiteLogBookDuress = _guardLogDataProvider.GetLogBookDuress(logBookId);
-                if (clientSiteLogBookDuress != null)
-                {
-                    isActive = clientSiteLogBookDuress.IsActive;
-                }
+                isActive = clientSiteLogBookDuress.IsActive;
             }
             return new JsonResult(isActive);
         }

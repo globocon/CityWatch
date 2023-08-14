@@ -919,7 +919,7 @@
         $.ajax({
             url: '/Guard/DailyLog?handler=DuressAlarmIsActive',
             type: 'GET',
-            data: $('#form_newlog').serialize(),
+            data: { clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val() },
         }).done(function (result) {
             if (result == true) {
                 document.getElementById("duress_status").textContent = "Active";
@@ -936,7 +936,12 @@
     $('#duress_btn').on('click', function () {
         $.ajax({
             url: '/Guard/DailyLog?handler=SaveClientSiteLogBookDuress',
-            data: $('#form_newlog').serialize(),
+            data: {
+                clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
+                guardLoginId: $('#GuardLog_GuardLoginId').val(),
+                logBookId: $('#GuardLog_ClientSiteLogBookId').val(),
+                guardId: $('#GuardLog_GuardLogin_GuardId').val(),
+            },
             type: 'POST',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function () {
@@ -1201,8 +1206,8 @@
         const siteId = button.data('cs-id');
         const siteName = button.data('cs-name');
         const siteEmail = button.data('cs-email');
-        const duresEmail = button.data('cs-duressemail');
-        const duresSms = button.data('cs-duresssms');
+        const duressEmail = button.data('cs-duressemail');
+        const duressSms = button.data('cs-duresssms');
         const landLine = button.data('cs-landline');
         const isDataCollectionEnabled = button.data('cs-datacollection-enabled');
 
@@ -1213,8 +1218,8 @@
         $('#ClientSiteKey_ClientSiteId').val(siteId);
         $('#ClientSiteCustomField_ClientSiteId').val(siteId);
         $('#gs_site_email').val(siteEmail);
-        $('#gs_duress_email').val(duresEmail);
-        $('#gs_duress_sms').val(duresSms);
+        $('#gs_duress_email').val(duressEmail);
+        $('#gs_duress_sms').val(duressSms);
         $('#gs_land_line').val(landLine);
         $('#gs_email_recipients').val(guardLogEmailTo);
         $('#enableLogDump').prop('checked', false);
@@ -1526,8 +1531,8 @@
                 enableLogDump: isUpdateDailyLog,
                 landLine: $('#gs_land_line').val(),
                 guardEmailTo: $('#gs_email_recipients').val(),
-                duresEmail: $('#gs_duress_email').val(),
-                duresSms: $('#gs_duress_sms').val()
+                duressEmail: $('#gs_duress_email').val(),
+                duressSms: $('#gs_duress_sms').val()
             },
             headers: { 'RequestVerificationToken': token }
         }).done(function () {

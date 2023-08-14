@@ -423,6 +423,44 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { success, message, kvlProfileId });
         }
 
+        public JsonResult OnPostSaveKvClientSiteLogBookDuress(int clientSiteId, int guardLoginId)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                var logBookId = KeyVehicleLog.ClientSiteLogBookId;
+                var GuardLoginId = KeyVehicleLog.GuardLoginId;
+                var clientSiteLogBookDuress = _guardLogDataProvider.GetLogBookDuress(clientSiteId);
+                if (clientSiteLogBookDuress != null)
+                {
+                    var isActive = clientSiteLogBookDuress.IsActive;
+                    if (isActive)
+                    {
+                        return new JsonResult(new { success = false, status = false });
+                    }
+                }
+                _guardLogDataProvider.SaveClientSiteLogBookDuress(clientSiteId, null);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+            return new JsonResult(new { status, message });
+        }
+
+        public JsonResult OnGetKvDuressAlarmIsActive(int clientSiteId)
+        {
+            bool isActive = false;
+            var clientSiteLogBookDuress = _guardLogDataProvider.GetLogBookDuress(clientSiteId);
+            if (clientSiteLogBookDuress != null)
+            {
+                isActive = clientSiteLogBookDuress.IsActive;
+            }
+            return new JsonResult(isActive);
+        }
+
         private async Task UploadToDropbox(int clientSiteId, string fileName)
         {
             var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientSiteId) ??

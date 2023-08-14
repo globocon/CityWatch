@@ -220,7 +220,7 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
 
-        public void OnPostSaveSiteEmail(int siteId, string siteEmail, bool enableLogDump, string landLine, string guardEmailTo, string duresEmail, string duresSms)
+        public void OnPostSaveSiteEmail(int siteId, string siteEmail, bool enableLogDump, string landLine, string guardEmailTo, string duressEmail, string duressSms)
         {
             var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(z => z.Id == siteId);
             if (clientSite != null)
@@ -229,8 +229,8 @@ namespace CityWatch.Web.Pages.Admin
                 clientSite.UploadGuardLog = enableLogDump;
                 clientSite.LandLine = landLine;
                 clientSite.GuardLogEmailTo = guardEmailTo;
-                clientSite.DuressEmail= duresEmail;
-                clientSite.DuressSms = duresSms;
+                clientSite.DuressEmail= duressEmail;
+                clientSite.DuressSms = duressSms;
             }
 
             _clientDataProvider.SaveClientSite(clientSite);

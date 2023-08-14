@@ -11,7 +11,7 @@ namespace CityWatch.Data.Providers
         List<GuardLog> GetGuardLogs(int logBookId, DateTime logDate);
         List<GuardLog> GetGuardLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
         GuardLog GetLatestGuardLog(int clientSiteId, int guardId);
-        void SaveClientSiteLogBookDuress(GuardLog guardLog);
+        void SaveClientSiteLogBookDuress(int clientSiteId, int? guardId);
         void SaveGuardLog(GuardLog guardLog);
         void DeleteGuardLog(int id);
         List<KeyVehicleLog> GetOpenKeyVehicleLogsByVehicleRego(string vehicleRego);
@@ -35,7 +35,7 @@ namespace CityWatch.Data.Providers
         List<CustomFieldLog> GetCustomFieldLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate);
         void SaveCustomFieldLogs(List<CustomFieldLog> customFieldLogs);
         void SaveCustomFieldLog(CustomFieldLog customFieldLog);
-        ClientSiteLogBookDuress GetLogBookDuress(int logBookId);
+        ClientSiteLogBookDuress GetLogBookDuress(int clientSiteId);
         List<string> GetVehicleRegos(string regoStart = null);
         List<string> GetCompanyNames(string companyNameStart);
         List<string> GetSenderNames(string senderNameStart);
@@ -105,18 +105,19 @@ namespace CityWatch.Data.Providers
             return null;
         }
 
-        public ClientSiteLogBookDuress GetLogBookDuress(int logBookId)
+        public ClientSiteLogBookDuress GetLogBookDuress(int clientSiteId)
         {
-           return _context.ClientSiteLogBookDuress.Where(z => z.LogBookId == logBookId).OrderBy(z=>z.Id).LastOrDefault();
+            return _context.ClientSiteLogBookDuress.Where(z => z.ClientSiteId == clientSiteId)
+                .OrderBy(z=>z.Id).LastOrDefault();
         }
 
-        public void SaveClientSiteLogBookDuress(GuardLog guardLog)
+        public void SaveClientSiteLogBookDuress(int clientSiteId, int? guardId)
         {
             _context.ClientSiteLogBookDuress.Add(new ClientSiteLogBookDuress()
             {
-                LogBookId = guardLog.ClientSiteLogBookId,
+                ClientSiteId = clientSiteId,
                 IsActive = true,
-                ActivatedBy = guardLog.GuardLogin.GuardId,
+                ActivatedBy = guardId,
                 ActivatedAt = DateTime.Now
             });
             _context.SaveChanges();

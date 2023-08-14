@@ -12,7 +12,7 @@ namespace CityWatch.Data.Models
         [Key]
         public int Id { get; set; }
 
-        public int LogBookId { get; set; }
+        public int ClientSiteId { get; set; }
 
         public bool IsActive { get; set; }
 
