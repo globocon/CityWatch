@@ -11,9 +11,13 @@ namespace CityWatch.Kpi.Services
 
     public enum OfficerPositionFilterManning
     {
+        All = 0,
+
         PatrolOnly = 1,
 
-        SecurityOnly = 2
+        NonPatrolOnly = 2,
+
+        SecurityOnly = 3
     }
     public interface IViewDataService
     {
@@ -101,15 +105,16 @@ namespace CityWatch.Kpi.Services
             return months;
         }
 
-        public List<SelectListItem> GetOfficerPositions(OfficerPositionFilterManning positionFilter = OfficerPositionFilterManning.SecurityOnly)
+        public List<SelectListItem> GetOfficerPositions(OfficerPositionFilterManning positionFilter = OfficerPositionFilterManning.All)
         {
             var items = new List<SelectListItem>()
             {
                 new SelectListItem("Select", "", true),
             };
-            var officerPositions = _configDataProvider.GetPositions();
-            foreach (var officerPosition in officerPositions.Where(z =>
-                 positionFilter == OfficerPositionFilterManning.PatrolOnly && z.IsPatrolCar ||                 
+            var officerPositions = _configDataProvider.GetPositions();           
+            foreach (var officerPosition in officerPositions.Where(z => positionFilter == OfficerPositionFilterManning.All ||
+                 positionFilter == OfficerPositionFilterManning.PatrolOnly && z.IsPatrolCar ||
+                 positionFilter == OfficerPositionFilterManning.NonPatrolOnly && !z.IsPatrolCar ||
                  positionFilter == OfficerPositionFilterManning.SecurityOnly && z.Name.Contains("Security")))
             {
                 items.Add(new SelectListItem(officerPosition.Name, officerPosition.Id.ToString()));
