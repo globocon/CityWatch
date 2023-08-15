@@ -228,10 +228,10 @@
                                                             <label class="form-label">@Model.ClientSiteManningGuardKpiSettings[colIndex].WeekDay.ToString().Substring(0, 3)</label>
                                                             break;
                                                         case 1:
-                                                            <input class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursStart">
+                                                            <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursStart">
                                                             break;
                                                         case 2:
-                                                            <input class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursEnd">
+                                                            <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursEnd">
                                                             break;
                                                         case 3:
                                                             <input class="form-control mb-2 patrols-count" min="0" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].NoOfPatrols" data-index="@colIndex">
@@ -303,10 +303,10 @@
                                                         <label class="form-label">@Model.ClientSiteManningGuardKpiSettings[colIndex].WeekDay.ToString().Substring(0, 3)</label>
                                                         break;
                                                     case 1:
-                                                        <input class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursStart">
+                                                        <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursStart">
                                                         break;
                                                     case 2:
-                                                        <input class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursEnd">
+                                                        <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursEnd">
                                                         break;
                                                     case 3:
                                                         <input class="form-control mb-2 patrols-count" min="0" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].NoOfPatrols" data-index="@colIndex">
@@ -368,10 +368,10 @@
                                                             <label class="form-label">@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].WeekDay.ToString().Substring(0, 3)</label>
                                                             break;
                                                         case 1:
-                                                            <input class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].EmpHoursStart">
+                                                            <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].EmpHoursStart">
                                                             break;
                                                         case 2:
-                                                            <input class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].EmpHoursEnd">
+                                                            <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].EmpHoursEnd">
                                                             break;
                                                         case 3:
                                                             <input class="form-control mb-2 patrols-count" min="0" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].NoOfPatrols" data-index="@colIndex2">
@@ -440,10 +440,10 @@
                                                         <label class="form-label">@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].WeekDay.ToString().Substring(0, 3)</label>
                                                         break;
                                                     case 1:
-                                                        <input class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].EmpHoursStart">
+                                                        <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].EmpHoursStart">
                                                         break;
                                                     case 2:
-                                                        <input class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].EmpHoursEnd">
+                                                        <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].EmpHoursEnd">
                                                         break;
                                                     case 3:
                                                         <input class="form-control mb-2 patrols-count" min="0" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].NoOfPatrols" data-index="@colIndex2">

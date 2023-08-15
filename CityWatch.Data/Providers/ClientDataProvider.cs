@@ -1,5 +1,6 @@
 ﻿using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
+using iText.Layout.Element;
 using iText.StyledXmlParser.Jsoup.Safety;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -45,6 +46,7 @@ namespace CityWatch.Data.Providers
         int SaveClientSiteLogBook(ClientSiteLogBook logBook);
         void MarkClientSiteLogBookAsUploaded(int logBookId, string fileName);
         void SetDataCollectionStatus(int clientSiteId, bool enabled);
+        string ValidDateTime(ClientSiteKpiSetting setting);
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -194,7 +196,7 @@ namespace CityWatch.Data.Providers
             if (clientSiteKpiSetting != null)
             {
                 clientSiteKpiSetting.ClientSiteManningGuardKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id && x.Type == ((int)OfficerPositionFilterForManning.NonPatrolOnly).ToString()).OrderBy(x => ((int)x.WeekDay + 6) % 7).ToList();
-                clientSiteKpiSetting.ClientSiteManningPatrolCarKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id && x.Type == ((int)OfficerPositionFilterForManning.PatrolOnly).ToString()).OrderBy(x => ((int)x.WeekDay + 6) % 7 ).ToList();
+                clientSiteKpiSetting.ClientSiteManningPatrolCarKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id && x.Type == ((int)OfficerPositionFilterForManning.PatrolOnly).ToString()).OrderBy(x => ((int)x.WeekDay + 6) % 7).ToList();
             }
             return clientSiteKpiSetting;
         }
@@ -441,6 +443,74 @@ namespace CityWatch.Data.Providers
                 return success;
             }
             return success;
+        }
+
+        public string ValidDateTime(ClientSiteKpiSetting setting)
+        {
+            var InvalidInputs = string.Empty;
+            if (setting != null)
+            {
+                foreach (var listItem in setting.ClientSiteManningGuardKpiSettings)
+                {
+                    if (listItem.EmpHoursStart != null)
+                    {
+                        if (!IsValidTimeFormat(listItem.EmpHoursStart))
+                        {
+                            InvalidInputs = InvalidInputs + listItem.EmpHoursStart + ",";
+
+                        }
+
+                    }
+                    if (listItem.EmpHoursEnd != null)
+                    {
+                        if (!IsValidTimeFormat(listItem.EmpHoursEnd))
+                        {
+                            InvalidInputs = InvalidInputs + listItem.EmpHoursEnd + ",";
+
+                        }
+
+                    }
+
+                    
+
+                }
+
+                foreach (var listItem2 in setting.ClientSiteManningPatrolCarKpiSettings)
+                {
+                    if (listItem2.EmpHoursStart != null)
+                    {
+                        if (!IsValidTimeFormat(listItem2.EmpHoursStart))
+                        {
+                            InvalidInputs = InvalidInputs + listItem2.EmpHoursStart + ",";
+
+                        }
+
+                    }
+                    if (listItem2.EmpHoursEnd != null)
+                    {
+                        if (!IsValidTimeFormat(listItem2.EmpHoursStart))
+                        {
+                            InvalidInputs = InvalidInputs + listItem2.EmpHoursStart + ",";
+
+                        }
+
+                        if (!IsValidTimeFormat(listItem2.EmpHoursEnd))
+                        {
+                            InvalidInputs = InvalidInputs + listItem2.EmpHoursEnd + ",";
+
+                        }
+
+                    }
+
+                }
+
+            }
+            return InvalidInputs.TrimEnd(',');
+        }
+        public bool IsValidTimeFormat(string input)
+        {
+            TimeSpan dummyOutput;          
+            return TimeSpan.TryParse(input, out dummyOutput);
         }
         public List<ClientSite> GetNewClientSites()
         {
