@@ -1868,6 +1868,7 @@
         $('.btn-add-guard-addl-details').show();
 
         var data = guardSettings.row($(this).parents('tr')).data();
+        debugger;
         $('#Guard_Name').val(data.name);
         $('#Guard_SecurityNo').val(data.securityNo);
         $('#Guard_Initial').val(data.initial);

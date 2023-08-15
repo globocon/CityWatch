@@ -58,5 +58,7 @@ namespace CityWatch.Web.Models
         public DateTime? DateEnrolled { get { return _guard.DateEnrolled; } }
 
         public bool IsActive { get { return _guard.IsActive; } }
+        public string Email { get { return _guard.Email; } }
+        public string Mobile { get { return _guard.Mobile; } }
     }
 }
