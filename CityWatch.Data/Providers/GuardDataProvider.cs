@@ -76,6 +76,8 @@ namespace CityWatch.Data.Providers
                 updateGuard.Provider = guard.Provider;
                 updateGuard.Mobile = guard.Mobile;
                 updateGuard.Email = guard.Email;
+                updateGuard.IsKPIAccess = guard.IsKPIAccess;
+                updateGuard.IsRCAccess = guard.IsRCAccess;
             }
 
             _context.SaveChanges();

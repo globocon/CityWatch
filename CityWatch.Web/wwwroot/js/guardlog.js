@@ -1909,7 +1909,7 @@
     $('#btn_save_guard').on('click', function () {
         clearGuardValidationSummary('glValidationSummary');
         $('#guard_saved_status').hide();
-        $('#Guard_IsActive').val($(cbIsActive).is(':checked'));
+        //$('#Guard_IsActive').val($(cbIsActive).is(':checked'));
         $.ajax({
             url: '/Admin/GuardSettings?handler=Guards',
             data: $('#frm_add_guard').serialize(),

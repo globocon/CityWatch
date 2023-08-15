@@ -149,15 +149,20 @@
                                 </div>
                             </div>
                             <div class="form-group row">
-                                <label class="col-md-2 form-check-label">Is Active</label>
+                                @*<label class="col-md-2 form-check-label">Is Active</label>
                                 <div class="col-md-3">
                                     <input type="checkbox" class="form-check col-md-4" id="cbIsActive">
                                     <input type="hidden" id="Guard_IsActive" name="Guard.IsActive">
+                                </div>*@
+                                <label class="col-md-2 form-check-label">(RC Access)</label>
+                                <div class="col-md-3">
+                                    <input type="checkbox" class="form-check col-md-4" id="cbIsRCAccess">
+                                    <input type="hidden" id="Guard_IsRCAccess" name="Guard.IsRCAccess">
                                 </div>
-                                <label class="col-md-1 form-check-label">Is Active</label>
+                                <label class="col-md-1 form-check-label">(KPI Access)</label>
                                 <div class="col-md-2">
-                                    <input type="checkbox" class="form-check col-md-4" id="cbIsActive">
-                                    <input type="hidden" id="Guard_IsActive" name="Guard.IsActive">
+                                    <input type="checkbox" class="form-check col-md-4" id="cbIsKPIAccess">
+                                    <input type="hidden" id="Guard_IsKPIAccess" name="Guard.IsKPIAccess">
                                 </div>
                                 <label class="col-md-1 col-form-label">Provider</label>
                                 <div class="col-md-3">

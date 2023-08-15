@@ -79,5 +79,8 @@ namespace CityWatch.Data.Models
         }
         public string Mobile { get; set; }
         public string Email { get; set; }
+
+        public bool IsRCAccess { get; set; }
+        public bool IsKPIAccess { get; set; }
     }
 }
