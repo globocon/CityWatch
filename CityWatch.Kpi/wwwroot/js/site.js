@@ -1058,6 +1058,10 @@ $(function () {
                 $("input[name^='ClientSiteManningPatrolCarKpiSettings']").val("");
 
             }
+            else if (data.success ==5) {
+                alert('Please enter a valid time for Start and End. These are invalid times ' + data.erorrMessage+' .');
+                
+            }
            
         }).fail(function () { });
     });

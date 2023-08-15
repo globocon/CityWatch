@@ -138,6 +138,7 @@ namespace CityWatch.Kpi.Pages.Admin
         {
             var success = 0;
             var clientSiteId = 0;
+            var erorrMessage = string.Empty;
             try
             {
 
@@ -150,13 +151,26 @@ namespace CityWatch.Kpi.Pages.Admin
                         var positionIdGuard = clientSiteKpiSetting.ClientSiteManningGuardKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
                         var positionIdPatrolCar = clientSiteKpiSetting.ClientSiteManningPatrolCarKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
 
-                        if (positionIdGuard != null || positionIdPatrolCar != null)
+                       var InvalidTimes=_clientDataProvider.ValidDateTime(clientSiteKpiSetting);
+
+                        if (InvalidTimes.Trim() == string.Empty)
                         {
-                            success= _clientDataProvider.SaveClientSiteManningKpiSetting(clientSiteKpiSetting);
+
+                            if (positionIdGuard != null || positionIdPatrolCar != null)
+                            {
+                                success = _clientDataProvider.SaveClientSiteManningKpiSetting(clientSiteKpiSetting);
+                            }
+                            else
+                            {
+                                success = 3;
+                            }
+
                         }
                         else
                         {
-                            success = 3;
+                            erorrMessage = InvalidTimes;
+                            success = 5;
+
                         }
                     }
                     else
@@ -177,7 +191,7 @@ namespace CityWatch.Kpi.Pages.Admin
                 success = 4;
             }
 
-            return new JsonResult(new { success, clientSiteId });
+            return new JsonResult(new { success, clientSiteId, erorrMessage });
         }
 
         public JsonResult OnPostUploadSiteImage()
