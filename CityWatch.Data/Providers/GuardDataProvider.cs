@@ -100,9 +100,11 @@ namespace CityWatch.Data.Providers
         {
             var guardLogins = _context.GuardLogins
                 .Where(z => guardIds.Contains(z.GuardId))
+
                 .Include(z => z.Guard)
                 .Include(z => z.ClientSite)
                 .ToList();
+
 
             return guardLogins
                 .GroupBy(z => new { z.GuardId, z.ClientSiteId })
