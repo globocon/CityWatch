@@ -385,12 +385,12 @@ $(function () {
             data: { clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val() },
         }).done(function (result) {
             if (result == true) {
-                document.getElementById("kv_duress_status").textContent = "Active";
-                document.getElementById("kv_duress_image").src = "/images/DuressButton.jpg";
+                $("#kv_duress_status").text("Active");
+                $('#kv_duress_image').attr("src", '/images/DuressButton.jpg');
             }
             else {
-                document.getElementById("kv_duress_status").textContent = "Normal";
-                document.getElementById("kv_duress_image").src = "/images/DuressButton_Inactive.jpg";
+                $("#kv_duress_status").text("Normal");
+                $('#kv_duress_image').attr("src", '/images/DuressButton_Inactive.jpg');
             }
         }).always(function () {
         });
@@ -406,7 +406,7 @@ $(function () {
             type: 'POST',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function () {
-            document.getElementById("kv_duress_image").src = "/images/DuressButton.jpg";
+            $('#kv_duress_image').attr("src", '/images/DuressButton.jpg');
             kvDuressIsActive();
             keyVehicleLog.ajax.reload();
         });

@@ -55,6 +55,6 @@ namespace CityWatch.Data
         public DbSet<ClientSiteActivityStatus> ClientSiteActivityStatus { get; set;}
         public DbSet<ClientSiteRadioCheck> ClientSiteRadioChecks { get; set; }
         public DbSet<CompanyDetails> CompanyDetails { get; set; }
-        public DbSet<ClientSiteLogBookDuress> ClientSiteLogBookDuress { get; set; }
+        public DbSet<ClientSiteDuress> ClientSiteDuress { get; set; }
     }
 }

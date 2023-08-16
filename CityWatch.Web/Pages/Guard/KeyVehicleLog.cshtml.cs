@@ -434,13 +434,13 @@ namespace CityWatch.Web.Pages.Guard
                 var clientSiteLogBookDuress = _guardLogDataProvider.GetLogBookDuress(clientSiteId);
                 if (clientSiteLogBookDuress != null)
                 {
-                    var isActive = clientSiteLogBookDuress.IsActive;
+                    var isActive = clientSiteLogBookDuress.Enabled;
                     if (isActive)
                     {
                         return new JsonResult(new { success = false, status = false });
                     }
                 }
-                _guardLogDataProvider.SaveClientSiteLogBookDuress(clientSiteId, null);
+                _guardLogDataProvider.SaveClientSiteLogBookDuress(clientSiteId, 11);
             }
             catch (Exception ex)
             {
@@ -456,7 +456,7 @@ namespace CityWatch.Web.Pages.Guard
             var clientSiteLogBookDuress = _guardLogDataProvider.GetLogBookDuress(clientSiteId);
             if (clientSiteLogBookDuress != null)
             {
-                isActive = clientSiteLogBookDuress.IsActive;
+                isActive = clientSiteLogBookDuress.Enabled;
             }
             return new JsonResult(isActive);
         }

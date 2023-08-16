@@ -922,12 +922,12 @@
             data: { clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val() },
         }).done(function (result) {
             if (result == true) {
-                document.getElementById("duress_status").textContent = "Active";
-                document.getElementById("duress_image").src = "/images/DuressButton.jpg";
+                $("#duress_status").text("Active");
+                $('#duress_image').attr("src", '/images/DuressButton.jpg');
             }
             else {
-                document.getElementById("duress_status").textContent = "Normal";
-                document.getElementById("duress_image").src = "/images/DuressButton_Inactive.jpg";
+                $("#duress_status").text("Normal");
+                $('#duress_image').attr("src", '/images/DuressButton_Inactive.jpg');
             }
         }).always(function () {
         });
@@ -945,7 +945,7 @@
             type: 'POST',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function () {
-            document.getElementById("duress_image").src = "/images/DuressButton.jpg";
+            $('#duress_image').attr("src", '/images/DuressButton.jpg');
             duressIsActive();
             gridGuardLog.clear();
             gridGuardLog.reload();

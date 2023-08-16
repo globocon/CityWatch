@@ -2,7 +2,6 @@ using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Services;
-using DocumentFormat.OpenXml.Drawing;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -348,7 +347,7 @@ namespace CityWatch.Web.Pages.Guard
                 var clientSiteLogBookDuress = _guardLogDataProvider.GetLogBookDuress(clientSiteId);
                 if (clientSiteLogBookDuress != null)
                 {
-                    var isActive = clientSiteLogBookDuress.IsActive;
+                    var isActive = clientSiteLogBookDuress.Enabled;
                     if (isActive)
                     {
                         return new JsonResult(new { success = false, status = false });
@@ -371,7 +370,7 @@ namespace CityWatch.Web.Pages.Guard
             var clientSiteLogBookDuress = _guardLogDataProvider.GetLogBookDuress(clientSiteId);
             if (clientSiteLogBookDuress != null)
             {
-                isActive = clientSiteLogBookDuress.IsActive;
+                isActive = clientSiteLogBookDuress.Enabled;
             }
             return new JsonResult(isActive);
         }

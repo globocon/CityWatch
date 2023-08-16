@@ -7,17 +7,17 @@ using System.Threading.Tasks;
 
 namespace CityWatch.Data.Models
 {
-    public class ClientSiteLogBookDuress
+    public class ClientSiteDuress
     {
         [Key]
         public int Id { get; set; }
 
         public int ClientSiteId { get; set; }
 
-        public bool IsActive { get; set; }
+        public bool Enabled { get; set; }
 
-        public int? ActivatedBy { get; set; }
+        public int ActivatedBy { get; set; }
 
-        public DateTime? ActivatedAt { get; set; }
+        public DateTime ActivatedAt { get; set; }
     }
 }
