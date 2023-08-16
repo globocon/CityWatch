@@ -423,7 +423,7 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { success, message, kvlProfileId });
         }
 
-        public JsonResult OnPostSaveKvClientSiteLogBookDuress(int clientSiteId, int guardLoginId)
+        public JsonResult OnPostSaveKvClientSiteLogBookDuress(int clientSiteId, int GuardId)
         {
             var status = true;
             var message = "Success";
@@ -440,7 +440,7 @@ namespace CityWatch.Web.Pages.Guard
                         return new JsonResult(new { success = false, status = false });
                     }
                 }
-                _guardLogDataProvider.SaveClientSiteLogBookDuress(clientSiteId, 11);
+                _guardLogDataProvider.SaveClientSiteLogBookDuress(clientSiteId, GuardId);
             }
             catch (Exception ex)
             {

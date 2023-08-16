@@ -401,7 +401,7 @@ $(function () {
             url: '/Guard/KeyVehicleLog?handler=SaveKvClientSiteLogBookDuress',
             data: {
                 clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),
-                guardLoginId: $('#KeyVehicleLog_GuardLogin_Id').val()
+                GuardId: $('#KeyVehicleLog_GuardLogin_GuardId').val()
             },
             type: 'POST',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
