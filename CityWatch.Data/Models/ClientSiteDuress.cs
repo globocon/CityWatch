@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CityWatch.Data.Models
 {
@@ -14,10 +10,10 @@ namespace CityWatch.Data.Models
 
         public int ClientSiteId { get; set; }
 
-        public bool Enabled { get; set; }
+        public bool IsEnabled { get; set; }
 
-        public int ActivatedBy { get; set; }
+        public int EnabledBy { get; set; }
 
-        public DateTime ActivatedAt { get; set; }
+        public DateTime EnabledDate { get; set; }
     }
 }

@@ -344,17 +344,17 @@ namespace CityWatch.Web.Pages.Guard
                     ClientSiteLogBookId = logBookId,
                     GuardLoginId = guardLoginId,
                 };
-                var clientSiteLogBookDuress = _guardLogDataProvider.GetLogBookDuress(clientSiteId);
+                var clientSiteLogBookDuress = _guardLogDataProvider.GetClientSiteDuress(clientSiteId);
                 if (clientSiteLogBookDuress != null)
                 {
-                    var isActive = clientSiteLogBookDuress.Enabled;
+                    var isActive = clientSiteLogBookDuress.IsEnabled;
                     if (isActive)
                     {
                         return new JsonResult(new { success = false, status = false });
                     }
                 }
                 _guardLogDataProvider.SaveGuardLog(guardlog);
-                _guardLogDataProvider.SaveClientSiteLogBookDuress(clientSiteId, guardId);
+                _guardLogDataProvider.SaveClientSiteDuress(clientSiteId, guardId);
             }
             catch (Exception ex)
             {
@@ -367,10 +367,10 @@ namespace CityWatch.Web.Pages.Guard
         public JsonResult OnGetDuressAlarmIsActive(int clientSiteId)
         {
             bool isActive = false;
-            var clientSiteLogBookDuress = _guardLogDataProvider.GetLogBookDuress(clientSiteId);
+            var clientSiteLogBookDuress = _guardLogDataProvider.GetClientSiteDuress(clientSiteId);
             if (clientSiteLogBookDuress != null)
             {
-                isActive = clientSiteLogBookDuress.Enabled;
+                isActive = clientSiteLogBookDuress.IsEnabled;
             }
             return new JsonResult(isActive);
         }

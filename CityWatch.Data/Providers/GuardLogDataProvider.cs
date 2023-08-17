@@ -10,8 +10,7 @@ namespace CityWatch.Data.Providers
     {
         List<GuardLog> GetGuardLogs(int logBookId, DateTime logDate);
         List<GuardLog> GetGuardLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
-        GuardLog GetLatestGuardLog(int clientSiteId, int guardId);
-        void SaveClientSiteLogBookDuress(int clientSiteId, int guardId);
+        GuardLog GetLatestGuardLog(int clientSiteId, int guardId);        
         void SaveGuardLog(GuardLog guardLog);
         void DeleteGuardLog(int id);
         List<KeyVehicleLog> GetOpenKeyVehicleLogsByVehicleRego(string vehicleRego);
@@ -34,8 +33,7 @@ namespace CityWatch.Data.Providers
         List<CustomFieldLog> GetCustomFieldLogs(int logBookId);
         List<CustomFieldLog> GetCustomFieldLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate);
         void SaveCustomFieldLogs(List<CustomFieldLog> customFieldLogs);
-        void SaveCustomFieldLog(CustomFieldLog customFieldLog);
-        ClientSiteDuress GetLogBookDuress(int clientSiteId);
+        void SaveCustomFieldLog(CustomFieldLog customFieldLog);        
         List<string> GetVehicleRegos(string regoStart = null);
         List<string> GetCompanyNames(string companyNameStart);
         List<string> GetSenderNames(string senderNameStart);
@@ -53,6 +51,8 @@ namespace CityWatch.Data.Providers
         void DeleteKeyVehicleLogField(int id);
         List<KeyVehicleLogAuditHistory> GetAuditHistory(int id);
         void SaveKeyVehicleLogAuditHistory(KeyVehicleLogAuditHistory keyVehicleLogAuditHistory);
+        void SaveClientSiteDuress(int clientSiteId, int guardId);
+        ClientSiteDuress GetClientSiteDuress(int clientSiteId);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -105,20 +105,22 @@ namespace CityWatch.Data.Providers
             return null;
         }
 
-        public ClientSiteDuress GetLogBookDuress(int clientSiteId)
+        public ClientSiteDuress GetClientSiteDuress(int clientSiteId)
         {
-            return _context.ClientSiteDuress.Where(z => z.ClientSiteId == clientSiteId)
-                .OrderBy(z=>z.Id).LastOrDefault();
+            return _context.ClientSiteDuress
+                .Where(z => z.ClientSiteId == clientSiteId)
+                .OrderBy(z => z.Id)
+                .LastOrDefault();
         }
 
-        public void SaveClientSiteLogBookDuress(int clientSiteId, int guardId)
+        public void SaveClientSiteDuress(int clientSiteId, int guardId)
         {
             _context.ClientSiteDuress.Add(new ClientSiteDuress()
             {
                 ClientSiteId = clientSiteId,
-                Enabled = true,
-                ActivatedBy = guardId,
-                ActivatedAt = DateTime.Now
+                IsEnabled = true,
+                EnabledBy = guardId,
+                EnabledDate = DateTime.Today
             });
             _context.SaveChanges();
         }
