@@ -917,7 +917,7 @@
 
     function duressIsActive() {
         $.ajax({
-            url: '/Guard/DailyLog?handler=DuressAlarmIsActive',
+            url: '/Guard/DailyLog?handler=IsDuressActive',
             type: 'GET',
             data: { clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val() },
         }).done(function (result) {
@@ -935,7 +935,7 @@
 
     $('#duress_btn').on('click', function () {
         $.ajax({
-            url: '/Guard/DailyLog?handler=SaveClientSiteLogBookDuress',
+            url: '/Guard/DailyLog?handler=SaveClientSiteDuress',
             data: {
                 clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
                 guardLoginId: $('#GuardLog_GuardLoginId').val(),

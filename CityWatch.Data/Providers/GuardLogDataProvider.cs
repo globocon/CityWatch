@@ -108,7 +108,7 @@ namespace CityWatch.Data.Providers
         public ClientSiteDuress GetClientSiteDuress(int clientSiteId)
         {
             return _context.ClientSiteDuress
-                .Where(z => z.ClientSiteId == clientSiteId)
+                .Where(z => z.ClientSiteId == clientSiteId && z.IsEnabled == true)
                 .OrderBy(z => z.Id)
                 .LastOrDefault();
         }

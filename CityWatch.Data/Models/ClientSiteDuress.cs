@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 
 namespace CityWatch.Data.Models
-{
+{   
     public class ClientSiteDuress
     {
         [Key]

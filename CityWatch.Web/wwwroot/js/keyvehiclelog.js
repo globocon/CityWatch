@@ -380,7 +380,7 @@ $(function () {
 
     function kvDuressIsActive() {
         $.ajax({
-            url: '/Guard/KeyVehicleLog?handler=KvDuressAlarmIsActive',
+            url: '/Guard/KeyVehicleLog?handler=IsDuressActive',
             type: 'GET',
             data: { clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val() },
         }).done(function (result) {
@@ -398,7 +398,7 @@ $(function () {
 
     $('#kv_duress_btn').on('click', function () {
         $.ajax({
-            url: '/Guard/KeyVehicleLog?handler=SaveKvClientSiteLogBookDuress',
+            url: '/Guard/KeyVehicleLog?handler=SaveClientSiteDuress',
             data: {
                 clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),
                 GuardId: $('#KeyVehicleLog_GuardLogin_GuardId').val()

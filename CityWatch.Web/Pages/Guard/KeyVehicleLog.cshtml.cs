@@ -423,7 +423,7 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { success, message, kvlProfileId });
         }
 
-        public JsonResult OnPostSaveKvClientSiteLogBookDuress(int clientSiteId, int GuardId)
+        public JsonResult OnPostSaveClientSiteDuress(int clientSiteId, int guardId)
         {
             var status = true;
             var message = "Success";
@@ -440,7 +440,7 @@ namespace CityWatch.Web.Pages.Guard
                         return new JsonResult(new { success = false, status = false });
                     }
                 }
-                _guardLogDataProvider.SaveClientSiteDuress(clientSiteId, GuardId);
+                _guardLogDataProvider.SaveClientSiteDuress(clientSiteId, guardId);
             }
             catch (Exception ex)
             {
@@ -450,7 +450,7 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { status, message });
         }
 
-        public JsonResult OnGetKvDuressAlarmIsActive(int clientSiteId)
+        public JsonResult OnGetIsDuressActive(int clientSiteId)
         {
             bool isActive = false;
             var clientSiteLogBookDuress = _guardLogDataProvider.GetClientSiteDuress(clientSiteId);

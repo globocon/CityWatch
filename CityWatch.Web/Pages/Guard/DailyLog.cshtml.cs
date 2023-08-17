@@ -329,7 +329,7 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { success = false, message = exMessage.ToString() });
         }
 
-        public JsonResult OnPostSaveClientSiteLogBookDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId)
+        public JsonResult OnPostSaveClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId)
         {
             var status = true;
             var message = "Success";
@@ -337,7 +337,7 @@ namespace CityWatch.Web.Pages.Guard
             {
                 var guardlog = new GuardLog()
                 {
-                    Notes = "DURESS ALARM ACTIVATED BY",
+                    Notes = "Duress Alarm Activated",
                     IsSystemEntry = true,
                     IrEntryType = Data.Enums.IrEntryType.Alarm,
                     EventDateTime = DateTime.Now,
@@ -364,7 +364,7 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { status, message });
         }
 
-        public JsonResult OnGetDuressAlarmIsActive(int clientSiteId)
+        public JsonResult OnGetIsDuressActive(int clientSiteId)
         {
             bool isActive = false;
             var clientSiteLogBookDuress = _guardLogDataProvider.GetClientSiteDuress(clientSiteId);
