@@ -720,16 +720,20 @@ namespace CityWatch.Web.Services
 
         public void EnableClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId)
         {
-            _guardLogDataProvider.SaveClientSiteDuress(clientSiteId, guardId);
-            _guardLogDataProvider.SaveGuardLog(new GuardLog()
+            var isEnabled = _guardLogDataProvider.GetClientSiteDuress(clientSiteId)?.IsEnabled ?? false;
+            if (!isEnabled)
             {
-                Notes = "Duress Alarm Activated",
-                IsSystemEntry = true,
-                IrEntryType = Data.Enums.IrEntryType.Alarm,
-                EventDateTime = DateTime.Now,
-                ClientSiteLogBookId = logBookId,
-                GuardLoginId = guardLoginId,
-            });
+                _guardLogDataProvider.SaveClientSiteDuress(clientSiteId, guardId);
+                _guardLogDataProvider.SaveGuardLog(new GuardLog()
+                {
+                    Notes = "Duress Alarm Activated",
+                    IsSystemEntry = true,
+                    IrEntryType = Data.Enums.IrEntryType.Alarm,
+                    EventDateTime = DateTime.Now,
+                    ClientSiteLogBookId = logBookId,
+                    GuardLoginId = guardLoginId,
+                });
+            }
         }
     }
 }

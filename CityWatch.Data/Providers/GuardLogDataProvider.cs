@@ -115,18 +115,14 @@ namespace CityWatch.Data.Providers
 
         public void SaveClientSiteDuress(int clientSiteId, int guardId)
         {
-            var isEnabled = GetClientSiteDuress(clientSiteId)?.IsEnabled ?? false;
-            if (!isEnabled)
+            _context.ClientSiteDuress.Add(new ClientSiteDuress()
             {
-                _context.ClientSiteDuress.Add(new ClientSiteDuress()
-                {
-                    ClientSiteId = clientSiteId,
-                    IsEnabled = true,
-                    EnabledBy = guardId,
-                    EnabledDate = DateTime.Today
-                });
-                _context.SaveChanges();
-            }
+                ClientSiteId = clientSiteId,
+                IsEnabled = true,
+                EnabledBy = guardId,
+                EnabledDate = DateTime.Today
+            });
+            _context.SaveChanges();
         }
 
         public void SaveGuardLog(GuardLog guardLog)
