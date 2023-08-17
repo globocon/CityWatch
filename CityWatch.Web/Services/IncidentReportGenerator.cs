@@ -130,8 +130,15 @@ namespace CityWatch.Web.Services
                 if (!string.IsNullOrEmpty(propValue))
                 {
                     if (field.PropType == typeof(bool))
-
-                        acroField.SetValue(propValue, false);
+                    {
+                        if (field.Name == "IR-YES-KV")
+                        {
+                            acroField.SetValue(propValue, true);
+                            acroForm.GetField("IR-NO-KV").SetValue("", false);
+                        }
+                        else
+                            acroField.SetValue(propValue, false);
+                    }
 
                     else
                         acroField.SetValue(propValue);
