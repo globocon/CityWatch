@@ -85,7 +85,9 @@ namespace CityWatch.Web.Helpers
                 new FormField("Supervisor Reported To", "ReportedBy", typeof(string)),
                 new FormField("SN", "SerialNumber", typeof(string)),
                 new FormField("LINKED-IR", "LinkedSerialNos", typeof(string)),
-                new FormField("GPS", "DateLocation.ClientSiteLiveGpsInDegrees", typeof(string))
+                new FormField("GPS", "DateLocation.ClientSiteLiveGpsInDegrees", typeof(string)),
+                new FormField("IR-YES-KV", "PlateLoadedYes", typeof(bool)),
+                new FormField("IR-NO-KV", "PlateLoadedNo", typeof(bool))
             };
         }
     }

@@ -116,6 +116,8 @@ namespace CityWatch.Web.Services
             acroForm.GetField("IR-NO9").SetValue("", false);
             acroForm.GetField("IR-NO").SetValue("", false);
             acroForm.GetField("IR-NO-BC").SetValue("", false);
+           
+           
 
             foreach (var field in editableFields)
             {
@@ -128,7 +130,9 @@ namespace CityWatch.Web.Services
                 if (!string.IsNullOrEmpty(propValue))
                 {
                     if (field.PropType == typeof(bool))
+
                         acroField.SetValue(propValue, false);
+
                     else
                         acroField.SetValue(propValue);
                 }
@@ -357,9 +361,11 @@ namespace CityWatch.Web.Services
             }
             else if (field.PropType == typeof(bool))
             {
-                if (field.Name.IndexOf("IR-NO") >= 0 ||
+                if (
+                    field.Name.IndexOf("IR-NO") >= 0 ||
                     field.Name.IndexOf("PTL-EX") >= 0 ||
                     field.Name.IndexOf("PTL-IN") >= 0 ||
+                    //field.Name.IndexOf("IR-NO-KV") >= 0 ||
                     field.Name == "IR-YES-BC")
                 {
                     propValue = _IncidentReport.GetPropValue<bool>(field.PropName) ? "No" : string.Empty;
