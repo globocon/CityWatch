@@ -313,6 +313,10 @@ $(function () {
             $('#MobileNumber').val('');
 
         const today = new Date();
+        /*To get the text inside the product dropdown*/
+        var inputElement = document.querySelector(".es-input");
+        // Get the value of the input element
+        if (inputElement) { var inputValue = inputElement.value; $('#ProductOther').val(inputValue); }
 
         if ($('#new_log_initial_call').val() !== '')
             $('#InitialCallTime').val(parseDateInKvlEntryFormat(today, $('#new_log_initial_call').val()));
@@ -428,7 +432,7 @@ $(function () {
             $('#Product').val(result.keyVehicleLogProfile.product);
             $('#Notes').val(result.keyVehicleLogProfile.notes);
             $("#list_product").val(result.keyVehicleLogProfile.product);
-            $("#list_product").trigger('change');
+            $("#list_product").trigger('change');           
             $('#Sender').val(result.sender);
             $('#lblIsSender').text(result.isSender ? 'Sender' : 'Reciever');
             $('#cbIsSender').prop('checked', result.isSender);
@@ -490,6 +494,25 @@ $(function () {
                     $('#new_log_exit_time').val(getTimeFromDateTime(new Date($('#ExitTime').val())));
 
                 $('#ActiveGuardLoginId').val($('#KeyVehicleLog_GuardLogin_Id').val());
+
+               
+
+                //New Custome Product
+                var tempElement = document.createElement('div');
+                tempElement.innerHTML = response;
+                var hiddenFieldElement = tempElement.querySelector('#Product');
+
+                if (hiddenFieldElement) {
+                    // Get the value of the hidden field
+                    var hiddenFieldValue = hiddenFieldElement.value;
+                    var inputElement = $(".es-input");
+                    inputElement.val(hiddenFieldValue); 
+                } else {
+                   
+                }
+
+                
+                
             }
         }).always(function () {
             $('#loader').hide();
