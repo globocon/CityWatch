@@ -12,6 +12,11 @@ namespace CityWatch.Data.Helpers
             return PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
         }
 
+        public static PdfFont GetPdfFont(string font)
+        {
+            return PdfFontFactory.CreateFont(font);
+        }
+
         public static void CombinePdfReports(string combinedFileName, List<string> fileNames, string summaryFileName)
         {
             var pdfDoc = new PdfDocument(new PdfWriter(combinedFileName));
