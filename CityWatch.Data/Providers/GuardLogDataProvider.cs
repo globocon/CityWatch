@@ -108,21 +108,25 @@ namespace CityWatch.Data.Providers
         public ClientSiteDuress GetClientSiteDuress(int clientSiteId)
         {
             return _context.ClientSiteDuress
-                .Where(z => z.ClientSiteId == clientSiteId && z.IsEnabled == true)
-                .OrderBy(z => z.Id)
+                .Where(z => z.ClientSiteId == clientSiteId)
+                .OrderBy(z => z.EnabledDate)
                 .LastOrDefault();
         }
 
         public void SaveClientSiteDuress(int clientSiteId, int guardId)
         {
-            _context.ClientSiteDuress.Add(new ClientSiteDuress()
+            var isEnabled = GetClientSiteDuress(clientSiteId)?.IsEnabled ?? false;
+            if (!isEnabled)
             {
-                ClientSiteId = clientSiteId,
-                IsEnabled = true,
-                EnabledBy = guardId,
-                EnabledDate = DateTime.Today
-            });
-            _context.SaveChanges();
+                _context.ClientSiteDuress.Add(new ClientSiteDuress()
+                {
+                    ClientSiteId = clientSiteId,
+                    IsEnabled = true,
+                    EnabledBy = guardId,
+                    EnabledDate = DateTime.Today
+                });
+                _context.SaveChanges();
+            }
         }
 
         public void SaveGuardLog(GuardLog guardLog)

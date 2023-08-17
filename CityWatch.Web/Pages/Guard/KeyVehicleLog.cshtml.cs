@@ -75,7 +75,10 @@ namespace CityWatch.Web.Pages.Guard
 
         public void OnGet()
         {
+            var logBookId = HttpContext.Session.GetInt32("LogBookId");
+            var clientSiteLogBook = _clientDataProvider.GetClientSiteLogBooks().SingleOrDefault(z => z.Id == logBookId && z.Type == LogBookType.VehicleAndKeyLog);
             KeyVehicleLog = GetKeyVehicleLog();
+            ViewData["IsDuressEnabled"] = _viewDataService.IsClientSiteDuressEnabled(clientSiteLogBook.ClientSiteId);
         }
 
         public JsonResult OnGetKeyVehicleLogs(int logbookId, KvlStatusFilter kvlStatusFilter)
@@ -423,24 +426,13 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { success, message, kvlProfileId });
         }
 
-        public JsonResult OnPostSaveClientSiteDuress(int clientSiteId, int guardId)
+        public JsonResult OnPostSaveClientSiteDuress(int clientSiteId, int guardId, int guardLoginId, int logBookId)
         {
             var status = true;
             var message = "Success";
             try
             {
-                var logBookId = KeyVehicleLog.ClientSiteLogBookId;
-                var GuardLoginId = KeyVehicleLog.GuardLoginId;
-                var clientSiteLogBookDuress = _guardLogDataProvider.GetClientSiteDuress(clientSiteId);
-                if (clientSiteLogBookDuress != null)
-                {
-                    var isActive = clientSiteLogBookDuress.IsEnabled;
-                    if (isActive)
-                    {
-                        return new JsonResult(new { success = false, status = false });
-                    }
-                }
-                _guardLogDataProvider.SaveClientSiteDuress(clientSiteId, guardId);
+                _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logBookId, guardId);
             }
             catch (Exception ex)
             {
@@ -448,17 +440,6 @@ namespace CityWatch.Web.Pages.Guard
                 message = "Error " + ex.Message;
             }
             return new JsonResult(new { status, message });
-        }
-
-        public JsonResult OnGetIsDuressActive(int clientSiteId)
-        {
-            bool isActive = false;
-            var clientSiteLogBookDuress = _guardLogDataProvider.GetClientSiteDuress(clientSiteId);
-            if (clientSiteLogBookDuress != null)
-            {
-                isActive = clientSiteLogBookDuress.IsEnabled;
-            }
-            return new JsonResult(isActive);
         }
 
         private async Task UploadToDropbox(int clientSiteId, string fileName)

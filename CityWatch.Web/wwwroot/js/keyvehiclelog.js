@@ -378,44 +378,26 @@ $(function () {
         }
     }
 
-    function kvDuressIsActive() {
-        $.ajax({
-            url: '/Guard/KeyVehicleLog?handler=IsDuressActive',
-            type: 'GET',
-            data: { clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val() },
-        }).done(function (result) {
-            if (result == true) {
-                $("#kv_duress_status").text("Active");
-                $('#kv_duress_image').attr("src", '/images/DuressButton.jpg');
-            }
-            else {
-                $("#kv_duress_status").text("Normal");
-                $('#kv_duress_image').attr("src", '/images/DuressButton_Inactive.jpg');
-            }
-        }).always(function () {
-        });
-    }
-
     $('#kv_duress_btn').on('click', function () {
         $.ajax({
             url: '/Guard/KeyVehicleLog?handler=SaveClientSiteDuress',
             data: {
                 clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),
-                GuardId: $('#KeyVehicleLog_GuardLogin_GuardId').val()
+                GuardId: $('#KeyVehicleLog_GuardLogin_GuardId').val(),
+                guardLoginId: $('#KeyVehicleLog_GuardLogin_Id').val(),
+                logBookId: $('#KeyVehicleLog_ClientSiteLogBookId').val()
             },
             type: 'POST',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function () {
-            $('#kv_duress_image').attr("src", '/images/DuressButton.jpg');
-            kvDuressIsActive();
-            keyVehicleLog.ajax.reload();
+        }).done(function (result) {
+            if (result.status) {
+                $('#kv_duress_image').attr("src", '/images/DuressButton.jpg');
+                $("#kv_duress_status").text("Active");
+            }
         });
     });
 
-    $(document).ready(function () {
-        kvDuressIsActive();
-    });
-
+    
     let gridKeyVehicleLogProfile = $('#key_vehicle_log_profiles').DataTable({
         paging: false,
         ordering: false,

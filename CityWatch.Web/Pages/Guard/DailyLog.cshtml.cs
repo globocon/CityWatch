@@ -66,6 +66,8 @@ namespace CityWatch.Web.Pages.Guard
                 GuardLoginId = guardLoginId.Value,
                 GuardLogin = guardLogin,
             };
+
+            ViewData["IsDuressEnabled"] = _viewDataService.IsClientSiteDuressEnabled(clientSiteLogBook.ClientSiteId);
         }
 
         public JsonResult OnGetGuardLogs(int logBookId, DateTime? logBookDate)
@@ -335,26 +337,7 @@ namespace CityWatch.Web.Pages.Guard
             var message = "Success";
             try
             {
-                var guardlog = new GuardLog()
-                {
-                    Notes = "Duress Alarm Activated",
-                    IsSystemEntry = true,
-                    IrEntryType = Data.Enums.IrEntryType.Alarm,
-                    EventDateTime = DateTime.Now,
-                    ClientSiteLogBookId = logBookId,
-                    GuardLoginId = guardLoginId,
-                };
-                var clientSiteLogBookDuress = _guardLogDataProvider.GetClientSiteDuress(clientSiteId);
-                if (clientSiteLogBookDuress != null)
-                {
-                    var isActive = clientSiteLogBookDuress.IsEnabled;
-                    if (isActive)
-                    {
-                        return new JsonResult(new { success = false, status = false });
-                    }
-                }
-                _guardLogDataProvider.SaveGuardLog(guardlog);
-                _guardLogDataProvider.SaveClientSiteDuress(clientSiteId, guardId);
+                _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logBookId, guardId);
             }
             catch (Exception ex)
             {
@@ -362,17 +345,6 @@ namespace CityWatch.Web.Pages.Guard
                 message = "Error " + ex.Message;
             }
             return new JsonResult(new { status, message });
-        }
-
-        public JsonResult OnGetIsDuressActive(int clientSiteId)
-        {
-            bool isActive = false;
-            var clientSiteLogBookDuress = _guardLogDataProvider.GetClientSiteDuress(clientSiteId);
-            if (clientSiteLogBookDuress != null)
-            {
-                isActive = clientSiteLogBookDuress.IsEnabled;
-            }
-            return new JsonResult(isActive);
         }
     }
 }

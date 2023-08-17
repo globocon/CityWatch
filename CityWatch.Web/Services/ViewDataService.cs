@@ -1,6 +1,7 @@
 ﻿using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
@@ -75,6 +76,8 @@ namespace CityWatch.Web.Services
         string GetClientSiteKeyDescription(int KeyId, int clientSiteId);
         void CopyOpenLogbookEntriesFromPreviousDay(int previousDayLogBookId, int logBookId, int guardLoginId);
         IEnumerable<string> GetCompanyAndSenderNames(string startsWith);
+        bool IsClientSiteDuressEnabled(int clientSiteId);
+        void EnableClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId);
     }
 
     public class ViewDataService : IViewDataService
@@ -708,6 +711,25 @@ namespace CityWatch.Web.Services
             var senderNames = _guardLogDataProvider.GetSenderNames(startsWith);
 
             return companyNames.Concat(senderNames).Distinct().OrderBy(x => x).ToList();
+        }
+
+        public bool IsClientSiteDuressEnabled(int clientSiteId)
+        {
+            return _guardLogDataProvider.GetClientSiteDuress(clientSiteId)?.IsEnabled ?? false;
+        }
+
+        public void EnableClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId)
+        {
+            _guardLogDataProvider.SaveClientSiteDuress(clientSiteId, guardId);
+            _guardLogDataProvider.SaveGuardLog(new GuardLog()
+            {
+                Notes = "Duress Alarm Activated",
+                IsSystemEntry = true,
+                IrEntryType = Data.Enums.IrEntryType.Alarm,
+                EventDateTime = DateTime.Now,
+                ClientSiteLogBookId = logBookId,
+                GuardLoginId = guardLoginId,
+            });
         }
     }
 }

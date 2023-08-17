@@ -915,24 +915,6 @@
         $('#auditlog-zip-modal').modal('show');
     });
 
-    function duressIsActive() {
-        $.ajax({
-            url: '/Guard/DailyLog?handler=IsDuressActive',
-            type: 'GET',
-            data: { clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val() },
-        }).done(function (result) {
-            if (result == true) {
-                $("#duress_status").text("Active");
-                $('#duress_image').attr("src", '/images/DuressButton.jpg');
-            }
-            else {
-                $("#duress_status").text("Normal");
-                $('#duress_image').attr("src", '/images/DuressButton_Inactive.jpg');
-            }
-        }).always(function () {
-        });
-    }
-
     $('#duress_btn').on('click', function () {
         $.ajax({
             url: '/Guard/DailyLog?handler=SaveClientSiteDuress',
@@ -944,16 +926,14 @@
             },
             type: 'POST',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function () {
-            $('#duress_image').attr("src", '/images/DuressButton.jpg');
-            duressIsActive();
+        }).done(function (result) {
+            if (result.status) {
+                $('#duress_image').attr("src", '/images/DuressButton.jpg');
+                $("#duress_status").text("Active");
+            }           
             gridGuardLog.clear();
             gridGuardLog.reload();
         });
-    });
-
-    $(document).ready(function () {
-        duressIsActive();
     });
 
     //Vehicle key Log

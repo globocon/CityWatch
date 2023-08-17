@@ -45,8 +45,19 @@
                     </ul>
                     <hr />
                     <div class="float-right">
-                        <button type="button" class="btn" id="duress_btn"><img src="~/images/DuressButton_Inactive.jpg" id="duress_image" alt="Duress" width="120" height="120"></button>
-                        <p style="margin-left: 30px;">Status:<span id="duress_status"></span></p>
+                        @{
+                            var isDuressActive = Convert.ToBoolean(ViewData["IsDuressEnabled"]);
+                        }
+                        @if (isDuressActive)
+                        {
+                            <button type="button" class="btn" id="duress_btn"><img src="~/images/DuressButton.jpg" id="duress_image" alt="Duress" width="120" height="120"></button>
+                            <p style="margin-left: 30px;">Status: <span id="duress_status">Active</span></p>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn" id="duress_btn"><img src="~/images/DuressButton_Inactive.jpg" id="duress_image" alt="Duress" width="120" height="120"></button>
+                            <p style="margin-left: 30px;">Status: <span id="duress_status">Normal</span></p>
+                        }
                     </div>
                     <p class="mb-2">
                         <b>Guard Name: </b>@Model.GuardLog.GuardLogin.Guard.Name ;
