@@ -1,11 +1,13 @@
 ﻿using CityWatch.Data.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CityWatch.Kpi.Models
 {
     public class DailyKpiGuard
     {
+        private readonly DateTime _date;       
         private readonly DailyClientSiteKpi _dailyClientSiteKpi;
         private readonly IEnumerable<GuardLogin> _dayGuardLogins;
 
@@ -13,16 +15,18 @@ namespace CityWatch.Kpi.Models
         {
             _dailyClientSiteKpi = dailyClientSiteKpi;
             _dayGuardLogins = dayGuardLogins;
+
+            _date = dailyClientSiteKpi.Date;           
         }
 
-        public DateTime Date { get { return _dailyClientSiteKpi.Date; } }
+        public DateTime Date { get { return _date; } }
 
         public decimal? EmployeeHours { get { return _dailyClientSiteKpi.EmployeeHours; } }
 
         public decimal? ActualEmployeeHours { get { return _dailyClientSiteKpi.ActualEmployeeHours; } }
 
         public decimal? EffectiveEmployeeHours { get { return ActualEmployeeHours ?? EmployeeHours; } }
-
+       
         public string Shift1GuardName
         {
             get
@@ -53,11 +57,11 @@ namespace CityWatch.Kpi.Models
                 return securityNo;
             }
         }
-        public bool Shift1GuardHr { get { return false; } }
+        public bool? Shift1GuardHr { get { return null; } }
 
-        public bool Shift1GuardVisy { get { return false; } }
+        public bool? Shift1GuardVisy { get { return null; } }
 
-        public bool Shift1GuardFire { get { return false; } }
+        public bool? Shift1GuardFire { get { return null; } }
 
         public string Shift2GuardName {
             get
@@ -90,11 +94,11 @@ namespace CityWatch.Kpi.Models
             }
         }
 
-        public bool Shift2GuardHr { get { return false; } }
+        public bool? Shift2GuardHr { get { return null; } }
 
-        public bool Shift2GuardVisy { get { return false; } }
+        public bool? Shift2GuardVisy { get { return null; } }
 
-        public bool Shift2GuardFire { get { return false; } }
+        public bool? Shift2GuardFire { get { return null; } }
 
         public string Shift3GuardName {
             get
@@ -127,10 +131,10 @@ namespace CityWatch.Kpi.Models
             }
         }
 
-        public bool Shift3GuardHr { get { return false; } }
+        public bool? Shift3GuardHr { get { return null; } }
 
-        public bool Shift3GuardVisy { get { return false; } }
+        public bool? Shift3GuardVisy { get { return null; } }
 
-        public bool Shift3GuardFire { get { return false; } }
+        public bool? Shift3GuardFire { get { return null; } }
     }
 }
