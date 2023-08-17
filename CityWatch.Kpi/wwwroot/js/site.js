@@ -1072,76 +1072,13 @@ $(function () {
         $('#divbtn').show();
    });
     
-    //$('#div_site_settings').on('click', '#showDivButton', function () {
-    //    var selectedValueGuard = $("#ClientSiteManningGuardKpiSettings_1__PositionId").val();
-    //    var selectedValuePatrolCar = $("#ClientSiteManningPatrolCarKpiSettings_1__PositionId").val();
-    //    if (currentDiv === 1) {
-    //        $('#positionfilterGuard').prop('disabled', false);
-    //        $('#positionfilterPatrolCar').prop('disabled', false);
-    //        if (selectedValueGuard != "" && selectedValuePatrolCar === "") {
-    //            $('#divGuard').show();
-    //            $('#divbtn').show();
-    //            $('#divPatrolCar').show();
-    //            $('#positionfilterGuard').prop('disabled', true);
-    //            $('#positionfilterPatrolCar').prop('disabled', false);
-    //        }
-    //        if (selectedValuePatrolCar != "" && selectedValueGuard === "") {
-    //            $('#divPatrolCar').show();
-    //            $('#divbtn').show();
-    //            $('#divGuard').show();
-    //            $('#positionfilterGuard').prop('disabled', false);
-    //            $('#positionfilterPatrolCar').prop('disabled', true);
-    //        }
-    //        if (selectedValueGuard != "" && selectedValuePatrolCar != "") {
-    //            $('#divPatrolCar').show();
-    //            $('#divGuard').show();
-    //            $('#divbtn').show();
-    //            $('#positionfilterGuard').prop('disabled', true);
-    //            $('#positionfilterPatrolCar').prop('disabled', true);
-    //        }
-    //        if (selectedValueGuard === "" && selectedValuePatrolCar === "") {
-    //            $('#divPatrolCar').hide();
-    //            $('#divGuard').show();
-    //            $('#divbtn').show();
-    //            $('#positionfilterPatrolCar').prop('disabled', false);
-    //            $('#positionfilterGuard').prop('disabled', false);
-
-    //        }
-    //        currentDiv = 2;
-    //    } else {
-    //        $('#divPatrolCar').show();
-    //        $('#divGuard').show();
-    //        $('#divbtn').show();
-           
-    //        if (selectedValueGuard != "" && selectedValuePatrolCar === "") {
-    //            $('#divGuard').show();
-    //            $('#divbtn').show();
-    //            $('#divPatrolCar').hide();
-    //            $('#positionfilterGuard').prop('disabled', false);
-    //            $('#positionfilterPatrolCar').prop('disabled', true);
-    //        }
-    //        if (selectedValuePatrolCar != "" && selectedValueGuard === "") {
-    //            $('#divPatrolCar').show();
-    //            $('#divbtn').show();
-    //            $('#divGuard').hide();
-    //            $('#positionfilterGuard').prop('disabled', true);
-    //            $('#positionfilterPatrolCar').prop('disabled', false);
-
-    //        }
-    //        $('#positionfilterGuard').prop('disabled', true);
-    //        $('#positionfilterPatrolCar').prop('disabled', true);
-    //        currentDiv = 1;
-    //    }
-
-
-    //});
+   
 
     $('#div_site_settings').on('change', '#positionfilterGuard', function () {
 
         const isChecked = $(this).is(':checked');
-        const filter = isChecked ? 1 : 2;        
+        const filter = isChecked ? 1 : 2;      
        
-      
         $.ajax({
             url: '/admin/settings?handler=OfficerPositions&filter=' + filter,
             type: 'GET',
@@ -1152,23 +1089,7 @@ $(function () {
                 $('#Report_Officer_Position').append('<option value="' + position.value + '">' + position.text + '</option>');
             });
         });
-        //const isChecked = $(this).is(':checked');
-        //const filter = isChecked ? 1 : 2;
-        //if (filter == 2) {
-        //    $("#divGuard").show();
-        //    $("#divPatrolCar").hide();
-        //    $('#divbtn').show(); 
-        //    $('#positionfilterGuard').prop('checked', false);
-        //    $('#positionfilterPatrolCar').prop('checked', true);
-        //    currentDiv = 1;
-        //} else {
-        //    $('#divbtn').show();
-        //    $("#divGuard").hide();
-        //    $("#divPatrolCar").show(); 
-        //    $('#positionfilterGuard').prop('checked', false);
-        //    $('#positionfilterPatrolCar').prop('checked', true);
-        //    currentDiv = 1;
-        //}
+        
     });
 
     $('#div_site_settings').on('change', '#positionfilterPatrolCar', function () {
@@ -1194,22 +1115,7 @@ $(function () {
                 $('#ClientSiteManningPatrolCarKpiSettings_1__PositionId').append('<option value="' + position.value + '">' + position.text + '</option>');
             });
         });
-        //const isChecked = $(this).is(':checked');
-        //const filter = isChecked ? 1 : 2;
-
-        //if (filter == 2) {
-        //    $("#divGuard").show();
-        //    $("#divPatrolCar").hide();
-        //    $('#positionfilterGuard').prop('checked', false);
-        //    $('#positionfilterPatrolCar').prop('checked', true);
-        //    currentDiv = 1;
-        //} else {
-        //    $("#divGuard").hide();
-        //    $("#divPatrolCar").show();
-        //    $('#positionfilterGuard').prop('checked', false);
-        //    $('#positionfilterPatrolCar').prop('checked', true);
-        //    currentDiv = 1;
-        //}
+       
     });
    
     $('#search_kw_client_site').on('keyup', function (event) {
