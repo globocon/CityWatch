@@ -30,6 +30,7 @@ namespace CityWatch.Data.Models
         public string SerialNo { get; set; }
         public bool DbxUploaded { get; set; }
         public int? ColourCode { get; set; }
+        public bool IsPlateLoaded { get; set; }
         public ICollection<IncidentReportEventType> IncidentReportEventTypes { get; set; }
     }
 }

@@ -100,7 +100,7 @@ namespace CityWatch.Web.Pages.Incident
         {
             if (Report == null)
                 throw new ArgumentNullException("Incident Report");
-
+           
             if (!ModelState.IsValid)
             {
                 return new JsonResult(new
@@ -362,6 +362,7 @@ namespace CityWatch.Web.Pages.Incident
                 ClientArea = Report.DateLocation.ClientArea,
                 SerialNo = Report.SerialNumber,
                 ColourCode = Report.SiteColourCodeId,
+                IsPlateLoaded=Report.PlateLoadedYes ,
                 IncidentReportEventTypes = Report.IrEventTypes.Select(z => new IncidentReportEventType() { EventType = z }).ToList()
             };
 

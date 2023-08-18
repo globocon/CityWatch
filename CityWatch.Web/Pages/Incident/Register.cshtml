@@ -382,18 +382,35 @@
                                         </span>
                                     </div>
                                 </div>
+                                
                                 <div class="col-md-7">
                                     <div class="form-group row">
-                                        <label class="col-form-label col-md-5">Serial Numbers of any Linked IR's:</label>
-                                        <div class="col-md-7">
+
+
+                                        <label class="col-form-label col-md-3">Plates Loaded into KV?:</label>
+                                        <div class="col-md-2">
+                                            <div class="form-check form-check-inline mr-4">
+                                                
+                                                <input asp-for="@Model.Report.PlateLoadedYes" class="form-check-input">
+                                                <label class="form-check-label font-weight-normal">Yes</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input asp-for="@Model.Report.PlateLoadedNo" class="form-check-input" checked="checked">
+                                                <label class="form-check-label font-weight-normal">No</label>
+                                            </div>
+                                        </div>
+
+                                        
+                                        <label class="col-form-label col-md-3">Linked IR's Number:</label>
+                                        <div class="col-md-4">
                                             <input type="text" class="form-control" asp-for="@Model.Report.LinkedSerialNos" placeholder="n/a">                                            
                                         </div>
-                                    </div>
+                                    </>
                                     <div class="form-group row">
-                                        <div class="col-md-4">
+                                        <div class="col-md-5">
                                             <select id="ddFeedbackTemplateType" class="form-control mb-3 mb-md-0" asp-items="@Html.GetEnumSelectList<FeedbackType>()"></select>
                                         </div>
-                                        <div class="col-md-8">
+                                        <div class="col-md-7">
                                             <select id="ddFeedbackTemplate" class="form-control" asp-items="@Model.ViewDataService.GetFeedbackTemplatesByType(FeedbackType.General)"></select>
                                         </div>
                                     </div>
@@ -504,7 +521,9 @@
     document.getElementById("Report_DateLocation_ShowIncidentLocationAddress").addEventListener('change', onShowLiveAddressChange);
     document.getElementById("Report_EventType_Other").addEventListener('change', onEventTypeOtherChange);
     document.getElementById("Report_EventType_SiteColour").addEventListener('change', onEventTypeSiteColourChange);
-
+    document.getElementById("Report_PlateLoadedNo").addEventListener('change', onPlateLoadedChange);
+    document.getElementById("Report_PlateLoadedYes").addEventListener('change', onPlateLoadedChange);
+   
     function onWindowLoad(event) {
         const autoCompleteLocation = new google.maps.places.Autocomplete(document.getElementById("Report_DateLocation_ClientAddress"), {
                 types: ['address'],
@@ -892,7 +911,24 @@
             if (gps === '') toggleClientGpsLink(false); 
             else toggleClientGpsLink(true, gps);
         }
-    }    
+    } 
+    
+    function onPlateLoadedChange(event) {
+        const yesPlateId = "Report_PlateLoadedYes";
+        const noPlateId = "Report_PlateLoadedNo";
+
+        if (this.id == yesPlateId && this.checked) {
+            document.getElementById(noPlateId).checked = false;
+        }
+
+        if (this.id == noPlateId && this.checked) {
+            document.getElementById(yesPlateId).checked = false;
+        }
+
+        if (!document.getElementById(yesPlateId).checked && !document.getElementById(noPlateId).checked) {
+            document.getElementById(noPlateId).checked = true;
+        }
+    }
 </script>
 <partial name="_MessagePopup" />
 @section scripts {
