@@ -124,6 +124,32 @@ namespace CityWatch.Web.Pages.Guard
             var message = "success";
             try
             {
+                if(KeyVehicleLog.Product==null && KeyVehicleLog.ProductOther!=null)
+                {
+                    if(string.IsNullOrEmpty(KeyVehicleLog.Product))
+                    {
+                        if (!string.IsNullOrEmpty(KeyVehicleLog.ProductOther))
+                        {   /* Custom input saving as product if product not selected */
+                            KeyVehicleLog.Product = KeyVehicleLog.ProductOther;
+                        }
+                    }
+
+                }
+                else if(KeyVehicleLog.Product != null && KeyVehicleLog.ProductOther != null)
+                {
+                    if(KeyVehicleLog.Product!= KeyVehicleLog.ProductOther)
+                    {
+                        if (!string.IsNullOrEmpty(KeyVehicleLog.Product))
+                        {
+                            if (!string.IsNullOrEmpty(KeyVehicleLog.ProductOther))
+                            {   /* Custom input saving as product if product not selected */
+                                KeyVehicleLog.Product = KeyVehicleLog.ProductOther;
+                            }
+                        }
+                    }
+
+                }
+
                 KeyVehicleLogAuditHistory keyVehicleLogAuditHistory = null;
                 keyVehicleLogAuditHistory = GetKvlAuditHistory(KeyVehicleLog);
                 _guardLogDataProvider.SaveKeyVehicleLog(KeyVehicleLog);

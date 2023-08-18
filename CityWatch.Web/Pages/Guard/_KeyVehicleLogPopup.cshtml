@@ -250,6 +250,7 @@
                     <label>Product</label>
                     <select class="form-control" id="list_product" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.ProductType, true)"></select>
                     <input type="hidden" asp-for="@Model.Product" />
+                    <input type="hidden" asp-for="@Model.ProductOther" />
                 </div>
             </div>
             <div class="form-row">                
