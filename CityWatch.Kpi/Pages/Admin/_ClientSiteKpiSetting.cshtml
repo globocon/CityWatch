@@ -187,42 +187,79 @@
                     <input type="hidden" asp-for="@Model.Id" />
                     <input type="hidden" asp-for="@Model.ClientSiteId" />
                     <input type="hidden" id="hidCount" value="@count" />
-                    @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == false).Count() == 0)
+                    @*display Already Existing Mannings*@
+
+                    @*Check if default value or orginal data exist*@
+                    @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == true).Count() == 0)
                     {
-                        <div id="divGuard" style="display: none;">
+                        @*Get All Distinct order Id *@
+                        var distinctOrderIds = Model.ClientSiteManningGuardKpiSettings.Select(order => order.OrderId).Distinct();
+                        @for (int rowIndexFirst = 0; rowIndexFirst < Model.ClientSiteManningGuardKpiSettings.Count(); rowIndexFirst = rowIndexFirst + 7)
+                        {
+
+                            var rowIndextemp = 0;
+
                             <hr />
                             <div class="row">
                                 <div class="col-md-12">
-                                    @for (int rowIndex = 0; rowIndex < 4; rowIndex++)
+
+                                    @for (int rowIndex = rowIndexFirst; rowIndex < (4 + rowIndexFirst); rowIndex++)
                                     {
+
                                         <div class="form-row">
                                             <div class="col-md-3">
-                                                @if (rowIndex == 0)
+                                                @if (rowIndextemp == 0)
                                                 {
 
                                                     <div class="d-flex flex-row justify-content-between">
                                                         <label class="form-label">Position</label>
                                                         <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
-                                                            <input type="checkbox" class="custom-control-input" id="positionfilterGuard" name="positionfilterGuard">
+                                                            @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
+                                                            {
+                                                                <input type="checkbox" class="custom-control-input" id="positionfilterGuard" disabled name="positionfilterGuard">
+                                                            }
+                                                            else
+                                                            {
+                                                                <input type="checkbox" class="custom-control-input" id="positionfilterGuard" disabled checked name="positionfilterGuard">
+
+                                                            }
                                                             <label class="custom-control-label" for="positionfilterGuard">Patrol Car</label>
                                                         </div>
                                                     </div>
 
                                                 }
-                                                @if (rowIndex == 1)
+                                                @if (rowIndextemp == 1)
                                                 {
                                                     <div class="form-group p-0">
-                                                        <select asp-for="@Model.ClientSiteManningGuardKpiSettings[rowIndex].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.NonPatrolOnly)" class="form-control"></select>
+
+                                                        @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
+                                                        {
+                                                            <select asp-for="@Model.ClientSiteManningGuardKpiSettings[rowIndex].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.NonPatrolOnly)" class="form-control"></select>
+
+                                                        }
+                                                        else
+                                                        {
+                                                            <select asp-for="@Model.ClientSiteManningGuardKpiSettings[rowIndex].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.PatrolOnly)" class="form-control"></select>
+                                                        }
                                                     </div>
                                                 }
                                             </div>
                                             <div class="col-md-1 p-0">
-                                                <label class="form-label">@rowTitleManningGuard[rowIndex]</label>
+                                              @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
+                                                {
+                                                    <label class="form-label">@rowTitleManningGuard[rowIndextemp]</label>
+
+                                                }
+                                                else
+                                                {
+                                                    <label class="form-label">@rowTitleManningPatrolCar[rowIndextemp]</label>
+                                                    
+                                                }
                                             </div>
-                                            @for (var colIndex = 0; colIndex < 7; colIndex++)
+                                            @for (var colIndex = rowIndexFirst; colIndex < (7 + rowIndexFirst); colIndex++)
                                             {
                                                 <div class="col-md-1 mx-1" id="divGuardInner_+@rowIndex+_+@colIndex">
-                                                    @switch (rowIndex)
+                                                    @switch (rowIndextemp)
                                                     {
                                                         case 0:
                                                             <label class="form-label">@Model.ClientSiteManningGuardKpiSettings[colIndex].WeekDay.ToString().Substring(0, 3)</label>
@@ -240,95 +277,28 @@
                                                     }
                                                     <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].WeekDay" />
                                                     <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].Id" />
-
+                                                    <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].OrderId" />
+                                                    <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].Type" />
+                                                    <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].SettingsId" />
                                                 </div>
                                             }
 
+
+
                                         </div>
+                                        rowIndextemp++;
                                     }
                                 </div>
                             </div>
-                        </div>
 
-                    }
-                    else
-                    {
-
-                        <hr />
-                        <div class="row">
-                            <div class="col-md-12">
-                                @for (int rowIndex = 0; rowIndex < 4; rowIndex++)
-                                {
-                                    <div class="form-row">
-                                        <div class="col-md-3">
-                                            @if (rowIndex == 0)
-                                            {
-
-                                                <div class="d-flex flex-row justify-content-between">
-                                                    <label class="form-label">Position</label>
-                                                    <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
-
-                                                        @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == false).Count() != 0 && (Model.ClientSiteManningPatrolCarKpiSettings.Where(x => x.DefaultValue == false).Count() != 0))
-                                                        {
-                                                            <input type="checkbox" disabled class="custom-control-input" id="positionfilterGuard" name="positionfilterGuard">
-
-                                                        }
-                                                        else
-                                                        {
-
-                                                            <input type="checkbox" class="custom-control-input" id="positionfilterGuard" name="positionfilterGuard">
-                                                        }
-
-                                                        <label class="custom-control-label" for="positionfilterGuard">Patrol Car</label>
-                                                    </div>
-                                                </div>
-
-                                            }
-                                            @if (rowIndex == 1)
-                                            {
-                                                <div class="form-group p-0">
-                                                    <select asp-for="@Model.ClientSiteManningGuardKpiSettings[rowIndex].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.NonPatrolOnly)" class="form-control"></select>
-                                                </div>
-                                            }
-                                        </div>
-                                        <div class="col-md-1 p-0">
-                                            <label class="form-label">@rowTitleManningGuard[rowIndex]</label>
-                                        </div>
-                                        @for (var colIndex = 0; colIndex < 7; colIndex++)
-                                        {
-                                            <div class="col-md-1 mx-1" id="divGuardInner_+@rowIndex+_+@colIndex">
-                                                @switch (rowIndex)
-                                                {
-                                                    case 0:
-                                                        <label class="form-label">@Model.ClientSiteManningGuardKpiSettings[colIndex].WeekDay.ToString().Substring(0, 3)</label>
-                                                        break;
-                                                    case 1:
-                                                        <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursStart">
-                                                        break;
-                                                    case 2:
-                                                        <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursEnd">
-                                                        break;
-                                                    case 3:
-                                                        <input class="form-control mb-2 patrols-count" min="0" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].NoOfPatrols" data-index="@colIndex">
-                                                        break;
-
-                                                }
-                                                <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].WeekDay" />
-                                                <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].Id" />
-
-                                            </div>
-                                        }
-
-                                    </div>
-                                }
-                            </div>
-                        </div>
+                        }
 
 
                     }
-
-                    @if (Model.ClientSiteManningPatrolCarKpiSettings.Where(x => x.DefaultValue == false).Count() == 0)
+                    @*Add New Mannings*@
+                    @if (Model.ClientSiteManningPatrolCarKpiSettings.Where(x => x.DefaultValue == true).Count() != 0)
                     {
+
                         <div id="divPatrolCar" style="display: none;">
                             <hr />
                             <div class="row">
@@ -355,9 +325,12 @@
                                                         <select asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[rowIndex2].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.PatrolOnly)" class="form-control"></select>
                                                     </div>
                                                 }
+
+
+
                                             </div>
                                             <div class="col-md-1 p-0">
-                                                <label class="form-label">@rowTitleManningPatrolCar[rowIndex2]</label>
+                                                <label class="form-label" id="lbl_ManningPatrolCar_@rowIndex2">@rowTitleManningPatrolCar[rowIndex2]</label>
                                             </div>
                                             @for (var colIndex2 = 0; colIndex2 < 7; colIndex2++)
                                             {
@@ -378,8 +351,11 @@
                                                             break;
 
                                                     }
+                                                    <input asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].Type" value="1" style="display: none;">
                                                     <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].WeekDay" />
                                                     <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].Id" />
+                                                    <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].OrderId" />
+                                                    <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].SettingsId" />
 
                                                 </div>
                                             }
@@ -390,96 +366,24 @@
                         </div>
 
 
-                    }
-                    else
-                    {
-
-                        <hr />
-                        <div class="row">
-                            <div class="col-md-12">
-                                @for (int rowIndex2 = 0; rowIndex2 < 4; rowIndex2++)
-                                {
-                                    <div class="form-row">
-                                        <div class="col-md-3">
-                                            @if (rowIndex2 == 0)
-                                            {
-
-                                                <div class="d-flex flex-row justify-content-between">
-                                                    <label class="form-label">Position</label>
-                                                    <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
-                                                        @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == false).Count() != 0 && (Model.ClientSiteManningPatrolCarKpiSettings.Where(x => x.DefaultValue == false).Count() != 0))
-                                                        {
-                                                            <input type="checkbox" disabled class="custom-control-input" id="positionfilterPatrolCar" checked name="positionfilterPatrolCar">
-                                                        }
-                                                        else
-                                                        {
-                                                            <input type="checkbox" class="custom-control-input" id="positionfilterPatrolCar" checked name="positionfilterPatrolCar">
-                                                        }
-
-                                                        <label class="custom-control-label" for="positionfilterPatrolCar">Patrol Car</label>
-                                                    </div>
-                                                </div>
-
-                                            }
-                                            @if (rowIndex2 == 1)
-                                            {
-                                                <div class="form-group p-0">
-                                                    <select asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[rowIndex2].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.PatrolOnly)" class="form-control"></select>
-                                                </div>
-                                            }
-                                        </div>
-                                        <div class="col-md-1 p-0">
-                                            <label class="form-label">@rowTitleManningPatrolCar[rowIndex2]</label>
-                                        </div>
-                                        @for (var colIndex2 = 0; colIndex2 < 7; colIndex2++)
-                                        {
-                                            <div class="col-md-1 mx-1">
-                                                @switch (rowIndex2)
-                                                {
-                                                    case 0:
-                                                        <label class="form-label">@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].WeekDay.ToString().Substring(0, 3)</label>
-                                                        break;
-                                                    case 1:
-                                                        <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].EmpHoursStart">
-                                                        break;
-                                                    case 2:
-                                                        <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].EmpHoursEnd">
-                                                        break;
-                                                    case 3:
-                                                        <input class="form-control mb-2 patrols-count" min="0" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].NoOfPatrols" data-index="@colIndex2">
-                                                        break;
-
-                                                }
-                                                <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].WeekDay" />
-                                                <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].Id" />
-
-                                            </div>
-                                        }
-                                    </div>
-                                }
-                            </div>
-                        </div>
-
 
 
                     }
-                    <hr />
-                    @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == false).Count() != 0 || (Model.ClientSiteManningPatrolCarKpiSettings.Where(x => x.DefaultValue == false).Count() != 0))
-                    {
 
+
+
+                    @*Old Code*@
+
+                    @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == true).Count() == 0)
+                    {
                         <button type="button" class="btn btn-success" id="save_site_manning_settings"><i class="fa fa-save mr-2"></i>Save Settings</button>
-
-
 
                     }
                     else
                     {
                         <div id="divbtn" style="display: none;">
                             <button type="button" class="btn btn-success" id="save_site_manning_settings"><i class="fa fa-save mr-2"></i>Save Settings</button>
-
-
                         </div>
-
                     }
 
                 </form>

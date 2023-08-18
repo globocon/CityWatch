@@ -227,6 +227,12 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(new { success, fileName = $"/SiteImage/{fileName}" });
         }
 
+
+        public IActionResult OnGetOfficerPositions(OfficerPositionFilterManning filter)
+        {
+            return new JsonResult(ViewDataService.GetOfficerPositions((OfficerPositionFilterManning)filter));
+        }
+
         public JsonResult OnGetKpiSendScheduleSummaryImage(int scheduleId)
         {            
             return new JsonResult(_kpiSchedulesDataProvider.GetScheduleSummaryImage(scheduleId));

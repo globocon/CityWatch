@@ -32,5 +32,7 @@ namespace CityWatch.Data.Models
         public string Type { get; set; }
         [NotMapped]
         public bool DefaultValue { get; set; }
+        
+        public int? OrderId { get; set; }
     }
 }
