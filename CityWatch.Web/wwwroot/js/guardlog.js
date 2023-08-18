@@ -1908,6 +1908,7 @@
         $('#Guard_Provider').val('');
         $('#Guard_Email').val('');
         $('#Guard_Mobile').val('');
+        $('#Guard_Mobile').val('+61 4');
         $('#Guard_Id').val('-1');
         $('#cbIsActive').prop('checked', true);
         $('#cbIsRCAccess').prop('checked', false);
