@@ -10,6 +10,8 @@ $(document).ready(function () {
     });
 
     $(document).on('hidden.bs.modal', '.modal', () => $('.modal:visible').length && $(document.body).addClass('modal-open'));
+
+
 });
 
 $(function () {
@@ -138,7 +140,7 @@ $(function () {
                 $('td', row).eq(8).html('N/A');
             } else if (data.wandPatrolsRatio > 0 && data.wandScanCountPerHr < data.wandScansTarget) {
                 $('td', row).eq(8).addClass('cell-below-limit');
-            } 
+            }
 
             if (data.isAcceptableLogFreq === null) {
                 $('td', row).eq(11).html('-');
@@ -460,15 +462,15 @@ $(function () {
             });
             $('#projectName').val(data.projectName);
             $('#summaryNote1').val(data.summaryNote1);
-            $('#summaryNote2').val(data.summaryNote2);            
-            $('#KpiSendScheduleSummaryNote_ScheduleId').val(data.id);            
-            $('#KpiSendScheduleSummaryNote_ForMonth').val(data.noteForThisMonth.forMonth);            
+            $('#summaryNote2').val(data.summaryNote2);
+            $('#KpiSendScheduleSummaryNote_ScheduleId').val(data.id);
+            $('#KpiSendScheduleSummaryNote_ForMonth').val(data.noteForThisMonth.forMonth);
             $("textarea[id='KpiSendScheduleSummaryNote_Notes']").val(data.noteForThisMonth.notes);
             $('#KpiSendScheduleSummaryNote_Id').val(data.noteForThisMonth.id);
-            $('#lblRemainingCount').html(getNoteLength(data.noteForThisMonth.notes));            
+            $('#lblRemainingCount').html(getNoteLength(data.noteForThisMonth.notes));
             $('#summaryNoteMonth').val((new Date()).getMonth() + 1);
             $('#summaryNoteYear').val((new Date()).getFullYear());
-            setSummaryImage(data.kpiSendScheduleSummaryImage);            
+            setSummaryImage(data.kpiSendScheduleSummaryImage);
         }).always(function () {
             $('#loader').hide();
         });
@@ -476,7 +478,7 @@ $(function () {
 
     function clearSummaryImage() {
         $('#summary_image').html('-');
-        $('#summary_image_updated').html('-');        
+        $('#summary_image_updated').html('-');
         $('#download_summary_image').hide();
         $('#delete_summary_image').hide();
     }
@@ -640,7 +642,7 @@ $(function () {
             alert('Select only one site to edit');
         } else {
             let triggerButton = '<button type="button" id="editSiteTrigger" style="display:none" data-toggle="modal" data-target="#kpi-settings-modal" ' +
-                                    'data-cs-id="' + $(selectedOption).val() + '" data-cs-name="' + $(selectedOption).text() + '"></button>';
+                'data-cs-id="' + $(selectedOption).val() + '" data-cs-name="' + $(selectedOption).text() + '"></button>';
             $(triggerButton).insertAfter($(this));
             $('#editSiteTrigger').click();
         }
@@ -655,7 +657,7 @@ $(function () {
         $('#selectedSitesCount').text($('#selectedSites option').length);
     }
 
-    $('#schedule-modal').on('shown.bs.modal', function (event) {        
+    $('#schedule-modal').on('shown.bs.modal', function (event) {
         clearScheduleModal();
         const button = $(event.relatedTarget);
         const isEdit = button.data('action') !== undefined && button.data('action') === 'editSchedule';
@@ -719,7 +721,7 @@ $(function () {
         }).done(function (result) {
             $('#btnScheduleRun').prop('disabled', false);
             const messageHtml = result.success ? '<i class="fa fa-check-circle-o text-success"></i> Done. Report sent via email' :
-                                                    '<i class="fa fa-times-circle text-danger"></i> Error. Check log for more details';
+                '<i class="fa fa-times-circle text-danger"></i> Error. Check log for more details';
             $('#schRunStatus').html(messageHtml);
         });
     });
@@ -748,7 +750,7 @@ $(function () {
                 // Create a Blob with the PDF data and initiate the download
                 var blob = new Blob([data], { type: 'application/pdf' });
                 // Create a temporary anchor element to trigger the download
-                var url = window.URL.createObjectURL(blob);                
+                var url = window.URL.createObjectURL(blob);
                 // Open the PDF in a new tab
                 var newTab = window.open(url, '_blank');
                 if (!newTab) {
@@ -849,8 +851,10 @@ $(function () {
         gridClientSiteSettings.clear();
         gridClientSiteSettings.reload({ type: $(this).val() });
     });
-
+    var currentDiv = 1;
     $('#kpi-settings-modal').on('shown.bs.modal', function (event) {
+        currentDiv = 1;
+        
         $('#div_site_settings').html('');
         const button = $(event.relatedTarget);
         $('#client_site_name').text(button.data('cs-name'))
@@ -922,7 +926,7 @@ $(function () {
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function (result) {
                 if (result.status) {
-                    $("textarea[id='ClientSiteKpiNote_Notes']").val('');                    
+                    $("textarea[id='ClientSiteKpiNote_Notes']").val('');
                     $('#lblSiteNoteRemainingCount').html(getSiteNoteLength(''));
                 }
                 else
@@ -1021,6 +1025,123 @@ $(function () {
         }).fail(function () { });
     });
 
+
+    $('#div_site_settings').on('click', '#save_site_manning_settings', function () {
+        $.ajax({
+            url: '/admin/settings?handler=ClientSiteManningKpiSettings',
+            type: 'POST',
+            data: $('#frm_site_manning_settings').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data.success == 1) {
+                alert('Saved site manning details successfully');               
+                $('#div_site_settings').html('');
+                $('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + data.clientSiteId);               
+                $('#kpi-settings-modal').modal('show');
+                currentDiv = 1;
+              
+            }
+            else if (data.success == 2) {
+                $("input[name^='ClientSiteManningGuardKpiSettings']").val("");
+                $("input[name^='ClientSiteManningPatrolCarKpiSettings']").val("");
+                $('#ClientSiteManningGuardKpiSettings_1__PositionId').val($('#ClientSiteManningGuardKpiSettings_1__PositionId option:first').val());
+                $('#ClientSiteManningPatrolCarKpiSettings_1__PositionId').val($('#ClientSiteManningPatrolCarKpiSettings_1__PositionId option:first').val());
+                alert('Please add the site settings from site settings tab');               
+               
+            }
+            else if (data.success == 3) {
+                alert('Please select position');
+            }
+            else if (data.success == 4) {
+                alert('Error! Please try again');
+                $("input[name^='ClientSiteManningGuardKpiSettings']").val("");
+                $("input[name^='ClientSiteManningPatrolCarKpiSettings']").val("");
+
+            }
+           
+        }).fail(function () { });
+    });
+   
+    
+    $('#div_site_settings').on('click', '#showDivButton', function () {
+        var selectedValueGuard = $("#ClientSiteManningGuardKpiSettings_1__PositionId").val();
+        var selectedValuePatrolCar = $("#ClientSiteManningPatrolCarKpiSettings_1__PositionId").val();
+        if (currentDiv === 1) {
+            $('#positionfilterGuard').prop('disabled', false);
+            $('#positionfilterPatrolCar').prop('disabled', false);
+            if (selectedValueGuard != "") {
+                $('#divGuard').show();
+                $('#divbtn').show();
+                $('#divPatrolCar').hide();
+            }
+            if (selectedValuePatrolCar != "") {
+                $('#divPatrolCar').show();
+                $('#divbtn').show();
+                $('#divGuard').hide();
+
+            }
+            if (selectedValueGuard != "" && selectedValuePatrolCar != "") {
+                $('#divPatrolCar').show();
+                $('#divGuard').show();
+                $('#divbtn').show();
+                $('#positionfilterGuard').prop('disabled', true);
+                $('#positionfilterPatrolCar').prop('disabled', true);
+            }
+            if (selectedValueGuard === "" && selectedValuePatrolCar === "") {
+                $('#divPatrolCar').hide();
+                $('#divGuard').show();
+                $('#divbtn').show();
+
+
+            }
+            currentDiv = 2;
+        } else {
+            $('#divPatrolCar').show();
+            $('#divGuard').show();
+            $('#divbtn').show();
+            $('#positionfilterGuard').prop('disabled', true);
+            $('#positionfilterPatrolCar').prop('disabled', true);
+            currentDiv = 1;
+        }
+
+
+    });
+
+    $('#div_site_settings').on('change', '#positionfilterGuard', function () {
+        const isChecked = $(this).is(':checked');
+        const filter = isChecked ? 1 : 2;
+        if (filter == 2) {
+            $("#divGuard").show();
+            $("#divPatrolCar").hide();
+            $('#positionfilterGuard').prop('checked', false);
+            $('#positionfilterPatrolCar').prop('checked', true);
+
+        } else {
+            $("#divGuard").hide();
+            $("#divPatrolCar").show();
+            $('#positionfilterGuard').prop('checked', false);
+            $('#positionfilterPatrolCar').prop('checked', true);
+        }
+    });
+
+    $('#div_site_settings').on('change', '#positionfilterPatrolCar', function () {
+        const isChecked = $(this).is(':checked');
+        const filter = isChecked ? 1 : 2;
+
+        if (filter == 2) {
+            $("#divGuard").show();
+            $("#divPatrolCar").hide();
+            $('#positionfilterGuard').prop('checked', false);
+            $('#positionfilterPatrolCar').prop('checked', true);
+
+        } else {
+            $("#divGuard").hide();
+            $("#divPatrolCar").show();
+            $('#positionfilterGuard').prop('checked', false);
+            $('#positionfilterPatrolCar').prop('checked', true);
+        }
+    });
+   
     $('#search_kw_client_site').on('keyup', function (event) {
         // Enter key pressed
         if (event.keyCode === 13) {
@@ -1031,6 +1152,7 @@ $(function () {
     $('#btnSearchClientSite').on('click', function () {
         gridSchedules.reload({ type: $('#sel_schedule').val(), searchTerm: $('#search_kw_client_site').val() });
     });
+
 
     /***** KPI Send Schedule SummaryNotes *****/
     $('#saveScheduleSummaryNotes').on('click', function () {
@@ -1067,7 +1189,7 @@ $(function () {
             $('#KpiSendScheduleSummaryNote_Id').val(result.id);
             $("textarea[id='KpiSendScheduleSummaryNote_Notes']").val(result.notes)
             $('#KpiSendScheduleSummaryNote_ForMonth').val(result.forMonth);
-            $('#lblRemainingCount').html(getNoteLength(result.notes));            
+            $('#lblRemainingCount').html(getNoteLength(result.notes));
         }).fail(function () { });
     }
 
@@ -1091,8 +1213,8 @@ $(function () {
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function (result) {
                 if (result.status) {
-                    $("textarea[id='KpiSendScheduleSummaryNote_Notes']").val('');                    
-                    $('#lblRemainingCount').html(getNoteLength(''));            
+                    $("textarea[id='KpiSendScheduleSummaryNote_Notes']").val('');
+                    $('#lblRemainingCount').html(getNoteLength(''));
                 }
                 else
                     alert(result.message);
@@ -1116,7 +1238,7 @@ $(function () {
         let max_chars = Number.MAX_SAFE_INTEGER;
         if (type === 'summary_note') max_chars = 2048;
         else if (type === 'site_note') max_chars = 512;
-        return max_chars - (note ? note.replace(/(\r\n|\n|\r)/g, 'xx').length : 0);        
+        return max_chars - (note ? note.replace(/(\r\n|\n|\r)/g, 'xx').length : 0);
     }
 
     function showHideSchedulePopupTabs(isEdit) {
@@ -1137,5 +1259,8 @@ $(function () {
                 $(this).show();
             });
         }
-    }    
+    }
+
+
+
 });

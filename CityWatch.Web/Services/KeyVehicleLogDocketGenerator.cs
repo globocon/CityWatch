@@ -3,6 +3,7 @@ using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
+using iText.IO.Font.Constants;
 using iText.IO.Image;
 using iText.Kernel.Colors;
 using iText.Kernel.Geom;
@@ -26,7 +27,9 @@ namespace CityWatch.Web.Services
 
         NoComms,
 
-        PhysicalRepair
+        PhysicalRepair,
+
+        POD
     }
 
     public interface IKeyVehicleLogDocketGenerator
@@ -129,7 +132,7 @@ namespace CityWatch.Web.Services
 
         private static Table CreateSiteDetailsTable(KeyVehicleLog keyVehicleLog)
         {
-            var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 5, 40, 10, 23, 5, 8, 4, 8 })).UseAllAvailableWidth().SetMarginTop(10);
+            var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 5, 38, 10, 18, 5, 8, 4, 15 })).UseAllAvailableWidth().SetMarginTop(10);
 
             siteDataTable.AddCell(GetSiteHeaderCell("Site:"));
             var siteName = new Cell()
@@ -148,7 +151,7 @@ namespace CityWatch.Web.Services
             siteDataTable.AddCell(GetSiteValueCell(keyVehicleLog.GuardLogin.Guard.Initial ?? string.Empty));
 
             siteDataTable.AddCell(GetSiteHeaderCell("S/No:"));
-            siteDataTable.AddCell(GetSiteValueCell(keyVehicleLog.DocketSerialNo ?? string.Empty));
+            siteDataTable.AddCell(GetSerialNoValueCell(keyVehicleLog.DocketSerialNo ?? string.Empty));
 
             return siteDataTable;
         }
@@ -542,6 +545,17 @@ namespace CityWatch.Web.Services
                .SetFontSize(CELL_FONT_SIZE)
                .SetTextAlignment(TextAlignment.CENTER)
                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+               .SetVerticalAlignment(VerticalAlignment.MIDDLE);
+        }
+
+        private static Cell GetSerialNoValueCell(string text)
+        {
+            return new Cell()
+               .Add(new Paragraph(text)
+               .SetFont(PdfHelper.GetPdfFont(StandardFonts.COURIER_BOLD))
+               .SetFontSize(CELL_FONT_SIZE_BIG * 1.2f)
+               .SetFontColor(WebColors.GetRGBColor("#FF323A"))
+               .SetTextAlignment(TextAlignment.CENTER))
                .SetVerticalAlignment(VerticalAlignment.MIDDLE);
         }
 
