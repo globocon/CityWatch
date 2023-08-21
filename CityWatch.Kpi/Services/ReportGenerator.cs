@@ -49,6 +49,7 @@ namespace CityWatch.Kpi.Services
         private readonly IViewDataService _viewDataService;
         private readonly IClientDataProvider _clientDataProvider;
         private readonly ILogger<ReportGenerator> _logger;
+        private readonly Settings _settings;
 
         public ReportGenerator(IOptions<Settings> settings,
             IWebHostEnvironment webHostEnvironment,
@@ -59,6 +60,7 @@ namespace CityWatch.Kpi.Services
             _viewDataService = viewDataService;
             _clientDataProvider = clientDataProvider;
             _logger = logger;
+            _settings = settings.Value;
 
             _reportRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "Pdf");
             _imageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
@@ -99,12 +101,15 @@ namespace CityWatch.Kpi.Services
             tableLayout.AddCell(new Cell().SetBorder(iText.Layout.Borders.Border.NO_BORDER).Add(tableSiteStats));
             doc.Add(tableLayout);
 
-            doc.Add(new AreaBreak());
+            if (_settings.GuardListOn)
+            {
+                doc.Add(new AreaBreak());
 
-            doc.Add(headerTable);
-            var monthlyGuardData = _viewDataService.GetMonthlyKpiGuardData(clientSiteId, fromDate, toDate);
-            var tableGuardData = CreateGuardReportData(monthlyGuardData, fromDate);
-            doc.Add(tableGuardData);
+                doc.Add(headerTable);
+                var monthlyGuardData = _viewDataService.GetMonthlyKpiGuardData(clientSiteId, fromDate, toDate);
+                var tableGuardData = CreateGuardReportData(monthlyGuardData, fromDate);
+                doc.Add(tableGuardData);
+            }
 
             doc.Close();
             pdfDoc.Close();
