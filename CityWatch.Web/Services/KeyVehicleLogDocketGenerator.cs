@@ -3,6 +3,7 @@ using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
+using iText.IO.Font.Constants;
 using iText.IO.Image;
 using iText.Kernel.Colors;
 using iText.Kernel.Geom;
@@ -26,12 +27,14 @@ namespace CityWatch.Web.Services
 
         NoComms,
 
-        PhysicalRepair
+        PhysicalRepair,
+
+        POD
     }
 
     public interface IKeyVehicleLogDocketGenerator
     {
-        string GeneratePdfReport(int keyVehicleLogId, string docketReason, string serialNo);
+        string GeneratePdfReport(int keyVehicleLogId, string docketReason, string blankNoteOnOrOff, string serialNo);
     }
     public class KeyVehicleLogDocketGenerator : IKeyVehicleLogDocketGenerator
     {
@@ -61,7 +64,7 @@ namespace CityWatch.Web.Services
             _settings = settings.Value;
         }
 
-        public string GeneratePdfReport(int keyVehicleLogId, string docketReason, string serialNo)
+        public string GeneratePdfReport(int keyVehicleLogId, string docketReason, string blankNoteOnOrOff, string serialNo)
         {
             var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(keyVehicleLogId);
 
@@ -85,7 +88,7 @@ namespace CityWatch.Web.Services
 
             doc.Add(CreateReportHeaderTable(keyVehicleLog.ClientSiteLogBook.ClientSiteId));
             doc.Add(CreateSiteDetailsTable(keyVehicleLog));
-            doc.Add(CreateReportDetailsTable(keyVehicleLogViewModel));
+            doc.Add(CreateReportDetailsTable(keyVehicleLogViewModel, blankNoteOnOrOff));
             doc.Add(GetKeyAndOtherDetailsTable(keyVehicleLogViewModel));
             doc.Add(GetCustomerRefAndVwiTable(keyVehicleLogViewModel));
             doc.Add(CreateWeightandOtherDetailsTable(keyVehicleLogViewModel, docketReason));
@@ -129,7 +132,7 @@ namespace CityWatch.Web.Services
 
         private static Table CreateSiteDetailsTable(KeyVehicleLog keyVehicleLog)
         {
-            var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 5, 40, 10, 23, 5, 8, 4, 8 })).UseAllAvailableWidth().SetMarginTop(10);
+            var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 5, 38, 10, 18, 5, 8, 4, 15 })).UseAllAvailableWidth().SetMarginTop(10);
 
             siteDataTable.AddCell(GetSiteHeaderCell("Site:"));
             var siteName = new Cell()
@@ -148,12 +151,12 @@ namespace CityWatch.Web.Services
             siteDataTable.AddCell(GetSiteValueCell(keyVehicleLog.GuardLogin.Guard.Initial ?? string.Empty));
 
             siteDataTable.AddCell(GetSiteHeaderCell("S/No:"));
-            siteDataTable.AddCell(GetSiteValueCell(keyVehicleLog.DocketSerialNo ?? string.Empty));
+            siteDataTable.AddCell(GetSerialNoValueCell(keyVehicleLog.DocketSerialNo ?? string.Empty));
 
             return siteDataTable;
         }
 
-        private Table CreateReportDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        private Table CreateReportDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel,string  blankNoteOnOrOff)
         {
             var outerTable = new Table(UnitValue.CreatePercentArray(new float[] { 78, 22 })).UseAllAvailableWidth().SetMarginTop(10);
 
@@ -183,7 +186,7 @@ namespace CityWatch.Web.Services
                                     .SetPaddingRight(0)
                                     .SetPaddingTop(0)
                                     .SetBorder(Border.NO_BORDER)
-                                    .Add(GetNotesTable(keyVehicleLogViewModel));
+                                    .Add(GetNotesTable(keyVehicleLogViewModel, blankNoteOnOrOff));
             outerTable.AddCell(cellNotesTable);
 
             var cellVehicleDetails = new Cell(1, 2)
@@ -282,13 +285,20 @@ namespace CityWatch.Web.Services
             return companyDetails;
         }
 
-        private static Table GetNotesTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        private static Table GetNotesTable(KeyVehicleLogViewModel keyVehicleLogViewModel,string blankNoteOnOrOff)
         {
             var notesTable = new Table(1).UseAllAvailableWidth();
 
             notesTable.AddCell(GetHeaderCell("Notes", textAlignment: TextAlignment.LEFT));
-            notesTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Notes, textAlignment: TextAlignment.LEFT, minHeight: 82));
+            if (blankNoteOnOrOff == "true")
+            {
+                notesTable.AddCell(GetDataCell("", textAlignment: TextAlignment.LEFT, minHeight: 82));
 
+            }
+            else
+            {
+                notesTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Notes, textAlignment: TextAlignment.LEFT, minHeight: 82));
+            }
             return notesTable;
         }
 
@@ -535,6 +545,17 @@ namespace CityWatch.Web.Services
                .SetFontSize(CELL_FONT_SIZE)
                .SetTextAlignment(TextAlignment.CENTER)
                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+               .SetVerticalAlignment(VerticalAlignment.MIDDLE);
+        }
+
+        private static Cell GetSerialNoValueCell(string text)
+        {
+            return new Cell()
+               .Add(new Paragraph(text)
+               .SetFont(PdfHelper.GetPdfFont(StandardFonts.COURIER_BOLD))
+               .SetFontSize(CELL_FONT_SIZE_BIG * 1.2f)
+               .SetFontColor(WebColors.GetRGBColor("#FF323A"))
+               .SetTextAlignment(TextAlignment.CENTER))
                .SetVerticalAlignment(VerticalAlignment.MIDDLE);
         }
 

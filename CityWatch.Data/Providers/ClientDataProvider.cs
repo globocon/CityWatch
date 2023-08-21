@@ -1,5 +1,6 @@
 ﻿using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
+using iText.StyledXmlParser.Jsoup.Safety;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -11,12 +12,19 @@ using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
 
 namespace CityWatch.Data.Providers
 {
+    public enum OfficerPositionFilterForManning
+    {
+        PatrolOnly = 1,
+
+        SecurityOnly = 2
+    }
     public interface IClientDataProvider
     {
         List<ClientType> GetClientTypes();
         void SaveClientType(ClientType clientType);
         void DeleteClientType(int id);
         List<ClientSite> GetClientSites(int? typeId);
+        List<ClientSite> GetNewClientSites();
         void SaveClientSite(ClientSite clientSite);
         void SaveCompanyDetails(CompanyDetails companyDetails);
         void DeleteClientSite(int id);
@@ -24,6 +32,7 @@ namespace CityWatch.Data.Providers
         ClientSiteKpiSetting GetClientSiteKpiSetting(int clientSiteId);
         List<ClientSiteKpiSetting> GetClientSiteKpiSetting(int[] clientSiteIds);
         void SaveClientSiteKpiSetting(ClientSiteKpiSetting setting);
+        int SaveClientSiteManningKpiSetting(ClientSiteKpiSetting setting);
         ClientSiteKpiNote GetClientSiteKpiNote(int id);
         int SaveClientSiteKpiNote(ClientSiteKpiNote note);
         List<ClientSiteLogBook> GetClientSiteLogBooks();
@@ -176,13 +185,17 @@ namespace CityWatch.Data.Providers
 
         public ClientSiteKpiSetting GetClientSiteKpiSetting(int clientSiteId)
         {
-            var clientSiteKpiSetting =  _context.ClientSiteKpiSettings
+            var clientSiteKpiSetting = _context.ClientSiteKpiSettings
                 .Include(x => x.ClientSite)
                 .Include(x => x.ClientSite.ClientType)
                 .Include(x => x.ClientSiteDayKpiSettings)
                 .Include(x => x.Notes)
                 .SingleOrDefault(x => x.ClientSiteId == clientSiteId);
-
+            if (clientSiteKpiSetting != null)
+            {
+                clientSiteKpiSetting.ClientSiteManningGuardKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id && x.Type == ((int)OfficerPositionFilterForManning.SecurityOnly).ToString()).OrderBy(x => ((int)x.WeekDay + 6) % 7).ToList();
+                clientSiteKpiSetting.ClientSiteManningPatrolCarKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id && x.Type == ((int)OfficerPositionFilterForManning.PatrolOnly).ToString()).OrderBy(x => ((int)x.WeekDay + 6) % 7 ).ToList();
+            }
             return clientSiteKpiSetting;
         }
 
@@ -193,7 +206,7 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.ClientSite.ClientType)
                 .Include(x => x.ClientSiteDayKpiSettings)
                 .Where(x => clientSiteIds.Contains(x.ClientSiteId))
-				.ToList();
+                .ToList();
 
             return clientSiteKpiSetting;
         }
@@ -345,6 +358,99 @@ namespace CityWatch.Data.Providers
                 }
             }
             _context.SaveChanges();
+        }
+
+        /// <summary>
+        /// For save and update ClientSite Manning details
+        /// </summary>
+        /// <param name="setting"></param>
+        /// <returns></returns>
+        public int SaveClientSiteManningKpiSetting(ClientSiteKpiSetting setting)
+        {
+            var success = 0;
+            try
+            {
+
+                if (setting != null)
+                {
+                    if (setting.ClientSiteManningGuardKpiSettings.Any() || setting.ClientSiteManningPatrolCarKpiSettings.Any())
+                    {
+                        var entityStateforGuard = !_context.ClientSiteManningKpiSettings.Any(x => x.SettingsId == setting.Id && x.Type == ((int)OfficerPositionFilterForManning.SecurityOnly).ToString()) ? EntityState.Added : EntityState.Modified;
+                        var entityStateforpatrolcar = !_context.ClientSiteManningKpiSettings.Any(x => x.SettingsId == setting.Id && x.Type == ((int)OfficerPositionFilterForManning.PatrolOnly).ToString()) ? EntityState.Added : EntityState.Modified;
+                        var positionIdGuard = setting.ClientSiteManningGuardKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
+                        var positionIdPatrolCar = setting.ClientSiteManningPatrolCarKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
+                        if (positionIdGuard != null || positionIdPatrolCar != null)
+                        {
+                            //ClientSiteManningKpi Guard Add and Update
+                            if (positionIdGuard != null)
+                            {
+                                //set the values for SettingsId and PositionId
+                                setting.ClientSiteManningGuardKpiSettings.ForEach(x => { x.Type = ((int)OfficerPositionFilterForManning.SecurityOnly).ToString(); x.SettingsId = setting.Id; x.PositionId = positionIdGuard.PositionId; });
+                                if (entityStateforGuard == EntityState.Added)
+                                {
+                                    if (setting.ClientSiteManningGuardKpiSettings.Any() && setting.ClientSiteManningGuardKpiSettings != null)
+                                    {
+
+                                        _context.ClientSiteManningKpiSettings.AddRange(setting.ClientSiteManningGuardKpiSettings);
+                                        _context.SaveChanges();
+                                        success = 1;
+
+                                    }
+                                }
+                                else
+                                {
+                                    if (setting.ClientSiteManningGuardKpiSettings.Any() && setting.ClientSiteManningGuardKpiSettings != null)
+                                    {
+                                        _context.ClientSiteManningKpiSettings.UpdateRange(setting.ClientSiteManningGuardKpiSettings);
+                                        _context.SaveChanges();
+                                        success = 1;
+                                    }
+                                }
+                            }
+                            if (positionIdPatrolCar != null)
+                            {   //ManningPatrolCar Add and Update
+                                //set the values for SettingsId and PositionId
+                                setting.ClientSiteManningPatrolCarKpiSettings.ForEach(x => { x.Type = ((int)OfficerPositionFilterForManning.PatrolOnly).ToString(); x.SettingsId = setting.Id; x.PositionId = positionIdPatrolCar.PositionId; });
+
+                                if (entityStateforpatrolcar == EntityState.Added)
+                                {
+                                    if (setting.ClientSiteManningPatrolCarKpiSettings.Any())
+                                    {
+                                        _context.ClientSiteManningKpiSettings.AddRange(setting.ClientSiteManningPatrolCarKpiSettings);
+                                        _context.SaveChanges();
+                                        success = 1;
+                                    }
+                                }
+                                else
+                                {
+                                    if (setting.ClientSiteManningPatrolCarKpiSettings.Any() && setting.ClientSiteManningPatrolCarKpiSettings != null)
+                                    {
+                                        _context.ClientSiteManningKpiSettings.UpdateRange(setting.ClientSiteManningPatrolCarKpiSettings);
+                                        _context.SaveChanges();
+                                        success = 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+            catch
+            {
+                return success;
+            }
+            return success;
+        }
+        public List<ClientSite> GetNewClientSites()
+        {
+            return _context.ClientSites
+
+                .Include(x => x.ClientType)
+                .OrderBy(x => x.ClientType.Name)
+                .ThenBy(x => x.Name)
+                .ToList();
+
         }
     }
 }

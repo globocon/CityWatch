@@ -277,6 +277,11 @@ namespace CityWatch.Web.Pages.Guard
 
         public JsonResult OnGetCompanyNames(string companyNamePart)
         {
+            return new JsonResult(_viewDataService.GetCompanyNames(companyNamePart).ToList());
+        }
+
+        public JsonResult OnGetCompanyAndSenderNames(string companyNamePart)
+        {
             return new JsonResult(_viewDataService.GetCompanyAndSenderNames(companyNamePart).ToList());
         }
 
@@ -285,14 +290,14 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(_guardLogDataProvider.GetVehicleRegos(regoPart).ToList());
         }
 
-        public async Task<JsonResult> OnPostGenerateManualDocket(int id, ManualDocketReason option, string otherReason, string stakeholderEmails, int clientSiteId)
+        public async Task<JsonResult> OnPostGenerateManualDocket(int id, ManualDocketReason option, string otherReason, string stakeholderEmails, int clientSiteId, string blankNoteOnOrOff)
         {
             var fileName = string.Empty;
 
             try
             {
                 var serialNo = GetNextDocketSequenceNumber(id);
-                fileName = _keyVehicleLogDocketGenerator.GeneratePdfReport(id, GetManualDocketReason(option, otherReason), serialNo);
+                fileName = _keyVehicleLogDocketGenerator.GeneratePdfReport(id, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, serialNo);
             }
             catch (Exception ex)
             {
@@ -505,6 +510,8 @@ namespace CityWatch.Web.Pages.Guard
                     return "Weighbridge Down = No Comms";
                 case ManualDocketReason.PhysicalRepair:
                     return "Weighbridge Down = Physical Repair";
+                case ManualDocketReason.POD:
+                    return "Proof Of Delivery (Receipt)";
                 default:
                     return string.Empty;
             }
@@ -551,11 +558,11 @@ namespace CityWatch.Web.Pages.Guard
         {
             var lastSequenceNumber = 0;
             var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(id);
-            if (keyVehicleLog.DocketSerialNo != null)
+            if (!string.IsNullOrEmpty(keyVehicleLog.DocketSerialNo))
             {
                 var serialNo = keyVehicleLog.DocketSerialNo;
-                var sufix = Regex.Replace(serialNo, @"[^A-Z]+", String.Empty);
-                int index = GetSuffixNumber(sufix);
+                var suffix = Regex.Replace(serialNo, @"[^A-Z]+", string.Empty);
+                int index = GetSuffixNumber(suffix);
                 var numberSuffix = GetSequenceNumberSuffix(index);
                 var serialnumber = string.Join("", serialNo.ToCharArray().Where(Char.IsDigit));
                 return $"{serialnumber}-{numberSuffix}";
@@ -569,23 +576,25 @@ namespace CityWatch.Web.Pages.Guard
                 configuration.Value = lastSequenceNumber.ToString();
                 _appConfigurationProvider.SaveConfiguration(configuration);
             }
-            return lastSequenceNumber.ToString().PadLeft(5, '0');
+
+            return lastSequenceNumber.ToString().PadLeft(6, '0');
         }
 
-        private int GetSuffixNumber(string suffix)
+        private static int GetSuffixNumber(string suffix)
         {
             int index = 0;
-            string alphabet = suffix.ToUpper();
+            // Start suffix from B
+            string alphabet = string.IsNullOrEmpty(suffix) ? "A" : suffix.ToUpper();
             for (int iChar = alphabet.Length - 1; iChar >= 0; iChar--)
             {
                 char colPiece = alphabet[iChar];
                 int colNum = colPiece - 64;
-                index = index + colNum * (int)Math.Pow(26, alphabet.Length - (iChar + 1));
+                index += colNum * (int)Math.Pow(26, alphabet.Length - (iChar + 1));
             }
             return index;
         }
 
-        private string GetSequenceNumberSuffix(int index)
+        private static string GetSequenceNumberSuffix(int index)
         {
             string value = "";
             decimal number = index + 1;

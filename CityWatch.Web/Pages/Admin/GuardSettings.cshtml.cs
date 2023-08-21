@@ -75,22 +75,70 @@ namespace CityWatch.Web.Pages.Admin
 
                 var clientSites = _viewDataService.GetUserClientSites(type, searchTerm);
 
-                var clientSiteWithSettings = _clientSiteWandDataProvider.GetClientSiteSmartWands().Select(z => z.ClientSiteId).ToList();
-
-                return new JsonResult(clientSites.Select(z => new
+                if (clientSites.Count == 0)
                 {
-                    z.Id,
-                    ClientTypeName = z.ClientType.Name,
-                    ClientSiteName = z.Name,
-                    z.SiteEmail,
-                    z.LandLine,
-                    z.DuressEmail,
-                    z.DuressSms,
-                    SiteUploadDailyLog = z.UploadGuardLog,
-                    z.GuardLogEmailTo,
-                    z.DataCollectionEnabled,
-                    HasSettings = clientSiteWithSettings.Any(x => x == z.Id) || !string.IsNullOrEmpty(z.SiteEmail)
-                }));
+                    var clientNewSites = _viewDataService.GetNewUserClientSites();
+                    
+                    var clientSiteWithSettings = _clientSiteWandDataProvider.GetClientSiteSmartWands(searchTerm).ToList();
+                    if (!string.IsNullOrEmpty(type))
+                    {
+                        return new JsonResult(clientNewSites.Select(z => new
+
+
+                        {
+
+                            z.Id,
+                            ClientTypeName = z.ClientType.Name,
+                            ClientSiteName = z.Name,
+                            z.SiteEmail,
+                            z.LandLine,
+                            SiteUploadDailyLog = z.UploadGuardLog,
+                            z.GuardLogEmailTo,
+                            z.DataCollectionEnabled,
+                            HasSettings = clientSiteWithSettings.Any(x => x.ClientSiteId == z.Id) || !string.IsNullOrEmpty(z.SiteEmail)
+                        }).Where(x => (clientSiteWithSettings.Any(c => c.ClientSiteId == x.Id)) && (x.ClientTypeName == type)));
+                    }
+                    else
+                    {
+                        return new JsonResult(clientNewSites.Select(z => new
+
+
+                        {
+
+                            z.Id,
+                            ClientTypeName = z.ClientType.Name,
+                            ClientSiteName = z.Name,
+                            z.SiteEmail,
+                            z.LandLine,
+                            SiteUploadDailyLog = z.UploadGuardLog,
+                            z.GuardLogEmailTo,
+                            z.DataCollectionEnabled,
+                            HasSettings = clientSiteWithSettings.Any(x => x.ClientSiteId == z.Id) || !string.IsNullOrEmpty(z.SiteEmail)
+                        }).Where(x => (clientSiteWithSettings.Any(c => c.ClientSiteId == x.Id)) ));
+                    }
+                }
+
+            
+                else
+                {
+
+                    var clientSiteWithSettings = _clientSiteWandDataProvider.GetClientSiteSmartWands().Select(z => z.ClientSiteId).ToList();
+
+                    return new JsonResult(clientSites.Select(z => new
+                    {
+                        z.Id,
+                        ClientTypeName = z.ClientType.Name,
+                        ClientSiteName = z.Name,
+                        z.SiteEmail,
+                        z.LandLine,
+                        z.DuressEmail,
+                        z.DuressSms,
+                        SiteUploadDailyLog = z.UploadGuardLog,
+                        z.GuardLogEmailTo,
+                        z.DataCollectionEnabled,
+                        HasSettings = clientSiteWithSettings.Any(x => x == z.Id) || !string.IsNullOrEmpty(z.SiteEmail)
+                    }));
+                }
 
             }
 
@@ -600,12 +648,6 @@ namespace CityWatch.Web.Pages.Admin
             {
                 status = false;
                 message = ex.Message;
-                if (ex.InnerException != null &&
-                    ex.InnerException is SqlException &&
-                    ex.InnerException.Message.StartsWith("Violation of UNIQUE KEY constraint"))
-                {
-                    message = "Reference number already exists";
-                }
             }
             return new JsonResult(new { status, dbxUploaded, message });
         }

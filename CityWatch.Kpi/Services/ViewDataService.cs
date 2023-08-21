@@ -1,12 +1,21 @@
-﻿using CityWatch.Data.Providers;
+﻿using CityWatch.Data.Models;
+using CityWatch.Data.Providers;
 using CityWatch.Kpi.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
+
 namespace CityWatch.Kpi.Services
 {
+
+    public enum OfficerPositionFilterManning
+    {
+        PatrolOnly = 1,
+
+        SecurityOnly = 2
+    }
     public interface IViewDataService
     {
         List<SelectListItem> ClientTypes { get; }
@@ -18,22 +27,31 @@ namespace CityWatch.Kpi.Services
         List<SelectListItem> GetMonthsInYear();
 
         MonthlyKpiResult GetKpiReportData(int clientSiteId, DateTime fromDate, DateTime toDate);
+        
+        List<DailyKpiGuard> GetMonthlyKpiGuardData(int clientSiteId, DateTime fromDate, DateTime toDate);
 
         public Dictionary<int, MonthlyKpiResult> GetMonthlyKpiReportData(int[] clientSiteIds, DateTime fromDate, DateTime toDate);
 
         List<DailyKpiResult> GetKpiReportData(int[] clientSiteId, DateTime fromDate, DateTime toDate);
+        List<SelectListItem> GetOfficerPositions(OfficerPositionFilterManning positionFilter = OfficerPositionFilterManning.SecurityOnly);
     }
 
     public class ViewDataService : IViewDataService
     {
         private readonly IClientDataProvider _clientDataProvider;
         private readonly IKpiDataProvider _kpiDataProvider;
+        private readonly IConfigDataProvider _configDataProvider;
+        private readonly IGuardDataProvider _guardDataProvider;
 
         public ViewDataService(IClientDataProvider clientDataProvider,
-            IKpiDataProvider kpiDataProvider)
+            IKpiDataProvider kpiDataProvider,
+            IConfigDataProvider configDataProvider,
+            IGuardDataProvider guardDataProvider)
         {
             _clientDataProvider = clientDataProvider;
             _kpiDataProvider = kpiDataProvider;
+            _configDataProvider = configDataProvider;
+            _guardDataProvider = guardDataProvider;
         }
 
         public List<SelectListItem> ClientTypes
@@ -88,6 +106,23 @@ namespace CityWatch.Kpi.Services
             return months;
         }
 
+        public List<SelectListItem> GetOfficerPositions(OfficerPositionFilterManning positionFilter = OfficerPositionFilterManning.SecurityOnly)
+        {
+            var items = new List<SelectListItem>()
+            {
+                new SelectListItem("Select", "", true),
+            };
+            var officerPositions = _configDataProvider.GetPositions();
+            foreach (var officerPosition in officerPositions.Where(z =>
+                 positionFilter == OfficerPositionFilterManning.PatrolOnly && z.IsPatrolCar ||                 
+                 positionFilter == OfficerPositionFilterManning.SecurityOnly && z.Name.Contains("Security")))
+            {
+                items.Add(new SelectListItem(officerPosition.Name, officerPosition.Id.ToString()));
+            }
+
+            return items;
+        }
+
         public MonthlyKpiResult GetKpiReportData(int clientSiteId, DateTime fromDate, DateTime toDate)
         {
             var dailyClientSiteKpis = _kpiDataProvider.GetDailyClientSiteKpis(clientSiteId, fromDate, toDate);
@@ -96,6 +131,27 @@ namespace CityWatch.Kpi.Services
             var dailyKpis = dailyClientSiteKpis.Select(x => new DailyKpiResult(x, clientSiteKpiSetting)).ToList();
 
             return new MonthlyKpiResult(clientSiteKpiSetting, dailyKpis);
+        }
+
+        public List<DailyKpiGuard> GetMonthlyKpiGuardData(int clientSiteId, DateTime fromDate, DateTime toDate)
+        {
+            var dailyClientSiteKpis = _kpiDataProvider.GetDailyClientSiteKpis(clientSiteId, fromDate, toDate).ToList();
+            var guardLogins = _guardDataProvider.GetGuardLogins(clientSiteId, fromDate, toDate).ToList();
+            foreach (var guardLogin in guardLogins)
+            {
+                // Trim OnDuty and OffDuty dates to login date
+                if (guardLogin.OnDuty.Date < guardLogin.LoginDate.Date)
+                {
+                    guardLogin.OnDuty = new DateTime(guardLogin.OnDuty.Year, guardLogin.OnDuty.Month, guardLogin.OnDuty.Day, 00, 01, 00); ;
+                }
+
+                var offDutyValue = guardLogin.OffDuty.Value;
+                if (offDutyValue.Date > guardLogin.LoginDate.Date)
+                {
+                    guardLogin.OffDuty = new DateTime(guardLogin.LoginDate.Year, guardLogin.LoginDate.Month, guardLogin.LoginDate.Day, 23, 59, 00); ;
+                }
+            }
+            return dailyClientSiteKpis.Select(z => new DailyKpiGuard(z, guardLogins.Where(y => y.LoginDate.ToString("yyyyMMdd") == z.Date.ToString("yyyyMMdd")))).ToList();            
         }
 
         public Dictionary<int, MonthlyKpiResult> GetMonthlyKpiReportData(int[] clientSiteIds, DateTime fromDate, DateTime toDate)
