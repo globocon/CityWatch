@@ -510,7 +510,7 @@ namespace CityWatch.Kpi.Services
 
         private Table CreateGuardReportData(List<DailyKpiGuard> monthlyKpiGuardData, DateTime fromDate)
         {
-            var kpiGuardTable = new Table(UnitValue.CreatePercentArray(new float[] { 2, 8, 6, 6, 12, 8, 2, 2, 2, 12, 8, 2, 2, 2, 12, 8, 2, 2, 2})).UseAllAvailableWidth();
+            var kpiGuardTable = new Table(UnitValue.CreatePercentArray(new float[] { 2, 6, 6, 6, 12, 9, 3, 3, 3, 12, 9, 3, 3, 3, 12, 9, 3, 3, 3})).UseAllAvailableWidth();
             CreateGuardReportHeader(kpiGuardTable, fromDate);
             foreach (var data in monthlyKpiGuardData)
             {                
@@ -521,21 +521,21 @@ namespace CityWatch.Kpi.Services
 
                 kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardName ?? string.Empty));
                 kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardSecurityNo ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardHr?.ToString() ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardVisy?.ToString() ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardFire?.ToString() ?? string.Empty));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardHr ?? string.Empty));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardVisy ?? string.Empty));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardFire ?? string.Empty));
 
                 kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardName ?? string.Empty));
                 kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardSecurityNo ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardHr?.ToString() ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardVisy?.ToString() ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardFire?.ToString() ?? string.Empty));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardHr ?? string.Empty));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardVisy ?? string.Empty));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardFire ?? string.Empty));
 
                 kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardName ?? string.Empty));
                 kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardSecurityNo ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardHr?.ToString() ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardVisy?.ToString() ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardFire?.ToString() ?? string.Empty));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardHr ?? string.Empty));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardVisy ?? string.Empty));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardFire ?? string.Empty));
             }
             return kpiGuardTable;
         }
@@ -563,8 +563,8 @@ namespace CityWatch.Kpi.Services
                 .Add(new Paragraph().Add(new Text("Shift Block 3"))));
             table.AddCell(CreateHeaderCell("Date"));
             table.AddCell(CreateHeaderCell("Day"));
-            table.AddCell(CreateHeaderCell("Expected Hrs"));
-            table.AddCell(CreateHeaderCell("Hrs Change"));
+            table.AddCell(CreateHeaderCell("Expected Hours"));
+            table.AddCell(CreateHeaderCell("Hours Change"));
             table.AddCell(CreateHeaderCell("Guard Name"));
             table.AddCell(CreateHeaderCell("Security No"));
             table.AddCell(CreateHeaderCell("HR"));

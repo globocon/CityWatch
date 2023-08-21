@@ -137,7 +137,21 @@ namespace CityWatch.Kpi.Services
         {
             var dailyClientSiteKpis = _kpiDataProvider.GetDailyClientSiteKpis(clientSiteId, fromDate, toDate).ToList();
             var guardLogins = _guardDataProvider.GetGuardLogins(clientSiteId, fromDate, toDate).ToList();
-            return dailyClientSiteKpis.Select(z => new DailyKpiGuard(z, guardLogins.Where(y => y.OnDuty.ToString("yyyyMMdd") == z.Date.ToString("yyyyMMdd")))).ToList();            
+            foreach (var guardLogin in guardLogins)
+            {
+                // Trim OnDuty and OffDuty dates to login date
+                if (guardLogin.OnDuty.Date < guardLogin.LoginDate.Date)
+                {
+                    guardLogin.OnDuty = new DateTime(guardLogin.OnDuty.Year, guardLogin.OnDuty.Month, guardLogin.OnDuty.Day, 00, 01, 00); ;
+                }
+
+                var offDutyValue = guardLogin.OffDuty.Value;
+                if (offDutyValue.Date > guardLogin.LoginDate.Date)
+                {
+                    guardLogin.OffDuty = new DateTime(guardLogin.LoginDate.Year, guardLogin.LoginDate.Month, guardLogin.LoginDate.Day, 23, 59, 00); ;
+                }
+            }
+            return dailyClientSiteKpis.Select(z => new DailyKpiGuard(z, guardLogins.Where(y => y.LoginDate.ToString("yyyyMMdd") == z.Date.ToString("yyyyMMdd")))).ToList();            
         }
 
         public Dictionary<int, MonthlyKpiResult> GetMonthlyKpiReportData(int[] clientSiteIds, DateTime fromDate, DateTime toDate)
