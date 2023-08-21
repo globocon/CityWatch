@@ -42,6 +42,7 @@ namespace CityWatch.Data.Providers
         ClientSiteKpiNote GetClientSiteKpiNote(int id);
         int SaveClientSiteKpiNote(ClientSiteKpiNote note);
         List<ClientSiteLogBook> GetClientSiteLogBooks();
+        List<ClientSiteLogBook> GetClientSiteLogBooks(int? logBookId, LogBookType type);
         List<ClientSiteLogBook> GetClientSiteLogBooks(int clientSiteId, LogBookType type, DateTime fromDate, DateTime toDate);
         ClientSiteLogBook GetClientSiteLogBook(int clientSiteId, LogBookType type, DateTime date);
         int SaveClientSiteLogBook(ClientSiteLogBook logBook);
@@ -525,5 +526,16 @@ namespace CityWatch.Data.Providers
                 .ToList();
 
         }
+        public List<ClientSiteLogBook> GetClientSiteLogBooks(int? logBookId, LogBookType type)
+        {
+            return _context.ClientSiteLogBooks
+                .Where(z => z.Id == logBookId && z.Type == type)
+                .Include(x => x.ClientSite)
+                .Include(x => x.ClientSite.ClientType)
+                .ToList();
+        }
+
+       
+
     }
 }

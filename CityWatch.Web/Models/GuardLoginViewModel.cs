@@ -10,6 +10,7 @@ namespace CityWatch.Web.Models
         public int? Id { get; set; }
 
         public string ClientSiteName { get; set; }
+        public string ClientTypeName { get; set; }
 
         public Guard Guard { get; set; }
 

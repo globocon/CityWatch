@@ -1817,7 +1817,6 @@
         pageLength: 50,
         autoWidth: false,
         ajax: '/Admin/GuardSettings?handler=Guards',
-        
         columns: [{
             className: 'dt-control',
             orderable: false,
