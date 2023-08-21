@@ -313,7 +313,7 @@
                                                     <div class="d-flex flex-row justify-content-between">
                                                         <label class="form-label">Position</label>
                                                         <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
-                                                            <input type="checkbox" class="custom-control-input" id="positionfilterPatrolCar" checked name="positionfilterPatrolCar">
+                                                            <input type="checkbox" class="custom-control-input" id="positionfilterPatrolCar" name="positionfilterPatrolCar">
                                                             <label class="custom-control-label" for="positionfilterPatrolCar">Patrol Car</label>
                                                         </div>
                                                     </div>
@@ -322,7 +322,7 @@
                                                 @if (rowIndex2 == 1)
                                                 {
                                                     <div class="form-group p-0">
-                                                        <select asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[rowIndex2].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.PatrolOnly)" class="form-control"></select>
+                                                        <select asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[rowIndex2].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.NonPatrolOnly)" class="form-control"></select>
                                                     </div>
                                                 }
 
@@ -351,7 +351,7 @@
                                                             break;
 
                                                     }
-                                                    <input asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].Type" value="1" style="display: none;">
+                                                    <input asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].Type" value="2" style="display: none;">
                                                     <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].WeekDay" />
                                                     <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].Id" />
                                                     <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].OrderId" />
