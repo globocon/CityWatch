@@ -347,7 +347,9 @@ namespace CityWatch.Web.Pages.Guard
 
             try
             {
-                await UploadToDropbox(clientSiteId, fileName);
+                var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(id);
+                await UploadToDropbox(clientSiteId, fileName, keyVehicleLog.ClientSiteLocation.Name);
+                
             }
             catch (Exception ex)
             {
@@ -471,6 +473,41 @@ namespace CityWatch.Web.Pages.Guard
 
             await _dropboxUploadService.Upload(dropBoxSettings, fileToUpload, dbxFilePath);
         }
+
+        private async Task UploadToDropbox(int clientSiteId, string fileName, string clientSiteLocation)
+        {
+            var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientSiteId) ??
+                throw new ArgumentException($"ClientSiteKpiSettings missing for this client site");
+
+            var siteBasePath = clientSiteKpiSettings.DropboxImagesDir;
+            if (string.IsNullOrEmpty(siteBasePath))
+                throw new ArgumentException($"Dropbox directory missing for this client site");
+
+            var fileToUpload = Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName);
+            var dayPathFormat = clientSiteKpiSettings.IsWeekendOnlySite ? "yyyyMMdd - ddd" : "yyyyMMdd";
+            var folderPathToCreate = string.Empty;
+            if(string.IsNullOrEmpty(clientSiteLocation))
+            {
+                folderPathToCreate = $"{siteBasePath}/FLIR - Wand Recordings - IRs - Daily Logs/{DateTime.Today.Date.Year}/{DateTime.Today.Date:yyyyMM} - {DateTime.Today.Date.ToString("MMMM").ToUpper()} DATA/{DateTime.Today.Date.ToString(dayPathFormat).ToUpper()}/Dockets - General";
+
+            }
+            else
+            {
+                folderPathToCreate = $"{siteBasePath}/FLIR - Wand Recordings - IRs - Daily Logs/{DateTime.Today.Date.Year}/{DateTime.Today.Date:yyyyMM} - {DateTime.Today.Date.ToString("MMMM").ToUpper()} DATA/{DateTime.Today.Date.ToString(dayPathFormat).ToUpper()}/Dockets - {clientSiteLocation.Trim()}";
+            }
+            var dropBoxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken,
+                                                      _settings.DropboxRefreshToken, _settings.DropboxUserEmail);
+
+            /* Create New Folder Dockets - General or Dockets - {clientSiteLocation}*/
+            if (await _dropboxUploadService.CheckAndCreateFolders(dropBoxSettings, folderPathToCreate))
+            {
+
+                var dbxFilePath = $"{folderPathToCreate}/{fileName}";
+                /* Upload File to New Folder*/
+                await _dropboxUploadService.Upload(dropBoxSettings, fileToUpload, dbxFilePath);
+            }
+        }
+
 
         private void SendEmail(string vehicleRego, string toAddresses, string fileName)
         {
