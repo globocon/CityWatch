@@ -422,7 +422,7 @@ namespace CityWatch.Data.Providers
 
         public List<string> GetCompanyNames(string companyNameStart)
         {
-            return _context.KeyVehicleLogs
+            return _context.KeyVehicleLogVisitorPersonalDetails
                 .Where(x => !string.IsNullOrEmpty(x.CompanyName) && x.CompanyName.Substring(0, companyNameStart.Length).ToLower() == companyNameStart.ToLower())
                 .Select(x => x.CompanyName)
                 .Distinct()

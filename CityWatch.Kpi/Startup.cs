@@ -49,6 +49,7 @@ namespace CityWatch.Kpi
             services.AddScoped<IIrDataProvider, IrDataProvider>();
             services.AddScoped<IPatrolDataReportService, PatrolDataReportService>();
             services.AddScoped<IConfigDataProvider, ConfigDataProvider>();
+            services.AddScoped<IGuardDataProvider, GuardDataProvider>();
 
             services.AddRazorPages(options => 
             {

@@ -3,6 +3,7 @@ using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
+using iText.IO.Font.Constants;
 using iText.IO.Image;
 using iText.Kernel.Colors;
 using iText.Kernel.Geom;
@@ -131,7 +132,7 @@ namespace CityWatch.Web.Services
 
         private static Table CreateSiteDetailsTable(KeyVehicleLog keyVehicleLog)
         {
-            var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 5, 38, 10, 23, 5, 8, 4, 10 })).UseAllAvailableWidth().SetMarginTop(10);
+            var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 5, 38, 10, 18, 5, 8, 4, 15 })).UseAllAvailableWidth().SetMarginTop(10);
 
             siteDataTable.AddCell(GetSiteHeaderCell("Site:"));
             var siteName = new Cell()
@@ -550,11 +551,11 @@ namespace CityWatch.Web.Services
         private static Cell GetSerialNoValueCell(string text)
         {
             return new Cell()
-               .Add(new Paragraph().Add(new Text(text)))
-               .SetFont(PdfHelper.GetPdfFont())
-               .SetFontSize(CELL_FONT_SIZE_BIG)
+               .Add(new Paragraph(text)
+               .SetFont(PdfHelper.GetPdfFont(StandardFonts.COURIER_BOLD))
+               .SetFontSize(CELL_FONT_SIZE_BIG * 1.2f)
                .SetFontColor(WebColors.GetRGBColor("#FF323A"))
-               .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+               .SetTextAlignment(TextAlignment.CENTER))
                .SetVerticalAlignment(VerticalAlignment.MIDDLE);
         }
 
