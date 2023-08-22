@@ -16,7 +16,7 @@ namespace CityWatch.Common.Services
         Task<bool> Upload(DropboxSettings settings, string fileToUpload, string dbxFilePath);
 
         Task<bool> Download(DropboxSettings settings, string downloadToFolder, string[] filesToDownload);
-        Task<bool> CheckAndCreateFolders(DropboxSettings settings, string clientSiteDbxFolder);
+       
     }
 
     public class DropboxService : IDropboxService
@@ -113,51 +113,6 @@ namespace CityWatch.Common.Services
             using var fileStream = File.Create(localFilePath);
             (await response.GetContentAsStreamAsync()).CopyTo(fileStream);
         }
-
-
-
-        public async Task<bool> CheckAndCreateFolders(DropboxSettings settings, string clientSiteDbxFolder)
-        {
-
-            try
-            {
-                using var dbxTeam = new DropboxTeamClient(settings.AccessToken, settings.RefreshToken, settings.AppKey, settings.AppSecret, new DropboxClientConfig());
-                var team = dbxTeam.Team.MembersListAsync().Result;
-                if (team.Members.Count > 0)
-                {
-                    var cwsMember = team.Members.SingleOrDefault(z => z.Profile.Email == settings.UserEmail);
-                    if (cwsMember != null)
-                    {
-                        var dbx = dbxTeam.AsMember(cwsMember.Profile.TeamMemberId);
-                        var account = await dbx.Users.GetCurrentAccountAsync();
-                        var nsId = new PathRoot.NamespaceId(account.RootInfo.RootNamespaceId);
-                        var isFolderExists = await CheckFolderExists(dbx, nsId, clientSiteDbxFolder);
-                        if (!isFolderExists)
-                        {
-                            //await dbx.WithPathRoot(nsId).Files.CreateFolderV2Async(clientSiteDbxFolder);
-
-                        }
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-                else
-                {
-                    return false;
-                }
-               
-            }
-            catch
-            {
-                return false;
-
-            }
-
-        }
-
 
         private static async Task<bool> CheckFolderExists(DropboxClient dbx, PathRoot.NamespaceId nsId, string folderPath)
         {

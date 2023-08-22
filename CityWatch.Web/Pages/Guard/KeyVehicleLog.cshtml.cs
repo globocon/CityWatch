@@ -348,7 +348,13 @@ namespace CityWatch.Web.Pages.Guard
             try
             {
                 var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(id);
-                await UploadToDropbox(clientSiteId, fileName, keyVehicleLog.ClientSiteLocation.Name);
+                var clientSiteLocation = string.Empty;
+                if (keyVehicleLog != null)
+                {
+                    if(keyVehicleLog.ClientSiteLocation!=null)
+                     clientSiteLocation = keyVehicleLog.ClientSiteLocation.Name;
+                }
+                await UploadToDropbox(clientSiteId, fileName, clientSiteLocation);
                 
             }
             catch (Exception ex)
@@ -485,27 +491,18 @@ namespace CityWatch.Web.Pages.Guard
 
             var fileToUpload = Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName);
             var dayPathFormat = clientSiteKpiSettings.IsWeekendOnlySite ? "yyyyMMdd - ddd" : "yyyyMMdd";
-            var folderPathToCreate = string.Empty;
-            if(string.IsNullOrEmpty(clientSiteLocation))
+            var folderPathToCreate = $"{siteBasePath}/FLIR - Wand Recordings - IRs - Daily Logs/{DateTime.Today.Date.Year}/{DateTime.Today.Date:yyyyMM} - {DateTime.Today.Date.ToString("MMMM").ToUpper()} DATA/{DateTime.Today.Date.ToString(dayPathFormat).ToUpper()}/Dockets - General/{fileName}"; ;
+            if(!string.IsNullOrEmpty(clientSiteLocation))
             {
-                folderPathToCreate = $"{siteBasePath}/FLIR - Wand Recordings - IRs - Daily Logs/{DateTime.Today.Date.Year}/{DateTime.Today.Date:yyyyMM} - {DateTime.Today.Date.ToString("MMMM").ToUpper()} DATA/{DateTime.Today.Date.ToString(dayPathFormat).ToUpper()}/Dockets - General";
+                folderPathToCreate = $"{siteBasePath}/FLIR - Wand Recordings - IRs - Daily Logs/{DateTime.Today.Date.Year}/{DateTime.Today.Date:yyyyMM} - {DateTime.Today.Date.ToString("MMMM").ToUpper()} DATA/{DateTime.Today.Date.ToString(dayPathFormat).ToUpper()}/Dockets - {string.Join("_", clientSiteLocation.Split(Path.GetInvalidFileNameChars()))}/{fileName}";
 
             }
-            else
-            {
-                folderPathToCreate = $"{siteBasePath}/FLIR - Wand Recordings - IRs - Daily Logs/{DateTime.Today.Date.Year}/{DateTime.Today.Date:yyyyMM} - {DateTime.Today.Date.ToString("MMMM").ToUpper()} DATA/{DateTime.Today.Date.ToString(dayPathFormat).ToUpper()}/Dockets - {clientSiteLocation.Trim()}";
-            }
+           
             var dropBoxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken,
                                                       _settings.DropboxRefreshToken, _settings.DropboxUserEmail);
-
-            /* Create New Folder Dockets - General or Dockets - {clientSiteLocation}*/
-            if (await _dropboxUploadService.CheckAndCreateFolders(dropBoxSettings, folderPathToCreate))
-            {
-
-                var dbxFilePath = $"{folderPathToCreate}/{fileName}";
-                /* Upload File to New Folder*/
-                await _dropboxUploadService.Upload(dropBoxSettings, fileToUpload, dbxFilePath);
-            }
+          
+            await _dropboxUploadService.Upload(dropBoxSettings, fileToUpload, folderPathToCreate);
+           
         }
 
 
