@@ -15,8 +15,7 @@ namespace CityWatch.Common.Services
     {
         Task<bool> Upload(DropboxSettings settings, string fileToUpload, string dbxFilePath);
 
-        Task<bool> Download(DropboxSettings settings, string downloadToFolder, string[] filesToDownload);
-       
+        Task<bool> Download(DropboxSettings settings, string downloadToFolder, string[] filesToDownload);       
     }
 
     public class DropboxService : IDropboxService
@@ -112,27 +111,6 @@ namespace CityWatch.Common.Services
             using var response = await client.WithPathRoot(nsId).Files.DownloadAsync(filePath);
             using var fileStream = File.Create(localFilePath);
             (await response.GetContentAsStreamAsync()).CopyTo(fileStream);
-        }
-
-        private static async Task<bool> CheckFolderExists(DropboxClient dbx, PathRoot.NamespaceId nsId, string folderPath)
-        {
-            try
-            {
-                var folderPathMeta = await dbx.WithPathRoot(nsId).Files.GetMetadataAsync(folderPath);
-                if (folderPathMeta.IsFolder)
-                    return true;
-            }
-            catch (ApiException<GetMetadataError> ex)
-            {
-                if (ex.ErrorResponse.IsPath && ex.ErrorResponse.AsPath.Value.IsNotFound)
-                {
-                    return false;
-                }
-
-                throw ex;
-            }
-
-            return false;
-        }
+        }       
     }
 }
