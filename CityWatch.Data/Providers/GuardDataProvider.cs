@@ -75,6 +75,10 @@ namespace CityWatch.Data.Providers
                 }
                 updateGuard.State = guard.State;
                 updateGuard.Provider = guard.Provider;
+                updateGuard.Mobile = guard.Mobile;
+                updateGuard.Email = guard.Email;
+                updateGuard.IsKPIAccess = guard.IsKPIAccess;
+                updateGuard.IsRCAccess = guard.IsRCAccess;
             }
 
             _context.SaveChanges();
@@ -97,9 +101,11 @@ namespace CityWatch.Data.Providers
         {
             var guardLogins = _context.GuardLogins
                 .Where(z => guardIds.Contains(z.GuardId))
+
                 .Include(z => z.Guard)
                 .Include(z => z.ClientSite)
                 .ToList();
+
 
             return guardLogins
                 .GroupBy(z => new { z.GuardId, z.ClientSiteId })

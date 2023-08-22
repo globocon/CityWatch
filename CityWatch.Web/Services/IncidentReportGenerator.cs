@@ -112,9 +112,12 @@ namespace CityWatch.Web.Services
             PdfDocument pdfDocument = new PdfDocument(new PdfReader(_TemplatePdf), new PdfWriter(reportPdf));
 
             PdfAcroForm acroForm = PdfAcroForm.GetAcroForm(pdfDocument, false);
+            
             acroForm.GetField("IR-NO9").SetValue("", false);
             acroForm.GetField("IR-NO").SetValue("", false);
             acroForm.GetField("IR-NO-BC").SetValue("", false);
+           
+           
 
             foreach (var field in editableFields)
             {
@@ -127,7 +130,16 @@ namespace CityWatch.Web.Services
                 if (!string.IsNullOrEmpty(propValue))
                 {
                     if (field.PropType == typeof(bool))
-                        acroField.SetValue(propValue, false);
+                    {
+                        if (field.Name == "IR-YES-KV")
+                        {
+                            acroField.SetValue(propValue, true);
+                            acroForm.GetField("IR-NO-KV").SetValue("", false);
+                        }
+                        else
+                            acroField.SetValue(propValue, false);
+                    }
+
                     else
                         acroField.SetValue(propValue);
                 }
@@ -356,9 +368,11 @@ namespace CityWatch.Web.Services
             }
             else if (field.PropType == typeof(bool))
             {
-                if (field.Name.IndexOf("IR-NO") >= 0 ||
+                if (
+                    field.Name.IndexOf("IR-NO") >= 0 ||
                     field.Name.IndexOf("PTL-EX") >= 0 ||
                     field.Name.IndexOf("PTL-IN") >= 0 ||
+                    //field.Name.IndexOf("IR-NO-KV") >= 0 ||
                     field.Name == "IR-YES-BC")
                 {
                     propValue = _IncidentReport.GetPropValue<bool>(field.PropName) ? "No" : string.Empty;

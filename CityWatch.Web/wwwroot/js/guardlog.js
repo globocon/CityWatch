@@ -484,6 +484,8 @@
                 $('#lbl_guard_name').html(result.name);
                 $('#lbl_guard_security_no').html(result.securityNo);
                 $('#lbl_guard_state').html(result.state);
+                $('#lbl_guard_email').html(result.email);
+                $('#lbl_guard_mobile').html(result.mobile);
                 $('#lbl_guard_provider').html(result.provider);
             }
         });
@@ -1868,13 +1870,18 @@
         $('.btn-add-guard-addl-details').show();
 
         var data = guardSettings.row($(this).parents('tr')).data();
+      
         $('#Guard_Name').val(data.name);
         $('#Guard_SecurityNo').val(data.securityNo);
         $('#Guard_Initial').val(data.initial);
         $('#Guard_State').val(data.state);
         $('#Guard_Provider').val(data.provider);
+        $('#Guard_Mobile').val(data.mobile)
+        $('#Guard_Email').val(data.email)
         $('#Guard_Id').val(data.id);
         $('#cbIsActive').prop('checked', data.isActive);
+        $('#cbIsRCAccess').prop('checked', data.isRCAccess);
+        $('#cbIsKPIAccess').prop('checked', data.isKPIAccess);
         $('#addGuardModal').modal('show');
         $('#GuardLicense_GuardId').val(data.id);
         $('#GuardCompliance_GuardId').val(data.id);
@@ -1898,15 +1905,23 @@
         $('#Guard_Initial').val('');
         $('#Guard_State').val('');
         $('#Guard_Provider').val('');
+        $('#Guard_Email').val('');
+        $('#Guard_Mobile').val('');
+        $('#Guard_Mobile').val('+61 4');
         $('#Guard_Id').val('-1');
         $('#cbIsActive').prop('checked', true);
+        $('#cbIsRCAccess').prop('checked', false);
+        $('#cbIsKPIAccess').prop('checked', false);
         $('#glValidationSummary').html('');
     }
 
     $('#btn_save_guard').on('click', function () {
         clearGuardValidationSummary('glValidationSummary');
         $('#guard_saved_status').hide();
-        $('#Guard_IsActive').val($(cbIsActive).is(':checked'));
+        //$('#Guard_IsActive').val($(cbIsActive).is(':checked'));
+        $('#Guard_IsActive').val(true);
+        $('#Guard_IsRCAccess').val($(cbIsRCAccess).is(':checked'));
+        $('#Guard_IsKPIAccess').val($(cbIsKPIAccess).is(':checked'));
         $.ajax({
             url: '/Admin/GuardSettings?handler=Guards',
             data: $('#frm_add_guard').serialize(),

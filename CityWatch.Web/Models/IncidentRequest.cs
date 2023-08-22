@@ -52,6 +52,11 @@ namespace CityWatch.Web.Models
         public int? SiteColourCodeId { get; set; }
 
         public string LinkedSerialNos { get; set; }
+        [Display(Name = "No")]
+        public bool PlateLoadedNo { get; set; }
+
+        [Display(Name = "Yes")]
+        public bool PlateLoadedYes { get; set; }
 
         [Display(Name = "Supervisor or person you reported this to:")]
         public string ReportedBy { get; set; }

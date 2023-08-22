@@ -79,7 +79,10 @@ namespace CityWatch.Web.Pages.Guard
             try
             {
                 GuardLogin.SmartWandOrPositionId = smartWandOrPositionId;
-                GuardLogin.ClientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(z => z.Name == GuardLogin.ClientSiteName);
+                var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Name == GuardLogin.ClientTypeName);
+                GuardLogin.ClientSite = _clientDataProvider.GetClientSites(clientType.Id).SingleOrDefault(z => z.Name == GuardLogin.ClientSiteName);
+
+                //GuardLogin.ClientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(z => z.Name == GuardLogin.ClientSiteName);
                 if (GuardLogin.IsNewGuard)
                 {
                     GuardLogin.Guard.Id = _guardDataProvider.SaveGuard(GuardLogin.Guard, out initalsUsed);

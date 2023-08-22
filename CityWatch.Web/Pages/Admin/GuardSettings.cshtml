@@ -128,10 +128,11 @@
                                 <div class="col-md-2">
                                     <input type="text" class="form-control" id="Guard_Initial" name="Guard.Initial">
                                 </div>
-                                <label class="col-md-1 col-form-label">Provider</label>
+                                <label class="col-md-1 col-form-label">Mobile</label>
                                 <div class="col-md-3">
-                                    <input type="text" class="form-control" id="Guard_Provider" name="Guard.Provider">
+                                    <input type="text" class="form-control" id="Guard_Mobile" name="Guard.Mobile" value="+61 4">
                                 </div>
+                                
                             </div>
                             <div class="form-group row">
                                 <label class="col-md-2 col-form-label">License No (Primary)</label>
@@ -142,11 +143,33 @@
                                 <div class="col-md-2">
                                     <select id="Guard_State" name="Guard.State" asp-items="@Model.ViewDataService.LicenseStates" class="form-control"></select>
                                 </div>
+                                <label class="col-md-1 col-form-label">Email</label>
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control" id="Guard_Email" name="Guard.Email">
+                                </div>
                             </div>
                             <div class="form-group row">
+                               
+                                <label class="col-md-2 form-check-label">RC Access</label>
+                                <div class="col-md-3">
+                                    <input type="checkbox" class="form-check" id="cbIsRCAccess">
+                                    <input type="hidden" id="Guard_IsRCAccess" name="Guard.IsRCAccess">
+                                </div>
+                                <label class="col-md-1 form-check-label">KPI Access</label>
+                                <div class="col-md-2">
+                                    <input type="checkbox" class="form-check" id="cbIsKPIAccess">
+                                    <input type="hidden" id="Guard_IsKPIAccess" name="Guard.IsKPIAccess">
+                                </div>
+                                <label class="col-md-1 col-form-label">Provider</label>
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control" id="Guard_Provider" name="Guard.Provider">
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
                                 <label class="col-md-2 form-check-label">Is Active</label>
-                                <div class="col-md-1">
-                                    <input type="checkbox" class="form-check col-md-4" id="cbIsActive">
+                                <div class="col-md-3">
+                                    <input type="checkbox" class="form-check" id="cbIsActive">
                                     <input type="hidden" id="Guard_IsActive" name="Guard.IsActive">
                                 </div>
                             </div>

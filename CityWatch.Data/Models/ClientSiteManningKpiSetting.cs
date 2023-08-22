@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Org.BouncyCastle.Asn1.Cms;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
@@ -24,12 +25,14 @@ namespace CityWatch.Data.Models
 
         public int? NoOfPatrols { get; set; }
 
-        public decimal? EmpHoursStart { get; set; }
+        public string EmpHoursStart { get; set; }
 
-        public decimal? EmpHoursEnd { get; set; }
+        public string EmpHoursEnd { get; set; }
 
         public string Type { get; set; }
         [NotMapped]
         public bool DefaultValue { get; set; }
+        
+        public int? OrderId { get; set; }
     }
 }
