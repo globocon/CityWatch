@@ -411,7 +411,8 @@ namespace CityWatch.Web.Pages.Guard
             if (guardLoginId == null)
                 throw new InvalidOperationException("Session timeout due to user inactivity. Failed to get guard details");
 
-            var clientSiteLogBook = _clientDataProvider.GetClientSiteLogBooks().SingleOrDefault(z => z.Id == logBookId && z.Type == LogBookType.VehicleAndKeyLog);
+            //var clientSiteLogBook = _clientDataProvider.GetClientSiteLogBooks().SingleOrDefault(z => z.Id == logBookId && z.Type == LogBookType.VehicleAndKeyLog);
+            var clientSiteLogBook = _clientDataProvider.GetClientSiteLogBooks(logBookId, LogBookType.VehicleAndKeyLog).SingleOrDefault();
             var guardLogin = _guardDataProvider.GetGuardLoginById(guardLoginId.Value);
             KeyVehicleLog ??= new KeyVehicleLog()
             {

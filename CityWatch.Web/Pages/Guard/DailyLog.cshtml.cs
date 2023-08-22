@@ -57,7 +57,8 @@ namespace CityWatch.Web.Pages.Guard
             ViewData["PreviousLogBookId"] = HttpContext.Session.GetInt32("PreviousLogBookId");
             ViewData["PreviousLogBookDateString"] = HttpContext.Session.GetString("PreviousLogBookDateString");
 
-            var clientSiteLogBook = _clientDataProvider.GetClientSiteLogBooks().SingleOrDefault(z => z.Id == logBookId && z.Type == LogBookType.DailyGuardLog);
+            //  var clientSiteLogBook = _clientDataProvider.GetClientSiteLogBooks().SingleOrDefault(z => z.Id == logBookId && z.Type == LogBookType.DailyGuardLog);
+            var clientSiteLogBook = _clientDataProvider.GetClientSiteLogBooks(logBookId, LogBookType.DailyGuardLog).SingleOrDefault();
             var guardLogin = _guardDataProvider.GetGuardLoginById(guardLoginId.Value);
             GuardLog ??= new GuardLog()
             {
