@@ -74,11 +74,13 @@ namespace CityWatch.Web.Pages.Guard
         public IViewDataService ViewDataService { get { return _viewDataService; } }
 
         public void OnGet()
-        {
-            var logBookId = HttpContext.Session.GetInt32("LogBookId");
-            var clientSiteLogBook = _clientDataProvider.GetClientSiteLogBooks().SingleOrDefault(z => z.Id == logBookId && z.Type == LogBookType.VehicleAndKeyLog);
+        {            
             KeyVehicleLog = GetKeyVehicleLog();
-            ViewData["IsDuressEnabled"] = _viewDataService.IsClientSiteDuressEnabled(clientSiteLogBook.ClientSiteId);
+            var logBookId = HttpContext.Session.GetInt32("LogBookId");
+            var clientSiteId = _clientDataProvider.GetClientSiteLogBooks(logBookId, LogBookType.VehicleAndKeyLog)
+                                .FirstOrDefault()?
+                                .ClientSiteId;
+            ViewData["IsDuressEnabled"] = clientSiteId != null && _viewDataService.IsClientSiteDuressEnabled(clientSiteId.Value);
         }
 
         public JsonResult OnGetKeyVehicleLogs(int logbookId, KvlStatusFilter kvlStatusFilter)

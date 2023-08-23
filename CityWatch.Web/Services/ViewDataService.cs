@@ -735,8 +735,7 @@ namespace CityWatch.Web.Services
 
         public void EnableClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId)
         {
-            var isEnabled = _guardLogDataProvider.GetClientSiteDuress(clientSiteId)?.IsEnabled ?? false;
-            if (!isEnabled)
+            if (!IsClientSiteDuressEnabled(clientSiteId))
             {
                 _guardLogDataProvider.SaveClientSiteDuress(clientSiteId, guardId);
                 _guardLogDataProvider.SaveGuardLog(new GuardLog()
