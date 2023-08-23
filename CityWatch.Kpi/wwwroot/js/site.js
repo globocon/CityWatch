@@ -1058,88 +1058,64 @@ $(function () {
                 $("input[name^='ClientSiteManningPatrolCarKpiSettings']").val("");
 
             }
+            else if (data.success ==5) {
+                alert('Please enter a valid time for Start and End. These are invalid times ' + data.erorrMessage+' .');
+                
+            }
            
         }).fail(function () { });
     });
-   
-    
+
     $('#div_site_settings').on('click', '#showDivButton', function () {
-        var selectedValueGuard = $("#ClientSiteManningGuardKpiSettings_1__PositionId").val();
-        var selectedValuePatrolCar = $("#ClientSiteManningPatrolCarKpiSettings_1__PositionId").val();
-        if (currentDiv === 1) {
-            $('#positionfilterGuard').prop('disabled', false);
-            $('#positionfilterPatrolCar').prop('disabled', false);
-            if (selectedValueGuard != "") {
-                $('#divGuard').show();
-                $('#divbtn').show();
-                $('#divPatrolCar').hide();
-            }
-            if (selectedValuePatrolCar != "") {
-                $('#divPatrolCar').show();
-                $('#divbtn').show();
-                $('#divGuard').hide();
-
-            }
-            if (selectedValueGuard != "" && selectedValuePatrolCar != "") {
-                $('#divPatrolCar').show();
-                $('#divGuard').show();
-                $('#divbtn').show();
-                $('#positionfilterGuard').prop('disabled', true);
-                $('#positionfilterPatrolCar').prop('disabled', true);
-            }
-            if (selectedValueGuard === "" && selectedValuePatrolCar === "") {
-                $('#divPatrolCar').hide();
-                $('#divGuard').show();
-                $('#divbtn').show();
-
-
-            }
-            currentDiv = 2;
-        } else {
-            $('#divPatrolCar').show();
-            $('#divGuard').show();
-            $('#divbtn').show();
-            $('#positionfilterGuard').prop('disabled', true);
-            $('#positionfilterPatrolCar').prop('disabled', true);
-            currentDiv = 1;
-        }
-
-
-    });
+        
+        $('#divPatrolCar').show();
+        $('#divbtn').show();
+   });
+    
+   
 
     $('#div_site_settings').on('change', '#positionfilterGuard', function () {
-        const isChecked = $(this).is(':checked');
-        const filter = isChecked ? 1 : 2;
-        if (filter == 2) {
-            $("#divGuard").show();
-            $("#divPatrolCar").hide();
-            $('#positionfilterGuard').prop('checked', false);
-            $('#positionfilterPatrolCar').prop('checked', true);
 
-        } else {
-            $("#divGuard").hide();
-            $("#divPatrolCar").show();
-            $('#positionfilterGuard').prop('checked', false);
-            $('#positionfilterPatrolCar').prop('checked', true);
-        }
+        const isChecked = $(this).is(':checked');
+        const filter = isChecked ? 1 : 2;      
+       
+        $.ajax({
+            url: '/admin/settings?handler=OfficerPositions&filter=' + filter,
+            type: 'GET',
+            dataType: 'json'
+        }).done(function (data) {
+            $('#Report_Officer_Position').html('');
+            data.map(function (position) {
+                $('#Report_Officer_Position').append('<option value="' + position.value + '">' + position.text + '</option>');
+            });
+        });
+        
     });
 
     $('#div_site_settings').on('change', '#positionfilterPatrolCar', function () {
+
         const isChecked = $(this).is(':checked');
         const filter = isChecked ? 1 : 2;
-
-        if (filter == 2) {
-            $("#divGuard").show();
-            $("#divPatrolCar").hide();
-            $('#positionfilterGuard').prop('checked', false);
-            $('#positionfilterPatrolCar').prop('checked', true);
-
-        } else {
-            $("#divGuard").hide();
-            $("#divPatrolCar").show();
-            $('#positionfilterGuard').prop('checked', false);
-            $('#positionfilterPatrolCar').prop('checked', true);
-        }
+        if (filter === 1) { $("#lbl_ManningPatrolCar_3").text("No of Patrols"); }
+        else { $("#lbl_ManningPatrolCar_3").text("Workers"); }
+        $("#ClientSiteManningPatrolCarKpiSettings_0__Type").val(filter);
+        $("#ClientSiteManningPatrolCarKpiSettings_1__Type").val(filter);
+        $("#ClientSiteManningPatrolCarKpiSettings_2__Type").val(filter);
+        $("#ClientSiteManningPatrolCarKpiSettings_3__Type").val(filter);
+        $("#ClientSiteManningPatrolCarKpiSettings_4__Type").val(filter);
+        $("#ClientSiteManningPatrolCarKpiSettings_5__Type").val(filter);
+        $("#ClientSiteManningPatrolCarKpiSettings_6__Type").val(filter);
+        $.ajax({
+            url: '/admin/settings?handler=OfficerPositions&filter=' + filter,
+            type: 'GET',
+            dataType: 'json'
+        }).done(function (data) {
+            $('#ClientSiteManningPatrolCarKpiSettings_1__PositionId').html('');
+            data.map(function (position) {
+                $('#ClientSiteManningPatrolCarKpiSettings_1__PositionId').append('<option value="' + position.value + '">' + position.text + '</option>');
+            });
+        });
+       
     });
    
     $('#search_kw_client_site').on('keyup', function (event) {

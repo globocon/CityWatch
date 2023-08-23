@@ -68,6 +68,8 @@ namespace CityWatch.Data.Models
         [Column("PurposeOfEntry")]
         public string Product { get; set; }
 
+        [NotMapped]
+        public string ProductOther { get; set; }
         public decimal? InWeight { get; set; }
 
         public decimal? OutWeight { get; set; }

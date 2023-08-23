@@ -1,9 +1,11 @@
 ﻿using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
+using iText.Layout.Element;
 using iText.StyledXmlParser.Jsoup.Safety;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Org.BouncyCastle.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,9 +16,13 @@ namespace CityWatch.Data.Providers
 {
     public enum OfficerPositionFilterForManning
     {
+        All = 0,
+
         PatrolOnly = 1,
 
-        SecurityOnly = 2
+        NonPatrolOnly = 2,
+
+        SecurityOnly = 3
     }
     public interface IClientDataProvider
     {
@@ -36,11 +42,13 @@ namespace CityWatch.Data.Providers
         ClientSiteKpiNote GetClientSiteKpiNote(int id);
         int SaveClientSiteKpiNote(ClientSiteKpiNote note);
         List<ClientSiteLogBook> GetClientSiteLogBooks();
+        List<ClientSiteLogBook> GetClientSiteLogBooks(int? logBookId, LogBookType type);
         List<ClientSiteLogBook> GetClientSiteLogBooks(int clientSiteId, LogBookType type, DateTime fromDate, DateTime toDate);
         ClientSiteLogBook GetClientSiteLogBook(int clientSiteId, LogBookType type, DateTime date);
         int SaveClientSiteLogBook(ClientSiteLogBook logBook);
         void MarkClientSiteLogBookAsUploaded(int logBookId, string fileName);
         void SetDataCollectionStatus(int clientSiteId, bool enabled);
+        string ValidDateTime(ClientSiteKpiSetting setting);
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -193,8 +201,11 @@ namespace CityWatch.Data.Providers
                 .SingleOrDefault(x => x.ClientSiteId == clientSiteId);
             if (clientSiteKpiSetting != null)
             {
-                clientSiteKpiSetting.ClientSiteManningGuardKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id && x.Type == ((int)OfficerPositionFilterForManning.SecurityOnly).ToString()).OrderBy(x => ((int)x.WeekDay + 6) % 7).ToList();
-                clientSiteKpiSetting.ClientSiteManningPatrolCarKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id && x.Type == ((int)OfficerPositionFilterForManning.PatrolOnly).ToString()).OrderBy(x => ((int)x.WeekDay + 6) % 7 ).ToList();
+
+                
+
+                clientSiteKpiSetting.ClientSiteManningGuardKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id).OrderBy(x => x.OrderId).ThenBy(x => ((int)x.WeekDay + 6) % 7).ToList();
+
             }
             return clientSiteKpiSetting;
         }
@@ -375,30 +386,45 @@ namespace CityWatch.Data.Providers
                 {
                     if (setting.ClientSiteManningGuardKpiSettings.Any() || setting.ClientSiteManningPatrolCarKpiSettings.Any())
                     {
-                        var entityStateforGuard = !_context.ClientSiteManningKpiSettings.Any(x => x.SettingsId == setting.Id && x.Type == ((int)OfficerPositionFilterForManning.SecurityOnly).ToString()) ? EntityState.Added : EntityState.Modified;
-                        var entityStateforpatrolcar = !_context.ClientSiteManningKpiSettings.Any(x => x.SettingsId == setting.Id && x.Type == ((int)OfficerPositionFilterForManning.PatrolOnly).ToString()) ? EntityState.Added : EntityState.Modified;
-                        var positionIdGuard = setting.ClientSiteManningGuardKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
-                        var positionIdPatrolCar = setting.ClientSiteManningPatrolCarKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
-                        if (positionIdGuard != null || positionIdPatrolCar != null)
-                        {
-                            //ClientSiteManningKpi Guard Add and Update
-                            if (positionIdGuard != null)
-                            {
-                                //set the values for SettingsId and PositionId
-                                setting.ClientSiteManningGuardKpiSettings.ForEach(x => { x.Type = ((int)OfficerPositionFilterForManning.SecurityOnly).ToString(); x.SettingsId = setting.Id; x.PositionId = positionIdGuard.PositionId; });
-                                if (entityStateforGuard == EntityState.Added)
-                                {
-                                    if (setting.ClientSiteManningGuardKpiSettings.Any() && setting.ClientSiteManningGuardKpiSettings != null)
-                                    {
 
-                                        _context.ClientSiteManningKpiSettings.AddRange(setting.ClientSiteManningGuardKpiSettings);
+                        if (setting.ClientSiteManningPatrolCarKpiSettings.Count > 0)
+                        {
+                            if (setting.ClientSiteManningPatrolCarKpiSettings.Where(x => x.DefaultValue == false).Count() > 0)
+                            {
+                                var positionIdPatrolCar = setting.ClientSiteManningPatrolCarKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
+                                //set the values for SettingsId and PositionId                       
+                                if (positionIdPatrolCar != null)
+                                {
+                                    int? maxId = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == setting.Id).Any() ? _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == setting.Id).Max(item => item.OrderId) : 0;
+                                    setting.ClientSiteManningPatrolCarKpiSettings.ForEach(x => { x.SettingsId = setting.Id; x.PositionId = positionIdPatrolCar.PositionId; x.OrderId = maxId + 1; });
+                                    if (setting.ClientSiteManningPatrolCarKpiSettings.Any())
+                                    {
+                                        _context.ClientSiteManningKpiSettings.AddRange(setting.ClientSiteManningPatrolCarKpiSettings);
                                         _context.SaveChanges();
                                         success = 1;
+                                    }
+
+                                }
+                                
+
+                            }
+
+                        }
+
+                        if (setting.ClientSiteManningGuardKpiSettings.Count > 0)
+                        {
+                            if (setting.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == false).Count() > 0)
+                            {
+                                var positionIdGuard = setting.ClientSiteManningGuardKpiSettings.Where(x => x.PositionId != 0).ToList();                                
+                                if (positionIdGuard != null)
+                                {
+                                    foreach (var poId in positionIdGuard)
+                                    {
+                                        if(poId!=null)
+                                        setting.ClientSiteManningGuardKpiSettings.Where(x=>x.OrderId== poId.OrderId).ToList().ForEach(x => { x.SettingsId = setting.Id;x.PositionId = poId.PositionId; });
 
                                     }
-                                }
-                                else
-                                {
+
                                     if (setting.ClientSiteManningGuardKpiSettings.Any() && setting.ClientSiteManningGuardKpiSettings != null)
                                     {
                                         _context.ClientSiteManningKpiSettings.UpdateRange(setting.ClientSiteManningGuardKpiSettings);
@@ -406,31 +432,15 @@ namespace CityWatch.Data.Providers
                                         success = 1;
                                     }
                                 }
-                            }
-                            if (positionIdPatrolCar != null)
-                            {   //ManningPatrolCar Add and Update
-                                //set the values for SettingsId and PositionId
-                                setting.ClientSiteManningPatrolCarKpiSettings.ForEach(x => { x.Type = ((int)OfficerPositionFilterForManning.PatrolOnly).ToString(); x.SettingsId = setting.Id; x.PositionId = positionIdPatrolCar.PositionId; });
-
-                                if (entityStateforpatrolcar == EntityState.Added)
-                                {
-                                    if (setting.ClientSiteManningPatrolCarKpiSettings.Any())
-                                    {
-                                        _context.ClientSiteManningKpiSettings.AddRange(setting.ClientSiteManningPatrolCarKpiSettings);
-                                        _context.SaveChanges();
-                                        success = 1;
-                                    }
-                                }
                                 else
                                 {
-                                    if (setting.ClientSiteManningPatrolCarKpiSettings.Any() && setting.ClientSiteManningPatrolCarKpiSettings != null)
-                                    {
-                                        _context.ClientSiteManningKpiSettings.UpdateRange(setting.ClientSiteManningPatrolCarKpiSettings);
-                                        _context.SaveChanges();
-                                        success = 1;
-                                    }
+
+                                    return 3;
                                 }
+
                             }
+
+
                         }
                     }
                 }
@@ -442,6 +452,74 @@ namespace CityWatch.Data.Providers
             }
             return success;
         }
+
+        public string ValidDateTime(ClientSiteKpiSetting setting)
+        {
+            var InvalidInputs = string.Empty;
+            if (setting != null)
+            {
+                foreach (var listItem in setting.ClientSiteManningGuardKpiSettings)
+                {
+                    if (listItem.EmpHoursStart != null)
+                    {
+                        if (!IsValidTimeFormat(listItem.EmpHoursStart))
+                        {
+                            InvalidInputs = InvalidInputs + listItem.EmpHoursStart + ",";
+
+                        }
+
+                    }
+                    if (listItem.EmpHoursEnd != null)
+                    {
+                        if (!IsValidTimeFormat(listItem.EmpHoursEnd))
+                        {
+                            InvalidInputs = InvalidInputs + listItem.EmpHoursEnd + ",";
+
+                        }
+
+                    }
+
+
+
+                }
+
+                foreach (var listItem2 in setting.ClientSiteManningPatrolCarKpiSettings)
+                {
+                    if (listItem2.EmpHoursStart != null)
+                    {
+                        if (!IsValidTimeFormat(listItem2.EmpHoursStart))
+                        {
+                            InvalidInputs = InvalidInputs + listItem2.EmpHoursStart + ",";
+
+                        }
+
+                    }
+                    if (listItem2.EmpHoursEnd != null)
+                    {
+                        if (!IsValidTimeFormat(listItem2.EmpHoursStart))
+                        {
+                            InvalidInputs = InvalidInputs + listItem2.EmpHoursStart + ",";
+
+                        }
+
+                        if (!IsValidTimeFormat(listItem2.EmpHoursEnd))
+                        {
+                            InvalidInputs = InvalidInputs + listItem2.EmpHoursEnd + ",";
+
+                        }
+
+                    }
+
+                }
+
+            }
+            return InvalidInputs.TrimEnd(',');
+        }
+        public bool IsValidTimeFormat(string input)
+        {
+            TimeSpan dummyOutput;
+            return TimeSpan.TryParse(input, out dummyOutput);
+        }
         public List<ClientSite> GetNewClientSites()
         {
             return _context.ClientSites
@@ -452,5 +530,16 @@ namespace CityWatch.Data.Providers
                 .ToList();
 
         }
+        public List<ClientSiteLogBook> GetClientSiteLogBooks(int? logBookId, LogBookType type)
+        {
+            return _context.ClientSiteLogBooks
+                .Where(z => z.Id == logBookId && z.Type == type)
+                .Include(x => x.ClientSite)
+                .Include(x => x.ClientSite.ClientType)
+                .ToList();
+        }
+
+       
+
     }
 }
