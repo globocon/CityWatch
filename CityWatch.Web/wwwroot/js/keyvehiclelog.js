@@ -395,7 +395,8 @@ $(function () {
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (result) {
             if (result.status) {
-                $('#kv_duress_image').attr("src", '/images/DuressButton.jpg');
+                $('#kv_duress_btn').removeClass('normal').addClass('active');
+                $("#kv_duress_status").addClass('font-weight-bold');
                 $("#kv_duress_status").text("Active");
             }
         });

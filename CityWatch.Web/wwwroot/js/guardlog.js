@@ -648,7 +648,7 @@
                 }).fail(function () {
                     console.log('error');
                 });
-            } else {
+            } else {    
                 gridGuardLog.clear();
                 gridGuardLog.reload();
             }
@@ -956,7 +956,8 @@
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (result) {
             if (result.status) {
-                $('#duress_image').attr("src", '/images/DuressButton.jpg');
+                $('#duress_btn').removeClass('normal').addClass('active');
+                $("#duress_status").addClass('font-weight-bold');
                 $("#duress_status").text("Active");
             }           
             gridGuardLog.clear();
