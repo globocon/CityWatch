@@ -466,7 +466,14 @@ namespace CityWatch.Web.Pages.Guard
             var message = "Success";
             try
             {
-                _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logBookId, guardId);
+                var logbookId = _clientDataProvider.GetClientSiteLogBook(clientSiteId, LogBookType.DailyGuardLog, DateTime.Today)?.Id;
+                logbookId ??= _clientDataProvider.SaveClientSiteLogBook(new ClientSiteLogBook()
+                    {
+                        ClientSiteId = clientSiteId,
+                        Type = LogBookType.DailyGuardLog,
+                        Date = DateTime.Today
+                    });
+                _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logbookId.Value, guardId);
             }
             catch (Exception ex)
             {
