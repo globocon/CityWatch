@@ -67,6 +67,8 @@ namespace CityWatch.Web.Pages.Guard
                 GuardLoginId = guardLoginId.Value,
                 GuardLogin = guardLogin,
             };
+
+            ViewData["IsDuressEnabled"] = _viewDataService.IsClientSiteDuressEnabled(clientSiteLogBook.ClientSiteId);
         }
 
         public JsonResult OnGetGuardLogs(int logBookId, DateTime? logBookDate)
@@ -249,7 +251,7 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     if (record.Value != null)
                     {
-                        var customFieldLog = customFieldLogs.SingleOrDefault(x => x.ClientSiteCustomField.Name.Equals(record.Key) && 
+                        var customFieldLog = customFieldLogs.SingleOrDefault(x => x.ClientSiteCustomField.Name.Equals(record.Key) &&
                                                                 x.ClientSiteCustomField.TimeSlot.Equals(timeSlot));
                         if (customFieldLog != null)
                         {
@@ -328,6 +330,22 @@ namespace CityWatch.Web.Pages.Guard
             }
 
             return new JsonResult(new { success = false, message = exMessage.ToString() });
+        }
+
+        public JsonResult OnPostSaveClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logBookId, guardId);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+            return new JsonResult(new { status, message });
         }
     }
 }

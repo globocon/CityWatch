@@ -74,8 +74,13 @@ namespace CityWatch.Web.Pages.Guard
         public IViewDataService ViewDataService { get { return _viewDataService; } }
 
         public void OnGet()
-        {
+        {            
             KeyVehicleLog = GetKeyVehicleLog();
+            var logBookId = HttpContext.Session.GetInt32("LogBookId");
+            var clientSiteId = _clientDataProvider.GetClientSiteLogBooks(logBookId, LogBookType.VehicleAndKeyLog)
+                                .FirstOrDefault()?
+                                .ClientSiteId;
+            ViewData["IsDuressEnabled"] = clientSiteId != null && _viewDataService.IsClientSiteDuressEnabled(clientSiteId.Value);
         }
 
         public JsonResult OnGetKeyVehicleLogs(int logbookId, KvlStatusFilter kvlStatusFilter)
@@ -453,6 +458,29 @@ namespace CityWatch.Web.Pages.Guard
                 message = ex.Message;
             }
             return new JsonResult(new { success, message, kvlProfileId });
+        }
+
+        public JsonResult OnPostSaveClientSiteDuress(int clientSiteId, int guardId, int guardLoginId, int logBookId)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                var logbookId = _clientDataProvider.GetClientSiteLogBook(clientSiteId, LogBookType.DailyGuardLog, DateTime.Today)?.Id;
+                logbookId ??= _clientDataProvider.SaveClientSiteLogBook(new ClientSiteLogBook()
+                    {
+                        ClientSiteId = clientSiteId,
+                        Type = LogBookType.DailyGuardLog,
+                        Date = DateTime.Today
+                    });
+                _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logbookId.Value, guardId);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+            return new JsonResult(new { status, message });
         }
 
         private async Task UploadToDropbox(int clientSiteId, string fileName)
