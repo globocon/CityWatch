@@ -109,7 +109,7 @@ namespace CityWatch.Data.Providers
         {
             return _context.ClientSiteDuress
                 .Where(z => z.ClientSiteId == clientSiteId)
-                .OrderBy(z => z.EnabledDate)
+                .OrderBy(z => z.Id)
                 .LastOrDefault();
         }
 
