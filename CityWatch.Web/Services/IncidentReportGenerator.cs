@@ -33,6 +33,7 @@ namespace CityWatch.Web.Services
     public interface IIncidentReportGenerator
     {
         string GeneratePdf(IncidentRequest incidentReport, ClientSite clientSite);
+
     }
 
     public class IncidentReportGenerator : IIncidentReportGenerator
@@ -90,7 +91,7 @@ namespace CityWatch.Web.Services
         public string GeneratePdf(IncidentRequest incidentReport, ClientSite clientSite)
         {
             _IncidentReport = incidentReport;
-            _clientSite = clientSite;            
+            _clientSite = clientSite;
             _UploadRootDir = IO.Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", incidentReport.ReportReference);
 
             var editableFields = PdfFormHelper.GetPdfFormFields();
@@ -112,12 +113,12 @@ namespace CityWatch.Web.Services
             PdfDocument pdfDocument = new PdfDocument(new PdfReader(_TemplatePdf), new PdfWriter(reportPdf));
 
             PdfAcroForm acroForm = PdfAcroForm.GetAcroForm(pdfDocument, false);
-            
+
             acroForm.GetField("IR-NO9").SetValue("", false);
             acroForm.GetField("IR-NO").SetValue("", false);
             acroForm.GetField("IR-NO-BC").SetValue("", false);
-           
-           
+
+
 
             foreach (var field in editableFields)
             {
@@ -203,13 +204,25 @@ namespace CityWatch.Web.Services
                 {
                     var siteImageUrl = GetSiteImage(_clientSite.Id);
                     AttachClientSiteImage(pdfDocument, siteImageUrl);
-                }                
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.StackTrace);
             }
-
+            try
+            {
+                //if (_clientSite != null)
+                //{
+                //    var siteImageUrl = GetSiteImage(_clientSite.Id);
+                //AttachClientSiteImage(pdfDocument, siteImageUrl);
+                AttachKvlDetails(pdfDocument, "3");
+                //}
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.StackTrace);
+            }
             pdfDocument.Close();
 
             return reportFileName;
@@ -414,7 +427,18 @@ namespace CityWatch.Web.Services
             SetImageObject(pdfDocument.GetFirstPage().GetPdfObject(), IMG_REF_PAGE_1, siteImageUrl);
             SetImageObject(pdfDocument.GetLastPage().GetPdfObject(), IMG_REF_PAGE_2, siteImageUrl);
         }
+        
+          private void AttachKvlDetails(PdfDocument pdfDocument, string data)
+        {
+            
 
+            if (string.IsNullOrEmpty(data))
+                return;
+            var index = 3;
+            var pageSize = new PageSize(pdfDocument.GetFirstPage().GetPageSize());
+            pdfDocument.AddNewPage(index, pageSize);
+            
+        }
         private static void SetImageObject(PdfDictionary pagePdfDict, string imgReference, string siteImageUrl)
         {
             PdfDictionary resources = pagePdfDict.GetAsDictionary(PdfName.Resources);

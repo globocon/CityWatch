@@ -1332,4 +1332,11 @@
         }
         return true;
     }
+    $('#register_plate_loaded').on('click', 'button[id=btn_delete_plate]', function () {
+       
+        
+        
+        $(this).closest("tr").remove();
+        return false;
+    });
 });
