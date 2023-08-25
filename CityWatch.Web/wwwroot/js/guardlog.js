@@ -648,7 +648,7 @@
                 }).fail(function () {
                     console.log('error');
                 });
-            } else {
+            } else {    
                 gridGuardLog.clear();
                 gridGuardLog.reload();
             }
@@ -943,6 +943,28 @@
         $('#auditlog-zip-modal').modal('show');
     });
 
+    $('#duress_btn').on('click', function () {
+        $.ajax({
+            url: '/Guard/DailyLog?handler=SaveClientSiteDuress',
+            data: {
+                clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
+                guardLoginId: $('#GuardLog_GuardLoginId').val(),
+                logBookId: $('#GuardLog_ClientSiteLogBookId').val(),
+                guardId: $('#GuardLog_GuardLogin_GuardId').val(),
+            },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.status) {
+                $('#duress_btn').removeClass('normal').addClass('active');
+                $("#duress_status").addClass('font-weight-bold');
+                $("#duress_status").text("Active");
+            }           
+            gridGuardLog.clear();
+            gridGuardLog.reload();
+        });
+    });
+
     //Vehicle key Log
 
     $('#btn_reset_vklfilter').on('click', function () {
@@ -1183,7 +1205,7 @@
 
     function settingsButtonRenderer(value, record) {
         return '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#gl-site-settings-modal" ' +
-            'data-cs-id="' + record.id + '" data-cs-email="' + record.siteEmail + '" data-cs-landline="' + record.landLine +
+            'data-cs-id="' + record.id + '" data-cs-email="' + record.siteEmail + '" data-cs-landline="' + record.landLine + '" data-cs-duressemail="' + record.duressEmail + '" data-cs-duresssms="' + record.duressSms +
             '" data-cs-guardlog-emailto="' + record.guardLogEmailTo + '" data-cs-dbx-upload="' + record.siteUploadDailyLog +
             '" data-cs-name="' + record.clientSiteName + '"data-cs-datacollection-enabled ="' + record.dataCollectionEnabled + '"><i class="fa fa-pencil mr-2"></i>Edit</button>';
     }
@@ -1193,6 +1215,8 @@
         const siteId = button.data('cs-id');
         const siteName = button.data('cs-name');
         const siteEmail = button.data('cs-email');
+        const duressEmail = button.data('cs-duressemail');
+        const duressSms = button.data('cs-duresssms');
         const landLine = button.data('cs-landline');
         const isDataCollectionEnabled = button.data('cs-datacollection-enabled');
 
@@ -1203,6 +1227,8 @@
         $('#ClientSiteKey_ClientSiteId').val(siteId);
         $('#ClientSiteCustomField_ClientSiteId').val(siteId);
         $('#gs_site_email').val(siteEmail);
+        $('#gs_duress_email').val(duressEmail);
+        $('#gs_duress_sms').val(duressSms);
         $('#gs_land_line').val(landLine);
         $('#gs_email_recipients').val(guardLogEmailTo);
         $('#enableLogDump').prop('checked', false);
@@ -1513,7 +1539,9 @@
                 siteEmail: $('#gs_site_email').val(),
                 enableLogDump: isUpdateDailyLog,
                 landLine: $('#gs_land_line').val(),
-                guardEmailTo: $('#gs_email_recipients').val()
+                guardEmailTo: $('#gs_email_recipients').val(),
+                duressEmail: $('#gs_duress_email').val(),
+                duressSms: $('#gs_duress_sms').val()
             },
             headers: { 'RequestVerificationToken': token }
         }).done(function () {

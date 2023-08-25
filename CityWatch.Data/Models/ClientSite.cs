@@ -37,6 +37,10 @@ namespace CityWatch.Data.Models
 
         public string LandLine { get; set; }
 
+        public string DuressEmail { get; set; }
+
+        public string DuressSms { get; set; }
+
         public bool UploadGuardLog { get; set; }
 
         public string GuardLogEmailTo { get; set; }
