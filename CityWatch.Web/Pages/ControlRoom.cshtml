@@ -8,7 +8,83 @@
 <div class="m-auto p-5">
     <h3 class="text-center">Citywatch Control Room</h3>
 </div>
+
+@*Rc Guard login Conformation Popup*@
+<div id="modelGuardLoginConRc" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    Guard Access permission for Radio Checklist (RC)
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <form id="frm_GuardLogin" method="post">
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <div class="input-group">
+                                    <label class="mt-2 mr-2">Security License No</label><br />
+                                    <input class="form-control" type="text" id="txt_securityLicenseNoRC">
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-primary" id="btnGuardLoginRC" title="Get guard details"><i class="fa fa-sign-in mr-2"></i><span class="d-none d-md-inline-flex">Get access permission</span></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left">
+                    <p id="Access_permission_RC_status" class="mb-0 py-2" style="display:none"></p>
+                    <div asp-validation-summary="All" id="GuardLoginValidationSummaryRC"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@*KPI Guard login Conformation Popup*@
+<div id="modelGuardLoginCon" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    Guard Access permission for Telematics (KPI)
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <form id="frm_GuardLogin" method="post">
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <div class="input-group">
+                                    <label class="mt-2 mr-2">Security License No</label><br />
+                                    <input class="form-control" type="text" id="txt_securityLicenseNo">
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-primary" id="btnGuardLogin" title="Get guard details"><i class="fa fa-sign-in mr-2"></i><span class="d-none d-md-inline-flex">Get access permission</span></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer"  style="display:block">
+                <div class="text-left">
+                <div asp-validation-summary="All" id="GuardLoginValidationSummary"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <partial name="_Slogan" />
 @section PageHeader {
-    <h3 class="text-center">CONTROL ROOM</h3>    
+    <h3 class="text-center">CONTROL ROOM</h3>
 }

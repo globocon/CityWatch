@@ -4,6 +4,7 @@ using CityWatch.Web.Helpers;
 using CityWatch.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 
@@ -11,14 +12,14 @@ namespace CityWatch.Web.Pages.Radio
 {
     public class CheckModel : PageModel
     {
-        public readonly IClientSiteRadioStatusDataProvider _radioStatusDataProvider;        
+        public readonly IClientSiteRadioStatusDataProvider _radioStatusDataProvider;
         private readonly IClientSiteActivityStatusDataProvider _clientSiteActivityStatusDataProvider;
         private readonly IRadioCheckViewDataService _radioCheckViewDataService;
         private readonly IClientSiteViewDataService _clientViewDataService;
 
         public CheckModel(IClientSiteRadioStatusDataProvider radioStatusDataProvider,
-            IClientSiteActivityStatusDataProvider clientSiteActivityStatusDataProvider, 
-            IRadioCheckViewDataService radioCheckViewDataService, 
+            IClientSiteActivityStatusDataProvider clientSiteActivityStatusDataProvider,
+            IRadioCheckViewDataService radioCheckViewDataService,
             IClientSiteViewDataService clientViewDataService)
         {
             _radioStatusDataProvider = radioStatusDataProvider;
@@ -29,12 +30,24 @@ namespace CityWatch.Web.Pages.Radio
 
         public ActionResult OnGet()
         {
-            if (!AuthUserHelper.IsAdminUserLoggedIn)
-                return Redirect(Url.Page("/Account/Unauthorized"));
 
-            _radioCheckViewDataService.ResetClientSiteActivityStatus();
-            
-            return Page();
+
+            if (AuthUserHelper.IsAdminUserLoggedIn)
+            {
+                _radioCheckViewDataService.ResetClientSiteActivityStatus();
+
+                return Page();
+            }
+            else if (AuthUserHelper.LoggedInUserId == null)
+            {
+                return Redirect(Url.Page("/Account/Unauthorized"));
+            }
+            else
+            {
+                _radioCheckViewDataService.ResetClientSiteActivityStatus();
+
+                return Page();
+            }
         }
 
         public IActionResult OnGetClientSites(string type)

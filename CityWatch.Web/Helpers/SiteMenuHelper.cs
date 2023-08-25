@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using CityWatch.Web.Helpers;
 
 namespace CityWatch.Web.Helpers
 {
@@ -80,7 +81,14 @@ namespace CityWatch.Web.Helpers
             if (pageName == PageNameHelper.ControlRoom)
             {
                 menuHtml.AppendLine("<div>");
-                menuHtml.AppendLine(@"<a href=""/Radio/Check"" class=""nav-link py-0""><i class=""fa fa-user mr-2""></i>Radio Checklist (RC)</a>");
+                if (!AuthUserHelper.IsAdminUserLoggedIn)
+                {   /* Check the guard Login Conformation*/
+                    menuHtml.AppendLine(@"<a href=""/Radio/Check"" id=""LoginConformationBtnRC"" class=""nav-link py-0""><i class=""fa fa-user mr-2""></i>Radio Checklist (RC)</a>");
+                }
+                else
+                {
+                    menuHtml.AppendLine(@"<a href=""/Radio/Check"" class=""nav-link py-0"" ><i class=""fa fa-user mr-2""></i>Radio Checklist (RC)</a>");
+                }
                 menuHtml.AppendLine("</div>");
             }
 
@@ -95,7 +103,16 @@ namespace CityWatch.Web.Helpers
             {
                 var kpiWebUrl = IsDevEnv ? string.Empty : "//kpi.cws-ir.com";
                 menuHtml.AppendLine("<div>");
-                menuHtml.AppendFormat(@"<a href=""{0}"" class=""nav-link py-0"" target=""_blank""><i class=""fa fa-bar-chart mr-2""></i>Telematics (KPI)</a>", kpiWebUrl).AppendLine();
+                if (!AuthUserHelper.IsAdminUserLoggedIn)
+                {   /* Check the guard Login Conformation*/
+                    menuHtml.AppendFormat(@"<a href=""{0}"" class=""nav-link py-0"" id=""LoginConformationBtnKPI"" target=""_blank""><i class=""fa fa-bar-chart mr-2""></i>Telematics (KPI)</a>", string.Empty).AppendLine();
+
+                }
+                else
+                {
+                    menuHtml.AppendFormat(@"<a href=""{0}"" class=""nav-link py-0"" target=""_blank""><i class=""fa fa-bar-chart mr-2""></i>Telematics (KPI)</a>", kpiWebUrl).AppendLine();
+
+                }
                 menuHtml.AppendLine("</div>");
             }
 
