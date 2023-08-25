@@ -1,6 +1,10 @@
 ﻿@using Microsoft.AspNetCore.Hosting
 @using Microsoft.Extensions.Hosting
+@using System.Security.Claims;
 @inject IWebHostEnvironment environment
+@{
+    var claimsIdentity = User.Identity as ClaimsIdentity;
+}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -52,10 +56,22 @@
                         <a href="@(environment.IsDevelopment() ? "" : "https://cws-ir.com/")" class="nav-link py-0" target="_blank"><i class="fa fa-home mr-2"></i>Home Page</a>
                     </div>
                     <div>
-                        <a asp-page="/Kpi/Dashboard" class="nav-link py-0"><i class="fa fa-bar-chart mr-2"></i>KPI Dashboard</a>
+                        @if (claimsIdentity != null && claimsIdentity.IsAuthenticated)
+                        {/* Only admin*/
+                            <a asp-page="/Kpi/Dashboard" class="nav-link py-0"><i class="fa fa-bar-chart mr-2"></i>KPI Dashboard</a>
+                        }
+                        else
+                        {/* Only Guard*/
+                            <a href="#" class="nav-link py-0"><i class="fa fa-bar-chart mr-2"></i>KPI Dashboard</a>
+                        }
+
                     </div>
                     <div>
-                        <a asp-page="/Admin/Settings" class="nav-link py-0"><i class="fa fa-cog mr-2"></i>KPI Settings</a>
+                        @if (claimsIdentity != null && claimsIdentity.IsAuthenticated)
+                        {/* Only admin User can see KPI Settings*/
+                            <a asp-page="/Admin/Settings" class="nav-link py-0"><i class="fa fa-cog mr-2"></i>KPI Settings</a>
+
+                        }
                     </div>
                 </div>
             </div>

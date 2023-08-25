@@ -815,11 +815,11 @@
 
     $('#dglClientType').on('change', function () {
         const clientTypeId = $(this).val();
-        const clientSiteControl = $('#dglClientSiteId');  
+        const clientSiteControl = $('#dglClientSiteId');
         var selectedOption = $(this).find("option:selected");
-        var selectedText = selectedOption.text();       
+        var selectedText = selectedOption.text();
         $("#vklClientType").val(selectedText);
-        $("#vklClientType").multiselect("refresh");        
+        $("#vklClientType").multiselect("refresh");
         gridsiteLog.clear();
 
         const clientSiteControlvkl = $('#vklClientSiteId');
@@ -844,16 +844,16 @@
             }
         });
 
-        
+
     });
 
 
-    $('#dglClientSiteId').on('change', function () { 
-        const clientTypeId = $(this).val();       
+    $('#dglClientSiteId').on('change', function () {
+        const clientTypeId = $(this).val();
         $("#vklClientSiteId").val(clientTypeId);
         $("#vklClientSiteId").multiselect("refresh");
-       
-      
+
+
 
 
     });
@@ -1870,7 +1870,7 @@
         $('.btn-add-guard-addl-details').show();
 
         var data = guardSettings.row($(this).parents('tr')).data();
-      
+
         $('#Guard_Name').val(data.name);
         $('#Guard_SecurityNo').val(data.securityNo);
         $('#Guard_Initial').val(data.initial);
@@ -2453,6 +2453,89 @@
             $('#upload_compliance_file').val('');
         });
     });
+
+    $("#LoginConformationBtnRC").on('click', function () {
+        $('#txt_securityLicenseNoRC').val('');
+        clearGuardValidationSummary('GuardLoginValidationSummaryRC');
+        $("#modelGuardLoginConRc").modal("show");
+        return false;
+    });
+
+    $('#btnGuardLoginRC').on('click', function () {
+        $('#Access_permission_RC_status').hide();
+        const securityLicenseNo = $('#txt_securityLicenseNoRC').val();
+        if (securityLicenseNo === '') {
+            displayGuardValidationSummary('GuardLoginValidationSummaryRC', 'Please enter the security license No ');
+        }
+        else {
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+                type: 'POST',
+                data: {
+                    securityLicenseNo: securityLicenseNo,
+                    type: 'RC'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.accessPermission) {
+                    $('#txt_securityLicenseNoRC').val('');
+                    $('#modelGuardLoginConRC').modal('hide');
+                    clearGuardValidationSummary('GuardLoginValidationSummaryRC');
+                    $('#Access_permission_RC_status').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Redirecting to Radio Checklist (RC). Please wait...').show();
+                    window.location.href = '/Radio/Check';
+                    
+                }
+                else {
+                    $('#txt_securityLicenseNoRC').val('');
+                    if (result.successCode === 0) {
+                        displayGuardValidationSummary('GuardLoginValidationSummaryRC', result.successMessage);
+                    }
+                }
+            });
+
+        }
+    });
+    /* Show login conformation popup for KPI */
+    $("#LoginConformationBtnKPI").on('click', function () {
+        clearGuardValidationSummary('GuardLoginValidationSummary');
+        $('#txt_securityLicenseNo').val('');
+        $("#modelGuardLoginCon").modal("show");
+        return false;
+    });
+    /* Check if Guard can access the KPI */
+    $('#btnGuardLogin').on('click', function () {
+        const securityLicenseNo = $('#txt_securityLicenseNo').val();
+        if (securityLicenseNo === '') {
+            displayGuardValidationSummary('GuardLoginValidationSummary', 'Please enter the security license No ');
+        }
+        else {
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+                type: 'POST',
+                data: {
+                    securityLicenseNo: securityLicenseNo,
+                    type: 'KPI'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.accessPermission) {
+                    $('#txt_securityLicenseNo').val('');
+                    $('#modelGuardLoginCon').modal('hide');
+                    window.location.href = 'https://kpi.cws-ir.com/Dashboard?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId;
+                    clearGuardValidationSummary('GuardLoginValidationSummary');
+                }
+                else {
+                    $('#txt_securityLicenseNo').val('');
+                    if (result.successCode === 0) {
+                        displayGuardValidationSummary('GuardLoginValidationSummary', result.successMessage);
+                    }
+                }
+            });
+
+        }
+    });
+
+
 
     $('#delete_compliance_file').on('click', function () {
         const guardComplianceId = $('#GuardCompliance_Id').val();

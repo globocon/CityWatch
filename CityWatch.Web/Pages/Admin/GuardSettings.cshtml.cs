@@ -78,7 +78,7 @@ namespace CityWatch.Web.Pages.Admin
                 if (clientSites.Count == 0)
                 {
                     var clientNewSites = _viewDataService.GetNewUserClientSites();
-                    
+
                     var clientSiteWithSettings = _clientSiteWandDataProvider.GetClientSiteSmartWands(searchTerm).ToList();
                     if (!string.IsNullOrEmpty(type))
                     {
@@ -114,11 +114,11 @@ namespace CityWatch.Web.Pages.Admin
                             z.GuardLogEmailTo,
                             z.DataCollectionEnabled,
                             HasSettings = clientSiteWithSettings.Any(x => x.ClientSiteId == z.Id) || !string.IsNullOrEmpty(z.SiteEmail)
-                        }).Where(x => (clientSiteWithSettings.Any(c => c.ClientSiteId == x.Id)) ));
+                        }).Where(x => (clientSiteWithSettings.Any(c => c.ClientSiteId == x.Id))));
                     }
                 }
 
-            
+
                 else
                 {
 
@@ -731,6 +731,78 @@ namespace CityWatch.Web.Pages.Admin
             }
 
             return new JsonResult(new { status });
+        }
+
+
+        public JsonResult OnPostGuardDetailsForRCLogin(string securityLicenseNo, string type)
+        {
+            var AccessPermission = false;
+            int? LoggedInUserId = 0;
+            string  SuccessMessage = string.Empty;
+            int ? SuccessCode = 0;
+            if (!string.IsNullOrEmpty(securityLicenseNo))
+            {
+                var guard = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(securityLicenseNo);
+                if (guard != null)
+                {
+
+                    if (type == "KPI")
+                    {
+                        if (guard.IsActive)
+                        {
+                            if (guard.IsKPIAccess)
+                            {
+                                AccessPermission = true;
+                                if (AuthUserHelper.LoggedInUserId != null)
+                                {
+                                    LoggedInUserId = AuthUserHelper.LoggedInUserId;
+                                }
+
+                                SuccessCode = 1;
+                            }
+                            else
+                            {
+                                SuccessMessage = "Not authorized to access this page";
+                            }
+                        }
+                        else
+                        {
+                            SuccessMessage = "Guard is inactive";
+                        }
+
+                    }
+                    if (type == "RC")
+                    {
+                        if (guard.IsActive)
+                        {
+                            if (guard.IsRCAccess)
+                            {
+                                AccessPermission = true;
+                                if (AuthUserHelper.LoggedInUserId != null)
+                                {
+                                    LoggedInUserId = AuthUserHelper.LoggedInUserId;
+                                }
+                                SuccessCode = 1;
+                            }
+                            else
+                            {
+                                SuccessMessage = "Not authorized to access this page";
+                            }
+                        }
+                        else
+                        {
+                            SuccessMessage = "Guard is inactive";
+                        }
+                    }
+                }
+                else
+                {
+                    SuccessMessage = "Invalid Security License No";
+
+                }
+
+            }
+            return new JsonResult(new { AccessPermission, LoggedInUserId, SuccessCode, SuccessMessage });
         }
 
         private bool UploadGuardLicenseToDropbox(GuardLicense guardLicense)

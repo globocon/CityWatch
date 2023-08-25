@@ -29,6 +29,7 @@ namespace CityWatch.Data.Providers
         GuardCompliance GetGuardCompliance(int id);
         void SaveGuardCompliance(GuardCompliance guardCompliance);
         void DeleteGuardCompliance(int id);
+        Guard GetGuardDetailsbySecurityLicenseNo(string securityLicenseNo);
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -44,6 +45,13 @@ namespace CityWatch.Data.Providers
         {
             return _context.Guards.ToList();
         }
+
+        public Guard GetGuardDetailsbySecurityLicenseNo(string securityLicenseNo)
+        {
+            return _context.Guards.SingleOrDefault(x => x.SecurityNo.Trim() == securityLicenseNo.Trim());
+        }
+        
+            
 
         public int SaveGuard(Guard guard, out string initalsUsed)
         {
