@@ -1,0 +1,9 @@
+Create Table dbo.ClientSiteDuress
+(
+	Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	ClientSiteId  INT NOT NULL FOREIGN KEY REFERENCES ClientSites(Id), 
+	[IsEnabled]  BIT  NOT NULL DEFAULT 0,
+	EnabledBy INT NOT NULL FOREIGN KEY REFERENCES Guards(Id),
+	EnabledDate	DATETIME NOT NULL
+)
+GO

@@ -136,6 +136,8 @@ namespace CityWatch.Data.Providers
                     Status = clientSite.Status,
                     StatusDate = clientSite.StatusDate,
                     SiteEmail = clientSite.SiteEmail,
+                    DuressEmail = clientSite.DuressEmail,
+                    DuressSms = clientSite.DuressSms,
                     LandLine = "+61 (3)",
                     DataCollectionEnabled = true
                 });
@@ -158,6 +160,8 @@ namespace CityWatch.Data.Providers
                 clientSiteToUpdate.Status = clientSite.Status;
                 clientSiteToUpdate.StatusDate = clientSite.StatusDate;
                 clientSiteToUpdate.SiteEmail = clientSite.SiteEmail;
+                clientSiteToUpdate.DuressSms = clientSite.DuressSms;
+                clientSiteToUpdate.DuressEmail= clientSite.DuressEmail;
             }
             _context.SaveChanges();
 
