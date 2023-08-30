@@ -107,12 +107,21 @@ namespace CityWatch.Data.Providers
 
         public List<GuardLogin> GetGuardLogins(int[] guardIds)
         {
-            var guardLogins = _context.GuardLogins
-                .Where(z => guardIds.Contains(z.GuardId))
+            List<GuardLogin> guardLogins = new List<GuardLogin>();
+            foreach (int guardId in guardIds)
+            {
+                guardLogins.AddRange(_context.GuardLogins
+                .Where(z => z.GuardId== guardId)                   
+                    .Include(z => z.ClientSite)
+                    .ToList());
+            }
+            //for query optimization Comment the old code
+            //var guardLogins = _context.GuardLogins
+            //    .Where(z => guardIds.Contains(z.GuardId))
 
-                .Include(z => z.Guard)
-                .Include(z => z.ClientSite)
-                .ToList();
+            //    .Include(z => z.Guard)
+            //    .Include(z => z.ClientSite)
+            //    .ToList();
 
 
             return guardLogins
