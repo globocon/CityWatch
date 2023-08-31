@@ -65,13 +65,13 @@
                                 <option value="">All</option>
                                 @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
                                 {
-                                    <option value="@item.Id">@item.Name</option>    
+                                    <option value="@item.Id">@item.Name</option>
                                 }
                             </select>
                         </div>
                         <div class="input-group col-md-4">
                             <input type="text" id="search_kw_client_site" class="form-control" placeholder="Search Client Site">
-                            <div class="input-group-append">                                
+                            <div class="input-group-append">
                                 <button class="btn btn-outline-primary" id="btnSearchClientSite"><i class="fa fa-search"></i></button>
                             </div>
                         </div>
@@ -97,7 +97,7 @@
                                 <option value="">None</option>
                                 @foreach (var item in Model.ConfigDataProiver.GetFeedbackTemplates())
                                 {
-                                    <option value="@item.Id">@item.Name</option>    
+                                    <option value="@item.Id">@item.Name</option>
                                 }
                             </select>
                         </div>
@@ -112,14 +112,14 @@
                         </button>
                     </div>
                     <form id="form_fbktpl" style="display:none" method="post">
-                        <div class="form-group row" style="display:none" id="new_fbktpl_name">                             
-                            <label class="col-md-3 col-form-label">New template name:</label>                            
-                            <div class="col-md-4">                                
+                        <div class="form-group row" style="display:none" id="new_fbktpl_name">
+                            <label class="col-md-3 col-form-label">New template name:</label>
+                            <div class="col-md-4">
                                 <input type="text" class="form-control" asp-for="@Model.FeedbackTemplate.Name" />
-                                <input type="hidden" asp-for="@Model.FeedbackTemplate.Id" value=""/>
+                                <input type="hidden" asp-for="@Model.FeedbackTemplate.Id" value="" />
                             </div>
                         </div>
-                        <div class="form-group">                    
+                        <div class="form-group">
                             <div class="d-flex flex-row mb-2">
                                 <label class="col-md-10 col-form-label pl-0">Pre-populated text for template &quot;<span id="sel_fbktpl_name"></span>&quot;:</label>
                                 <select class="form-control" asp-for="@Model.FeedbackTemplate.Type" asp-items="@Html.GetEnumSelectList<FeedbackType>()"></select>
@@ -142,7 +142,7 @@
                         <thead>
                             <tr>
                                 <th style="width:370px">Current Location</th>
-                                <th style="width:370px">Date & Time Last Uploaded</th>   
+                                <th style="width:370px">Date & Time Last Uploaded</th>
                                 <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
                             </tr>
                         </thead>
@@ -159,30 +159,69 @@
                                     </label>
                                     <a href="@Url.Content("~/Pdf/Template/IR_Form_Template.pdf")" target="_blank" class="btn btn-outline-primary"><i class="fa fa-download mr-2"></i>Download</a>
                                 </td>
-                            </tr>                            
+                            </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
-           <div class="row mb-2">
-               <div class="col-md-6 position-relative">
-                   <label class="fw-bold position-absolute mb-0" style="bottom:0">Documents available for staff to download in the field:</label>
-               </div>
+            <div class="row mb-2">
+                <div class="col-md-6 position-relative">
+                    <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Company SOP</label> <label class="fw-bold mb-0" style="bottom:0">Documents available for staff to download in the field:</label>
+                </div>
                 <div class="col-md-6 text-right">
-                     <label class="btn btn-success mb-0">
-                        <form id="form_add_staff_document_file" method="post">
+                    <label class="btn btn-success mb-0">
+                        <form id="form_add_staff_document_file_company_sop" method="post">
                             <i class="fa fa-upload mr-2"></i>Add File
-                            <input type="file" id="add_staff_document_file" accept=".pdf, .docx, .xlsx" hidden>
+                            <input type="file" id="add_staff_document_file_company_sop" accept=".pdf, .docx, .xlsx" hidden>
                         </form>
                     </label>
                 </div>
             </div>
-            <div class="row">
+            <div class="row mb-4">
                 <div class="col-md-12">
-                    <table class="table" id="staff_document_files"></table>                    
+                    <table class="table" id="staff_document_files_type_CompanySop"></table>
+
                 </div>
             </div>
-       </div>
+            <div class="row mb-2">
+                <div class="col-md-6 position-relative">
+                    <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Training</label>  <label class="fw-bold mb-0" style="bottom:0">Documents available for staff to download in the field:</label>
+                </div>
+                <div class="col-md-6 text-right">
+                    <label class="btn btn-success mb-0">
+                        <form id="form_add_staff_document_file_training" method="post">
+                            <i class="fa fa-upload mr-2"></i>Add File
+                            <input type="file" id="add_staff_document_file_training" accept=".pdf, .docx, .xlsx" hidden>
+                        </form>
+                    </label>
+                </div>
+            </div>
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <table class="table" id="staff_document_files_type_Training"></table>
+                </div>
+            </div>
+
+            <div class="row mb-2">
+                <div class="col-md-6 position-relative">
+                    <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Templates & Forms</label><label class="fw-bold mb-0" style="bottom:0">Documents available for staff to download in the field:</label>
+                </div>
+                <div class="col-md-6 text-right">
+                    <label class="btn btn-success mb-0">
+                        <form id="form_add_staff_document_file_templates_and_forms" method="post">
+                            <i class="fa fa-upload mr-2"></i>Add File
+                            <input type="file" id="add_staff_document_file_templates_and_forms" accept=".pdf, .docx, .xlsx" hidden>
+                        </form>
+                    </label>
+                </div>
+            </div>
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <table class="table" id="staff_document_files_type_TemplatesAndForms"></table>
+                </div>
+            </div>
+
+        </div>
         <div class="tab-pane fade py-3" id="fields" role="tabpanel" aria-labelledby="fields-tab" @hideTabStyle>
             <div class="form-group row">
                 <label class="col-form-label col-md-3">Select a field type</label>
@@ -200,15 +239,15 @@
                 <div class="col-md-12">
                     <div class="text-right">
                         <button class="btn btn-success mb-3" id="add_field_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
-                    </div>                    
-                    <table class="table" id="field_settings"></table>                    
+                    </div>
+                    <table class="table" id="field_settings"></table>
                 </div>
             </div>
             <div class="row" style="display:none" id="positionSettings">
                 <div class="col-md-12">
                     <div class="text-right">
                         <button class="btn btn-success mb-3" id="add_position_settings"><i class="fa fa-plus mr-2"></i>Add New Position</button>
-                    </div>                    
+                    </div>
                     <table class="table" id="position_settings"></table>
                 </div>
             </div>
@@ -221,23 +260,23 @@
             </div>
             <div class="row">
                 <div class="col-md-12">
-                    <table class="table" id="user_settings"></table>                    
+                    <table class="table" id="user_settings"></table>
                 </div>
             </div>
         </div>
         <div class="tab-pane fade py-3" id="c4isettings" role="tabpanel" aria-labelledby="c4isettings-tab" @hideTabStyle>
-            <form id="form_CompanyDetails"  >
+            <form id="form_CompanyDetails">
                 <div class="form-group row">
-                    
+
                     <div class="col-md-4">
                         <input type="hidden" id="txt_CompanyId" class="form-control" />
                     </div>
-                   
+
                 </div>
                 <div class="form-group row">
                     <label class="col-form-label col-md-2">Company Name</label>
                     <div class="col-md-4">
-                        <input type="text" id="txt_CompanyName" class="form-control" name="CompanyDetails.Name"  />
+                        <input type="text" id="txt_CompanyName" class="form-control" name="CompanyDetails.Name" />
                     </div>
                     <label class="col-form-label col-md-1">Domain</label>
                     <div class="col-md-4">
@@ -250,7 +289,7 @@
                         <a class="navbar-brand" href="https://www.citywatchsecurity.com.au" target="_blank">
                             <img id="img_PrimaryLogo" height="60px" src="~/images/CWSLogo.png" />
                         </a>
-                        
+
 
                         <label class="btn btn-success mb-0">
                             <form id="form_cs_primarylogo" method="post">
@@ -297,17 +336,17 @@
                     <div class="col-md-10">
                         <textarea id="txt_EmailMessage" class=" form-control"></textarea>
                     </div>
-                
+
                 </div>
                 <div class="form-group row">
                     <label class="col-form-label col-md-2">Software License</label>
                     <div class="col-md-2">
                         <select id="drp_swlicense" disabled="disabled">
-                            <option value="1" >Gold</option>
+                            <option value="1">Gold</option>
                             <option value="2">Silver</option>
                             <option value="3">Bronze</option>
                         </select>
-                       
+
                     </div>
                     <label class="col-form-label col-md-2">Type</label>
                     <div class="col-md-2">
@@ -316,12 +355,12 @@
                             <option value="2">Monthly</option>
                             <option value="3">Perpectual</option>
                         </select>
-                        
+
                     </div>
                     <label class="col-form-label col-md-2">Expires</label>
                     <div class="col-md-2">
-                        <input type="date" id="txt_ExpiryDate" value="30-06-2050" disabled="disabled"  />
-                        
+                        <input type="date" id="txt_ExpiryDate" value="30-06-2050" disabled="disabled" />
+
                     </div>
 
                 </div>
@@ -335,34 +374,34 @@
         </div>
         <div class="tab-pane fade py-3" id="uca" role="tabpanel" aria-labelledby="uca-tab" @hideTabStyle>
             <div class="row">
-                <div class="col-md-12 justify-content-center" >
+                <div class="col-md-12 justify-content-center">
                     <table class="table" id="user_client_access"></table>
                 </div>
             </div>
         </div>
     </div>
-    
+
 </div>
 
 <!-- modal popup -->
 
 <div class="modal" tabindex="-1" role="dialog" id="msg-modal">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title"><i class="fa fa-exclamation-circle text-danger" aria-hidden="true"></i> Error</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <p>Submit failed. Please fill all required fields</p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-primary" data-dismiss="modal">Ok</button>
-      </div>
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-exclamation-circle text-danger" aria-hidden="true"></i> Error</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Submit failed. Please fill all required fields</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" data-dismiss="modal">Ok</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 <!-- toast message -->
 <div class="toast hide" role="status" aria-live="polite" aria-atomic="true" data-delay="3000" style="position: absolute; top: 0; left: 50%;">
