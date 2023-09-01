@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace CityWatch.Data.Providers
@@ -128,12 +129,19 @@ namespace CityWatch.Data.Providers
         public void SaveGuardLog(GuardLog guardLog)
         {
             // Insert new guardlog entry
+            //Quick fix 01092023 start
+            var eventDateTime = guardLog.EventDateTime;
+            if (!guardLog.IsSystemEntry)
+            {
+                eventDateTime = DateTime.Parse(guardLog.EventDateTime.ToString("dd/MM/yyyy HH:mm:ss"), new CultureInfo("en-US"));
+            }
+            //Quick fix 01092023 End
             if (guardLog.Id == 0)
             {
                 _context.GuardLogs.Add(new GuardLog()
                 {
                     ClientSiteLogBookId = guardLog.ClientSiteLogBookId,
-                    EventDateTime = guardLog.EventDateTime,
+                    EventDateTime = eventDateTime,
                     Notes = guardLog.Notes,
                     GuardLoginId = guardLog.GuardLoginId,
                     IsSystemEntry = guardLog.IsSystemEntry,
