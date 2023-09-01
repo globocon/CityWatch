@@ -24,6 +24,7 @@ namespace CityWatch.Data.Providers
         void SavePostion(IncidentReportPosition incidentReportPosition);
         void DeletePosition(int id);
         void CrPrimaryLogoUpload(DateTime dateTimeUploaded, string primaryLogoPath);
+        List<StaffDocument> GetStaffDocumentsUsingType(int type);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -111,6 +112,11 @@ namespace CityWatch.Data.Providers
         public List<StaffDocument> GetStaffDocuments()
         {
             return _context.StaffDocuments.OrderBy(x => x.FileName).ToList();
+        }
+
+        public List<StaffDocument> GetStaffDocumentsUsingType(int type)
+        {
+            return _context.StaffDocuments.Where(x=>x.DocumentType== type).OrderBy(x => x.FileName).ToList();
         }
 
         public void SaveStaffDocument(StaffDocument staffdocument)

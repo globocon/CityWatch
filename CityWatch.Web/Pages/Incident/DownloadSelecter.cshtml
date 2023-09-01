@@ -1,0 +1,16 @@
+﻿@page
+@model CityWatch.Web.Pages.Incident.DownloadSelecterModel
+@{
+    ViewData["Title"] = "CityWatch Security | Downloads";
+    ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.Downloads;
+}
+
+<div id="dvDownloadSelecterOuter">
+    <div id="dvcompanysop"><a href="/Incident/Downloads?type=1" id="Ancompanysop"><img src="~/images/companysop.png" class="center" /></a></div>
+    <div id="dvtraining"><a href="/Incident/Downloads?type=2" id="Antraining"><img src="~/images/c4itraining.png" class="center" /></a></div>
+    <div id="dvformsandtemplates"><a href="/Incident/Downloads?type=3" id="Anformsandtemplates"><img src="~/images/formsandtemplates.png" class="center" /></a></div>
+</div>
+
+@section PageHeader {
+    <h3 class="text-center">Downloads</h3>
+}

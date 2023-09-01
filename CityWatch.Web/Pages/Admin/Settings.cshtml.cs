@@ -22,8 +22,8 @@ namespace CityWatch.Web.Pages.Admin
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IViewDataService _viewDataService;
 
-        public SettingsModel(IWebHostEnvironment webHostEnvironment, 
-            IClientDataProvider clientDataProvider, 
+        public SettingsModel(IWebHostEnvironment webHostEnvironment,
+            IClientDataProvider clientDataProvider,
             IConfigDataProvider configDataProvider,
             IUserDataProvider userDataProvider,
             IViewDataService viewDataService)
@@ -53,7 +53,7 @@ namespace CityWatch.Web.Pages.Admin
         {
             if (!AuthUserHelper.IsAdminUserLoggedIn)
                 return Redirect(Url.Page("/Account/Unauthorized"));
-                
+
             ReportTemplate = _configDataProvider.GetReportTemplate();
             return Page();
         }
@@ -163,7 +163,7 @@ namespace CityWatch.Web.Pages.Admin
             var value = string.Empty;
             try
             {
-               var currUser = _userDataProvider.GetUsers().SingleOrDefault(x => x.Id == user.Id);
+                var currUser = _userDataProvider.GetUsers().SingleOrDefault(x => x.Id == user.Id);
                 if (currUser != null)
                     value = PasswordHelper.DecryptPassword(currUser.Password);
             }
@@ -209,7 +209,7 @@ namespace CityWatch.Web.Pages.Admin
                 {
                     message = ex.Message;
                 }
-                
+
             }
             return new JsonResult(new { success, message });
         }
@@ -271,7 +271,11 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_configDataProvider.GetStaffDocuments());
         }
-        
+        public JsonResult OnGetStaffDocsUsingType(int type)
+        {
+            return new JsonResult(_configDataProvider.GetStaffDocumentsUsingType(type));
+        }
+
         public JsonResult OnPostUploadStaffDoc()
         {
             var success = false;
@@ -288,9 +292,9 @@ namespace CityWatch.Web.Pages.Admin
                             throw new ArgumentException("Unsupported file type");
 
                         var staffDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "StaffDocs");
-                        if  (!Directory.Exists(staffDocsFolder))
+                        if (!Directory.Exists(staffDocsFolder))
                             Directory.CreateDirectory(staffDocsFolder);
-                        
+
                         using (var stream = System.IO.File.Create(Path.Combine(staffDocsFolder, file.FileName)))
                         {
                             file.CopyTo(stream);
@@ -303,7 +307,52 @@ namespace CityWatch.Web.Pages.Admin
                             FileName = file.FileName,
                             LastUpdated = DateTime.Now
                         });
-                        
+
+                        success = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        message = ex.Message;
+                    }
+                }
+            }
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnPostUploadStaffDocUsingType()
+        {
+            var success = false;
+            var message = "Uploaded successfully";
+            var files = Request.Form.Files;
+            if (files.Count == 1)
+            {
+                var file = files[0];
+                if (file.Length > 0)
+                {
+                    try
+                    {
+                        if (".pdf,.docx,.xlsx".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
+                            throw new ArgumentException("Unsupported file type");
+
+                        var staffDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "StaffDocs");
+                        if (!Directory.Exists(staffDocsFolder))
+                            Directory.CreateDirectory(staffDocsFolder);
+
+                        using (var stream = System.IO.File.Create(Path.Combine(staffDocsFolder, file.FileName)))
+                        {
+                            file.CopyTo(stream);
+                        }
+
+                        var documentId = Convert.ToInt32(Request.Form["doc-id"]);
+                        var type = Convert.ToInt32(Request.Form["type"]);
+                        _configDataProvider.SaveStaffDocument(new StaffDocument()
+                        {
+                            Id = documentId,
+                            FileName = file.FileName,
+                            LastUpdated = DateTime.Now,
+                            DocumentType= type
+                        });
+
                         success = true;
                     }
                     catch (Exception ex)
@@ -330,9 +379,9 @@ namespace CityWatch.Web.Pages.Admin
 
                     _configDataProvider.DeleteStaffDocument(id);
                 }
-            
-            
-    }
+
+
+            }
             catch (Exception ex)
             {
                 status = false;
@@ -356,7 +405,7 @@ namespace CityWatch.Web.Pages.Admin
             {
                 if (record != null)
                 {
-                   record.Password = PasswordHelper.EncryptPassword(record.Password);
+                    record.Password = PasswordHelper.EncryptPassword(record.Password);
                     _userDataProvider.SaveUser(record);
                 }
             }
@@ -365,8 +414,8 @@ namespace CityWatch.Web.Pages.Admin
                 status = false;
                 message = "Error " + ex.Message;
 
-                if (ex.InnerException != null && 
-                    ex.InnerException is SqlException && 
+                if (ex.InnerException != null &&
+                    ex.InnerException is SqlException &&
                     ex.InnerException.Message.StartsWith("Violation of UNIQUE KEY constraint"))
                 {
                     message = "A user with this username already exists";
@@ -490,21 +539,21 @@ namespace CityWatch.Web.Pages.Admin
             var template = _viewDataService.GetAllCoreSettings(companyId);
             return new JsonResult(template);
         }
-     
-     
+
+
         public JsonResult OnPostCrPrimaryLogoUpload()
         {
             var success = false;
             var message = "Uploaded successfully";
             var dateTimeUpdated = DateTime.Now;
             var files = Request.Form.Files;
-            var filepath="";
+            var filepath = "";
             if (files.Count == 1)
             {
                 var file = files[0];
-                
-               
-               
+
+
+
                 if (file.Length > 0)
                 {
                     try
@@ -513,12 +562,12 @@ namespace CityWatch.Web.Pages.Admin
                             throw new ArgumentException("Unsupported file type");
 
                         var reportRootDir = Path.Combine(_webHostEnvironment.WebRootPath, "Images");
-                         filepath = Path.Combine(reportRootDir, "cr_primarylogo.JPG");
+                        filepath = Path.Combine(reportRootDir, "cr_primarylogo.JPG");
                         using (var stream = System.IO.File.Create(Path.Combine(reportRootDir, "cr_primarylogo.JPG")))
                         {
                             file.CopyTo(stream);
                         }
-                        
+
                         success = true;
                     }
                     catch (Exception ex)
@@ -568,7 +617,7 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { success, message, dateTimeUpdated = dateTimeUpdated.ToString("dd MMM yyyy @ HH:mm"), filepath });
         }
-       
+
         public JsonResult OnPostCompanyDetails(Data.Models.CompanyDetails company)
         {
             var status = true;

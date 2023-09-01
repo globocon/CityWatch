@@ -60,7 +60,7 @@ namespace CityWatch.Web.Helpers
             if (pageName == PageNameHelper.Index)
             {
                 menuHtml.AppendLine("<div>");
-                menuHtml.AppendLine(@"<a href=""/Incident/Downloads"" class=""nav-link py-0""><i class=""fa fa-download mr-2""></i>Downloads</a>");
+                menuHtml.AppendLine(@"<a href=""Incident/DownloadSelecter"" class=""nav-link py-0""><i class=""fa fa-download mr-2""></i>Downloads</a>");
                 menuHtml.AppendLine("</div>");
             }
 

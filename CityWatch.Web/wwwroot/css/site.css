@@ -433,3 +433,43 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
 }
 
 /* -- */
+/* -- DownloadSelecter Page -- */
+#dvDownloadSelecterOuter {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    text-align: center
+}
+
+#dvcompanysop {
+    width: 25%;
+    
+}
+
+#dvtraining {
+    width: 25%;
+    
+}
+
+#dvformsandtemplates {
+    width: 25%;
+   
+}
+
+.center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+}
+
+@media (max-width:992px) {
+    #dvDownloadSelecterOuter {
+        flex-direction: column;
+    }
+
+    #dvcompanysop, #dvtraining, #dvformsandtemplates {
+        width: 100%;
+        margin-bottom:7px;
+    }
+}

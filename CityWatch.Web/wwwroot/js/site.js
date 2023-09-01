@@ -1053,6 +1053,11 @@
 
     /****** Download Page Settings *******/
     let gridStaffDocs;
+    let gridStaffDocsTypeCompanySop;
+    let gridStaffDocsTypeTraining;
+    let gridStaffDocsTypeTemplatesAndForms;
+
+    
 
     gridStaffDocs = $('#staff_document_files').grid({
         dataSource: '/Admin/Settings?handler=StaffDocs',
@@ -1068,6 +1073,53 @@
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
+    /* Grid for CompanySop*/
+    gridStaffDocsTypeCompanySop = $('#staff_document_files_type_CompanySop').grid({
+        dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=1',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        columns: [
+            { field: 'fileName', title: 'File Name', width: 200 },
+            { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 200 },
+            { width: 200, renderer: staffDocsButtonRendererCompanySop },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+
+    /* Grid for Training*/
+    gridStaffDocsTypeTraining = $('#staff_document_files_type_Training').grid({
+        dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=2',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        columns: [
+            { field: 'fileName', title: 'File Name', width: 200 },
+            { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 200 },
+            { width: 200, renderer: staffDocsButtonRendererTraining },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+
+
+    gridStaffDocsTypeTemplatesAndForms = $('#staff_document_files_type_TemplatesAndForms').grid({
+        dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=3',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        columns: [
+            { field: 'fileName', title: 'File Name', width: 200 },
+            { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 200 },
+            { width: 200, renderer: staffDocsButtonRendererTemplatesAndForms },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
 
     function staffDocsButtonRenderer(value, record) {
         return '<label class="btn btn-success mb-0">' +
@@ -1077,6 +1129,34 @@
             '</form></label>' +
             '<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>' +
             '<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file" data-doc-id="' + record.id + '"><i class="fa fa-trash mr-2"></i>Delete</button>';
+    }
+
+    function staffDocsButtonRendererCompanySop(value, record) {
+        return '<label class="btn btn-success mb-0">' +
+            '<form id="form_file_downloads_company_sop" method="post">' +
+            '<i class="fa fa-upload mr-2"></i>Replace' +
+            '<input type="file" name="upload_staff_file_company_sop" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
+            '</form></label>' +
+            '<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>' +
+            '<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_company_sop" data-doc-id="' + record.id + '"><i class="fa fa-trash mr-2"></i>Delete</button>';
+    }
+    function staffDocsButtonRendererTraining(value, record) {
+        return '<label class="btn btn-success mb-0">' +
+            '<form id="form_file_downloads_training" method="post">' +
+            '<i class="fa fa-upload mr-2"></i>Replace' +
+            '<input type="file" name="upload_staff_file_training" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
+            '</form></label>' +
+            '<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>' +
+            '<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_training" data-doc-id="' + record.id + '"><i class="fa fa-trash mr-2"></i>Delete</button>';
+    }
+    function staffDocsButtonRendererTemplatesAndForms(value, record) {
+        return '<label class="btn btn-success mb-0">' +
+            '<form id="form_file_downloads_templates_forms" method="post">' +
+            '<i class="fa fa-upload mr-2"></i>Replace' +
+            '<input type="file" name="upload_staff_file_templates_forms" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
+            '</form></label>' +
+            '<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>' +
+            '<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_templates_forms" data-doc-id="' + record.id + '"><i class="fa fa-trash mr-2"></i>Delete</button>';
     }
 
     $('#staff_document_files').on('click', '.delete_staff_file', function () {
@@ -1094,12 +1174,50 @@
         }
     })
 
+    $('#staff_document_files_type_CompanySop,#staff_document_files_type_Training,#staff_document_files_type_TemplatesAndForms').on('click', '.delete_staff_file_company_sop,.delete_staff_file_training,.delete_staff_file_templates_forms', function () {
+        if (confirm('Are you sure want to delete this file?')) {
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteStaffDoc',
+                data: { id: $(this).attr('data-doc-id') },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function () {
+                gridStaffDocsTypeCompanySop.reload();
+                gridStaffDocsTypeTraining.reload();
+                gridStaffDocsTypeTemplatesAndForms.reload();
+            }).fail(function () {
+                console.log('error')
+            });
+        }
+    })
+
     $('#staff_document_files').on('change', 'input[name="upload_staff_file"]', function () {
         uploadStafDoc($(this), true);
     });
 
+    $('#staff_document_files_type_CompanySop').on('change', 'input[name="upload_staff_file_company_sop"]', function () {
+        uploadStafDocUsingType($(this), true,1);
+    });
+
+    $('#staff_document_files_type_Training').on('change', 'input[name="upload_staff_file_training"]', function () {
+        uploadStafDocUsingType($(this), true,2);
+    });
+
+    $('#staff_document_files_type_TemplatesAndForms').on('change', 'input[name="upload_staff_file_templates_forms"]', function () {
+        uploadStafDocUsingType($(this), true,3);
+    });
+
     $('#add_staff_document_file').on('change', function () {
         uploadStafDoc($(this));
+    });
+    $('#add_staff_document_file_company_sop').on('change', function () {
+        uploadStafDocUsingType($(this), false,1);
+    });
+    $('#add_staff_document_file_training').on('change', function () {
+        uploadStafDocUsingType($(this), false,2);
+    });
+    $('#add_staff_document_file_templates_and_forms').on('change', function () {
+        uploadStafDocUsingType($(this),false, 3);
     });
 
     function uploadStafDoc(uploadCtrl, edit = false) {
@@ -1131,11 +1249,50 @@
         });
     }
 
-    /****** Downloads *******/
-    let gridFileDownloads;
+    function uploadStafDocUsingType(uploadCtrl, edit = false,type) {
+        const file = uploadCtrl.get(0).files.item(0);
+        const fileExtn = file.name.split('.').pop();
+        if (!fileExtn || '.pdf,.docx,.xlsx'.indexOf(fileExtn.toLowerCase()) < 0) {
+            showModal('Unsupported file type. Please upload a .pdf, .docx or .xlsx file');
+            return false;
+        }
 
+        const fileForm = new FormData();
+        fileForm.append('file', file);
+        fileForm.append('type', type);
+        if (edit)
+            fileForm.append('doc-id', uploadCtrl.attr('data-doc-id'));
+
+        $.ajax({
+            url: '/Admin/Settings?handler=UploadStaffDocUsingType',
+            type: 'POST',
+            data: fileForm,
+            processData: false,
+            contentType: false,
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+        }).done(function (data) {
+            if (data.success) {
+                gridStaffDocsTypeCompanySop.reload();
+                gridStaffDocsTypeTraining.reload();
+                gridStaffDocsTypeTemplatesAndForms.reload();
+                showStatusNotification(data.success, data.message);
+            }
+        }).fail(function () {
+            showStatusNotification(false, 'Something went wrong');
+        });
+    }
+
+    /****** Downloads *******/   
+
+    var queryString = window.location.search;
+    // Parse the query string into an object
+    var params = new URLSearchParams(queryString);
+    // Get the value of the 'name' parameter
+    var type = params.get('type');
+    let gridFileDownloads;
     gridFileDownloads = $('#file_downloads').grid({
-        dataSource: '/Admin/Settings?handler=StaffDocs',
+        /* dataSource: '/Admin/Settings?handler=StaffDocs',*/
+        dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type='+type,
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
