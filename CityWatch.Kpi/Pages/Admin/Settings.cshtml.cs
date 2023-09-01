@@ -3,6 +3,7 @@ using CityWatch.Data.Providers;
 using CityWatch.Kpi.Models;
 using CityWatch.Kpi.Services;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
@@ -33,7 +34,7 @@ namespace CityWatch.Kpi.Pages.Admin
         public IViewDataService ViewDataService { get { return _viewDataService; } }
 
         public IImportJobDataProvider ImportJobDataProvider { get { return _importJobDataProvider; } }
-
+        public int GuardId { get; set; }
         public SettingsModel(IWebHostEnvironment webHostEnvironment,
             IViewDataService viewDataService,
             IImportDataService importDataService,
@@ -56,6 +57,7 @@ namespace CityWatch.Kpi.Pages.Admin
         public void OnGet()
         {
             ReportRequest = new KpiRequest();
+            GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
         }
 
         public IActionResult OnGetKpiDataImportJobs()
@@ -94,6 +96,9 @@ namespace CityWatch.Kpi.Pages.Admin
                 if (clientType != null)
                 {
                     var clientSites = _clientDataProvider.GetClientSites(clientType.Id);
+                    GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+                    if (GuardId!=0)
+                        clientSites = _clientDataProvider.GetClientSitesUsingGuardId(GuardId);
                     var clientSiteWithSettings = _clientDataProvider.GetClientSiteKpiSettings().Select(z => z.ClientSiteId).ToList();
 
                     return new JsonResult(clientSites.Select(z => new
@@ -272,16 +277,39 @@ namespace CityWatch.Kpi.Pages.Admin
 
         public JsonResult OnGetKpiSendSchedules(int type, string searchTerm)
         {
-            return new JsonResult(_kpiSchedulesDataProvider.GetAllSendSchedules()
-                .Select(z => KpiSendScheduleViewModel.FromDataModel(z))
-                .Where(z => z.CoverSheetType == (CoverSheetType)type && (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
-                .OrderBy(x => x.ProjectName)
-                .ThenBy(x => x.ClientTypes));
+            GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            if (GuardId == 0)
+            {
+                return new JsonResult(_kpiSchedulesDataProvider.GetAllSendSchedules()
+                    .Select(z => KpiSendScheduleViewModel.FromDataModel(z))
+                    .Where(z => z.CoverSheetType == (CoverSheetType)type && (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
+                    .OrderBy(x => x.ProjectName)
+                    .ThenBy(x => x.ClientTypes));
+
+            }
+            else
+            {
+
+                return new JsonResult(_kpiSchedulesDataProvider.GetAllSendSchedulesUisngGuardId(GuardId)
+                   .Select(z => KpiSendScheduleViewModel.FromDataModel(z))
+                   .Where(z => z.CoverSheetType == (CoverSheetType)type && (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
+                   .OrderBy(x => x.ProjectName)
+                   .ThenBy(x => x.ClientTypes));
+
+            }
         }
 
         public JsonResult OnGetKpiSendSchedule(int id)
         {
-            return new JsonResult(_kpiSchedulesDataProvider.GetSendScheduleById(id));
+            GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            if (GuardId == 0)
+            {
+                return new JsonResult(_kpiSchedulesDataProvider.GetSendScheduleById(id));
+            }
+            else
+            {
+                return new JsonResult(_kpiSchedulesDataProvider.GetSendScheduleByIdandGuardId(id, GuardId));
+            }
         }
 
         public JsonResult OnPostSaveKpiSendSchedule(KpiSendScheduleViewModel kpiSendScheduleViewModel)

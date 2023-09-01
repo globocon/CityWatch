@@ -2531,7 +2531,7 @@
         return false;
     });
     /* Check if Guard can access the KPI */
-    $('#btnGuardLogin').on('click', function () {
+    $('#btnGuardLoginKPI').on('click', function () {
         const securityLicenseNo = $('#txt_securityLicenseNo').val();
         if (securityLicenseNo === '') {
             displayGuardValidationSummary('GuardLoginValidationSummary', 'Please enter the security license No ');
@@ -2549,7 +2549,9 @@
                 if (result.accessPermission) {
                     $('#txt_securityLicenseNo').val('');
                     $('#modelGuardLoginCon').modal('hide');
-                    window.location.href = 'https://kpi.cws-ir.com/Dashboard?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId;
+                    /* window.location.href = 'https://kpi.cws-ir.com/Dashboard?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId;*/
+                    window.location.href = 'https://localhost:44378/Dashboard?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
+                    
                     clearGuardValidationSummary('GuardLoginValidationSummary');
                 }
                 else {

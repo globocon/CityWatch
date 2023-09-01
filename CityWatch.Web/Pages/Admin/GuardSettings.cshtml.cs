@@ -744,6 +744,7 @@ namespace CityWatch.Web.Pages.Admin
             int? LoggedInUserId = 0;
             string  SuccessMessage = string.Empty;
             int ? SuccessCode = 0;
+            int? GuId = 0;
             if (!string.IsNullOrEmpty(securityLicenseNo))
             {
                 var guard = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(securityLicenseNo);
@@ -757,9 +758,11 @@ namespace CityWatch.Web.Pages.Admin
                             if (guard.IsKPIAccess)
                             {
                                 AccessPermission = true;
+                                GuId=guard.Id;
                                 if (AuthUserHelper.LoggedInUserId != null)
                                 {
                                     LoggedInUserId = AuthUserHelper.LoggedInUserId;
+                                    
                                 }
 
                                 SuccessCode = 1;
@@ -782,6 +785,7 @@ namespace CityWatch.Web.Pages.Admin
                             if (guard.IsRCAccess)
                             {
                                 AccessPermission = true;
+                                GuId = guard.Id;
                                 if (AuthUserHelper.LoggedInUserId != null)
                                 {
                                     LoggedInUserId = AuthUserHelper.LoggedInUserId;
@@ -806,7 +810,7 @@ namespace CityWatch.Web.Pages.Admin
                 }
 
             }
-            return new JsonResult(new { AccessPermission, LoggedInUserId, SuccessCode, SuccessMessage });
+            return new JsonResult(new { AccessPermission, LoggedInUserId, GuId, SuccessCode, SuccessMessage });
         }
 
         private bool UploadGuardLicenseToDropbox(GuardLicense guardLicense)
