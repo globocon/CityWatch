@@ -8,8 +8,9 @@
     <div class="form-row">
         <div class="form-group col-md-2">
             <label class="mx-1" for="clientType" >Client Type</label>
-            <select class="form-control report-input mx-1" id="clientType" asp-items="@Model.ViewDataService.ClientTypesUsingLoginUserId(Model.UserId)"></select>
+            <select class="form-control report-input mx-1" id="clientType" asp-items="@Model.ViewDataService.ClientTypesUsingLoginUserId(Model.GuardId)"></select>
             <input type="hidden" id="hid_userId" name="hiddenField" value="@Model.UserId" />
+            <input type="hidden" id="hid_guardId" name="hiddenField" value="@Model.GuardId" />
         </div>
         <div class="form-group col-md-2">
             <label class="mx-1" asp-for="@Model.ReportRequest.ClientSiteId"></label>

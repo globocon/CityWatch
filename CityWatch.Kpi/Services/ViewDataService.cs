@@ -41,7 +41,7 @@ namespace CityWatch.Kpi.Services
 
         List<DailyKpiResult> GetKpiReportData(int[] clientSiteId, DateTime fromDate, DateTime toDate);
         List<SelectListItem> GetOfficerPositions(OfficerPositionFilterManning positionFilter = OfficerPositionFilterManning.SecurityOnly);
-        List<SelectListItem> ClientTypesUsingLoginUserId(int userId);
+        List<SelectListItem> ClientTypesUsingLoginUserId(int guardId);
         List<SelectListItem> GetClientSitesUsingLoginUserId(int userId, string type = "");
     }
 
@@ -79,9 +79,9 @@ namespace CityWatch.Kpi.Services
             }
         }
 
-        public List<SelectListItem> ClientTypesUsingLoginUserId(int userId)
+        public List<SelectListItem> ClientTypesUsingLoginUserId(int guardId)
         {
-            if (userId == 0)
+            if (guardId == 0)
             {
                 var clientTypes = _clientDataProvider.GetClientTypes();
                 var items = new List<SelectListItem>() { new SelectListItem("Select", "", true) };
@@ -94,12 +94,12 @@ namespace CityWatch.Kpi.Services
             }
             else
             {
-                var ClientType = _context.UserClientSiteAccess
-                .Where(x => x.UserId == userId)
-                .Include(x => x.ClientSite.ClientType)                
-                .ToList();
-                
+                List<GuardLogin> guardLogins = new List<GuardLogin>();
 
+                var ClientType=_context.GuardLogins
+                    .Where(z => z.GuardId == guardId)                        
+                        .Include(x => x.ClientSite.ClientType)                        
+                        .ToList();
 
                 var items = new List<SelectListItem>() { new SelectListItem("Select", "", true) };
                 foreach (var item in ClientType)
@@ -127,9 +127,9 @@ namespace CityWatch.Kpi.Services
             return sites;
         }
 
-        public List<SelectListItem> GetClientSitesUsingLoginUserId(int userId, string type = "")
+        public List<SelectListItem> GetClientSitesUsingLoginUserId(int guardId, string type = "")
         {
-            if (userId == 0)
+            if (guardId == 0)
             {
                 var sites = new List<SelectListItem>();
                 //var mapping = _clientDataProvider.GetClientSites(null).Where(x => x.ClientType.Name == type);
@@ -147,14 +147,19 @@ namespace CityWatch.Kpi.Services
             else
             {
                 var sites = new List<SelectListItem>();
-                var mapping = _context.UserClientSiteAccess
-               .Where(x => x.UserId == userId && x.ClientSite.ClientType.Name.Trim() == type.Trim())
-               .Include(x => x.ClientSite)
-               .Include(x => x.ClientSite.ClientType)
-       .ToList();
+
+                var mapping = _context.GuardLogins
+                .Where(z => z.GuardId == guardId)
+                    .Include(z => z.ClientSite)
+                    .ToList();
+
+
                 foreach (var item in mapping)
                 {
-                    sites.Add(new SelectListItem(item.ClientSite.Name, item.ClientSite.Id.ToString()));
+                    if (!sites.Any(cus => cus.Text == item.ClientSite.Name))
+                    {
+                        sites.Add(new SelectListItem(item.ClientSite.Name, item.ClientSite.Id.ToString()));
+                    }
                 }
                 return sites;
 

@@ -49,6 +49,7 @@ namespace CityWatch.Data.Providers
         void MarkClientSiteLogBookAsUploaded(int logBookId, string fileName);
         void SetDataCollectionStatus(int clientSiteId, bool enabled);
         string ValidDateTime(ClientSiteKpiSetting setting);
+        List<ClientSite> GetClientSitesUsingGuardId(int? GuardId);
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -113,6 +114,15 @@ namespace CityWatch.Data.Providers
                 .OrderBy(x => x.ClientType.Name)
                 .ThenBy(x => x.Name)
                 .ToList();
+        }
+        public List<ClientSite> GetClientSitesUsingGuardId(int? GuardId)
+        {
+            return _context.GuardLogins
+           .Where(z => z.GuardId == GuardId)
+           .Select(z => z.ClientSite)
+           .Distinct()
+           .ToList();
+
         }
 
         public void SaveClientSite(ClientSite clientSite)

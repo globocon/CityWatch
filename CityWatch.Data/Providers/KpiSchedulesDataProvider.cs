@@ -20,6 +20,8 @@ namespace CityWatch.Data.Providers
         void SaveKpiSendScheduleSummaryImage(int scheduleId, string fileName);
         KpiSendScheduleSummaryImage GetScheduleSummaryImage(int scheduleId);
         void DeleteSummaryImage(int scheduleId);
+        List<KpiSendSchedule> GetAllSendSchedulesUisngGuardId(int GuardId);
+        KpiSendSchedule GetSendScheduleByIdandGuardId(int scheduleId, int GuardId);
     }
 
     public class KpiSchedulesDataProvider : IKpiSchedulesDataProvider
@@ -41,8 +43,48 @@ namespace CityWatch.Data.Providers
                 .ToList();
         }
 
+        public List<KpiSendSchedule> GetAllSendSchedulesUisngGuardId(int GuardId)
+        {
+
+            var selectedSiteSchedule = new List<KpiSendSchedule>();
+            var distinctClientSiteIds = _context.GuardLogins
+            .Where(z => z.GuardId == GuardId)
+            .Select(z => z.ClientSite.Id)
+            .Distinct()
+            .ToList();
+            
+            var list = _context.KpiSendSchedules
+               .Include(z => z.KpiSendScheduleSummaryImage)
+               .Include(z => z.KpiSendScheduleClientSites)
+               .ThenInclude(y => y.ClientSite)
+               .ThenInclude(y => y.ClientType)
+               .ToList();
+
+            foreach (var item in list)
+            {
+                foreach (var item2 in item.KpiSendScheduleClientSites)
+                {
+
+                    if (distinctClientSiteIds.Contains(item2.ClientSiteId))
+                    {
+                        
+                        selectedSiteSchedule.Add(item);
+                    }
+                    else
+                    {
+                        item.KpiSendScheduleClientSites.Remove(item2);
+                    }
+                }
+
+
+            }
+
+            return selectedSiteSchedule;
+        }
+
         public KpiSendSchedule GetSendScheduleById(int scheduleId)
         {
+
             return _context.KpiSendSchedules
               .Include(t => t.KpiSendScheduleSummaryImage)
               .Include(x => x.KpiSendScheduleSummaryNotes)
@@ -50,6 +92,32 @@ namespace CityWatch.Data.Providers
               .ThenInclude(y => y.ClientSite)
               .ThenInclude(y => y.ClientType)
               .SingleOrDefault(x => x.Id == scheduleId);
+        }
+
+        public KpiSendSchedule GetSendScheduleByIdandGuardId(int scheduleId,int GuardId)
+        {
+            var distinctClientSiteIds = _context.GuardLogins
+          .Where(z => z.GuardId == GuardId)
+          .Select(z => z.ClientSite.Id)
+          .Distinct()
+          .ToList();
+            var KpiSendSchedule = _context.KpiSendSchedules
+              .Include(t => t.KpiSendScheduleSummaryImage)
+              .Include(x => x.KpiSendScheduleSummaryNotes)
+              .Include(z => z.KpiSendScheduleClientSites)
+              .ThenInclude(y => y.ClientSite)
+              .ThenInclude(y => y.ClientType)
+              .SingleOrDefault(x => x.Id == scheduleId);
+            foreach(var li in KpiSendSchedule.KpiSendScheduleClientSites)
+            {
+                if (!distinctClientSiteIds.Contains(li.ClientSiteId))
+                {
+                    KpiSendSchedule.KpiSendScheduleClientSites.Remove(li);
+
+                }
+
+            }
+            return KpiSendSchedule;
         }
 
         public KpiSendScheduleSummaryImage GetScheduleSummaryImage(int scheduleId)
@@ -154,8 +222,8 @@ namespace CityWatch.Data.Providers
             }
             _context.SaveChanges();
             return summaryNote.Id;
-        }   
-        
+        }
+
         public void SaveKpiSendScheduleSummaryImage(int scheduleId, string fileName)
         {
             var summaryImageToUpdate = _context.KpiSendScheduleSummaryImages.SingleOrDefault(x => x.ScheduleId == scheduleId);
