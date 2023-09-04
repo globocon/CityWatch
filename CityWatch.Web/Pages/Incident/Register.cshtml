@@ -374,10 +374,10 @@
                 <div class="card-body">
                     <div class="form-row" id="plateloaded">
                        
-                        <div class="form-group mr-5">
+                        <div class="form-group  col-md-3 mr-5">
                             <label class="col-form-label">Plates Loaded into KV?:</label>
                             <div>
-                                <div class="form-check form-check-inline mr-4">
+                                <div class="form-check form-check-inline mr-10">
 
                                     <input asp-for="@Model.Report.PlateLoadedYes" class="form-check-input">
                                     <label class="form-check-label font-weight-normal">Yes</label>
@@ -391,14 +391,14 @@
                         
                        
                         
-                        <div class="form-group" id="plateLoadedCarOrTruckRegoDetails">
+                        <div class="form-group  mr-3" id="plateLoadedCarOrTruckRegoDetails">
                             
                                 <label>ID No. / Car or Truck Rego.</label>
                                 <input class="form-control" type="text" asp-for="@Model.Report.VehicleRego" autocomplete="off" style="width:200px;" />
                                 
                             
                         </div>
-                        <div class="form-group col-md-3" id="plateLoadedCarOrTruckPlateDetails">
+                        <div class="form-group col-md-5 " id="plateLoadedCarOrTruckPlateDetails">
 
                             
                             <label>ID / Plate (State or AU)</label>
@@ -407,8 +407,9 @@
                             <input type="hidden" asp-for="@Model.Report.PlateId" id="PlateId" />
 
                         </div>
-                        <div class="form-group">
-                            <button type="button" class="btn btn-primary mr-4 mb-2" id="btnAddNewPlateLoadedEntry" disabled>+ Add Entry</button>
+                        <div class="form-group mt-4">
+                            
+                            <button type="button" class="btn btn-primary mb-2" id="btnAddNewPlateLoadedEntry" disabled>+ Add Entry</button>
 
                         </div>
                         
@@ -418,8 +419,8 @@
                         <table class="table table-bordered table-striped" id="register_plate_loaded">
                             <thead>
                                 <tr>
-                                    <th>SlNo</th>
-                                    <th>PlateId</th>
+                                    <th hidden>SlNo</th>
+                                    <th hidden>PlateId</th>
                                     <th>ID No. / Car or Truck Rego.</th>
                                     <th>ID / Plate (State or AU)</th>
                                     <th></th>
@@ -1034,7 +1035,7 @@
     document.getElementById("Report_VehicleRego").addEventListener('keypress', vehicleRegoValidateSplChars);
     document.getElementById("Report_VehicleRego").addEventListener('blur', vehicleRegoDisableKeyListPlates);
     document.getElementById("kvl_list_plates").addEventListener('change', kvlListPlatesChange);
-    
+    //document.getElementById("btn_delete_plate").addEventListener('click', deletePlates);
    
     function kvlListPlatesChange() {
 
@@ -1045,69 +1046,102 @@
         }
     }
     var emp=null;
-    function onbtnAddNewPlateLoadedEntryClick()
-    {
-        //$.ajax({
-        //    url: '/Guard/Register?handler=SavePlateLoaded',
-        //    data: $('#form_newlog').serialize(),
-        //    type: 'POST',
-        //    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        //}).done(function (result) {
-        //    if (result.success) {
-        //        gridGuardLog.clear();
-        //        gridGuardLog.reload();
-        //        $('#GuardLog_Notes').val('');
-        //    }
-        //    else {
-        //        displayValidationSummary(result.errors);
-        //    }
-        //}).fail(function () {
-        //    alert('Error saving entry. Please logout and login again');
-        //}).always(function () {
-        //    $('#loader').hide();
-        //});
-        document.getElementById("Report_SiteColourCodeId").value
-        if (emp !== null && $('#PlateId').val !== null) {
-          //  alert('');
-            if ($('#register_plate_loaded  tr').length > 1) {
-                var rowCount=$('#register_plate_loaded  tr').length ;
-                $('#register_plate_loaded  tr:last').after('<tr><td>' + rowCount + '</td>' +
-                    '<td>' + $('#PlateId').val() + '</td>' +
-                    '<td>' + emp + '</td>' +
-                    
-                    '<td>' + $('#kvl_list_plates').find(":selected").text() + ' </td>' + 
-                    '<td> <button  class= "btn btn-outline-primary mr-2" id = "btn_delete_plate"> <i class="fa fa-trash mr-2"> </i></button >  </td>' +
-                    '</tr > ');
-
-                // CLEAR ALL TEXTBOXES.
-
-                $('#PlateId').val('');
-                $("#Report_VehicleRego").val('');
-                $('#kvl_list_plates').val('');
+    function onbtnAddNewPlateLoadedEntryClick() {
+        if ($('#Report_VehicleRego').val()!='')
+        {
+            var obj=
+            {
+                PlateId:$('#PlateId').val(),
+                TruckNo: $('#Report_VehicleRego').val(),
+                IncidentReportId:0,
+               LogId:0
+           
             }
-            else{
-                var rowCount = $('#register_plate_loaded  tr').length;
-                $('#register_plate_loaded  tr:last').after('<tr><td>' + rowCount + '</td>' +
-                    '<td>' + $('#PlateId').val() + '</td>' +
-                    '<td>' + emp + '</td>' +
-                    
-                    '<td>' + $('#kvl_list_plates').find(":selected").text() + ' </td>' + 
-                    '<td>' + '<button  class= "btn btn-outline-primary mr-2" id = "btn_delete_plate"> <i class="fa fa-trash mr-2"> </i></button >' + '</td>' +
-                    '</tr >');
+        
+            $.ajax({
+                url: '/Incident/Register?handler=PlateLoaded',
+                data: { 'report': obj },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.status) {
+                    if (result.message !== '') {
+                        getPlatesLoaded();
+                        //showStatusNotification(true, 'Company details modified successfully');
 
-                // CLEAR ALL TEXTBOXES.
+                    }
 
-                $('#PlateId').val('');
-                $("#Report_VehicleRego").val('');
-                $('#kvl_list_plates').val('');
-            }
+                } else {
+                    displayGuardValidationSummary(result.message);
+                }
+            });
         }
+        else{
+            alert("Please Enter The Truck Registration Number")
+        }
+       
 
     }
-    
+    function getPlatesLoaded()
+    {
+        if ($('#register_plate_loaded  tr').length > 1) {
+            var rowCount = $('#register_plate_loaded  tr').length;
+            $('#register_plate_loaded  tr:last').after('<tr><td hidden>' + rowCount + '</td>' +
+                '<td hidden>' + $('#PlateId').val() + '</td>' +
+                '<td>' + emp + '</td>' +
+
+                '<td>' + $('#kvl_list_plates').find(":selected").text() + ' </td>' +
+                '<td> <button  class= "btn btn-outline-primary mr-2" id = "btn_delete_plate"> <i class="fa fa-trash mr-2"> </i></button >  </td>' +
+                '</tr > ');
+            // CLEAR ALL TEXTBOXES.
+            $('#PlateId').val('');
+            $("#Report_VehicleRego").val('');
+            $('#kvl_list_plates').val('');
+        }
+        else {
+            var rowCount = $('#register_plate_loaded  tr').length;
+            $('#register_plate_loaded  tr:last').after('<tr><td hidden>' + rowCount + '</td>' +
+                '<td hidden>' + $('#PlateId').val() + '</td>' +
+                '<td>' + emp + '</td>' +
+
+                '<td>' + $('#kvl_list_plates').find(":selected").text() + ' </td>' +
+                '<td>' + '<button  class= "btn btn-outline-primary mr-2" id = "btn_delete_plate"> <i class="fa fa-trash mr-2"> </i></button >' + '</td>' +
+                '</tr >');
+            // CLEAR ALL TEXTBOXES.
+            $('#PlateId').val('');
+            $("#Report_VehicleRego").val('');
+            $('#kvl_list_plates').val('');
+        }
+    }
     function deletePlates()
     {
-        debugger;
+       debugger;
+        var obj =
+        {
+            PlateId: $('#PlateId').val(),
+            TruckNo: $('#Report_VehicleRego').val(),
+            LogId: 0
+
+        }
+
+        $.ajax({
+            url: '/Incident/Register?handler=DeletePlateLoaded',
+            data: { 'report': obj },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.status) {
+                if (result.message !== '') {
+                    getPlatesLoaded();
+                   // showStatusNotification(true, 'Company details modified successfully');
+
+                }
+
+            } else {
+                displayGuardValidationSummary(result.message);
+            }
+        });
+
     }
     function vehicleRegoDisableKeyListPlates() 
     {

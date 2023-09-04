@@ -5,6 +5,7 @@ using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
 using CityWatch.Web.Services;
+using DocumentFormat.OpenXml.Spreadsheet;
 using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -96,7 +97,7 @@ namespace CityWatch.Web.Pages.Incident
             return new JsonResult(_ViewDataService.GetOfficerPositions((OfficerPositionFilter)filter));
         }
 
-        public JsonResult OnPostSubmit(List<IncidentReportsPlatesLoaded> plateLoaded)
+        public JsonResult OnPostSubmit()
         {
             if (Report == null)
                 throw new ArgumentNullException("Incident Report");
@@ -366,7 +367,10 @@ namespace CityWatch.Web.Pages.Incident
                 SerialNo = Report.SerialNumber,
                 ColourCode = Report.SiteColourCodeId,
                 IsPlateLoaded = Report.PlateLoadedYes,
-                IncidentReportEventTypes = Report.IrEventTypes.Select(z => new IncidentReportEventType() { EventType = z }).ToList()
+                PlateId=0,
+                VehicleRego=null,
+                LogId = AuthUserHelper.LoggedInUserId.GetValueOrDefault(),
+             IncidentReportEventTypes = Report.IrEventTypes.Select(z => new IncidentReportEventType() { EventType = z }).ToList()
             };
 
             if (!reportGenerated)
@@ -386,6 +390,16 @@ namespace CityWatch.Web.Pages.Incident
                 try
                 {
                     _irDataProvider.SaveReport(report);
+                    if (report.IsPlateLoaded == true)
+                    {
+                        var incidentreportid = _clientDataProvider.GetMaxIncidentReportId(AuthUserHelper.LoggedInUserId.GetValueOrDefault());
+                        var incidentreportsplateid = _clientDataProvider.GetIncidentDetailsKvlReport(AuthUserHelper.LoggedInUserId.GetValueOrDefault());
+                        for(int i=0; i< incidentreportsplateid.Count;i++)
+                        {
+                            _irDataProvider.UpdateReport(incidentreportid, Convert.ToInt32(incidentreportsplateid[i].Id));
+                        }
+
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -441,6 +455,46 @@ namespace CityWatch.Web.Pages.Incident
                 _logger.LogError(ex.StackTrace);
             }
         }
+        public JsonResult OnPostPlateLoaded(Data.Models.IncidentReportsPlatesLoaded report)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                report.LogId = AuthUserHelper.LoggedInUserId.GetValueOrDefault();
+                _clientDataProvider.SavePlateLoaded(report);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+        public IActionResult OnGetPlatesLoaded()
+        {
+            return new JsonResult(_configDataProvider.GetPlatesLoaded(AuthUserHelper.LoggedInUserId.GetValueOrDefault()));
+        }
+        public JsonResult OnPostDeletePlateLoaded(Data.Models.IncidentReportsPlatesLoaded report)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                report.LogId = AuthUserHelper.LoggedInUserId.GetValueOrDefault();
+                _clientDataProvider.DeletePlateLoaded(report);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+        
+
 
     }
 }

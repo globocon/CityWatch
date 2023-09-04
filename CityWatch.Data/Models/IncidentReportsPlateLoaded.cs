@@ -8,10 +8,12 @@ namespace CityWatch.Data.Models
     public class IncidentReportsPlatesLoaded
     {
         [Key]
-        //public int Id { get; set; }
+        public int? Id { get; set; }
         //public int IncidentReportId { get; set; }
         public int PlateId { get; set; }
-        public string TruckNo { get; set; }               
-       
+        public int IncidentReportId { get; set; }
+        public string TruckNo { get; set; }
+        public int? LogId { get; set; }
+
     }
 }

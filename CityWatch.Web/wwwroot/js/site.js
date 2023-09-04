@@ -1333,10 +1333,41 @@
         return true;
     }
     $('#register_plate_loaded').on('click', 'button[id=btn_delete_plate]', function () {
+        
        
-        
-        
+        var plateid = $(this).closest("tr").find("td").eq(1).text();
+
+        var truckNo = $(this).closest("tr").find("td").eq(2).text();
+        debugger;
         $(this).closest("tr").remove();
+        var obj =
+        {
+            PlateId: plateid,
+            TruckNo: truckNo,
+            LogId: 0
+
+        }
+
+        $.ajax({
+            url: '/Incident/Register?handler=DeletePlateLoaded',
+            data: { 'report': obj },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.status) {
+                if (result.message !== '') {
+                   
+                    //getPlatesLoaded();
+                    // showStatusNotification(true, 'Company details modified successfully');
+
+                }
+
+            } else {
+                displayGuardValidationSummary(result.message);
+            }
+        });
+
+        //$(this).closest("tr").remove();
         return false;
     });
 });

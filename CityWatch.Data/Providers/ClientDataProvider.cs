@@ -10,6 +10,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using static Dropbox.Api.FileProperties.PropertyType;
+//using static Dropbox.Api.Files.ListRevisionsMode;
 using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
 
 namespace CityWatch.Data.Providers
@@ -33,6 +35,9 @@ namespace CityWatch.Data.Providers
         List<ClientSite> GetNewClientSites();
         void SaveClientSite(ClientSite clientSite);
         void SaveCompanyDetails(CompanyDetails companyDetails);
+        void SavePlateLoaded(IncidentReportsPlatesLoaded report);
+        void DeletePlateLoaded(IncidentReportsPlatesLoaded report);
+
         void DeleteClientSite(int id);
         List<ClientSiteKpiSetting> GetClientSiteKpiSettings();
         ClientSiteKpiSetting GetClientSiteKpiSetting(int clientSiteId);
@@ -47,7 +52,16 @@ namespace CityWatch.Data.Providers
         int SaveClientSiteLogBook(ClientSiteLogBook logBook);
         void MarkClientSiteLogBookAsUploaded(int logBookId, string fileName);
         void SetDataCollectionStatus(int clientSiteId, bool enabled);
+
         string ValidDateTime(ClientSiteKpiSetting setting);
+        List<IncidentReportsPlatesLoaded> GetIncidentDetailsKvlReport(int logId);
+        List<KeyVehicleLog> GetKeyVehiclogWithPlateIdAndTruckNoByLogId(int[] plateid, string[] truckNo,int logId);
+        List<KeyVehcileLogField> GetKeyVehicleLogFields(bool includeDeleted = false);
+        int GetMaxIncidentReportId(int LogId);
+        public List<ClientSiteKey> GetClientSiteKeys(int clientSiteId);
+        public List<ClientSiteKey> GetClientSiteKeys(int[] clientSiteIds);
+        List<ClientSitePoc> GetClientSitePocs();
+        List<ClientSiteLocation> GetClientSiteLocations();
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -524,6 +538,97 @@ namespace CityWatch.Data.Providers
                 .ThenBy(x => x.Name)
                 .ToList();
 
+        }
+        public void SavePlateLoaded(IncidentReportsPlatesLoaded report)
+        {
+            
+                
+
+                _context.IncidentReportsPlatesLoaded.Add(report);
+            
+            _context.SaveChanges();
+        }
+        public void DeletePlateLoaded(IncidentReportsPlatesLoaded report)
+        {
+
+
+
+            
+
+
+            var platesLoadedToDeleteId = _context.IncidentReportsPlatesLoaded.Where(x => x.LogId == report.LogId && x.PlateId==report.PlateId && x.TruckNo==report.TruckNo && x.IncidentReportId==0).Max(z => z.Id);
+            var platesLoadedToDelete = _context.IncidentReportsPlatesLoaded.SingleOrDefault(x => x.Id == platesLoadedToDeleteId.Value);
+            if (platesLoadedToDelete == null)
+                throw new InvalidOperationException();
+            
+            _context.IncidentReportsPlatesLoaded.Remove(platesLoadedToDelete);
+            _context.SaveChanges();
+        }
+        
+        public List<IncidentReportsPlatesLoaded> GetIncidentDetailsKvlReport(int logId)
+        {
+            return _context.IncidentReportsPlatesLoaded
+                .Where(z => z.LogId ==logId && z.IncidentReportId ==0)
+                .ToList();
+        }
+
+        public List<KeyVehicleLog> GetKeyVehiclogWithPlateIdAndTruckNoByLogId(int[] plateid, string[] truckNo, int logId)
+        {
+
+            return _context.KeyVehicleLogs.Where(z => truckNo.Contains(z.VehicleRego) && plateid.Contains(z.PlateId) && DateTime.Compare(z.ClientSiteLogBook.Date.Date, DateTime.Now.Date) == 0)
+                  .Include(z => z.ClientSiteLogBook)
+                .ThenInclude(z => z.ClientSite)
+               
+                .ToList();
+
+        }
+        public List<KeyVehcileLogField> GetKeyVehicleLogFields(bool includeDeleted = false)
+        {
+            return _context.KeyVehcileLogFields
+                .Where(x => includeDeleted || !x.IsDeleted)
+                .OrderBy(x => x.TypeId)
+                .ThenBy(x => x.Name)
+                .ToList();
+        }
+        public int GetMaxIncidentReportId (int LogId)
+            
+        {
+            var incidentReportid= _context.IncidentReports
+                 .Where(z => z.LogId == LogId).Max(x => x.Id);
+            return Convert.ToInt32(incidentReportid);
+
+
+        }
+        public List<ClientSiteKey> GetClientSiteKeys(int clientSiteId)
+        {
+            return _context.ClientSiteKeys
+                .Where(z => z.ClientSiteId == clientSiteId)
+                .Include(x => x.ClientSite)
+                .OrderBy(z => z.KeyNo)
+                .ToList();
+        }
+
+        public List<ClientSiteKey> GetClientSiteKeys(int[] clientSiteIds)
+        {
+            return _context.ClientSiteKeys
+                .Where(z => clientSiteIds.Contains(z.ClientSiteId))
+                .Include(x => x.ClientSite)
+                .OrderBy(z => z.KeyNo)
+                .ToList();
+        }
+        public List<ClientSitePoc> GetClientSitePocs()
+        {
+            return _context.ClientSitePocs
+                .Where(z =>  !z.IsDeleted)
+                .OrderBy(z => z.Name)
+                .ToList();
+        }
+        public List<ClientSiteLocation> GetClientSiteLocations()
+        {
+            return _context.ClientSiteLocations
+                .Where(z =>  !z.IsDeleted)
+                .OrderBy(z => z.Name)
+                .ToList();
         }
     }
 }
