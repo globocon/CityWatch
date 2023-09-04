@@ -878,7 +878,7 @@
         var i=1;
         document.getElementById('loader').style.display = 'block';
         $('#register_plate_loaded tr:gt(0)').each(function () {
-            debugger;
+            
             var  plateid = $(this).find("td").eq(1).text();
             
             var truckNo = $(this).find("td").eq(2).text();
@@ -1115,7 +1115,7 @@
     }
     function deletePlates()
     {
-       debugger;
+       
         var obj =
         {
             PlateId: $('#PlateId').val(),

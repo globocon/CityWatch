@@ -1338,7 +1338,7 @@
         var plateid = $(this).closest("tr").find("td").eq(1).text();
 
         var truckNo = $(this).closest("tr").find("td").eq(2).text();
-        debugger;
+        
         $(this).closest("tr").remove();
         var obj =
         {
