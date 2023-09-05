@@ -52,13 +52,13 @@
             
             <div style="display:none" id="guardLoginDetails">
                 <div class="form-row">
-                    <div class="form-group col-md-6">
+                    <div class="form-group col-md-6" id="divGuardEmail">
                         <label>Personal(Private) Email</label>
                         <input type="text" class="form-control" asp-for="@Model.GuardLogin.Guard.Email" />
                     </div>
-                    <div class="form-group col-md-6">
+                    <div class="form-group col-md-6" id="divGuardMobile">
                         <label>Personal(Private) Mobile</label>
-                        <input type="text" class="form-control" asp-for="@Model.GuardLogin.Guard.Mobile" />
+                        <input type="text" class="form-control" value="+61 4" asp-for="@Model.GuardLogin.Guard.Mobile" />
                     </div>
 
                 </div>

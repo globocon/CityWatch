@@ -197,6 +197,13 @@
                     $('#GuardLogin_OffDuty_Time').prop('disabled', false);
 
                     $('#GuardLogin_Guard_Name').val(result.guard.name);
+                    if (result.guard.email != null) {
+                        $("#divGuardEmail").hide();
+                    }
+                    if (result.guard.mobile != null) {
+                        $("#divGuardMobile").hide();
+                    }
+                    
                     $('#GuardLogin_Guard_Email').val(result.guard.email);
                     $('#GuardLogin_Guard_Mobile').val(result.guard.mobile);
                     $('#GuardLogin_Guard_Initial').val(result.guard.initial);
@@ -257,14 +264,16 @@
             $('#GuardLogin_Guard_SecurityNo').val('');
             showGuardSearchResult('Enter Security License No of New Guard');
             $('#divNewGuard').show();
-            $('#guardLoginDetails').show();
             $('#GuardLogin_ClientSiteName').prop('disabled', false);
             $('#GuardLogin_ClientType').prop('disabled', false);
             $('#GuardLogin_OnDuty_Time').prop('disabled', false);
             $('#GuardLogin_OnDuty_Time').val(getTimeFromDateTime(new Date()));
             $('#GuardLogin_OffDuty_Time').prop('disabled', false);
             $('#GuardLogin_Guard_Email').val('');
+            $("#divGuardEmail").show();
             $('#GuardLogin_Guard_Mobile').val('');
+            $('#guardLoginDetails').show();
+            $("#divGuardMobile").show();
         }
         else {
             $('#divNewGuard').hide();
