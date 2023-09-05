@@ -197,6 +197,8 @@
                     $('#GuardLogin_OffDuty_Time').prop('disabled', false);
 
                     $('#GuardLogin_Guard_Name').val(result.guard.name);
+                    $('#GuardLogin_Guard_Email').val(result.guard.email);
+                    $('#GuardLogin_Guard_Mobile').val(result.guard.mobile);
                     $('#GuardLogin_Guard_Initial').val(result.guard.initial);
                     $('#guardLoginDetails').show();
                     $('#GuardLogin_Guard_Id').val(result.guard.id);
@@ -261,6 +263,8 @@
             $('#GuardLogin_OnDuty_Time').prop('disabled', false);
             $('#GuardLogin_OnDuty_Time').val(getTimeFromDateTime(new Date()));
             $('#GuardLogin_OffDuty_Time').prop('disabled', false);
+            $('#GuardLogin_Guard_Email').val('');
+            $('#GuardLogin_Guard_Mobile').val('');
         }
         else {
             $('#divNewGuard').hide();
