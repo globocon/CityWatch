@@ -356,6 +356,24 @@ button.multiselect-option.dropdown-item > .form-check > label {
         box-shadow: 0 0 0 0 !important;
     }
 
+.btn-duress.btn-md {
+    width: 80px;
+    height: 80px;
+    padding: 7px 10px;
+    border-radius: 40px;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    color: #fff;
+    border: 5px solid #C0C0C0;
+    background-color: #9a0707;
+}
+
+    .btn-duress.btn-md.active {
+        border-color: #C0C0C0 !important;
+        background-color: #ff0000;
+    }
+
 /*  gijgo grid group column set bg-light color */
 tr[role=group] {
     background-color: #f8f9fa !important;
@@ -415,3 +433,43 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
 }
 
 /* -- */
+/* -- DownloadSelecter Page -- */
+#dvDownloadSelecterOuter {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    text-align: center
+}
+
+#dvcompanysop {
+    width: 25%;
+    
+}
+
+#dvtraining {
+    width: 25%;
+    
+}
+
+#dvformsandtemplates {
+    width: 25%;
+   
+}
+
+.center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+}
+
+@media (max-width:992px) {
+    #dvDownloadSelecterOuter {
+        flex-direction: column;
+    }
+
+    #dvcompanysop, #dvtraining, #dvformsandtemplates {
+        width: 100%;
+        margin-bottom:7px;
+    }
+}

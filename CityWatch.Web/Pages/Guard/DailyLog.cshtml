@@ -25,24 +25,39 @@
             </div>
             <div id="collapseOne" class="collapse multi-collapse show">
                 <div class="card-body">
-                    <ul class="list-unstyled">
-                        <li class="d-flex flex-sm-row flex-column flex-sm-wrap">
-                            <span class="mr-1"><b>Client Site: </b>@Model.GuardLog.ClientSiteLogBook.ClientSite.Name | </span>
-                            <span><b>Client Type: </b>@Model.GuardLog.ClientSiteLogBook.ClientSite.ClientType.Name</span>
-                        </li>
-                        <li>
-                            <b>Address: </b>@(Model.GuardLog.ClientSiteLogBook.ClientSite.Address ?? "N/A")
-                        </li>
-                        <li>
-                            <b>Landline: </b>@(Model.GuardLog.ClientSiteLogBook.ClientSite.LandLine ?? "N/A")
-                        </li>
-                        <li class="d-flex flex-sm-row flex-column flex-sm-wrap">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <ul class="list-unstyled">
+                                <li class="d-flex flex-sm-row flex-column flex-sm-wrap">
+                                    <span class="mr-1"><b>Client Site: </b>@Model.GuardLog.ClientSiteLogBook.ClientSite.Name | </span>
+                                    <span><b>Client Type: </b>@Model.GuardLog.ClientSiteLogBook.ClientSite.ClientType.Name</span>
+                                </li>
+                                <li>
+                                    <b>Address: </b>@(Model.GuardLog.ClientSiteLogBook.ClientSite.Address ?? "N/A")
+                                </li>
+                                <li>
+                                    <b>Landline: </b>@(Model.GuardLog.ClientSiteLogBook.ClientSite.LandLine ?? "N/A")
+                                </li>
+                                <li class="d-flex flex-sm-row flex-column flex-sm-wrap">
+                                    @{
+                                        var clientSmartWands = Model.ViewDataService.GetClientSiteSmartWands(Model.GuardLog.ClientSiteLogBook.ClientSiteId);
+                                    }
+                                    @Html.Raw("<b class=\"mr-1\">Smart WANDs: </b>" + (clientSmartWands.Any() ? string.Join(" ", clientSmartWands.Select(z => $"<span class=\"mr-1\">{z.SmartWandId} : {z.PhoneNumber},</span>")) : "N/A"))
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4 text-center">
                             @{
-                                var clientSmartWands = Model.ViewDataService.GetClientSiteSmartWands(Model.GuardLog.ClientSiteLogBook.ClientSiteId);
+                                var isDuressActive = Convert.ToBoolean(ViewData["IsDuressEnabled"]);
+                                var btnImage = isDuressActive ? "~/images/DuressButton.jpg" : "~/images/DuressButton_Inactive.jpg";
+                                var duressStatus = isDuressActive ? "Active" : "Normal";
                             }
-                            @Html.Raw("<b class=\"mr-1\">Smart WANDs: </b>" + (clientSmartWands.Any() ? string.Join(" ", clientSmartWands.Select(z => $"<span class=\"mr-1\">{z.SmartWandId} : {z.PhoneNumber},</span>")) : "N/A"))
-                        </li>
-                    </ul>
+                            <button type="button" class="btn btn-duress btn-md @duressStatus.ToLower()" id="duress_btn">DURESS</button>
+                            <p class="mb-0 mt-2">
+                                Status: <span id="duress_status" class="@(isDuressActive ? "font-weight-bold" : "")">@duressStatus</span>
+                            </p>
+                        </div>
+                    </div>                    
                     <hr />
                     <p class="mb-2">
                         <b>Guard Name: </b>@Model.GuardLog.GuardLogin.Guard.Name ;

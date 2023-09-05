@@ -49,10 +49,12 @@ namespace CityWatch.Kpi
             services.AddScoped<IIrDataProvider, IrDataProvider>();
             services.AddScoped<IPatrolDataReportService, PatrolDataReportService>();
             services.AddScoped<IConfigDataProvider, ConfigDataProvider>();
+            services.AddScoped<IGuardDataProvider, GuardDataProvider>();
 
             services.AddRazorPages(options => 
             {
-                options.Conventions.AuthorizeFolder("/");
+                // AllowAnonymousToFolder("/") given for allowing guard can access the KPI Dashboard 
+                options.Conventions.AllowAnonymousToFolder("/");
                 options.Conventions.AuthorizeFolder("/Develop");
                 options.Conventions.AllowAnonymousToFolder("/Account");
             });

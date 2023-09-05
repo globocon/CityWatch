@@ -1,6 +1,10 @@
-﻿using CityWatch.Data.Providers;
+﻿using CityWatch.Data;
+using CityWatch.Data.Models;
+using CityWatch.Data.Providers;
 using CityWatch.Kpi.Models;
+using iText.Layout.Element;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,10 +35,14 @@ namespace CityWatch.Kpi.Services
 
         MonthlyKpiResult GetKpiReportData(int clientSiteId, DateTime fromDate, DateTime toDate);
 
+        List<DailyKpiGuard> GetMonthlyKpiGuardData(int clientSiteId, DateTime fromDate, DateTime toDate);
+
         public Dictionary<int, MonthlyKpiResult> GetMonthlyKpiReportData(int[] clientSiteIds, DateTime fromDate, DateTime toDate);
 
         List<DailyKpiResult> GetKpiReportData(int[] clientSiteId, DateTime fromDate, DateTime toDate);
         List<SelectListItem> GetOfficerPositions(OfficerPositionFilterManning positionFilter = OfficerPositionFilterManning.SecurityOnly);
+        List<SelectListItem> ClientTypesUsingLoginUserId(int guardId);
+        List<SelectListItem> GetClientSitesUsingLoginUserId(int userId, string type = "");
     }
 
     public class ViewDataService : IViewDataService
@@ -42,15 +50,18 @@ namespace CityWatch.Kpi.Services
         private readonly IClientDataProvider _clientDataProvider;
         private readonly IKpiDataProvider _kpiDataProvider;
         private readonly IConfigDataProvider _configDataProvider;
-
+        private readonly IGuardDataProvider _guardDataProvider;
+        private readonly CityWatchDbContext _context;
         public ViewDataService(IClientDataProvider clientDataProvider,
             IKpiDataProvider kpiDataProvider,
-            IConfigDataProvider configDataProvider
-            )
+            IConfigDataProvider configDataProvider,
+            IGuardDataProvider guardDataProvider, CityWatchDbContext context)
         {
             _clientDataProvider = clientDataProvider;
             _kpiDataProvider = kpiDataProvider;
             _configDataProvider = configDataProvider;
+            _guardDataProvider = guardDataProvider;
+            _context = context;
         }
 
         public List<SelectListItem> ClientTypes
@@ -68,6 +79,43 @@ namespace CityWatch.Kpi.Services
             }
         }
 
+        public List<SelectListItem> ClientTypesUsingLoginUserId(int guardId)
+        {
+            if (guardId == 0)
+            {
+                var clientTypes = _clientDataProvider.GetClientTypes();
+                var items = new List<SelectListItem>() { new SelectListItem("Select", "", true) };
+                foreach (var item in clientTypes)
+                {
+                    items.Add(new SelectListItem(item.Name, item.Name));
+                }
+
+                return items;
+            }
+            else
+            {
+                List<GuardLogin> guardLogins = new List<GuardLogin>();
+
+                var ClientType=_context.GuardLogins
+                    .Where(z => z.GuardId == guardId)                        
+                        .Include(x => x.ClientSite.ClientType)                        
+                        .ToList();
+
+                var items = new List<SelectListItem>() { new SelectListItem("Select", "", true) };
+                foreach (var item in ClientType)
+                {
+                    if (!items.Any(cus => cus.Text == item.ClientSite.ClientType.Name))
+                    {
+                        items.Add(new SelectListItem(item.ClientSite.ClientType.Name, item.ClientSite.ClientType.Name));
+                    }
+                }
+
+                return items;
+
+            }
+
+        }
+
         public List<SelectListItem> GetClientSites(string type = "")
         {
             var sites = new List<SelectListItem>();
@@ -77,6 +125,45 @@ namespace CityWatch.Kpi.Services
                 sites.Add(new SelectListItem(item.Name, item.Id.ToString()));
             }
             return sites;
+        }
+
+        public List<SelectListItem> GetClientSitesUsingLoginUserId(int guardId, string type = "")
+        {
+            if (guardId == 0)
+            {
+                var sites = new List<SelectListItem>();
+                //var mapping = _clientDataProvider.GetClientSites(null).Where(x => x.ClientType.Name == type);
+                var mapping = _context.UserClientSiteAccess
+               .Where(x => x.ClientSite.ClientType.Name.Trim() == type.Trim())
+               .Include(x => x.ClientSite)
+               .Include(x => x.ClientSite.ClientType).ToList();
+                foreach (var item in mapping)
+                {
+                    sites.Add(new SelectListItem(item.ClientSite.Name, item.ClientSite.Id.ToString()));
+                }
+                return sites;
+
+            }
+            else
+            {
+                var sites = new List<SelectListItem>();
+
+                var mapping = _context.GuardLogins
+                .Where(z => z.GuardId == guardId)
+                    .Include(z => z.ClientSite)
+                    .ToList();
+
+
+                foreach (var item in mapping)
+                {
+                    if (!sites.Any(cus => cus.Text == item.ClientSite.Name))
+                    {
+                        sites.Add(new SelectListItem(item.ClientSite.Name, item.ClientSite.Id.ToString()));
+                    }
+                }
+                return sites;
+
+            }
         }
 
         public List<SelectListItem> GetYears()
@@ -111,7 +198,7 @@ namespace CityWatch.Kpi.Services
             {
                 new SelectListItem("Select", "", true),
             };
-            var officerPositions = _configDataProvider.GetPositions();           
+            var officerPositions = _configDataProvider.GetPositions();
             foreach (var officerPosition in officerPositions.Where(z => positionFilter == OfficerPositionFilterManning.All ||
                  positionFilter == OfficerPositionFilterManning.PatrolOnly && z.IsPatrolCar ||
                  positionFilter == OfficerPositionFilterManning.NonPatrolOnly && !z.IsPatrolCar ||
@@ -131,6 +218,27 @@ namespace CityWatch.Kpi.Services
             var dailyKpis = dailyClientSiteKpis.Select(x => new DailyKpiResult(x, clientSiteKpiSetting)).ToList();
 
             return new MonthlyKpiResult(clientSiteKpiSetting, dailyKpis);
+        }
+
+        public List<DailyKpiGuard> GetMonthlyKpiGuardData(int clientSiteId, DateTime fromDate, DateTime toDate)
+        {
+            var dailyClientSiteKpis = _kpiDataProvider.GetDailyClientSiteKpis(clientSiteId, fromDate, toDate).ToList();
+            var guardLogins = _guardDataProvider.GetGuardLogins(clientSiteId, fromDate, toDate).ToList();
+            foreach (var guardLogin in guardLogins)
+            {
+                // Trim OnDuty and OffDuty dates to login date
+                if (guardLogin.OnDuty.Date < guardLogin.LoginDate.Date)
+                {
+                    guardLogin.OnDuty = new DateTime(guardLogin.OnDuty.Year, guardLogin.OnDuty.Month, guardLogin.OnDuty.Day, 00, 01, 00); ;
+                }
+
+                var offDutyValue = guardLogin.OffDuty.Value;
+                if (offDutyValue.Date > guardLogin.LoginDate.Date)
+                {
+                    guardLogin.OffDuty = new DateTime(guardLogin.LoginDate.Year, guardLogin.LoginDate.Month, guardLogin.LoginDate.Day, 23, 59, 00); ;
+                }
+            }
+            return dailyClientSiteKpis.Select(z => new DailyKpiGuard(z, guardLogins.Where(y => y.LoginDate.ToString("yyyyMMdd") == z.Date.ToString("yyyyMMdd")))).ToList();
         }
 
         public Dictionary<int, MonthlyKpiResult> GetMonthlyKpiReportData(int[] clientSiteIds, DateTime fromDate, DateTime toDate)

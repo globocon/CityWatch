@@ -14,6 +14,7 @@ namespace CityWatch.Data.Models
         public int Id { get; set; }
         public string FileName { get; set; }
         public DateTime LastUpdated { get; set; }
+        public int DocumentType { get; set; }
 
         [NotMapped]
         public string FormattedLastUpdated { get { return LastUpdated.ToString("dd MMM yyyy @ HH:mm"); } } 

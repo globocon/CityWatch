@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace CityWatch.Data.Providers
@@ -10,7 +11,7 @@ namespace CityWatch.Data.Providers
     {
         List<GuardLog> GetGuardLogs(int logBookId, DateTime logDate);
         List<GuardLog> GetGuardLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
-        GuardLog GetLatestGuardLog(int clientSiteId, int guardId);
+        GuardLog GetLatestGuardLog(int clientSiteId, int guardId);        
         void SaveGuardLog(GuardLog guardLog);
         void DeleteGuardLog(int id);
         List<KeyVehicleLog> GetOpenKeyVehicleLogsByVehicleRego(string vehicleRego);
@@ -33,7 +34,7 @@ namespace CityWatch.Data.Providers
         List<CustomFieldLog> GetCustomFieldLogs(int logBookId);
         List<CustomFieldLog> GetCustomFieldLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate);
         void SaveCustomFieldLogs(List<CustomFieldLog> customFieldLogs);
-        void SaveCustomFieldLog(CustomFieldLog customFieldLog);
+        void SaveCustomFieldLog(CustomFieldLog customFieldLog);        
         List<string> GetVehicleRegos(string regoStart = null);
         List<string> GetCompanyNames(string companyNameStart);
         List<string> GetSenderNames(string senderNameStart);
@@ -51,6 +52,8 @@ namespace CityWatch.Data.Providers
         void DeleteKeyVehicleLogField(int id);
         List<KeyVehicleLogAuditHistory> GetAuditHistory(int id);
         void SaveKeyVehicleLogAuditHistory(KeyVehicleLogAuditHistory keyVehicleLogAuditHistory);
+        void SaveClientSiteDuress(int clientSiteId, int guardId);
+        ClientSiteDuress GetClientSiteDuress(int clientSiteId);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -103,15 +106,42 @@ namespace CityWatch.Data.Providers
             return null;
         }
 
+        public ClientSiteDuress GetClientSiteDuress(int clientSiteId)
+        {
+            return _context.ClientSiteDuress
+                .Where(z => z.ClientSiteId == clientSiteId)
+                .OrderBy(z => z.Id)
+                .LastOrDefault();
+        }
+
+        public void SaveClientSiteDuress(int clientSiteId, int guardId)
+        {
+            _context.ClientSiteDuress.Add(new ClientSiteDuress()
+            {
+                ClientSiteId = clientSiteId,
+                IsEnabled = true,
+                EnabledBy = guardId,
+                EnabledDate = DateTime.Today
+            });
+            _context.SaveChanges();
+        }
+
         public void SaveGuardLog(GuardLog guardLog)
         {
             // Insert new guardlog entry
+            //Quick fix 01092023 start
+            var eventDateTime = guardLog.EventDateTime;
+            if (!guardLog.IsSystemEntry)
+            {
+                eventDateTime = DateTime.Parse(guardLog.EventDateTime.ToString("dd/MM/yyyy HH:mm:ss"), new CultureInfo("en-US"));
+            }
+            //Quick fix 01092023 End
             if (guardLog.Id == 0)
             {
                 _context.GuardLogs.Add(new GuardLog()
                 {
                     ClientSiteLogBookId = guardLog.ClientSiteLogBookId,
-                    EventDateTime = guardLog.EventDateTime,
+                    EventDateTime = eventDateTime,
                     Notes = guardLog.Notes,
                     GuardLoginId = guardLog.GuardLoginId,
                     IsSystemEntry = guardLog.IsSystemEntry,
@@ -422,7 +452,7 @@ namespace CityWatch.Data.Providers
 
         public List<string> GetCompanyNames(string companyNameStart)
         {
-            return _context.KeyVehicleLogs
+            return _context.KeyVehicleLogVisitorPersonalDetails
                 .Where(x => !string.IsNullOrEmpty(x.CompanyName) && x.CompanyName.Substring(0, companyNameStart.Length).ToLower() == companyNameStart.ToLower())
                 .Select(x => x.CompanyName)
                 .Distinct()

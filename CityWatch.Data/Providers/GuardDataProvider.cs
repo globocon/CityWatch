@@ -11,6 +11,7 @@ namespace CityWatch.Data.Providers
         List<Guard> GetGuards();
         int SaveGuard(Guard guard, out string initalsUsed);
         List<GuardLogin> GetGuardLogins(int[] guardIds);
+        List<GuardLogin> GetGuardLogins(int clientSiteId, DateTime fromDate, DateTime toDate);
         List<GuardLogin> GetUniqueGuardLogins();
         List<GuardLogin> GetGuardLoginsBySmartWandId(int smartWandId);
         List<GuardLogin> GetGuardLoginsByLogBookId(int logBookId);
@@ -28,6 +29,7 @@ namespace CityWatch.Data.Providers
         GuardCompliance GetGuardCompliance(int id);
         void SaveGuardCompliance(GuardCompliance guardCompliance);
         void DeleteGuardCompliance(int id);
+        Guard GetGuardDetailsbySecurityLicenseNo(string securityLicenseNo);
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -43,6 +45,13 @@ namespace CityWatch.Data.Providers
         {
             return _context.Guards.ToList();
         }
+
+        public Guard GetGuardDetailsbySecurityLicenseNo(string securityLicenseNo)
+        {
+            return _context.Guards.SingleOrDefault(x => x.SecurityNo.Trim() == securityLicenseNo.Trim());
+        }
+        
+            
 
         public int SaveGuard(Guard guard, out string initalsUsed)
         {
@@ -98,12 +107,21 @@ namespace CityWatch.Data.Providers
 
         public List<GuardLogin> GetGuardLogins(int[] guardIds)
         {
-            var guardLogins = _context.GuardLogins
-                .Where(z => guardIds.Contains(z.GuardId))
+            List<GuardLogin> guardLogins = new List<GuardLogin>();
+            foreach (int guardId in guardIds)
+            {
+                guardLogins.AddRange(_context.GuardLogins
+                .Where(z => z.GuardId== guardId)                   
+                    .Include(z => z.ClientSite)
+                    .ToList());
+            }
+            //for query optimization Comment the old code
+            //var guardLogins = _context.GuardLogins
+            //    .Where(z => guardIds.Contains(z.GuardId))
 
-                .Include(z => z.Guard)
-                .Include(z => z.ClientSite)
-                .ToList();
+            //    .Include(z => z.Guard)
+            //    .Include(z => z.ClientSite)
+            //    .ToList();
 
 
             return guardLogins
@@ -128,6 +146,21 @@ namespace CityWatch.Data.Providers
                 .Include(z => z.SmartWand)
                 .Include(z => z.Position)
                 .ToList();
+        }
+
+        public List<GuardLogin> GetGuardLogins(int clientSiteId, DateTime fromDate, DateTime toDate)
+        {
+            var logbookIds = _context.ClientSiteLogBooks
+                                    .Where(z => z.Date >= fromDate && z.Date <= toDate &&
+                                            z.ClientSiteId == clientSiteId &&
+                                            z.Type == LogBookType.DailyGuardLog)
+                                    .Select(z => z.Id);
+
+            var guardLogins = _context.GuardLogins.Where(z => logbookIds.Contains(z.ClientSiteLogBookId));
+
+            guardLogins.Include(z => z.Guard).Load();
+
+            return guardLogins.ToList();
         }
 
         public List<GuardLogin> GetUniqueGuardLogins()

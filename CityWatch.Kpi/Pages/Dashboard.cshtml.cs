@@ -1,11 +1,15 @@
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
+using CityWatch.Data.Services;
 using CityWatch.Kpi.Models;
 using CityWatch.Kpi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System;
 using System.Threading.Tasks;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Http;
 
 namespace CityWatch.Kpi.Pages
 {
@@ -17,6 +21,7 @@ namespace CityWatch.Kpi.Pages
         private readonly IImportJobDataProvider _importJobDataProvider;
         private readonly IImportDataService _importDataService;
         public readonly IKpiDataProvider _kpiDataProvider;
+        private readonly IUserAuthenticationService _userAuthentication;
 
         public DashboardModel(IViewDataService viewDataService,
             IImportJobDataProvider importJobDataProvider,
@@ -36,16 +41,82 @@ namespace CityWatch.Kpi.Pages
         [BindProperty]
         public KpiRequest ReportRequest { get; set; }
 
+        public int UserId { get; set; }
+        public int GuardId { get; set; }
+
         public IViewDataService ViewDataService { get { return _viewDataService; } }
 
-        public void OnGet()
+        public IActionResult OnGet()
         {
-            ReportRequest = new KpiRequest();
+            /* The following changes done for allowing guard to access the KPI*/
+            var claimsIdentity = User.Identity as ClaimsIdentity;
+            /* For Guard Login using securityLicenseNo*/
+            string securityLicenseNo = Request.Query["Sl"];
+            string LoginGuardId = Request.Query["guid"];
+            /* For Guard Login using securityLicenseNo the office staff UserId*/
+            string loginUserId = Request.Query["lud"];
+            GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            if (!string.IsNullOrEmpty(securityLicenseNo) && !string.IsNullOrEmpty(loginUserId) && !string.IsNullOrEmpty(LoginGuardId))
+            {
+                ReportRequest = new KpiRequest();
+                UserId = int.Parse(loginUserId);
+                GuardId = int.Parse(LoginGuardId);
+                HttpContext.Session.SetInt32("GuardId", GuardId);
+                return Page();
+            }
+            // Check if the user is authenticated(Normal Admin Login)
+            if (claimsIdentity != null && claimsIdentity.IsAuthenticated)
+            {   /*Old Code for admin only*/
+                ReportRequest = new KpiRequest();
+                HttpContext.Session.SetInt32("GuardId", 0);
+                return Page();
+            }
+            else if(GuardId!=0)
+            {
+             
+                HttpContext.Session.SetInt32("GuardId", GuardId);
+                return Page();
+            }
+            else
+            {
+                HttpContext.Session.SetInt32("GuardId", 0);
+                return Redirect(Url.Page("/Account/Login"));
+            }
         }
 
+        /// <summary>
+        ///  Get Client Sites Using type and UserId
+        /// </summary>
+        /// <param name="type">Client Type</param>
+        /// <param name="UserId">Login User Id(Admin/Guard)</param>
+        /// <returns></returns>
+        public IActionResult OnGetClientSitesUsingUserId(string type, string guardId)
+        {
+            if (string.IsNullOrEmpty(guardId))
+            {
+                return new JsonResult(_viewDataService.GetClientSites(type));
+            }
+            else
+            {
+                return new JsonResult(_viewDataService.GetClientSitesUsingLoginUserId(int.Parse(guardId), type));
+
+            }
+
+        }
         public IActionResult OnGetClientSites(string type)
         {
-            return new JsonResult(_viewDataService.GetClientSites(type));
+            GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            if (GuardId==0)
+            {
+                return new JsonResult(_viewDataService.GetClientSites(type));
+            }
+            else
+            {
+                return new JsonResult(_viewDataService.GetClientSitesUsingLoginUserId(GuardId, type));
+            }
+
+
+
         }
 
         public IActionResult OnGetClientSiteKpiSettings(int siteId, int month, int year)
@@ -90,7 +161,7 @@ namespace CityWatch.Kpi.Pages
                 var fileName = _kpiReportGenerator.GeneratePdfReport(siteId, startDate, endDate);
                 return new JsonResult(new { success = true, header, data, fileName });
             }
-            return new JsonResult(new { success =  false });
+            return new JsonResult(new { success = false });
         }
 
         private string GetLastImportDateTime(int siteId, int month, int year)

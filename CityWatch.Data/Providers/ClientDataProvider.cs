@@ -47,6 +47,7 @@ namespace CityWatch.Data.Providers
         ClientSiteKpiNote GetClientSiteKpiNote(int id);
         int SaveClientSiteKpiNote(ClientSiteKpiNote note);
         List<ClientSiteLogBook> GetClientSiteLogBooks();
+        List<ClientSiteLogBook> GetClientSiteLogBooks(int? logBookId, LogBookType type);
         List<ClientSiteLogBook> GetClientSiteLogBooks(int clientSiteId, LogBookType type, DateTime fromDate, DateTime toDate);
         ClientSiteLogBook GetClientSiteLogBook(int clientSiteId, LogBookType type, DateTime date);
         int SaveClientSiteLogBook(ClientSiteLogBook logBook);
@@ -54,6 +55,7 @@ namespace CityWatch.Data.Providers
         void SetDataCollectionStatus(int clientSiteId, bool enabled);
 
         string ValidDateTime(ClientSiteKpiSetting setting);
+
         List<IncidentReportsPlatesLoaded> GetIncidentDetailsKvlReport(int logId);
         List<KeyVehicleLog> GetKeyVehiclogWithPlateIdAndTruckNoByLogId(int[] plateid, string[] truckNo,int logId);
         List<KeyVehcileLogField> GetKeyVehicleLogFields(bool includeDeleted = false);
@@ -62,6 +64,9 @@ namespace CityWatch.Data.Providers
         public List<ClientSiteKey> GetClientSiteKeys(int[] clientSiteIds);
         List<ClientSitePoc> GetClientSitePocs();
         List<ClientSiteLocation> GetClientSiteLocations();
+
+        List<ClientSite> GetClientSitesUsingGuardId(int? GuardId);
+
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -127,6 +132,15 @@ namespace CityWatch.Data.Providers
                 .ThenBy(x => x.Name)
                 .ToList();
         }
+        public List<ClientSite> GetClientSitesUsingGuardId(int? GuardId)
+        {
+            return _context.GuardLogins
+           .Where(z => z.GuardId == GuardId)
+           .Select(z => z.ClientSite)
+           .Distinct()
+           .ToList();
+
+        }
 
         public void SaveClientSite(ClientSite clientSite)
         {
@@ -149,6 +163,8 @@ namespace CityWatch.Data.Providers
                     Status = clientSite.Status,
                     StatusDate = clientSite.StatusDate,
                     SiteEmail = clientSite.SiteEmail,
+                    DuressEmail = clientSite.DuressEmail,
+                    DuressSms = clientSite.DuressSms,
                     LandLine = "+61 (3)",
                     DataCollectionEnabled = true
                 });
@@ -171,6 +187,8 @@ namespace CityWatch.Data.Providers
                 clientSiteToUpdate.Status = clientSite.Status;
                 clientSiteToUpdate.StatusDate = clientSite.StatusDate;
                 clientSiteToUpdate.SiteEmail = clientSite.SiteEmail;
+                clientSiteToUpdate.DuressSms = clientSite.DuressSms;
+                clientSiteToUpdate.DuressEmail= clientSite.DuressEmail;
             }
             _context.SaveChanges();
 
@@ -539,6 +557,7 @@ namespace CityWatch.Data.Providers
                 .ToList();
 
         }
+
         public void SavePlateLoaded(IncidentReportsPlatesLoaded report)
         {
             
@@ -630,5 +649,16 @@ namespace CityWatch.Data.Providers
                 .OrderBy(z => z.Name)
                 .ToList();
         }
+
+        public List<ClientSiteLogBook> GetClientSiteLogBooks(int? logBookId, LogBookType type)
+        {
+            return _context.ClientSiteLogBooks
+                .Where(z => z.Id == logBookId && z.Type == type)
+                .Include(x => x.ClientSite)
+                .Include(x => x.ClientSite.ClientType)
+                .ToList();
+        }      
+
+
     }
 }

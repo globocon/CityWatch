@@ -648,7 +648,7 @@
                 }).fail(function () {
                     console.log('error');
                 });
-            } else {
+            } else {    
                 gridGuardLog.clear();
                 gridGuardLog.reload();
             }
@@ -815,11 +815,11 @@
 
     $('#dglClientType').on('change', function () {
         const clientTypeId = $(this).val();
-        const clientSiteControl = $('#dglClientSiteId');  
+        const clientSiteControl = $('#dglClientSiteId');
         var selectedOption = $(this).find("option:selected");
-        var selectedText = selectedOption.text();       
+        var selectedText = selectedOption.text();
         $("#vklClientType").val(selectedText);
-        $("#vklClientType").multiselect("refresh");        
+        $("#vklClientType").multiselect("refresh");
         gridsiteLog.clear();
 
         const clientSiteControlvkl = $('#vklClientSiteId');
@@ -844,16 +844,16 @@
             }
         });
 
-        
+
     });
 
 
-    $('#dglClientSiteId').on('change', function () { 
-        const clientTypeId = $(this).val();       
+    $('#dglClientSiteId').on('change', function () {
+        const clientTypeId = $(this).val();
         $("#vklClientSiteId").val(clientTypeId);
         $("#vklClientSiteId").multiselect("refresh");
-       
-      
+
+
 
 
     });
@@ -941,6 +941,28 @@
             return;
         }
         $('#auditlog-zip-modal').modal('show');
+    });
+
+    $('#duress_btn').on('click', function () {
+        $.ajax({
+            url: '/Guard/DailyLog?handler=SaveClientSiteDuress',
+            data: {
+                clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
+                guardLoginId: $('#GuardLog_GuardLoginId').val(),
+                logBookId: $('#GuardLog_ClientSiteLogBookId').val(),
+                guardId: $('#GuardLog_GuardLogin_GuardId').val(),
+            },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.status) {
+                $('#duress_btn').removeClass('normal').addClass('active');
+                $("#duress_status").addClass('font-weight-bold');
+                $("#duress_status").text("Active");
+            }           
+            gridGuardLog.clear();
+            gridGuardLog.reload();
+        });
     });
 
     //Vehicle key Log
@@ -1183,7 +1205,7 @@
 
     function settingsButtonRenderer(value, record) {
         return '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#gl-site-settings-modal" ' +
-            'data-cs-id="' + record.id + '" data-cs-email="' + record.siteEmail + '" data-cs-landline="' + record.landLine +
+            'data-cs-id="' + record.id + '" data-cs-email="' + record.siteEmail + '" data-cs-landline="' + record.landLine + '" data-cs-duressemail="' + record.duressEmail + '" data-cs-duresssms="' + record.duressSms +
             '" data-cs-guardlog-emailto="' + record.guardLogEmailTo + '" data-cs-dbx-upload="' + record.siteUploadDailyLog +
             '" data-cs-name="' + record.clientSiteName + '"data-cs-datacollection-enabled ="' + record.dataCollectionEnabled + '"><i class="fa fa-pencil mr-2"></i>Edit</button>';
     }
@@ -1193,6 +1215,8 @@
         const siteId = button.data('cs-id');
         const siteName = button.data('cs-name');
         const siteEmail = button.data('cs-email');
+        const duressEmail = button.data('cs-duressemail');
+        const duressSms = button.data('cs-duresssms');
         const landLine = button.data('cs-landline');
         const isDataCollectionEnabled = button.data('cs-datacollection-enabled');
 
@@ -1203,6 +1227,8 @@
         $('#ClientSiteKey_ClientSiteId').val(siteId);
         $('#ClientSiteCustomField_ClientSiteId').val(siteId);
         $('#gs_site_email').val(siteEmail);
+        $('#gs_duress_email').val(duressEmail);
+        $('#gs_duress_sms').val(duressSms);
         $('#gs_land_line').val(landLine);
         $('#gs_email_recipients').val(guardLogEmailTo);
         $('#enableLogDump').prop('checked', false);
@@ -1513,7 +1539,9 @@
                 siteEmail: $('#gs_site_email').val(),
                 enableLogDump: isUpdateDailyLog,
                 landLine: $('#gs_land_line').val(),
-                guardEmailTo: $('#gs_email_recipients').val()
+                guardEmailTo: $('#gs_email_recipients').val(),
+                duressEmail: $('#gs_duress_email').val(),
+                duressSms: $('#gs_duress_sms').val()
             },
             headers: { 'RequestVerificationToken': token }
         }).done(function () {
@@ -1817,7 +1845,6 @@
         pageLength: 50,
         autoWidth: false,
         ajax: '/Admin/GuardSettings?handler=Guards',
-        
         columns: [{
             className: 'dt-control',
             orderable: false,
@@ -1871,7 +1898,7 @@
         $('.btn-add-guard-addl-details').show();
 
         var data = guardSettings.row($(this).parents('tr')).data();
-      
+
         $('#Guard_Name').val(data.name);
         $('#Guard_SecurityNo').val(data.securityNo);
         $('#Guard_Initial').val(data.initial);
@@ -1919,8 +1946,7 @@
     $('#btn_save_guard').on('click', function () {
         clearGuardValidationSummary('glValidationSummary');
         $('#guard_saved_status').hide();
-        //$('#Guard_IsActive').val($(cbIsActive).is(':checked'));
-        $('#Guard_IsActive').val(true);
+        $('#Guard_IsActive').val($(cbIsActive).is(':checked'));       
         $('#Guard_IsRCAccess').val($(cbIsRCAccess).is(':checked'));
         $('#Guard_IsKPIAccess').val($(cbIsKPIAccess).is(':checked'));
         $.ajax({
@@ -2454,6 +2480,91 @@
             $('#upload_compliance_file').val('');
         });
     });
+
+    $("#LoginConformationBtnRC").on('click', function () {
+        $('#txt_securityLicenseNoRC').val('');
+        clearGuardValidationSummary('GuardLoginValidationSummaryRC');
+        $("#modelGuardLoginConRc").modal("show");
+        return false;
+    });
+
+    $('#btnGuardLoginRC').on('click', function () {
+        $('#Access_permission_RC_status').hide();
+        const securityLicenseNo = $('#txt_securityLicenseNoRC').val();
+        if (securityLicenseNo === '') {
+            displayGuardValidationSummary('GuardLoginValidationSummaryRC', 'Please enter the security license No ');
+        }
+        else {
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+                type: 'POST',
+                data: {
+                    securityLicenseNo: securityLicenseNo,
+                    type: 'RC'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.accessPermission) {
+                    $('#txt_securityLicenseNoRC').val('');
+                    $('#modelGuardLoginConRC').modal('hide');
+                    clearGuardValidationSummary('GuardLoginValidationSummaryRC');
+                    $('#Access_permission_RC_status').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Redirecting to Radio Checklist (RC). Please wait...').show();
+                    window.location.href = '/Radio/Check';
+                    
+                }
+                else {
+                    $('#txt_securityLicenseNoRC').val('');
+                    if (result.successCode === 0) {
+                        displayGuardValidationSummary('GuardLoginValidationSummaryRC', result.successMessage);
+                    }
+                }
+            });
+
+        }
+    });
+    /* Show login conformation popup for KPI */
+    $("#LoginConformationBtnKPI").on('click', function () {
+        clearGuardValidationSummary('GuardLoginValidationSummary');
+        $('#txt_securityLicenseNo').val('');
+        $("#modelGuardLoginCon").modal("show");
+        return false;
+    });
+    /* Check if Guard can access the KPI */
+    $('#btnGuardLoginKPI').on('click', function () {
+        const securityLicenseNo = $('#txt_securityLicenseNo').val();
+        if (securityLicenseNo === '') {
+            displayGuardValidationSummary('GuardLoginValidationSummary', 'Please enter the security license No ');
+        }
+        else {
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+                type: 'POST',
+                data: {
+                    securityLicenseNo: securityLicenseNo,
+                    type: 'KPI'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.accessPermission) {
+                    $('#txt_securityLicenseNo').val('');
+                    $('#modelGuardLoginCon').modal('hide');
+                    /* window.location.href = 'https://kpi.cws-ir.com/Dashboard?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId;*//*live server*/
+                    /*window.location.href = 'https://localhost:44378/Dashboard?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;*//*local testing*/
+                    window.location.href = 'http://kpi.c4i-system.com/Dashboard?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId; /*test server*/
+                    clearGuardValidationSummary('GuardLoginValidationSummary');
+                }
+                else {
+                    $('#txt_securityLicenseNo').val('');
+                    if (result.successCode === 0) {
+                        displayGuardValidationSummary('GuardLoginValidationSummary', result.successMessage);
+                    }
+                }
+            });
+
+        }
+    });
+
+
 
     $('#delete_compliance_file').on('click', function () {
         const guardComplianceId = $('#GuardCompliance_Id').val();

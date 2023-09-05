@@ -6,6 +6,23 @@
 }
 <div class="row mt-3">
     <div class="col-md-12 ">
+        @if(!string.IsNullOrEmpty(HttpContext.Request.Query["type"]))
+        {
+            if (HttpContext.Request.Query["type"].ToString().Trim() == "1")
+            {
+                <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Company SOP's</label>
+            }
+            else if (HttpContext.Request.Query["type"].ToString().Trim() == "2")
+            {
+                <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">C4i Training</label>
+
+            }
+            else if (HttpContext.Request.Query["type"].ToString().Trim() == "3")
+            {
+                <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Forms & Templates</label>
+            }
+            
+        }
         <table class="table" id="file_downloads"></table>                    
     </div>
 </div>

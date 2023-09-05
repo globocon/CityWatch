@@ -78,7 +78,7 @@ namespace CityWatch.Web.Pages.Admin
                 if (clientSites.Count == 0)
                 {
                     var clientNewSites = _viewDataService.GetNewUserClientSites();
-                    
+
                     var clientSiteWithSettings = _clientSiteWandDataProvider.GetClientSiteSmartWands(searchTerm).ToList();
                     if (!string.IsNullOrEmpty(type))
                     {
@@ -114,11 +114,11 @@ namespace CityWatch.Web.Pages.Admin
                             z.GuardLogEmailTo,
                             z.DataCollectionEnabled,
                             HasSettings = clientSiteWithSettings.Any(x => x.ClientSiteId == z.Id) || !string.IsNullOrEmpty(z.SiteEmail)
-                        }).Where(x => (clientSiteWithSettings.Any(c => c.ClientSiteId == x.Id)) ));
+                        }).Where(x => (clientSiteWithSettings.Any(c => c.ClientSiteId == x.Id))));
                     }
                 }
 
-            
+
                 else
                 {
 
@@ -131,6 +131,8 @@ namespace CityWatch.Web.Pages.Admin
                         ClientSiteName = z.Name,
                         z.SiteEmail,
                         z.LandLine,
+                        z.DuressEmail,
+                        z.DuressSms,
                         SiteUploadDailyLog = z.UploadGuardLog,
                         z.GuardLogEmailTo,
                         z.DataCollectionEnabled,
@@ -266,7 +268,7 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
 
-        public void OnPostSaveSiteEmail(int siteId, string siteEmail, bool enableLogDump, string landLine, string guardEmailTo)
+        public void OnPostSaveSiteEmail(int siteId, string siteEmail, bool enableLogDump, string landLine, string guardEmailTo, string duressEmail, string duressSms)
         {
             var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(z => z.Id == siteId);
             if (clientSite != null)
@@ -275,6 +277,8 @@ namespace CityWatch.Web.Pages.Admin
                 clientSite.UploadGuardLog = enableLogDump;
                 clientSite.LandLine = landLine;
                 clientSite.GuardLogEmailTo = guardEmailTo;
+                clientSite.DuressEmail= duressEmail;
+                clientSite.DuressSms = duressSms;
             }
 
             _clientDataProvider.SaveClientSite(clientSite);
@@ -731,6 +735,82 @@ namespace CityWatch.Web.Pages.Admin
             }
 
             return new JsonResult(new { status });
+        }
+
+
+        public JsonResult OnPostGuardDetailsForRCLogin(string securityLicenseNo, string type)
+        {
+            var AccessPermission = false;
+            int? LoggedInUserId = 0;
+            string  SuccessMessage = string.Empty;
+            int ? SuccessCode = 0;
+            int? GuId = 0;
+            if (!string.IsNullOrEmpty(securityLicenseNo))
+            {
+                var guard = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(securityLicenseNo);
+                if (guard != null)
+                {
+
+                    if (type == "KPI")
+                    {
+                        if (guard.IsActive)
+                        {
+                            if (guard.IsKPIAccess)
+                            {
+                                AccessPermission = true;
+                                GuId=guard.Id;
+                                if (AuthUserHelper.LoggedInUserId != null)
+                                {
+                                    LoggedInUserId = AuthUserHelper.LoggedInUserId;
+                                    
+                                }
+
+                                SuccessCode = 1;
+                            }
+                            else
+                            {
+                                SuccessMessage = "Not authorized to access this page";
+                            }
+                        }
+                        else
+                        {
+                            SuccessMessage = "Guard is inactive";
+                        }
+
+                    }
+                    if (type == "RC")
+                    {
+                        if (guard.IsActive)
+                        {
+                            if (guard.IsRCAccess)
+                            {
+                                AccessPermission = true;
+                                GuId = guard.Id;
+                                if (AuthUserHelper.LoggedInUserId != null)
+                                {
+                                    LoggedInUserId = AuthUserHelper.LoggedInUserId;
+                                }
+                                SuccessCode = 1;
+                            }
+                            else
+                            {
+                                SuccessMessage = "Not authorized to access this page";
+                            }
+                        }
+                        else
+                        {
+                            SuccessMessage = "Guard is inactive";
+                        }
+                    }
+                }
+                else
+                {
+                    SuccessMessage = "Invalid Security License No";
+
+                }
+
+            }
+            return new JsonResult(new { AccessPermission, LoggedInUserId, GuId, SuccessCode, SuccessMessage });
         }
 
         private bool UploadGuardLicenseToDropbox(GuardLicense guardLicense)

@@ -74,8 +74,13 @@ namespace CityWatch.Web.Pages.Guard
         public IViewDataService ViewDataService { get { return _viewDataService; } }
 
         public void OnGet()
-        {
+        {            
             KeyVehicleLog = GetKeyVehicleLog();
+            var logBookId = HttpContext.Session.GetInt32("LogBookId");
+            var clientSiteId = _clientDataProvider.GetClientSiteLogBooks(logBookId, LogBookType.VehicleAndKeyLog)
+                                .FirstOrDefault()?
+                                .ClientSiteId;
+            ViewData["IsDuressEnabled"] = clientSiteId != null && _viewDataService.IsClientSiteDuressEnabled(clientSiteId.Value);
         }
 
         public JsonResult OnGetKeyVehicleLogs(int logbookId, KvlStatusFilter kvlStatusFilter)
@@ -347,7 +352,14 @@ namespace CityWatch.Web.Pages.Guard
 
             try
             {
-                await UploadToDropbox(clientSiteId, fileName);
+                var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(id);
+                var clientSiteLocation = string.Empty;
+                if (keyVehicleLog != null)
+                {
+                    if (keyVehicleLog.ClientSiteLocation != null)
+                        clientSiteLocation = keyVehicleLog.ClientSiteLocation.Name;
+                }
+                await UploadToDropbox(clientSiteId, fileName, clientSiteLocation);
             }
             catch (Exception ex)
             {
@@ -411,7 +423,8 @@ namespace CityWatch.Web.Pages.Guard
             if (guardLoginId == null)
                 throw new InvalidOperationException("Session timeout due to user inactivity. Failed to get guard details");
 
-            var clientSiteLogBook = _clientDataProvider.GetClientSiteLogBooks().SingleOrDefault(z => z.Id == logBookId && z.Type == LogBookType.VehicleAndKeyLog);
+            //var clientSiteLogBook = _clientDataProvider.GetClientSiteLogBooks().SingleOrDefault(z => z.Id == logBookId && z.Type == LogBookType.VehicleAndKeyLog);
+            var clientSiteLogBook = _clientDataProvider.GetClientSiteLogBooks(logBookId, LogBookType.VehicleAndKeyLog).SingleOrDefault();
             var guardLogin = _guardDataProvider.GetGuardLoginById(guardLoginId.Value);
             KeyVehicleLog ??= new KeyVehicleLog()
             {
@@ -454,6 +467,29 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { success, message, kvlProfileId });
         }
 
+        public JsonResult OnPostSaveClientSiteDuress(int clientSiteId, int guardId, int guardLoginId, int logBookId)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                var logbookId = _clientDataProvider.GetClientSiteLogBook(clientSiteId, LogBookType.DailyGuardLog, DateTime.Today)?.Id;
+                logbookId ??= _clientDataProvider.SaveClientSiteLogBook(new ClientSiteLogBook()
+                    {
+                        ClientSiteId = clientSiteId,
+                        Type = LogBookType.DailyGuardLog,
+                        Date = DateTime.Today
+                    });
+                _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logbookId.Value, guardId);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+            return new JsonResult(new { status, message });
+        }
+
         private async Task UploadToDropbox(int clientSiteId, string fileName)
         {
             var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientSiteId) ??
@@ -472,6 +508,31 @@ namespace CityWatch.Web.Pages.Guard
             await _dropboxUploadService.Upload(dropBoxSettings, fileToUpload, dbxFilePath);
         }
 
+
+        private async Task UploadToDropbox(int clientSiteId, string fileName, string clientSiteLocation)
+        {
+            var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientSiteId) ??
+                throw new ArgumentException($"ClientSiteKpiSettings missing for this client site");
+
+            var siteBasePath = clientSiteKpiSettings.DropboxImagesDir;
+            if (string.IsNullOrEmpty(siteBasePath))
+                throw new ArgumentException($"Dropbox directory missing for this client site");
+
+            var fileToUpload = Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName);
+            var dayPathFormat = clientSiteKpiSettings.IsWeekendOnlySite ? "yyyyMMdd - ddd" : "yyyyMMdd";
+            var folderPathToCreate = $"{siteBasePath}/FLIR - Wand Recordings - IRs - Daily Logs/{DateTime.Today.Date.Year}/{DateTime.Today.Date:yyyyMM} - {DateTime.Today.Date.ToString("MMMM").ToUpper()} DATA/{DateTime.Today.Date.ToString(dayPathFormat).ToUpper()}/Dockets - General/{fileName}"; ;
+            if (!string.IsNullOrEmpty(clientSiteLocation))
+            {
+                folderPathToCreate = $"{siteBasePath}/FLIR - Wand Recordings - IRs - Daily Logs/{DateTime.Today.Date.Year}/{DateTime.Today.Date:yyyyMM} - {DateTime.Today.Date.ToString("MMMM").ToUpper()} DATA/{DateTime.Today.Date.ToString(dayPathFormat).ToUpper()}/Dockets - {string.Join("_", clientSiteLocation.Split(Path.GetInvalidFileNameChars()))}/{fileName}";
+
+            }
+
+            var dropBoxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken,
+                                                      _settings.DropboxRefreshToken, _settings.DropboxUserEmail);
+
+            await _dropboxUploadService.Upload(dropBoxSettings, fileToUpload, folderPathToCreate);
+
+        }
         private void SendEmail(string vehicleRego, string toAddresses, string fileName)
         {
             var fromAddress = _emailOptions.FromAddress.Split('|');

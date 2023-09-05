@@ -18,13 +18,13 @@ $(function () {
 
     $('#clientType').on('change', function () {
         resetDashboardUi();
-
+        
         const option = $(this).val();
         if (!option)
             return;
-
+        var guardId = $("#hid_guardId").val();
         $.ajax({
-            url: '/dashboard?handler=ClientSites&type=' + encodeURIComponent(option),
+            url: '/dashboard?handler=ClientSitesUsingUserId&type=' + encodeURIComponent(option) + "&&guardId=" + encodeURIComponent(guardId),
             type: 'GET',
             dataType: 'json',
         }).done(function (data) {
