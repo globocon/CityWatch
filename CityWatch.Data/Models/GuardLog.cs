@@ -24,6 +24,9 @@ namespace CityWatch.Data.Models
 
         public bool IsSystemEntry { get; set; }
 
+        [NotMapped]
+        public string TimePartOnly { get; set; }
+
         public IrEntryType? IrEntryType { get; set; }
 
         [ForeignKey("ClientSiteLogBookId")]
