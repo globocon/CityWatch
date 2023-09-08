@@ -64,8 +64,14 @@ namespace CityWatch.Data.Providers
         public List<ClientSiteKey> GetClientSiteKeys(int[] clientSiteIds);
         List<ClientSitePoc> GetClientSitePocs();
         List<ClientSiteLocation> GetClientSiteLocations();
-
         List<ClientSite> GetClientSitesUsingGuardId(int? GuardId);
+        List<ClientSiteLinksPageType> GetSiteLinksPageTypes();
+        List<ClientSiteLinksDetails> GetSiteLinksPageDetails(int type);
+        int SaveClientSiteLinksPageType(ClientSiteLinksPageType ClientSiteLinksPageTypeRecord);
+        int SaveSiteLinkDetails(ClientSiteLinksDetails ClientSiteLinksDetailsRecord);
+        void DeleteSiteLinkDetails(int id);
+        List<ClientSiteLinksDetails> GetSiteLinkDetailsUsingTypeAndState(int type, string state);
+        string GetSiteLinksTypeUsingId(int typeId);
 
     }
 
@@ -658,6 +664,143 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.ClientSite.ClientType)
                 .ToList();
         }      
+
+
+
+        /* Save Client Site Links Page Type*/
+
+        public List<ClientSiteLinksPageType> GetSiteLinksPageTypes()
+        {
+            return _context.ClientSiteLinksPageType.OrderBy(x => x.PageTypeName).ToList();
+        }
+        public List<ClientSiteLinksDetails> GetSiteLinksPageDetails(int type)
+        {
+            return _context.ClientSiteLinksDetails.Where(x=>x.ClientSiteLinksTypeId == type).OrderBy(x => x.Title).ToList();
+            
+        }
+        public int SaveClientSiteLinksPageType(ClientSiteLinksPageType ClientSiteLinksPageTypeRecord)
+        {
+            int saveStatus = 0;
+            if (ClientSiteLinksPageTypeRecord != null)
+            {
+
+                if (ClientSiteLinksPageTypeRecord.Id == 0)
+                {
+                    var ClientSiteLinksPageTypeToUpdate = _context.ClientSiteLinksPageType.SingleOrDefault(x => x.PageTypeName == ClientSiteLinksPageTypeRecord.PageTypeName);
+
+                    if (ClientSiteLinksPageTypeToUpdate == null)
+                    {
+                        _context.ClientSiteLinksPageType.Add(new ClientSiteLinksPageType() { PageTypeName = ClientSiteLinksPageTypeRecord.PageTypeName });
+                        saveStatus = 1;
+
+                    }
+                    else
+                    {
+                        saveStatus = 2;
+                    }
+
+                }
+                else
+                {
+                    var ClientSiteLinksPageTypeToUpdate = _context.ClientSiteLinksPageType.SingleOrDefault(x => x.Id == ClientSiteLinksPageTypeRecord.Id);
+                    if (ClientSiteLinksPageTypeToUpdate != null)
+                    {
+
+                        ClientSiteLinksPageTypeToUpdate.PageTypeName = ClientSiteLinksPageTypeRecord.PageTypeName;
+                        saveStatus = 1;
+                    }
+
+
+                }
+                _context.SaveChanges();
+
+            }
+
+            return saveStatus;
+        }
+
+
+        public int SaveSiteLinkDetails(ClientSiteLinksDetails ClientSiteLinksDetailsRecord)
+        {
+            int saveStatus = 0;
+            if (ClientSiteLinksDetailsRecord != null)
+            {
+                
+                if (ClientSiteLinksDetailsRecord.Id == -1)
+                {
+                    /* for checking already exist this title in state */
+                    var checkIfAlreadyExist = _context.ClientSiteLinksDetails.SingleOrDefault(x => x.Title == ClientSiteLinksDetailsRecord.Title && x.State == ClientSiteLinksDetailsRecord.State);
+                    if (checkIfAlreadyExist == null)
+                    {
+                        _context.ClientSiteLinksDetails.Add(new ClientSiteLinksDetails()
+                        {
+                            Title = ClientSiteLinksDetailsRecord.Title,
+                            Hyperlink = ClientSiteLinksDetailsRecord.Hyperlink,
+                            State = ClientSiteLinksDetailsRecord.State,
+                            ClientSiteLinksTypeId = ClientSiteLinksDetailsRecord.typeId
+                        });
+                        saveStatus = 1;
+                    }
+                    else
+                    {
+                        saveStatus = 2;
+                    }
+
+                }
+                else
+                {
+                    var reportFieldToUpdate = _context.ClientSiteLinksDetails.SingleOrDefault(x => x.Id == ClientSiteLinksDetailsRecord.Id);
+
+                    if (reportFieldToUpdate != null)
+                    {
+                        /* for checking already exist this title in state */
+                        var checkIfAlreadyExist = _context.ClientSiteLinksDetails.SingleOrDefault(x => x.Title == ClientSiteLinksDetailsRecord.Title && x.State == ClientSiteLinksDetailsRecord.State && x.Id != ClientSiteLinksDetailsRecord.Id);
+                        if (checkIfAlreadyExist == null)
+                        {
+                            reportFieldToUpdate.Title = ClientSiteLinksDetailsRecord.Title;
+                            reportFieldToUpdate.Hyperlink = ClientSiteLinksDetailsRecord.Hyperlink;
+                            reportFieldToUpdate.State = ClientSiteLinksDetailsRecord.State;
+                            reportFieldToUpdate.ClientSiteLinksTypeId = ClientSiteLinksDetailsRecord.ClientSiteLinksTypeId;
+                            saveStatus = 1;
+                        }
+                        else
+                        {
+
+                            saveStatus = 3;
+                        }
+                    }
+                }
+                _context.SaveChanges();
+
+            }
+
+            return saveStatus;
+        }
+
+
+        public void DeleteSiteLinkDetails(int id)
+        {
+            if (id == -1)
+                return;
+
+            var siteLinkDetailsToDelete = _context.ClientSiteLinksDetails.SingleOrDefault(x => x.Id == id);
+            if (siteLinkDetailsToDelete == null)
+                throw new InvalidOperationException();
+
+            _context.ClientSiteLinksDetails.Remove(siteLinkDetailsToDelete);
+            _context.SaveChanges();
+        }
+
+        public List<ClientSiteLinksDetails> GetSiteLinkDetailsUsingTypeAndState(int type,string state)
+        {
+            return _context.ClientSiteLinksDetails.Where(x => x.ClientSiteLinksTypeId == type && x.State== state).OrderBy(x => x.Title).ToList();
+        }
+
+        public string GetSiteLinksTypeUsingId(int typeId)
+        {
+           
+            return _context.ClientSiteLinksPageType.SingleOrDefault(x => x.Id == typeId).PageTypeName;
+        }
 
 
     }

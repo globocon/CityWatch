@@ -24,9 +24,10 @@
         var kvlAttachmentsCount = kvlAttachments != null ? kvlAttachments.Count : 0;
         var kvlKeys = ViewData["KeyVehicleLog_Keys"] as List<ClientSiteKey>;
         var kvlKeysCount = kvlKeys != null ? kvlKeys.Count : 0;
+        var kvlAttachmentRootPath = ViewData["KeyVehicleLog_FilesPathRoot"] as string;
     }
     <div class="row">
-        <div class="col-md-6 border-right">            
+        <div class="col-md-6 border-right">
             <div class="form-row">
                 <div class="form-group col-md-3">
                     <label>Initial Call <br />(<span style="font-size:11px">or Email Request</span>)</label><i class="fa fa-circle text-warning ml-3"></i>
@@ -68,16 +69,16 @@
                     </div>
                     <input type="datetime-local" asp-for="@Model.ExitTime" hidden />
                 </div>
-            </div>            
+            </div>
             <ul class="nav nav-tabs" role="tablist">
                 <li class="nav-item">
                     <a class="nav-link active" id="vehicle-details-tab" data-toggle="tab" data-target="#vehicle-details" role="tab" aria-controls="vehicle-details" aria-selected="true">
-                        <i class="fa fa-truck mr-2"></i>Vehicle
+                        <i class="fa fa-user"></i> Person or <i class="fa fa-truck mr-2"></i>Vehicle
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" id="key-details-tab" data-toggle="tab" data-target="#key-details" role="tab" aria-controls="key-details" aria-selected="false">
-                        <i class="fa fa-key mr-2"></i>Keys<span class="badge badge-primary ml-2">@kvlKeysCount</span>
+                        <i class="fa fa-key mr-2"></i>Keys or FOB<span class="badge badge-primary ml-2">@kvlKeysCount</span>
                     </a>
                 </li>
             </ul>
@@ -104,7 +105,7 @@
                                 </div>
                             </div>
                             <input type="text" class="form-control" asp-for="@Model.TimeSlotNo">
-                        </div>               
+                        </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group col-md-4">
@@ -121,7 +122,7 @@
                         </div>
                         <div class="form-group col-md-2">
                             <label>Reels</label>
-                            <input class="form-control" type="number" asp-for="@Model.Reels"/>
+                            <input class="form-control" type="number" asp-for="@Model.Reels" />
                         </div>
                     </div>
                     <div class="form-row">
@@ -253,22 +254,22 @@
                     <input type="hidden" asp-for="@Model.ProductOther" />
                 </div>
             </div>
-            <div class="form-row">                
+            <div class="form-row">
                 <div class="form-group col-md-4">
                     <label>Customer Ref</label>
-                    <input class="form-control" type="text" asp-for="@Model.CustomerRef"/>
+                    <input class="form-control" type="text" asp-for="@Model.CustomerRef" />
                 </div>
                 <div class="form-group col-md-4">
                     <label>VWI</label>
-                    <input class="form-control" type="text" asp-for="@Model.Vwi"/>
+                    <input class="form-control" type="text" asp-for="@Model.Vwi" />
                 </div>
                 <div class="form-group col-md-4">
                     <div class="d-flex flex-row justify-content-between">
-                        <label id="lblIsSender">Sender</label>
+                        <label id="lblIsSender">Sender Address</label>
                         <div class="custom-control custom-switch duty-day-switch">
                             <input type="checkbox" class="custom-control-input" id="cbIsSender">
                             <label class="custom-control-label" for="cbIsSender"></label>
-                            <input hidden asp-for="@Model.IsSender"/>
+                            <input hidden asp-for="@Model.IsSender" />
                         </div>
                     </div>
                     <input type="text" class="form-control" asp-for="@Model.Sender">
@@ -284,6 +285,10 @@
                     <label>Site Location</label>
                     <select class="form-control" asp-for="@Model.ClientSiteLocationId" asp-items="@clientViewDataService.GetClientSiteLocations(new int[] { Model.ClientSiteLogBook.ClientSiteId })">
                     </select>
+                </div>
+                <div class="form-group col-md-4">
+                    <label class="mb-5"></label>
+                    <button type="button" class="btn mt-4 ml-5" title="Copy to Clipboard" id="copyButton"><i class="fa fa-clipboard fa-2x" aria-hidden="true"></i></button>
                 </div>
             </div>
             <ul class="nav nav-tabs" role="tablist">
@@ -310,21 +315,27 @@
                         <div class="form-group col-md-12">
                             <label>Notes</label>
                             <textarea class="form-control" rows="5" maxlength="512" asp-for="@Model.Notes"></textarea>
+                            <span style="font-size:0.8rem" class="d-block">
+                                You can add new notes above. But never delete the previuos or existing entries(Add entries: Z-A).
+                            </span>
                         </div>
                     </div>
                 </div>
                 <div class="tab-pane fade p-2" id="kvl-attachments" role="tabpanel" aria-labelledby="kvl-attachments-tab">
                     <div class="row mt-5 mt-md-3">
                         <div class="col">
-                            <i class="text-muted">Click Browse and select one or more files (.jpg, .jpeg, .png, .bmp)</i>
+                            <i class="text-muted" style="font-size:12px">Click Browse and select one or more files (.jpg, .jpeg, .png, .bmp, .pdf, .mp3, .mp4, .avi)</i>
                             <div class="custom-file mt-3">
-                                <input type="file" id="kvl_attachment_upload" name="media" class="custom-file-input" accept=".jpg, .jpeg, .png, .bmp" multiple>
+
+                                <input type="file" id="kvl_attachment_upload" name="media" class="custom-file-input" accept=".jpg, .jpeg, .png, .bmp, .pdf, .mp3, .mp4, .avi" multiple>
+
                                 <label class="custom-file-label" for="kvl_attachment_upload">Choose file(s) to upload</label>
                             </div>
                         </div>
                     </div>
                     <div class="row mt-2">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
+                          
                             <ul id="kvl-attachment-list" class="list-group d-block w-auto pt-2">
                                 @if (kvlAttachments != null)
                                 {
@@ -334,6 +345,7 @@
                                         <li class="list-group-item" id="attach_@index" data-index="@index">
                                             @fileName
                                             <i class="fa fa-trash-o ml-2 text-danger btn-delete-kvl-attachment" title="Delete" style="cursor: pointer;"></i>
+                                            <a href="@kvlAttachmentRootPath/@fileName" target="_blank"><i class="fa fa-download ml-2 text-primary" title="Download" style="cursor: pointer;"></i></a>
                                         </li>
                                         index++;
                                     }
@@ -358,7 +370,7 @@
                                             <th width="15%">Guard Initial</th>
                                             <th width="50%">Audit Message</th>
                                         </tr>
-                                    </thead>                                    
+                                    </thead>
                                 </table>
                             }
                         </div>

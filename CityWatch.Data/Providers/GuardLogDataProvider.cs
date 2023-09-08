@@ -11,7 +11,7 @@ namespace CityWatch.Data.Providers
     {
         List<GuardLog> GetGuardLogs(int logBookId, DateTime logDate);
         List<GuardLog> GetGuardLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
-        GuardLog GetLatestGuardLog(int clientSiteId, int guardId);        
+        GuardLog GetLatestGuardLog(int clientSiteId, int guardId);
         void SaveGuardLog(GuardLog guardLog);
         void DeleteGuardLog(int id);
         List<KeyVehicleLog> GetOpenKeyVehicleLogsByVehicleRego(string vehicleRego);
@@ -34,7 +34,7 @@ namespace CityWatch.Data.Providers
         List<CustomFieldLog> GetCustomFieldLogs(int logBookId);
         List<CustomFieldLog> GetCustomFieldLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate);
         void SaveCustomFieldLogs(List<CustomFieldLog> customFieldLogs);
-        void SaveCustomFieldLog(CustomFieldLog customFieldLog);        
+        void SaveCustomFieldLog(CustomFieldLog customFieldLog);
         List<string> GetVehicleRegos(string regoStart = null);
         List<string> GetCompanyNames(string companyNameStart);
         List<string> GetSenderNames(string senderNameStart);
@@ -128,20 +128,12 @@ namespace CityWatch.Data.Providers
 
         public void SaveGuardLog(GuardLog guardLog)
         {
-            // Insert new guardlog entry
-            //Quick fix 01092023 start
-            var eventDateTime = guardLog.EventDateTime;
-            if (!guardLog.IsSystemEntry)
-            {
-                eventDateTime = DateTime.Parse(guardLog.EventDateTime.ToString("dd/MM/yyyy HH:mm:ss"), new CultureInfo("en-US"));
-            }
-            //Quick fix 01092023 End
             if (guardLog.Id == 0)
             {
                 _context.GuardLogs.Add(new GuardLog()
                 {
                     ClientSiteLogBookId = guardLog.ClientSiteLogBookId,
-                    EventDateTime = eventDateTime,
+                    EventDateTime = guardLog.EventDateTime,
                     Notes = guardLog.Notes,
                     GuardLoginId = guardLog.GuardLoginId,
                     IsSystemEntry = guardLog.IsSystemEntry,
@@ -172,7 +164,7 @@ namespace CityWatch.Data.Providers
         public List<KeyVehicleLog> GetOpenKeyVehicleLogsByVehicleRego(string vehicleRego)
         {
             var results = _context.KeyVehicleLogs.Where(x => x.VehicleRego == vehicleRego && !x.ExitTime.HasValue && x.EntryTime >= DateTime.Today);
-                
+
             results.Include(x => x.ClientSiteLogBook)
                 .ThenInclude(x => x.ClientSite)
                 .Load();
@@ -441,8 +433,8 @@ namespace CityWatch.Data.Providers
         public List<string> GetVehicleRegos(string regoStart = null)
         {
             return _context.KeyVehicleLogVisitorProfiles
-                .Where(z => string.IsNullOrEmpty(regoStart) || 
-                            (!string.IsNullOrEmpty(z.VehicleRego) && 
+                .Where(z => string.IsNullOrEmpty(regoStart) ||
+                            (!string.IsNullOrEmpty(z.VehicleRego) &&
                                 z.VehicleRego.Substring(0, regoStart.Length).ToLower() == regoStart.ToLower()))
                 .Select(z => z.VehicleRego)
                 .Distinct()
