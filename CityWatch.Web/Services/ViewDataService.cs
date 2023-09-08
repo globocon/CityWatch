@@ -64,6 +64,7 @@ namespace CityWatch.Web.Services
         List<KeyVehicleLogViewModel> GetKeyVehicleLogs(int logBookId, KvlStatusFilter kvlStatusFilter);
         List<SelectListItem> GetKeyVehicleLogFieldsByType(KvlFieldType type, bool withoutSelect = false);
         List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRego(string truckRego);
+        List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRegoNew(string truckRego,string ImagePath);
         IEnumerable<string> GetKeyVehicleLogAttachments(string uploadsDir, string reportReference);
         IEnumerable<ClientSiteKey> GetKeyVehicleLogKeys(KeyVehicleLog keyVehicleLog);
         IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistory(string vehicleRego);
@@ -538,15 +539,41 @@ namespace CityWatch.Web.Services
         {
             var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
             var profiles = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(truckRego);
+            
+            var createdLogIds = profiles.Select(z => z.KeyVehicleLogProfile.CreatedLogId).Where(z => z > 0).ToArray();
+            var kvls = _guardLogDataProvider.GetKeyVehicleLogByIds(createdLogIds);
+            foreach (var profile in profiles)
+            {
+               profile.KeyVehicleLogProfile.KeyVehicleLog = kvls.SingleOrDefault(z => z.Id == profile.KeyVehicleLogProfile.CreatedLogId);
+              
+            }
+
+            return profiles.Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
+        }
+        public List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRegoNew(string truckRego,string Image)
+        {
+            var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
+            var profiles = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(truckRego);
+
             var createdLogIds = profiles.Select(z => z.KeyVehicleLogProfile.CreatedLogId).Where(z => z > 0).ToArray();
             var kvls = _guardLogDataProvider.GetKeyVehicleLogByIds(createdLogIds);
             foreach (var profile in profiles)
             {
                 profile.KeyVehicleLogProfile.KeyVehicleLog = kvls.SingleOrDefault(z => z.Id == profile.KeyVehicleLogProfile.CreatedLogId);
+                if (profile.IsPOIAlert == true)
+                {
+                   // profile.POIImage = "<img  src=" + Image + "height=\"40px;\" width=\"100px\" />";
+                    profile.POIImage = "Yes";
+                }
+                else
+                {
+                    profile.POIImage = null;
+                }
             }
 
             return profiles.Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
         }
+        
 
         public List<SelectListItem> VehicleRegos
         {

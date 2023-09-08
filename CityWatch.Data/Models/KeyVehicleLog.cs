@@ -93,6 +93,9 @@ namespace CityWatch.Data.Models
 
         [HiddenInput]
         public bool IsSender { get; set; }
+        [HiddenInput]
+        public bool IsPOIAlert { get; set; }
+
 
         public string Sender { get; set; }
 

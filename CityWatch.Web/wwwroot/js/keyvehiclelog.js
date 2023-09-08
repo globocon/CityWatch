@@ -402,7 +402,7 @@ $(function () {
         });
     });
 
-    
+    //var ret = staffDocsButtonRenderer;
     let gridKeyVehicleLogProfile = $('#key_vehicle_log_profiles').DataTable({
         paging: false,
         ordering: false,
@@ -415,6 +415,15 @@ $(function () {
             { data: 'detail.companyName' },
             { data: 'detail.personName' },
             { data: 'personTypeText' },
+            { data: 'detail.poiImage' },
+
+            //{
+            //targets: -1,
+            //    data: null,
+            //className: 'image-center',
+            //    defaultContent: '',
+            //    function: staffDocsButtonRenderer
+            //},
             {
                 targets: -1,
                 data: null,
@@ -423,7 +432,20 @@ $(function () {
             },
         ],
     });
+    function staffDocsButtonRenderer(value, record) {
+        
+            $.ajax({
+                type: 'GET',
+                url: '/Guard/KeyVehicleLog?handler=ImageLoad',
 
+            }).done(function (response) {
+                if (value.detail.isPOIAlert == true) {
+                    return response;
+                }
+            });
+        
+           
+    }
     $('#key_vehicle_log_profiles tbody').on('click', '#btnSelectProfile', function () {
         var data = gridKeyVehicleLogProfile.row($(this).parents('tr')).data();
         populateKvlModal(data.detail.id);        
@@ -457,6 +479,15 @@ $(function () {
             $('#Sender').val(result.sender);
             $('#lblIsSender').text(result.isSender ? 'Sender' : 'Reciever');
             $('#cbIsSender').prop('checked', result.isSender);
+            $('#chbIsPOIAlert1').prop('checked', result.isPOIAlert);
+            if (result.isPOIAlert == true) {
+                $('#titlePOIWarning').attr('hidden', false);
+                $('#imagesiren').attr('hidden', false);
+            }
+            else {
+                $('#titlePOIWarning').attr('hidden', true);
+                $('#imagesiren').attr('hidden', true);
+            }
 
             loadAuditHistory(result.keyVehicleLogProfile.vehicleRego);
         });
@@ -476,6 +507,8 @@ $(function () {
 
         const vkl_modal_title = isNewEntry ? 'Add a new log book entry' : 'Edit log book entry';
         $('#vkl-modal').find('.modal-title').html(vkl_modal_title);
+        const vkl_modal_danger = 'POI Warning'
+        $('#vkl-modal').find('.modal-title .btn-danger').html(vkl_modal_danger);
 
         $.ajax({
             type: 'GET',
@@ -581,7 +614,20 @@ $(function () {
             $('#lblIsSender').text(isChecked ? 'Sender' : 'Reciever');
             $('#IsSender').val(isChecked);
         });
-
+        $('#chbIsPOIAlert1').on('change', function () {
+            const isChecked = $(this).is(':checked');
+            if (isChecked == true) {
+                $('#titlePOIWarning').attr('hidden', false);
+                $('#imagesiren').attr('hidden', false);
+              
+                
+            }
+            else {
+                $('#titlePOIWarning').attr('hidden', true);
+                $('#imagesiren').attr('hidden', true);
+            }
+            $('#IsPOIAlert').val(isChecked);
+        });
         $('#kvlActionIsEdit').val(isEdit);
 
         $('#list_product').attr('placeholder', 'Select Or Edit').editableSelect({
@@ -758,7 +804,17 @@ $(function () {
             $('#new_log_exit_time').val('');
             $('#ExitTime').val('');
         });
-
+        $('#btnCopyToClipBoard').on('click', function () {
+            var time = $('#new_log_initial_call').val();
+            navigator.clipboard.writeText(time)
+                .then(() => {
+                    console.log(`Copied " + $('#new_log_initial_call').val() + " to clipboard`);
+                })
+                .catch((err) => {
+                    console.error('Could not copy text: ', err);
+                });
+         
+        });
         $('#kvl_list_plates').on('change', function () {
             const option = $(this).find(":selected");
             if (option.val() !== '') {
@@ -1438,4 +1494,7 @@ $(function () {
         $('#IsBlankNoteOn').val(isChecked);
        
     });
+    $('#titlePOIWarning').show();
+    $('#imagesiren').show();
+   
 });

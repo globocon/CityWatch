@@ -19,6 +19,7 @@ namespace CityWatch.Data.Providers
         List<KeyVehicleLog> GetKeyVehicleLogs(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate);
         KeyVehicleLog GetKeyVehicleLogById(int id);
         List<KeyVehicleLog> GetKeyVehicleLogByIds(int[] ids);
+        List<KeyVehicleLog> GetPOIAlert( string companyname, string individualname, int individualtype);
         void SaveDocketSerialNo(int id, string serialNo);
         void SaveKeyVehicleLog(KeyVehicleLog keyVehicleLog);
         void DeleteKeyVehicleLog(int id);
@@ -227,6 +228,14 @@ namespace CityWatch.Data.Providers
                 .ThenInclude(z => z.ClientSite)
                 .ToList();
         }
+        public List<KeyVehicleLog> GetPOIAlert( string companyname, string individualname, int individualtype)
+        {
+            return _context.KeyVehicleLogs.Where(z =>  z.CompanyName==companyname && z.PersonName==individualname && z.PersonType==individualtype && z.IsPOIAlert==true)
+             .Include(z => z.ClientSiteLogBook)
+                .ThenInclude(z => z.ClientSite)
+                .ToList();
+
+        }
 
         public void SaveKeyVehicleLog(KeyVehicleLog keyVehicleLog)
         {
@@ -274,6 +283,7 @@ namespace CityWatch.Data.Providers
                 keyVehicleLogToUpdate.Vwi = keyVehicleLog.Vwi;
                 keyVehicleLogToUpdate.Sender = keyVehicleLog.Sender;
                 keyVehicleLogToUpdate.IsSender = keyVehicleLog.IsSender;
+                keyVehicleLogToUpdate.IsPOIAlert = keyVehicleLog.IsPOIAlert;
             }
             _context.SaveChanges();
         }
@@ -515,11 +525,13 @@ namespace CityWatch.Data.Providers
             kvlPersonalDetailsToDb.CompanyName = keyVehicleLogVisitorPersonalDetail.CompanyName;
             kvlPersonalDetailsToDb.PersonName = keyVehicleLogVisitorPersonalDetail.PersonName;
             kvlPersonalDetailsToDb.PersonType = keyVehicleLogVisitorPersonalDetail.PersonType;
+            kvlPersonalDetailsToDb.IsPOIAlert = keyVehicleLogVisitorPersonalDetail.IsPOIAlert;
 
             if (kvlPersonalDetailsToDb.Id == 0)
             {
                 _context.KeyVehicleLogVisitorPersonalDetails.Add(kvlPersonalDetailsToDb);
             }
+
             _context.SaveChanges();
 
             return kvlPersonalDetailsToDb.Id;

@@ -6,6 +6,7 @@ using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
 using CityWatch.Web.Services;
+using iText.IO.Image;
 using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -26,6 +27,17 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using IO = System.IO;
 
+using iText.IO.Font.Constants;
+
+using iText.Kernel.Colors;
+//using iText.Kernel.Geom;
+using iText.Kernel.Pdf;
+using iText.Layout;
+using iText.Layout.Borders;
+using iText.Layout.Element;
+using iText.Layout.Properties;
+
+
 namespace CityWatch.Web.Pages.Guard
 {
     public class KeyVehicleLogModel : PageModel
@@ -42,7 +54,8 @@ namespace CityWatch.Web.Pages.Guard
         private readonly Settings _settings;
         private readonly ILogger<KeyVehicleLogModel> _logger;
         private readonly IAppConfigurationProvider _appConfigurationProvider;
-
+        private readonly string _imageRootDir;
+        private readonly IWebHostEnvironment _webHostEnvironment;
         public KeyVehicleLogModel(IWebHostEnvironment webHostEnvironment,
             IGuardLogDataProvider guardLogDataProvider,
             IClientDataProvider clientDataProvider,
@@ -66,6 +79,9 @@ namespace CityWatch.Web.Pages.Guard
             _settings = settings.Value;
             _logger = logger;
             _appConfigurationProvider = appConfigurationProvider;
+            _imageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
+            _webHostEnvironment = webHostEnvironment;
+
         }
 
         [BindProperty]
@@ -208,7 +224,10 @@ namespace CityWatch.Web.Pages.Guard
 
         public JsonResult OnGetProfileByRego(string truckRego)
         {
-            return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego).OrderBy(z => z, new KeyVehicleLogProfileViewModelComparer()));
+            //var reportRootDir = Path.Combine(_webHostEnvironment.WebRootPath, "Images");
+            //string imagepath = Path.Combine(reportRootDir, "ziren.png");
+            string imagepath = "~/images/ziren.png";
+            return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRegoNew(truckRego, imagepath).OrderBy(z => z, new KeyVehicleLogProfileViewModelComparer()));
         }
 
         public JsonResult OnGetProfileById(int id)
@@ -598,6 +617,7 @@ namespace CityWatch.Web.Pages.Guard
             else
             {
                 var kvlVisitorProfile = _guardLogDataProvider.GetKeyVehicleLogVisitorProfile(kvlPersonalDetail.KeyVehicleLogProfile.VehicleRego);
+               
                 profileId = kvlVisitorProfile.Id;
             }
 
@@ -675,5 +695,11 @@ namespace CityWatch.Web.Pages.Guard
             }
             return value;
         }
+        public JsonResult OnGetImageLoad()
+        {
+            var imagepath = Path.Combine(_imageRootDir, "ziren.png");
+            return new JsonResult(imagepath);
+        }
+
     }
 }

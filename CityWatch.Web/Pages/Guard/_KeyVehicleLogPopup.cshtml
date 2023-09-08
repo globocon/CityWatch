@@ -285,6 +285,24 @@
                     <select class="form-control" asp-for="@Model.ClientSiteLocationId" asp-items="@clientViewDataService.GetClientSiteLocations(new int[] { Model.ClientSiteLogBook.ClientSiteId })">
                     </select>
                 </div>
+               @* <div class="form-group col-md-1">
+                    <button id="btnCopyToClipBoard"><i class="fa fa-copy"></i></button>
+                </div>*@
+           
+
+                <div class="form-group col-md-4">
+                    <div class="d-flex flex-row justify-content-between">
+                        <label ></label>
+                        
+                    </div>
+                    <div class="custom-control custom-switch custom-control-inline mt-4">
+                        <input type="checkbox" class="custom-control-input" id="chbIsPOIAlert1">
+                        <label class="custom-control-label" for="chbIsPOIAlert1"></label>
+                        <input hidden asp-for="@Model.IsPOIAlert" />
+                        <label id="lbl_IsPOIAlert">POI Alert.</label>
+                    </div>
+                </div>
+
             </div>
             <ul class="nav nav-tabs" role="tablist">
                 <li class="nav-item">
@@ -308,7 +326,14 @@
                 <div class="tab-pane fade show active p-2" id="kvl-notes" role="tabpanel" aria-labelledby="kvl-notes-tab">
                     <div class="form-row">
                         <div class="form-group col-md-12">
-                            <label>Notes</label>
+                            <div class="form-row">
+                                <label class="col-md-1">Notes</label>
+
+                                <span style="font-size:0.8rem;font:italic" class="col-md-11">
+                                    Details of difficult driver can include appearence such as Gender / Height / Scars / Tattoos / Clothing etc. Mention the  linked IR Serial Number.
+                                </span>
+                            </div>
+                            
                             <textarea class="form-control" rows="5" maxlength="512" asp-for="@Model.Notes"></textarea>
                         </div>
                     </div>
