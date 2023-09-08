@@ -455,7 +455,7 @@ $(function () {
             $("#list_product").val(result.keyVehicleLogProfile.product);
             $("#list_product").trigger('change');           
             $('#Sender').val(result.sender);
-            $('#lblIsSender').text(result.isSender ? 'Sender' : 'Reciever');
+            $('#lblIsSender').text(result.isSender ? 'Sender Address' : 'Reciever Address');
             $('#cbIsSender').prop('checked', result.isSender);
 
             loadAuditHistory(result.keyVehicleLogProfile.vehicleRego);
@@ -565,7 +565,7 @@ $(function () {
             $('#cbIsTimeSlotNo').prop('checked', isTimeSlot);
 
             let isSender = $('#IsSender').val().toLowerCase() === 'true';
-            $('#lblIsSender').text(isSender ? 'Sender' : 'Reciever');
+            $('#lblIsSender').text(isSender ? 'Sender Address' : 'Reciever Address');
             $('#cbIsSender').prop('checked', isSender);
             loadAuditHistory($('#VehicleRego').val());
         }
@@ -578,7 +578,7 @@ $(function () {
 
         $('#cbIsSender').on('change', function () {
             const isChecked = $(this).is(':checked');
-            $('#lblIsSender').text(isChecked ? 'Sender' : 'Reciever');
+            $('#lblIsSender').text(isChecked ? 'Sender Address' : 'Reciever Address');
             $('#IsSender').val(isChecked);
         });
 
