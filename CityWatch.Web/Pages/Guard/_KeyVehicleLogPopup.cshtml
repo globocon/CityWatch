@@ -73,12 +73,12 @@
             <ul class="nav nav-tabs" role="tablist">
                 <li class="nav-item">
                     <a class="nav-link active" id="vehicle-details-tab" data-toggle="tab" data-target="#vehicle-details" role="tab" aria-controls="vehicle-details" aria-selected="true">
-                        <i class="fa fa-truck mr-2"></i>Vehicle
+                        <i class="fa fa-user"></i> Person or <i class="fa fa-truck mr-2"></i>Vehicle
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" id="key-details-tab" data-toggle="tab" data-target="#key-details" role="tab" aria-controls="key-details" aria-selected="false">
-                        <i class="fa fa-key mr-2"></i>Keys<span class="badge badge-primary ml-2">@kvlKeysCount</span>
+                        <i class="fa fa-key mr-2"></i>Keys or FOB<span class="badge badge-primary ml-2">@kvlKeysCount</span>
                     </a>
                 </li>
             </ul>
@@ -265,7 +265,7 @@
                 </div>
                 <div class="form-group col-md-4">
                     <div class="d-flex flex-row justify-content-between">
-                        <label id="lblIsSender">Sender</label>
+                        <label id="lblIsSender">Sender Address</label>
                         <div class="custom-control custom-switch duty-day-switch">
                             <input type="checkbox" class="custom-control-input" id="cbIsSender">
                             <label class="custom-control-label" for="cbIsSender"></label>
@@ -315,6 +315,9 @@
                         <div class="form-group col-md-12">
                             <label>Notes</label>
                             <textarea class="form-control" rows="5" maxlength="512" asp-for="@Model.Notes"></textarea>
+                            <span style="font-size:0.8rem" class="d-block">
+                                You can add new notes above. But never delete the previuos or existing entries(Add entries: Z-A).
+                            </span>
                         </div>
                     </div>
                 </div>
