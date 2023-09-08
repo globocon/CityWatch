@@ -9,6 +9,13 @@ namespace CityWatch.Web.Models
     {
         private readonly KeyVehicleLog _keyVehicleLog;
         private readonly List<KeyVehcileLogField> _keyVehicleLogFields;
+        private readonly List<KeyVehicleLog> _keyVehicleLoglist;
+       
+        public KeyVehicleLogViewModel(List<KeyVehicleLog> keyVehicleLog, List<KeyVehcileLogField> keyVehcileLogFields)
+        {
+            _keyVehicleLoglist = keyVehicleLog;
+            _keyVehicleLogFields = keyVehcileLogFields;
+        }
 
         public KeyVehicleLogViewModel(KeyVehicleLog keyVehicleLog, List<KeyVehcileLogField> keyVehcileLogFields)
         {
@@ -18,6 +25,7 @@ namespace CityWatch.Web.Models
 
         public string GroupText { get { return _keyVehicleLog.EntryTime?.Date.ToString("dd MMM yyyy"); } }
 
+        
         public KeyVehicleLog Detail
         {
             get

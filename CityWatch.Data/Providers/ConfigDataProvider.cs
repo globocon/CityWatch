@@ -24,7 +24,9 @@ namespace CityWatch.Data.Providers
         void SavePostion(IncidentReportPosition incidentReportPosition);
         void DeletePosition(int id);
         void CrPrimaryLogoUpload(DateTime dateTimeUploaded, string primaryLogoPath);
+        List<IncidentReportsPlatesLoaded> GetPlatesLoaded(int LogId);
         List<StaffDocument> GetStaffDocumentsUsingType(int type);
+
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -245,6 +247,10 @@ namespace CityWatch.Data.Providers
             templateToUpdate.PrimaryLogoUploadedOn = dateTimeUploaded;
             templateToUpdate.PrimaryLogoPath= primaryLogoPath;
             _context.SaveChanges();
+        }
+        public List<IncidentReportsPlatesLoaded> GetPlatesLoaded(int  LogId)
+        {
+            return _context.IncidentReportsPlatesLoaded.Where(z => z.LogId == LogId).OrderBy(z => z.Id).ToList();
         }
     }
 }

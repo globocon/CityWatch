@@ -274,7 +274,8 @@ namespace CityWatch.Web.Services
         public List<SelectListItem> GetUserClientSites(int? userId, string type = "")
         {
             var sites = new List<SelectListItem>();
-            var mapping = GetUserClientSitesHavingAccess(null, userId, string.Empty).Where(x => x.ClientType.Name == type);
+            var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Name == type);
+            var mapping = GetUserClientSitesHavingAccess(clientType.Id, userId, string.Empty).Where(x => x.ClientType.Name == type);
             foreach (var item in mapping)
             {
                 sites.Add(new SelectListItem(item.Name, item.Name));

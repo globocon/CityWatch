@@ -5,6 +5,7 @@
 @using CityWatch.Web.Services
 @using Microsoft.Extensions.Configuration
 @model CityWatch.Web.Pages.Incident.RegisterModel
+@inject IViewDataService viewDataService
 @inject IConfiguration Configuration
 @{
     ViewData["Title"] = "CityWatch Security | Incident Report";
@@ -365,6 +366,73 @@
             </div>
         </div> 
     </div>
+    <!-- Main Number Plates/ID's of Incident -->
+    <div class="row mt-5 mt-md-3">
+        <div class="col">
+            <div class="card">
+                <h4 class="card-header">Main Number Plates/ID's of Incident:</h4>
+                <div class="card-body">
+                    <div class="form-row" id="plateloaded">
+                       
+                        <div class="form-group  col-md-3 mr-5">
+                            <label class="col-form-label">Plates Loaded into KV?:</label>
+                            <div>
+                                <div class="form-check form-check-inline mr-10">
+
+                                    <input asp-for="@Model.Report.PlateLoadedYes" class="form-check-input">
+                                    <label class="form-check-label font-weight-normal">Yes</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input asp-for="@Model.Report.PlateLoadedNo" class="form-check-input" checked="checked">
+                                    <label class="form-check-label font-weight-normal">No</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                       
+                        
+                        <div class="form-group  mr-3" id="plateLoadedCarOrTruckRegoDetails">
+                            
+                                <label>ID No. / Car or Truck Rego.</label>
+                                <input class="form-control" type="text" asp-for="@Model.Report.VehicleRego" autocomplete="off" style="width:200px;" />
+                                
+                            
+                        </div>
+                        <div class="form-group col-md-5 " id="plateLoadedCarOrTruckPlateDetails">
+
+                            
+                            <label>ID / Plate (State or AU)</label>
+                            <select class="form-control" disabled id="kvl_list_plates" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.Plate)" style="width:200px;">
+                            </select>
+                            <input type="hidden" asp-for="@Model.Report.PlateId" id="PlateId" />
+
+                        </div>
+                        <div class="form-group mt-4">
+                            
+                            <button type="button" class="btn btn-primary mb-2" id="btnAddNewPlateLoadedEntry" disabled>+ Add Entry</button>
+
+                        </div>
+                        
+                        
+                    </div>
+                    <div class="form-row">
+                        <table class="table table-bordered table-striped" id="register_plate_loaded">
+                            <thead>
+                                <tr>
+                                    <th hidden>SlNo</th>
+                                    <th hidden>PlateId</th>
+                                    <th>ID No. / Car or Truck Rego.</th>
+                                    <th>ID / Plate (State or AU)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Feedback -->
     <div class="row mt-5 mt-md-3">
         <div class="col-md-12">
@@ -387,30 +455,18 @@
                                     <div class="form-group row">
 
 
-                                        <label class="col-form-label col-md-3">Plates Loaded into KV?:</label>
-                                        <div class="col-md-2">
-                                            <div class="form-check form-check-inline mr-4">
-                                                
-                                                <input asp-for="@Model.Report.PlateLoadedYes" class="form-check-input">
-                                                <label class="form-check-label font-weight-normal">Yes</label>
-                                            </div>
-                                            <div class="form-check form-check-inline">
-                                                <input asp-for="@Model.Report.PlateLoadedNo" class="form-check-input" checked="checked">
-                                                <label class="form-check-label font-weight-normal">No</label>
-                                            </div>
-                                        </div>
 
                                         
-                                        <label class="col-form-label col-md-3">Linked IR's Number:</label>
-                                        <div class="col-md-4">
+                                        <label class="col-form-label col-md-5">Serial Numbers of any Linked IR's:</label>
+                                        <div class="col-md-7">
                                             <input type="text" class="form-control" asp-for="@Model.Report.LinkedSerialNos" placeholder="n/a">                                            
                                         </div>
                                     </div>
                                     <div class="form-group row">
-                                        <div class="col-md-5">
+                                        <div class="col-md-3 ml-3">
                                             <select id="ddFeedbackTemplateType" class="form-control mb-3 mb-md-0" asp-items="@Html.GetEnumSelectList<FeedbackType>()"></select>
                                         </div>
-                                        <div class="col-md-7">
+                                        <div class="col-md-8">
                                             <select id="ddFeedbackTemplate" class="form-control" asp-items="@Model.ViewDataService.GetFeedbackTemplatesByType(FeedbackType.General)"></select>
                                         </div>
                                     </div>
@@ -523,6 +579,8 @@
     document.getElementById("Report_EventType_SiteColour").addEventListener('change', onEventTypeSiteColourChange);
     document.getElementById("Report_PlateLoadedNo").addEventListener('change', onPlateLoadedChange);
     document.getElementById("Report_PlateLoadedYes").addEventListener('change', onPlateLoadedChange);
+    document.getElementById("Report_VehicleRego").addEventListener('change', onPlateLoadedChange);
+    
    
     function onWindowLoad(event) {
         const autoCompleteLocation = new google.maps.places.Autocomplete(document.getElementById("Report_DateLocation_ClientAddress"), {
@@ -791,7 +849,7 @@
             event.preventDefault();
             return false;
         }
-
+        
         const mainForm = document.getElementById("cwsir-form");
         const attachments = mainForm.querySelectorAll('input[name="Report.Attachments"]');
         if (attachments.length > 0) {
@@ -815,11 +873,30 @@
         input.setAttribute('value', document.getElementById("Report.DisableEmail").checked);
         input.setAttribute('type', 'hidden');
         mainForm.appendChild(input);
-
+       // var plateLoaded = [];
+        var plateLoaded;
+        var i=1;
         document.getElementById('loader').style.display = 'block';
+        $('#register_plate_loaded tr:gt(0)').each(function () {
+            
+            var  plateid = $(this).find("td").eq(1).text();
+            
+            var truckNo = $(this).find("td").eq(2).text();
+            
+            if ((truckNo !== null || truckNo != '') && (plateid !== null || plateid !== 'undefined'))
+            {
+                plateLoaded = {
+                        PlateId: plateid,
+                        TruckNo: truckNo
+                      }
+            }
+            i=i+1;
+            
+        });
         fetch('/Incident/Register?handler=submit', {
             method: 'POST',
-            headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value },
+            headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value  },
+           
             body: new FormData(mainForm),
         }).then(response => response.json())
         .then(result => {
@@ -837,6 +914,26 @@
         }).catch(error => {
 
         });
+        //$.ajax({
+        //    url: '/Incident/Register?handler=submit',
+        //    data: { $('#cwsir-form').serialize(), 'plateLoaded': plateLoaded },
+        //    type: 'POST',
+        //    dataType:'json',
+        //    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        //    body: new FormData(mainForm),
+        //}).done(function (result) {
+        //    document.getElementById('loader').style.display = 'none';
+        //            if (result.success) {
+        //                window.location.replace('/Incident/Notify');
+        //            } else {
+        //                result.errors.forEach(function(item){
+        //                    const span = document.querySelector("span[data-valmsg-for='" + item.propertyName + "']");
+        //                    span.innerText = item.errorList[0];
+        //                    span.className = "field-validation-error";
+        //                });
+        //                displayValidationSummary(result.errors)
+        //            }
+        //});
     }
 
     function validateForm() {
@@ -919,16 +1016,159 @@
 
         if (this.id == yesPlateId && this.checked) {
             document.getElementById(noPlateId).checked = false;
+            $('#btnAddNewPlateLoadedEntry').attr('disabled', false);
+            
         }
 
         if (this.id == noPlateId && this.checked) {
             document.getElementById(yesPlateId).checked = false;
+            
+            $('#btnAddNewPlateLoadedEntry').attr('disabled', 'disabled');
         }
 
         if (!document.getElementById(yesPlateId).checked && !document.getElementById(noPlateId).checked) {
             document.getElementById(noPlateId).checked = true;
         }
     }
+    document.getElementById("btnAddNewPlateLoadedEntry").addEventListener('click', onbtnAddNewPlateLoadedEntryClick);
+    document.getElementById("Report_VehicleRego").addEventListener('keyup', vehicleRegoToUpperCase);
+    document.getElementById("Report_VehicleRego").addEventListener('keypress', vehicleRegoValidateSplChars);
+    document.getElementById("Report_VehicleRego").addEventListener('blur', vehicleRegoDisableKeyListPlates);
+    document.getElementById("kvl_list_plates").addEventListener('change', kvlListPlatesChange);
+    //document.getElementById("btn_delete_plate").addEventListener('click', deletePlates);
+   
+    function kvlListPlatesChange() {
+
+        const option = $(this).find(":selected");
+       
+        if (option.val() !== '') {
+            $('#PlateId').val(option.val());
+        }
+    }
+    var emp=null;
+    function onbtnAddNewPlateLoadedEntryClick() {
+        if ($('#Report_VehicleRego').val()!='')
+        {
+            var obj=
+            {
+                PlateId:$('#PlateId').val(),
+                TruckNo: $('#Report_VehicleRego').val(),
+                IncidentReportId:0,
+               LogId:0
+           
+            }
+        
+            $.ajax({
+                url: '/Incident/Register?handler=PlateLoaded',
+                data: { 'report': obj },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.status) {
+                    if (result.message !== '') {
+                        getPlatesLoaded();
+                        //showStatusNotification(true, 'Company details modified successfully');
+
+                    }
+
+                } else {
+                    displayGuardValidationSummary(result.message);
+                }
+            });
+        }
+        else{
+            alert("Please Enter The Truck Registration Number")
+        }
+       
+
+    }
+    function getPlatesLoaded()
+    {
+        if ($('#register_plate_loaded  tr').length > 1) {
+            var rowCount = $('#register_plate_loaded  tr').length;
+            $('#register_plate_loaded  tr:last').after('<tr><td hidden>' + rowCount + '</td>' +
+                '<td hidden>' + $('#PlateId').val() + '</td>' +
+                '<td>' + emp + '</td>' +
+
+                '<td>' + $('#kvl_list_plates').find(":selected").text() + ' </td>' +
+                '<td> <button  class= "btn btn-outline-primary mr-2" id = "btn_delete_plate"> <i class="fa fa-trash mr-2"> </i></button >  </td>' +
+                '</tr > ');
+            // CLEAR ALL TEXTBOXES.
+            $('#PlateId').val('');
+            $("#Report_VehicleRego").val('');
+            $('#kvl_list_plates').val('');
+        }
+        else {
+            var rowCount = $('#register_plate_loaded  tr').length;
+            $('#register_plate_loaded  tr:last').after('<tr><td hidden>' + rowCount + '</td>' +
+                '<td hidden>' + $('#PlateId').val() + '</td>' +
+                '<td>' + emp + '</td>' +
+
+                '<td>' + $('#kvl_list_plates').find(":selected").text() + ' </td>' +
+                '<td>' + '<button  class= "btn btn-outline-primary mr-2" id = "btn_delete_plate"> <i class="fa fa-trash mr-2"> </i></button >' + '</td>' +
+                '</tr >');
+            // CLEAR ALL TEXTBOXES.
+            $('#PlateId').val('');
+            $("#Report_VehicleRego").val('');
+            $('#kvl_list_plates').val('');
+        }
+    }
+    function deletePlates()
+    {
+       
+        var obj =
+        {
+            PlateId: $('#PlateId').val(),
+            TruckNo: $('#Report_VehicleRego').val(),
+            LogId: 0
+
+        }
+
+        $.ajax({
+            url: '/Incident/Register?handler=DeletePlateLoaded',
+            data: { 'report': obj },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.status) {
+                if (result.message !== '') {
+                    getPlatesLoaded();
+                   // showStatusNotification(true, 'Company details modified successfully');
+
+                }
+
+            } else {
+                displayGuardValidationSummary(result.message);
+            }
+        });
+
+    }
+    function vehicleRegoDisableKeyListPlates() 
+    {
+        const vehicleRegoHasVal = $(this).val() !== '';
+        $('#kvl_list_plates').attr('disabled', !vehicleRegoHasVal);
+        if (!vehicleRegoHasVal) {
+            // TODO: clear previous auto populated profile values
+        }
+        emp = $(this).val();
+    }
+   
+
+    function vehicleRegoToUpperCase() {
+        let regoToUpper = $(this).val().toUpperCase();
+        $(this).val(regoToUpper);
+    }
+
+    function vehicleRegoValidateSplChars(e) {
+        //  blocking special charactors
+        if (e.which != 35 && e.which != 32 && e.which < 48 ||
+            (e.which > 57 && e.which < 65) ||
+            (e.which > 90 && e.which < 97) ||
+            e.which > 122) {
+            e.preventDefault();
+        }
+    }
+    
 </script>
 <partial name="_MessagePopup" />
 @section scripts {
