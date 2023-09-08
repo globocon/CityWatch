@@ -286,6 +286,10 @@
                     <select class="form-control" asp-for="@Model.ClientSiteLocationId" asp-items="@clientViewDataService.GetClientSiteLocations(new int[] { Model.ClientSiteLogBook.ClientSiteId })">
                     </select>
                 </div>
+                <div class="form-group col-md-4">
+                    <label class="mb-5"></label>
+                    <button type="button" class="btn mt-4 ml-5" title="Copy to Clipboard" id="copyButton"><i class="fa fa-clipboard fa-2x" aria-hidden="true"></i></button>
+                </div>
             </div>
             <ul class="nav nav-tabs" role="tablist">
                 <li class="nav-item">
@@ -319,7 +323,9 @@
                         <div class="col">
                             <i class="text-muted" style="font-size:12px">Click Browse and select one or more files (.jpg, .jpeg, .png, .bmp, .pdf, .mp3, .mp4, .avi)</i>
                             <div class="custom-file mt-3">
+
                                 <input type="file" id="kvl_attachment_upload" name="media" class="custom-file-input" accept=".jpg, .jpeg, .png, .bmp, .pdf, .mp3, .mp4, .avi" multiple>
+
                                 <label class="custom-file-label" for="kvl_attachment_upload">Choose file(s) to upload</label>
                             </div>
                         </div>
