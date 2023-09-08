@@ -704,7 +704,7 @@
     function addGuardLog() {
         const today = new Date();
         $('#GuardLog_EventDateTime').val(today.getDate() + '-' + (today.getMonth() + 1) + '-' + today.getFullYear() + ' ' + $('#new_log_time').val());
-
+        $('#GuardLog_TimePartOnly').val($('#new_log_time').val());
         $('#loader').show();
         $('#validation-summary ul').html('');
         $.ajax({
