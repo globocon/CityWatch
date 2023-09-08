@@ -1,0 +1,51 @@
+﻿@page
+@model CityWatch.Web.Pages.Incident.ToolSelecterModel
+@{
+    ViewData["Title"] = "CityWatch Security | Tools";
+    ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.Tools;
+}
+
+
+
+<div class="container" role="main">
+    <div class="center-block text-center m-2">
+        <select class="form-control" id="ddl_toolSelecter" style="width:300px;display: inline;">
+            @foreach (var item in Model.ClientDataProvider.GetSiteLinksPageTypes())
+            {
+
+
+                <option value="@item.Id">@item.PageTypeName</option>
+
+            }
+        </select>
+    </div>
+    <div style="height:20px">
+
+    </div>
+    <div class="center-block text-center m-2">
+        <hr />
+    </div>
+    <div style="height:20px">
+    </div>
+    <div class="center-block text-center m-2">
+        <a class="btn btn-primary dynamic-link" id="ACT" href="#">ACT</a>
+        <a class="btn btn-primary dynamic-link" id="SA" href="#">SA</a>
+    </div>
+    <div class="center-block text-center m-2">
+        <a class="btn btn-primary dynamic-link" id="NSW" href="#">NSW</a>
+        <a class="btn btn-primary dynamic-link" id="TAS" href="#">TAS</a>
+    </div>
+    <div class="center-block text-center m-2">
+        <a class="btn btn-primary dynamic-link" id="NT" href="#">NT</a>
+        <a class="btn btn-primary dynamic-link" id="VIC" href="#">VIC</a>
+    </div>
+    <div class="center-block text-center m-2">
+        <a class="btn btn-primary dynamic-link" id="QLD" href="#">QLD</a>
+        <a class="btn btn-primary dynamic-link" id="WA" href="#">WA</a>
+    </div>
+</div>
+
+
+@section PageHeader {
+    <h3 class="text-center">Tools</h3>
+    }
