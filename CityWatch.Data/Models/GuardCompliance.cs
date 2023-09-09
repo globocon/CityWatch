@@ -42,6 +42,8 @@ namespace CityWatch.Data.Models
             }
         }
 
+        public string HrGroup { get; set; }
+
         [ForeignKey("GuardId")]
         public Guard Guard { get; set; }
     }

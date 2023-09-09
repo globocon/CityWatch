@@ -2367,9 +2367,10 @@
             dataSrc: ''
         },
         columns: [
-            { data: 'referenceNo', width: "10%" },
+            { data: 'referenceNo', width: "6%" },
+            { data: 'hrGroup', width: "3%" },
             { data: 'description', width: "10%" },
-            { data: 'expiryDate', width: "10%" },
+            { data: 'expiryDate', width: "8%" },
             { data: 'reminder1', width: "3%" },
             { data: 'reminder2', width: "3%" },
             { data: 'fileName', width: "10%" },
@@ -2411,6 +2412,7 @@
         $('#GuardCompliance_Id').val(data.id);
         $('#GuardCompliance_FileName').val(data.fileName);
         $('#guardCompliance_fileName').text(data.fileName ? data.fileName : 'None');
+        $('#GuardCompliance_HrGroup').val(data.hrGroup);
         $('#addGuardCompliancesModal').modal('show');
     });
 
