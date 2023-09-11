@@ -534,7 +534,7 @@ $(function () {
                 if ($('#EntryTime').val() !== '') {
                     $('#new_log_entry_time').val(getTimeFromDateTime(new Date($('#EntryTime').val())));
                 }
-
+                
                 if ($('#SentInTime').val() !== '') {
                     $('#new_log_sent_in_time').val(getTimeFromDateTime(new Date($('#SentInTime').val())));
                 }
