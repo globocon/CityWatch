@@ -89,6 +89,7 @@
                             <div class="col-md-2 col-md-2-tight">
                                 <input type="time" class="form-control" id="new_log_time" value="@DateTime.Now.ToString("hh:mm")">
                                 <input type="hidden" asp-for="@Model.GuardLog.EventDateTime" />
+                                <input type="hidden" asp-for="@Model.GuardLog.TimePartOnly" />
                             </div>
                         </div>
                         <div class="form-group row">

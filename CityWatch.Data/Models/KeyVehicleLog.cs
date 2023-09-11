@@ -41,8 +41,9 @@ namespace CityWatch.Data.Models
 
         public string Trailer4Rego { get; set; }
 
-        public int? PlateId { get; set; }
-
+        public int PlateId { get; set; }
+       
+        
         public string KeyNo { get; set; }
 
         public string CompanyName { get; set; }
@@ -153,7 +154,7 @@ namespace CityWatch.Data.Models
             if (string.IsNullOrEmpty(VehicleRego))
                 errors.Add(new ValidationResult("ID No or Vehicle Registration is required"));
 
-            if (!string.IsNullOrEmpty(VehicleRego) && PlateId.GetValueOrDefault() <= 0)
+            if (!string.IsNullOrEmpty(VehicleRego) && PlateId <= 0)
                 errors.Add(new ValidationResult("State of ID / Plate is required"));
 
             if (!PersonType.HasValue)

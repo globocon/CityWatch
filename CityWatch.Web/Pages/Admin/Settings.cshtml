@@ -27,10 +27,13 @@
             <a class="nav-link" id="fbktpl-tab" data-toggle="tab" href="#fbktpl" role="tab" aria-controls="fbktpl" aria-selected="false">Feedback Template</a>
         </li>
         <li class="nav-item" @hideTabStyle>
-            <a class="nav-link" id="irdocs-tab" data-toggle="tab" href="#irdocs" role="tab" aria-controls="irdocs" aria-selected="false">PDF Template & Downloads</a>
+            <a class="nav-link" id="irdocs-tab" data-toggle="tab" href="#irdocs" role="tab" aria-controls="irdocs" aria-selected="false">IR Template & Downloads</a>
         </li>
         <li class="nav-item" @hideTabStyle>
             <a class="nav-link" id="fields-tab" data-toggle="tab" href="#fields" role="tab" aria-controls="fields" aria-selected="false">Fields</a>
+        </li>
+        <li class="nav-item" @hideTabStyle>
+            <a class="nav-link" id="tools-tab" data-toggle="tab" href="#tools" role="tab" aria-controls="tools" aria-selected="false">Tools</a>
         </li>
         <li class="nav-item" @hideTabStyle>
             <a class="nav-link" id="user-tab" data-toggle="tab" href="#user" role="tab" aria-controls="user" aria-selected="false">Users</a>
@@ -252,6 +255,39 @@
                 </div>
             </div>
         </div>
+        @*Tools start*@
+        <div class="tab-pane fade py-3" id="tools" role="tabpanel" aria-labelledby="tools-tab" @hideTabStyle>
+            <div class="form-group row">
+                <label class="col-form-label col-md-3">Select a page type</label>
+                <div class="col-md-4">
+                    <select class="form-control" id="report_tools_types">
+                        <option value="">None</option>
+                        @foreach (var item in Model.ClientDataProvider.GetSiteLinksPageTypes())
+                        {
+                            <option value="@item.Id">@item.PageTypeName</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-5 text-right"><button class="btn btn-success mb-3" id="add_tools_page"><i class="fa fa-plus mr-2"></i>Add Page Type</button></div>
+            </div>
+            <div class="row" id="toolsSettings">
+                <div class="form-group row col-md-12 ml-0 mr-0 mb-0">
+                    <div class="col-md-10 ml-0 p-0">
+                        <label class="col-form-label col-md-10 p-0" style="position: absolute;bottom: 0;">Web links available for staff to access in the field</label>
+                    </div>
+                                     
+                    <div class="col-2 text-right ml-0 p-0">
+                        <button class="btn btn-success mb-3 text-right" id="add_tools_settings"><i class="fa fa-plus mr-2"></i>Add Tools</button>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <table class="table" id="tools_settings"></table>
+                </div>
+            </div>
+
+        </div>
+        @*Tools End*@
+
         <div class="tab-pane fade py-3" id="user" role="tabpanel" aria-labelledby="user-tab" @hideTabStyle>
             <div class="row">
                 <div class="col-md-12 text-right">

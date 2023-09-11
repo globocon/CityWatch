@@ -81,6 +81,29 @@ namespace CityWatch.Web.Pages.Guard
 
         public JsonResult OnPostSaveGuardLog()
         {
+            //for solving the date format in azure  server 
+            // passing the time part from jquery and create new date 
+            if (GuardLog != null)
+            {
+                if (!string.IsNullOrEmpty(GuardLog.TimePartOnly))
+                {
+                    var dateParts = GuardLog.TimePartOnly.Split(":");
+                    if (dateParts.Length >= 2)
+                    {
+                        DateTime desiredDateTime = new DateTime(
+                        DateTime.Now.Year,
+                        DateTime.Now.Month,
+                        DateTime.Now.Day,
+                        int.Parse(dateParts[0]),
+                        int.Parse(dateParts[1]),
+                        0);
+                        GuardLog.EventDateTime = desiredDateTime;
+                        ModelState.Remove("GuardLog.EventDateTime");
+                    }
+                    
+                }
+            }
+
             if (!ModelState.IsValid)
             {
                 return new JsonResult(new

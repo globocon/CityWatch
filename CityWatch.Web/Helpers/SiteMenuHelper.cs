@@ -57,10 +57,17 @@ namespace CityWatch.Web.Helpers
                 menuHtml.AppendLine("</div>");
             }
 
-            if (pageName == PageNameHelper.Index)
+            if (pageName == PageNameHelper.Index || pageName == PageNameHelper.Tools)
             {
                 menuHtml.AppendLine("<div>");
-                menuHtml.AppendLine(@"<a href=""Incident/DownloadSelecter"" class=""nav-link py-0""><i class=""fa fa-download mr-2""></i>Downloads</a>");
+                menuHtml.AppendLine(@"<a href=""/Incident/ToolSelecter"" class=""nav-link py-0""><i class=""fa fa-wrench mr-2""></i>Tools</a>");
+                menuHtml.AppendLine("</div>");
+            }
+
+            if (pageName == PageNameHelper.Index || pageName == PageNameHelper.Downloads)
+            {
+                menuHtml.AppendLine("<div>");
+                menuHtml.AppendLine(@"<a href=""/Incident/DownloadSelecter"" class=""nav-link py-0""><i class=""fa fa-download mr-2""></i>Downloads</a>");
                 menuHtml.AppendLine("</div>");
             }
 
@@ -157,6 +164,7 @@ namespace CityWatch.Web.Helpers
         public const string Downloads = "Downloads";
         public const string PatrolData = "PatrolData";
         public const string ControlRoom = "ControlRoom";
+        public const string Tools = "Tools";
         public const string AuditSiteLogs = "AuditSiteLogs";
         public const string DailyGuardLog = "DailyGuardLog";
         public const string VehicleAndKeyLog = "VehicleAndKeyLog";

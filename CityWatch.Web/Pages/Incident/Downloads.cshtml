@@ -10,19 +10,20 @@
         {
             if (HttpContext.Request.Query["type"].ToString().Trim() == "1")
             {
-                <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Company SOP's</label>
+                <h4>Company SOP's</h4>
             }
             else if (HttpContext.Request.Query["type"].ToString().Trim() == "2")
             {
-                <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">C4i Training</label>
+                <h4>C4i Training</h4>
 
             }
             else if (HttpContext.Request.Query["type"].ToString().Trim() == "3")
             {
-                <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Forms & Templates</label>
+                <h4>Forms & Templates</h4>
             }
             
         }
+        <div class="mb-5"></div>
         <table class="table" id="file_downloads"></table>                    
     </div>
 </div>
