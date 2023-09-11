@@ -2561,9 +2561,9 @@
                 if (result.accessPermission) {
                     $('#txt_securityLicenseNo').val('');
                     $('#modelGuardLoginCon').modal('hide');
-                    /* window.location.href = 'https://kpi.cws-ir.com/Dashboard?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId;*//*live server*/
+                    window.location.href = 'https://kpi.cws-ir.com/Dashboard?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;/*live server*/
                     /*window.location.href = 'https://localhost:44378/Dashboard?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;*//*local testing*/
-                    window.location.href = 'http://kpi.c4i-system.com/Dashboard?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId; /*test server*/
+                    /*window.location.href = 'http://kpi.c4i-system.com/Dashboard?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId; /*test server*/
                     clearGuardValidationSummary('GuardLoginValidationSummary');
                 }
                 else {
