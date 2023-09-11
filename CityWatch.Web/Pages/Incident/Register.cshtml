@@ -394,7 +394,7 @@
                         <div class="form-group  mr-3" id="plateLoadedCarOrTruckRegoDetails">
                             
                                 <label>ID No. / Car or Truck Rego.</label>
-                                <input class="form-control" type="text" asp-for="@Model.Report.VehicleRego" autocomplete="off" style="width:200px;" />
+                                <input class="form-control" type="text" asp-for="@Model.Report.VehicleRego" autocomplete="off" style="width:200px;" disabled />
                                 
                             
                         </div>
@@ -554,7 +554,53 @@
     </div>
   </div>
 </div>
-
+<!--    Vehicle Profiles Modal -->
+<div class="modal" tabindex="-1" role="dialog" id="incident-report-profiles-modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-gear mr-2" aria-hidden="true"></i>Visitor Profiles. ID No / Vehicle Rego : <span id="kvl-profile-title-rego"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-2">
+                    <div class="col-md-12">
+                        <small class="form-text text-primary mb-1">
+                            <i class="fa fa-info-circle mr-1"></i>Click any row below to copy Company Name and Person Type. Then click Add Record.
+                        </small>
+                        <div class="form-inline">
+                            <label>Create a new record with Person Name:</label>
+                            <input class="form-control mx-2" type="text" id="driver_name" value="Unknown" />
+                            <button class="btn btn-success" id="btn_duplicate_profile">Add Record</button>
+                        </div>
+                        <div class="validation-summary-errors my-1" asp-validation-summary="All" id="duplicate_profile_status"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <table class="table table-bordered" width="100%" id="incident_reports_vehicle_log_profiles">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" hidden></th>
+                                    <th rowspan="2"><center>ID / Plate</center></th>
+                                    <th rowspan="2"><center>Company Name</center></th>
+                                    <th colspan="2"><center>Individual</center></th>
+                                    <th rowspan="2"></th>
+                                </tr>
+                                <tr>
+                                    <th>Person Name</th>
+                                    <th>Person Type</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <script>
 
     window.addEventListener('load', onWindowLoad);
@@ -816,6 +862,22 @@
 
         return false;
     }
+    function truckRegistrationNumberIsValid()
+    {
+        const truckregistrationNumber = document.getElementById('Report_VehicleRego').value.trim();
+        if (!truckregistrationNumber) {
+            return false;
+        }
+        return true;
+    }
+    function plateIdIsValid()
+    {
+        const plateid = document.getElementById('PlateId').value.trim();
+        if (plateid==0) {
+            return false;
+        }
+        return true;
+    }
 
     function jobNumberIsValid() {
         const isSecMobPatrolCar = document.getElementById("Report_IsPositionPatrolCar").value;        
@@ -970,6 +1032,30 @@
 
         return { isValid: errors.length === 0 , errors: errors };
     }
+    function validatePlateIds() {
+        let errors = [];
+
+        
+        if (!truckRegistrationNumberIsValid()) {
+            errors.push({ field: 'Truck Registration Number', errorList: ['Please fill the ID or Truck Registation Number'] });
+        }
+
+        if (!plateIdIsValid()) {
+            errors.push({ field: 'Plates Selected', errorList: ['Please select the Plate ID'] });
+        }
+
+        
+
+        const requiredFields = ['Report_VehicleRego', '#PlateId'];
+        requiredFields.forEach(function (id) {
+            let field = document.getElementById(id);
+            if (field.value === '') {
+                errors.push({ field: id, errorList: [field.getAttribute('data-val-required')] });
+            }
+        });
+
+        return { isValid: errors.length === 0, errors: errors };
+    }
 
     function displayValidationSummary(errors) {
         const summaryDiv = document.getElementById('validation-summary');
@@ -1017,6 +1103,7 @@
         if (this.id == yesPlateId && this.checked) {
             document.getElementById(noPlateId).checked = false;
             $('#btnAddNewPlateLoadedEntry').attr('disabled', false);
+            $('#Report_VehicleRego').attr('disabled', false);
             
         }
 
@@ -1024,6 +1111,10 @@
             document.getElementById(yesPlateId).checked = false;
             
             $('#btnAddNewPlateLoadedEntry').attr('disabled', 'disabled');
+            $('#Report_VehicleRego').val('');
+            $('#Report_VehicleRego').attr('disabled', 'disabled');
+            $('#kvl_list_plates').attr('disabled', 'disabled');
+            $('#kvl_list_plates').val('');
         }
 
         if (!document.getElementById(yesPlateId).checked && !document.getElementById(noPlateId).checked) {
@@ -1034,6 +1125,7 @@
     document.getElementById("Report_VehicleRego").addEventListener('keyup', vehicleRegoToUpperCase);
     document.getElementById("Report_VehicleRego").addEventListener('keypress', vehicleRegoValidateSplChars);
     document.getElementById("Report_VehicleRego").addEventListener('blur', vehicleRegoDisableKeyListPlates);
+    
     document.getElementById("kvl_list_plates").addEventListener('change', kvlListPlatesChange);
     //document.getElementById("btn_delete_plate").addEventListener('click', deletePlates);
    
@@ -1049,6 +1141,13 @@
     function onbtnAddNewPlateLoadedEntryClick() {
         if ($('#Report_VehicleRego').val()!='')
         {
+        //const result = validatePlateIds();
+        //if (!result.isValid) {
+        //    $('#msg-modal').modal();
+        //    displayValidationSummary(result.errors);
+        //    event.preventDefault();
+        //    return false;
+        //}
             var obj=
             {
                 PlateId:$('#PlateId').val(),
@@ -1088,7 +1187,7 @@
             var rowCount = $('#register_plate_loaded  tr').length;
             $('#register_plate_loaded  tr:last').after('<tr><td hidden>' + rowCount + '</td>' +
                 '<td hidden>' + $('#PlateId').val() + '</td>' +
-                '<td>' + emp + '</td>' +
+                '<td>' + $("#Report_VehicleRego").val() + '</td>' +
 
                 '<td>' + $('#kvl_list_plates').find(":selected").text() + ' </td>' +
                 '<td> <button  class= "btn btn-outline-primary mr-2" id = "btn_delete_plate"> <i class="fa fa-trash mr-2"> </i></button >  </td>' +
@@ -1102,7 +1201,7 @@
             var rowCount = $('#register_plate_loaded  tr').length;
             $('#register_plate_loaded  tr:last').after('<tr><td hidden>' + rowCount + '</td>' +
                 '<td hidden>' + $('#PlateId').val() + '</td>' +
-                '<td>' + emp + '</td>' +
+                '<td>' + $("#Report_VehicleRego").val() + '</td>' +
 
                 '<td>' + $('#kvl_list_plates').find(":selected").text() + ' </td>' +
                 '<td>' + '<button  class= "btn btn-outline-primary mr-2" id = "btn_delete_plate"> <i class="fa fa-trash mr-2"> </i></button >' + '</td>' +
@@ -1111,6 +1210,7 @@
             $('#PlateId').val('');
             $("#Report_VehicleRego").val('');
             $('#kvl_list_plates').val('');
+            $('#kvl_list_plates').attr('disabled','disabled');
         }
     }
     function deletePlates()
@@ -1152,8 +1252,9 @@
         }
         emp = $(this).val();
     }
-   
-
+  
+        
+    //})
     function vehicleRegoToUpperCase() {
         let regoToUpper = $(this).val().toUpperCase();
         $(this).val(regoToUpper);
