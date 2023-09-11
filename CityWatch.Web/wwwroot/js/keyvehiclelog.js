@@ -488,7 +488,7 @@ $(function () {
                 $('#titlePOIWarning').attr('hidden', true);
                 $('#imagesiren').attr('hidden', true);
             }
-
+            const isChecked = $('#chbIsPOIAlert1').is(':checked');
             loadAuditHistory(result.keyVehicleLogProfile.vehicleRego);
         });
         $('#kvl-profiles-modal').modal('hide');
@@ -590,7 +590,8 @@ $(function () {
             $('#IsTimeSlotNo').val(true);
             $('#cbIsTimeSlotNo').prop('checked', true);
             $('#IsSender').val(true);
-            $('#cbIsSender').prop('checked', true);            
+            $('#cbIsSender').prop('checked', true);   
+            $('#chbIsPOIAlert1').prop('checked', false);  
         }
         else {
             let isTimeSlot = $('#IsTimeSlotNo').val().toLowerCase() === 'true';
@@ -600,6 +601,11 @@ $(function () {
             let isSender = $('#IsSender').val().toLowerCase() === 'true';
             $('#lblIsSender').text(isSender ? 'Sender' : 'Reciever');
             $('#cbIsSender').prop('checked', isSender);
+
+            let isPOIAlert = $('#IsPOIAlert').val().toLowerCase() === 'true';
+            
+            $('#chbIsPOIAlert1').prop('checked', isPOIAlert);
+
             loadAuditHistory($('#VehicleRego').val());
         }
 
