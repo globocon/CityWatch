@@ -37,7 +37,8 @@ namespace CityWatch.Data.Providers
         void SaveCompanyDetails(CompanyDetails companyDetails);
         void SavePlateLoaded(IncidentReportsPlatesLoaded report);
         void DeletePlateLoaded(IncidentReportsPlatesLoaded report);
-
+        void DeleteFullPlateLoaded(IncidentReportsPlatesLoaded report,int Count);
+        
         void DeleteClientSite(int id);
         List<ClientSiteKpiSetting> GetClientSiteKpiSettings();
         ClientSiteKpiSetting GetClientSiteKpiSetting(int clientSiteId);
@@ -58,6 +59,7 @@ namespace CityWatch.Data.Providers
 
         List<IncidentReportsPlatesLoaded> GetIncidentDetailsKvlReport(int logId);
         List<KeyVehicleLog> GetKeyVehiclogWithPlateIdAndTruckNoByLogId(int[] plateid, string[] truckNo,int logId);
+        List<KeyVehicleLog> GetKeyVehiclogWithPlateIdAndTruckNoByLogIdIndividual(int plateid, string truckNo, int logId);
         List<KeyVehcileLogField> GetKeyVehicleLogFields(bool includeDeleted = false);
         int GetMaxIncidentReportId(int LogId);
         public List<ClientSiteKey> GetClientSiteKeys(int clientSiteId);
@@ -70,7 +72,9 @@ namespace CityWatch.Data.Providers
         int SaveClientSiteLinksPageType(ClientSiteLinksPageType ClientSiteLinksPageTypeRecord);
         int SaveSiteLinkDetails(ClientSiteLinksDetails ClientSiteLinksDetailsRecord);
         void DeleteSiteLinkDetails(int id);
+        int GetIncidentReportsPlatesCount(int PlateId, string TruckNo, int? userId);
         List<ClientSiteLinksDetails> GetSiteLinkDetailsUsingTypeAndState(int type, string state);
+       
         string GetSiteLinksTypeUsingId(int typeId);
 
     }
@@ -590,6 +594,22 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
         
+        public void DeleteFullPlateLoaded(IncidentReportsPlatesLoaded report,int Count)
+        {
+
+            var platesLoadedToDeleteId = _context.IncidentReportsPlatesLoaded.Where(x => x.LogId == report.LogId  && x.IncidentReportId == 0);
+           for(int i = 1; i < Count; i++) { 
+
+                var platesLoadedToDelete = _context.IncidentReportsPlatesLoaded.Where(x => platesLoadedToDeleteId.Select(z => z.Id).Contains(x.Id));
+                if (platesLoadedToDelete == null)
+                    throw new InvalidOperationException();
+                var IdFrom = platesLoadedToDelete.Max(y => y.Id);
+                var IdTo = platesLoadedToDelete.SingleOrDefault(x => x.Id == IdFrom);
+                _context.IncidentReportsPlatesLoaded.Remove(IdTo);
+                _context.SaveChanges();
+            }
+
+        }
         public List<IncidentReportsPlatesLoaded> GetIncidentDetailsKvlReport(int logId)
         {
             return _context.IncidentReportsPlatesLoaded
@@ -604,6 +624,16 @@ namespace CityWatch.Data.Providers
                   .Include(z => z.ClientSiteLogBook)
                 .ThenInclude(z => z.ClientSite)
                
+                .ToList();
+
+        }
+        public List<KeyVehicleLog> GetKeyVehiclogWithPlateIdAndTruckNoByLogIdIndividual(int plateid, string truckNo, int logId)
+        {
+
+            return _context.KeyVehicleLogs.Where(z => z.VehicleRego==truckNo && z.PlateId==plateid && DateTime.Compare(z.ClientSiteLogBook.Date.Date, DateTime.Now.Date) == 0)
+                  .Include(z => z.ClientSiteLogBook)
+                .ThenInclude(z => z.ClientSite)
+
                 .ToList();
 
         }
@@ -801,7 +831,18 @@ namespace CityWatch.Data.Providers
            
             return _context.ClientSiteLinksPageType.SingleOrDefault(x => x.Id == typeId).PageTypeName;
         }
-
+        public List<IncidentReportsPlatesLoaded> GetPlateLoadedEntry(int? userId)
+        {
+            return _context.IncidentReportsPlatesLoaded
+               .Where(z => z.LogId == userId && z.IncidentReportId == 0)
+               .ToList();
+        }
+        public int GetIncidentReportsPlatesCount(int PlateId, string TruckNo, int? userId)
+        {
+            return _context.IncidentReportsPlatesLoaded
+               .Where(z => z.LogId == userId && z.IncidentReportId == 0 && z.PlateId==PlateId && z.TruckNo==TruckNo)
+               .Count();
+        }
 
     }
 }

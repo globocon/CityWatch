@@ -493,7 +493,50 @@ namespace CityWatch.Web.Pages.Incident
 
             return new JsonResult(new { status = status, message = message });
         }
-        
+        public JsonResult OnPostDeleteFullPlateLoaded(Data.Models.IncidentReportsPlatesLoaded report,int Count)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                report.LogId = AuthUserHelper.LoggedInUserId.GetValueOrDefault();
+                _clientDataProvider.DeleteFullPlateLoaded(report,Count);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+        public JsonResult OnGetPlateLoaded(int PlateId,string TruckNo)
+        {
+           
+                int LogId = AuthUserHelper.LoggedInUserId.GetValueOrDefault();
+                var kvlFields = _clientDataProvider.GetKeyVehicleLogFields();
+                //var plates = kvlFields.Where(z => plateIds.Contains(z.Id)).Select(x => x.Name).ToArray();
+
+                var keyVehicleLog = _clientDataProvider.GetKeyVehiclogWithPlateIdAndTruckNoByLogIdIndividual(PlateId, TruckNo, AuthUserHelper.LoggedInUserId.GetValueOrDefault());
+
+                var TruckConfigText = kvlFields.Where(z => keyVehicleLog.Select(x => x.TruckConfig).Contains(z.Id)).Select(x => x.Name).ToArray();
+                var CompanyName = keyVehicleLog.Select(z => z.CompanyName);
+            //_clientDataProvider.GetPlateLoaded(report, Count);
+
+            
+            return new JsonResult(new { TruckConfigText, CompanyName });
+        }
+        public JsonResult OnGetIfPlateExists(int PlateId, string TruckNo)
+        {
+
+            int LogId = AuthUserHelper.LoggedInUserId.GetValueOrDefault();
+           
+            var Count = _clientDataProvider.GetIncidentReportsPlatesCount(PlateId, TruckNo, AuthUserHelper.LoggedInUserId.GetValueOrDefault());
+
+           
+
+            return new JsonResult(new { Count });
+        }
 
 
     }

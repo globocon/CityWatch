@@ -493,7 +493,7 @@ $(function () {
             let personName = result.personName ? result.personName : 'Unknown';
             $('#PlateId').val(result.keyVehicleLogProfile.plateId);
             $('#kvl_list_plates').val(result.keyVehicleLogProfile.plateId);
-           
+            
 
             loadAuditHistory(result.keyVehicleLogProfile.vehicleRego);
         });
@@ -1593,6 +1593,9 @@ $(function () {
                         items.push(item);
                     });
                     response(items);
+                    if (data.length == 0) {
+                        $('#Report_VehicleRego').val('');
+                    }
                 },
                 error: function (response) {
                     alert(response.responseText);
@@ -1611,6 +1614,7 @@ $(function () {
                 }).done(function (result) {
                     if (result.length > 0) {
                         gridIncidentReportsVehicleLogProfile.clear().rows.add(result).draw();
+
                         $('#driver_name').val('Unknown');
                         $('#duplicate_profile_status').text('');
                         $('#incident-report-profiles-modal').find('#kvl-profile-title-rego').html(item);
