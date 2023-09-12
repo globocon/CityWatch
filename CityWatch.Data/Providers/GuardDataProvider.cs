@@ -293,7 +293,7 @@ namespace CityWatch.Data.Providers
                     guardComplianceToUpdate.Reminder2 = guardCompliance.Reminder2;
                     guardComplianceToUpdate.ExpiryDate = guardCompliance.ExpiryDate;
                     guardComplianceToUpdate.FileName = guardCompliance.FileName;
-                    guardComplianceToUpdate.HrGroup= guardCompliance.HrGroup;
+                    guardComplianceToUpdate.HrGroup = guardCompliance.HrGroup;
                 }
             }
             _context.SaveChanges();

@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static Dropbox.Api.FileRequests.GracePeriod;
+using CityWatch.Data.Enums;
 
 namespace CityWatch.Kpi.Models
 {
@@ -90,7 +90,7 @@ namespace CityWatch.Kpi.Models
                     {
                         foreach (var x in data)
                         {
-                            if (x.HrGroup == "HR 1")
+                            if (x.HrGroup == HrGroup.HR1)
                             {
                                 if (x.ExpiryDate == null)
                                     text = "Y";
@@ -118,7 +118,7 @@ namespace CityWatch.Kpi.Models
                     {
                         foreach (var x in data)
                         {
-                            if (x.HrGroup == "HR 2")
+                            if (x.HrGroup == HrGroup.HR2)
                             {
                                 if (x.ExpiryDate == null)
                                     text = "Y";
@@ -147,7 +147,7 @@ namespace CityWatch.Kpi.Models
                     {
                         foreach (var x in data)
                         {
-                            if (x.HrGroup == "HR 3")
+                            if (x.HrGroup == HrGroup.HR3)
                             {
                                 if (x.ExpiryDate == null)
                                     text = "Y";
@@ -191,7 +191,7 @@ namespace CityWatch.Kpi.Models
                     {
                         foreach (var x in data)
                         {
-                            if (x.HrGroup == "HR 1")
+                            if (x.HrGroup == HrGroup.HR1)
                             {
                                 if (x.ExpiryDate == null)
                                     text = "Y";
@@ -219,7 +219,7 @@ namespace CityWatch.Kpi.Models
                     {
                         foreach (var x in data)
                         {
-                            if (x.HrGroup == "HR 2")
+                            if (x.HrGroup == HrGroup.HR2)
                             {
                                 if (x.ExpiryDate == null)
                                     text = "Y";
@@ -247,7 +247,7 @@ namespace CityWatch.Kpi.Models
                     {
                         foreach (var x in data)
                         {
-                            if (x.HrGroup == "HR 3")
+                            if (x.HrGroup == HrGroup.HR3)
                             {
                                 if (x.ExpiryDate == null)
                                     text = "Y";
@@ -291,7 +291,7 @@ namespace CityWatch.Kpi.Models
                     {
                         foreach (var x in data)
                         {
-                            if (x.HrGroup == "HR 1")
+                            if (x.HrGroup == HrGroup.HR1)
                             {
                                 if (x.ExpiryDate == null)
                                     text = "Y";
@@ -319,7 +319,7 @@ namespace CityWatch.Kpi.Models
                     {
                         foreach (var x in data)
                         {
-                            if (x.HrGroup == "HR 2")
+                            if (x.HrGroup == HrGroup.HR2)
                             {
                                 if (x.ExpiryDate == null)
                                     text = "Y";
@@ -347,7 +347,7 @@ namespace CityWatch.Kpi.Models
                     {
                         foreach (var x in data)
                         {
-                            if (x.HrGroup == "HR 3")
+                            if (x.HrGroup == HrGroup.HR3)
                             {
                                 if (x.ExpiryDate == null)
                                     text = "Y";

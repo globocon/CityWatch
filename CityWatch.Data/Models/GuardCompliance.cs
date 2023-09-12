@@ -1,4 +1,5 @@
 ﻿using CityWatch.Common.Helpers;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
@@ -42,7 +43,7 @@ namespace CityWatch.Data.Models
             }
         }
 
-        public string HrGroup { get; set; }
+        public HrGroup? HrGroup { get; set; }
 
         [ForeignKey("GuardId")]
         public Guard Guard { get; set; }

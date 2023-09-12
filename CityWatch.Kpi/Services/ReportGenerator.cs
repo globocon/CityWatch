@@ -482,22 +482,14 @@ namespace CityWatch.Kpi.Services
             return cell;
         }
 
-        private Cell CreateHrDataCell(string text)
-        {
+        private Cell CreateDataCell(string text, string textColorHex) {
             var cell = new Cell();
             cell.SetFontSize(CELL_FONT_SIZE)
+                .SetFontColor(WebColors.GetRGBColor(textColorHex))
                 .SetPaddingTop(0)
                 .SetPaddingBottom(0);
-            if (text == "Y")
-            {
-                cell.SetFontColor(WebColors.GetRGBColor(CELL_FONT_GREEN));
-            }
-            if (text == "N")
-            {
-                cell.SetFontColor(WebColors.GetRGBColor(CELL_FONT_RED));
-            }
-            cell.Add(new Paragraph(text));
-            return cell;
+            cell.Add(new Paragraph(text ?? string.Empty));
+            return cell;            
         }
 
         private Image GetGraphImage(List<EffortCount> effortCounts)
@@ -535,10 +527,11 @@ namespace CityWatch.Kpi.Services
 
         private Table CreateGuardReportData(List<DailyKpiGuard> monthlyKpiGuardData, DateTime fromDate)
         {
-            var kpiGuardTable = new Table(UnitValue.CreatePercentArray(new float[] { 2, 6, 6, 6, 12, 9, 3, 3, 3, 12, 9, 3, 3, 3, 12, 9, 3, 3, 3})).UseAllAvailableWidth();
+            var textColor = string.Empty;
+            var kpiGuardTable = new Table(UnitValue.CreatePercentArray(new float[] { 2, 6, 6, 6, 12, 9, 3, 3, 3, 12, 9, 3, 3, 3, 12, 9, 3, 3, 3 })).UseAllAvailableWidth();
             CreateGuardReportHeader(kpiGuardTable, fromDate);
             foreach (var data in monthlyKpiGuardData)
-            {                
+            {
                 kpiGuardTable.AddCell(CreateDataCell(data.Date.ToString("dd")));
                 kpiGuardTable.AddCell(CreateDataCell(data.Date.ToString("dddd")));
                 kpiGuardTable.AddCell(CreateDataCell(data.EmployeeHours?.ToString() ?? string.Empty));
@@ -546,21 +539,68 @@ namespace CityWatch.Kpi.Services
 
                 kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardName ?? string.Empty));
                 kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardSecurityNo ?? string.Empty));
-                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift1GuardHr1 ?? string.Empty));
-                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift1GuardHr2 ?? string.Empty));
-                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift1GuardHr3 ?? string.Empty));
+
+                if (data.Shift1GuardHr1 == "Y")
+                    textColor = CELL_FONT_GREEN;
+                else if (data.Shift1GuardHr1 == "N")
+                    textColor = CELL_FONT_RED;
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardHr1, textColor));
+
+                if (data.Shift1GuardHr2 == "Y")
+                    textColor = CELL_FONT_GREEN;
+                else if (data.Shift1GuardHr2 == "N")
+
+                    textColor = CELL_FONT_RED;
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardHr2, textColor));
+
+                if (data.Shift1GuardHr3 == "Y")
+                    textColor = CELL_FONT_GREEN;
+                else if (data.Shift1GuardHr3 == "N")
+                    textColor = CELL_FONT_RED;
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardHr3, textColor));
+                
 
                 kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardName ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardSecurityNo ?? string.Empty));
-                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift2GuardHr1 ?? string.Empty));
-                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift2GuardHr2 ?? string.Empty));
-                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift2GuardHr3 ?? string.Empty));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardSecurityNo ?? string.Empty));                
+
+                if (data.Shift2GuardHr1 == "Y")
+                    textColor = CELL_FONT_GREEN;
+                else if (data.Shift2GuardHr1 == "N")
+                    textColor = CELL_FONT_RED;
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardHr1, textColor));
+
+                if (data.Shift2GuardHr2 == "Y")
+                    textColor = CELL_FONT_GREEN;
+                else if (data.Shift2GuardHr2 == "N")
+                    textColor = CELL_FONT_RED;
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardHr2, textColor));
+
+                if (data.Shift2GuardHr3 == "Y")
+                    textColor = CELL_FONT_GREEN;
+                else if (data.Shift2GuardHr3 == "N")
+                    textColor = CELL_FONT_RED;
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardHr3, textColor));
 
                 kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardName ?? string.Empty));
                 kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardSecurityNo ?? string.Empty));
-                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift3GuardHr1 ?? string.Empty));
-                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift3GuardHr2 ?? string.Empty));
-                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift3GuardHr3 ?? string.Empty));
+
+                if (data.Shift3GuardHr1 == "Y")
+                    textColor = CELL_FONT_GREEN;
+                else if (data.Shift3GuardHr1 == "N")
+                    textColor = CELL_FONT_RED;
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardHr1, textColor));
+
+                if (data.Shift3GuardHr2 == "Y")
+                    textColor = CELL_FONT_GREEN;
+                else if (data.Shift3GuardHr2 == "N")
+                    textColor = CELL_FONT_RED;
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardHr2, textColor));
+
+                if (data.Shift3GuardHr3 == "Y")
+                    textColor = CELL_FONT_GREEN;
+                else if (data.Shift3GuardHr3 == "N")
+                    textColor = CELL_FONT_RED;
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardHr3, textColor));
             }
             return kpiGuardTable;
         }

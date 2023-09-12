@@ -30,7 +30,7 @@ namespace CityWatch.Web.Services
         Closed = 2,
 
         Pending = 3
-    }
+    }    
 
     public interface IViewDataService
     {
@@ -42,7 +42,6 @@ namespace CityWatch.Web.Services
         List<SelectListItem> ClientArea { get; }
         List<SelectListItem> GuardMonth { get; }
         List<SelectListItem> VehicleRegos { get; }
-        List<SelectListItem> HrGroup { get; }
         string GetFeedbackTemplateText(int id);
         List<SelectListItem> GetFeedbackTemplatesByType(FeedbackType type);
         List<SelectListItem> GetOfficerPositions(OfficerPositionFilter positionFilter = OfficerPositionFilter.All);
@@ -748,21 +747,6 @@ namespace CityWatch.Web.Services
                     ClientSiteLogBookId = logBookId,
                     GuardLoginId = guardLoginId,
                 });
-            }
-        }
-
-        public List<SelectListItem> HrGroup
-        {
-            get
-            {
-                return new List<SelectListItem>()
-                {
-                    new SelectListItem("Select", "", true),
-                    new SelectListItem("BLANK", "BLANK"),
-                    new SelectListItem("HR 1", "HR 1"),
-                    new SelectListItem("HR 2", "HR 2"),
-                    new SelectListItem("HR 3", "HR 3"),
-                };
             }
         }
     }
