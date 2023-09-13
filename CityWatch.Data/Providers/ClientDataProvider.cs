@@ -619,12 +619,13 @@ namespace CityWatch.Data.Providers
 
         public List<KeyVehicleLog> GetKeyVehiclogWithPlateIdAndTruckNoByLogId(int[] plateid, string[] truckNo, int logId)
         {
+            
+                return _context.KeyVehicleLogs.Where(z => truckNo.Contains(z.VehicleRego) && plateid.Contains(z.PlateId) && DateTime.Compare(z.ClientSiteLogBook.Date.Date, DateTime.Now.Date) == 0)
+                      .Include(z => z.ClientSiteLogBook)
+                    .ThenInclude(z => z.ClientSite)
 
-            return _context.KeyVehicleLogs.Where(z => truckNo.Contains(z.VehicleRego) && plateid.Contains(z.PlateId) && DateTime.Compare(z.ClientSiteLogBook.Date.Date, DateTime.Now.Date) == 0)
-                  .Include(z => z.ClientSiteLogBook)
-                .ThenInclude(z => z.ClientSite)
-               
-                .ToList();
+                    .ToList();
+            
 
         }
         public List<KeyVehicleLog> GetKeyVehiclogWithPlateIdAndTruckNoByLogIdIndividual(int plateid, string truckNo, int logId)

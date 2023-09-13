@@ -520,7 +520,13 @@ namespace CityWatch.Web.Pages.Incident
                 var keyVehicleLog = _clientDataProvider.GetKeyVehiclogWithPlateIdAndTruckNoByLogIdIndividual(PlateId, TruckNo, AuthUserHelper.LoggedInUserId.GetValueOrDefault());
 
                 var TruckConfigText = kvlFields.Where(z => keyVehicleLog.Select(x => x.TruckConfig).Contains(z.Id)).Select(x => x.Name).ToArray();
-                var CompanyName = keyVehicleLog.Select(z => z.CompanyName);
+                string  CompanyName =null;
+                foreach(var kv in keyVehicleLog)
+                {
+                CompanyName = kv.CompanyName;
+                break;
+                }
+                keyVehicleLog.Select(z => z.CompanyName);
             //_clientDataProvider.GetPlateLoaded(report, Count);
 
             
