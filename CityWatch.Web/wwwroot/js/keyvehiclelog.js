@@ -423,13 +423,7 @@ $(function () {
             },
         ],
     });
-
-    $('#key_vehicle_log_profiles tbody').on('click', '#btnSelectProfile', function () {
-        var data = gridKeyVehicleLogProfile.row($(this).parents('tr')).data();
-        populateKvlModal(data.detail.id);        
-    });
-
-    function populateKvlModal(id) {        
+    function populateKvlModal(id) {
         $.ajax({
             url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + id,
             type: 'GET',
@@ -453,7 +447,7 @@ $(function () {
             $('#Product').val(result.keyVehicleLogProfile.product);
             $('#Notes').val(result.keyVehicleLogProfile.notes);
             $("#list_product").val(result.keyVehicleLogProfile.product);
-            $("#list_product").trigger('change');           
+            $("#list_product").trigger('change');
             $('#Sender').val(result.sender);
             $('#lblIsSender').text(result.isSender ? 'Sender Address' : 'Reciever Address');
             $('#cbIsSender').prop('checked', result.isSender);
@@ -462,9 +456,52 @@ $(function () {
         });
         $('#kvl-profiles-modal').modal('hide');
     }
+    $('#key_vehicle_log_profiles tbody').on('click', '#btnSelectProfile', function () {
+        var data = gridKeyVehicleLogProfile.row($(this).parents('tr')).data();
+        populateKvlModal(data.detail.id);        
+    });
+    let gridIncidentReportsVehicleLogProfile = $('#incident_reports_vehicle_log_profiles').DataTable({
+        paging: false,
+        ordering: false,
+        info: false,
+        searching: false,
+        data: [],
+        columns: [
+            { data: 'detail.id', visible: false },
+            { data: 'plate' },
+            { data: 'detail.companyName' },
+            { data: 'detail.personName' },
+            { data: 'personTypeText' },
+            {
+                targets: -1,
+                data: null,
+                className: 'text-center',
+                defaultContent: '<button id="btnSelectProfile" class="btn btn-outline-primary">Select</button>'
+            },
+        ],
+    });
+    $('#incident_reports_vehicle_log_profiles tbody').on('click', '#btnSelectProfile', function () {
+        var data = gridIncidentReportsVehicleLogProfile.row($(this).parents('tr')).data();
+        populateIncidentReportModal(data.detail.id);
+    });
+    function populateIncidentReportModal(id) {
+        $.ajax({
+            url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + id,
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (result) {
+            let personName = result.personName ? result.personName : 'Unknown';
+            $('#PlateId').val(result.keyVehicleLogProfile.plateId);
+            $('#kvl_list_plates').val(result.keyVehicleLogProfile.plateId);
+            
+
+            loadAuditHistory(result.keyVehicleLogProfile.vehicleRego);
+        });
+        $('#incident-report-profiles-modal').modal('hide');
+    }
 
     $('#key_vehicle_log_profiles tbody').on('click', 'tr', function () {
-        gridKeyVehicleLogProfile.$('tr.selected').removeClass('selected');
+        gridkeyVehicleLogProfile.$('tr.selected').removeClass('selected');
         $(this).addClass('selected');
     });
 
@@ -1539,5 +1576,53 @@ $(function () {
         $('#lbl_BlankNotes').text(isChecked ? 'Blank Notes On' : 'Blank Notes Off'); lbl_BlankNotes
         $('#IsBlankNoteOn').val(isChecked);
        
+    });
+    $('#Report_VehicleRego').typeahead({
+        minLength: 3,
+        autoSelect: true,
+        source: function (request, response) {
+            $.ajax({
+                url: '/Guard/KeyVehiclelog?handler=VehicleRegos',
+                data: { regoPart: request },
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    items = [];
+                    map = {};
+                    $.each(data, function (i, item) {
+                        items.push(item);
+                    });
+                    response(items);
+                    if (data.length == 0) {
+                        $('#Report_VehicleRego').val('');
+                    }
+                },
+                error: function (response) {
+                    alert(response.responseText);
+                },
+                failure: function (response) {
+                    alert(response.responseText);
+                }
+            });
+        },
+        afterSelect: function (item) {
+            if (item) {
+                $.ajax({
+                    url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + item,
+                    type: 'GET',
+                    dataType: 'json',
+                }).done(function (result) {
+                    if (result.length > 0) {
+                        gridIncidentReportsVehicleLogProfile.clear().rows.add(result).draw();
+
+                        $('#driver_name').val('Unknown');
+                        $('#duplicate_profile_status').text('');
+                        $('#incident-report-profiles-modal').find('#kvl-profile-title-rego').html(item);
+                        $('#Report_VehicleRego').val(item);
+                        $('#incident-report-profiles-modal').modal('show');
+                    }
+                });
+            }
+        }
     });
 });
