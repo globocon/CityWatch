@@ -904,7 +904,13 @@
         const isSiteColourCodeEventType = document.getElementById("Report_EventType_SiteColour").checked;
         return !isSiteColourCodeEventType || (isSiteColourCodeEventType && document.getElementById("Report_SiteColourCodeId").value !== '');
     }
-
+    function siteKVLCheckValid() {
+        const isPlateAlert = document.getElementById("Report_PlateLoadedYes").checked;
+        var rowcount=$("#register_plate_loaded tr").length;
+        
+        return ((!isPlateAlert) || rowcount > 1  );
+    }
+   
     function onbtnSumbitClick(event) {        
         const result = validateForm();
         if (!result.isValid) {            
@@ -1022,7 +1028,9 @@
         if (!siteColourCodeIsValid()) {          
             errors.push({field: 'Site Colour Code', errorList: ['Please select Site Colour Code']});
         }
-
+        if (!siteKVLCheckValid()) {
+            errors.push({ field: 'Plate Lodaed', errorList: ['Please add the plates if you click on the Yes checkbox in KV, Otherwise click on No'] });
+        }
         const requiredFields = ['Report_DateLocation_ReportDate', 'Report_DateLocation_ClientType', 
         'Report_DateLocation_ClientSite', 'Report_Officer_GuardMonth'];
         requiredFields.forEach(function(id){
@@ -1257,7 +1265,7 @@
                             '<td>' + $('#kvl_list_plates').find(":selected").text() + ' </td>' +
                             '<td>' + result.truckConfigText + ' </td>' +
                             '<td>' + result.companyName + ' </td>' +
-                    '<td> <button  class= "btn btn-outline-danger mr-2" id = "btn_delete_plate"> <i class="fa fa-trash mr-2"> </i></button >  </td>' +
+                    '<td> <button  class= "btn btn-outline-danger" id = "btn_delete_plate"> <i class="fa fa-trash"> </i></button >  </td>' +
                             '</tr > ');
                         // CLEAR ALL TEXTBOXES.
                         $('#PlateId').val('');
@@ -1273,7 +1281,7 @@
                             '<td>' + $('#kvl_list_plates').find(":selected").text() + ' </td>' +
                     '<td>' + result.truckConfigText + ' </td>' +
                     '<td>' + result.companyName + ' </td>' +
-                    '<td>' + '<button  class= "btn btn-outline-danger mr-2" id = "btn_delete_plate"> <i class="fa fa-trash mr-2"> </i></button >' + '</td>' +
+                    '<td>' + '<button  class= "btn btn-outline-danger " id = "btn_delete_plate"> <i class="fa fa-trash"> </i></button >' + '</td>' +
                             '</tr >');
                         // CLEAR ALL TEXTBOXES.
                         $('#PlateId').val('');
