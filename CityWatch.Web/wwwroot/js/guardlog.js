@@ -2368,8 +2368,8 @@
         },
         columns: [
             { data: 'referenceNo', width: "6%" },
-            { data: 'hrGroup', width: "3%" },
-            { data: 'description', width: "10%" },
+            { data: 'hrGroup', width: "6%" },
+            { data: 'description', width: "7%" },
             { data: 'expiryDate', width: "8%" },
             { data: 'reminder1', width: "3%" },
             { data: 'reminder2', width: "3%" },
