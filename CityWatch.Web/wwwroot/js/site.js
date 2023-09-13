@@ -50,7 +50,7 @@
 
     // Only to handle the clear event of client site input
     $('#Report_DateLocation_ClientSite').on('change', function () {
-        if ($(this).val() === '') {            
+        if ($(this).val() === '') {
             $('#Report_DateLocation_ClientAddress').val('');
             toggleClientGpsLink(false);
         }
@@ -170,8 +170,8 @@
         columns: [
             { field: 'name', title: 'Client Type', width: 400, editor: true }
         ],
-        initialized: function (e) {            
-            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');            
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
 
@@ -479,7 +479,7 @@
         gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val() });
     });
 
-    /****** Report Fileds *******/
+    /****** Report Fileds start *******/
     let gridReportFields;
 
     gridReportFields = $('#field_settings').grid({
@@ -584,6 +584,202 @@
             }
         });
     }
+    /****** Report Fileds end *******/
+
+    /****** Report tools start *******/
+    let gridReportTools;
+
+    gridReportTools = $('#tools_settings').grid({
+        dataSource: '/Admin/Settings?handler=LinksPageDetails',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        inlineEditing: { mode: 'command' },
+        columns: [
+            { field: 'title', title: 'Title', width: 200, editor: true },
+            { field: 'hyperlink', title: 'Hyperlink', width: 350, editor: true },
+            { field: 'state', title: 'State', width: 80, type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+
+    let isReportTooolsAdding = false;
+    $('#add_tools_settings').on('click', function () {
+        const selToolsTypeId = $('#report_tools_types').val();
+        if (!selToolsTypeId) {
+            alert('Please select a field type to update');
+            return;
+        }
+
+        if (isReportTooolsAdding) {
+            alert('Unsaved changes in the grid. Refresh the page');
+        } else {
+            isReportTooolsAdding = true;
+            gridReportTools.addRow({
+                'id': -1,
+                'typeId': selToolsTypeId,
+                'name': '',
+                'emailTo': ''
+            }).edit(-1);
+        }
+    });
+
+    $('#report_tools_types').on('change', function () {
+        const selToolsTypeId = $(this).val();
+
+        if (!selToolsTypeId) { // None
+            $('#toolsSettings').show();
+            gridReportTools.clear();
+            gridReportTools.reload({ typeId: selToolsTypeId });
+
+        } else {
+            $('#toolsSettings').show();
+            gridReportTools.clear();
+            gridReportTools.reload({ typeId: selToolsTypeId });
+        }
+    });
+
+    if (gridReportTools) {
+        gridReportTools.on('rowDataChanged', function (e, id, record) {
+            const data = $.extend(true, {}, record);
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '/Admin/Settings?handler=LinksPageDetails',
+                data: { reportfield: data },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function (response) {
+                if (!response.status) {
+                    alert(response.message);
+                }
+                gridReportTools.clear();
+                gridReportTools.reload({ typeId: $('#report_tools_types').val() });
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isReportTooolsAdding)
+                    isReportTooolsAdding = false;
+            });
+        });
+
+        gridReportTools.on('rowRemoving', function (e, id, record) {
+
+            if (confirm('Are you sure want to delete this field?')) {
+                const token = $('input[name="__RequestVerificationToken"]').val();
+                $.ajax({
+                    url: '/Admin/Settings?handler=DeleteLinksPageDetails',
+                    data: { id: record },
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': token },
+                }).done(function () {
+                    gridReportTools.reload({ typeId: $('#report_tools_types').val() });
+                }).fail(function () {
+                    console.log('error');
+                }).always(function () {
+                    if (isReportTooolsAdding)
+                        isReportTooolsAdding = false;
+                });
+            }
+        });
+    }
+
+    $('#add_tools_page').on('click', function () {
+        $('#pageType').val('');
+        $('#tools-modal').modal();
+    });
+
+    $('#btnSavePageType').on('click', function () {
+        if (newpageTypeIsValid()) {
+            var data = {
+                'PageTypeName': $('#pageType').val()
+            };
+            $.ajax({
+                url: '/Admin/Settings?handler=LinksPageType',
+                data: { ClientSiteLinksPageTyperecord: data },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (data) {
+                if (data.status != 1) {
+                    $('#pageType').val('');
+                    $('#pageType-modal-validation').html(data.message).show().delay(2000).fadeOut();
+                } else {                    
+                    $('#tools-modal').modal('hide');
+                    $('#pageType').val('');
+                    refreshPageType();                   
+                    showStatusNotification(true, 'Saved successfully');
+                }
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+            });
+        }
+    });
+
+
+    function newpageTypeIsValid() {
+        const pageType = $('#pageType').val();
+        if (pageType === '') {
+            $('#pageType-modal-validation').html('Page Type is required').show().delay(2000).fadeOut();
+            return false;
+        }
+        return true;
+    }
+
+    const refreshPageType = function () {
+        $.ajax({
+            url: '/Admin/Settings?handler=LinksPageTypeList',
+            type: 'GET',
+            success: function (data) {
+                if (data) {
+                    $('#report_tools_types').html('');
+                    $('#report_tools_types').append('<option value="">None</option>');
+                    data.map(function (template) {
+                        $('#report_tools_types').append('<option value="' + template.id + '">' + template.pageTypeName + '</option>');
+                    });
+                }
+            }
+        });
+    }
+    updateLinks();
+    $('#ddl_toolSelecter').on('change', function () {
+        updateLinks();
+    });
+    function updateLinks() {
+        var selectedValue = $('#ddl_toolSelecter').val();
+        $('.dynamic-link').each(function () {
+            var linkId = $(this).attr('id');
+            $(this).attr('href', 'Tools?st=' + linkId + "&&type=" + selectedValue );
+
+        });
+    }
+
+
+    var queryString = window.location.search;
+    // Parse the query string into an object
+    var params = new URLSearchParams(queryString);
+    // Get the value of the 'name' parameter
+    var type = params.get('type');
+    var state = params.get('st');
+    let gridTools;
+    gridTools = $('#file_Tools').grid({
+        /* dataSource: '/Admin/Settings?handler=StaffDocs',*/
+        dataSource: '/Admin/Settings?handler=LinkDetailsUisngTypeandState&&type=' + type + "&&state=" + state,
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        columns: [
+            { field: 'title', title: 'Tools', width: 400 },
+            { title: 'Weblink', width: 50, renderer: linkClickRenderer },
+        ]
+    });
+    function linkClickRenderer(value, record) {
+        return '<div class="centerIcon"><a href="http://' + record.hyperlink + '" target="_blank"><img src="../images/Blue_globe_icon.svg" class="imgIcon"/></a></div>'
+    }
+
+
+    /****** Report tools end *******/
 
     let gridPositions;
 
@@ -650,7 +846,7 @@
         } else {
             isPositionAdding = true;
             gridPositions.addRow({
-                'id': -1,                
+                'id': -1,
                 'name': '',
                 'emailTo': '',
                 'isPatrolCar': false,
@@ -681,7 +877,7 @@
             data: { id: userId, deleted: deleted },
             type: 'POST',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function () {            
+        }).done(function () {
             gridUsers.reload();
             gridClientSiteAccess.reload();
         }).fail(function () {
@@ -756,7 +952,7 @@
             $('#userName').val(button.data('uname'))
             $('#userName').prop('readonly', true);
             $('#userPassword').val('');
-            $('#userConfirmPassword').val('');            
+            $('#userConfirmPassword').val('');
         }
     });
 
@@ -1057,7 +1253,7 @@
     let gridStaffDocsTypeTraining;
     let gridStaffDocsTypeTemplatesAndForms;
 
-    
+
 
     gridStaffDocs = $('#staff_document_files').grid({
         dataSource: '/Admin/Settings?handler=StaffDocs',
@@ -1196,28 +1392,28 @@
     });
 
     $('#staff_document_files_type_CompanySop').on('change', 'input[name="upload_staff_file_company_sop"]', function () {
-        uploadStafDocUsingType($(this), true,1);
+        uploadStafDocUsingType($(this), true, 1);
     });
 
     $('#staff_document_files_type_Training').on('change', 'input[name="upload_staff_file_training"]', function () {
-        uploadStafDocUsingType($(this), true,2);
+        uploadStafDocUsingType($(this), true, 2);
     });
 
     $('#staff_document_files_type_TemplatesAndForms').on('change', 'input[name="upload_staff_file_templates_forms"]', function () {
-        uploadStafDocUsingType($(this), true,3);
+        uploadStafDocUsingType($(this), true, 3);
     });
 
     $('#add_staff_document_file').on('change', function () {
         uploadStafDoc($(this));
     });
     $('#add_staff_document_file_company_sop').on('change', function () {
-        uploadStafDocUsingType($(this), false,1);
+        uploadStafDocUsingType($(this), false, 1);
     });
     $('#add_staff_document_file_training').on('change', function () {
-        uploadStafDocUsingType($(this), false,2);
+        uploadStafDocUsingType($(this), false, 2);
     });
     $('#add_staff_document_file_templates_and_forms').on('change', function () {
-        uploadStafDocUsingType($(this),false, 3);
+        uploadStafDocUsingType($(this), false, 3);
     });
 
     function uploadStafDoc(uploadCtrl, edit = false) {
@@ -1249,7 +1445,7 @@
         });
     }
 
-    function uploadStafDocUsingType(uploadCtrl, edit = false,type) {
+    function uploadStafDocUsingType(uploadCtrl, edit = false, type) {
         const file = uploadCtrl.get(0).files.item(0);
         const fileExtn = file.name.split('.').pop();
         if (!fileExtn || '.pdf,.docx,.xlsx'.indexOf(fileExtn.toLowerCase()) < 0) {
@@ -1282,7 +1478,7 @@
         });
     }
 
-    /****** Downloads *******/   
+    /****** Downloads *******/
 
     var queryString = window.location.search;
     // Parse the query string into an object
@@ -1292,7 +1488,7 @@
     let gridFileDownloads;
     gridFileDownloads = $('#file_downloads').grid({
         /* dataSource: '/Admin/Settings?handler=StaffDocs',*/
-        dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type='+type,
+        dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=' + type,
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
@@ -1303,7 +1499,7 @@
     });
 
     function fileDownloadsButtonRenderer(value, record) {
-        return '<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>'
+        return '<div class="button-container-div"><a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a></div>'
     }
 
     const showStatusNotification = function (success, message) {
@@ -1317,25 +1513,25 @@
     }
 
     const showModal = function (message) {
-        
+
         $('#msg-modal .modal-body p').html(message);
         $('#msg-modal').modal();
-    }   
+    }
     /*****C4i Core Settings *****/
-   
+
     getC4Settings();
-    
-    
+
+
     function getC4Settings() {
 
         const option = 1;
-       
+
         $.ajax({
             url: '/Admin/Settings?handler=CoreSettings&companyId=' + option,
             type: 'GET',
             dataType: 'json'
         }).done(function (data) {
-            
+
             for (var i = 0; i < data.length; i++) {
                 $('#txt_CompanyId').val(data[i].id);
                 $('#txt_CompanyName').val(data[i].name);
@@ -1348,60 +1544,60 @@
                 $("#img_PrimaryLogo").attr('src', data[i].primaryLogoPath);
                 $("#img_BannerLogo").attr('src', data[i].bannerLogoPath);
             }
-            
-           
+
+
             data.map(function (clientType) {
                 $('#sel_client_type').append('<option value="' + clientType.id + '">' + clientType.name + '</option>');
             });
-            
+
         });
     }
-    
-       
-        $('#cr_primarylogo_upload').on('change', function () {
-            
-            const file = $(this).get(0).files.item(0);
-            const fileExtn = file.name.split('.').pop();
-            // if (!fileExtn || fileExtn !== 'jpg' || fileExtn !=='JPG' || fileExtn !=='jpeg' || fileExtn !=='JPEG') {
-            if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'png' && fileExtn !== 'PNG' && fileExtn !== 'GIF' && fileExtn !== 'gif')) {
-                showModal('Unsupported file type. Please upload a .jpg/.jpeg file');
-                return false;
-            }
-            const prlogopath = $("#img_PrimaryLogo").prop('src');
-            const fileForm = new FormData();
-            fileForm.append('file', file);
-            fileForm.append('prlogopath', prlogopath);
-            $.ajax({
-                url: '/Admin/Settings?handler=CrPrimaryLogoUpload',
-                type: 'POST',
-                data: fileForm,
-                processData: false,
-                contentType: false,
-                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
-            }).done(function (data) {
-                
-                if (data.success)
-                    
-                    var result = prlogopath.lastIndexOf("/");
-                var newfile = data.filepath;
-                var result1 = newfile.lastIndexOf("/");
-                var substr = prlogopath.substring(0, result + 1);
-                
-                var substr2 = newfile.substring( result1 + 1);
-                substr = substr + "cr_primarylogo.JPG";
-                $("#img_PrimaryLogo").attr('src', substr);
-                
-            }).fail(function () {
-                showStatusNotification(false, 'Something went wrong');
-            }).always(function () {
-              
-            });
+
+
+    $('#cr_primarylogo_upload').on('change', function () {
+
+        const file = $(this).get(0).files.item(0);
+        const fileExtn = file.name.split('.').pop();
+        // if (!fileExtn || fileExtn !== 'jpg' || fileExtn !=='JPG' || fileExtn !=='jpeg' || fileExtn !=='JPEG') {
+        if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'png' && fileExtn !== 'PNG' && fileExtn !== 'GIF' && fileExtn !== 'gif')) {
+            showModal('Unsupported file type. Please upload a .jpg/.jpeg file');
+            return false;
+        }
+        const prlogopath = $("#img_PrimaryLogo").prop('src');
+        const fileForm = new FormData();
+        fileForm.append('file', file);
+        fileForm.append('prlogopath', prlogopath);
+        $.ajax({
+            url: '/Admin/Settings?handler=CrPrimaryLogoUpload',
+            type: 'POST',
+            data: fileForm,
+            processData: false,
+            contentType: false,
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+        }).done(function (data) {
+
+            if (data.success)
+
+                var result = prlogopath.lastIndexOf("/");
+            var newfile = data.filepath;
+            var result1 = newfile.lastIndexOf("/");
+            var substr = prlogopath.substring(0, result + 1);
+
+            var substr2 = newfile.substring(result1 + 1);
+            substr = substr + "cr_primarylogo.JPG";
+            $("#img_PrimaryLogo").attr('src', substr);
+
+        }).fail(function () {
+            showStatusNotification(false, 'Something went wrong');
+        }).always(function () {
+
         });
-        
-    
-   
+    });
+
+
+
     $('#cr_bannerlogo_upload').on('change', function () {
-        
+
         const file = $(this).get(0).files.item(0);
         const fileExtn = file.name.split('.').pop();
         // if (!fileExtn || fileExtn !== 'jpg' || fileExtn !=='JPG' || fileExtn !=='jpeg' || fileExtn !=='JPEG') {
@@ -1421,7 +1617,7 @@
             contentType: false,
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
         }).done(function (data) {
-            
+
             if (data.success)
 
                 var result = prlogopath.lastIndexOf("/");
@@ -1432,21 +1628,21 @@
             var substr2 = newfile.substring(result1 + 1);
             substr = substr + "cr_bannerlogo.JPG";
             $("#img_BannerLogo").attr('src', substr);
-            
-            
-            
+
+
+
         }).fail(function () {
             showStatusNotification(false, 'Something went wrong');
         }).always(function () {
-            
+
         });
     });
-  
 
- 
-  
+
+
+
     $("#btn_CompanySave").on("click", function () {
-        
+
         var companyId = parseInt($("#txt_CompanyId").val());
         if (ValidateCompany(true)) {
             const token = $('input[name="__RequestVerificationToken"]').val();
@@ -1464,7 +1660,7 @@
             }
             $.ajax({
                 url: '/Admin/Settings?handler=CompanyDetails',
-                data: {'company':obj},
+                data: { 'company': obj },
                 type: 'POST',
                 headers: { 'RequestVerificationToken': token },
             }).done(function (result) {
@@ -1472,9 +1668,9 @@
                     if (result.message !== '') {
                         getC4Settings();
                         showStatusNotification(true, 'Company details modified successfully');
-                        
+
                     }
-                   
+
                 } else {
                     displayGuardValidationSummary(result.message);
                 }
@@ -1482,11 +1678,49 @@
         }
     });
     function ValidateCompany() {
-        
+
         if ($("#txt_CompanyName").val() == "") {
             showModal('Company name is required');
             return false;
         }
         return true;
     }
+    $('#register_plate_loaded').on('click', 'button[id=btn_delete_plate]', function () {
+        
+       
+        var plateid = $(this).closest("tr").find("td").eq(1).text();
+
+        var truckNo = $(this).closest("tr").find("td").eq(2).text();
+        
+        $(this).closest("tr").remove();
+        var obj =
+        {
+            PlateId: plateid,
+            TruckNo: truckNo,
+            LogId: 0
+
+        }
+
+        $.ajax({
+            url: '/Incident/Register?handler=DeletePlateLoaded',
+            data: { 'report': obj },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.status) {
+                if (result.message !== '') {
+                   
+                    //getPlatesLoaded();
+                    // showStatusNotification(true, 'Company details modified successfully');
+
+                }
+
+            } else {
+                displayGuardValidationSummary(result.message);
+            }
+        });
+
+        //$(this).closest("tr").remove();
+        return false;
+    });
 });

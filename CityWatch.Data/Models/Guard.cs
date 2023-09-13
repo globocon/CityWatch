@@ -39,6 +39,12 @@ namespace CityWatch.Data.Models
             if (string.IsNullOrEmpty(Initial))
                 errors.Add(new ValidationResult("Guard Initial is required"));
 
+            //if (string.IsNullOrEmpty(Email))
+            //    errors.Add(new ValidationResult("Guard Email is required"));
+
+            //if (string.IsNullOrEmpty(Mobile))
+            //    errors.Add(new ValidationResult("Guard Mobile is required"));
+
             if (!string.IsNullOrEmpty(SecurityNo))
             {
                 var invalidSecNo = SecurityNumberIsNotValid();

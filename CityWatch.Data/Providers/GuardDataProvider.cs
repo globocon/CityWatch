@@ -10,6 +10,7 @@ namespace CityWatch.Data.Providers
     {
         List<Guard> GetGuards();
         int SaveGuard(Guard guard, out string initalsUsed);
+        int UpdateGuard(Guard guard, string state, out string initalsUsed);
         List<GuardLogin> GetGuardLogins(int[] guardIds);
         List<GuardLogin> GetGuardLogins(int clientSiteId, DateTime fromDate, DateTime toDate);
         List<GuardLogin> GetUniqueGuardLogins();
@@ -81,8 +82,11 @@ namespace CityWatch.Data.Providers
                 {
                     updateGuard.Initial = guard.Initial;
                 }
-                updateGuard.State = guard.State;
-                updateGuard.Provider = guard.Provider;
+                
+                    updateGuard.State = guard.State;
+                
+                    updateGuard.Provider = guard.Provider;
+                
                 updateGuard.Mobile = guard.Mobile;
                 updateGuard.Email = guard.Email;
                 updateGuard.IsKPIAccess = guard.IsKPIAccess;
@@ -104,7 +108,46 @@ namespace CityWatch.Data.Providers
 
             return guard.Id;
         }
+        public int UpdateGuard(Guard guard, string state, out string initalsUsed)
+        {
+            initalsUsed = guard.Initial;
+            var isNewGuard = guard.Id == -1;
+            if (isNewGuard)
+            {
+                guard.Id = 0;
+                guard.IsActive = true;
+                initalsUsed = MakeGuardInitials(guard.Initial);
+                guard.Initial = initalsUsed;
+                guard.DateEnrolled = DateTime.Today;
+                _context.Guards.Add(guard);
+            }
+            else
+            {
+                var updateGuard = _context.Guards.SingleOrDefault(x => x.Id == guard.Id);
+                
 
+                updateGuard.Mobile = guard.Mobile;
+                updateGuard.Email = guard.Email;
+                updateGuard.State = state;
+
+
+            }
+
+            _context.SaveChanges();
+
+            if (isNewGuard)
+            {
+                _context.GuardLicenses.Add(new GuardLicense()
+                {
+                    LicenseNo = guard.SecurityNo,
+                    LicenseType = GuardLicenseType.Other,
+                    GuardId = guard.Id
+                });
+                _context.SaveChanges();
+            }
+
+            return guard.Id;
+        }
         public List<GuardLogin> GetGuardLogins(int[] guardIds)
         {
             List<GuardLogin> guardLogins = new List<GuardLogin>();
@@ -113,6 +156,7 @@ namespace CityWatch.Data.Providers
                 guardLogins.AddRange(_context.GuardLogins
                 .Where(z => z.GuardId== guardId)                   
                     .Include(z => z.ClientSite)
+                    .Include(z => z.Guard)
                     .ToList());
             }
             //for query optimization Comment the old code

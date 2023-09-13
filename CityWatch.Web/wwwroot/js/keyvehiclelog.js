@@ -477,7 +477,7 @@ $(function () {
             $("#list_product").val(result.keyVehicleLogProfile.product);
             $("#list_product").trigger('change');           
             $('#Sender').val(result.sender);
-            $('#lblIsSender').text(result.isSender ? 'Sender' : 'Reciever');
+            $('#lblIsSender').text(result.isSender ? 'Sender Address' : 'Reciever Address');
             $('#cbIsSender').prop('checked', result.isSender);
             $('#chbIsPOIAlert1').prop('checked', result.isPOIAlert);
             if (result.isPOIAlert == true) {
@@ -601,7 +601,7 @@ $(function () {
             $('#cbIsTimeSlotNo').prop('checked', isTimeSlot);
 
             let isSender = $('#IsSender').val().toLowerCase() === 'true';
-            $('#lblIsSender').text(isSender ? 'Sender' : 'Reciever');
+            $('#lblIsSender').text(isSender ? 'Sender Address' : 'Reciever Address');
             $('#cbIsSender').prop('checked', isSender);
 
             let isPOIAlert = $('#IsPOIAlert').val().toLowerCase() === 'true';
@@ -627,7 +627,7 @@ $(function () {
 
         $('#cbIsSender').on('change', function () {
             const isChecked = $(this).is(':checked');
-            $('#lblIsSender').text(isChecked ? 'Sender' : 'Reciever');
+            $('#lblIsSender').text(isChecked ? 'Sender Address' : 'Reciever Address');
             $('#IsSender').val(isChecked);
         });
         $('#chbIsPOIAlert1').on('change', function () {
@@ -903,9 +903,92 @@ $(function () {
             }
         });
 
+
+
+        //$('#copyButton').on('click', function () {
+        //    /*Copy to clipboard*/
+        //    var textToCopy = "";
+        //    textToCopy = textToCopy + "Initial Call : " + $('#new_log_initial_call').val();
+        //    textToCopy = textToCopy + "\r\n";
+        //    textToCopy = textToCopy + "Entry Time : " + $('#new_log_entry_time').val();
+        //    textToCopy = textToCopy + "\r\n";
+        //    textToCopy = textToCopy + "Sent In Time : " + $('#new_log_sent_in_time').val();
+        //    textToCopy = textToCopy + "\r\n";
+        //    textToCopy = textToCopy + "Exit Time : " + $('#new_log_exit_time').val();
+        //    textToCopy = textToCopy + "\r\n";
+        //    textToCopy = textToCopy + "ID No. / Car or Truck Rego : " + $('#VehicleRego').val();
+        //    textToCopy = textToCopy + "\r\n";
+        //    var selectedOption = $("#kvl_list_plates option[value='" + $('#kvl_list_plates').val() + "']");
+        //    textToCopy = textToCopy + "ID / Plate(State or AU) : " + selectedOption.text();
+        //    textToCopy = textToCopy + "\r\n";
+        //    textToCopy = textToCopy + "Time Slot No. : " + $('#TimeSlotNo').val();
+        //    textToCopy = textToCopy + "\r\n";
+        //    var selectedVehicleConfig = $("#TruckConfig option[value='" + $('#TruckConfig').val() + "']");
+        //    textToCopy = textToCopy + "Vehicle Config : " + selectedVehicleConfig.text();
+        //    textToCopy = textToCopy + "\r\n";
+        //    var selectedTrailerType = $("#TrailerType option[value='" + $('#TrailerType').val() + "']");
+        //    textToCopy = textToCopy + "Trailer Type : " + selectedTrailerType.text();
+        //    textToCopy = textToCopy + "\r\n";
+        //    textToCopy = textToCopy + "Max Weight : " + $('#MaxWeight').val();
+        //    textToCopy = textToCopy + "\r\n";
+        //    textToCopy = textToCopy + "Reels : " + $('#Reels').val();
+        //    textToCopy = textToCopy + "\r\n";
+        //    textToCopy = textToCopy + "Trailer 1 Rego.or ISO + Seals : " + $('#Trailer1Rego').val();
+        //    textToCopy = textToCopy + "\r\n";
+        //    textToCopy = textToCopy + "Trailer 2 Rego.or ISO + Seals : " + $('#Trailer2Rego').val();
+        //    textToCopy = textToCopy + "\r\n";
+        //    textToCopy = textToCopy + "Trailer 3 Rego.or ISO + Seals : " + $('#Trailer3Rego').val();
+        //    textToCopy = textToCopy + "\r\n";
+        //    textToCopy = textToCopy + "Trailer 4 Rego.or ISO + Seals : " + $('#Trailer4Rego').val();
+        //    textToCopy = textToCopy + "\r\n";
+        //    textToCopy = textToCopy + "Weight In Gross (t) : " + $('#InWeight').val();
+        //    textToCopy = textToCopy + "\r\n";
+        //    textToCopy = textToCopy + "Weight Out Net(t) : " + $('#OutWeight').val();
+        //    textToCopy = textToCopy + "\r\n";
+        //    textToCopy = textToCopy + "Weight Empty Tare(t) : " + $('#TareWeight').val();
+        //    textToCopy = textToCopy + "\r\n";            
+        //    textToCopy = textToCopy + "Contamination Deduction? : " + $('#DeductionPercentage').val();
+        //    textToCopy = textToCopy + "\r\n";
+        //    textToCopy = textToCopy + "Company Name : " + $('#CompanyName').val();
+        //    textToCopy = textToCopy + "\r\n";
+        //    textToCopy = textToCopy + "Individuals Name : " + $('#PersonName').val();
+        //    textToCopy = textToCopy + "\r\n";
+        //    var selectedTypeofIndividual = $("#PersonType option[value='" + $('#PersonType').val() + "']");
+        //    textToCopy = textToCopy + "Type of Individual : " + selectedTypeofIndividual.text();
+        //    textToCopy = textToCopy + "\r\n";
+        //    textToCopy = textToCopy + "Mobile Number : " + $('#MobileNumber').val();
+        //    textToCopy = textToCopy + "\r\n";
+        //    var selectedEntryReason = $("#EntryReason option[value='" + $('#EntryReason').val() + "']");
+        //    textToCopy = textToCopy + "Entry Reason : " + selectedEntryReason.text();
+        //    textToCopy = textToCopy + "\r\n";
+        //    var selectedEntryProduct = $("#list_product option[value='" + $('#list_product').val() + "']");
+        //    var hiddenFieldElement = $('#Product').val();
+        //    textToCopy = textToCopy + "Product : " + hiddenFieldElement;
+        //    textToCopy = textToCopy + "\r\n";
+        //    textToCopy = textToCopy + "Customer Ref : " + $('#CustomerRef').val();
+        //    textToCopy = textToCopy + "\r\n";
+        //    textToCopy = textToCopy + "VWI : " + $('#Vwi').val();
+        //    textToCopy = textToCopy + "\r\n";
+        //    textToCopy = textToCopy + "Sender : " + $('#Sender').val();
+        //    textToCopy = textToCopy + "\r\n";
+        //    var selectedSitePocId = $("#ClientSitePocId option[value='" + $('#ClientSitePocId').val() + "']");            
+        //    textToCopy = textToCopy + "Site POC : " + selectedSitePocId.text();
+        //    textToCopy = textToCopy + "\r\n";
+        //    var selectedSiteLocation = $("#ClientSiteLocationId option[value='" + $('#ClientSiteLocationId').val() + "']");      
+        //    textToCopy = textToCopy + "Site Location : " + selectedSiteLocation.text();
+        //    textToCopy = textToCopy + "\r\n";
+        //    textToCopy = textToCopy + "Notes : " + $('#Notes').val();
+        //    textToCopy = textToCopy + "\r\n";
+        //    navigator.clipboard.writeText(textToCopy)
+        //        .then(() => { alert('Copied to clipboard.') })
+        //        .catch((error) => { alert('Copy failed. Error: ${error}') })
+        //});
+       
+
         $('#kvl_attachment_upload').on("change", function (e) {
             const fileUpload = this;
-            if (fileUpload.files.length > 0) {
+            if (fileUpload.files.length > 0)
+            {
 
                 let arIndex = [];
                 const attachmentList = document.getElementById('kvl-attachment-list').getElementsByTagName('li');
@@ -913,51 +996,70 @@ $(function () {
                     arIndex.push(parseInt(attachmentList[i].getAttribute('data-index')));
                 let attachIndex = arIndex.length > 0 ? Math.max(...arIndex) + 1 : 0;
 
-                for (let i = 0; i < fileUpload.files.length; i++, attachIndex++) {
+                /*Maximum allowed size in bytes*/
+                const maxAllowedSize = 30 * 1024 * 1024;
+                var fileSizeCheck = true;
+                var FileName = "";
+                for (let i = 0; i < fileUpload.files.length; i++, attachIndex++)
+                {
+                    const filecheck = fileUpload.files.item(i);
+                    if (filecheck.size > maxAllowedSize)
+                    {
+                        fileSizeCheck = false;
+                        FileName = FileName + filecheck.name +','
+                    }
+                }
+                if (fileSizeCheck)
+                {
+                    for (let i = 0; i < fileUpload.files.length; i++, attachIndex++)
+                    {
 
-                    const file = fileUpload.files.item(i);
+                        const file = fileUpload.files.item(i);
+                        const attachment_id = 'attach_' + attachIndex;
+                        const li = document.createElement('li');
+                        li.id = attachment_id;
+                        li.className = 'list-group-item';
+                        li.dataset.index = attachIndex;
+                        let liText = document.createTextNode(file.name);
 
-                    const attachment_id = 'attach_' + attachIndex;
-                    const li = document.createElement('li');
-                    li.id = attachment_id;
-                    li.className = 'list-group-item';
-                    li.dataset.index = attachIndex;
-                    let liText = document.createTextNode(file.name);
+                        const icon = document.createElement("i");
+                        icon.className = 'fa fa-circle-o-notch fa-spin ml-2 text-success';
+                        icon.title = 'Uploading...';
+                        icon.style = 'cursor:pointer';
 
-                    const icon = document.createElement("i");
-                    icon.className = 'fa fa-circle-o-notch fa-spin ml-2 text-success';
-                    icon.title = 'Uploading...';
-                    icon.style = 'cursor:pointer';
+                        li.appendChild(liText);
+                        li.appendChild(icon);
+                        document.getElementById('kvl-attachment-list').append(li);
 
-                    li.appendChild(liText);
-                    li.appendChild(icon);
-                    document.getElementById('kvl-attachment-list').append(li);
+                        // upload file to server
+                        const fileForm = new FormData();
+                        fileForm.append('attachments', fileUpload.files.item(i))
+                        fileForm.append('attach_id', attachment_id);
+                        fileForm.append('report_reference', $('#ReportReference').val());
+                        $.ajax({
+                            url: '/Guard/KeyVehiclelog?handler=Upload',
+                            type: 'POST',
+                            data: fileForm,
+                            dataType: 'json',
+                            processData: false,
+                            contentType: false,
+                            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                        }).done(function (result) {
+                            const icon = document.getElementById(result.attachmentId).getElementsByTagName('i').item(0);
+                            if (result.success) {
+                                icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-kvl-attachment';
+                                icon.title = 'Delete';
+                            } else {
+                                icon.className = 'fa fa-exclamation-triangle ml-2 text-warning';
+                                icon.title = 'Error';
+                            }
 
-                    // upload file to server
-                    const fileForm = new FormData();
-                    fileForm.append('attachments', fileUpload.files.item(i))
-                    fileForm.append('attach_id', attachment_id);
-                    fileForm.append('report_reference', $('#ReportReference').val());
-                    $.ajax({
-                        url: '/Guard/KeyVehiclelog?handler=Upload',
-                        type: 'POST',
-                        data: fileForm,
-                        dataType: 'json',
-                        processData: false,
-                        contentType: false,
-                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                    }).done(function (result) {
-                        const icon = document.getElementById(result.attachmentId).getElementsByTagName('i').item(0);
-                        if (result.success) {
-                            icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-kvl-attachment';
-                            icon.title = 'Delete';
-                        } else {
-                            icon.className = 'fa fa-exclamation-triangle ml-2 text-warning';
-                            icon.title = 'Error';
-                        }
-
-                        adjustKvlAttachmentCount(true);
-                    });
+                            adjustKvlAttachmentCount(true);
+                        });
+                    }
+                }
+                else {
+                    alert("Maximum allowed size (30Mb) exceeded for the file '"+FileName+"'")
                 }
             }
         });

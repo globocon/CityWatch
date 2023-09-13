@@ -41,6 +41,8 @@ namespace CityWatch.Web.Pages.Admin
 
         public IUserDataProvider UserDataProvider { get { return _userDataProvider; } }
 
+        public IClientDataProvider ClientDataProvider { get { return _clientDataProvider; } }
+
         [BindProperty]
         public FeedbackTemplate FeedbackTemplate { get; set; }
         [BindProperty]
@@ -350,7 +352,7 @@ namespace CityWatch.Web.Pages.Admin
                             Id = documentId,
                             FileName = file.FileName,
                             LastUpdated = DateTime.Now,
-                            DocumentType= type
+                            DocumentType = type
                         });
 
                         success = true;
@@ -425,6 +427,110 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { status = status, message = message });
         }
 
+
+        public JsonResult OnPostLinksPageType(ClientSiteLinksPageType ClientSiteLinksPageTyperecord)
+        {
+            var status = 0;
+            var message = "Success";
+            try
+            {
+                if (ClientSiteLinksPageTyperecord != null)
+                {
+
+                    status = _clientDataProvider.SaveClientSiteLinksPageType(ClientSiteLinksPageTyperecord);
+                    if (status != 1)
+                    {
+                        if (status == 2)
+                        {
+                            message = "Same site link type already exist";
+                        }
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                status = 0;
+                message = "Error " + ex.Message;
+
+
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+
+        public IActionResult OnGetLinksPageTypeList()
+        {
+            return new JsonResult(_clientDataProvider.GetSiteLinksPageTypes());
+        }
+
+        public JsonResult OnGetLinksPageDetails(int typeId)
+        {
+            var fields = _clientDataProvider.GetSiteLinksPageDetails(typeId);
+            return new JsonResult(fields);
+        }
+
+        public JsonResult OnPostLinksPageDetails(ClientSiteLinksDetails reportfield)
+        {
+            var status = true;
+            var message = "Success";
+            var success = 1;
+            try
+            {
+
+                if (reportfield.typeId != 0 && reportfield.ClientSiteLinksTypeId == 0)
+                {
+                    reportfield.ClientSiteLinksTypeId = reportfield.typeId;
+                }
+                else if (reportfield.typeId == 0 && reportfield.ClientSiteLinksTypeId != 0)
+                {
+                    reportfield.typeId = reportfield.ClientSiteLinksTypeId;
+
+                }
+
+                if (reportfield.ClientSiteLinksTypeId != 0)
+                    success= _clientDataProvider.SaveSiteLinkDetails(reportfield);
+                if(success!=1)
+                {   if (success == 2)
+                        message = "The title you have entered is already exists for this State. Please Use different Title or select different State.";
+                    else if (success == 3)
+                        message = "The title you have entered is already exists for this State. Please Use different Title or select different State.";
+                    status = false;
+                }
+               
+
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+
+
+        public JsonResult OnPostDeleteLinksPageDetails(int id)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.DeleteSiteLinkDetails(id);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+        public JsonResult OnGetLinkDetailsUisngTypeandState(int type,string state)
+        {
+            return new JsonResult(_clientDataProvider.GetSiteLinkDetailsUsingTypeAndState(type, state));
+        }
+       
         public JsonResult OnGetUserClientAccess()
         {
             return new JsonResult(_viewDataService.GetAllUsersClientSiteAccess());

@@ -85,7 +85,12 @@ namespace CityWatch.Web.Pages.Guard
                 //GuardLogin.ClientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(z => z.Name == GuardLogin.ClientSiteName);
                 if (GuardLogin.IsNewGuard)
                 {
-                    GuardLogin.Guard.Id = _guardDataProvider.SaveGuard(GuardLogin.Guard, out initalsUsed);
+                    GuardLogin.Guard.Id = _guardDataProvider.UpdateGuard(GuardLogin.Guard, GuardLogin.ClientSite.State, out initalsUsed);
+                }
+                else
+                {
+                    GuardLogin.Guard.IsActive = true;
+                    _guardDataProvider.UpdateGuard(GuardLogin.Guard, GuardLogin.ClientSite.State, out initalsUsed);
                 }
 
                 var logBookId = GetLogBookId(out var isNewLogBook);
