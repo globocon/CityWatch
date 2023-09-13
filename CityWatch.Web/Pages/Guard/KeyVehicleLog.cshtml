@@ -140,7 +140,10 @@
     <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
+                
                 <h5 class="modal-title">Add a new log book entry</h5>
+                <h5 style="color:red; text-align:right" class="col-md-8" id="titlePOIWarning" hidden>POI Warning</h5>
+                <i class="fa fa-police-siren" id="imagesiren" hidden><img  id="img1" src="~/images/ziren.png" height="40px;" width="100px" /></i>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -191,6 +194,8 @@
                                     <th rowspan="2"><center>ID / Plate</center></th>
                                     <th rowspan="2"><center>Company Name</center></th>
                                     <th colspan="2"><center>Individual</center></th>
+                                    <th rowspan="2" ><center>POI</center></th>
+                                    @*<th rowspan="2"><center>POI</center></th>*@
                                     <th rowspan="2"></th>
                                 </tr>
                                 <tr>

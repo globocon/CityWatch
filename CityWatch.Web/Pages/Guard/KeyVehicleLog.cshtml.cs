@@ -6,6 +6,7 @@ using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
 using CityWatch.Web.Services;
+using iText.IO.Image;
 using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -26,6 +27,20 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using IO = System.IO;
 
+using DocumentFormat.OpenXml.Bibliography;
+
+
+using iText.IO.Font.Constants;
+
+using iText.Kernel.Colors;
+//using iText.Kernel.Geom;
+using iText.Kernel.Pdf;
+using iText.Layout;
+using iText.Layout.Borders;
+using iText.Layout.Element;
+using iText.Layout.Properties;
+
+
 namespace CityWatch.Web.Pages.Guard
 {
     public class KeyVehicleLogModel : PageModel
@@ -42,7 +57,8 @@ namespace CityWatch.Web.Pages.Guard
         private readonly Settings _settings;
         private readonly ILogger<KeyVehicleLogModel> _logger;
         private readonly IAppConfigurationProvider _appConfigurationProvider;
-
+        private readonly string _imageRootDir;
+   
         public KeyVehicleLogModel(IWebHostEnvironment webHostEnvironment,
             IGuardLogDataProvider guardLogDataProvider,
             IClientDataProvider clientDataProvider,
@@ -66,6 +82,9 @@ namespace CityWatch.Web.Pages.Guard
             _settings = settings.Value;
             _logger = logger;
             _appConfigurationProvider = appConfigurationProvider;
+            _imageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
+           
+
         }
 
         [BindProperty]
@@ -159,7 +178,19 @@ namespace CityWatch.Web.Pages.Guard
                 KeyVehicleLogAuditHistory keyVehicleLogAuditHistory = null;
                 keyVehicleLogAuditHistory = GetKvlAuditHistory(KeyVehicleLog);
                 _guardLogDataProvider.SaveKeyVehicleLog(KeyVehicleLog);
-
+                var img = _guardLogDataProvider.GetCompanyDetails();
+                string imagepath=null;
+                foreach(var item in img)
+                {
+                    imagepath = item.PrimaryLogoPath;
+                    break;
+                }
+                string toBeSearched = "images";
+               string code = imagepath.Substring(imagepath.IndexOf(toBeSearched) + toBeSearched.Length);
+                var reportRootDir = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "Images");
+                //string imagepath = Path.Combine(reportRootDir, "ziren.png");
+                
+                KeyVehicleLog.POIImage =  Path.Combine("../images", "ziren.png");
                 var profileId = GetKvlProfileId(KeyVehicleLog);
                 keyVehicleLogAuditHistory.ProfileId = profileId;
                 keyVehicleLogAuditHistory.KeyVehicleLogId = KeyVehicleLog.Id;
@@ -209,7 +240,10 @@ namespace CityWatch.Web.Pages.Guard
 
         public JsonResult OnGetProfileByRego(string truckRego)
         {
-            return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego).OrderBy(z => z, new KeyVehicleLogProfileViewModelComparer()));
+            //var reportRootDir = Path.Combine(_webHostEnvironment.WebRootPath, "Images");
+            //string imagepath = Path.Combine(reportRootDir, "ziren.png");
+            string imagepath = "~/images/ziren.png";
+            return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRegoNew(truckRego, imagepath).OrderBy(z => z, new KeyVehicleLogProfileViewModelComparer()));
         }
 
         public JsonResult OnGetProfileById(int id)
@@ -599,6 +633,11 @@ namespace CityWatch.Web.Pages.Guard
             else
             {
                 var kvlVisitorProfile = _guardLogDataProvider.GetKeyVehicleLogVisitorProfile(kvlPersonalDetail.KeyVehicleLogProfile.VehicleRego);
+                if(personalDetails.Any(z => z.Equals(kvlPersonalDetail)))
+                {
+                    kvlPersonalDetail.Id = personalDetails.Where(z=> z.PersonName== kvlPersonalDetail.PersonName).Max(z => z.Id);
+                }
+                profileId = _guardLogDataProvider.SaveKeyVehicleLogProfileWithPersonalDetail(kvlPersonalDetail);
                 profileId = kvlVisitorProfile.Id;
             }
 
@@ -676,5 +715,11 @@ namespace CityWatch.Web.Pages.Guard
             }
             return value;
         }
+        public JsonResult OnGetImageLoad()
+        {
+            var imagepath = Path.Combine(_imageRootDir, "ziren.png");
+            return new JsonResult(imagepath);
+        }
+
     }
 }
