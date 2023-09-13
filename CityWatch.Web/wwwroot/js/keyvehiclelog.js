@@ -833,84 +833,84 @@ $(function () {
 
 
 
-        //$('#copyButton').on('click', function () {
-        //    /*Copy to clipboard*/
-        //    var textToCopy = "";
-        //    textToCopy = textToCopy + "Initial Call : " + $('#new_log_initial_call').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Entry Time : " + $('#new_log_entry_time').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Sent In Time : " + $('#new_log_sent_in_time').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Exit Time : " + $('#new_log_exit_time').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "ID No. / Car or Truck Rego : " + $('#VehicleRego').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    var selectedOption = $("#kvl_list_plates option[value='" + $('#kvl_list_plates').val() + "']");
-        //    textToCopy = textToCopy + "ID / Plate(State or AU) : " + selectedOption.text();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Time Slot No. : " + $('#TimeSlotNo').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    var selectedVehicleConfig = $("#TruckConfig option[value='" + $('#TruckConfig').val() + "']");
-        //    textToCopy = textToCopy + "Vehicle Config : " + selectedVehicleConfig.text();
-        //    textToCopy = textToCopy + "\r\n";
-        //    var selectedTrailerType = $("#TrailerType option[value='" + $('#TrailerType').val() + "']");
-        //    textToCopy = textToCopy + "Trailer Type : " + selectedTrailerType.text();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Max Weight : " + $('#MaxWeight').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Reels : " + $('#Reels').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Trailer 1 Rego.or ISO + Seals : " + $('#Trailer1Rego').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Trailer 2 Rego.or ISO + Seals : " + $('#Trailer2Rego').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Trailer 3 Rego.or ISO + Seals : " + $('#Trailer3Rego').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Trailer 4 Rego.or ISO + Seals : " + $('#Trailer4Rego').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Weight In Gross (t) : " + $('#InWeight').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Weight Out Net(t) : " + $('#OutWeight').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Weight Empty Tare(t) : " + $('#TareWeight').val();
-        //    textToCopy = textToCopy + "\r\n";            
-        //    textToCopy = textToCopy + "Contamination Deduction? : " + $('#DeductionPercentage').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Company Name : " + $('#CompanyName').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Individuals Name : " + $('#PersonName').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    var selectedTypeofIndividual = $("#PersonType option[value='" + $('#PersonType').val() + "']");
-        //    textToCopy = textToCopy + "Type of Individual : " + selectedTypeofIndividual.text();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Mobile Number : " + $('#MobileNumber').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    var selectedEntryReason = $("#EntryReason option[value='" + $('#EntryReason').val() + "']");
-        //    textToCopy = textToCopy + "Entry Reason : " + selectedEntryReason.text();
-        //    textToCopy = textToCopy + "\r\n";
-        //    var selectedEntryProduct = $("#list_product option[value='" + $('#list_product').val() + "']");
-        //    var hiddenFieldElement = $('#Product').val();
-        //    textToCopy = textToCopy + "Product : " + hiddenFieldElement;
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Customer Ref : " + $('#CustomerRef').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "VWI : " + $('#Vwi').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Sender : " + $('#Sender').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    var selectedSitePocId = $("#ClientSitePocId option[value='" + $('#ClientSitePocId').val() + "']");            
-        //    textToCopy = textToCopy + "Site POC : " + selectedSitePocId.text();
-        //    textToCopy = textToCopy + "\r\n";
-        //    var selectedSiteLocation = $("#ClientSiteLocationId option[value='" + $('#ClientSiteLocationId').val() + "']");      
-        //    textToCopy = textToCopy + "Site Location : " + selectedSiteLocation.text();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Notes : " + $('#Notes').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    navigator.clipboard.writeText(textToCopy)
-        //        .then(() => { alert('Copied to clipboard.') })
-        //        .catch((error) => { alert('Copy failed. Error: ${error}') })
-        //});
+        $('#copyButton').on('click', function () {
+            /*Copy to clipboard*/
+            var textToCopy = "";
+            textToCopy = textToCopy + "Initial Call : " + $('#new_log_initial_call').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Entry Time : " + $('#new_log_entry_time').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Sent In Time : " + $('#new_log_sent_in_time').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Exit Time : " + $('#new_log_exit_time').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "ID No. / Car or Truck Rego : " + $('#VehicleRego').val();
+            textToCopy = textToCopy + "\r\n";
+            var selectedOption = $("#kvl_list_plates option[value='" + $('#kvl_list_plates').val() + "']");
+            textToCopy = textToCopy + "ID / Plate(State or AU) : " + selectedOption.text();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Time Slot No. : " + $('#TimeSlotNo').val();
+            textToCopy = textToCopy + "\r\n";
+            var selectedVehicleConfig = $("#TruckConfig option[value='" + $('#TruckConfig').val() + "']");
+            textToCopy = textToCopy + "Vehicle Config : " + selectedVehicleConfig.text();
+            textToCopy = textToCopy + "\r\n";
+            var selectedTrailerType = $("#TrailerType option[value='" + $('#TrailerType').val() + "']");
+            textToCopy = textToCopy + "Trailer Type : " + selectedTrailerType.text();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Max Weight : " + $('#MaxWeight').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Reels : " + $('#Reels').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Trailer 1 Rego.or ISO + Seals : " + $('#Trailer1Rego').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Trailer 2 Rego.or ISO + Seals : " + $('#Trailer2Rego').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Trailer 3 Rego.or ISO + Seals : " + $('#Trailer3Rego').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Trailer 4 Rego.or ISO + Seals : " + $('#Trailer4Rego').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Weight In Gross (t) : " + $('#InWeight').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Weight Out Net(t) : " + $('#OutWeight').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Weight Empty Tare(t) : " + $('#TareWeight').val();
+            textToCopy = textToCopy + "\r\n";            
+            textToCopy = textToCopy + "Contamination Deduction? : " + $('#DeductionPercentage').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Company Name : " + $('#CompanyName').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Individuals Name : " + $('#PersonName').val();
+            textToCopy = textToCopy + "\r\n";
+            var selectedTypeofIndividual = $("#PersonType option[value='" + $('#PersonType').val() + "']");
+            textToCopy = textToCopy + "Type of Individual : " + selectedTypeofIndividual.text();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Mobile Number : " + $('#MobileNumber').val();
+            textToCopy = textToCopy + "\r\n";
+            var selectedEntryReason = $("#EntryReason option[value='" + $('#EntryReason').val() + "']");
+            textToCopy = textToCopy + "Entry Reason : " + selectedEntryReason.text();
+            textToCopy = textToCopy + "\r\n";
+            var selectedEntryProduct = $("#list_product option[value='" + $('#list_product').val() + "']");
+            var hiddenFieldElement = $('#Product').val();
+            textToCopy = textToCopy + "Product : " + hiddenFieldElement;
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Customer Ref : " + $('#CustomerRef').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "VWI : " + $('#Vwi').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Sender : " + $('#Sender').val();
+            textToCopy = textToCopy + "\r\n";
+            var selectedSitePocId = $("#ClientSitePocId option[value='" + $('#ClientSitePocId').val() + "']");            
+            textToCopy = textToCopy + "Site POC : " + selectedSitePocId.text();
+            textToCopy = textToCopy + "\r\n";
+            var selectedSiteLocation = $("#ClientSiteLocationId option[value='" + $('#ClientSiteLocationId').val() + "']");      
+            textToCopy = textToCopy + "Site Location : " + selectedSiteLocation.text();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Notes : " + $('#Notes').val();
+            textToCopy = textToCopy + "\r\n";
+            navigator.clipboard.writeText(textToCopy)
+                .then(() => { alert('Copied to clipboard.') })
+                .catch((error) => { alert('Copy failed. Error: ${error}') })
+        });
        
 
         $('#kvl_attachment_upload').on("change", function (e) {

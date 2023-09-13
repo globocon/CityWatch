@@ -172,8 +172,11 @@ namespace CityWatch.Web.Pages.Incident
             if (Report.DateLocation.ReimbursementYes) {
                 message.Cc.Add(new MailboxAddress(ccAddress[1], ccAddress[0]));
             }
-
+            /* Mail Id added Bcc globoconsoftware for checking Ir Mail not getting Issue Start(date 13,09,2023) */
+            message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
+            /* Mail Id added Bcc globoconsoftware end */
             var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite && x.ClientType.Name == Report.DateLocation.ClientType);
+           
             if (clientSite != null && !string.IsNullOrEmpty(clientSite.Emails))
             {
                 foreach (var email in clientSite.Emails.Split(","))
@@ -182,7 +185,7 @@ namespace CityWatch.Web.Pages.Incident
                         message.Cc.Add(new MailboxAddress(string.Empty, email.Trim()));
                 }
             }
-            
+
             message.Subject = $"{ subject } - { Report.DateLocation.ClientType } - { Report.DateLocation.ClientSite }";
 
             var builder = new BodyBuilder()
