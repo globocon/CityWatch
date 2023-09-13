@@ -73,7 +73,7 @@ namespace CityWatch.Data.Providers
         int SaveSiteLinkDetails(ClientSiteLinksDetails ClientSiteLinksDetailsRecord);
         void DeleteSiteLinkDetails(int id);
         int GetIncidentReportsPlatesCount(int PlateId, string TruckNo, int? userId);
-        List<ClientSiteLinksDetails> GetSiteLinkDetailsUsingTypeAndState(int type, string state); 
+       
         List<ClientSiteLinksDetails> GetSiteLinkDetailsUsingTypeAndState(int type);
         string GetSiteLinksTypeUsingId(int typeId);
         int DeleteClientSiteLinksPageType(int typeId);
