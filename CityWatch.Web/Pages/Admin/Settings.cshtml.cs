@@ -438,14 +438,37 @@ namespace CityWatch.Web.Pages.Admin
                 {
 
                     status = _clientDataProvider.SaveClientSiteLinksPageType(ClientSiteLinksPageTyperecord);
-                    if (status != 1)
+                    if (status ==-1)
                     {
-                        if (status == 2)
-                        {
-                            message = "Same site link type already exist";
-                        }
+                      
+                            message = "Same button name already exist";
+                        
 
                     }
+                }
+            }
+            catch (Exception ex)
+            {
+                status = 0;
+                message = "Error " + ex.Message;
+
+
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+
+        public JsonResult OnPostDeletePageType(int TypeId)
+        {
+            var status = 0;
+            var message = "Success";
+            try
+            {
+                if (TypeId != 0)
+                {
+
+                    status = _clientDataProvider.DeleteClientSiteLinksPageType(TypeId);
+                   
                 }
             }
             catch (Exception ex)
@@ -492,9 +515,9 @@ namespace CityWatch.Web.Pages.Admin
                     success= _clientDataProvider.SaveSiteLinkDetails(reportfield);
                 if(success!=1)
                 {   if (success == 2)
-                        message = "The title you have entered is already exists for this State. Please Use different Title or select different State.";
+                        message = "The title you have entered is already exists for this button. Please Use different Title or button.";
                     else if (success == 3)
-                        message = "The title you have entered is already exists for this State. Please Use different Title or select different State.";
+                        message = "The title you have entered is already exists for this button. Please Use different Title or button.";
                     status = false;
                 }
                
@@ -526,9 +549,9 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { status = status, message = message });
         }
-        public JsonResult OnGetLinkDetailsUisngTypeandState(int type,string state)
+        public JsonResult OnGetLinkDetailsUisngTypeandState(int type)
         {
-            return new JsonResult(_clientDataProvider.GetSiteLinkDetailsUsingTypeAndState(type, state));
+            return new JsonResult(_clientDataProvider.GetSiteLinkDetailsUsingTypeAndState(type));
         }
        
         public JsonResult OnGetUserClientAccess()

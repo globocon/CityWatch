@@ -597,8 +597,8 @@
         inlineEditing: { mode: 'command' },
         columns: [
             { field: 'title', title: 'Title', width: 200, editor: true },
-            { field: 'hyperlink', title: 'Hyperlink', width: 350, editor: true },
-            { field: 'state', title: 'State', width: 80, type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
+            { field: 'hyperlink', title: 'Hyperlink', width: 350, editor: true }
+            
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -609,7 +609,7 @@
     $('#add_tools_settings').on('click', function () {
         const selToolsTypeId = $('#report_tools_types').val();
         if (!selToolsTypeId) {
-            alert('Please select a field type to update');
+            alert('Please select a button to update');
             return;
         }
 
@@ -692,6 +692,7 @@
 
     $('#btnSavePageType').on('click', function () {
         if (newpageTypeIsValid()) {
+            var newItem = $("#pageType").val();
             var data = {
                 'PageTypeName': $('#pageType').val()
             };
@@ -701,14 +702,34 @@
                 type: 'POST',
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function (data) {
-                if (data.status != 1) {
+                if (data.status == -1) {
                     $('#pageType').val('');
                     $('#pageType-modal-validation').html(data.message).show().delay(2000).fadeOut();
-                } else {                    
-                    $('#tools-modal').modal('hide');
+                } else { 
+
+                    const button_id = 'attach_' + data.status;
+                    const li = document.createElement('li');
+                    li.id = button_id;
+                    li.className = 'list-group-item';
+                    li.dataset.index = data.status;
+                    li.style ="border-left: 0;border-right: 0;"
+                    let liText = document.createTextNode(newItem);
+
+                    const icon = document.createElement("i");
+                    icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-tools-type';
+                    icon.title = 'Delete';
+                    icon.style = 'cursor: pointer;float:right';
+
+                    li.appendChild(liText);
+                    li.appendChild(icon);
+                    document.getElementById('itemList').append(li);
+
+                    $("#itemInput").val("");
+                    // Append the new item to the list
+                   
                     $('#pageType').val('');
                     refreshPageType();                   
-                    showStatusNotification(true, 'Saved successfully');
+                   
                 }
             }).fail(function () {
                 console.log('error');
@@ -721,7 +742,7 @@
     function newpageTypeIsValid() {
         const pageType = $('#pageType').val();
         if (pageType === '') {
-            $('#pageType-modal-validation').html('Page Type is required').show().delay(2000).fadeOut();
+            $('#pageType-modal-validation').html('Button name is required').show().delay(2000).fadeOut();
             return false;
         }
         return true;
@@ -742,18 +763,7 @@
             }
         });
     }
-    updateLinks();
-    $('#ddl_toolSelecter').on('change', function () {
-        updateLinks();
-    });
-    function updateLinks() {
-        var selectedValue = $('#ddl_toolSelecter').val();
-        $('.dynamic-link').each(function () {
-            var linkId = $(this).attr('id');
-            $(this).attr('href', 'Tools?st=' + linkId + "&&type=" + selectedValue );
-
-        });
-    }
+   
 
 
     var queryString = window.location.search;
@@ -765,7 +775,7 @@
     let gridTools;
     gridTools = $('#file_Tools').grid({
         /* dataSource: '/Admin/Settings?handler=StaffDocs',*/
-        dataSource: '/Admin/Settings?handler=LinkDetailsUisngTypeandState&&type=' + type + "&&state=" + state,
+        dataSource: '/Admin/Settings?handler=LinkDetailsUisngTypeandState&&type=' + type,
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
@@ -777,8 +787,30 @@
     function linkClickRenderer(value, record) {
         return '<div class="centerIcon"><a href="http://' + record.hyperlink + '" target="_blank"><img src="../images/Blue_globe_icon.svg" class="imgIcon"/></a></div>'
     }
+    $('#itemList').on('click', '.btn-delete-tools-type', function (event) {
+        if (confirm('Are you sure want to delete this button Name?')) {
+            var target = event.target;
+            const fileName = target.parentNode.innerText.trim();
+            var itemToDelete = target.parentNode.dataset.index;
+            $.ajax({
+                url: '/Admin/Settings?handler=DeletePageType',
+                type: 'POST',
+                dataType: 'json',
+                data: { TypeId: itemToDelete },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result) {
+                    $('#pageType').val('');
+                    refreshPageType();
+                    target.parentNode.parentNode.removeChild(target.parentNode);
+                   
+                }
+            });
+        }
+    });
 
-
+    
+   
     /****** Report tools end *******/
 
     let gridPositions;

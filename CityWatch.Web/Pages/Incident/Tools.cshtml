@@ -13,8 +13,9 @@
             int a;
             if (int.TryParse(HttpContext.Request.Query["type"].ToString(), out a))
             {
-               
-                <label class="fw-bold mb-0 mr-3" style="font-weight:500;float:left">@Model.ClientDataProvider.GetSiteLinksTypeUsingId(int.Parse(HttpContext.Request.Query["type"].ToString())) <i class="fa fa-arrow-right" aria-hidden="true"></i>  @HttpContext.Request.Query["st"].ToString().Trim()</label>
+
+                
+                <h4>@Model.ClientDataProvider.GetSiteLinksTypeUsingId(int.Parse(HttpContext.Request.Query["type"].ToString()))</h4>
             }
             else
             {
