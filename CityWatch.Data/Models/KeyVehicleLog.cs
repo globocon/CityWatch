@@ -48,7 +48,8 @@ namespace CityWatch.Data.Models
         public string CompanyName { get; set; }
 
         public string PersonName { get; set; }
-        
+        public string POIImage { get; set; }
+
         public string MobileNumber { get; set; }
 
         /// <summary>

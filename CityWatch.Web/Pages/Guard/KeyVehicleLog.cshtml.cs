@@ -27,6 +27,9 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using IO = System.IO;
 
+using DocumentFormat.OpenXml.Bibliography;
+
+
 using iText.IO.Font.Constants;
 
 using iText.Kernel.Colors;
@@ -55,7 +58,7 @@ namespace CityWatch.Web.Pages.Guard
         private readonly ILogger<KeyVehicleLogModel> _logger;
         private readonly IAppConfigurationProvider _appConfigurationProvider;
         private readonly string _imageRootDir;
-        private readonly IWebHostEnvironment _webHostEnvironment;
+   
         public KeyVehicleLogModel(IWebHostEnvironment webHostEnvironment,
             IGuardLogDataProvider guardLogDataProvider,
             IClientDataProvider clientDataProvider,
@@ -80,7 +83,7 @@ namespace CityWatch.Web.Pages.Guard
             _logger = logger;
             _appConfigurationProvider = appConfigurationProvider;
             _imageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
-            _webHostEnvironment = webHostEnvironment;
+           
 
         }
 
@@ -174,7 +177,19 @@ namespace CityWatch.Web.Pages.Guard
                 KeyVehicleLogAuditHistory keyVehicleLogAuditHistory = null;
                 keyVehicleLogAuditHistory = GetKvlAuditHistory(KeyVehicleLog);
                 _guardLogDataProvider.SaveKeyVehicleLog(KeyVehicleLog);
-
+                var img = _guardLogDataProvider.GetCompanyDetails();
+                string imagepath=null;
+                foreach(var item in img)
+                {
+                    imagepath = item.PrimaryLogoPath;
+                    break;
+                }
+                string toBeSearched = "images";
+               string code = imagepath.Substring(imagepath.IndexOf(toBeSearched) + toBeSearched.Length);
+                var reportRootDir = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "Images");
+                //string imagepath = Path.Combine(reportRootDir, "ziren.png");
+                
+                KeyVehicleLog.POIImage =  Path.Combine("../images", "ziren.png");
                 var profileId = GetKvlProfileId(KeyVehicleLog);
                 keyVehicleLogAuditHistory.ProfileId = profileId;
                 keyVehicleLogAuditHistory.KeyVehicleLogId = KeyVehicleLog.Id;
@@ -617,7 +632,11 @@ namespace CityWatch.Web.Pages.Guard
             else
             {
                 var kvlVisitorProfile = _guardLogDataProvider.GetKeyVehicleLogVisitorProfile(kvlPersonalDetail.KeyVehicleLogProfile.VehicleRego);
-               
+                if(personalDetails.Any(z => z.Equals(kvlPersonalDetail)))
+                {
+                    kvlPersonalDetail.Id = personalDetails.Where(z=> z.PersonName== kvlPersonalDetail.PersonName).Max(z => z.Id);
+                }
+                profileId = _guardLogDataProvider.SaveKeyVehicleLogProfileWithPersonalDetail(kvlPersonalDetail);
                 profileId = kvlVisitorProfile.Id;
             }
 

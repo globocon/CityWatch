@@ -55,6 +55,7 @@ namespace CityWatch.Data.Providers
         void SaveKeyVehicleLogAuditHistory(KeyVehicleLogAuditHistory keyVehicleLogAuditHistory);
         void SaveClientSiteDuress(int clientSiteId, int guardId);
         ClientSiteDuress GetClientSiteDuress(int clientSiteId);
+        List<CompanyDetails> GetCompanyDetails();
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -515,6 +516,7 @@ namespace CityWatch.Data.Providers
             return kvlVisitorPersonalDetail.ProfileId;
         }
 
+
         public int SaveKeyVehicleLogVisitorPersonalDetail(KeyVehicleLogVisitorPersonalDetail keyVehicleLogVisitorPersonalDetail)
         {
             var kvlPersonalDetailsToDb = _context.KeyVehicleLogVisitorPersonalDetails
@@ -526,7 +528,12 @@ namespace CityWatch.Data.Providers
             kvlPersonalDetailsToDb.PersonName = keyVehicleLogVisitorPersonalDetail.PersonName;
             kvlPersonalDetailsToDb.PersonType = keyVehicleLogVisitorPersonalDetail.PersonType;
             kvlPersonalDetailsToDb.IsPOIAlert = keyVehicleLogVisitorPersonalDetail.IsPOIAlert;
-
+            if (keyVehicleLogVisitorPersonalDetail.IsPOIAlert == true)
+            {
+                string imagepath = "~/images/ziren.png";
+                kvlPersonalDetailsToDb.POIImage = keyVehicleLogVisitorPersonalDetail.POIImage;
+            }
+           
             if (kvlPersonalDetailsToDb.Id == 0)
             {
                 _context.KeyVehicleLogVisitorPersonalDetails.Add(kvlPersonalDetailsToDb);
@@ -659,6 +666,10 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
 
             return kvlProfileToDb.Id;
+        }
+        public List<CompanyDetails> GetCompanyDetails()
+        {
+            return _context.CompanyDetails.ToList();
         }
     }
 }

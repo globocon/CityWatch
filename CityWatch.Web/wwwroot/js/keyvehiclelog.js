@@ -415,7 +415,7 @@ $(function () {
             { data: 'detail.companyName' },
             { data: 'detail.personName' },
             { data: 'personTypeText' },
-            { data: 'detail.poiImage' },
+            { data: 'detail.poiImageDisplay' },
 
             //{
             //targets: -1,
@@ -527,6 +527,8 @@ $(function () {
                 $('#new_log_entry_time').val(getTimeFromDateTime(new Date()));
                 $('#new_log_sent_in_time').val(getTimeFromDateTime(new Date()));
                 $('#ActiveGuardLoginId').val('');
+                $('#titlePOIWarning').attr('hidden', true)
+                $('#imagesiren').attr('hidden', true);
             } else {
                 if ($('#InialCallTime').val() !== '') {
                     $('#new_log_initial_call').val(getTimeFromDateTime(new Date($('#InitialCallTime').val())));
@@ -549,7 +551,7 @@ $(function () {
 
                 $('#ActiveGuardLoginId').val($('#KeyVehicleLog_GuardLogin_Id').val());
 
-               
+                
 
                 //New Custome Product
                 var tempElement = document.createElement('div');
@@ -605,6 +607,14 @@ $(function () {
             let isPOIAlert = $('#IsPOIAlert').val().toLowerCase() === 'true';
             
             $('#chbIsPOIAlert1').prop('checked', isPOIAlert);
+            if (isPOIAlert == true) {
+                $('#titlePOIWarning').attr('hidden', false);
+                $('#imagesiren').attr('hidden', false);
+            }
+            else {
+                $('#titlePOIWarning').attr('hidden', true);
+                $('#imagesiren').attr('hidden', true);
+            }
 
             loadAuditHistory($('#VehicleRego').val());
         }
