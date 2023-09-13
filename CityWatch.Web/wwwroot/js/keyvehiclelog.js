@@ -417,13 +417,7 @@ $(function () {
             { data: 'personTypeText' },
             { data: 'detail.poiImageDisplay' },
 
-            //{
-            //targets: -1,
-            //    data: null,
-            //className: 'image-center',
-            //    defaultContent: '',
-            //    function: staffDocsButtonRenderer
-            //},
+           
             {
                 targets: -1,
                 data: null,
@@ -433,20 +427,7 @@ $(function () {
         ],
     });
 
-    function staffDocsButtonRenderer(value, record) {
-        
-            $.ajax({
-                type: 'GET',
-                url: '/Guard/KeyVehicleLog?handler=ImageLoad',
-
-            }).done(function (response) {
-                if (value.detail.isPOIAlert == true) {
-                    return response;
-                }
-            });
-        
-           
-    }
+    
     $('#key_vehicle_log_profiles tbody').on('click', '#btnSelectProfile', function () {
         var data = gridKeyVehicleLogProfile.row($(this).parents('tr')).data();
         populateKvlModal(data.detail.id);        
@@ -496,6 +477,10 @@ $(function () {
         });
         $('#kvl-profiles-modal').modal('hide');
     }
+    $('#key_vehicle_log_profiles tbody').on('click', 'tr', function () {
+        gridKeyVehicleLogProfile.$('tr.selected').removeClass('selected');
+        $(this).addClass('selected');
+    });
     $('#key_vehicle_log_profiles tbody').on('click', '#btnSelectProfile', function () {
         var data = gridKeyVehicleLogProfile.row($(this).parents('tr')).data();
         populateKvlModal(data.detail.id);        
@@ -540,10 +525,7 @@ $(function () {
         $('#incident-report-profiles-modal').modal('hide');
     }
 
-    $('#key_vehicle_log_profiles tbody').on('click', 'tr', function () {
-        gridkeyVehicleLogProfile.$('tr.selected').removeClass('selected');
-        $(this).addClass('selected');
-    });
+    
 
     function loadVklPopup(id, isNewEntry) {
         if (isLogbookExpired($('#KeyVehicleLog_ClientSiteLogBook_Date').val())) {
