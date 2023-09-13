@@ -286,10 +286,10 @@
                     <select class="form-control" asp-for="@Model.ClientSiteLocationId" asp-items="@clientViewDataService.GetClientSiteLocations(new int[] { Model.ClientSiteLogBook.ClientSiteId })">
                     </select>
                 </div>
-                @*<div class="form-group col-md-4">
+               <div class="form-group col-md-4">
                     <label class="mb-5"></label>
                     <button type="button" class="btn mt-4 ml-5" title="Copy to Clipboard" id="copyButton"><i class="fa fa-clipboard fa-2x" aria-hidden="true"></i></button>
-                </div>*@
+                </div>
             </div>
             <ul class="nav nav-tabs" role="tablist">
                 <li class="nav-item">
