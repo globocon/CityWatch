@@ -432,6 +432,7 @@ $(function () {
             },
         ],
     });
+
     function staffDocsButtonRenderer(value, record) {
         
             $.ajax({
@@ -451,7 +452,9 @@ $(function () {
         populateKvlModal(data.detail.id);        
     });
 
-    function populateKvlModal(id) {        
+   
+    function populateKvlModal(id) {
+
         $.ajax({
             url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + id,
             type: 'GET',
@@ -475,7 +478,7 @@ $(function () {
             $('#Product').val(result.keyVehicleLogProfile.product);
             $('#Notes').val(result.keyVehicleLogProfile.notes);
             $("#list_product").val(result.keyVehicleLogProfile.product);
-            $("#list_product").trigger('change');           
+            $("#list_product").trigger('change');
             $('#Sender').val(result.sender);
             $('#lblIsSender').text(result.isSender ? 'Sender Address' : 'Reciever Address');
             $('#cbIsSender').prop('checked', result.isSender);
@@ -493,9 +496,52 @@ $(function () {
         });
         $('#kvl-profiles-modal').modal('hide');
     }
+    $('#key_vehicle_log_profiles tbody').on('click', '#btnSelectProfile', function () {
+        var data = gridKeyVehicleLogProfile.row($(this).parents('tr')).data();
+        populateKvlModal(data.detail.id);        
+    });
+    let gridIncidentReportsVehicleLogProfile = $('#incident_reports_vehicle_log_profiles').DataTable({
+        paging: false,
+        ordering: false,
+        info: false,
+        searching: false,
+        data: [],
+        columns: [
+            { data: 'detail.id', visible: false },
+            { data: 'plate' },
+            { data: 'detail.companyName' },
+            { data: 'detail.personName' },
+            { data: 'personTypeText' },
+            {
+                targets: -1,
+                data: null,
+                className: 'text-center',
+                defaultContent: '<button id="btnSelectProfile" class="btn btn-outline-primary">Select</button>'
+            },
+        ],
+    });
+    $('#incident_reports_vehicle_log_profiles tbody').on('click', '#btnSelectProfile', function () {
+        var data = gridIncidentReportsVehicleLogProfile.row($(this).parents('tr')).data();
+        populateIncidentReportModal(data.detail.id);
+    });
+    function populateIncidentReportModal(id) {
+        $.ajax({
+            url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + id,
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (result) {
+            let personName = result.personName ? result.personName : 'Unknown';
+            $('#PlateId').val(result.keyVehicleLogProfile.plateId);
+            $('#kvl_list_plates').val(result.keyVehicleLogProfile.plateId);
+            
+
+            loadAuditHistory(result.keyVehicleLogProfile.vehicleRego);
+        });
+        $('#incident-report-profiles-modal').modal('hide');
+    }
 
     $('#key_vehicle_log_profiles tbody').on('click', 'tr', function () {
-        gridKeyVehicleLogProfile.$('tr.selected').removeClass('selected');
+        gridkeyVehicleLogProfile.$('tr.selected').removeClass('selected');
         $(this).addClass('selected');
     });
 
@@ -905,84 +951,84 @@ $(function () {
 
 
 
-        //$('#copyButton').on('click', function () {
-        //    /*Copy to clipboard*/
-        //    var textToCopy = "";
-        //    textToCopy = textToCopy + "Initial Call : " + $('#new_log_initial_call').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Entry Time : " + $('#new_log_entry_time').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Sent In Time : " + $('#new_log_sent_in_time').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Exit Time : " + $('#new_log_exit_time').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "ID No. / Car or Truck Rego : " + $('#VehicleRego').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    var selectedOption = $("#kvl_list_plates option[value='" + $('#kvl_list_plates').val() + "']");
-        //    textToCopy = textToCopy + "ID / Plate(State or AU) : " + selectedOption.text();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Time Slot No. : " + $('#TimeSlotNo').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    var selectedVehicleConfig = $("#TruckConfig option[value='" + $('#TruckConfig').val() + "']");
-        //    textToCopy = textToCopy + "Vehicle Config : " + selectedVehicleConfig.text();
-        //    textToCopy = textToCopy + "\r\n";
-        //    var selectedTrailerType = $("#TrailerType option[value='" + $('#TrailerType').val() + "']");
-        //    textToCopy = textToCopy + "Trailer Type : " + selectedTrailerType.text();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Max Weight : " + $('#MaxWeight').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Reels : " + $('#Reels').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Trailer 1 Rego.or ISO + Seals : " + $('#Trailer1Rego').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Trailer 2 Rego.or ISO + Seals : " + $('#Trailer2Rego').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Trailer 3 Rego.or ISO + Seals : " + $('#Trailer3Rego').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Trailer 4 Rego.or ISO + Seals : " + $('#Trailer4Rego').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Weight In Gross (t) : " + $('#InWeight').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Weight Out Net(t) : " + $('#OutWeight').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Weight Empty Tare(t) : " + $('#TareWeight').val();
-        //    textToCopy = textToCopy + "\r\n";            
-        //    textToCopy = textToCopy + "Contamination Deduction? : " + $('#DeductionPercentage').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Company Name : " + $('#CompanyName').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Individuals Name : " + $('#PersonName').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    var selectedTypeofIndividual = $("#PersonType option[value='" + $('#PersonType').val() + "']");
-        //    textToCopy = textToCopy + "Type of Individual : " + selectedTypeofIndividual.text();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Mobile Number : " + $('#MobileNumber').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    var selectedEntryReason = $("#EntryReason option[value='" + $('#EntryReason').val() + "']");
-        //    textToCopy = textToCopy + "Entry Reason : " + selectedEntryReason.text();
-        //    textToCopy = textToCopy + "\r\n";
-        //    var selectedEntryProduct = $("#list_product option[value='" + $('#list_product').val() + "']");
-        //    var hiddenFieldElement = $('#Product').val();
-        //    textToCopy = textToCopy + "Product : " + hiddenFieldElement;
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Customer Ref : " + $('#CustomerRef').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "VWI : " + $('#Vwi').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Sender : " + $('#Sender').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    var selectedSitePocId = $("#ClientSitePocId option[value='" + $('#ClientSitePocId').val() + "']");            
-        //    textToCopy = textToCopy + "Site POC : " + selectedSitePocId.text();
-        //    textToCopy = textToCopy + "\r\n";
-        //    var selectedSiteLocation = $("#ClientSiteLocationId option[value='" + $('#ClientSiteLocationId').val() + "']");      
-        //    textToCopy = textToCopy + "Site Location : " + selectedSiteLocation.text();
-        //    textToCopy = textToCopy + "\r\n";
-        //    textToCopy = textToCopy + "Notes : " + $('#Notes').val();
-        //    textToCopy = textToCopy + "\r\n";
-        //    navigator.clipboard.writeText(textToCopy)
-        //        .then(() => { alert('Copied to clipboard.') })
-        //        .catch((error) => { alert('Copy failed. Error: ${error}') })
-        //});
+        $('#copyButton').on('click', function () {
+            /*Copy to clipboard*/
+            var textToCopy = "";
+            textToCopy = textToCopy + "Initial Call : " + $('#new_log_initial_call').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Entry Time : " + $('#new_log_entry_time').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Sent In Time : " + $('#new_log_sent_in_time').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Exit Time : " + $('#new_log_exit_time').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "ID No. / Car or Truck Rego : " + $('#VehicleRego').val();
+            textToCopy = textToCopy + "\r\n";
+            var selectedOption = $("#kvl_list_plates option[value='" + $('#kvl_list_plates').val() + "']");
+            textToCopy = textToCopy + "ID / Plate(State or AU) : " + selectedOption.text();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Time Slot No. : " + $('#TimeSlotNo').val();
+            textToCopy = textToCopy + "\r\n";
+            var selectedVehicleConfig = $("#TruckConfig option[value='" + $('#TruckConfig').val() + "']");
+            textToCopy = textToCopy + "Vehicle Config : " + selectedVehicleConfig.text();
+            textToCopy = textToCopy + "\r\n";
+            var selectedTrailerType = $("#TrailerType option[value='" + $('#TrailerType').val() + "']");
+            textToCopy = textToCopy + "Trailer Type : " + selectedTrailerType.text();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Max Weight : " + $('#MaxWeight').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Reels : " + $('#Reels').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Trailer 1 Rego.or ISO + Seals : " + $('#Trailer1Rego').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Trailer 2 Rego.or ISO + Seals : " + $('#Trailer2Rego').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Trailer 3 Rego.or ISO + Seals : " + $('#Trailer3Rego').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Trailer 4 Rego.or ISO + Seals : " + $('#Trailer4Rego').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Weight In Gross (t) : " + $('#InWeight').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Weight Out Net(t) : " + $('#OutWeight').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Weight Empty Tare(t) : " + $('#TareWeight').val();
+            textToCopy = textToCopy + "\r\n";            
+            textToCopy = textToCopy + "Contamination Deduction? : " + $('#DeductionPercentage').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Company Name : " + $('#CompanyName').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Individuals Name : " + $('#PersonName').val();
+            textToCopy = textToCopy + "\r\n";
+            var selectedTypeofIndividual = $("#PersonType option[value='" + $('#PersonType').val() + "']");
+            textToCopy = textToCopy + "Type of Individual : " + selectedTypeofIndividual.text();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Mobile Number : " + $('#MobileNumber').val();
+            textToCopy = textToCopy + "\r\n";
+            var selectedEntryReason = $("#EntryReason option[value='" + $('#EntryReason').val() + "']");
+            textToCopy = textToCopy + "Entry Reason : " + selectedEntryReason.text();
+            textToCopy = textToCopy + "\r\n";
+            var selectedEntryProduct = $("#list_product option[value='" + $('#list_product').val() + "']");
+            var hiddenFieldElement = $('#Product').val();
+            textToCopy = textToCopy + "Product : " + hiddenFieldElement;
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Customer Ref : " + $('#CustomerRef').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "VWI : " + $('#Vwi').val();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Sender : " + $('#Sender').val();
+            textToCopy = textToCopy + "\r\n";
+            var selectedSitePocId = $("#ClientSitePocId option[value='" + $('#ClientSitePocId').val() + "']");            
+            textToCopy = textToCopy + "Site POC : " + selectedSitePocId.text();
+            textToCopy = textToCopy + "\r\n";
+            var selectedSiteLocation = $("#ClientSiteLocationId option[value='" + $('#ClientSiteLocationId').val() + "']");      
+            textToCopy = textToCopy + "Site Location : " + selectedSiteLocation.text();
+            textToCopy = textToCopy + "\r\n";
+            textToCopy = textToCopy + "Notes : " + $('#Notes').val();
+            textToCopy = textToCopy + "\r\n";
+            navigator.clipboard.writeText(textToCopy)
+                .then(() => { alert('Copied to clipboard.') })
+                .catch((error) => { alert('Copy failed. Error: ${error}') })
+        });
        
 
         $('#kvl_attachment_upload').on("change", function (e) {
@@ -1612,7 +1658,58 @@ $(function () {
         $('#IsBlankNoteOn').val(isChecked);
        
     });
+
     $('#titlePOIWarning').show();
     $('#imagesiren').show();
    
+
+    $('#Report_VehicleRego').typeahead({
+        minLength: 3,
+        autoSelect: true,
+        source: function (request, response) {
+            $.ajax({
+                url: '/Guard/KeyVehiclelog?handler=VehicleRegos',
+                data: { regoPart: request },
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    items = [];
+                    map = {};
+                    $.each(data, function (i, item) {
+                        items.push(item);
+                    });
+                    response(items);
+                    if (data.length == 0) {
+                        $('#Report_VehicleRego').val('');
+                    }
+                },
+                error: function (response) {
+                    alert(response.responseText);
+                },
+                failure: function (response) {
+                    alert(response.responseText);
+                }
+            });
+        },
+        afterSelect: function (item) {
+            if (item) {
+                $.ajax({
+                    url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + item,
+                    type: 'GET',
+                    dataType: 'json',
+                }).done(function (result) {
+                    if (result.length > 0) {
+                        gridIncidentReportsVehicleLogProfile.clear().rows.add(result).draw();
+
+                        $('#driver_name').val('Unknown');
+                        $('#duplicate_profile_status').text('');
+                        $('#incident-report-profiles-modal').find('#kvl-profile-title-rego').html(item);
+                        $('#Report_VehicleRego').val(item);
+                        $('#incident-report-profiles-modal').modal('show');
+                    }
+                });
+            }
+        }
+    });
+
 });

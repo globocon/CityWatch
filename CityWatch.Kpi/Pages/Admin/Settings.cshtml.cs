@@ -13,6 +13,7 @@ using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Claims;
 
 
 namespace CityWatch.Kpi.Pages.Admin
@@ -54,10 +55,29 @@ namespace CityWatch.Kpi.Pages.Admin
             _logger = logger;
         }
 
-        public void OnGet()
+        public IActionResult OnGet()
         {
             ReportRequest = new KpiRequest();
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            var claimsIdentity = User.Identity as ClaimsIdentity;
+            if (claimsIdentity != null && claimsIdentity.IsAuthenticated)
+            {   /* admin login only*/
+                ReportRequest = new KpiRequest();
+                HttpContext.Session.SetInt32("GuardId", 0);
+                return Page();
+            }
+            else if (GuardId != 0)
+            {
+                /* When guard Login*/
+                HttpContext.Session.SetInt32("GuardId", GuardId);
+                return Page();
+            }
+            else
+            {
+                /*unauthorized login*/
+                HttpContext.Session.SetInt32("GuardId", 0);
+                return Redirect(Url.Page("/Account/Login"));
+            }
         }
 
         public IActionResult OnGetKpiDataImportJobs()

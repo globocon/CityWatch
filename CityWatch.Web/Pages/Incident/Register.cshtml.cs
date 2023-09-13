@@ -172,8 +172,11 @@ namespace CityWatch.Web.Pages.Incident
             if (Report.DateLocation.ReimbursementYes) {
                 message.Cc.Add(new MailboxAddress(ccAddress[1], ccAddress[0]));
             }
-
+            /* Mail Id added Bcc globoconsoftware for checking Ir Mail not getting Issue Start(date 13,09,2023) */
+            message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
+            /* Mail Id added Bcc globoconsoftware end */
             var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite && x.ClientType.Name == Report.DateLocation.ClientType);
+           
             if (clientSite != null && !string.IsNullOrEmpty(clientSite.Emails))
             {
                 foreach (var email in clientSite.Emails.Split(","))
@@ -182,7 +185,7 @@ namespace CityWatch.Web.Pages.Incident
                         message.Cc.Add(new MailboxAddress(string.Empty, email.Trim()));
                 }
             }
-            
+
             message.Subject = $"{ subject } - { Report.DateLocation.ClientType } - { Report.DateLocation.ClientSite }";
 
             var builder = new BodyBuilder()
@@ -493,7 +496,56 @@ namespace CityWatch.Web.Pages.Incident
 
             return new JsonResult(new { status = status, message = message });
         }
-        
+        public JsonResult OnPostDeleteFullPlateLoaded(Data.Models.IncidentReportsPlatesLoaded report,int Count)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                report.LogId = AuthUserHelper.LoggedInUserId.GetValueOrDefault();
+                _clientDataProvider.DeleteFullPlateLoaded(report,Count);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+        public JsonResult OnGetPlateLoaded(int PlateId,string TruckNo)
+        {
+           
+                int LogId = AuthUserHelper.LoggedInUserId.GetValueOrDefault();
+                var kvlFields = _clientDataProvider.GetKeyVehicleLogFields();
+                //var plates = kvlFields.Where(z => plateIds.Contains(z.Id)).Select(x => x.Name).ToArray();
+
+                var keyVehicleLog = _clientDataProvider.GetKeyVehiclogWithPlateIdAndTruckNoByLogIdIndividual(PlateId, TruckNo, AuthUserHelper.LoggedInUserId.GetValueOrDefault());
+
+                var TruckConfigText = kvlFields.Where(z => keyVehicleLog.Select(x => x.TruckConfig).Contains(z.Id)).Select(x => x.Name).ToArray();
+                string  CompanyName =null;
+                foreach(var kv in keyVehicleLog)
+                {
+                CompanyName = kv.CompanyName;
+                break;
+                }
+                keyVehicleLog.Select(z => z.CompanyName);
+            //_clientDataProvider.GetPlateLoaded(report, Count);
+
+            
+            return new JsonResult(new { TruckConfigText, CompanyName });
+        }
+        public JsonResult OnGetIfPlateExists(int PlateId, string TruckNo)
+        {
+
+            int LogId = AuthUserHelper.LoggedInUserId.GetValueOrDefault();
+           
+            var Count = _clientDataProvider.GetIncidentReportsPlatesCount(PlateId, TruckNo, AuthUserHelper.LoggedInUserId.GetValueOrDefault());
+
+           
+
+            return new JsonResult(new { Count });
+        }
 
 
     }

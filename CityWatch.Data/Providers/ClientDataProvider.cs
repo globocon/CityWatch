@@ -37,7 +37,8 @@ namespace CityWatch.Data.Providers
         void SaveCompanyDetails(CompanyDetails companyDetails);
         void SavePlateLoaded(IncidentReportsPlatesLoaded report);
         void DeletePlateLoaded(IncidentReportsPlatesLoaded report);
-
+        void DeleteFullPlateLoaded(IncidentReportsPlatesLoaded report,int Count);
+        
         void DeleteClientSite(int id);
         List<ClientSiteKpiSetting> GetClientSiteKpiSettings();
         ClientSiteKpiSetting GetClientSiteKpiSetting(int clientSiteId);
@@ -58,6 +59,7 @@ namespace CityWatch.Data.Providers
 
         List<IncidentReportsPlatesLoaded> GetIncidentDetailsKvlReport(int logId);
         List<KeyVehicleLog> GetKeyVehiclogWithPlateIdAndTruckNoByLogId(int[] plateid, string[] truckNo,int logId);
+        List<KeyVehicleLog> GetKeyVehiclogWithPlateIdAndTruckNoByLogIdIndividual(int plateid, string truckNo, int logId);
         List<KeyVehcileLogField> GetKeyVehicleLogFields(bool includeDeleted = false);
         int GetMaxIncidentReportId(int LogId);
         public List<ClientSiteKey> GetClientSiteKeys(int clientSiteId);
@@ -70,8 +72,11 @@ namespace CityWatch.Data.Providers
         int SaveClientSiteLinksPageType(ClientSiteLinksPageType ClientSiteLinksPageTypeRecord);
         int SaveSiteLinkDetails(ClientSiteLinksDetails ClientSiteLinksDetailsRecord);
         void DeleteSiteLinkDetails(int id);
-        List<ClientSiteLinksDetails> GetSiteLinkDetailsUsingTypeAndState(int type, string state);
+        int GetIncidentReportsPlatesCount(int PlateId, string TruckNo, int? userId);
+        List<ClientSiteLinksDetails> GetSiteLinkDetailsUsingTypeAndState(int type, string state); 
+        List<ClientSiteLinksDetails> GetSiteLinkDetailsUsingTypeAndState(int type);
         string GetSiteLinksTypeUsingId(int typeId);
+        int DeleteClientSiteLinksPageType(int typeId);
 
     }
 
@@ -590,6 +595,22 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
         
+        public void DeleteFullPlateLoaded(IncidentReportsPlatesLoaded report,int Count)
+        {
+
+            var platesLoadedToDeleteId = _context.IncidentReportsPlatesLoaded.Where(x => x.LogId == report.LogId  && x.IncidentReportId == 0);
+           for(int i = 1; i < Count; i++) { 
+
+                var platesLoadedToDelete = _context.IncidentReportsPlatesLoaded.Where(x => platesLoadedToDeleteId.Select(z => z.Id).Contains(x.Id));
+                if (platesLoadedToDelete == null)
+                    throw new InvalidOperationException();
+                var IdFrom = platesLoadedToDelete.Max(y => y.Id);
+                var IdTo = platesLoadedToDelete.SingleOrDefault(x => x.Id == IdFrom);
+                _context.IncidentReportsPlatesLoaded.Remove(IdTo);
+                _context.SaveChanges();
+            }
+
+        }
         public List<IncidentReportsPlatesLoaded> GetIncidentDetailsKvlReport(int logId)
         {
             return _context.IncidentReportsPlatesLoaded
@@ -599,11 +620,22 @@ namespace CityWatch.Data.Providers
 
         public List<KeyVehicleLog> GetKeyVehiclogWithPlateIdAndTruckNoByLogId(int[] plateid, string[] truckNo, int logId)
         {
+            
+                return _context.KeyVehicleLogs.Where(z => truckNo.Contains(z.VehicleRego) && plateid.Contains(z.PlateId) && DateTime.Compare(z.ClientSiteLogBook.Date.Date, DateTime.Now.Date) == 0)
+                      .Include(z => z.ClientSiteLogBook)
+                    .ThenInclude(z => z.ClientSite)
 
-            return _context.KeyVehicleLogs.Where(z => truckNo.Contains(z.VehicleRego) && plateid.Contains(z.PlateId) && DateTime.Compare(z.ClientSiteLogBook.Date.Date, DateTime.Now.Date) == 0)
+                    .ToList();
+            
+
+        }
+        public List<KeyVehicleLog> GetKeyVehiclogWithPlateIdAndTruckNoByLogIdIndividual(int plateid, string truckNo, int logId)
+        {
+
+            return _context.KeyVehicleLogs.Where(z => z.VehicleRego==truckNo && z.PlateId==plateid && DateTime.Compare(z.ClientSiteLogBook.Date.Date, DateTime.Now.Date) == 0)
                   .Include(z => z.ClientSiteLogBook)
                 .ThenInclude(z => z.ClientSite)
-               
+
                 .ToList();
 
         }
@@ -680,7 +712,7 @@ namespace CityWatch.Data.Providers
         }
         public int SaveClientSiteLinksPageType(ClientSiteLinksPageType ClientSiteLinksPageTypeRecord)
         {
-            int saveStatus = 0;
+            int saveStatus = -1;
             if (ClientSiteLinksPageTypeRecord != null)
             {
 
@@ -691,12 +723,13 @@ namespace CityWatch.Data.Providers
                     if (ClientSiteLinksPageTypeToUpdate == null)
                     {
                         _context.ClientSiteLinksPageType.Add(new ClientSiteLinksPageType() { PageTypeName = ClientSiteLinksPageTypeRecord.PageTypeName });
+
                         saveStatus = 1;
 
                     }
                     else
                     {
-                        saveStatus = 2;
+                        saveStatus = -1;
                     }
 
                 }
@@ -710,10 +743,17 @@ namespace CityWatch.Data.Providers
                         saveStatus = 1;
                     }
 
+                    
+                }
+
+               
+                _context.SaveChanges();
+                if(saveStatus!=-1)
+                {
+                    var lastInsertedId = _context.ClientSiteLinksPageType.SingleOrDefault(x => x.PageTypeName == ClientSiteLinksPageTypeRecord.PageTypeName);
+                    saveStatus = lastInsertedId.Id;
 
                 }
-                _context.SaveChanges();
-
             }
 
             return saveStatus;
@@ -728,8 +768,8 @@ namespace CityWatch.Data.Providers
                 
                 if (ClientSiteLinksDetailsRecord.Id == -1)
                 {
-                    /* for checking already exist this title in state */
-                    var checkIfAlreadyExist = _context.ClientSiteLinksDetails.SingleOrDefault(x => x.Title == ClientSiteLinksDetailsRecord.Title && x.State == ClientSiteLinksDetailsRecord.State);
+                    /* for checking already exist this title  */
+                    var checkIfAlreadyExist = _context.ClientSiteLinksDetails.FirstOrDefault(x => x.Title == ClientSiteLinksDetailsRecord.Title && x.ClientSiteLinksTypeId == ClientSiteLinksDetailsRecord.typeId);
                     if (checkIfAlreadyExist == null)
                     {
                         _context.ClientSiteLinksDetails.Add(new ClientSiteLinksDetails()
@@ -754,7 +794,7 @@ namespace CityWatch.Data.Providers
                     if (reportFieldToUpdate != null)
                     {
                         /* for checking already exist this title in state */
-                        var checkIfAlreadyExist = _context.ClientSiteLinksDetails.SingleOrDefault(x => x.Title == ClientSiteLinksDetailsRecord.Title && x.State == ClientSiteLinksDetailsRecord.State && x.Id != ClientSiteLinksDetailsRecord.Id);
+                        var checkIfAlreadyExist = _context.ClientSiteLinksDetails.FirstOrDefault(x => x.Title == ClientSiteLinksDetailsRecord.Title && x.ClientSiteLinksTypeId == ClientSiteLinksDetailsRecord.typeId && x.Id != ClientSiteLinksDetailsRecord.Id);
                         if (checkIfAlreadyExist == null)
                         {
                             reportFieldToUpdate.Title = ClientSiteLinksDetailsRecord.Title;
@@ -791,15 +831,60 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
 
-        public List<ClientSiteLinksDetails> GetSiteLinkDetailsUsingTypeAndState(int type,string state)
+        public List<ClientSiteLinksDetails> GetSiteLinkDetailsUsingTypeAndState(int type)
         {
-            return _context.ClientSiteLinksDetails.Where(x => x.ClientSiteLinksTypeId == type && x.State== state).OrderBy(x => x.Title).ToList();
+            return _context.ClientSiteLinksDetails.Where(x => x.ClientSiteLinksTypeId == type).OrderBy(x => x.Title).ToList();
         }
 
         public string GetSiteLinksTypeUsingId(int typeId)
         {
            
             return _context.ClientSiteLinksPageType.SingleOrDefault(x => x.Id == typeId).PageTypeName;
+        }
+
+        public List<IncidentReportsPlatesLoaded> GetPlateLoadedEntry(int? userId)
+        {
+            return _context.IncidentReportsPlatesLoaded
+               .Where(z => z.LogId == userId && z.IncidentReportId == 0)
+               .ToList();
+        }
+        public int GetIncidentReportsPlatesCount(int PlateId, string TruckNo, int? userId)
+        {
+            return _context.IncidentReportsPlatesLoaded
+               .Where(z => z.LogId == userId && z.IncidentReportId == 0 && z.PlateId==PlateId && z.TruckNo==TruckNo)
+               .Count();
+        }
+
+
+        public int DeleteClientSiteLinksPageType(int typeId)
+        {
+            if (typeId == -1)
+                return 0;
+
+            var siteLinkTypeToDelete = _context.ClientSiteLinksPageType.SingleOrDefault(x => x.Id == typeId);
+            if (siteLinkTypeToDelete == null)
+            {
+               
+                return 0;
+            }
+            else
+            {
+                var deatilsList = _context.ClientSiteLinksDetails.Where(x => x.ClientSiteLinksTypeId == typeId).ToList();
+                if(deatilsList.Count!=0)
+                {
+                    foreach (var det in deatilsList)
+                    {
+                        _context.ClientSiteLinksDetails.Remove(det);
+                        _context.SaveChanges();
+                    }
+                    
+
+                }
+
+                _context.ClientSiteLinksPageType.Remove(siteLinkTypeToDelete);
+                _context.SaveChanges();
+                return 1;
+            }
         }
 
 

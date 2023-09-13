@@ -3,46 +3,182 @@
 @{
     ViewData["Title"] = "CityWatch Security | Tools";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.Tools;
+    var StiteLinkType = Model.ClientDataProvider.GetSiteLinksPageTypes();
 }
 
 
 
 <div class="container" role="main">
     <div class="center-block text-center m-2">
-        <select class="form-control" id="ddl_toolSelecter" style="width:300px;display: inline;">
-            @foreach (var item in Model.ClientDataProvider.GetSiteLinksPageTypes())
+        @if (@StiteLinkType != null)
+        {
+            @foreach (var item in StiteLinkType)
             {
+                @if (!item.PageTypeName.Contains("State"))
+                {
+                    /* button not start with State*/
+                    <a class="btn btn-primary dynamic-link" id="@item.PageTypeName" href="Tools?st=@item.PageTypeName&&type=@item.Id">@item.PageTypeName</a>
 
 
-                <option value="@item.Id">@item.PageTypeName</option>
+                }
+                else if (item.PageTypeName.Contains("State"))
+                {
+                    /* button start with State and not in ACT,SA,NSW,TAS,NT,VIC,QLD,WA*/
+                    if (item.PageTypeName.Contains("ACT") == false &&
+                    item.PageTypeName.Contains("SA") == false &&
+                    item.PageTypeName.Contains("NSW") == false &&
+                    item.PageTypeName.Contains("TAS") == false &&
+                    item.PageTypeName.Contains("NT") == false &&
+                    item.PageTypeName.Contains("VIC") == false &&
+                    item.PageTypeName.Contains("QLD") == false &&
+                    item.PageTypeName.Contains("WA") == false
+                    )
+                    {
+                        <a class="btn btn-primary dynamic-link" id="@item.PageTypeName" href="Tools?st=@item.PageTypeName&&type=@item.Id">@item.PageTypeName</a>
+
+                    }
+
+                }
 
             }
-        </select>
-    </div>
-    <div style="height:20px">
 
+
+        }
     </div>
-    <div class="center-block text-center m-2">
-        <hr />
-    </div>
-    <div style="height:20px">
-    </div>
-    <div class="center-block text-center m-2">
-        <a class="btn btn-primary dynamic-link" id="ACT" href="#">ACT</a>
-        <a class="btn btn-primary dynamic-link" id="SA" href="#">SA</a>
-    </div>
-    <div class="center-block text-center m-2">
-        <a class="btn btn-primary dynamic-link" id="NSW" href="#">NSW</a>
-        <a class="btn btn-primary dynamic-link" id="TAS" href="#">TAS</a>
-    </div>
-    <div class="center-block text-center m-2">
-        <a class="btn btn-primary dynamic-link" id="NT" href="#">NT</a>
-        <a class="btn btn-primary dynamic-link" id="VIC" href="#">VIC</a>
-    </div>
-    <div class="center-block text-center m-2">
-        <a class="btn btn-primary dynamic-link" id="QLD" href="#">QLD</a>
-        <a class="btn btn-primary dynamic-link" id="WA" href="#">WA</a>
-    </div>
+
+
+   @* @button start with State and in ACT,SA,NSW,TAS,NT,VIC,QLD,WA@*@
+
+    @if (StiteLinkType.Where(x => x.PageTypeName.Contains("ACT")).FirstOrDefault() != null
+    || (StiteLinkType.Where(x => x.PageTypeName.Contains("SA")).FirstOrDefault() != null))
+    {
+        var stateValueAct = StiteLinkType.Where(x => x.PageTypeName.Contains("ACT")).FirstOrDefault();
+        var stateValueSA = StiteLinkType.Where(x => x.PageTypeName.Contains("SA")).FirstOrDefault();
+        if (stateValueAct != null && stateValueSA != null)
+        {
+            <div class="center-block text-center m-2">
+
+                <a class="btn btn-primary dynamic-link" id="ACT" href="Tools?st=ACT&&type=@stateValueAct.Id">ACT</a>
+
+                <a class="btn btn-primary dynamic-link" id="SA" href="Tools?st=SA&&type=@stateValueSA.Id">SA</a>
+
+            </div>
+
+        }
+        else if (stateValueAct != null && stateValueSA == null)
+        {
+            <div class="center-block text-center m-2">
+                <a class="btn btn-primary dynamic-link" id="ACT" href="Tools?st=ACT&&type=@stateValueAct.Id">ACT</a>
+            </div>
+
+        }
+        else if (stateValueAct == null && stateValueSA != null)
+        {
+            <div class="center-block text-center m-2">
+                <a class="btn btn-primary dynamic-link" id="SA" href="Tools?st=SA&&type=@stateValueSA.Id">SA</a>
+            </div>
+        }
+
+    }
+
+    @if (StiteLinkType.Where(x => x.PageTypeName.Contains("NSW")).FirstOrDefault() != null
+    || (StiteLinkType.Where(x => x.PageTypeName.Contains("TAS")).FirstOrDefault() != null))
+    {
+        var stateValueNSW = StiteLinkType.Where(x => x.PageTypeName.Contains("NSW")).FirstOrDefault();
+        var stateValueTAS = StiteLinkType.Where(x => x.PageTypeName.Contains("TAS")).FirstOrDefault();
+        if (stateValueNSW != null && stateValueTAS != null)
+        {
+            <div class="center-block text-center m-2">
+
+                <a class="btn btn-primary dynamic-link" id="NSW" href="Tools?st=NSW&&type=@stateValueNSW.Id">NSW</a>
+
+                <a class="btn btn-primary dynamic-link" id="TAS" href="Tools?st=TAS&&type=@stateValueTAS.Id">TAS</a>
+
+            </div>
+
+        }
+        else if (stateValueNSW != null && stateValueTAS == null)
+        {
+            <div class="center-block text-center m-2">
+                <a class="btn btn-primary dynamic-link" id="NSW" href="Tools?st=NSW&&type=@stateValueNSW.Id">NSW</a>
+            </div>
+
+        }
+        else if (stateValueNSW == null && stateValueNSW != null)
+        {
+            <div class="center-block text-center m-2">
+                <a class="btn btn-primary dynamic-link" id="TAS" href="Tools?st=TAS&&type=@stateValueTAS.Id">TAS</a>
+            </div>
+        }
+
+    }
+
+    @if (StiteLinkType.Where(x => x.PageTypeName.Contains("NT")).FirstOrDefault() != null
+    || (StiteLinkType.Where(x => x.PageTypeName.Contains("VIC")).FirstOrDefault() != null))
+    {
+        var stateValueNT = StiteLinkType.Where(x => x.PageTypeName.Contains("NT")).FirstOrDefault();
+        var stateValueVIC = StiteLinkType.Where(x => x.PageTypeName.Contains("VIC")).FirstOrDefault();
+        if (stateValueNT != null && stateValueVIC != null)
+        {
+            <div class="center-block text-center m-2">
+
+                <a class="btn btn-primary dynamic-link" id="NT" href="Tools?st=NT&&type=@stateValueNT.Id">NT</a>
+
+                <a class="btn btn-primary dynamic-link" id="VIC" href="Tools?st=VIC&&type=@stateValueVIC.Id">VIC</a>
+
+            </div>
+
+        }
+        else if (stateValueNT != null && stateValueVIC == null)
+        {
+            <div class="center-block text-center m-2">
+                <a class="btn btn-primary dynamic-link" id="NT" href="Tools?st=NT&&type=@stateValueNT.Id">NT</a>
+            </div>
+
+        }
+        else if (stateValueNT == null && stateValueVIC != null)
+        {
+            <div class="center-block text-center m-2">
+                <a class="btn btn-primary dynamic-link" id="VIC" href="Tools?st=VIC&&type=@stateValueVIC.Id">VIC</a>
+            </div>
+        }
+
+    }
+
+    @if (StiteLinkType.Where(x => x.PageTypeName.Contains("QLD")).FirstOrDefault() != null
+    || (StiteLinkType.Where(x => x.PageTypeName.Contains("WA")).FirstOrDefault() != null))
+    {
+        var stateValueQLD = StiteLinkType.Where(x => x.PageTypeName.Contains("QLD")).FirstOrDefault();
+        var stateValueWA = StiteLinkType.Where(x => x.PageTypeName.Contains("WA")).FirstOrDefault();
+        if (stateValueQLD != null && stateValueWA != null)
+        {
+            <div class="center-block text-center m-2">
+
+                <a class="btn btn-primary dynamic-link" id="QLD" href="Tools?st=QLD&&type=@stateValueQLD.Id">QLD</a>
+
+                <a class="btn btn-primary dynamic-link" id="WA" href="Tools?st=WA&&type=@stateValueWA.Id">WA</a>
+
+            </div>
+
+        }
+        else if (stateValueQLD != null && stateValueWA == null)
+        {
+            <div class="center-block text-center m-2">
+                <a class="btn btn-primary dynamic-link" id="QLD" href="Tools?st=QLD&&type=@stateValueQLD.Id">QLD</a>
+            </div>
+
+        }
+        else if (stateValueQLD == null && stateValueWA != null)
+        {
+            <div class="center-block text-center m-2">
+                <a class="btn btn-primary dynamic-link" id="WA" href="Tools?st=WA&&type=@stateValueWA.Id">WA</a>
+            </div>
+        }
+
+    }
+
+
+
 </div>
 
 
