@@ -73,9 +73,10 @@ namespace CityWatch.Data.Providers
         int SaveSiteLinkDetails(ClientSiteLinksDetails ClientSiteLinksDetailsRecord);
         void DeleteSiteLinkDetails(int id);
         int GetIncidentReportsPlatesCount(int PlateId, string TruckNo, int? userId);
-        List<ClientSiteLinksDetails> GetSiteLinkDetailsUsingTypeAndState(int type, string state);
-       
+        List<ClientSiteLinksDetails> GetSiteLinkDetailsUsingTypeAndState(int type, string state); 
+        List<ClientSiteLinksDetails> GetSiteLinkDetailsUsingTypeAndState(int type);
         string GetSiteLinksTypeUsingId(int typeId);
+        int DeleteClientSiteLinksPageType(int typeId);
 
     }
 
@@ -711,7 +712,7 @@ namespace CityWatch.Data.Providers
         }
         public int SaveClientSiteLinksPageType(ClientSiteLinksPageType ClientSiteLinksPageTypeRecord)
         {
-            int saveStatus = 0;
+            int saveStatus = -1;
             if (ClientSiteLinksPageTypeRecord != null)
             {
 
@@ -722,12 +723,13 @@ namespace CityWatch.Data.Providers
                     if (ClientSiteLinksPageTypeToUpdate == null)
                     {
                         _context.ClientSiteLinksPageType.Add(new ClientSiteLinksPageType() { PageTypeName = ClientSiteLinksPageTypeRecord.PageTypeName });
+
                         saveStatus = 1;
 
                     }
                     else
                     {
-                        saveStatus = 2;
+                        saveStatus = -1;
                     }
 
                 }
@@ -741,10 +743,17 @@ namespace CityWatch.Data.Providers
                         saveStatus = 1;
                     }
 
+                    
+                }
+
+               
+                _context.SaveChanges();
+                if(saveStatus!=-1)
+                {
+                    var lastInsertedId = _context.ClientSiteLinksPageType.SingleOrDefault(x => x.PageTypeName == ClientSiteLinksPageTypeRecord.PageTypeName);
+                    saveStatus = lastInsertedId.Id;
 
                 }
-                _context.SaveChanges();
-
             }
 
             return saveStatus;
@@ -759,8 +768,8 @@ namespace CityWatch.Data.Providers
                 
                 if (ClientSiteLinksDetailsRecord.Id == -1)
                 {
-                    /* for checking already exist this title in state */
-                    var checkIfAlreadyExist = _context.ClientSiteLinksDetails.SingleOrDefault(x => x.Title == ClientSiteLinksDetailsRecord.Title && x.State == ClientSiteLinksDetailsRecord.State);
+                    /* for checking already exist this title  */
+                    var checkIfAlreadyExist = _context.ClientSiteLinksDetails.FirstOrDefault(x => x.Title == ClientSiteLinksDetailsRecord.Title && x.ClientSiteLinksTypeId == ClientSiteLinksDetailsRecord.typeId);
                     if (checkIfAlreadyExist == null)
                     {
                         _context.ClientSiteLinksDetails.Add(new ClientSiteLinksDetails()
@@ -785,7 +794,7 @@ namespace CityWatch.Data.Providers
                     if (reportFieldToUpdate != null)
                     {
                         /* for checking already exist this title in state */
-                        var checkIfAlreadyExist = _context.ClientSiteLinksDetails.SingleOrDefault(x => x.Title == ClientSiteLinksDetailsRecord.Title && x.State == ClientSiteLinksDetailsRecord.State && x.Id != ClientSiteLinksDetailsRecord.Id);
+                        var checkIfAlreadyExist = _context.ClientSiteLinksDetails.FirstOrDefault(x => x.Title == ClientSiteLinksDetailsRecord.Title && x.ClientSiteLinksTypeId == ClientSiteLinksDetailsRecord.typeId && x.Id != ClientSiteLinksDetailsRecord.Id);
                         if (checkIfAlreadyExist == null)
                         {
                             reportFieldToUpdate.Title = ClientSiteLinksDetailsRecord.Title;
@@ -822,9 +831,9 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
 
-        public List<ClientSiteLinksDetails> GetSiteLinkDetailsUsingTypeAndState(int type,string state)
+        public List<ClientSiteLinksDetails> GetSiteLinkDetailsUsingTypeAndState(int type)
         {
-            return _context.ClientSiteLinksDetails.Where(x => x.ClientSiteLinksTypeId == type && x.State== state).OrderBy(x => x.Title).ToList();
+            return _context.ClientSiteLinksDetails.Where(x => x.ClientSiteLinksTypeId == type).OrderBy(x => x.Title).ToList();
         }
 
         public string GetSiteLinksTypeUsingId(int typeId)
@@ -832,6 +841,7 @@ namespace CityWatch.Data.Providers
            
             return _context.ClientSiteLinksPageType.SingleOrDefault(x => x.Id == typeId).PageTypeName;
         }
+
         public List<IncidentReportsPlatesLoaded> GetPlateLoadedEntry(int? userId)
         {
             return _context.IncidentReportsPlatesLoaded
@@ -844,6 +854,39 @@ namespace CityWatch.Data.Providers
                .Where(z => z.LogId == userId && z.IncidentReportId == 0 && z.PlateId==PlateId && z.TruckNo==TruckNo)
                .Count();
         }
+
+
+        public int DeleteClientSiteLinksPageType(int typeId)
+        {
+            if (typeId == -1)
+                return 0;
+
+            var siteLinkTypeToDelete = _context.ClientSiteLinksPageType.SingleOrDefault(x => x.Id == typeId);
+            if (siteLinkTypeToDelete == null)
+            {
+               
+                return 0;
+            }
+            else
+            {
+                var deatilsList = _context.ClientSiteLinksDetails.Where(x => x.ClientSiteLinksTypeId == typeId).ToList();
+                if(deatilsList.Count!=0)
+                {
+                    foreach (var det in deatilsList)
+                    {
+                        _context.ClientSiteLinksDetails.Remove(det);
+                        _context.SaveChanges();
+                    }
+                    
+
+                }
+
+                _context.ClientSiteLinksPageType.Remove(siteLinkTypeToDelete);
+                _context.SaveChanges();
+                return 1;
+            }
+        }
+
 
     }
 }
