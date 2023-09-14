@@ -82,27 +82,16 @@ namespace CityWatch.Kpi.Models
         {
             get
             {
-                var text = string.Empty;
-                foreach (var y in _shift1Guards)
+                var hr1Value = "-";
+                foreach (var guard in _shift1Guards)
                 {
-                    var data = _guardCompliance.Where(z => z.GuardId.Equals(y.Value.Id));
-                    if (data != null)
+                    var hr1Compliance = _guardCompliance.FirstOrDefault(z => z.GuardId.Equals(guard.Value.Id) && z.HrGroup == HrGroup.HR1);
+                    if (hr1Compliance != null)
                     {
-                        foreach (var x in data)
-                        {
-                            if (x.HrGroup == HrGroup.HR1)
-                            {
-                                if (x.ExpiryDate == null)
-                                    text = "Y";
-                                if (x.ExpiryDate <= DateTime.Today)
-                                    text = "N";
-                                if (x.ExpiryDate > DateTime.Today)
-                                    text = "Y";
-                            }
-                        }
+                        GetHrValue(hr1Compliance);
                     }
                 }
-                return string.Join("\n", text);
+                return string.Join("\n", hr1Value);
             }
         }
 
@@ -361,6 +350,20 @@ namespace CityWatch.Kpi.Models
                 }
                 return string.Join("\n", text);
             }
+        }
+
+        private static string GetHrValue(GuardCompliance compliance)
+        {
+            if (compliance.ExpiryDate.HasValue)
+            {
+                if (compliance.ExpiryDate <= DateTime.Today)
+                    return "N";
+
+                if (compliance.ExpiryDate <= DateTime.Today.AddDays(45))
+                    return "E";
+            }
+
+            return "Y";
         }
     }
 }
