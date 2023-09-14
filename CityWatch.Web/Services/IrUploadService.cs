@@ -87,7 +87,7 @@ namespace CityWatch.Web.Services
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError("Error uploading IR {0} to patrols folder", incidentReport.FileName, ex.Message);
+                        _logger.LogError("Error uploading IR {0} to patrols folder, Message : {1}", incidentReport.FileName, ex.Message);
                     }
                 }
             }
@@ -107,7 +107,7 @@ namespace CityWatch.Web.Services
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError("Error uploading IR {0} to client site folder", incidentReport.FileName, ex.Message); ;
+                    _logger.LogError("Error uploading IR {0} to client site folder , Message : {1}", incidentReport.FileName, ex.Message); ;
                 }
             }
         }
