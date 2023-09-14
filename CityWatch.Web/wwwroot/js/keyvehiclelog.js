@@ -463,6 +463,7 @@ $(function () {
             $('#Sender').val(result.sender);
             $('#lblIsSender').text(result.isSender ? 'Sender Address' : 'Reciever Address');
             $('#cbIsSender').prop('checked', result.isSender);
+            $('#IsPOIAlert').val(result.isPOIAlert);
             $('#chbIsPOIAlert1').prop('checked', result.isPOIAlert);
             if (result.isPOIAlert == true) {
                 $('#titlePOIWarning').attr('hidden', false);
