@@ -45,6 +45,8 @@ namespace CityWatch.Data.Models
 
         public HrGroup? HrGroup { get; set; }
 
+        public string HrGroupText { get { return HrGroup?.ToDisplayName(); } }
+
         [ForeignKey("GuardId")]
         public Guard Guard { get; set; }
     }
