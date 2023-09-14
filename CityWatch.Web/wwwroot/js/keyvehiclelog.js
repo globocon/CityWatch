@@ -656,9 +656,9 @@ $(function () {
             $('#lblIsSender').text(isChecked ? 'Sender Address' : 'Reciever Address');
             $('#IsSender').val(isChecked);
         });
-        $('#chbIsPOIAlert1').on('change', function () {
-            const isChecked = $(this).is(':checked');
-            if (isChecked == true) {
+        $('#PersonOfInterest').on('change', function () {
+            const value = $(this).val();
+            if (value != '') {
                 $('#titlePOIWarning').attr('hidden', false);
                 $('#imagesiren').attr('hidden', false);
               

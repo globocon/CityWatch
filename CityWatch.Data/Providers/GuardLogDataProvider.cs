@@ -223,10 +223,14 @@ namespace CityWatch.Data.Providers
         }
         public List<KeyVehicleLog> GetPOIAlert( string companyname, string individualname, int individualtype)
         {
-            return _context.KeyVehicleLogs.Where(z =>  z.CompanyName==companyname && z.PersonName==individualname && z.PersonType==individualtype && z.IsPOIAlert==true)
-             .Include(z => z.ClientSiteLogBook)
-                .ThenInclude(z => z.ClientSite)
-                .ToList();
+            //return _context.KeyVehicleLogs.Where(z =>  z.CompanyName==companyname && z.PersonName==individualname && z.PersonType==individualtype && z.IsPOIAlert==true)
+            // .Include(z => z.ClientSiteLogBook)
+            //    .ThenInclude(z => z.ClientSite)
+            //    .ToList();
+            return _context.KeyVehicleLogs.Where(z => z.CompanyName == companyname && z.PersonName == individualname && z.PersonType == individualtype && z.PersonOfInterest != 0)
+            .Include(z => z.ClientSiteLogBook)
+               .ThenInclude(z => z.ClientSite)
+               .ToList();
 
         }
 
@@ -276,7 +280,7 @@ namespace CityWatch.Data.Providers
                 keyVehicleLogToUpdate.Vwi = keyVehicleLog.Vwi;
                 keyVehicleLogToUpdate.Sender = keyVehicleLog.Sender;
                 keyVehicleLogToUpdate.IsSender = keyVehicleLog.IsSender;
-                keyVehicleLogToUpdate.IsPOIAlert = keyVehicleLog.IsPOIAlert;
+                keyVehicleLogToUpdate.PersonOfInterest = keyVehicleLog.PersonOfInterest;
             }
             _context.SaveChanges();
         }

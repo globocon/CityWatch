@@ -296,15 +296,10 @@
 
                 <div class="form-group col-md-4">
                     <label>POI</label>
-                    <select asp-for="@Model.TruckConfig" class="form-control" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.PersonOfInterest)"></select>
+                    <select asp-for="@Model.PersonOfInterest" class="form-control" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.PersonOfInterest)"></select>
 
                 </div>
-             </div>
-
-
-
-               
-
+            
             </div>
             <ul class="nav nav-tabs" role="tablist">
                 <li class="nav-item">
@@ -332,7 +327,7 @@
                                 <label class="col-md-1">Notes</label>
 
                                 <span style="font-size:0.8rem;font:italic" class="col-md-11">
-                                    Details of difficult driver can include appearence such as Gender / Height / Scars / Tattoos / Clothing etc. Mention the  linked IR Serial Number.
+                                    Details of POI can include appearence such as Gender / Height / Scars / Tattoos / Clothing etc. Mention the  linked IR Serial Number.
                                 </span>
                             </div>
                             
