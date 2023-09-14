@@ -563,7 +563,7 @@ namespace CityWatch.Web.Services
                 profile.KeyVehicleLogProfile.KeyVehicleLog = kvls.SingleOrDefault(z => z.Id == profile.KeyVehicleLogProfile.CreatedLogId);
                 if (profile.IsPOIAlert == true)
                 {
-                    profile.POIImageDisplay = "<img  src=" + profile.POIImage + " height=100px width=50px />";
+                    profile.POIImageDisplay = "<img  src=" + profile.POIImage + " height=35px width=35px class=ml-2 />";
                   //  profile.POIImage = "Yes";
                 }
                 else
