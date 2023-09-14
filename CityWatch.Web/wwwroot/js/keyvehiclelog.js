@@ -481,10 +481,7 @@ $(function () {
         gridKeyVehicleLogProfile.$('tr.selected').removeClass('selected');
         $(this).addClass('selected');
     });
-    $('#key_vehicle_log_profiles tbody').on('click', '#btnSelectProfile', function () {
-        var data = gridKeyVehicleLogProfile.row($(this).parents('tr')).data();
-        populateKvlModal(data.detail.id);        
-    });
+    
     let gridIncidentReportsVehicleLogProfile = $('#incident_reports_vehicle_log_profiles').DataTable({
         paging: false,
         ordering: false,
