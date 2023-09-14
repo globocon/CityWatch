@@ -415,7 +415,7 @@ $(function () {
             { data: 'detail.companyName' },
             { data: 'detail.personName' },
             { data: 'personTypeText' },
-            { data: 'detail.poiImageDisplay' },
+            //{ data: 'detail.poiImageDisplay' },
 
            
             {
@@ -619,7 +619,7 @@ $(function () {
             $('#cbIsTimeSlotNo').prop('checked', true);
             $('#IsSender').val(true);
             $('#cbIsSender').prop('checked', true);   
-            $('#chbIsPOIAlert1').prop('checked', false);  
+            //$('#chbIsPOIAlert1').prop('checked', false);  
         }
         else {
             let isTimeSlot = $('#IsTimeSlotNo').val().toLowerCase() === 'true';
@@ -630,17 +630,17 @@ $(function () {
             $('#lblIsSender').text(isSender ? 'Sender Address' : 'Reciever Address');
             $('#cbIsSender').prop('checked', isSender);
 
-            let isPOIAlert = $('#IsPOIAlert').val().toLowerCase() === 'true';
+            //let isPOIAlert = $('#IsPOIAlert').val().toLowerCase() === 'true';
             
-            $('#chbIsPOIAlert1').prop('checked', isPOIAlert);
-            if (isPOIAlert == true) {
-                $('#titlePOIWarning').attr('hidden', false);
-                $('#imagesiren').attr('hidden', false);
-            }
-            else {
-                $('#titlePOIWarning').attr('hidden', true);
-                $('#imagesiren').attr('hidden', true);
-            }
+            //$('#chbIsPOIAlert1').prop('checked', isPOIAlert);
+            //if (isPOIAlert == true) {
+            //    $('#titlePOIWarning').attr('hidden', false);
+            //    $('#imagesiren').attr('hidden', false);
+            //}
+            //else {
+            //    $('#titlePOIWarning').attr('hidden', true);
+            //    $('#imagesiren').attr('hidden', true);
+            //}
 
             loadAuditHistory($('#VehicleRego').val());
         }
