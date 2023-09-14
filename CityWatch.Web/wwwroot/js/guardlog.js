@@ -2393,7 +2393,7 @@
         }],
         'createdRow': function (row, data, index) {
             if (data.expiryDate !== null) {
-                $('td', row).eq(2).html(getFormattedDate(new Date(data.expiryDate), null, ' '));
+                $('td', row).eq(3).html(getFormattedDate(new Date(data.expiryDate), null, ' '));
 
             }
         },
