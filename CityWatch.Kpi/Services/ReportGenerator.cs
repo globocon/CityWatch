@@ -40,6 +40,8 @@ namespace CityWatch.Kpi.Services
         private const string CELL_BG_BLUE_HEADER = "#bdd7ee";
         private const string CELL_BG_YELLOW_IR_COUNT = "#feff9a";
         private const string CELL_BG_ORANGE_IR_ALARM = "#ffdab3";
+        private const string CELL_FONT_GREEN = "#008000";
+        private const string CELL_FONT_RED = "#FF0000";
 
         private readonly string _reportRootDir;
         private readonly string _imageRootDir;
@@ -480,6 +482,28 @@ namespace CityWatch.Kpi.Services
             return cell;
         }
 
+        private Cell CreateHrDataCell(string text) 
+        {
+            var cell = new Cell();
+            cell.SetFontSize(CELL_FONT_SIZE)
+                .SetPaddingTop(0)
+                .SetPaddingBottom(0);
+
+            var p = new Paragraph();
+            var arTexts = text.Split(",").ToArray();
+            for (int index = 0; index < arTexts.Length; index++)
+            {
+                var textValue = arTexts[index] ?? string.Empty;
+                string textColorHex = GetHrTextColor(textValue);
+                p.Add(new Text(textValue).SetFontColor(WebColors.GetRGBColor(textColorHex)));
+                
+                if (index < arTexts.Length - 1)
+                    p.Add("\n");
+            }
+            cell.Add(p);
+            return cell;            
+        }
+
         private Image GetGraphImage(List<EffortCount> effortCounts)
         {
 
@@ -514,35 +538,43 @@ namespace CityWatch.Kpi.Services
         }
 
         private Table CreateGuardReportData(List<DailyKpiGuard> monthlyKpiGuardData, DateTime fromDate)
-        {
-            var kpiGuardTable = new Table(UnitValue.CreatePercentArray(new float[] { 2, 6, 6, 6, 12, 9, 3, 3, 3, 12, 9, 3, 3, 3, 12, 9, 3, 3, 3})).UseAllAvailableWidth();
+        {            
+            var kpiGuardTable = new Table(UnitValue.CreatePercentArray(new float[] { 2, 6, 6, 6, 12, 9, 3, 3, 3, 12, 9, 3, 3, 3, 12, 9, 3, 3, 3 })).UseAllAvailableWidth();
             CreateGuardReportHeader(kpiGuardTable, fromDate);
             foreach (var data in monthlyKpiGuardData)
-            {                
+            {
                 kpiGuardTable.AddCell(CreateDataCell(data.Date.ToString("dd")));
                 kpiGuardTable.AddCell(CreateDataCell(data.Date.ToString("dddd")));
                 kpiGuardTable.AddCell(CreateDataCell(data.EmployeeHours?.ToString() ?? string.Empty));
                 kpiGuardTable.AddCell(CreateDataCell(data.ActualEmployeeHours?.ToString() ?? string.Empty));
-
                 kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardName ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardSecurityNo ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardHr ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardVisy ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardFire ?? string.Empty));
-
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardSecurityNo ?? string.Empty));                
+                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift1GuardHr1));
+                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift1GuardHr2));
+                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift1GuardHr3));               
                 kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardName ?? string.Empty));
                 kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardSecurityNo ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardHr ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardVisy ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardFire ?? string.Empty));
-
+                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift2GuardHr1));
+                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift2GuardHr2));
+                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift2GuardHr3));                
                 kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardName ?? string.Empty));
                 kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardSecurityNo ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardHr ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardVisy ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardFire ?? string.Empty));
+                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift3GuardHr1));
+                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift3GuardHr2));
+                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift3GuardHr3));                
             }
             return kpiGuardTable;
+        }
+
+        private static string GetHrTextColor(string hrValue)
+        {
+            if (hrValue == "Y")
+                return CELL_FONT_GREEN;
+
+            if (hrValue == "N" || hrValue == "E")
+                return CELL_FONT_RED;
+
+            return string.Empty;
         }
 
         private void CreateGuardReportHeader(Table table, DateTime fromDate)
@@ -572,19 +604,19 @@ namespace CityWatch.Kpi.Services
             table.AddCell(CreateHeaderCell("Hours Change"));
             table.AddCell(CreateHeaderCell("Guard Name"));
             table.AddCell(CreateHeaderCell("Security No"));
-            table.AddCell(CreateHeaderCell("HR"));
-            table.AddCell(CreateHeaderCell("VISY"));
-            table.AddCell(CreateHeaderCell("FIRE"));
+            table.AddCell(CreateHeaderCell("HR 1"));
+            table.AddCell(CreateHeaderCell("HR 2"));
+            table.AddCell(CreateHeaderCell("HR 3"));
             table.AddCell(CreateHeaderCell("Guard Name"));
             table.AddCell(CreateHeaderCell("Security No"));
-            table.AddCell(CreateHeaderCell("HR"));
-            table.AddCell(CreateHeaderCell("VISY"));
-            table.AddCell(CreateHeaderCell("FIRE"));
+            table.AddCell(CreateHeaderCell("HR 1"));
+            table.AddCell(CreateHeaderCell("HR 2"));
+            table.AddCell(CreateHeaderCell("HR 3"));
             table.AddCell(CreateHeaderCell("Guard Name"));
             table.AddCell(CreateHeaderCell("Security No"));
-            table.AddCell(CreateHeaderCell("HR"));
-            table.AddCell(CreateHeaderCell("VISY"));
-            table.AddCell(CreateHeaderCell("FIRE"));
+            table.AddCell(CreateHeaderCell("HR 1"));
+            table.AddCell(CreateHeaderCell("HR 2"));
+            table.AddCell(CreateHeaderCell("HR 3"));
         }
     }
 }
