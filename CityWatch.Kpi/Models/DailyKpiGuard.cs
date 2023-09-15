@@ -82,16 +82,20 @@ namespace CityWatch.Kpi.Models
         {
             get
             {
-                var hr1Value = "-";
+                var hr1Values = new List<string>();
                 foreach (var guard in _shift1Guards)
                 {
                     var hr1Compliance = _guardCompliance.FirstOrDefault(z => z.GuardId.Equals(guard.Value.Id) && z.HrGroup == HrGroup.HR1);
                     if (hr1Compliance != null)
                     {
-                        hr1Value = GetHrValue(hr1Compliance);
+                        hr1Values.Add(GetHrValue(hr1Compliance));
+                    }
+                    else
+                    {
+                        hr1Values.Add("-");
                     }
                 }
-                return string.Join("\n", hr1Value);
+                return string.Join("\n", hr1Values);
             }
         }
 
@@ -99,16 +103,20 @@ namespace CityWatch.Kpi.Models
         {
             get
             {
-                var hr2Value = "-";
+                var hr2Values = new List<string>();
                 foreach (var guard in _shift1Guards)
                 {
                     var hr2Compliance = _guardCompliance.FirstOrDefault(z => z.GuardId.Equals(guard.Value.Id) && z.HrGroup == HrGroup.HR2);
                     if (hr2Compliance != null)
                     {
-                        hr2Value = GetHrValue(hr2Compliance);
+                        hr2Values.Add(GetHrValue(hr2Compliance));
+                    }
+                    else
+                    {
+                        hr2Values.Add("-");
                     }
                 }
-                return string.Join("\n", hr2Value);
+                return string.Join("\n", hr2Values);
             }
         }        
 
@@ -116,16 +124,21 @@ namespace CityWatch.Kpi.Models
         {
             get
             {
-                var hr3Value = "-";
+                var hr3Values = new List<string>();
                 foreach (var guard in _shift1Guards)
                 {
                     var hr3Compliance = _guardCompliance.FirstOrDefault(z => z.GuardId.Equals(guard.Value.Id) && z.HrGroup == HrGroup.HR3);
                     if (hr3Compliance != null)
                     {
-                        hr3Value = GetHrValue(hr3Compliance);
+                        hr3Values.Add(GetHrValue(hr3Compliance));
+                    }
+                    else
+                    {
+                        hr3Values.Add("-");
+
                     }
                 }
-                return string.Join("\n", hr3Value);
+                return string.Join("\n", hr3Values);
             }
         }
 
@@ -149,16 +162,20 @@ namespace CityWatch.Kpi.Models
         {
             get
             {
-                var hr1Value = "-";
+                var hr1Values = new List<string>();
                 foreach (var guard in _shift2Guards)
                 {
                     var hr1Compliance = _guardCompliance.FirstOrDefault(z => z.GuardId.Equals(guard.Value.Id) && z.HrGroup == HrGroup.HR1);
                     if (hr1Compliance != null)
                     {
-                        hr1Value = GetHrValue(hr1Compliance);
+                        hr1Values.Add(GetHrValue(hr1Compliance));
+                    }
+                    else
+                    {
+                        hr1Values.Add("-");
                     }
                 }
-                return string.Join("\n", hr1Value);
+                return string.Join("\n", hr1Values);
             }
         }
 
@@ -166,16 +183,20 @@ namespace CityWatch.Kpi.Models
         {
             get
             {
-                var hr2Value = "-";
+                var hr2Values = new List<string>();
                 foreach (var guard in _shift2Guards)
                 {
                     var hr2Compliance = _guardCompliance.FirstOrDefault(z => z.GuardId.Equals(guard.Value.Id) && z.HrGroup == HrGroup.HR2);
                     if (hr2Compliance != null)
                     {
-                        hr2Value = GetHrValue(hr2Compliance);
+                        hr2Values.Add(GetHrValue(hr2Compliance));
+                    }
+                    else
+                    {
+                        hr2Values.Add("-");
                     }
                 }
-                return string.Join("\n", hr2Value);
+                return string.Join("\n", hr2Values);
             }
         }
 
@@ -183,16 +204,21 @@ namespace CityWatch.Kpi.Models
         {
             get
             {
-                var hr3Value = "-";
+                var hr3Values = new List<string>();
                 foreach (var guard in _shift2Guards)
                 {
                     var hr3Compliance = _guardCompliance.FirstOrDefault(z => z.GuardId.Equals(guard.Value.Id) && z.HrGroup == HrGroup.HR3);
                     if (hr3Compliance != null)
                     {
-                        hr3Value = GetHrValue(hr3Compliance);
+                        hr3Values.Add(GetHrValue(hr3Compliance));
+                    }
+                    else
+                    {
+                        hr3Values.Add("-");
+
                     }
                 }
-                return string.Join("\n", hr3Value);
+                return string.Join("\n", hr3Values);
             }
         }
 
@@ -216,16 +242,20 @@ namespace CityWatch.Kpi.Models
         {
             get
             {
-                var hr1Value = "-";
+                var hr1Values = new List<string>();
                 foreach (var guard in _shift3Guards)
                 {
                     var hr1Compliance = _guardCompliance.FirstOrDefault(z => z.GuardId.Equals(guard.Value.Id) && z.HrGroup == HrGroup.HR1);
                     if (hr1Compliance != null)
                     {
-                        hr1Value = GetHrValue(hr1Compliance);
+                        hr1Values.Add(GetHrValue(hr1Compliance));
+                    }
+                    else
+                    {
+                        hr1Values.Add("-");
                     }
                 }
-                return string.Join("\n", hr1Value);
+                return string.Join("\n", hr1Values);
             }
         }
 
@@ -233,16 +263,19 @@ namespace CityWatch.Kpi.Models
         {
             get
             {
-                var hr2Value = "-";
+                var hr2Values = new List<string>();
                 foreach (var guard in _shift3Guards)
                 {
                     var hr2Compliance = _guardCompliance.FirstOrDefault(z => z.GuardId.Equals(guard.Value.Id) && z.HrGroup == HrGroup.HR2);
                     if (hr2Compliance != null)
                     {
-                        hr2Value = GetHrValue(hr2Compliance);
+                        hr2Values.Add(GetHrValue(hr2Compliance));
+                    }
+                    else { 
+                        hr2Values.Add("-");
                     }
                 }
-                return string.Join("\n", hr2Value);
+                return string.Join("\n", hr2Values);
             }
         }
 
@@ -250,16 +283,20 @@ namespace CityWatch.Kpi.Models
         {
             get
             {
-                var hr3Value = "-";
+                var hr3Values = new List<string>();
                 foreach (var guard in _shift3Guards)
                 {
                     var hr3Compliance = _guardCompliance.FirstOrDefault(z => z.GuardId.Equals(guard.Value.Id) && z.HrGroup == HrGroup.HR3);
                     if (hr3Compliance != null)
                     {
-                        hr3Value = GetHrValue(hr3Compliance);
+                        hr3Values.Add(GetHrValue(hr3Compliance));
+                    }
+                    else
+                    {
+                        hr3Values.Add("-");
                     }
                 }
-                return string.Join("\n", hr3Value);
+                return string.Join("\n", hr3Values);
             }
         }
 
