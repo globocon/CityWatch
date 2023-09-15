@@ -263,15 +263,16 @@ namespace CityWatch.Kpi.Models
             }
         }
 
-        private static string GetHrValue(GuardCompliance compliance)
+        private string GetHrValue(GuardCompliance compliance)
         {
             if (compliance.ExpiryDate.HasValue)
             {
-                if (compliance.ExpiryDate < DateTime.Today)
-                    return "E";
-
-                if (compliance.ExpiryDate <= DateTime.Today.AddDays(45))
+                if (compliance.ExpiryDate < _date)
                     return "N";
+
+                if (compliance.ExpiryDate >= _date && 
+                    compliance.ExpiryDate <= _date.AddDays(45))
+                    return "E";
             }
 
             return "Y";

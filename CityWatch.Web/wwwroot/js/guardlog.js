@@ -2345,6 +2345,7 @@
         $('#GuardCompliance_ExpiryDate').val('');
         $('#GuardCompliance_FileName').val('');
         $('#guardCompliance_fileName').text('None');
+        $('#GuardCompliance_HrGroup').val('');
         clearGuardValidationSummary('complianceValidationSummary');
     }
 
