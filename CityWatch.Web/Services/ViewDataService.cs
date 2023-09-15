@@ -30,7 +30,7 @@ namespace CityWatch.Web.Services
         Closed = 2,
 
         Pending = 3
-    }
+    }    
 
     public interface IViewDataService
     {
