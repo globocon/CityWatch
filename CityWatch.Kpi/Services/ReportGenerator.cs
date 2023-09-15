@@ -482,13 +482,25 @@ namespace CityWatch.Kpi.Services
             return cell;
         }
 
-        private Cell CreateDataCell(string text, string textColorHex) {
+        private Cell CreateHrDataCell(string text) 
+        {
             var cell = new Cell();
             cell.SetFontSize(CELL_FONT_SIZE)
-                .SetFontColor(WebColors.GetRGBColor(textColorHex))
                 .SetPaddingTop(0)
                 .SetPaddingBottom(0);
-            cell.Add(new Paragraph(text ?? string.Empty));
+
+            var p = new Paragraph();
+            var arTexts = text.Split(",").ToArray();
+            for (int index = 0; index < arTexts.Length; index++)
+            {
+                var textValue = arTexts[index] ?? string.Empty;
+                string textColorHex = GetHrTextColor(textValue);
+                p.Add(new Text(textValue).SetFontColor(WebColors.GetRGBColor(textColorHex)));
+                
+                if (index < arTexts.Length - 1)
+                    p.Add("\n");
+            }
+            cell.Add(p);
             return cell;            
         }
 
@@ -537,19 +549,19 @@ namespace CityWatch.Kpi.Services
                 kpiGuardTable.AddCell(CreateDataCell(data.ActualEmployeeHours?.ToString() ?? string.Empty));
                 kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardName ?? string.Empty));
                 kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardSecurityNo ?? string.Empty));                
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardHr1, GetHrTextColor(data.Shift1GuardHr1)));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardHr2, GetHrTextColor(data.Shift1GuardHr2)));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardHr3, GetHrTextColor(data.Shift1GuardHr3)));               
+                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift1GuardHr1));
+                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift1GuardHr2));
+                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift1GuardHr3));               
                 kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardName ?? string.Empty));
                 kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardSecurityNo ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardHr1, GetHrTextColor(data.Shift2GuardHr1)));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardHr2, GetHrTextColor(data.Shift2GuardHr2)));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardHr3, GetHrTextColor(data.Shift2GuardHr3)));                
+                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift2GuardHr1));
+                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift2GuardHr2));
+                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift2GuardHr3));                
                 kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardName ?? string.Empty));
                 kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardSecurityNo ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardHr1, GetHrTextColor(data.Shift3GuardHr1)));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardHr2, GetHrTextColor(data.Shift3GuardHr2)));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardHr3, GetHrTextColor(data.Shift3GuardHr3)));                
+                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift3GuardHr1));
+                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift3GuardHr2));
+                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift3GuardHr3));                
             }
             return kpiGuardTable;
         }

@@ -95,7 +95,7 @@ namespace CityWatch.Kpi.Models
                         hr1Values.Add("-");
                     }
                 }
-                return string.Join("\n", hr1Values);
+                return string.Join(",", hr1Values);
             }
         }
 
@@ -116,7 +116,7 @@ namespace CityWatch.Kpi.Models
                         hr2Values.Add("-");
                     }
                 }
-                return string.Join("\n", hr2Values);
+                return string.Join(",", hr2Values);
             }
         }        
 
@@ -138,7 +138,7 @@ namespace CityWatch.Kpi.Models
 
                     }
                 }
-                return string.Join("\n", hr3Values);
+                return string.Join(",", hr3Values);
             }
         }
 
@@ -175,7 +175,7 @@ namespace CityWatch.Kpi.Models
                         hr1Values.Add("-");
                     }
                 }
-                return string.Join("\n", hr1Values);
+                return string.Join(",", hr1Values);
             }
         }
 
@@ -196,7 +196,7 @@ namespace CityWatch.Kpi.Models
                         hr2Values.Add("-");
                     }
                 }
-                return string.Join("\n", hr2Values);
+                return string.Join(",", hr2Values);
             }
         }
 
@@ -218,7 +218,7 @@ namespace CityWatch.Kpi.Models
 
                     }
                 }
-                return string.Join("\n", hr3Values);
+                return string.Join(",", hr3Values);
             }
         }
 
@@ -255,7 +255,7 @@ namespace CityWatch.Kpi.Models
                         hr1Values.Add("-");
                     }
                 }
-                return string.Join("\n", hr1Values);
+                return string.Join(",", hr1Values);
             }
         }
 
@@ -275,7 +275,7 @@ namespace CityWatch.Kpi.Models
                         hr2Values.Add("-");
                     }
                 }
-                return string.Join("\n", hr2Values);
+                return string.Join(",", hr2Values);
             }
         }
 
@@ -296,7 +296,7 @@ namespace CityWatch.Kpi.Models
                         hr3Values.Add("-");
                     }
                 }
-                return string.Join("\n", hr3Values);
+                return string.Join(",", hr3Values);
             }
         }
 
