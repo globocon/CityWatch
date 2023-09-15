@@ -95,7 +95,7 @@ namespace CityWatch.Data.Models
 
         [HiddenInput]
         public bool IsSender { get; set; }
-        [HiddenInput]
+        
         public  int? PersonOfInterest { get; set; }
 
 

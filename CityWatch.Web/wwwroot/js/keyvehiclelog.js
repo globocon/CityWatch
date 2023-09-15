@@ -463,11 +463,12 @@ $(function () {
             $('#Sender').val(result.sender);
             $('#lblIsSender').text(result.isSender ? 'Sender Address' : 'Reciever Address');
             $('#cbIsSender').prop('checked', result.isSender);
-            $('#IsPOIAlert').val(result.isPOIAlert);
-            $('#chbIsPOIAlert1').prop('checked', result.isPOIAlert);
-            if (result.isPOIAlert == true) {
+            $('#PersonOfInterest').val(result.personOfInterest)
+            if ($('#PersonOfInterest').val() != '') {
                 $('#titlePOIWarning').attr('hidden', false);
                 $('#imagesiren').attr('hidden', false);
+
+
             }
             else {
                 $('#titlePOIWarning').attr('hidden', true);
@@ -630,17 +631,16 @@ $(function () {
             $('#lblIsSender').text(isSender ? 'Sender Address' : 'Reciever Address');
             $('#cbIsSender').prop('checked', isSender);
 
-            //let isPOIAlert = $('#IsPOIAlert').val().toLowerCase() === 'true';
-            
-            //$('#chbIsPOIAlert1').prop('checked', isPOIAlert);
-            //if (isPOIAlert == true) {
-            //    $('#titlePOIWarning').attr('hidden', false);
-            //    $('#imagesiren').attr('hidden', false);
-            //}
-            //else {
-            //    $('#titlePOIWarning').attr('hidden', true);
-            //    $('#imagesiren').attr('hidden', true);
-            //}
+            if ($('#PersonOfInterest').val() != '') {
+                $('#titlePOIWarning').attr('hidden', false);
+                $('#imagesiren').attr('hidden', false);
+
+
+            }
+            else {
+                $('#titlePOIWarning').attr('hidden', true);
+                $('#imagesiren').attr('hidden', true);
+            }
 
             loadAuditHistory($('#VehicleRego').val());
         }
@@ -1500,6 +1500,14 @@ $(function () {
         var data = keyVehicleLog.row($(this).parents('tr')).data();
         $('#print-manual-docket-modal').modal('show')
         $('#printDocketForKvlId').val(data.detail.id);
+        if (data.detail.personOfInterest != null) {
+            $('#titlePOIWarningPrint').attr('hidden', false);
+            $('#imagesirenprint').attr('hidden', false);
+        }
+        else {
+            $('#titlePOIWarningPrint').attr('hidden', true);
+            $('#imagesirenprint').attr('hidden', true);
+        }
     });
     
     $('.print-docket-reason').on('change', function () {

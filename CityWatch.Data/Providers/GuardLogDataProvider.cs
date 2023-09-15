@@ -523,8 +523,8 @@ namespace CityWatch.Data.Providers
             kvlPersonalDetailsToDb.CompanyName = keyVehicleLogVisitorPersonalDetail.CompanyName;
             kvlPersonalDetailsToDb.PersonName = keyVehicleLogVisitorPersonalDetail.PersonName;
             kvlPersonalDetailsToDb.PersonType = keyVehicleLogVisitorPersonalDetail.PersonType;
-            kvlPersonalDetailsToDb.IsPOIAlert = keyVehicleLogVisitorPersonalDetail.IsPOIAlert;
-            if (keyVehicleLogVisitorPersonalDetail.IsPOIAlert == true)
+            kvlPersonalDetailsToDb.PersonOfInterest = keyVehicleLogVisitorPersonalDetail.PersonOfInterest;
+            if (keyVehicleLogVisitorPersonalDetail.PersonOfInterest != null)
             {
                 string imagepath = "~/images/ziren.png";
                 kvlPersonalDetailsToDb.POIImage = keyVehicleLogVisitorPersonalDetail.POIImage;
