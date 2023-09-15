@@ -405,7 +405,8 @@
                             <select class="form-control" disabled id="kvl_list_plates" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.Plate)" style="width:200px;">
                             </select>
                             <input type="hidden" asp-for="@Model.Report.PlateId" id="PlateId" />
-
+                            <input type="hidden"  id="CompanyName" />
+                            <input type="hidden" id="TruckConfigure" />
                         </div>
                         <div class="form-group mt-4">
                             
@@ -1248,14 +1249,7 @@
 
         //}
 
-        $.ajax({
-            url: '/Incident/Register?handler=PlateLoaded',
-            data: { 'PlateId': $('#PlateId').val() ,'TruckNo': $('#Report_VehicleRego').val() },
-            type: 'GET',
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {
-            
-               
+      
                     if ($('#register_plate_loaded  tr').length > 1) {
                         var rowCount = $('#register_plate_loaded  tr').length;
                         $('#register_plate_loaded  tr:last').after('<tr><td hidden>' + rowCount + '</td>' +
@@ -1263,8 +1257,8 @@
                             '<td>' + $("#Report_VehicleRego").val() + '</td>' +
 
                             '<td>' + $('#kvl_list_plates').find(":selected").text() + ' </td>' +
-                            '<td>' + result.truckConfigText + ' </td>' +
-                            '<td>' + result.companyName + ' </td>' +
+                '<td>' + $('#TruckConfigure').val() + ' </td>' +
+                    '<td>' + $("#CompanyName").val() + ' </td>' +
                     '<td> <button  class= "btn btn-outline-danger" id = "btn_delete_plate"> <i class="fa fa-trash"> </i></button >  </td>' +
                             '</tr > ');
                         // CLEAR ALL TEXTBOXES.
@@ -1279,8 +1273,8 @@
                             '<td>' + $("#Report_VehicleRego").val() + '</td>' +
 
                             '<td>' + $('#kvl_list_plates').find(":selected").text() + ' </td>' +
-                    '<td>' + result.truckConfigText + ' </td>' +
-                    '<td>' + result.companyName + ' </td>' +
+                '<td>' + $('#TruckConfigure').val() + ' </td>' +
+                    '<td>' + $("#CompanyName").val() + ' </td>' +
                     '<td>' + '<button  class= "btn btn-outline-danger " id = "btn_delete_plate"> <i class="fa fa-trash"> </i></button >' + '</td>' +
                             '</tr >');
                         // CLEAR ALL TEXTBOXES.
@@ -1290,7 +1284,7 @@
                         $('#kvl_list_plates').attr('disabled', 'disabled');
                     }
                 
-        });
+       
         
     }
     function deletePlates()

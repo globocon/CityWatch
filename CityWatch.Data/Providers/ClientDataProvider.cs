@@ -77,6 +77,7 @@ namespace CityWatch.Data.Providers
         List<ClientSiteLinksDetails> GetSiteLinkDetailsUsingTypeAndState(int type);
         string GetSiteLinksTypeUsingId(int typeId);
         int DeleteClientSiteLinksPageType(int typeId);
+        List<KeyVehcileLogField> GetKeyVehicleLogFieldsByTruckId(int TruckConfig);
 
     }
 
@@ -885,6 +886,14 @@ namespace CityWatch.Data.Providers
                 _context.SaveChanges();
                 return 1;
             }
+        }
+        
+        public List<KeyVehcileLogField> GetKeyVehicleLogFieldsByTruckId(int TruckConfig)
+        {
+            return GetKeyVehicleLogFields()
+                .Where(x => x.Id == TruckConfig)
+                .OrderBy(x => x.Name)
+                .ToList();
         }
 
 
