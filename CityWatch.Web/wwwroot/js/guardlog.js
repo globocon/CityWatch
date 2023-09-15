@@ -2345,6 +2345,7 @@
         $('#GuardCompliance_ExpiryDate').val('');
         $('#GuardCompliance_FileName').val('');
         $('#guardCompliance_fileName').text('None');
+        $('#GuardCompliance_HrGroup').val('');
         clearGuardValidationSummary('complianceValidationSummary');
     }
 
@@ -2367,9 +2368,10 @@
             dataSrc: ''
         },
         columns: [
-            { data: 'referenceNo', width: "10%" },
-            { data: 'description', width: "10%" },
-            { data: 'expiryDate', width: "10%" },
+            { data: 'referenceNo', width: "6%" },
+            { data: 'hrGroupText', width: "6%" },
+            { data: 'description', width: "7%" },
+            { data: 'expiryDate', width: "8%" },
             { data: 'reminder1', width: "3%" },
             { data: 'reminder2', width: "3%" },
             { data: 'fileName', width: "10%" },
@@ -2392,7 +2394,7 @@
         }],
         'createdRow': function (row, data, index) {
             if (data.expiryDate !== null) {
-                $('td', row).eq(2).html(getFormattedDate(new Date(data.expiryDate), null, ' '));
+                $('td', row).eq(3).html(getFormattedDate(new Date(data.expiryDate), null, ' '));
 
             }
         },
@@ -2411,6 +2413,7 @@
         $('#GuardCompliance_Id').val(data.id);
         $('#GuardCompliance_FileName').val(data.fileName);
         $('#guardCompliance_fileName').text(data.fileName ? data.fileName : 'None');
+        $('#GuardCompliance_HrGroup').val(data.hrGroup);
         $('#addGuardCompliancesModal').modal('show');
     });
 

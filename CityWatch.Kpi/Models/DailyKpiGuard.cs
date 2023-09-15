@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CityWatch.Data.Enums;
 
 namespace CityWatch.Kpi.Models
 {
@@ -9,14 +10,16 @@ namespace CityWatch.Kpi.Models
     {
         private readonly DateTime _date;
         private readonly DailyClientSiteKpi _dailyClientSiteKpi;
+        private readonly IEnumerable<GuardCompliance> _guardCompliance;
 
         private readonly Dictionary<int, Guard> _shift1Guards = new();
         private readonly Dictionary<int, Guard> _shift2Guards = new();
         private readonly Dictionary<int, Guard> _shift3Guards = new();
 
-        public DailyKpiGuard(DailyClientSiteKpi dailyClientSiteKpi, IEnumerable<GuardLogin> dayGuardLogins)
+        public DailyKpiGuard(DailyClientSiteKpi dailyClientSiteKpi, IEnumerable<GuardLogin> dayGuardLogins, IEnumerable<GuardCompliance> guardCompliances)
         {
             _dailyClientSiteKpi = dailyClientSiteKpi;
+            _guardCompliance = guardCompliances;
 
             _date = dailyClientSiteKpi.Date;
             var shift1Start = new DateTime(_date.Year, _date.Month, _date.Day, 00, 01, 00);
@@ -75,27 +78,67 @@ namespace CityWatch.Kpi.Models
             }
         }
 
-        public string Shift1GuardHr
+        public string Shift1GuardHr1
         {
             get
             {
-                return string.Join("\n", _shift1Guards.Select(z => "-"));
+                var hr1Values = new List<string>();
+                foreach (var guard in _shift1Guards)
+                {
+                    var hr1Compliance = _guardCompliance.FirstOrDefault(z => z.GuardId.Equals(guard.Value.Id) && z.HrGroup == HrGroup.HR1);
+                    if (hr1Compliance != null)
+                    {
+                        hr1Values.Add(GetHrValue(hr1Compliance));
+                    }
+                    else
+                    {
+                        hr1Values.Add("-");
+                    }
+                }
+                return string.Join(",", hr1Values);
             }
         }
 
-        public string Shift1GuardVisy
+        public string Shift1GuardHr2
         {
             get
             {
-                return string.Join("\n", _shift1Guards.Select(z => "-"));
+                var hr2Values = new List<string>();
+                foreach (var guard in _shift1Guards)
+                {
+                    var hr2Compliance = _guardCompliance.FirstOrDefault(z => z.GuardId.Equals(guard.Value.Id) && z.HrGroup == HrGroup.HR2);
+                    if (hr2Compliance != null)
+                    {
+                        hr2Values.Add(GetHrValue(hr2Compliance));
+                    }
+                    else
+                    {
+                        hr2Values.Add("-");
+                    }
+                }
+                return string.Join(",", hr2Values);
             }
-        }
+        }        
 
-        public string Shift1GuardFire
+        public string Shift1GuardHr3
         {
             get
             {
-                return string.Join("\n", _shift1Guards.Select(z => "-"));
+                var hr3Values = new List<string>();
+                foreach (var guard in _shift1Guards)
+                {
+                    var hr3Compliance = _guardCompliance.FirstOrDefault(z => z.GuardId.Equals(guard.Value.Id) && z.HrGroup == HrGroup.HR3);
+                    if (hr3Compliance != null)
+                    {
+                        hr3Values.Add(GetHrValue(hr3Compliance));
+                    }
+                    else
+                    {
+                        hr3Values.Add("-");
+
+                    }
+                }
+                return string.Join(",", hr3Values);
             }
         }
 
@@ -115,27 +158,67 @@ namespace CityWatch.Kpi.Models
             }
         }
 
-        public string Shift2GuardHr
+        public string Shift2GuardHr1
         {
             get
             {
-                return string.Join("\n", _shift2Guards.Select(z => "-"));
+                var hr1Values = new List<string>();
+                foreach (var guard in _shift2Guards)
+                {
+                    var hr1Compliance = _guardCompliance.FirstOrDefault(z => z.GuardId.Equals(guard.Value.Id) && z.HrGroup == HrGroup.HR1);
+                    if (hr1Compliance != null)
+                    {
+                        hr1Values.Add(GetHrValue(hr1Compliance));
+                    }
+                    else
+                    {
+                        hr1Values.Add("-");
+                    }
+                }
+                return string.Join(",", hr1Values);
             }
         }
 
-        public string Shift2GuardVisy
+        public string Shift2GuardHr2
         {
             get
             {
-                return string.Join("\n", _shift2Guards.Select(z => "-"));
+                var hr2Values = new List<string>();
+                foreach (var guard in _shift2Guards)
+                {
+                    var hr2Compliance = _guardCompliance.FirstOrDefault(z => z.GuardId.Equals(guard.Value.Id) && z.HrGroup == HrGroup.HR2);
+                    if (hr2Compliance != null)
+                    {
+                        hr2Values.Add(GetHrValue(hr2Compliance));
+                    }
+                    else
+                    {
+                        hr2Values.Add("-");
+                    }
+                }
+                return string.Join(",", hr2Values);
             }
         }
 
-        public string Shift2GuardFire
+        public string Shift2GuardHr3
         {
             get
             {
-                return string.Join("\n", _shift2Guards.Select(z => "-"));
+                var hr3Values = new List<string>();
+                foreach (var guard in _shift2Guards)
+                {
+                    var hr3Compliance = _guardCompliance.FirstOrDefault(z => z.GuardId.Equals(guard.Value.Id) && z.HrGroup == HrGroup.HR3);
+                    if (hr3Compliance != null)
+                    {
+                        hr3Values.Add(GetHrValue(hr3Compliance));
+                    }
+                    else
+                    {
+                        hr3Values.Add("-");
+
+                    }
+                }
+                return string.Join(",", hr3Values);
             }
         }
 
@@ -155,28 +238,81 @@ namespace CityWatch.Kpi.Models
             }
         }
 
-        public string Shift3GuardHr
+        public string Shift3GuardHr1
         {
             get
             {
-                return string.Join("\n", _shift3Guards.Select(z => "-"));
+                var hr1Values = new List<string>();
+                foreach (var guard in _shift3Guards)
+                {
+                    var hr1Compliance = _guardCompliance.FirstOrDefault(z => z.GuardId.Equals(guard.Value.Id) && z.HrGroup == HrGroup.HR1);
+                    if (hr1Compliance != null)
+                    {
+                        hr1Values.Add(GetHrValue(hr1Compliance));
+                    }
+                    else
+                    {
+                        hr1Values.Add("-");
+                    }
+                }
+                return string.Join(",", hr1Values);
             }
         }
 
-        public string Shift3GuardVisy
+        public string Shift3GuardHr2
         {
             get
             {
-                return string.Join("\n", _shift3Guards.Select(z => "-"));
+                var hr2Values = new List<string>();
+                foreach (var guard in _shift3Guards)
+                {
+                    var hr2Compliance = _guardCompliance.FirstOrDefault(z => z.GuardId.Equals(guard.Value.Id) && z.HrGroup == HrGroup.HR2);
+                    if (hr2Compliance != null)
+                    {
+                        hr2Values.Add(GetHrValue(hr2Compliance));
+                    }
+                    else { 
+                        hr2Values.Add("-");
+                    }
+                }
+                return string.Join(",", hr2Values);
             }
         }
 
-        public string Shift3GuardFire
+        public string Shift3GuardHr3
         {
             get
             {
-                return string.Join("\n", _shift3Guards.Select(z => "-"));
+                var hr3Values = new List<string>();
+                foreach (var guard in _shift3Guards)
+                {
+                    var hr3Compliance = _guardCompliance.FirstOrDefault(z => z.GuardId.Equals(guard.Value.Id) && z.HrGroup == HrGroup.HR3);
+                    if (hr3Compliance != null)
+                    {
+                        hr3Values.Add(GetHrValue(hr3Compliance));
+                    }
+                    else
+                    {
+                        hr3Values.Add("-");
+                    }
+                }
+                return string.Join(",", hr3Values);
             }
+        }
+
+        private string GetHrValue(GuardCompliance compliance)
+        {
+            if (compliance.ExpiryDate.HasValue)
+            {
+                if (compliance.ExpiryDate < _date)
+                    return "N";
+
+                if (compliance.ExpiryDate >= _date && 
+                    compliance.ExpiryDate <= _date.AddDays(45))
+                    return "E";
+            }
+
+            return "Y";
         }
     }
 }
