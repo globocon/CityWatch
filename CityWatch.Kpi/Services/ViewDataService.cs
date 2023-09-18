@@ -40,6 +40,7 @@ namespace CityWatch.Kpi.Services
         public Dictionary<int, MonthlyKpiResult> GetMonthlyKpiReportData(int[] clientSiteIds, DateTime fromDate, DateTime toDate);
 
         List<DailyKpiResult> GetKpiReportData(int[] clientSiteId, DateTime fromDate, DateTime toDate);
+
         List<SelectListItem> GetOfficerPositions(OfficerPositionFilterManning positionFilter = OfficerPositionFilterManning.SecurityOnly);
         List<SelectListItem> ClientTypesUsingLoginUserId(int guardId);
         List<SelectListItem> GetClientSitesUsingLoginUserId(int userId, string type = "");
@@ -166,35 +167,35 @@ namespace CityWatch.Kpi.Services
             }
         }
 
-        public List<SelectListItem> GetYears()
-        {
-            var years = new List<SelectListItem>();
-            foreach (var item in Enumerable.Range(DateTime.Now.Year - 1, 2).OrderByDescending(x => x))
+            public List<SelectListItem> GetYears()
             {
-                years.Add(new SelectListItem(item.ToString(), item.ToString()));
+                var years = new List<SelectListItem>();
+                foreach (var item in Enumerable.Range(DateTime.Now.Year - 1, 2).OrderByDescending(x => x))
+                {
+                    years.Add(new SelectListItem(item.ToString(), item.ToString()));
+                }
+                return years;
             }
-            return years;
-        }
 
-        public List<SelectListItem> GetMonthsInYear()
-        {
-            var months = new List<SelectListItem>();
-            var range = Enumerable.Range(0, Int32.MaxValue)
-                     .Select(e => new DateTime(DateTime.Now.Year, 1, 1).AddMonths(e))
-                     .TakeWhile(e => e <= new DateTime(DateTime.Now.Year, 12, 31))
-                     .Select(e => new { value = e.Month, text = e.ToString("MMMM") });
-
-            foreach (var item in range)
+            public List<SelectListItem> GetMonthsInYear()
             {
-                bool selected = item.text == DateTime.Now.ToString("MMMM");
-                months.Add(new SelectListItem(item.text, item.value.ToString(), selected));
-            }
-            return months;
-        }
+                var months = new List<SelectListItem>();
+                var range = Enumerable.Range(0, Int32.MaxValue)
+                         .Select(e => new DateTime(DateTime.Now.Year, 1, 1).AddMonths(e))
+                         .TakeWhile(e => e <= new DateTime(DateTime.Now.Year, 12, 31))
+                         .Select(e => new { value = e.Month, text = e.ToString("MMMM") });
 
-        public List<SelectListItem> GetOfficerPositions(OfficerPositionFilterManning positionFilter = OfficerPositionFilterManning.All)
-        {
-            var items = new List<SelectListItem>()
+                foreach (var item in range)
+                {
+                    bool selected = item.text == DateTime.Now.ToString("MMMM");
+                    months.Add(new SelectListItem(item.text, item.value.ToString(), selected));
+                }
+                return months;
+            }
+
+            public List<SelectListItem> GetOfficerPositions(OfficerPositionFilterManning positionFilter = OfficerPositionFilterManning.All)
+            {
+                var items = new List<SelectListItem>()
             {
                 new SelectListItem("Select", "", true),
             };
@@ -207,30 +208,31 @@ namespace CityWatch.Kpi.Services
                 items.Add(new SelectListItem(officerPosition.Name, officerPosition.Id.ToString()));
             }
 
-            return items;
-        }
+                return items;
+            }
 
-        public MonthlyKpiResult GetKpiReportData(int clientSiteId, DateTime fromDate, DateTime toDate)
-        {
-            var dailyClientSiteKpis = _kpiDataProvider.GetDailyClientSiteKpis(clientSiteId, fromDate, toDate);
-            var clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(clientSiteId);
-
-            var dailyKpis = dailyClientSiteKpis.Select(x => new DailyKpiResult(x, clientSiteKpiSetting)).ToList();
-
-            return new MonthlyKpiResult(clientSiteKpiSetting, dailyKpis);
-        }
-
-        public List<DailyKpiGuard> GetMonthlyKpiGuardData(int clientSiteId, DateTime fromDate, DateTime toDate)
-        {
-            var dailyClientSiteKpis = _kpiDataProvider.GetDailyClientSiteKpis(clientSiteId, fromDate, toDate).ToList();
-            var guardLogins = _guardDataProvider.GetGuardLogins(clientSiteId, fromDate, toDate).ToList();
-            foreach (var guardLogin in guardLogins)
+            public MonthlyKpiResult GetKpiReportData(int clientSiteId, DateTime fromDate, DateTime toDate)
             {
-                // Trim OnDuty and OffDuty dates to login date
-                if (guardLogin.OnDuty.Date < guardLogin.LoginDate.Date)
+                var dailyClientSiteKpis = _kpiDataProvider.GetDailyClientSiteKpis(clientSiteId, fromDate, toDate);
+                var clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(clientSiteId);
+
+                var dailyKpis = dailyClientSiteKpis.Select(x => new DailyKpiResult(x, clientSiteKpiSetting)).ToList();
+
+                return new MonthlyKpiResult(clientSiteKpiSetting, dailyKpis);
+            }
+
+            public List<DailyKpiGuard> GetMonthlyKpiGuardData(int clientSiteId, DateTime fromDate, DateTime toDate)
+            {
+                var dailyClientSiteKpis = _kpiDataProvider.GetDailyClientSiteKpis(clientSiteId, fromDate, toDate).ToList();
+                var guardLogins = _guardDataProvider.GetGuardLogins(clientSiteId, fromDate, toDate).ToList();
+                var guardCompliances = _guardDataProvider.GetAllGuardCompliances();
+                foreach (var guardLogin in guardLogins)
                 {
-                    guardLogin.OnDuty = new DateTime(guardLogin.OnDuty.Year, guardLogin.OnDuty.Month, guardLogin.OnDuty.Day, 00, 01, 00); ;
-                }
+                    // Trim OnDuty and OffDuty dates to login date
+                    if (guardLogin.OnDuty.Date < guardLogin.LoginDate.Date)
+                    {
+                        guardLogin.OnDuty = new DateTime(guardLogin.OnDuty.Year, guardLogin.OnDuty.Month, guardLogin.OnDuty.Day, 00, 01, 00); ;
+                    }
 
                 var offDutyValue = guardLogin.OffDuty.Value;
                 if (offDutyValue.Date > guardLogin.LoginDate.Date)
@@ -238,39 +240,39 @@ namespace CityWatch.Kpi.Services
                     guardLogin.OffDuty = new DateTime(guardLogin.LoginDate.Year, guardLogin.LoginDate.Month, guardLogin.LoginDate.Day, 23, 59, 00); ;
                 }
             }
-            return dailyClientSiteKpis.Select(z => new DailyKpiGuard(z, guardLogins.Where(y => y.LoginDate.ToString("yyyyMMdd") == z.Date.ToString("yyyyMMdd")))).ToList();
+            return dailyClientSiteKpis.Select(z => new DailyKpiGuard(z, guardLogins.Where(y => y.LoginDate.ToString("yyyyMMdd") == z.Date.ToString("yyyyMMdd")), guardCompliances)).ToList();
         }
 
-        public Dictionary<int, MonthlyKpiResult> GetMonthlyKpiReportData(int[] clientSiteIds, DateTime fromDate, DateTime toDate)
-        {
-            var dailyClientSiteKpis = _kpiDataProvider.GetDailyClientSiteKpis(clientSiteIds, fromDate, toDate);
-            var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientSiteIds);
-
-            var results = new Dictionary<int, MonthlyKpiResult>();
-            foreach (var siteId in clientSiteIds)
+            public Dictionary<int, MonthlyKpiResult> GetMonthlyKpiReportData(int[] clientSiteIds, DateTime fromDate, DateTime toDate)
             {
-                var clientSiteKpiSetting = clientSiteKpiSettings.SingleOrDefault(z => z.ClientSiteId == siteId);
-                var clientSiteKpis = dailyClientSiteKpis.Where(z => z.ClientSiteId == siteId);
-                var dailyKpiResults = clientSiteKpis.Select(x => new DailyKpiResult(x, clientSiteKpiSetting)).ToList();
-                results.Add(siteId, new MonthlyKpiResult(clientSiteKpiSetting, dailyKpiResults));
-            }
-            return results;
-        }
+                var dailyClientSiteKpis = _kpiDataProvider.GetDailyClientSiteKpis(clientSiteIds, fromDate, toDate);
+                var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientSiteIds);
 
-        public List<DailyKpiResult> GetKpiReportData(int[] clientSiteIds, DateTime fromDate, DateTime toDate)
-        {
-            var dailyClientSiteKpis = _kpiDataProvider.GetDailyClientSiteKpis(clientSiteIds, fromDate, toDate);
-            var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientSiteIds);
-
-            var dailyKpis = new List<DailyKpiResult>();
-            foreach (var clientSiteId in clientSiteIds)
-            {
-                var kpiSetting = clientSiteKpiSettings.SingleOrDefault(z => z.ClientSite.Id == clientSiteId);
-                dailyKpis.AddRange(dailyClientSiteKpis.Where(z => z.ClientSiteId == clientSiteId)
-                                                        .Select(x => new DailyKpiResult(x, kpiSetting)));
+                var results = new Dictionary<int, MonthlyKpiResult>();
+                foreach (var siteId in clientSiteIds)
+                {
+                    var clientSiteKpiSetting = clientSiteKpiSettings.SingleOrDefault(z => z.ClientSiteId == siteId);
+                    var clientSiteKpis = dailyClientSiteKpis.Where(z => z.ClientSiteId == siteId);
+                    var dailyKpiResults = clientSiteKpis.Select(x => new DailyKpiResult(x, clientSiteKpiSetting)).ToList();
+                    results.Add(siteId, new MonthlyKpiResult(clientSiteKpiSetting, dailyKpiResults));
+                }
+                return results;
             }
 
-            return dailyKpis;
+            public List<DailyKpiResult> GetKpiReportData(int[] clientSiteIds, DateTime fromDate, DateTime toDate)
+            {
+                var dailyClientSiteKpis = _kpiDataProvider.GetDailyClientSiteKpis(clientSiteIds, fromDate, toDate);
+                var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientSiteIds);
+
+                var dailyKpis = new List<DailyKpiResult>();
+                foreach (var clientSiteId in clientSiteIds)
+                {
+                    var kpiSetting = clientSiteKpiSettings.SingleOrDefault(z => z.ClientSite.Id == clientSiteId);
+                    dailyKpis.AddRange(dailyClientSiteKpis.Where(z => z.ClientSiteId == clientSiteId)
+                                                            .Select(x => new DailyKpiResult(x, kpiSetting)));
+                }
+
+                return dailyKpis;
+            }
         }
     }
-}

@@ -472,7 +472,10 @@ namespace CityWatch.Web.Services
            var index = 1;
             var pageSize = new PageSize(pdfDocument.GetLastPage().GetPageSize());
             var doc = new Document(pdfDocument);
-            pdfDocument.AddNewPage(index, pageSize);
+            if (keyVehicleLog.Count > 0)
+            {
+                pdfDocument.AddNewPage(index, pageSize);
+            }
            // newpdf.AddNewPage(1, pageSize);
 
             

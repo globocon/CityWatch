@@ -513,27 +513,17 @@ namespace CityWatch.Web.Pages.Incident
 
             return new JsonResult(new { status = status, message = message });
         }
-        public JsonResult OnGetPlateLoaded(int PlateId,string TruckNo)
+        public JsonResult OnGetPlateLoaded(int TruckConfig)
         {
            
-                int LogId = AuthUserHelper.LoggedInUserId.GetValueOrDefault();
-                var kvlFields = _clientDataProvider.GetKeyVehicleLogFields();
-                //var plates = kvlFields.Where(z => plateIds.Contains(z.Id)).Select(x => x.Name).ToArray();
+                
+                var TruckConfigText = _clientDataProvider.GetKeyVehicleLogFieldsByTruckId(TruckConfig);
 
-                var keyVehicleLog = _clientDataProvider.GetKeyVehiclogWithPlateIdAndTruckNoByLogIdIndividual(PlateId, TruckNo, AuthUserHelper.LoggedInUserId.GetValueOrDefault());
-
-                var TruckConfigText = kvlFields.Where(z => keyVehicleLog.Select(x => x.TruckConfig).Contains(z.Id)).Select(x => x.Name).ToArray();
-                string  CompanyName =null;
-                foreach(var kv in keyVehicleLog)
-                {
-                CompanyName = kv.CompanyName;
-                break;
-                }
-                keyVehicleLog.Select(z => z.CompanyName);
-            //_clientDataProvider.GetPlateLoaded(report, Count);
-
+               
             
-            return new JsonResult(new { TruckConfigText, CompanyName });
+
+
+            return new JsonResult(new { TruckConfigText });
         }
         public JsonResult OnGetIfPlateExists(int PlateId, string TruckNo)
         {

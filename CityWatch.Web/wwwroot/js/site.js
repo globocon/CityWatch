@@ -785,7 +785,7 @@
         ]
     });
     function linkClickRenderer(value, record) {
-        return '<div class="centerIcon"><a href="http://' + record.hyperlink + '" target="_blank"><img src="../images/Blue_globe_icon.svg" class="imgIcon"/></a></div>'
+        return '<div class="centerIcon"><a href="' + record.hyperlink + '" target="_blank"><img src="../images/Blue_globe_icon.svg" class="imgIcon"/></a></div>'
     }
     $('#itemList').on('click', '.btn-delete-tools-type', function (event) {
         if (confirm('Are you sure want to delete this button Name?')) {

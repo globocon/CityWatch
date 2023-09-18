@@ -518,7 +518,15 @@ $(function () {
             let personName = result.personName ? result.personName : 'Unknown';
             $('#PlateId').val(result.keyVehicleLogProfile.plateId);
             $('#kvl_list_plates').val(result.keyVehicleLogProfile.plateId);
-            
+            $('#CompanyName').val(result.companyName);
+            $.ajax({
+                url: '/Incident/Register?handler=PlateLoaded',
+                data: { 'TruckConfig': result.keyVehicleLogProfile.truckConfig },
+                type: 'GET',
+                dataType: 'json',
+            }).done(function (result1) {
+                $('#TruckConfigure').val(result1.truckConfigText[0].name);
+            })
 
             loadAuditHistory(result.keyVehicleLogProfile.vehicleRego);
         });
