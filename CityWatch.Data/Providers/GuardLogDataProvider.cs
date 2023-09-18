@@ -17,6 +17,7 @@ namespace CityWatch.Data.Providers
         List<KeyVehicleLog> GetOpenKeyVehicleLogsByVehicleRego(string vehicleRego);
         List<KeyVehicleLog> GetKeyVehicleLogs(int logBookId);
         List<KeyVehicleLog> GetKeyVehicleLogs(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate);
+        List<KeyVehicleLog> GetKeyVehicleLogsWithPOI(int[] clientSiteIds,int[] personOfInterestIds, DateTime logFromDate, DateTime logToDate);
         KeyVehicleLog GetKeyVehicleLogById(int id);
         List<KeyVehicleLog> GetKeyVehicleLogByIds(int[] ids);
         List<KeyVehicleLog> GetPOIAlert( string companyname, string individualname, int individualtype);
@@ -202,7 +203,22 @@ namespace CityWatch.Data.Providers
 
             return results.OrderBy(z => z.EntryTime).ToList();
         }
+        public List<KeyVehicleLog> GetKeyVehicleLogsWithPOI(int[] clientSiteIds, int[] personOfInterestIds, DateTime logFromDate, DateTime logToDate)
 
+        {
+            var results = _context.KeyVehicleLogs
+               .Where(z => clientSiteIds.Contains(z.ClientSiteLogBook.ClientSiteId)  && z.ClientSiteLogBook.Type == LogBookType.VehicleAndKeyLog
+                            && z.EntryTime >= logFromDate && z.EntryTime < logToDate.AddDays(1))
+               .Include(z => z.GuardLogin.Guard)
+               .Include(x => x.ClientSiteLocation)
+               .Include(x => x.ClientSitePoc);
+
+            results.Include(x => x.ClientSiteLogBook)
+               .ThenInclude(z => z.ClientSite)
+               .Load();
+
+            return results.OrderBy(z => z.EntryTime).ToList();
+        }
         public KeyVehicleLog GetKeyVehicleLogById(int id)
         {
             return _context.KeyVehicleLogs
