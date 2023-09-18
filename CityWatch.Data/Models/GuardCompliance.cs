@@ -1,4 +1,5 @@
 ﻿using CityWatch.Common.Helpers;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
@@ -41,6 +42,11 @@ namespace CityWatch.Data.Models
                 return $"{GuardHelper.GetGuardDocumentDbxRootUrl(Guard)}/{ReferenceNo}/{FileName}";
             }
         }
+
+        public HrGroup? HrGroup { get; set; }
+
+        [NotMapped]
+        public string HrGroupText { get { return HrGroup?.ToDisplayName(); } }
 
         [ForeignKey("GuardId")]
         public Guard Guard { get; set; }

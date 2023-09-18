@@ -21,7 +21,7 @@
         <div class="tab-content">
             <div class="tab-pane fade show active py-3" id="@($"guard_{guardId}_licenses")" role="tabpanel" aria-labelledby="licenses-tab">
                 <div class="col-md-12 mt-2 ml-1">
-                    <table id="tbl_guard_licenses" class="table table-bordered table-sm" width="100%">
+                    <table id="tbl_guard_license" class="table table-bordered table-sm" width="100%">
                         <thead>
                             <tr>
                                 <th>License No</th>
@@ -29,7 +29,7 @@
                                 <th>Expiry Date</th>
                                 <th>Reminder 1</th>
                                 <th>Reminder 2</th>
-                                <th>File</th>
+                                <th width="25%">File</th>
                             </tr>
                         </thead>
                         @if (guardLicenses != null)
@@ -51,15 +51,16 @@
             </div>
             <div class="tab-pane fade py-3" id="@($"guard_{guardId}_compliances")" role="tabpanel" aria-labelledby="compliances_tab">
                 <div class="col-md-12 mt-2 ml-1">
-                    <table id="tbl_guard_compliances" class="table table-bordered table-sm" width="100%">
+                    <table id="tbl_guard_compliance" class="table table-bordered table-sm" width="100%">
                         <thead>
                             <tr>
                                 <th>Reference No</th>
+                                <th>HR Group</th>
                                 <th>Description</th>
                                 <th>Expiry Date</th>
                                 <th>Reminder 1</th>
                                 <th>Reminder 2</th>
-                                <th>File</th>
+                                <th width="25%">File</th>
                             </tr>
                         </thead>
                         @if (guardCompliances != null)
@@ -68,6 +69,7 @@
                             {
                                 <tr>
                                     <td>@guardCompliance.ReferenceNo</td>
+                                    <td>@guardCompliance.HrGroup</td>
                                     <td>@guardCompliance.Description</td>
                                     <td>@guardCompliance.ExpiryDate?.ToString("dd MMM yyyy")</td>
                                     <td>@guardCompliance.Reminder1</td>

@@ -1,4 +1,6 @@
 ﻿@using CityWatch.Data.Models;
+@using CityWatch.Data.Enums;
+
 <div class="modal fade" id="addGuardCompliancesModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="addComplianceModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -35,6 +37,12 @@
                             <label class="form-label">Reminder 2</label>
                             <input type="number" class="form-control" id="GuardCompliance_Reminder2" name="GuardCompliance.Reminder2" min="1" max="365">
                         </div>
+                        <div class="form-group col-md-3">
+                            <label class="form-label">HR Group</label>
+                            <select class="form-control" id="GuardCompliance_HrGroup" name="GuardCompliance.HrGroup" asp-items="@Html.GetEnumSelectList<HrGroup>()">
+                                <option selected="selected" value="">Select</option>
+                            </select>
+                        </div>                        
                     </div>
                     <hr />
                     <div class="form-row">

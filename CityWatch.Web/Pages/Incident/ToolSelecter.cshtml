@@ -14,24 +14,25 @@
         {
             @foreach (var item in StiteLinkType)
             {
-                @if (!item.PageTypeName.Contains("State"))
+              
+                @if (!item.PageTypeName.ToLower().Contains("state"))
                 {
                     /* button not start with State*/
-                    <a class="btn btn-primary dynamic-link" id="@item.PageTypeName" href="Tools?st=@item.PageTypeName&&type=@item.Id">@item.PageTypeName</a>
+                    <a class="btn btn-primary dynamic-link" style="width:230px" id="@item.PageTypeName" href="Tools?st=@item.PageTypeName&&type=@item.Id">@item.PageTypeName</a>
 
 
                 }
-                else if (item.PageTypeName.Contains("State"))
+                else if (item.PageTypeName.ToLower().Contains("state"))
                 {
                     /* button start with State and not in ACT,SA,NSW,TAS,NT,VIC,QLD,WA*/
-                    if (item.PageTypeName.Contains("ACT") == false &&
-                    item.PageTypeName.Contains("SA") == false &&
-                    item.PageTypeName.Contains("NSW") == false &&
-                    item.PageTypeName.Contains("TAS") == false &&
-                    item.PageTypeName.Contains("NT") == false &&
-                    item.PageTypeName.Contains("VIC") == false &&
-                    item.PageTypeName.Contains("QLD") == false &&
-                    item.PageTypeName.Contains("WA") == false
+                    if (item.PageTypeName.ToUpper().Contains("ACT") == false &&
+                    item.PageTypeName.ToUpper().Contains("SA") == false &&
+                    item.PageTypeName.ToUpper().Contains("NSW") == false &&
+                    item.PageTypeName.ToUpper().Contains("TAS") == false &&
+                    item.PageTypeName.ToUpper().Contains("NT") == false &&
+                    item.PageTypeName.ToUpper().Contains("VIC") == false &&
+                    item.PageTypeName.ToUpper().Contains("QLD") == false &&
+                    item.PageTypeName.ToUpper().Contains("WA") == false
                     )
                     {
                         <a class="btn btn-primary dynamic-link" id="@item.PageTypeName" href="Tools?st=@item.PageTypeName&&type=@item.Id">@item.PageTypeName</a>
@@ -47,7 +48,7 @@
     </div>
 
 
-   @* @button start with State and in ACT,SA,NSW,TAS,NT,VIC,QLD,WA@*@
+    @* @button start with State and in ACT,SA,NSW,TAS,NT,VIC,QLD,WA@*@
 
     @if (StiteLinkType.Where(x => x.PageTypeName.Contains("ACT")).FirstOrDefault() != null
     || (StiteLinkType.Where(x => x.PageTypeName.Contains("SA")).FirstOrDefault() != null))

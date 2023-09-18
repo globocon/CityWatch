@@ -171,6 +171,7 @@
                                 </div>
                                 <input disabled class="form-control" type="number" asp-for="@Model.DeductionPercentage" style="width:30%">
                                 <span class="d-block ml-2 pt-2">%</span>
+                                <button type="button" class="btn p-0 ml-2 mb-3" title="Copy to Clipboard" id="copyButton"><i class="fa fa-clipboard fa-2x" aria-hidden="true"></i></button>
                             </div>
                         </div>
                     </div>
@@ -288,6 +289,7 @@
                 </div>
 
 
+
                 @*<div class="form-group col-md-1">
                     <label class="mb-5"></label>
                     <button type="button" class="btn p-0 mt-1" title="Copy to Clipboard" id="copyButton"><i class="fa fa-clipboard fa-2x" aria-hidden="true"></i></button>
@@ -297,6 +299,24 @@
                 <div class="form-group col-md-4">
                     <label>POI</label>
                     <select asp-for="@Model.PersonOfInterest" class="form-control" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.PersonOfInterest)"></select>
+
+                <div class="form-group col-md-3">
+                    <div class="d-flex flex-row justify-content-between">
+                        <label></label>
+
+                    </div>
+                    @*<div class="custom-control custom-switch custom-control-inline mt-4">
+                    <input type="checkbox" class="custom-control-input" id="chbIsPOIAlert1">
+                    <label class="custom-control-label" for="chbIsPOIAlert1"></label>
+                    <input hidden asp-for="@Model.IsPOIAlert" />
+                    <label id="lbl_IsPOIAlert">POI Alert.</label>
+                    </div>*@
+                </div>
+
+
+
+
+
 
                 </div>
             
@@ -330,7 +350,7 @@
                                     Details of POI can include appearence such as Gender / Height / Scars / Tattoos / Clothing etc. Mention the  linked IR Serial Number.
                                 </span>
                             </div>
-                            
+
                             <textarea class="form-control" rows="5" maxlength="512" asp-for="@Model.Notes"></textarea>
                             <span style="font-size:0.8rem" class="d-block">
                                 You can add new notes above. But never delete the previous or existing entries (Add entries: Z-A)
@@ -352,7 +372,7 @@
                     </div>
                     <div class="row mt-2">
                         <div class="col-md-12">
-                          
+
                             <ul id="kvl-attachment-list" class="list-group d-block w-auto pt-2">
                                 @if (kvlAttachments != null)
                                 {
