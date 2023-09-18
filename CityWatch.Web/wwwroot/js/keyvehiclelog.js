@@ -658,7 +658,7 @@ $(function () {
             $('#IsSender').val(isChecked);
         });
 
-        //to check whether the person of interest is selected or not
+        //to check whether the person of interest is selected or not 
         $('#PersonOfInterest').on('change', function () {
             const value = $(this).val();
             if (value != '') {
