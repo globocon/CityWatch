@@ -463,6 +463,7 @@ $(function () {
             $('#Sender').val(result.sender);
             $('#lblIsSender').text(result.isSender ? 'Sender Address' : 'Reciever Address');
             $('#cbIsSender').prop('checked', result.isSender);
+            //for checking whether the person is under scam or not(jisha james)
             $('#PersonOfInterest').val(result.personOfInterest)
             if ($('#PersonOfInterest').val() != '') {
                 $('#titlePOIWarning').attr('hidden', false);
@@ -630,7 +631,7 @@ $(function () {
             let isSender = $('#IsSender').val().toLowerCase() === 'true';
             $('#lblIsSender').text(isSender ? 'Sender Address' : 'Reciever Address');
             $('#cbIsSender').prop('checked', isSender);
-
+            //for checking whether the person is under scam or not(jisha james)
             if ($('#PersonOfInterest').val() != '') {
                 $('#titlePOIWarning').attr('hidden', false);
                 $('#imagesiren').attr('hidden', false);
@@ -656,6 +657,8 @@ $(function () {
             $('#lblIsSender').text(isChecked ? 'Sender Address' : 'Reciever Address');
             $('#IsSender').val(isChecked);
         });
+
+        //to check whether the person of interest is selected or not
         $('#PersonOfInterest').on('change', function () {
             const value = $(this).val();
             if (value != '') {
