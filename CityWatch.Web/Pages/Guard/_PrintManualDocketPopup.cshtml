@@ -30,13 +30,13 @@
                                     <i id="imagesirenprint" hidden><img id="img1" src="~/images/ziren.png" height="25px;" /></i>
                                 </div>*@
                             </li>
-                            <li class="py-2">
+                            <li>
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input print-docket-reason" type="checkbox" id="cbxOther" value="0">
                                     <label class="form-check-label mr-2" for="cbxOther">Other</label>
                                     <select id="otherReason" disabled class="form-control" asp-items="@Model.ViewDataService.GetKeyVehicleLogFieldsByType(Data.Models.KvlFieldType.DocketReasons, true)"></select>
                                     <h5 style="color:red; text-align:center" class="ml-5" id="titlePOIWarningPrint" hidden>POI Warning</h5>
-                                    <i id="imagesirenprint" hidden><img id="img1" src="~/images/ziren.png" height="25px;" /></i>
+                                    <i id="imagesirenprint" hidden><img id="img1" src="~/images/ziren.png" height="25px;" class="ml-2"  /></i>
                                 </div>
                             </li>
                             <li class="py-2">
