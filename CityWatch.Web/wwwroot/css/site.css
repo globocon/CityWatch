@@ -523,6 +523,7 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
     .dark-mode table.dataTable tbody > tr td {
         background-color: #333 !important;
     }
+
     .dark-mode .table-bordered {
         color: #fff;
     }
@@ -537,22 +538,33 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
         background-clip: padding-box;
         border: 1px solid #fff;
     }
+
     .dark-mode .es-list {
         max-height: 320px !important;
         background-color: #fff;
         color: #333
     }
+
     .dark-mode #list_product {
         background-color: #fff;
         color: #333
     }
+
     .dark-mode .fa-clipboard {
         background-color: #fff;
         color: #333
     }
+
     .dark-mode .table-hover tbody tr:hover {
         color: #fff;
         background-color: rgba(0,0,0,.075);
+    }
+
+
+    .dark-mode.btn-primary {
+        color: #fff;
+        background-color: #007bff;
+        border-color: #007bff;
     }
 
 
