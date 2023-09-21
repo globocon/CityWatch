@@ -315,7 +315,40 @@ namespace CityWatch.Web.Pages.Guard
 
             return new JsonResult(new { attachmentId = Request.Form["attach_id"], success });
         }
+        public JsonResult OnPostVehicleImageUpload()
 
+        {
+            var success = false;
+            var files = Request.Form.Files;
+            var vehicle_rego = Request.Form["vehicle_rego"].ToString();
+            
+            if (files.Count == 1)
+            {
+                var file = files[0];
+                if (file.Length > 0)
+                {
+                    try
+                    {
+                        var uploadFileName = vehicle_rego + Path.GetExtension(file.FileName);
+
+                        var folderPath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", vehicle_rego);
+                        if (!IO.Directory.Exists(folderPath))
+                            IO.Directory.CreateDirectory(folderPath);
+                        using (var stream = IO.File.Create(IO.Path.Combine(folderPath, uploadFileName)))
+                        {
+                            file.CopyTo(stream);
+                        }
+                        success = true;
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                }
+            }
+
+            return new JsonResult(new { attachmentId = Request.Form["attach_id"], success });
+        }
         public JsonResult OnPostDeleteAttachment(string reportReference, string fileName)
         {
             var success = false;

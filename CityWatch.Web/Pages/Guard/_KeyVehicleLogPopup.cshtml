@@ -323,6 +323,12 @@
                         Audit Log
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="kvl-photo-tab" data-toggle="tab" data-target="#kvl-photo" role="tab" aria-controls="kvl-photo" aria-selected="false">
+                        <i class="fa fa-photo mr-2"></i>
+                        ID Photo
+                    </a>
+                </li>
             </ul>
             <div class="tab-content">
                 <div class="tab-pane fade show active p-2" id="kvl-notes" role="tabpanel" aria-labelledby="kvl-notes-tab">
@@ -398,6 +404,21 @@
                         </div>
                     </div>
                 </div>
+                <div class="tab-pane fade p-2" id="kvl-photo" role="tabpanel" aria-labelledby="kvl-photo-tab">
+                    <div class="row">
+                        
+                            <div class="col-md-4 box  text-center align-text-bottom" >
+                                <img id="img_PersonId" height="80" alt="Photo ID (Person)" class="align-content-end" hidden/>
+                                <h6 id="head_PersonId">Photo ID (Person)</h6>
+                            </div>
+                        <div class="col-md-2"></div>
+                            <div class="col-md-4 box text-center">
+                                <img id="img_VehicleId" height="80" alt="Photo ID (Person)" class="align-content-end" hidden />
+                            <h6 id="head_VehicleId">Photo ID (Vehicle)</h6>
+                            </div>
+                       
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -407,3 +428,10 @@
         </div>
     </div>
 </form>
+<style>
+    .box {
+        width: 400px;
+        height: 100px;
+        border: 2px black solid;
+    }
+</style>
