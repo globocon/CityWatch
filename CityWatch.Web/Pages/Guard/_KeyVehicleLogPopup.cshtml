@@ -288,6 +288,18 @@
                     </select>
                 </div>
 
+
+
+                @*<div class="form-group col-md-1">
+                    <label class="mb-5"></label>
+                    <button type="button" class="btn p-0 mt-1" title="Copy to Clipboard" id="copyButton"><i class="fa fa-clipboard fa-2x" aria-hidden="true"></i></button>
+                </div>*@
+           
+
+                <div class="form-group col-md-4">
+                    <label>POI</label>
+                    <select asp-for="@Model.PersonOfInterest" class="form-control" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.PersonOfInterest)"></select>
+
                 <div class="form-group col-md-3">
                     <div class="d-flex flex-row justify-content-between">
                         <label></label>
@@ -305,6 +317,9 @@
 
 
 
+
+                </div>
+            
             </div>
             <ul class="nav nav-tabs" role="tablist">
                 <li class="nav-item">
@@ -332,7 +347,7 @@
                                 <label class="col-md-1">Notes</label>
 
                                 <span style="font-size:0.8rem;font:italic" class="col-md-11">
-                                    Details of difficult driver can include appearence such as Gender / Height / Scars / Tattoos / Clothing etc. Mention the  linked IR Serial Number.
+                                    Details of POI can include appearence such as Gender / Height / Scars / Tattoos / Clothing etc. Mention the  linked IR Serial Number.
                                 </span>
                             </div>
 

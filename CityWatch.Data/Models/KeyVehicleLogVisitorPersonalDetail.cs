@@ -18,7 +18,7 @@ namespace CityWatch.Data.Models
             CompanyName = keyVehicleLog.CompanyName;
             PersonName = keyVehicleLog.PersonName;
             PersonType = keyVehicleLog.PersonType;
-            IsPOIAlert = keyVehicleLog.IsPOIAlert;
+            PersonOfInterest = keyVehicleLog.PersonOfInterest;
             POIImage = keyVehicleLog.POIImage;
         }
 
@@ -30,7 +30,7 @@ namespace CityWatch.Data.Models
         public string CompanyName { get; set; }
 
         public string PersonName { get; set; }
-        public bool IsPOIAlert { get; set; }
+        public int? PersonOfInterest { get; set; }
       
         public string POIImage { get; set; }
         [NotMapped]

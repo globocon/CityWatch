@@ -69,7 +69,8 @@ namespace CityWatch.Web.Pages.Admin
 
         public JsonResult OnPostKeyVehicleSiteLogs(KeyVehicleLogAuditLogRequest keyVehicleLogAuditLogRequest)
         {
-            return new JsonResult(_auditLogViewDataService.GetKeyVehicleLogs(keyVehicleLogAuditLogRequest));
+            //return new JsonResult(_auditLogViewDataService.GetKeyVehicleLogs(keyVehicleLogAuditLogRequest));
+            return new JsonResult(_auditLogViewDataService.GetKeyVehicleLogsWithPOI(keyVehicleLogAuditLogRequest));
         }
 
         /*

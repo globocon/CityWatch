@@ -17,6 +17,7 @@ namespace CityWatch.Data.Providers
         List<KeyVehicleLog> GetOpenKeyVehicleLogsByVehicleRego(string vehicleRego);
         List<KeyVehicleLog> GetKeyVehicleLogs(int logBookId);
         List<KeyVehicleLog> GetKeyVehicleLogs(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate);
+        List<KeyVehicleLog> GetKeyVehicleLogsWithPOI(int[] clientSiteIds,int[] personOfInterestIds, DateTime logFromDate, DateTime logToDate);
         KeyVehicleLog GetKeyVehicleLogById(int id);
         List<KeyVehicleLog> GetKeyVehicleLogByIds(int[] ids);
         List<KeyVehicleLog> GetPOIAlert( string companyname, string individualname, int individualtype);
@@ -203,7 +204,22 @@ namespace CityWatch.Data.Providers
 
             return results.OrderBy(z => z.EntryTime).ToList();
         }
+        public List<KeyVehicleLog> GetKeyVehicleLogsWithPOI(int[] clientSiteIds, int[] personOfInterestIds, DateTime logFromDate, DateTime logToDate)
 
+        {
+            var results = _context.KeyVehicleLogs
+               .Where(z => clientSiteIds.Contains(z.ClientSiteLogBook.ClientSiteId)  && z.ClientSiteLogBook.Type == LogBookType.VehicleAndKeyLog
+                            && z.EntryTime >= logFromDate && z.EntryTime < logToDate.AddDays(1))
+               .Include(z => z.GuardLogin.Guard)
+               .Include(x => x.ClientSiteLocation)
+               .Include(x => x.ClientSitePoc);
+
+            results.Include(x => x.ClientSiteLogBook)
+               .ThenInclude(z => z.ClientSite)
+               .Load();
+
+            return results.OrderBy(z => z.EntryTime).ToList();
+        }
         public KeyVehicleLog GetKeyVehicleLogById(int id)
         {
             return _context.KeyVehicleLogs
@@ -224,10 +240,14 @@ namespace CityWatch.Data.Providers
         }
         public List<KeyVehicleLog> GetPOIAlert( string companyname, string individualname, int individualtype)
         {
-            return _context.KeyVehicleLogs.Where(z =>  z.CompanyName==companyname && z.PersonName==individualname && z.PersonType==individualtype && z.IsPOIAlert==true)
-             .Include(z => z.ClientSiteLogBook)
-                .ThenInclude(z => z.ClientSite)
-                .ToList();
+            //return _context.KeyVehicleLogs.Where(z =>  z.CompanyName==companyname && z.PersonName==individualname && z.PersonType==individualtype && z.IsPOIAlert==true)
+            // .Include(z => z.ClientSiteLogBook)
+            //    .ThenInclude(z => z.ClientSite)
+            //    .ToList();
+            return _context.KeyVehicleLogs.Where(z => z.CompanyName == companyname && z.PersonName == individualname && z.PersonType == individualtype && z.PersonOfInterest != 0)
+            .Include(z => z.ClientSiteLogBook)
+               .ThenInclude(z => z.ClientSite)
+               .ToList();
 
         }
 
@@ -277,7 +297,7 @@ namespace CityWatch.Data.Providers
                 keyVehicleLogToUpdate.Vwi = keyVehicleLog.Vwi;
                 keyVehicleLogToUpdate.Sender = keyVehicleLog.Sender;
                 keyVehicleLogToUpdate.IsSender = keyVehicleLog.IsSender;
-                keyVehicleLogToUpdate.IsPOIAlert = keyVehicleLog.IsPOIAlert;
+                keyVehicleLogToUpdate.PersonOfInterest = keyVehicleLog.PersonOfInterest;
             }
             _context.SaveChanges();
         }
@@ -531,8 +551,8 @@ namespace CityWatch.Data.Providers
             kvlPersonalDetailsToDb.CompanyName = keyVehicleLogVisitorPersonalDetail.CompanyName;
             kvlPersonalDetailsToDb.PersonName = keyVehicleLogVisitorPersonalDetail.PersonName;
             kvlPersonalDetailsToDb.PersonType = keyVehicleLogVisitorPersonalDetail.PersonType;
-            kvlPersonalDetailsToDb.IsPOIAlert = keyVehicleLogVisitorPersonalDetail.IsPOIAlert;
-            if (keyVehicleLogVisitorPersonalDetail.IsPOIAlert == true)
+            kvlPersonalDetailsToDb.PersonOfInterest = keyVehicleLogVisitorPersonalDetail.PersonOfInterest;
+            if (keyVehicleLogVisitorPersonalDetail.PersonOfInterest != null)
             {
                 string imagepath = "~/images/ziren.png";
                 kvlPersonalDetailsToDb.POIImage = keyVehicleLogVisitorPersonalDetail.POIImage;

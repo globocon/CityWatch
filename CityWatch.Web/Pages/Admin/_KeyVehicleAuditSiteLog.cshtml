@@ -40,6 +40,7 @@
             <div class="card-body">
                 <div class="form-row">
                     <input type="hidden" asp-for="@Model.KeyVehicleLogAuditLogRequest.ClientSiteId" />
+                    <input type="hidden" asp-for="@Model.KeyVehicleLogAuditLogRequest.PersonOfInterest" />
                     <input type="hidden" asp-for="@Model.KeyVehicleLogAuditLogRequest.LogBookType" />
                     <input type="hidden" asp-for="@Model.KeyVehicleLogAuditLogRequest.LogFromDate" />
                     <input type="hidden" asp-for="@Model.KeyVehicleLogAuditLogRequest.LogToDate" />
@@ -100,6 +101,10 @@
                         <label class="mx-1">Key #</label>
                         <select class="form-control" id="listKeyVehicleLogAuditLogRequestKeyNo"></select>
                         <input type="hidden" asp-for="@Model.KeyVehicleLogAuditLogRequest.KeyNo" />
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label class="mx-1">POI</label>
+                        <select class="form-control mx-1" multiple="multiple" id="vklPersonOfInterest" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.PersonOfInterest,true)"></select>
                     </div>
                 </div>
             </div>
