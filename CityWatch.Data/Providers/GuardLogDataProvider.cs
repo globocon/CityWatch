@@ -38,6 +38,7 @@ namespace CityWatch.Data.Providers
         void SaveCustomFieldLogs(List<CustomFieldLog> customFieldLogs);
         void SaveCustomFieldLog(CustomFieldLog customFieldLog);
         List<string> GetVehicleRegos(string regoStart = null);
+        List<string> GetVehicleRegosForKVL(string regoStart = null);
         List<string> GetCompanyNames(string companyNameStart);
         List<string> GetSenderNames(string senderNameStart);
         KeyVehicleLogProfile GetKeyVehicleLogVisitorProfile(string truckRego);
@@ -467,6 +468,17 @@ namespace CityWatch.Data.Providers
                 .Where(z => string.IsNullOrEmpty(regoStart) ||
                             (!string.IsNullOrEmpty(z.VehicleRego) &&
                                 z.VehicleRego.Substring(0, regoStart.Length).ToLower() == regoStart.ToLower()))
+                .Select(z => z.VehicleRego)
+                .Distinct()
+                .OrderBy(z => z)
+                .ToList();
+        }
+        public List<string> GetVehicleRegosForKVL(string regoStart = null)
+        {
+            return _context.KeyVehicleLogVisitorProfiles
+                .Where(z => string.IsNullOrEmpty(regoStart) ||
+                            (!string.IsNullOrEmpty(z.VehicleRego) &&
+                                z.VehicleRego.Contains(regoStart)))
                 .Select(z => z.VehicleRego)
                 .Distinct()
                 .OrderBy(z => z)

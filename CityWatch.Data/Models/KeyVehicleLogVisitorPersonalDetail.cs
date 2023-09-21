@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Dropbox.Api.TeamLog;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -39,6 +40,8 @@ namespace CityWatch.Data.Models
 
         [ForeignKey("ProfileId")]
         public KeyVehicleLogProfile KeyVehicleLogProfile { get; set; }
+        [NotMapped]
+        public List<string> Attachments { get; set; }
 
         public bool Equals(KeyVehicleLogVisitorPersonalDetail other)
         {

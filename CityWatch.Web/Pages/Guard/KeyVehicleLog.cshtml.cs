@@ -58,7 +58,7 @@ namespace CityWatch.Web.Pages.Guard
         private readonly ILogger<KeyVehicleLogModel> _logger;
         private readonly IAppConfigurationProvider _appConfigurationProvider;
         private readonly string _imageRootDir;
-   
+
         public KeyVehicleLogModel(IWebHostEnvironment webHostEnvironment,
             IGuardLogDataProvider guardLogDataProvider,
             IClientDataProvider clientDataProvider,
@@ -83,7 +83,7 @@ namespace CityWatch.Web.Pages.Guard
             _logger = logger;
             _appConfigurationProvider = appConfigurationProvider;
             _imageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
-           
+
 
         }
 
@@ -93,7 +93,7 @@ namespace CityWatch.Web.Pages.Guard
         public IViewDataService ViewDataService { get { return _viewDataService; } }
 
         public void OnGet()
-        {            
+        {
             KeyVehicleLog = GetKeyVehicleLog();
             var logBookId = HttpContext.Session.GetInt32("LogBookId");
             var clientSiteId = _clientDataProvider.GetClientSiteLogBooks(logBookId, LogBookType.VehicleAndKeyLog)
@@ -119,10 +119,11 @@ namespace CityWatch.Web.Pages.Guard
                 if (keyVehicleLogInDb != null)
                 {
                     keyVehicleLog = keyVehicleLogInDb;
+                    /* Change in Attachement*/
                     ViewData["KeyVehicleLog_Attachments"] = _viewDataService.GetKeyVehicleLogAttachments(
-                        IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), keyVehicleLogInDb.ReportReference?.ToString())
+                        IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), keyVehicleLogInDb.VehicleRego?.ToString())
                         .ToList();
-                    ViewData["KeyVehicleLog_FilesPathRoot"] = "/KvlUploads/"+ keyVehicleLogInDb.ReportReference?.ToString();
+                    ViewData["KeyVehicleLog_FilesPathRoot"] = "/KvlUploads/" + keyVehicleLogInDb.VehicleRego?.ToString();
                     ViewData["KeyVehicleLog_Keys"] = _viewDataService.GetKeyVehicleLogKeys(keyVehicleLogInDb).ToList();
                 }
             }
@@ -149,9 +150,9 @@ namespace CityWatch.Web.Pages.Guard
             var message = "success";
             try
             {
-                if(KeyVehicleLog.Product==null && KeyVehicleLog.ProductOther!=null)
+                if (KeyVehicleLog.Product == null && KeyVehicleLog.ProductOther != null)
                 {
-                    if(string.IsNullOrEmpty(KeyVehicleLog.Product))
+                    if (string.IsNullOrEmpty(KeyVehicleLog.Product))
                     {
                         if (!string.IsNullOrEmpty(KeyVehicleLog.ProductOther))
                         {   /* Custom input saving as product if product not selected */
@@ -160,9 +161,9 @@ namespace CityWatch.Web.Pages.Guard
                     }
 
                 }
-                else if(KeyVehicleLog.Product != null && KeyVehicleLog.ProductOther != null)
+                else if (KeyVehicleLog.Product != null && KeyVehicleLog.ProductOther != null)
                 {
-                    if(KeyVehicleLog.Product!= KeyVehicleLog.ProductOther)
+                    if (KeyVehicleLog.Product != KeyVehicleLog.ProductOther)
                     {
                         if (!string.IsNullOrEmpty(KeyVehicleLog.Product))
                         {
@@ -179,18 +180,18 @@ namespace CityWatch.Web.Pages.Guard
                 keyVehicleLogAuditHistory = GetKvlAuditHistory(KeyVehicleLog);
                 _guardLogDataProvider.SaveKeyVehicleLog(KeyVehicleLog);
                 var img = _guardLogDataProvider.GetCompanyDetails();
-                string imagepath=null;
-                foreach(var item in img)
+                string imagepath = null;
+                foreach (var item in img)
                 {
                     imagepath = item.PrimaryLogoPath;
                     break;
                 }
                 string toBeSearched = "images";
-               string code = imagepath.Substring(imagepath.IndexOf(toBeSearched) + toBeSearched.Length);
+                string code = imagepath.Substring(imagepath.IndexOf(toBeSearched) + toBeSearched.Length);
                 var reportRootDir = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "Images");
                 //string imagepath = Path.Combine(reportRootDir, "ziren.png");
-                
-                KeyVehicleLog.POIImage =  Path.Combine("../images", "ziren.png");
+
+                KeyVehicleLog.POIImage = Path.Combine("../images", "ziren.png");
                 var profileId = GetKvlProfileId(KeyVehicleLog);
                 keyVehicleLogAuditHistory.ProfileId = profileId;
                 keyVehicleLogAuditHistory.KeyVehicleLogId = KeyVehicleLog.Id;
@@ -248,7 +249,23 @@ namespace CityWatch.Web.Pages.Guard
 
         public JsonResult OnGetProfileById(int id)
         {
-            return new JsonResult(_guardLogDataProvider.GetKeyVehicleLogProfileWithPersonalDetails(id));
+            /* New Change for attachements#P7#97 Start 19/09/2023 */
+            var keyVehicleLogDetails = _guardLogDataProvider.GetKeyVehicleLogProfileWithPersonalDetails(id);
+            if (keyVehicleLogDetails != null)
+            {
+
+
+                keyVehicleLogDetails.Attachments = _viewDataService.GetKeyVehicleLogAttachments(
+                    IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), keyVehicleLogDetails.KeyVehicleLogProfile.VehicleRego?.ToString())
+                    .ToList();
+
+
+
+
+
+            }
+            /* New Change for attachements#P7#97 end 19/09/2023 */
+            return new JsonResult(keyVehicleLogDetails);
         }
 
         public JsonResult OnGetClientSiteKeyDescription(int keyId, int clientSiteId)
@@ -270,7 +287,7 @@ namespace CityWatch.Web.Pages.Guard
                 return new JsonResult(new { status = 2, clientSite = keyVehicleLogFromOtherSite.ClientSiteLogBook.ClientSite.Name });
 
 
-            return new JsonResult(new { status = 0});
+            return new JsonResult(new { status = 0 });
         }
 
         public JsonResult OnGetIsKeyAllocated(int logbookId, string keyNo)
@@ -288,6 +305,7 @@ namespace CityWatch.Web.Pages.Guard
             var success = false;
             var files = Request.Form.Files;
             var reportReference = Request.Form["report_reference"].ToString();
+            var vehicleRego = Request.Form["vehicleRego"].ToString();
             if (files.Count == 1)
             {
                 var file = files[0];
@@ -296,15 +314,21 @@ namespace CityWatch.Web.Pages.Guard
                     try
                     {
                         var uploadFileName = IO.Path.GetFileName(file.FileName);
-
-                        var folderPath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", reportReference);
-                        if (!IO.Directory.Exists(folderPath))
-                            IO.Directory.CreateDirectory(folderPath);
-                        using (var stream = IO.File.Create(IO.Path.Combine(folderPath, uploadFileName)))
+                        if (vehicleRego.Trim() != string.Empty)
                         {
-                            file.CopyTo(stream);
+
+
+                            /*var folderPath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", reportReference);*/
+                            /* Attachement Change */
+                            var folderPath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", vehicleRego);
+                            if (!IO.Directory.Exists(folderPath))
+                                IO.Directory.CreateDirectory(folderPath);
+                            using (var stream = IO.File.Create(IO.Path.Combine(folderPath, uploadFileName)))
+                            {
+                                file.CopyTo(stream);
+                            }
+                            success = true;
                         }
-                        success = true;
                     }
                     catch (Exception)
                     {
@@ -316,12 +340,12 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { attachmentId = Request.Form["attach_id"], success });
         }
 
-        public JsonResult OnPostDeleteAttachment(string reportReference, string fileName)
+        public JsonResult OnPostDeleteAttachment(string reportReference, string fileName,string vehicleRego)
         {
             var success = false;
-            if (!string.IsNullOrEmpty(reportReference) && !string.IsNullOrEmpty(fileName))
+            if (!string.IsNullOrEmpty(vehicleRego) && !string.IsNullOrEmpty(fileName))
             {
-                var filePath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", reportReference, fileName);
+                var filePath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", vehicleRego, fileName);
                 if (IO.File.Exists(filePath))
                 {
                     try
@@ -350,7 +374,12 @@ namespace CityWatch.Web.Pages.Guard
 
         public JsonResult OnGetVehicleRegos(string regoPart)
         {
-            return new JsonResult(_guardLogDataProvider.GetVehicleRegos(regoPart).ToList());
+            //return new JsonResult(_guardLogDataProvider.GetVehicleRegos(regoPart).ToList());
+
+            //the above code is commented beacause  the GetVehicleRegos is used in other pages 
+            //along with that we have to check the entry given in any part of the corresponding vehicle rego for ticket no p7-95
+            return new JsonResult(_guardLogDataProvider.GetVehicleRegosForKVL(regoPart).ToList());
+            
         }
 
         public async Task<JsonResult> OnPostGenerateManualDocket(int id, ManualDocketReason option, string otherReason, string stakeholderEmails, int clientSiteId, string blankNoteOnOrOff)
@@ -510,11 +539,11 @@ namespace CityWatch.Web.Pages.Guard
             {
                 var logbookId = _clientDataProvider.GetClientSiteLogBook(clientSiteId, LogBookType.DailyGuardLog, DateTime.Today)?.Id;
                 logbookId ??= _clientDataProvider.SaveClientSiteLogBook(new ClientSiteLogBook()
-                    {
-                        ClientSiteId = clientSiteId,
-                        Type = LogBookType.DailyGuardLog,
-                        Date = DateTime.Today
-                    });
+                {
+                    ClientSiteId = clientSiteId,
+                    Type = LogBookType.DailyGuardLog,
+                    Date = DateTime.Today
+                });
                 _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logbookId.Value, guardId);
             }
             catch (Exception ex)
@@ -633,9 +662,9 @@ namespace CityWatch.Web.Pages.Guard
             else
             {
                 var kvlVisitorProfile = _guardLogDataProvider.GetKeyVehicleLogVisitorProfile(kvlPersonalDetail.KeyVehicleLogProfile.VehicleRego);
-                if(personalDetails.Any(z => z.Equals(kvlPersonalDetail)))
+                if (personalDetails.Any(z => z.Equals(kvlPersonalDetail)))
                 {
-                    kvlPersonalDetail.Id = personalDetails.Where(z=> z.PersonName== kvlPersonalDetail.PersonName).Max(z => z.Id);
+                    kvlPersonalDetail.Id = personalDetails.Where(z => z.PersonName == kvlPersonalDetail.PersonName).Max(z => z.Id);
                 }
                 profileId = _guardLogDataProvider.SaveKeyVehicleLogProfileWithPersonalDetail(kvlPersonalDetail);
                 profileId = kvlVisitorProfile.Id;
