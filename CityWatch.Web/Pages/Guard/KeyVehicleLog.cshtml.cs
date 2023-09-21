@@ -374,7 +374,12 @@ namespace CityWatch.Web.Pages.Guard
 
         public JsonResult OnGetVehicleRegos(string regoPart)
         {
-            return new JsonResult(_guardLogDataProvider.GetVehicleRegos(regoPart).ToList());
+            //return new JsonResult(_guardLogDataProvider.GetVehicleRegos(regoPart).ToList());
+
+            //the above code is commented beacause  the GetVehicleRegos is used in other pages 
+            //along with that we have to check the entry given in any part of the corresponding vehicle rego for ticket no p7-95
+            return new JsonResult(_guardLogDataProvider.GetVehicleRegosForKVL(regoPart).ToList());
+            
         }
 
         public async Task<JsonResult> OnPostGenerateManualDocket(int id, ManualDocketReason option, string otherReason, string stakeholderEmails, int clientSiteId, string blankNoteOnOrOff)
