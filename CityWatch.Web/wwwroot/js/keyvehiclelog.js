@@ -1329,7 +1329,7 @@ $(function () {
                 var fileSizeCheck = true;
                 var FileName = "";
                 for (let i = 0; i < fileUpload.files.length; i++, attachIndex++) {
-                    const filecheck = fileUpload.files[uploadindex].item(i);
+                    const filecheck = fileUpload.files.item(i);
                     if (filecheck.size > maxAllowedSize) {
                         fileSizeCheck = false;
                         FileName = FileName + filecheck.name + ','
@@ -1338,55 +1338,56 @@ $(function () {
 
 
                 if (fileSizeCheck) {
+                    for (let i = 0; i < fileUpload.files.length; i++, attachIndex++) {
+                        const file = fileUpload.files.item(i);
+                        const attachment_id = 'attach_' + attachIndex;
+                        const li = document.createElement('li');
+                        li.id = attachment_id;
+                        li.className = 'list-group-item';
+                        li.dataset.index = attachIndex;
+                        let liText = document.createTextNode(file.name);
 
-                    const file = fileUpload.files.item(uploadindex);
-                    const attachment_id = 'attach_' + attachIndex;
-                    const li = document.createElement('li');
-                    li.id = attachment_id;
-                    li.className = 'list-group-item';
-                    li.dataset.index = attachIndex;
-                    let liText = document.createTextNode(file.name);
+                        const icon = document.createElement("i");
+                        icon.className = 'fa fa-circle-o-notch fa-spin ml-2 text-success';
+                        icon.title = 'Uploading...';
+                        icon.style = 'cursor:pointer';
 
-                    const icon = document.createElement("i");
-                    icon.className = 'fa fa-circle-o-notch fa-spin ml-2 text-success';
-                    icon.title = 'Uploading...';
-                    icon.style = 'cursor:pointer';
+                        li.appendChild(liText);
+                        li.appendChild(icon);
+                        document.getElementById('kvl-attachment-list').append(li);
 
-                    li.appendChild(liText);
-                    li.appendChild(icon);
-                    document.getElementById('kvl-attachment-list').append(li);
+                        // upload file to server
+                        const fileForm = new FormData();
+                        fileForm.append('attachments', fileUpload.files.item(i))
+                        fileForm.append('attach_id', attachment_id);
+                        fileForm.append('report_reference', $('#ReportReference').val());
+                        fileForm.append('vehicle_rego', $('#VehicleRego').val());
+                        $.ajax({
+                            url: '/Guard/KeyVehiclelog?handler=VehicleImageUpload',
+                            type: 'POST',
+                            data: fileForm,
+                            dataType: 'json',
+                            processData: false,
+                            contentType: false,
+                            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                        }).done(function (result) {
+                            const icon = document.getElementById(result.attachmentId).getElementsByTagName('i').item(0);
+                            if (result.success) {
+                                icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-kvl-attachment';
+                                icon.title = 'Delete';
+                            } else {
+                                icon.className = 'fa fa-exclamation-triangle ml-2 text-warning';
+                                icon.title = 'Error';
+                            }
 
-                    // upload file to server
-                    const fileForm = new FormData();
-                    fileForm.append('attachments', fileUpload.files.item(uploadindex))
-                    fileForm.append('attach_id', attachment_id);
-                    fileForm.append('report_reference', $('#ReportReference').val());
-                    fileForm.append('vehicle_rego', $('#VehicleRego').val());
-                    $.ajax({
-                        url: '/Guard/KeyVehiclelog?handler=VehicleImageUpload',
-                        type: 'POST',
-                        data: fileForm,
-                        dataType: 'json',
-                        processData: false,
-                        contentType: false,
-                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                    }).done(function (result) {
-                        const icon = document.getElementById(result.attachmentId).getElementsByTagName('i').item(0);
-                        if (result.success) {
-                            icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-kvl-attachment';
-                            icon.title = 'Delete';
-                        } else {
-                            icon.className = 'fa fa-exclamation-triangle ml-2 text-warning';
-                            icon.title = 'Error';
-                        }
-
-                        adjustKvlAttachmentCount(true);
-                    });
+                            adjustKvlAttachmentCount(true);
+                        });
 
 
 
+                    }
+                
                 }
-
                 else {
                     alert("Maximum allowed size (30Mb) exceeded for the file '" + FileName + "'")
                 }
