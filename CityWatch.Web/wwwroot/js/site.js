@@ -598,7 +598,7 @@
         columns: [
             { field: 'title', title: 'Title', width: 200, editor: true },
             { field: 'hyperlink', title: 'Hyperlink', width: 350, editor: true }
-            
+
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -705,14 +705,14 @@
                 if (data.status == -1) {
                     $('#pageType').val('');
                     $('#pageType-modal-validation').html(data.message).show().delay(2000).fadeOut();
-                } else { 
+                } else {
 
                     const button_id = 'attach_' + data.status;
                     const li = document.createElement('li');
                     li.id = button_id;
                     li.className = 'list-group-item';
                     li.dataset.index = data.status;
-                    li.style ="border-left: 0;border-right: 0;"
+                    li.style = "border-left: 0;border-right: 0;"
                     let liText = document.createTextNode(newItem);
 
                     const icon = document.createElement("i");
@@ -726,10 +726,10 @@
 
                     $("#itemInput").val("");
                     // Append the new item to the list
-                   
+
                     $('#pageType').val('');
-                    refreshPageType();                   
-                   
+                    refreshPageType();
+
                 }
             }).fail(function () {
                 console.log('error');
@@ -763,7 +763,7 @@
             }
         });
     }
-   
+
 
 
     var queryString = window.location.search;
@@ -803,14 +803,14 @@
                     $('#pageType').val('');
                     refreshPageType();
                     target.parentNode.parentNode.removeChild(target.parentNode);
-                   
+
                 }
             });
         }
     });
 
-    
-   
+
+
     /****** Report tools end *******/
 
     let gridPositions;
@@ -1717,13 +1717,58 @@
         }
         return true;
     }
-    $('#register_plate_loaded').on('click', 'button[id=btn_delete_plate]', function () {
+
+
+    $('#toggleDarkMode').on('change', function () {
+        const isChecked = $(this).is(':checked');
+        const filter = isChecked ? 1 : 2;
+        // Check if dark mode is enabled
+        var darkModeEnabled = $("body").hasClass("dark-mode");
+        // Toggle the dark-mode class on the body element
+        $("body").toggleClass("dark-mode", !darkModeEnabled);
+        // Toggle dark mode for all other elements
+        $("*").each(function () {
+            $(this).toggleClass("dark-mode", !darkModeEnabled);
+        });
+        // Update the user's preference in local storage
+        localStorage.setItem('darkMode', !darkModeEnabled);
+
+    });
+    /* On Each page load check if darmode set*/
+    setDarkModePreference();
+    function setDarkModePreference() {
+        var check = localStorage.getItem('darkMode');
+        var darkModeEnabled2 = localStorage.getItem('darkMode') === 'true';
+        localStorage.setItem('darkMode', darkModeEnabled2);
+        if (darkModeEnabled2) {
+            $('#toggleDarkMode').prop('checked', true);
+        }
+        else {
+
+            $('#toggleDarkMode').prop('checked', false);
+        }
         
-       
+        if (darkModeEnabled2 != null) {
+            $("body").toggleClass("dark-mode", darkModeEnabled2);
+            $("*").each(function () {
+                $(this).toggleClass("dark-mode", darkModeEnabled2);
+            });
+            $('table tbody tr').each(function () {
+                $(this).toggleClass("dark-mode", darkModeEnabled2);
+            }); 
+           
+        }
+    }
+
+
+
+    $('#register_plate_loaded').on('click', 'button[id=btn_delete_plate]', function () {
+
+
         var plateid = $(this).closest("tr").find("td").eq(1).text();
 
         var truckNo = $(this).closest("tr").find("td").eq(2).text();
-        
+
         $(this).closest("tr").remove();
         var obj =
         {
@@ -1741,7 +1786,7 @@
         }).done(function (result) {
             if (result.status) {
                 if (result.message !== '') {
-                   
+
                     //getPlatesLoaded();
                     // showStatusNotification(true, 'Company details modified successfully');
 
