@@ -235,7 +235,7 @@
         <div class="modal-content">
             <div class="modal-header col-md-12">
 
-                <h5 class="modal-title col-md-10">Is this image the ID  of the Person or ID of the Vehicle </h5>
+                <h5 class="modal-title col-md-8">Is this image the ID  of the Person or ID of the Vehicle </h5>
                 @*<h5 style="color:red; text-align:right" class="col-md-6 ml-5" id="titlePOIWarning" hidden>POI Warning</h5>
                 <i id="imagesiren" hidden><img  id="img1" src="~/images/ziren.png" height="25px;" /></i>*@
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -244,21 +244,22 @@
             </div>
             <div class="modal-body pb-0">
                 <div class="form-row">
-                    <div class="col-md-6">
+                    <div class="col-md-2">
                         <input type="checkbox" id="chbIsPerson" />
                         <label for="chbIsPerson"> Person</label>
                         <input type="hidden" id="IsPerson" />
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-2">
                         <input type="checkbox" id="chbIsVehicle" />
                         <label for="chbIsVehicle"> Vehicle</label>
                         <input type="hidden" id="IsVehicle" />
                     </div>
-                    <div class="col-md-6">
-                        <input type="checkbox" id="chbIsNone" />
+                    <div class="col-md-2">
+                        <input type="checkbox" id="chbIsNone" checked />
                         <label for="chbIsNone"> Other</label>
                         <input type="hidden" id="IsNone" />
                     </div>
+
                    @* temporarily commented*@
                        @* <div class="col-md-12">
                             <table class="table table-bordered table-sm" width="100%" id="gridIsPersonOrVehicle">
@@ -275,6 +276,13 @@
                         </div>
                         <input type="text" id="kvl_attachment_upload2"  hidden>*@
                   @*  temporarily commented*@
+                </div>
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <span style="font-size:0.8rem;font:italic; color:red" class="col-md-12">
+                            Note :Recommended Format Height: 130 px Width: 230 px
+                        </span>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer justify-content-between">
