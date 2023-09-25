@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Dropbox.Api.TeamLog;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -17,7 +18,7 @@ namespace CityWatch.Data.Models
             CompanyName = keyVehicleLog.CompanyName;
             PersonName = keyVehicleLog.PersonName;
             PersonType = keyVehicleLog.PersonType;
-            IsPOIAlert = keyVehicleLog.IsPOIAlert;
+            PersonOfInterest = keyVehicleLog.PersonOfInterest;
             POIImage = keyVehicleLog.POIImage;
         }
 
@@ -29,7 +30,7 @@ namespace CityWatch.Data.Models
         public string CompanyName { get; set; }
 
         public string PersonName { get; set; }
-        public bool IsPOIAlert { get; set; }
+        public int? PersonOfInterest { get; set; }
       
         public string POIImage { get; set; }
         [NotMapped]
@@ -39,6 +40,8 @@ namespace CityWatch.Data.Models
 
         [ForeignKey("ProfileId")]
         public KeyVehicleLogProfile KeyVehicleLogProfile { get; set; }
+        [NotMapped]
+        public List<string> Attachments { get; set; }
 
         public bool Equals(KeyVehicleLogVisitorPersonalDetail other)
         {

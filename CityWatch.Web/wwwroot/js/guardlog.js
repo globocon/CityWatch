@@ -1151,7 +1151,23 @@
         buttonTextAlignment: 'left',
         includeSelectAllOption: true,
     });
+    // for selecting more than one POI
+    $('#vklPersonOfInterest').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
+    $('#vklPersonOfInterest').on('change', function () {
+        const personOfInterestId = $(this).val();
+        $("#vklPersonOfInterest").val(personOfInterestId);
+        $("#vklPersonOfInterest").multiselect("refresh");
 
+
+
+
+    });
     $('#vklClientType').on('change', function () {
 
         const clientType = $(this).val().join(';');
@@ -1181,7 +1197,8 @@
         $('#KeyVehicleLogAuditLogRequest_LogFromDate').val($('#vklAudtitFromDate').val());
         $('#KeyVehicleLogAuditLogRequest_LogToDate').val($('#vklAudtitToDate').val());
         $('#KeyVehicleLogAuditLogRequest_LogBookType').val(2);
-
+        
+        $('#KeyVehicleLogAuditLogRequest_PersonOfInterest').val($('#vklPersonOfInterest').val());
         $.ajax({
             url: '/Admin/AuditSiteLog?handler=KeyVehicleSiteLogs',
             type: 'POST',
