@@ -124,8 +124,15 @@
                         </div>
                         <div class="form-group">
                             <div class="d-flex flex-row mb-2">
-                                <label class="col-md-10 col-form-label pl-0">Pre-populated text for template &quot;<span id="sel_fbktpl_name"></span>&quot;:</label>
-                                <select class="form-control" asp-for="@Model.FeedbackTemplate.Type" asp-items="@Html.GetEnumSelectList<FeedbackType>()"></select>
+                                <label class="col-md-8 col-form-label pl-0">Pre-populated text for template &quot;<span id="sel_fbktpl_name"></span>&quot;:</label>
+                                <button class="btn btn-success col-md-2 mr-2" id="add_feedbacktype_page"><i class="fa fa-plus mr-2"></i>New Category</button>
+                                @*<select class="form-control" asp-for="@Model.FeedbackTemplate.Type" asp-items="@Html.GetEnumSelectList<FeedbackType>()"></select>*@
+                                <select class="form-control" id="FeedbackTemplate_Type">
+                                    @foreach (var item in Model.ConfigDataProiver.GetFeedbackTypes())
+                                    {
+                                        <option value="@item.Id">@item.Name</option>
+                                    }
+                                </select>
                             </div>
                             <textarea class="form-control" asp-for="@Model.FeedbackTemplate.Text" rows="10"></textarea>
                             <div class="mt-3">

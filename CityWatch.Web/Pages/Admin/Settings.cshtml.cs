@@ -46,6 +46,8 @@ namespace CityWatch.Web.Pages.Admin
         [BindProperty]
         public FeedbackTemplate FeedbackTemplate { get; set; }
         [BindProperty]
+        public FeedbackNewType FeedbackNewType { get; set; }
+        [BindProperty]
         public CompanyDetails CompanyDetails { get; set; }
 
         [BindProperty]
@@ -458,6 +460,36 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { status = status, message = message });
         }
 
+        public JsonResult OnPostFeedBackType(FeedbackNewType FeedbackNewTyperecord)
+        {
+            var status = 0;
+            var message = "Success";
+            try
+            {
+                if (FeedbackNewTyperecord != null)
+                {
+
+                    status = _clientDataProvider.SaveFeedbackType(FeedbackNewTyperecord);
+                    if (status == -1)
+                    {
+
+                        message = "Same Category name already exist";
+
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                status = 0;
+                message = "Error " + ex.Message;
+
+
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+
         public JsonResult OnPostDeletePageType(int TypeId)
         {
             var status = 0;
@@ -467,8 +499,31 @@ namespace CityWatch.Web.Pages.Admin
                 if (TypeId != 0)
                 {
 
-                    status = _clientDataProvider.DeleteClientSiteLinksPageType(TypeId);
+                    status = _clientDataProvider.DeleteFeedBackType(TypeId);
                    
+                }
+            }
+            catch (Exception ex)
+            {
+                status = 0;
+                message = "Error " + ex.Message;
+
+
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+        public JsonResult OnPostDeleteFeedBackType(int TypeId)
+        {
+            var status = 0;
+            var message = "Success";
+            try
+            {
+                if (TypeId != 0)
+                {
+
+                    status = _clientDataProvider.DeleteFeedBackType(TypeId);
+
                 }
             }
             catch (Exception ex)
@@ -486,7 +541,11 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_clientDataProvider.GetSiteLinksPageTypes());
         }
-
+        public IActionResult OnGetFeedBackTypeList()
+        {
+            return new JsonResult(_configDataProvider.GetFeedbackTypes());
+        }
+        
         public JsonResult OnGetLinksPageDetails(int typeId)
         {
             var fields = _clientDataProvider.GetSiteLinksPageDetails(typeId);

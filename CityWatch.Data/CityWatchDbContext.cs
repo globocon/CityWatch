@@ -16,6 +16,7 @@ namespace CityWatch.Data
         public DbSet<ClientSiteKpiSetting> ClientSiteKpiSettings { get; set; }
         public DbSet<ClientSiteDayKpiSetting> ClientSiteDayKpiSettings { get; set; }
         public DbSet<FeedbackTemplate> FeedbackTemplates { get; set; }
+        public DbSet<FeedbackNewType> FeedbackType { get; set; }
         public DbSet<ReportTemplate> ReportTemplates { get; set; }
         public DbSet<StaffDocument> StaffDocuments { get; set; }
         public DbSet<IncidentReport> IncidentReports { get; set; }

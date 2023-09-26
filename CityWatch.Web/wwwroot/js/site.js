@@ -689,7 +689,13 @@
         $('#pageType').val('');
         $('#tools-modal').modal();
     });
+    /*to add the feedback type*/
+    $('#add_feedbacktype_page').on('click', function () {
+        $('#feedBackType').val('');
+        $('#category-modal').modal('show');
+    });
 
+    
     $('#btnSavePageType').on('click', function () {
         if (newpageTypeIsValid()) {
             var newItem = $("#pageType").val();
@@ -737,12 +743,66 @@
             });
         }
     });
-
-
     function newpageTypeIsValid() {
         const pageType = $('#pageType').val();
         if (pageType === '') {
             $('#pageType-modal-validation').html('Button name is required').show().delay(2000).fadeOut();
+            return false;
+        }
+        return true;
+    }
+
+    $('#btnSaveFeedBackType').on('click', function () {
+        if (newfeedbackTypeIsValid()) {
+            var newItem = $("#feedBackType").val();
+            var data = {
+                'PageTypeName': $('#feedBackType').val()
+            };
+            $.ajax({
+                url: '/Admin/Settings?handler=FeedBackType',
+                data: { FeedbackNewTyperecord: data },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (data) {
+                if (data.status == -1) {
+                    $('#feedbackType').val('');
+                    $('#feedbackType-modal-validation').html(data.message).show().delay(2000).fadeOut();
+                } else {
+
+                    const button_id = 'attach_' + data.status;
+                    const li = document.createElement('li');
+                    li.id = button_id;
+                    li.className = 'list-group-item';
+                    li.dataset.index = data.status;
+                    li.style = "border-left: 0;border-right: 0;"
+                    let liText = document.createTextNode(newItem);
+
+                    const icon = document.createElement("i");
+                    icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-feedback-type';
+                    icon.title = 'Delete';
+                    icon.style = 'cursor: pointer;float:right';
+
+                    li.appendChild(liText);
+                    li.appendChild(icon);
+                    document.getElementById('itemList').append(li);
+
+                    $("#itemInput").val("");
+                    // Append the new item to the list
+
+                    $('#feedbackType').val('');
+                    refreshFeedBackType();
+
+                }
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+            });
+        }
+    });
+    function newfeedbackTypeIsValid() {
+        const feedBackType = $('#feedBackType').val();
+        if (feedBackType === '') {
+            $('#feedBackType-modal-validation').html('Category name is required').show().delay(2000).fadeOut();
             return false;
         }
         return true;
@@ -764,7 +824,21 @@
         });
     }
    
-
+    const refreshFeedBackType = function () {
+        $.ajax({
+            url: '/Admin/Settings?handler=FeedBackTypeList',
+            type: 'GET',
+            success: function (data) {
+                if (data) {
+                    $('#FeedbackTemplate_Type').html('');
+                    
+                    data.map(function (template) {
+                        $('#FeedbackTemplate_Type').append('<option value="' + template.id + '">' + template.name + '</option>');
+                    });
+                }
+            }
+        });
+    }
 
     var queryString = window.location.search;
     // Parse the query string into an object
@@ -787,21 +861,21 @@
     function linkClickRenderer(value, record) {
         return '<div class="centerIcon"><a href="' + record.hyperlink + '" target="_blank"><img src="../images/Blue_globe_icon.svg" class="imgIcon"/></a></div>'
     }
-    $('#itemList').on('click', '.btn-delete-tools-type', function (event) {
-        if (confirm('Are you sure want to delete this button Name?')) {
+    $('#itemfeedbackList').on('click', '.btn-delete-feedback-type', function (event) {
+        if (confirm('Are you sure want to delete this Category ?')) {
             var target = event.target;
             const fileName = target.parentNode.innerText.trim();
             var itemToDelete = target.parentNode.dataset.index;
             $.ajax({
-                url: '/Admin/Settings?handler=DeletePageType',
+                url: '/Admin/Settings?handler=DeleteFeedBackType',
                 type: 'POST',
                 dataType: 'json',
                 data: { TypeId: itemToDelete },
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function (result) {
                 if (result) {
-                    $('#pageType').val('');
-                    refreshPageType();
+                    $('#feedbackType').val('');
+                    refreshFeedBackType();
                     target.parentNode.parentNode.removeChild(target.parentNode);
                    
                 }

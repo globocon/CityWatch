@@ -8,6 +8,7 @@ namespace CityWatch.Data.Providers
     public interface IConfigDataProvider
     {
         List<FeedbackTemplate> GetFeedbackTemplates();
+        List<FeedbackNewType> GetFeedbackTypes();
         void SaveFeedbackTemplate(FeedbackTemplate template);
         void DeleteFeedbackTemplate(int id);
         ReportTemplate GetReportTemplate();        
@@ -42,7 +43,10 @@ namespace CityWatch.Data.Providers
         {
             return _context.FeedbackTemplates.OrderBy(x => x.Name).ToList();
         }
-
+        public List<FeedbackNewType> GetFeedbackTypes()
+        {
+            return _context.FeedbackType.OrderBy(x => x.Id).ToList();
+        }
         public void SaveFeedbackTemplate(FeedbackTemplate template)
         {
             if (template == null)
