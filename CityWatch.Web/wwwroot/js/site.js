@@ -605,6 +605,9 @@
         }
     });
 
+
+   
+
     let isReportTooolsAdding = false;
     $('#add_tools_settings').on('click', function () {
         const selToolsTypeId = $('#report_tools_types').val();
@@ -684,16 +687,19 @@
             }
         });
     }
-
+   
     $('#add_tools_page').on('click', function () {
         $('#pageType').val('');
         $('#tools-modal').modal();
     });
     /*to add the feedback type*/
-    $('#add_feedbacktype_page').on('click', function () {
+    $('#add_feedbacktype_page').on('click', function (e) {
+        e.preventDefault();
         $('#feedBackType').val('');
-        $('#category-modal').modal('show');
+        $('#category-modal').modal();
     });
+   
+  
 
     
     $('#btnSavePageType').on('click', function () {
@@ -756,7 +762,7 @@
         if (newfeedbackTypeIsValid()) {
             var newItem = $("#feedBackType").val();
             var data = {
-                'PageTypeName': $('#feedBackType').val()
+                'Name': $('#feedBackType').val()
             };
             $.ajax({
                 url: '/Admin/Settings?handler=FeedBackType',
@@ -765,7 +771,7 @@
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function (data) {
                 if (data.status == -1) {
-                    $('#feedbackType').val('');
+                    $('#feedBackType').val('');
                     $('#feedbackType-modal-validation').html(data.message).show().delay(2000).fadeOut();
                 } else {
 
@@ -784,12 +790,12 @@
 
                     li.appendChild(liText);
                     li.appendChild(icon);
-                    document.getElementById('itemList').append(li);
+                    document.getElementById('itemfeedbackList').append(li);
 
                     $("#itemInput").val("");
                     // Append the new item to the list
 
-                    $('#feedbackType').val('');
+                    $('#feedBackType').val('');
                     refreshFeedBackType();
 
                 }
