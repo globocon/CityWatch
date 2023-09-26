@@ -460,9 +460,11 @@ $(function () {
                 $('#img_VehicleId').attr('src', result.fulePath);
                 $('#img_VehicleId').prop('hidden', false);
                 $('#head_VehicleId').prop('hidden', true);
+                $('#btn-delete-VehicleImage').prop('hidden', false)
             } else {
                 $('#head_VehicleId').prop('hidden', false);
                 $('#img_VehicleId').prop('hidden', true);
+                $('#btn-delete-VehicleImage').prop('hidden', true)
             }
 
         });
@@ -486,12 +488,15 @@ $(function () {
         }).done(function (result) {
 
             if (result.success) {
+                
                 $('#img_PersonId').attr('src', result.fulePath);
                 $('#img_PersonId').prop('hidden', false);
                 $('#head_PersonId').prop('hidden', true);
+                $('#btn-delete-PersonImage').prop('hidden', false)
             } else {
                 $('#head_PersonId').prop('hidden', false);
                 $('#img_PersonId').prop('hidden', true);
+                $('#btn-delete-PersonImage').prop('hidden', true)
             }
 
         });
@@ -1122,8 +1127,57 @@ $(function () {
                 });
             }
         });
-
-
+        
+        
+        
+        $('#btn-delete-PersonImage').on('click', function (e) {
+            if (confirm('Are you sure want to remove this Person Image?')) {
+                e.preventDefault();
+                const fileName = $('#CompanyName').val() + '-' + $('#PersonType').find('option:selected').text() + '-' + $('#PersonName').val() + '.jpg';
+                const vehicleRego = $('#VehicleRego').val()
+                $.ajax({
+                    url: '/Guard/KeyVehiclelog?handler=DeletePersonImage',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        reportReference: $('#ReportReference').val(),
+                        fileName: fileName
+                    },
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (result) {
+                    if (result) {
+                        $('#img_PersonId').prop('hidden', true)
+                        $('#head_PersonId').prop('hidden', false)
+                        $('#btn-delete-PersonImage').prop('hidden', true)
+                    }
+                });
+            }
+        });
+        $('#btn-delete-VehicleImage').on('click', function (e) {
+            if (confirm('Are you sure want to remove this Vehicle Image?')) {
+                e.preventDefault();
+                const fileName = $('#VehicleRego').val() + '.jpg';
+                const vehicleRego = $('#VehicleRego').val()
+                $.ajax({
+                    url: '/Guard/KeyVehiclelog?handler=DeleteVehicleImage',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        reportReference: $('#ReportReference').val(),
+                        fileName: fileName,
+                        vehicleRego: vehicleRego
+                    },
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (result) {
+                    if (result) {
+                        $('#img_VehicleId').prop('hidden', true)
+                        $('#head_VehicleId').prop('hidden', false)
+                        $('#btn-delete-VehicleImage').prop('hidden', true)
+                        
+                    }
+                });
+            }
+        });
 
         $('#copyButton').on('click', function () {
             /*Copy to clipboard*/
@@ -1205,15 +1259,7 @@ $(function () {
         });
 
 
-        $('#kvl_attachment_upload').on("change", function (e) {
-            const fileUpload = this;
-            
-            
-            
-            if (fileUpload.files.length > 0)
-            {
-
-
+       
         $('#kvl_attachment_upload').on("change", function (e) {
             var vehicleRego = $('#VehicleRego').val();
             if (vehicleRego !== "") {
@@ -1225,6 +1271,7 @@ $(function () {
                     for (let i = 0; i < attachmentList.length; i++)
                         arIndex.push(parseInt(attachmentList[i].getAttribute('data-index')));
                     let attachIndex = arIndex.length > 0 ? Math.max(...arIndex) + 1 : 0;
+
 
                     /*Maximum allowed size in bytes*/
                     const maxAllowedSize = 30 * 1024 * 1024;
@@ -1238,92 +1285,99 @@ $(function () {
                         }
                     }
 
-                }
-                for (var i = $('#gridIsPersonOrVehicle  tr').length; i > 1; i--) {
-                    $('#gridIsPersonOrVehicle  tr:last').remove();
-                }
-               
-                if (fileSizeCheck)
-                {
-                    for (let i = 0; i < fileUpload.files.length; i++, attachIndex++)
-                    {
-                        var rowCount = $('#gridIsPersonOrVehicle  tr').length;
-                        const fileExtn = fileUpload.files[i].name.split('.').pop();
-                        if (fileUpload.files.length == 1 && (fileExtn == 'jpg' || fileExtn == 'JPG')) {
-                            $('#vkl-image-modal').modal('show');
-                            /*temporarily commented*/
-                           
-                            //$('#gridIsPersonOrVehicle  tr:last').after('<tr><td>' + rowCount + '</td>' +
-                            //    '<td >' + fileUpload.files[i].name + '</td>' +
-                            //    '<td hidden>' + i + '</td>' +
 
-                            //    '<td> <input type="checkbox" id="chbIsPerson" /><label for="chbIsPerson">Is Person</label><input type="hidden" id="IsPerson" />  <input type="checkbox" id="chbIsVehicle" /><label for="chbIsVehicle">Is Vehicle</label><input type="hidden" id="IsVehicle" />  <input type="checkbox" id="chbIsNone" /><label for="chbIsNone">Is None</label><input type="hidden" id="IsNone" /></td>' +
-                            //    '</tr > ');
-                        }
-                        else {
+                    //for (var i = $('#gridIsPersonOrVehicle  tr').length; i > 1; i--) {
+                    //    $('#gridIsPersonOrVehicle  tr:last').remove();
+                    //}
 
                     if (fileSizeCheck) {
                         for (let i = 0; i < fileUpload.files.length; i++, attachIndex++) {
+                            var rowCount = $('#gridIsPersonOrVehicle  tr').length;
+                            const fileExtn = fileUpload.files[i].name.split('.').pop();
+                            if (fileUpload.files.length == 1 && (fileExtn == 'jpg' || fileExtn == 'JPG')) {
+                                $('#vkl-image-modal').modal('show');
+                                $('#chbIsPerson').prop('checked', false)
+                                $('#chbIsVehicle').prop('checked', false)
+                                $('#chbIsNone').prop('checked', true)
+                                /*temporarily commented*/
+
+                                //$('#gridIsPersonOrVehicle  tr:last').after('<tr><td>' + rowCount + '</td>' +
+                                //    '<td >' + fileUpload.files[i].name + '</td>' +
+                                //    '<td hidden>' + i + '</td>' +
+
+                                //    '<td> <input type="checkbox" id="chbIsPerson" /><label for="chbIsPerson">Is Person</label><input type="hidden" id="IsPerson" />  <input type="checkbox" id="chbIsVehicle" /><label for="chbIsVehicle">Is Vehicle</label><input type="hidden" id="IsVehicle" />  <input type="checkbox" id="chbIsNone" /><label for="chbIsNone">Is None</label><input type="hidden" id="IsNone" /></td>' +
+                                //    '</tr > ');
+                            }
+                            else {
+
+                                if (fileSizeCheck) {
+                                    for (let i = 0; i < fileUpload.files.length; i++, attachIndex++) {
 
 
-                            const file = fileUpload.files.item(i);
-                            const attachment_id = 'attach_' + attachIndex;
-                            const li = document.createElement('li');
-                            li.id = attachment_id;
-                            li.className = 'list-group-item';
-                            li.dataset.index = attachIndex;
-                            let liText = document.createTextNode(file.name);
+                                        const file = fileUpload.files.item(i);
+                                        const attachment_id = 'attach_' + attachIndex;
+                                        const li = document.createElement('li');
+                                        li.id = attachment_id;
+                                        li.className = 'list-group-item';
+                                        li.dataset.index = attachIndex;
+                                        let liText = document.createTextNode(file.name);
 
-                            const icon = document.createElement("i");
-                            icon.className = 'fa fa-circle-o-notch fa-spin ml-2 text-success';
-                            icon.title = 'Uploading...';
-                            icon.style = 'cursor:pointer';
+                                        const icon = document.createElement("i");
+                                        icon.className = 'fa fa-circle-o-notch fa-spin ml-2 text-success';
+                                        icon.title = 'Uploading...';
+                                        icon.style = 'cursor:pointer';
 
-                            li.appendChild(liText);
-                            li.appendChild(icon);
-                            document.getElementById('kvl-attachment-list').append(li);
+                                        li.appendChild(liText);
+                                        li.appendChild(icon);
+                                        document.getElementById('kvl-attachment-list').append(li);
 
-                            // upload file to server
-                            const fileForm = new FormData();
-                            fileForm.append('attachments', fileUpload.files.item(i))
-                            fileForm.append('attach_id', attachment_id);
-                            fileForm.append('report_reference', $('#ReportReference').val());
+                                        // upload file to server
+                                        const fileForm = new FormData();
+                                        fileForm.append('attachments', fileUpload.files.item(i))
+                                        fileForm.append('attach_id', attachment_id);
+                                        fileForm.append('report_reference', $('#ReportReference').val());
 
 
 
-                            fileForm.append('vehicleRego', $('#VehicleRego').val());
+                                        fileForm.append('vehicleRego', $('#VehicleRego').val());
 
-                            $.ajax({
-                                url: '/Guard/KeyVehiclelog?handler=Upload',
-                                type: 'POST',
-                                data: fileForm,
-                                dataType: 'json',
-                                processData: false,
-                                contentType: false,
-                                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                            }).done(function (result) {
-                                const icon = document.getElementById(result.attachmentId).getElementsByTagName('i').item(0);
-                                if (result.success) {
-                                    icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-kvl-attachment';
-                                    icon.title = 'Delete';
-                                } else {
-                                    icon.className = 'fa fa-exclamation-triangle ml-2 text-warning';
-                                    icon.title = 'Error';
+                                        $.ajax({
+                                            url: '/Guard/KeyVehiclelog?handler=Upload',
+                                            type: 'POST',
+                                            data: fileForm,
+                                            dataType: 'json',
+                                            processData: false,
+                                            contentType: false,
+                                            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                                        }).done(function (result) {
+                                            const icon = document.getElementById(result.attachmentId).getElementsByTagName('i').item(0);
+                                            if (result.success) {
+                                                icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-kvl-attachment';
+                                                icon.title = 'Delete';
+                                            } else {
+                                                icon.className = 'fa fa-exclamation-triangle ml-2 text-warning';
+                                                icon.title = 'Error';
+                                            }
+
+                                            adjustKvlAttachmentCount(true);
+                                        });
+                                    }
+
                                 }
-
-                                adjustKvlAttachmentCount(true);
-                            });
+                            }
                         }
 
+                        /*$('#vkl-image-modal').modal('show');*/
                     }
 
-                    /*$('#vkl-image-modal').modal('show');*/
+                    else {
+                        alert("Maximum allowed size (30Mb) exceeded for the file '" + FileName + "'")
+                    }
                 }
-
-                else {
-                    alert("Maximum allowed size (30Mb) exceeded for the file '"+FileName+"'")
-                }
-                }
+            }
+            else {
+                alert("Please enter the ID/Truck Registration Number");
+            }
             
         });
 
@@ -1436,7 +1490,7 @@ $(function () {
 
 
                 if (fileSizeCheck) {
-                    for (let i = 0; i < fileUpload.length; i++, attachIndex++) {
+                    for (let i = 0; i < fileUpload.length; i++) {
                         const file = fileUpload.item(i);
                         const attachment_id = 'attach_' + attachIndex;
                         const li = document.createElement('li');
@@ -1524,7 +1578,7 @@ $(function () {
 
 
                 if (fileSizeCheck) {
-                    for (let i = 0; i < fileUpload.length; i++, attachIndex++) {
+                    for (let i = 0; i < fileUpload.length; i++) {
                         const file = fileUpload.item(i);
                         const attachment_id = 'attach_' + attachIndex;
                         const li = document.createElement('li');
@@ -1616,7 +1670,7 @@ $(function () {
 
 
                 if (fileSizeCheck) {
-                    for (let i = 0; i < fileUpload.length; i++, attachIndex++) {
+                    for (let i = 0; i < fileUpload.length; i++) {
                         const file = fileUpload.item(i);
                         const attachment_id = 'attach_' + attachIndex;
                         const li = document.createElement('li');
@@ -1675,17 +1729,9 @@ $(function () {
                 }
             }
 
-                    }
-                    else {
-                        alert("Maximum allowed size (30Mb) exceeded for the file '" + FileName + "'")
-                    }
-
-                }
-            }
-            else {
-                alert("Please enter 'ID No. / Car or Truck Rego.' before attaching a file");
-            }
-        });
+                 
+            
+            
 
 
         }

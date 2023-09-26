@@ -465,7 +465,7 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(new { fulePath, success });
         }
-        public JsonResult OnPostDeleteAttachment(string reportReference, string fileName)
+        
 
         public JsonResult OnPostDeleteAttachment(string reportReference, string fileName,string vehicleRego)
 
@@ -489,7 +489,50 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(success);
         }
+        public JsonResult OnPostDeletePersonImage(string reportReference, string fileName)
 
+        {
+            var success = false;
+            if ( !string.IsNullOrEmpty(fileName))
+            {
+                var filePath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", "Person", fileName);
+                if (IO.File.Exists(filePath))
+                {
+                    try
+                    {
+                        IO.File.Delete(filePath);
+                        success = true;
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            }
+            return new JsonResult(success);
+        }
+        public JsonResult OnPostDeleteVehicleImage(string reportReference, string fileName, string vehicleRego)
+
+        {
+            var success = false;
+            if (!string.IsNullOrEmpty(vehicleRego) && !string.IsNullOrEmpty(fileName))
+            {
+                var filePath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", vehicleRego, fileName);
+                if (IO.File.Exists(filePath))
+                {
+                    try
+                    {
+                        IO.File.Delete(filePath);
+                        success = true;
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            }
+            return new JsonResult(success);
+        }
         public JsonResult OnGetCompanyNames(string companyNamePart)
         {
             return new JsonResult(_viewDataService.GetCompanyNames(companyNamePart).ToList());
