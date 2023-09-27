@@ -1291,7 +1291,7 @@ $(function () {
                     //}
 
                     if (fileSizeCheck) {
-                        for (let i = 0; i < fileUpload.files.length; i++, attachIndex++) {
+                        for (let i = 0; i < fileUpload.files.length; i++) {
                             var rowCount = $('#gridIsPersonOrVehicle  tr').length;
                             const fileExtn = fileUpload.files[i].name.split('.').pop();
                             if (fileUpload.files.length == 1 && (fileExtn == 'jpg' || fileExtn == 'JPG')) {
@@ -1311,7 +1311,7 @@ $(function () {
                             else {
 
                                 if (fileSizeCheck) {
-                                    for (let i = 0; i < fileUpload.files.length; i++, attachIndex++) {
+                                   /* for (let i = 0; i < fileUpload.files.length; i++) {*/
 
 
                                         const file = fileUpload.files.item(i);
@@ -1361,7 +1361,7 @@ $(function () {
 
                                             adjustKvlAttachmentCount(true);
                                         });
-                                    }
+                                    /*}*/
 
                                 }
                             }
@@ -1480,7 +1480,7 @@ $(function () {
                 const maxAllowedSize = 30 * 1024 * 1024;
                 var fileSizeCheck = true;
                 var FileName = "";
-                for (let i = 0; i < fileUpload.length; i++, attachIndex++) {
+                for (let i = 0; i < fileUpload.length; i++) {
                     const filecheck = fileUpload.item(i);
                     if (filecheck.size > maxAllowedSize) {
                         fileSizeCheck = false;
@@ -1568,7 +1568,7 @@ $(function () {
                 const maxAllowedSize = 30 * 1024 * 1024;
                 var fileSizeCheck = true;
                 var FileName = "";
-                for (let i = 0; i < fileUpload.length; i++, attachIndex++) {
+                for (let i = 0; i < fileUpload.length; i++) {
                     const filecheck = fileUpload.item(i);
                     if (filecheck.size > maxAllowedSize) {
                         fileSizeCheck = false;
