@@ -1717,6 +1717,67 @@
         }
         return true;
     }
+
+    /* Block Print Screen start 27092023 */
+    function copyToClipboard() {
+        /* when click Print screen it's copy a blank text in clipboard*/
+        var textToCopy = '';
+        navigator.clipboard.writeText(textToCopy);
+
+    }
+
+    $(window).keyup(function (e) {
+
+        if (e.key === 'Alt' || e.key === 'PrintScreen' || e.key === 'Meta') {
+            e.preventDefault();
+            copyToClipboard();
+        }
+        if (e.key === 'Alt' && e.key === 'PrintScreen' || e.key === 'Meta') {
+            e.preventDefault();
+            copyToClipboard();
+        }
+        switch (e.keyCode) {
+            case 49: // 1
+                copyToClipboard();
+                break;
+            case 44: // PrintScreen
+                copyToClipboard();
+                break;
+            case 91: // left windows
+                copyToClipboard();
+                break;
+            case 92: // right windows
+                copyToClipboard();
+                break;
+        }
+
+    });
+
+    document.addEventListener("keydown", onKeyDown, false);
+
+    function onKeyDown(e) {
+
+        if (e.key === 'Alt' || e.key === 'PrintScreen' || e.key === 'Meta') {
+            e.preventDefault();
+            copyToClipboard();
+        }
+        switch (e.keyCode) {
+            case 49: // 1
+                copyToClipboard();
+                break;
+            case 44: // PrintScreen
+                copyToClipboard();
+                break;
+            case 91: // left windows
+                copyToClipboard();
+                break;
+            case 92: // right windows
+                copyToClipboard();
+                break;
+        }
+    }
+    /* Block Print Screen end */
+
     $('#register_plate_loaded').on('click', 'button[id=btn_delete_plate]', function () {
         
        
