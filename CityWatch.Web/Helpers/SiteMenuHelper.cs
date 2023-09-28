@@ -25,7 +25,8 @@ namespace CityWatch.Web.Helpers
             if (pageName == PageNameHelper.Index)
             {
                 menuHtml.AppendLine("<div>");
-                menuHtml.AppendLine(@"<a href=""/ControlRoom"" class=""nav-link py-0""><img src = ""/images/control-center-i.png"" alt=""control room icon"" class=""mr-2""/>Control Room</a>");
+                menuHtml.AppendLine(@"<a href=""/ControlRoom"" class=""nav-link py-0"">
+<img src = ""/images/control-center-i.png"" alt=""control room icon"" class=""mr-2 controlroomIcon""  />Control Room</a>");
                 menuHtml.AppendLine("</div>");
             }
 

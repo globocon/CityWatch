@@ -567,6 +567,89 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
         border-color: #007bff;
     }
 
+    .dark-mode.fa-sign-out {
+        background-color: transparent !important;
+    }
+
+    .dark-mode a:hover {
+        color: #F36523;
+        text-decoration: none;
+    }
+
+    .dark-mode.bg-cws-orange {
+        background-color: #EA6326 !important;
+    }
+
+    .dark-mode.border-dark {
+        border-color: #fff !important;
+    }
+
+    .dark-mode.d-md-inline-flex {
+        background-color: transparent !important;
+    }
+
+    .dark-mode.fa-search {
+        background-color: transparent !important;
+    }
+
+    .dark-mode.card {
+        border-color: #fff !important;
+    }
+
+    .dark-mode.text-muted {
+        color: #fff !important;
+    }
+
+    .dark-mode.fa-plus {
+        background-color: transparent !important;
+    }
+
+    .dark-mode.list-group-item {
+        color: #333 !important;
+    }
+
+    .dark-mode #Report_SiteColourCodeId {
+        background-color: #4D4746 !important;
+    }
+
+    .dark-mode #kvl_list_plates {
+        color: #4D4746 !important;
+    }
+
+    .dark-mode #myTable th {
+        /* Your CSS styles for <th> elements here */
+        background-color: lightblue;
+        color: white;
+        font-weight: bold;
+    }
+
+    .dark-mode.gj-grid thead th {
+        background-color: #333;
+        color: #fff;
+    }
+
+    .dark-mode.fa-sign-in {
+        background-color: transparent !important;
+    }
+
+    .dark-mode .list-group-item {
+        color: white !important;
+    }
+    .dark-mode #kvl-attachment-list li {
+        color: #333 !important;
+    }
+
+    
+
+
+
+
+
+
+
+
+
+
 
 /* Dark Mode Change 20/09/2023 End*/
 
