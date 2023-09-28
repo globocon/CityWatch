@@ -16,7 +16,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
 
 namespace CityWatch.Web.Pages.Admin
 {
@@ -166,6 +168,7 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { success, message });
         }
+
 
         public JsonResult OnPostDeletePatrolCar(int id)
         {
