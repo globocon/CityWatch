@@ -34,7 +34,12 @@ namespace CityWatch.Data.Services
                                 (patrolRequest.ClientSites == null || z.ClientSiteId.HasValue && patrolRequest.ClientSites.Contains(z.ClientSite.Name)) &&
                                 (patrolRequest.Position == null || z.Position == patrolRequest.Position)));
             var clientSites = _clientDataProvider.GetClientSites(null);
-            var feedbackTemplates = _configDataProvider.GetFeedbackTemplates().Where(x => x.Type == FeedbackType.ColourCodes);
+            //var feedbackTemplates = _configDataProvider.GetFeedbackTemplates().Where(x => x.Type == FeedbackType.ColourCodes);
+
+            //To get the feedback id for Colour Codes -start
+            int feedbackTypes= Convert.ToInt16(_configDataProvider.GetFeedbackTypes().Where(x => x.Name == "Colour Codes").Select(x=> x.Id));
+            var feedbackTemplates = _configDataProvider.GetFeedbackTemplates().Where(x => x.Type == feedbackTypes);
+            //To get the feedback id for Colour Codes -end
 
             return new PatrolDataReport(patrolRequest.ClientSites, incidentReports.Select(x => new DailyPatrolData(x, clientSites)), feedbackTemplates);
         }

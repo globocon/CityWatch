@@ -70,7 +70,7 @@ namespace CityWatch.Data.Providers
         List<ClientSiteLinksPageType> GetSiteLinksPageTypes();
         List<ClientSiteLinksDetails> GetSiteLinksPageDetails(int type);
         int SaveClientSiteLinksPageType(ClientSiteLinksPageType ClientSiteLinksPageTypeRecord);
-        int SaveFeedbackType(FeedbackNewType FeedbackNewTypeRecord);
+        int SaveFeedbackType(FeedbackType FeedbackNewTypeRecord);
         
         int SaveSiteLinkDetails(ClientSiteLinksDetails ClientSiteLinksDetailsRecord);
         void DeleteSiteLinkDetails(int id);
@@ -762,7 +762,8 @@ namespace CityWatch.Data.Providers
 
             return saveStatus;
         }
-        public int SaveFeedbackType(FeedbackNewType FeedbackNewTypeRecord)
+        //to save  the feedback type-start
+        public int SaveFeedbackType(FeedbackType FeedbackNewTypeRecord)
         {
             int saveStatus = -1;
             if (FeedbackNewTypeRecord != null)
@@ -774,7 +775,7 @@ namespace CityWatch.Data.Providers
 
                     if (FeedbackNewTypeToUpdate == null)
                     {
-                        _context.FeedbackType.Add(new FeedbackNewType() { Name = FeedbackNewTypeRecord.Name });
+                        _context.FeedbackType.Add(new FeedbackType() { Name = FeedbackNewTypeRecord.Name });
 
                         saveStatus = 1;
 
@@ -810,7 +811,7 @@ namespace CityWatch.Data.Providers
 
             return saveStatus;
         }
-
+        //to save  the feedback type-end
         public int SaveSiteLinkDetails(ClientSiteLinksDetails ClientSiteLinksDetailsRecord)
         {
             int saveStatus = 0;

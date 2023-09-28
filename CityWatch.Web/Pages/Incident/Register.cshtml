@@ -12,6 +12,10 @@
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.Register;
     var mapSettings = @Configuration.GetSection("GoogleMap").Get(typeof(GoogleMapSettings)) as GoogleMapSettings;
     var ApiKey = mapSettings.ApiKey;
+    //to get the ids of  feedback type colourcodes and the general -start
+    var colourcode = @Model.ConfigDataProiver.GetFeedbackTypesId("Colour Codes");
+    var general = @Model.ConfigDataProiver.GetFeedbackTypesId("General");
+    //to get the ids of  feedback type colourcodes and the general -end
 }
 <div id="loader"></div>
 <div class="row my-3 my-md-2">
@@ -57,7 +61,10 @@
                         <label class="form-check-label">
                             <div class="d-flex flex-row align-content-start flex-wrap">
                                 <span>Site COLOUR Code Alert <em class="text-muted">(Code Blue, Code Grey, Code Yellow, etc)</em></span>
-                                <select asp-for="@Model.Report.SiteColourCodeId" class="form-control form-control-sm ml-0 ml-lg-2 w-75" disabled asp-items="@Model.ViewDataService.GetFeedbackTemplatesByType(FeedbackType.ColourCodes)"></select>
+                                @*<select asp-for="@Model.Report.SiteColourCodeId" class="form-control form-control-sm ml-0 ml-lg-2 w-75" disabled asp-items="@Model.ViewDataService.GetFeedbackTemplatesByType(FeedbackType.ColourCodes)"></select>*@
+                                @*Template type is directly taken from database -jisha-start *@
+                                <select asp-for="@Model.Report.SiteColourCodeId" class="form-control form-control-sm ml-0 ml-lg-2 w-75" disabled asp-items="@Model.ViewDataService.GetFeedbackTemplatesByType(Convert.ToInt16(colourcode))"></select>
+                                @*Template type is directly taken from database -jisha-end *@
                                 <input type="hidden" asp-for="@Model.Report.SiteColourCode" />
                             </div>
                         </label>                            
@@ -467,10 +474,21 @@
                                     </div>
                                     <div class="form-group row">
                                         <div class="col-md-3 ml-3">
-                                            <select id="ddFeedbackTemplateType" class="form-control mb-3 mb-md-0" asp-items="@Html.GetEnumSelectList<FeedbackType>()"></select>
+                                            @*<select id="ddFeedbackTemplateType" class="form-control mb-3 mb-md-0" asp-items="@Html.GetEnumSelectList<FeedbackType>()"></select>*@
+                                            @*Template type is directly taken from database -jisha-start*@
+                                                <select id="ddFeedbackTemplateType" class="form-control mb-3 mb-md-0">
+                                                @foreach (var item in Model.ConfigDataProiver.GetFeedbackTypes())
+                                                {
+                                                    <option value="@item.Id">@item.Name</option>
+                                                }
+                                            </select>
+                                            @*Template type is directly taken from database -jisha-end*@
                                         </div>
                                         <div class="col-md-8">
-                                            <select id="ddFeedbackTemplate" class="form-control" asp-items="@Model.ViewDataService.GetFeedbackTemplatesByType(FeedbackType.General)"></select>
+                                            @*<select id="ddFeedbackTemplate" class="form-control" asp-items="@Model.ViewDataService.GetFeedbackTemplatesByType(FeedbackType.General)"></select>*@
+                                            @*Template type is directly taken from database -jisha-start*@
+                                            <select id="ddFeedbackTemplate" class="form-control" asp-items="@Model.ViewDataService.GetFeedbackTemplatesByType(Convert.ToInt16(general))"></select>
+                                            @*Template type is directly taken from database -jisha-end*@
                                         </div>
                                     </div>
                                 </div>

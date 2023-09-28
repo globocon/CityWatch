@@ -8,16 +8,17 @@ namespace CityWatch.Data.Providers
     public interface IConfigDataProvider
     {
         List<FeedbackTemplate> GetFeedbackTemplates();
-        List<FeedbackNewType> GetFeedbackTypes();
+        List<FeedbackType> GetFeedbackTypes();
+        int GetFeedbackTypesId(string Name);
         void SaveFeedbackTemplate(FeedbackTemplate template);
         void DeleteFeedbackTemplate(int id);
-        ReportTemplate GetReportTemplate();        
+        ReportTemplate GetReportTemplate();
         void SaveReportTemplate(DateTime dateTimeUpdated);
         List<StaffDocument> GetStaffDocuments();
         void SaveStaffDocument(StaffDocument staffdocument);
         void DeleteStaffDocument(int id);
         List<State> GetStates();
-        List <IncidentReportField> GetReportFields();
+        List<IncidentReportField> GetReportFields();
         List<IncidentReportField> GetReportFieldsByType(ReportFieldType type);
         void SaveReportField(IncidentReportField incidentReportField);
         void DeleteReportField(int id);
@@ -43,10 +44,19 @@ namespace CityWatch.Data.Providers
         {
             return _context.FeedbackTemplates.OrderBy(x => x.Name).ToList();
         }
-        public List<FeedbackNewType> GetFeedbackTypes()
+        //to retrieve the feedback type-start
+        public List<FeedbackType> GetFeedbackTypes()
         {
             return _context.FeedbackType.OrderBy(x => x.Id).ToList();
         }
+        //to retrieve the feedback type-end
+        //to retrieve the feedback type id -start
+        public int GetFeedbackTypesId(string Name)
+        {
+            return _context.FeedbackType.Where(x => x.Name == Name).Select(x => x.Id).FirstOrDefault();
+        }
+        //to retrieve the feedback type id -end
+
         public void SaveFeedbackTemplate(FeedbackTemplate template)
         {
             if (template == null)

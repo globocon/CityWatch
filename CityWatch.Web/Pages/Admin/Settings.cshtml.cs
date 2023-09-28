@@ -46,7 +46,7 @@ namespace CityWatch.Web.Pages.Admin
         [BindProperty]
         public FeedbackTemplate FeedbackTemplate { get; set; }
         [BindProperty]
-        public FeedbackNewType FeedbackNewType { get; set; }
+        public FeedbackType FeedbackNewType { get; set; }
         [BindProperty]
         public CompanyDetails CompanyDetails { get; set; }
 
@@ -236,7 +236,7 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success, message });
         }
-
+        //to delete existing feedback type -end
         public JsonResult OnPostIrTemplateUpload()
         {
             var success = false;
@@ -459,8 +459,8 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { status = status, message = message });
         }
-
-        public JsonResult OnPostFeedBackType(FeedbackNewType FeedbackNewTyperecord)
+        //to add new feedback type -start
+        public JsonResult OnPostFeedBackType(FeedbackType FeedbackNewTyperecord)
         {
             var status = 0;
             var message = "Success";
@@ -489,7 +489,7 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { status = status, message = message });
         }
-
+        //to add new feedback type -end
         public JsonResult OnPostDeletePageType(int TypeId)
         {
             var status = 0;
@@ -513,6 +513,7 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { status = status, message = message });
         }
+        //to delete existing feedback type -start
         public JsonResult OnPostDeleteFeedBackType(int TypeId)
         {
             var status = 0;
@@ -536,16 +537,17 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { status = status, message = message });
         }
-
+        //to delete existing feedback type -end
         public IActionResult OnGetLinksPageTypeList()
         {
             return new JsonResult(_clientDataProvider.GetSiteLinksPageTypes());
         }
+        //to get existing feedback type -start
         public IActionResult OnGetFeedBackTypeList()
         {
             return new JsonResult(_configDataProvider.GetFeedbackTypes());
         }
-        
+        //to get existing feedback type -end
         public JsonResult OnGetLinksPageDetails(int typeId)
         {
             var fields = _clientDataProvider.GetSiteLinksPageDetails(typeId);
