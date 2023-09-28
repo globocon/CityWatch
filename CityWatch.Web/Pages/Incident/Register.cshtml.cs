@@ -21,6 +21,7 @@ using System.Linq;
 using System.Text.Json;
 using Azure.Storage.Blobs;
 using Microsoft.Extensions.Configuration;
+using Azure.Storage.Blobs.Models;
 
 
 namespace CityWatch.Web.Pages.Incident
@@ -250,17 +251,12 @@ namespace CityWatch.Web.Pages.Incident
             }
 
             message.Subject = $"{subject} - {Report.DateLocation.ClientType} - {Report.DateLocation.ClientSite}";
-
-
-
-
-            /* azure blob Implementation 25-9-2023* Start*/
+            /* azure blob Implementation download link add to mail body 25-9-2023* Start*/
             var azureStorageConnectionString = _configuration.GetSection("AzureStorage").Get<List<string>>();
             if (azureStorageConnectionString.Count > 0)
             {
                 if (azureStorageConnectionString[0] != null)
                 {
-
                     string connectionString = azureStorageConnectionString[0];
                     string blobName = Path.GetFileName(fileName);
                     string containerName = "irfiles";
@@ -270,13 +266,12 @@ namespace CityWatch.Web.Pages.Incident
                     /* The container Structure like irfiles/20230925*/
                     BlobClient blobClient = containerClient.GetBlobClient(new string(blobName.Take(8).ToArray()) + "/" + blobName);
                     using FileStream fs = System.IO.File.OpenRead(fileName);
-                    blobClient.Upload(fs, true);
+                    var blobHttpHeader = new BlobHttpHeaders { ContentType = "application/pdf" };
+                    blobClient.Upload(fs, new BlobUploadOptions { HttpHeaders = blobHttpHeader });
                     fs.Close();
-                    messageHtml = messageHtml + "<p> Please click below to download the Incident Report</p>" +
-                    "<a href=\"http://test.c4i-system.com/DownloadPDF?containerName=irfiles&&fileName=" + (new string(blobName.Take(8).ToArray()) + "/" + blobName) + "\" target=\"_blank\">" +
-                    "<button style = \"background-color: #008CBA; color: white; padding: 10px 20px; border: none; cursor: pointer; border-radius: 5px;\">Download Incident Report</button >" +
-                    "</a>";
-
+                    messageHtml = messageHtml + "<p>Please " +
+                    "<a href=\" https://c4istorage1.blob.core.windows.net/irfiles/" + (new string(blobName.Take(8).ToArray()) + "/" + blobName) + "\" target=\"_blank\">" +
+                    "click here</a> to download the Incident Report</p>";
                 }
 
             }
