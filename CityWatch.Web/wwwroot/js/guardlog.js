@@ -1225,10 +1225,14 @@
         });
     });
 
-    //code addded  to download Excel
+    //code addded  to download Excel start
+
     $("#add_Downloadbtn").click(function () {
-        debugger;
+       
+        var Key = $('#site-settings-for').html();
+     
         var type = 'xlsx';
+        var name = Key + '.';
         var data = document.getElementById('cs_client_site_keys');
 
         // Check if all columns are empty
@@ -1271,11 +1275,12 @@
 
         
 
-        var excelFile = XLSX.utils.table_to_book(tableClone, { sheet: "Sheet1" });
+        var excelFile = XLSX.utils.table_to_book(tableClone, { sheet: "Keys" });
 
         // Use XLSX.writeFile to generate and download the Excel file
-        XLSX.writeFile(excelFile, 'ExportedFile:HTMLTableToExcel.' + type);
+        XLSX.writeFile(excelFile, name + type);
     });
+     //code addded  to download Excel end
 
     $('#ClientSiteCustomField_Name').editableSelect({
         effects: 'slide'
