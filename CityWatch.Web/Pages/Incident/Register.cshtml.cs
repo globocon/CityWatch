@@ -273,7 +273,7 @@ namespace CityWatch.Web.Pages.Incident
                     blobClient.Upload(fs, true);
                     fs.Close();
                     messageHtml = messageHtml + "<p> Please click below to download the Incident Report</p>" +
-                    "<a href=\"http://test.c4i-system.com/Api/DownLoadPdf/PdfDownload?containerName=irfiles&&fileName=" + (new string(blobName.Take(8).ToArray()) + "/" + blobName) + "\" download >" +
+                    "<a href=\"http://test.c4i-system.com/DownloadPDF?containerName=irfiles&&fileName=" + (new string(blobName.Take(8).ToArray()) + "/" + blobName) + "\" target=\"_blank\">" +
                     "<button style = \"background-color: #008CBA; color: white; padding: 10px 20px; border: none; cursor: pointer; border-radius: 5px;\">Download Incident Report</button >" +
                     "</a>";
 
