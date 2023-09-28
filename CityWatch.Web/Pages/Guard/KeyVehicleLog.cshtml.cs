@@ -339,6 +339,7 @@ namespace CityWatch.Web.Pages.Guard
 
             return new JsonResult(new { attachmentId = Request.Form["attach_id"], success });
         }
+        //to upload the vehicle image-start
         public JsonResult OnPostVehicleImageUpload()
 
 
@@ -374,6 +375,9 @@ namespace CityWatch.Web.Pages.Guard
 
             return new JsonResult(new { attachmentId = Request.Form["attach_id"], success });
         }
+        //to upload the vehicle image-end
+
+        //to display the vehicle image-start
         public IActionResult OnGetVehicleImageUpload(string VehicleRego)
 
         {
@@ -399,6 +403,9 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(new { fulePath, success });
         }
+        //to display the vehicle image-end
+
+        //to upload the person image-start
         public JsonResult OnPostPersonImageUpload()
 
         {
@@ -442,6 +449,9 @@ namespace CityWatch.Web.Pages.Guard
 
             return new JsonResult(new { attachmentId = Request.Form["attach_id"], success });
         }
+        //to upload the person image-end
+
+        //to display the person image-start
         public IActionResult OnGetPersonImageUpload(string CompanyName,string PersonType,string PersonName)
 
         {
@@ -465,7 +475,7 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(new { fulePath, success });
         }
-        
+        //to display the person image-end
 
         public JsonResult OnPostDeleteAttachment(string reportReference, string fileName,string vehicleRego)
 
@@ -489,6 +499,7 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(success);
         }
+        //to delete the person image-start
         public JsonResult OnPostDeletePersonImage(string reportReference, string fileName)
 
         {
@@ -511,6 +522,8 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(success);
         }
+        //to delete the person image-end
+        //to delete the vehicle image-start
         public JsonResult OnPostDeleteVehicleImage(string reportReference, string fileName, string vehicleRego)
 
         {
@@ -533,6 +546,7 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(success);
         }
+        //to delete the vehicle image-end
         public JsonResult OnGetCompanyNames(string companyNamePart)
         {
             return new JsonResult(_viewDataService.GetCompanyNames(companyNamePart).ToList());
