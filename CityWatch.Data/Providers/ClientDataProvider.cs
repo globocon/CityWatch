@@ -938,6 +938,7 @@ namespace CityWatch.Data.Providers
                 return 1;
             }
         }
+        //to delete the feedback type-start
         public int DeleteFeedBackType(int typeId)
         {
             if (typeId == -1)
@@ -958,7 +959,7 @@ namespace CityWatch.Data.Providers
                 return 1;
             }
         }
-
+        //to delete the feedback type-end
         public List<KeyVehcileLogField> GetKeyVehicleLogFieldsByTruckId(int TruckConfig)
         {
             return GetKeyVehicleLogFields()

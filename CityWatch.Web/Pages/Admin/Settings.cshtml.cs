@@ -499,7 +499,7 @@ namespace CityWatch.Web.Pages.Admin
                 if (TypeId != 0)
                 {
 
-                    status = _clientDataProvider.DeleteFeedBackType(TypeId);
+                    status = _clientDataProvider.DeleteClientSiteLinksPageType(TypeId);
                    
                 }
             }
