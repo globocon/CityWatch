@@ -230,3 +230,67 @@
 @section PageHeader {
     <h3 class="text-center">KEY, VEHICLE & VISITOR PORTAL</h3>
 }
+@*to check whether the uploaded image is of person or vehicle - start*@
+<div class="modal" tabindex="-1" role="dialog" id="vkl-image-modal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8">Is this image the ID  of the Person or ID of the Vehicle </h5>
+                @*<h5 style="color:red; text-align:right" class="col-md-6 ml-5" id="titlePOIWarning" hidden>POI Warning</h5>
+                <i id="imagesiren" hidden><img  id="img1" src="~/images/ziren.png" height="25px;" /></i>*@
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-2">
+                        <input type="checkbox" id="chbIsPerson" />
+                        <label for="chbIsPerson"> Person</label>
+                        <input type="hidden" id="IsPerson" />
+                    </div>
+                    <div class="col-md-2">
+                        <input type="checkbox" id="chbIsVehicle" />
+                        <label for="chbIsVehicle"> Vehicle</label>
+                        <input type="hidden" id="IsVehicle" />
+                    </div>
+                    <div class="col-md-2">
+                        <input type="checkbox" id="chbIsNone" checked />
+                        <label for="chbIsNone"> Other</label>
+                        <input type="hidden" id="IsNone" />
+                    </div>
+
+                   @* temporarily commented*@
+                       @* <div class="col-md-12">
+                            <table class="table table-bordered table-sm" width="100%" id="gridIsPersonOrVehicle">
+                                <thead>
+                                    <tr>
+                                        <th>SlNo</th>
+                                        <th>file</th>
+                                        <th hidden>Hidden</th>
+                                        <th>Is Person Or Vehicle</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <input type="text" id="kvl_attachment_upload2"  hidden>*@
+                  @*  temporarily commented*@
+                </div>
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <span style="font-size:0.8rem;font:italic; color:red" class="col-md-12">
+                            Note :Recommended Format Height: 130 px Width: 230 px
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <button class="btn btn-success " id="btnIsPersonOrVehicle">Ok</button>
+                
+            </div>
+        </div>
+    </div>
+</div>
+@*to check whether the uploaded image is of person or vehicle - end*@

@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="~/lib/select2/css/select2.min.css" />
     <link rel="stylesheet" href="~/lib/ttskch/select2-bootstrap4-theme/dist/select2-bootstrap4.min.css" />
     <link rel="stylesheet" href="~/css/site.css" />
+    <script type="text/javascript" src="https://unpkg.com/xlsx@0.15.1/dist/xlsx.full.min.js"></script>
     <script>
         function getGpsAsHyperLink(value) {
             const gps = value.split(',');
@@ -40,6 +41,10 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom mb-3">
             <div class="container">
+                 @if (User.Identity.IsAuthenticated)
+                {
+                    <a href="@Url.Page("/Index")" class="" nav-link py-0""><i class=" fa fa-home mr-2 mb-5"></i></a>
+                }
                 <a class="navbar-brand" href="https://www.citywatchsecurity.com.au" target="_blank">
                     <img src="~/images/CWSLogo.png" alt="cws logo" height="60px"/>
                 </a>
