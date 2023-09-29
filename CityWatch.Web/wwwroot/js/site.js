@@ -131,14 +131,23 @@
     $('#Report_SiteColourCodeId').on('change', function () {
         const option = $(this).val();
         const optionText = $("option:selected", this).text();
+        var filter = "Colour Codes";
         $('#Report_Feedback').val('');
         if (option == '')
             return false;
 
         // Set feedback Template Type to 3 = 'Colour Codes'
-        $('#ddFeedbackTemplateType').val(3);
-        $('#ddFeedbackTemplateType').trigger('change', [option]);
-        $('#Report_SiteColourCode').val(optionText);
+        /*to get the colour code and its id into feedbacktype dropdown-start*/
+        $.ajax({
+            url: '/Incident/Register?handler=FeedbackTypesId&filter=' + filter,
+            type: 'GET',
+            dataType: 'json'
+        }).done(function (data) {
+            $('#ddFeedbackTemplateType').val(data.truckConfigText);
+            $('#ddFeedbackTemplateType').trigger('change', [option]);
+            $('#Report_SiteColourCode').val(optionText);
+        });
+        /*to get the colour code and its id into feedbacktype dropdown-end*/
     });
 
     $('#positionfilter').on('change', function () {

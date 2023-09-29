@@ -548,6 +548,18 @@ namespace CityWatch.Web.Pages.Incident
 
             return new JsonResult(new { Count });
         }
+        public JsonResult OnGetFeedbackTypesId(string filter)
+        {
+
+
+            var TruckConfigText = _configDataProvider.GetFeedbackTypesId(filter);
+
+
+
+
+
+            return new JsonResult(new { TruckConfigText });
+        }
 
 
     }
