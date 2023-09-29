@@ -26,7 +26,7 @@ namespace CityWatch.Web.Helpers
             {
                 menuHtml.AppendLine("<div>");
                 menuHtml.AppendLine(@"<a href=""/ControlRoom"" class=""nav-link py-0"">
-<img src = ""/images/control-center-i.png"" alt=""control room icon"" class=""mr-2 controlroomIcon""  />Control Room</a>");
+                <i class=""fa fa-desktop mr-2""></i>Control Room</a>");
                 menuHtml.AppendLine("</div>");
             }
 
