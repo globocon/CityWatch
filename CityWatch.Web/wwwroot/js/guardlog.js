@@ -608,13 +608,20 @@
     gridGuardLog = $('#guard_daily_log').grid(gridGuardLogSettings);
 
     if (gridGuardLog) {
+        
         const bg_color_pale_yellow = '#fcf8d1';
         const bg_color_pale_red = '#ffcccc';
         const irEntryTypeIsAlarm = 2;
-
+     
         gridGuardLog.on('rowDataBound', function (e, $row, id, record) {
             if (record.irEntryType) {
                 $row.css('background-color', record.irEntryType === irEntryTypeIsAlarm ? bg_color_pale_red : bg_color_pale_yellow);
+                /* add for check if dark mode is on start*/
+                if ($('#toggleDarkMode').is(':checked')) {
+                    $row.css('color', '#333');
+                    $row.css('background-color', record.irEntryType === irEntryTypeIsAlarm ? bg_color_pale_red : bg_color_pale_yellow);
+                }
+                /* add for check if dark mode is on end*/
             }
         });
 

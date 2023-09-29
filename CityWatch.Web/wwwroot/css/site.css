@@ -291,10 +291,10 @@ button.multiselect-option.dropdown-item > .form-check > label {
     padding: 0.5rem
 }
 
-#patrol_cars_log.table td[data-mode=edit] [data-role=edit] input[type=text],
-#custom_field_log.table td[data-mode=edit] [data-role=edit] input[type=text] {
-    padding-left: 0px;
-}
+    #patrol_cars_log.table td[data-mode=edit] [data-role=edit] input[type=text],
+    #custom_field_log.table td[data-mode=edit] [data-role=edit] input[type=text] {
+        padding-left: 0px;
+    }
 
 #cs-pocs th:last-child,
 #cs-locations th:last-child {
@@ -415,7 +415,7 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
 }
 
 #vehicle_key_daily_log_filter {
-    display:none;
+    display: none;
 }
 
 #form_new_vehicle_and_key_log label {
@@ -443,17 +443,14 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
 
 #dvcompanysop {
     width: 25%;
-    
 }
 
 #dvtraining {
     width: 25%;
-    
 }
 
 #dvformsandtemplates {
     width: 25%;
-   
 }
 
 .center {
@@ -462,10 +459,11 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
     margin-right: auto;
     width: 100%;
 }
+
 .centerIcon {
     display: flex;
     justify-content: center;
-    align-items: center;  
+    align-items: center;
 }
 
 @media (max-width:992px) {
@@ -475,22 +473,184 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
 
     #dvcompanysop, #dvtraining, #dvformsandtemplates {
         width: 100%;
-        margin-bottom:7px;
+        margin-bottom: 7px;
     }
 }
+
 .imgIcon {
     width: 25px;
     height: 25px;
 }
-    #container {
+
+#container {
     text-align: center;
 }
+
 .dynamic-link {
-   width:150px;
-   margin:3px;
+    width: 150px;
+    margin: 3px;
 }
+
 .button-container-div {
     text-align: center;
-   
 }
+
+
+
+/* Dark Mode Change 20/09/2023 Start*/
+.dark-mode {
+    background-color: #333;
+    color: #fff;
+}
+
+    .dark-mode .bg-white {
+        background-color: #333 !important;
+        color: #fff;
+    }
+
+    .dark-mode .bg-cws-orange {
+        background-color: #EA6326 !important;
+    }
+
+    .dark-mode .odd {
+        background-color: #333 !important;
+    }
+
+    .dark-mode table.dataTable tbody tr {
+        background-color: #333 !important;
+    }
+
+    .dark-mode table.dataTable tbody > tr td {
+        background-color: #333 !important;
+    }
+
+    .dark-mode .table-bordered {
+        color: #fff;
+    }
+
+    .dark-mode .modal-content {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        pointer-events: auto;
+        background-color: #333 !important;
+        background-clip: padding-box;
+        border: 1px solid #fff;
+    }
+
+    .dark-mode .es-list {
+        max-height: 320px !important;
+        background-color: #fff;
+        color: #333
+    }
+
+    .dark-mode #list_product {
+        background-color: #fff;
+        color: #333
+    }
+
+    .dark-mode .fa-clipboard {
+        background-color: #fff;
+        color: #333
+    }
+
+    .dark-mode .table-hover tbody tr:hover {
+        color: #fff;
+        background-color: rgba(0,0,0,.075);
+    }
+
+
+    .dark-mode.btn-primary {
+        color: #fff;
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+
+    .dark-mode.fa-sign-out {
+        background-color: transparent !important;
+    }
+
+    .dark-mode a:hover {
+        color: #F36523;
+        text-decoration: none;
+    }
+
+    .dark-mode.bg-cws-orange {
+        background-color: #EA6326 !important;
+    }
+
+    .dark-mode.border-dark {
+        border-color: #fff !important;
+    }
+
+    .dark-mode.d-md-inline-flex {
+        background-color: transparent !important;
+    }
+
+    .dark-mode.fa-search {
+        background-color: transparent !important;
+    }
+
+    .dark-mode.card {
+        border-color: #fff !important;
+    }
+
+    .dark-mode.text-muted {
+        color: #fff !important;
+    }
+
+    .dark-mode.fa-plus {
+        background-color: transparent !important;
+    }
+
+    .dark-mode.list-group-item {
+        color: #333 !important;
+    }
+
+    .dark-mode #Report_SiteColourCodeId {
+        background-color: #4D4746 !important;
+    }
+
+    .dark-mode #kvl_list_plates {
+        color: #4D4746 !important;
+    }
+
+    .dark-mode #myTable th {
+        /* Your CSS styles for <th> elements here */
+        background-color: lightblue;
+        color: white;
+        font-weight: bold;
+    }
+
+    .dark-mode.gj-grid thead th {
+        background-color: #333;
+        color: #fff;
+    }
+
+    .dark-mode.fa-sign-in {
+        background-color: transparent !important;
+    }
+
+    .dark-mode .list-group-item {
+        color: white !important;
+    }
+    .dark-mode #kvl-attachment-list li {
+        color: #333 !important;
+    }
+
+    
+
+
+
+
+
+
+
+
+
+
+
+/* Dark Mode Change 20/09/2023 End*/
+
 
