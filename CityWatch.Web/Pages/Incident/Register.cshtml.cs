@@ -72,7 +72,7 @@ namespace CityWatch.Web.Pages.Incident
             _guardLogDataProvider = guardLogDataProvider;
             _configuration = configuration;
         }
-
+        public IConfigDataProvider ConfigDataProiver { get { return _configDataProvider; } }
         public void OnGet()
         {
             HttpContext.Session.SetString("ReportReference", Guid.NewGuid().ToString());
@@ -95,11 +95,26 @@ namespace CityWatch.Web.Pages.Incident
             return new JsonResult(new { text });
         }
 
-        public IActionResult OnGetFeedbackTemplatesByType(FeedbackType type)
-        {
-            return new JsonResult(_ViewDataService.GetFeedbackTemplatesByType((FeedbackType)type));
-        }
+        //public IActionResult OnGetFeedbackTemplatesByType(FeedbackType type)
+        //{
+        //    return new JsonResult(_ViewDataService.GetFeedbackTemplatesByType((FeedbackType)type));
+        //}
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        /// 
 
+        //To get feedback template by selecting the type-start
+        public IActionResult OnGetFeedbackTemplatesByType(int type)
+        {
+
+            return new JsonResult(_ViewDataService.GetFeedbackTemplatesByType(type));
+        }
+        //To get feedback template by selecting the type-end
+
+     
         public IActionResult OnGetOfficerPositions(OfficerPositionFilter filter)
         {
             return new JsonResult(_ViewDataService.GetOfficerPositions((OfficerPositionFilter)filter));
@@ -634,6 +649,18 @@ namespace CityWatch.Web.Pages.Incident
 
 
             return new JsonResult(new { Count });
+        }
+        public JsonResult OnGetFeedbackTypesId(string filter)
+        {
+
+
+            var TruckConfigText = _configDataProvider.GetFeedbackTypesId(filter);
+
+
+
+
+
+            return new JsonResult(new { TruckConfigText });
         }
 
 

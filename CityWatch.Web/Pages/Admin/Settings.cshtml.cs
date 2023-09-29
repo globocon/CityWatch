@@ -46,6 +46,8 @@ namespace CityWatch.Web.Pages.Admin
         [BindProperty]
         public FeedbackTemplate FeedbackTemplate { get; set; }
         [BindProperty]
+        public FeedbackType FeedbackNewType { get; set; }
+        [BindProperty]
         public CompanyDetails CompanyDetails { get; set; }
 
         [BindProperty]
@@ -234,7 +236,7 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success, message });
         }
-
+        //to delete existing feedback type -end
         public JsonResult OnPostIrTemplateUpload()
         {
             var success = false;
@@ -457,7 +459,37 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { status = status, message = message });
         }
+        //to add new feedback type -start
+        public JsonResult OnPostFeedBackType(FeedbackType FeedbackNewTyperecord)
+        {
+            var status = 0;
+            var message = "Success";
+            try
+            {
+                if (FeedbackNewTyperecord != null)
+                {
 
+                    status = _clientDataProvider.SaveFeedbackType(FeedbackNewTyperecord);
+                    if (status == -1)
+                    {
+
+                        message = "Same Category name already exist";
+
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                status = 0;
+                message = "Error " + ex.Message;
+
+
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+        //to add new feedback type -end
         public JsonResult OnPostDeletePageType(int TypeId)
         {
             var status = 0;
@@ -481,12 +513,41 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { status = status, message = message });
         }
+        //to delete existing feedback type -start
+        public JsonResult OnPostDeleteFeedBackType(int TypeId)
+        {
+            var status = 0;
+            var message = "Success";
+            try
+            {
+                if (TypeId != 0)
+                {
 
+                    status = _clientDataProvider.DeleteFeedBackType(TypeId);
+
+                }
+            }
+            catch (Exception ex)
+            {
+                status = 0;
+                message = "Error " + ex.Message;
+
+
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+        //to delete existing feedback type -end
         public IActionResult OnGetLinksPageTypeList()
         {
             return new JsonResult(_clientDataProvider.GetSiteLinksPageTypes());
         }
-
+        //to get existing feedback type -start
+        public IActionResult OnGetFeedBackTypeList()
+        {
+            return new JsonResult(_configDataProvider.GetFeedbackTypes());
+        }
+        //to get existing feedback type -end
         public JsonResult OnGetLinksPageDetails(int typeId)
         {
             var fields = _clientDataProvider.GetSiteLinksPageDetails(typeId);
