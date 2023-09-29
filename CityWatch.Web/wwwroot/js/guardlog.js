@@ -1225,6 +1225,63 @@
         });
     });
 
+    //code addded  to download Excel start
+
+    $("#add_Downloadbtn").click(function () {
+       
+        var Key = $('#site-settings-for').html();
+     
+        var type = 'xlsx';
+        var name = Key + '.';
+        var data = document.getElementById('cs_client_site_keys');
+
+        // Check if all columns are empty
+        var isEmptyTable = true;
+        var rows = data.getElementsByTagName('tr');
+        for (var i = 0; i < rows.length; i++) {
+            var cells = rows[i].getElementsByTagName('td');
+            for (var j = 1; j < cells.length; j++) {
+                if (cells[j].textContent.trim() !== '') {
+                    isEmptyTable = false;
+                    break;
+                }
+            }
+        }
+
+        if (isEmptyTable) {
+            // Create a message row with the desired text
+            var messageRow = document.createElement('tr');
+            var messageCell = document.createElement('td');
+            messageCell.innerText = 'No data available in table';
+            messageRow.appendChild(messageCell);
+
+            // Create a new table with the message
+            var tableClone = document.createElement('table');
+            var tbody = document.createElement('tbody');
+            tbody.appendChild(messageRow);
+            tableClone.appendChild(tbody);
+        } else {
+            // Clone the table and remove the last column
+            var tableClone = data.cloneNode(true);
+            var rows = tableClone.getElementsByTagName('tr');
+            for (var i = 0; i < rows.length; i++) {
+                var lastCell = rows[i].lastElementChild;
+                if (lastCell) {
+                    rows[i].removeChild(lastCell);
+                }
+            }
+        }
+
+
+        
+
+        var excelFile = XLSX.utils.table_to_book(tableClone, { sheet: "Keys" });
+
+        // Use XLSX.writeFile to generate and download the Excel file
+        XLSX.writeFile(excelFile, name + type);
+    });
+     //code addded  to download Excel end
+
     $('#ClientSiteCustomField_Name').editableSelect({
         effects: 'slide'
     });
