@@ -1872,8 +1872,7 @@
     }
     /* Block Print Screen end */
 
-/* dark Mode Start*/
-
+    /* dark Mode Start*/
     $('#toggleDarkMode').on('change', function () {
         const isChecked = $(this).is(':checked');
         const filter = isChecked ? 1 : 2;
@@ -1902,8 +1901,18 @@
 
             $('#toggleDarkMode').prop('checked', false);
         }
-    }
 
+        if (darkModeEnabled2 != null) {
+            $("body").toggleClass("dark-mode", darkModeEnabled2);
+            $("*").each(function () {
+                $(this).toggleClass("dark-mode", darkModeEnabled2);
+            });
+            $('table tbody tr').each(function () {
+                $(this).toggleClass("dark-mode", darkModeEnabled2);
+            });
+
+        }
+    }
     /* dark mode end */
     $('#register_plate_loaded').on('click', 'button[id=btn_delete_plate]', function () {
 
