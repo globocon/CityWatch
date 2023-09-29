@@ -339,8 +339,146 @@ namespace CityWatch.Web.Pages.Guard
 
             return new JsonResult(new { attachmentId = Request.Form["attach_id"], success });
         }
+        //to upload the vehicle image-start
+        public JsonResult OnPostVehicleImageUpload()
+
+
+        {
+            var success = false;
+            var files = Request.Form.Files;
+            var vehicle_rego = Request.Form["vehicle_rego"].ToString();
+            
+            if (files.Count == 1)
+            {
+                var file = files[0];
+                if (file.Length > 0)
+                {
+                    try
+                    {
+                        var uploadFileName = vehicle_rego + Path.GetExtension(file.FileName);
+
+                        var folderPath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", vehicle_rego);
+                        if (!IO.Directory.Exists(folderPath))
+                            IO.Directory.CreateDirectory(folderPath);
+                        using (var stream = IO.File.Create(IO.Path.Combine(folderPath, uploadFileName)))
+                        {
+                            file.CopyTo(stream);
+                        }
+                        success = true;
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                }
+            }
+
+            return new JsonResult(new { attachmentId = Request.Form["attach_id"], success });
+        }
+        //to upload the vehicle image-end
+
+        //to display the vehicle image-start
+        public IActionResult OnGetVehicleImageUpload(string VehicleRego)
+
+        {
+            var success = false;
+            
+          
+            var uploadFileName = VehicleRego + ".jpg";
+            //     var folderPath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", VehicleRego, uploadFileName);
+            var folderPath=IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", VehicleRego);
+            //var folderPath = Path.Combine("../KvlUploads", VehicleRego);
+            var fulePath = Path.Combine(folderPath, uploadFileName);
+            
+            if(!IO.File.Exists(fulePath))
+            {
+                success = false;
+            }
+            else
+            {
+                
+                success = true;
+                folderPath = Path.Combine("../KvlUploads", VehicleRego);
+                fulePath = Path.Combine(folderPath, uploadFileName);
+            }
+            return new JsonResult(new { fulePath, success });
+        }
+        //to display the vehicle image-end
+
+        //to upload the person image-start
+        public JsonResult OnPostPersonImageUpload()
+
+        {
+            var success = false;
+            var files = Request.Form.Files;
+            var vehicle_rego = Request.Form["vehicle_rego"].ToString();
+            var company_name = Request.Form["company_name"].ToString();
+            var person_type = Request.Form["person_type"].ToString();
+            var person_name = Request.Form["person_name"].ToString();
+            if (files.Count == 1)
+            {
+                var file = files[0];
+                if (file.Length > 0)
+                {
+                    try
+                    {
+                        var uploadFileName = company_name + "-" + person_type  + "-" + person_name + Path.GetExtension(file.FileName);
+
+                        var folderPath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", "Person");
+                        if (!IO.Directory.Exists(folderPath))
+                            IO.Directory.CreateDirectory(folderPath);
+                        using (var stream = IO.File.Create(IO.Path.Combine(folderPath, uploadFileName)))
+                        {
+                            file.CopyTo(stream);
+                        }
+                        var folderPathNew = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", vehicle_rego);
+                        if (!IO.Directory.Exists(folderPathNew))
+                            IO.Directory.CreateDirectory(folderPathNew);
+                        using (var stream = IO.File.Create(IO.Path.Combine(folderPathNew, uploadFileName)))
+                        {
+                            file.CopyTo(stream);
+                        }
+                        success = true;
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                }
+            }
+
+            return new JsonResult(new { attachmentId = Request.Form["attach_id"], success });
+        }
+        //to upload the person image-end
+
+        //to display the person image-start
+        public IActionResult OnGetPersonImageUpload(string CompanyName,string PersonType,string PersonName)
+
+        {
+            var success = false;
+
+
+            var uploadFileName = CompanyName + "-" + PersonType + "-" + PersonName + ".jpg";
+            //     var folderPath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", VehicleRego, uploadFileName);
+            //var folderPath = Path.Combine("../KvlUploads", "Person");
+            var folderPath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", "Person");
+            var fulePath = Path.Combine(folderPath, uploadFileName);
+            if (!IO.File.Exists(fulePath))
+            {
+                success = false;
+            }
+            else
+            {
+                success = true;
+                folderPath = Path.Combine("../KvlUploads", "Person");
+                fulePath = Path.Combine(folderPath, uploadFileName);
+            }
+            return new JsonResult(new { fulePath, success });
+        }
+        //to display the person image-end
 
         public JsonResult OnPostDeleteAttachment(string reportReference, string fileName,string vehicleRego)
+
         {
             var success = false;
             if (!string.IsNullOrEmpty(vehicleRego) && !string.IsNullOrEmpty(fileName))
@@ -361,7 +499,54 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(success);
         }
+        //to delete the person image-start
+        public JsonResult OnPostDeletePersonImage(string reportReference, string fileName)
 
+        {
+            var success = false;
+            if ( !string.IsNullOrEmpty(fileName))
+            {
+                var filePath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", "Person", fileName);
+                if (IO.File.Exists(filePath))
+                {
+                    try
+                    {
+                        IO.File.Delete(filePath);
+                        success = true;
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            }
+            return new JsonResult(success);
+        }
+        //to delete the person image-end
+        //to delete the vehicle image-start
+        public JsonResult OnPostDeleteVehicleImage(string reportReference, string fileName, string vehicleRego)
+
+        {
+            var success = false;
+            if (!string.IsNullOrEmpty(vehicleRego) && !string.IsNullOrEmpty(fileName))
+            {
+                var filePath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", vehicleRego, fileName);
+                if (IO.File.Exists(filePath))
+                {
+                    try
+                    {
+                        IO.File.Delete(filePath);
+                        success = true;
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            }
+            return new JsonResult(success);
+        }
+        //to delete the vehicle image-end
         public JsonResult OnGetCompanyNames(string companyNamePart)
         {
             return new JsonResult(_viewDataService.GetCompanyNames(companyNamePart).ToList());
