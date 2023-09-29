@@ -19,6 +19,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using Azure.Storage.Blobs;
+using Microsoft.Extensions.Configuration;
+using Azure.Storage.Blobs.Models;
+
 
 namespace CityWatch.Web.Pages.Incident
 {
@@ -26,7 +30,7 @@ namespace CityWatch.Web.Pages.Incident
     {
         const string LAST_USED_IR_SEQ_NO_CONFIG_NAME = "LastUsedIrSn";
 
-        private readonly IWebHostEnvironment _WebHostEnvironment;        
+        private readonly IWebHostEnvironment _WebHostEnvironment;
         private readonly EmailOptions _EmailOptions;
         private readonly IViewDataService _ViewDataService;
         private readonly IClientDataProvider _clientDataProvider;
@@ -36,13 +40,14 @@ namespace CityWatch.Web.Pages.Incident
         private readonly ILogger<RegisterModel> _logger;
         private readonly IIncidentReportGenerator _incidentReportGenerator;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
+        private readonly IConfiguration _configuration;
 
         [BindProperty]
         public IncidentRequest Report { get; set; }
-        
+
         public IViewDataService ViewDataService { get { return _ViewDataService; } }
 
-        public RegisterModel(IWebHostEnvironment webHostEnvironment,             
+        public RegisterModel(IWebHostEnvironment webHostEnvironment,
             IOptions<EmailOptions> emailOptions,
             IViewDataService viewDataService,
             IClientDataProvider clientDataProvider,
@@ -51,9 +56,11 @@ namespace CityWatch.Web.Pages.Incident
             IAppConfigurationProvider appConfigurationProvider,
             ILogger<RegisterModel> logger,
             IIncidentReportGenerator incidentReportGenerator,
-            IGuardLogDataProvider guardLogDataProvider)
+            IGuardLogDataProvider guardLogDataProvider,
+            IConfiguration configuration
+            )
         {
-            _WebHostEnvironment = webHostEnvironment;            
+            _WebHostEnvironment = webHostEnvironment;
             _EmailOptions = emailOptions.Value;
             _ViewDataService = viewDataService;
             _clientDataProvider = clientDataProvider;
@@ -63,6 +70,7 @@ namespace CityWatch.Web.Pages.Incident
             _logger = logger;
             _incidentReportGenerator = incidentReportGenerator;
             _guardLogDataProvider = guardLogDataProvider;
+            _configuration = configuration;
         }
 
         public void OnGet()
@@ -90,7 +98,7 @@ namespace CityWatch.Web.Pages.Incident
         public IActionResult OnGetFeedbackTemplatesByType(FeedbackType type)
         {
             return new JsonResult(_ViewDataService.GetFeedbackTemplatesByType((FeedbackType)type));
-        }       
+        }
 
         public IActionResult OnGetOfficerPositions(OfficerPositionFilter filter)
         {
@@ -127,7 +135,7 @@ namespace CityWatch.Web.Pages.Incident
         public JsonResult OnPostUpload()
         {
             var success = false;
-            var files = Request.Form.Files;            
+            var files = Request.Form.Files;
             if (files.Count == 1)
             {
                 var file = files[0];
@@ -148,7 +156,7 @@ namespace CityWatch.Web.Pages.Incident
                     }
                     catch (Exception)
                     {
-                        
+
                     }
                 }
             }
@@ -169,14 +177,15 @@ namespace CityWatch.Web.Pages.Incident
             foreach (var address in GetToEmailAddressList(toAddress))
                 message.To.Add(address);
 
-            if (Report.DateLocation.ReimbursementYes) {
+            if (Report.DateLocation.ReimbursementYes)
+            {
                 message.Cc.Add(new MailboxAddress(ccAddress[1], ccAddress[0]));
             }
             /* Mail Id added Bcc globoconsoftware for checking Ir Mail not getting Issue Start(date 13,09,2023) */
             message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
             /* Mail Id added Bcc globoconsoftware end */
             var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite && x.ClientType.Name == Report.DateLocation.ClientType);
-           
+
             if (clientSite != null && !string.IsNullOrEmpty(clientSite.Emails))
             {
                 foreach (var email in clientSite.Emails.Split(","))
@@ -186,7 +195,7 @@ namespace CityWatch.Web.Pages.Incident
                 }
             }
 
-            message.Subject = $"{ subject } - { Report.DateLocation.ClientType } - { Report.DateLocation.ClientSite }";
+            message.Subject = $"{subject} - {Report.DateLocation.ClientType} - {Report.DateLocation.ClientSite}";
 
             var builder = new BodyBuilder()
             {
@@ -198,7 +207,7 @@ namespace CityWatch.Web.Pages.Incident
             using (var client = new SmtpClient())
             {
                 client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
-                if (!string.IsNullOrEmpty(_EmailOptions.SmtpUserName) && 
+                if (!string.IsNullOrEmpty(_EmailOptions.SmtpUserName) &&
                     !string.IsNullOrEmpty(_EmailOptions.SmtpPassword))
                     client.Authenticate(_EmailOptions.SmtpUserName, _EmailOptions.SmtpPassword);
                 client.Send(message);
@@ -208,13 +217,103 @@ namespace CityWatch.Web.Pages.Incident
             return true;
         }
 
+
+
+        private bool SendEmailWithAzureBlob(string fileName)
+        {
+            var fromAddress = _EmailOptions.FromAddress.Split('|');
+            var toAddress = _EmailOptions.ToAddress.Split('|');
+            var ccAddress = _EmailOptions.CcAddress.Split('|');
+            var subject = _EmailOptions.Subject;
+            var messageHtml = _EmailOptions.Message;
+
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+            foreach (var address in GetToEmailAddressList(toAddress))
+                message.To.Add(address);
+
+            if (Report.DateLocation.ReimbursementYes)
+            {
+                message.Cc.Add(new MailboxAddress(ccAddress[1], ccAddress[0]));
+            }
+            /* Mail Id added Bcc globoconsoftware for checking Ir Mail not getting Issue Start(date 13,09,2023) */
+            message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
+            /* Mail Id added Bcc globoconsoftware end */
+            var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite && x.ClientType.Name == Report.DateLocation.ClientType);
+
+            if (clientSite != null && !string.IsNullOrEmpty(clientSite.Emails))
+            {
+                foreach (var email in clientSite.Emails.Split(","))
+                {
+                    if (CommonHelper.IsValidEmail(email))
+                        message.Cc.Add(new MailboxAddress(string.Empty, email.Trim()));
+                }
+            }
+
+            message.Subject = $"{subject} - {Report.DateLocation.ClientType} - {Report.DateLocation.ClientSite}";
+            /* azure blob Implementation download link add to mail body 25-9-2023* Start*/
+            var azureStorageConnectionString = _configuration.GetSection("AzureStorage").Get<List<string>>();
+            if (azureStorageConnectionString.Count > 0)
+            {
+                if (azureStorageConnectionString[0] != null)
+                {
+                    string connectionString = azureStorageConnectionString[0];
+                    string blobName = Path.GetFileName(fileName);
+                    string containerName = "irfiles";
+                    BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
+                    BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+                    containerClient.CreateIfNotExists();
+                    /* The container Structure like irfiles/20230925*/
+                    BlobClient blobClient = containerClient.GetBlobClient(new string(blobName.Take(8).ToArray()) + "/" + blobName);
+                    using FileStream fs = System.IO.File.OpenRead(fileName);
+                    var blobHttpHeader = new BlobHttpHeaders { ContentType = "application/pdf" };
+                    blobClient.Upload(fs, new BlobUploadOptions { HttpHeaders = blobHttpHeader });
+                    fs.Close();
+                    messageHtml = messageHtml + "<p>Please " +
+                    "<a href=\" https://c4istorage1.blob.core.windows.net/irfiles/" + (new string(blobName.Take(8).ToArray()) + "/" + blobName) + "\" target=\"_blank\">" +
+                    "click here</a> to download the Incident Report</p>";
+                }
+
+            }
+            /* azure blob Implementation 25-9-2023* End*/
+            var builder = new BodyBuilder()
+            {
+                HtmlBody = messageHtml
+            };
+            builder.Attachments.Add(fileName);
+            message.Body = builder.ToMessageBody();
+            using (var client = new SmtpClient())
+            {
+                client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                if (!string.IsNullOrEmpty(_EmailOptions.SmtpUserName) &&
+                    !string.IsNullOrEmpty(_EmailOptions.SmtpPassword))
+                    client.Authenticate(_EmailOptions.SmtpUserName, _EmailOptions.SmtpPassword);
+                client.Send(message);
+                client.Disconnect(true);
+            }
+
+            return true;
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         private List<MailboxAddress> GetToEmailAddressList(string[] toAddress)
         {
             var emailAddressList = new List<MailboxAddress>();
             emailAddressList.Add(new MailboxAddress(toAddress[1], toAddress[0]));
-
             var fields = _configDataProvider.GetReportFields().ToList();
-            
+
             var positionEmailTo = GetFieldEmailAddress(fields, ReportFieldType.Position, Report.Officer.Position);
             if (!string.IsNullOrEmpty(positionEmailTo))
                 emailAddressList.Add(new MailboxAddress(string.Empty, positionEmailTo));
@@ -239,11 +338,11 @@ namespace CityWatch.Web.Pages.Incident
         {
             var lastSequenceNumber = 0;
             var configuration = _appConfigurationProvider.GetConfigurationByName(LAST_USED_IR_SEQ_NO_CONFIG_NAME);
-            if(configuration != null)
+            if (configuration != null)
             {
                 lastSequenceNumber = int.Parse(configuration.Value);
                 lastSequenceNumber++;
-                configuration.Value = lastSequenceNumber.ToString(); 
+                configuration.Value = lastSequenceNumber.ToString();
                 _appConfigurationProvider.SaveConfiguration(configuration);
             }
             return lastSequenceNumber.ToString().PadLeft(5, '0');
@@ -370,10 +469,10 @@ namespace CityWatch.Web.Pages.Incident
                 SerialNo = Report.SerialNumber,
                 ColourCode = Report.SiteColourCodeId,
                 IsPlateLoaded = Report.PlateLoadedYes,
-                PlateId=0,
-                VehicleRego=null,
+                PlateId = 0,
+                VehicleRego = null,
                 LogId = AuthUserHelper.LoggedInUserId.GetValueOrDefault(),
-             IncidentReportEventTypes = Report.IrEventTypes.Select(z => new IncidentReportEventType() { EventType = z }).ToList()
+                IncidentReportEventTypes = Report.IrEventTypes.Select(z => new IncidentReportEventType() { EventType = z }).ToList()
             };
 
             if (!reportGenerated)
@@ -397,7 +496,7 @@ namespace CityWatch.Web.Pages.Incident
                     {
                         var incidentreportid = _clientDataProvider.GetMaxIncidentReportId(AuthUserHelper.LoggedInUserId.GetValueOrDefault());
                         var incidentreportsplateid = _clientDataProvider.GetIncidentDetailsKvlReport(AuthUserHelper.LoggedInUserId.GetValueOrDefault());
-                        for(int i=0; i< incidentreportsplateid.Count;i++)
+                        for (int i = 0; i < incidentreportsplateid.Count; i++)
                         {
                             _irDataProvider.UpdateReport(incidentreportid, Convert.ToInt32(incidentreportsplateid[i].Id));
                         }
@@ -422,7 +521,7 @@ namespace CityWatch.Web.Pages.Incident
                 try
                 {
                     if (!Convert.ToBoolean(Request.Form["Report.DisableEmail"]))
-                        SendEmail(Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
+                        SendEmailWithAzureBlob(Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
                 }
                 catch (Exception ex)
                 {
@@ -496,14 +595,14 @@ namespace CityWatch.Web.Pages.Incident
 
             return new JsonResult(new { status = status, message = message });
         }
-        public JsonResult OnPostDeleteFullPlateLoaded(Data.Models.IncidentReportsPlatesLoaded report,int Count)
+        public JsonResult OnPostDeleteFullPlateLoaded(Data.Models.IncidentReportsPlatesLoaded report, int Count)
         {
             var status = true;
             var message = "Success";
             try
             {
                 report.LogId = AuthUserHelper.LoggedInUserId.GetValueOrDefault();
-                _clientDataProvider.DeleteFullPlateLoaded(report,Count);
+                _clientDataProvider.DeleteFullPlateLoaded(report, Count);
             }
             catch (Exception ex)
             {
@@ -515,12 +614,12 @@ namespace CityWatch.Web.Pages.Incident
         }
         public JsonResult OnGetPlateLoaded(int TruckConfig)
         {
-           
-                
-                var TruckConfigText = _clientDataProvider.GetKeyVehicleLogFieldsByTruckId(TruckConfig);
 
-               
-            
+
+            var TruckConfigText = _clientDataProvider.GetKeyVehicleLogFieldsByTruckId(TruckConfig);
+
+
+
 
 
             return new JsonResult(new { TruckConfigText });
@@ -529,10 +628,10 @@ namespace CityWatch.Web.Pages.Incident
         {
 
             int LogId = AuthUserHelper.LoggedInUserId.GetValueOrDefault();
-           
+
             var Count = _clientDataProvider.GetIncidentReportsPlatesCount(PlateId, TruckNo, AuthUserHelper.LoggedInUserId.GetValueOrDefault());
 
-           
+
 
             return new JsonResult(new { Count });
         }
