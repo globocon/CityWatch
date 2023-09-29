@@ -11,6 +11,7 @@ namespace CityWatch.Web.Services
     {
         List<GuardLogViewModel> GetAuditGuardLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
         List<KeyVehicleLogViewModel> GetKeyVehicleLogs(KeyVehicleLogAuditLogRequest keyVehicleLogAuditLogRequest);
+        List<KeyVehicleLogViewModel> GetKeyVehicleLogsWithPOI(KeyVehicleLogAuditLogRequest keyVehicleLogAuditLogRequest);
     }
 
     public class AuditLogViewDataService : IAuditLogViewDataService
@@ -62,6 +63,26 @@ namespace CityWatch.Web.Services
                     (!kvlRequest.TrailerType.HasValue || z.TrailerType == kvlRequest.TrailerType) &&
                     (!kvlRequest.ClientSitePocId.HasValue || z.ClientSitePocId == kvlRequest.ClientSitePocId) &&
                     (!kvlRequest.ClientSiteLocationId.HasValue || z.ClientSiteLocationId == kvlRequest.ClientSiteLocationId) &&
+                    (string.IsNullOrEmpty(kvlRequest.KeyNo) || (!string.IsNullOrEmpty(z.KeyNo) && z.KeyNo.Contains(kvlRequest.KeyNo))))
+                .Select(z => new KeyVehicleLogViewModel(z, kvlFields))
+                .ToList();
+        }
+        public List<KeyVehicleLogViewModel> GetKeyVehicleLogsWithPOI(KeyVehicleLogAuditLogRequest kvlRequest)
+        {
+            var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
+            return _guardLogDataProvider.GetKeyVehicleLogs(kvlRequest.ClientSiteIds, kvlRequest.LogFromDate, kvlRequest.LogToDate)
+                .Where(z =>
+                    (string.IsNullOrEmpty(kvlRequest.VehicleRego) || string.Equals(z.VehicleRego, kvlRequest.VehicleRego, StringComparison.OrdinalIgnoreCase)) &&
+                    (string.IsNullOrEmpty(kvlRequest.CompanyName) || string.Equals(z.CompanyName, kvlRequest.CompanyName, StringComparison.OrdinalIgnoreCase)) &&
+                    (string.IsNullOrEmpty(kvlRequest.PersonName) || string.Equals(z.PersonName, kvlRequest.PersonName, StringComparison.OrdinalIgnoreCase)) &&
+                    (!kvlRequest.PersonType.HasValue || z.PersonType == kvlRequest.PersonType) &&
+                    (!kvlRequest.EntryReason.HasValue || z.EntryReason == kvlRequest.EntryReason) &&
+                    (string.IsNullOrEmpty(kvlRequest.Product) || z.Product == kvlRequest.Product) &&
+                    (!kvlRequest.TruckConfig.HasValue || z.TruckConfig == kvlRequest.TruckConfig) &&
+                    (!kvlRequest.TrailerType.HasValue || z.TrailerType == kvlRequest.TrailerType) &&
+                    (!kvlRequest.ClientSitePocId.HasValue || z.ClientSitePocId == kvlRequest.ClientSitePocId) &&
+                    (!kvlRequest.ClientSiteLocationId.HasValue || z.ClientSiteLocationId == kvlRequest.ClientSiteLocationId) &&
+                    (string.IsNullOrEmpty(kvlRequest.PersonOfInterest) || kvlRequest.PersonOfInterestIds.Contains(Convert.ToInt16(z.PersonOfInterest))) &&
                     (string.IsNullOrEmpty(kvlRequest.KeyNo) || (!string.IsNullOrEmpty(z.KeyNo) && z.KeyNo.Contains(kvlRequest.KeyNo))))
                 .Select(z => new KeyVehicleLogViewModel(z, kvlFields))
                 .ToList();

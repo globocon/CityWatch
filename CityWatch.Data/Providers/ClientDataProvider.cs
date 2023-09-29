@@ -70,6 +70,8 @@ namespace CityWatch.Data.Providers
         List<ClientSiteLinksPageType> GetSiteLinksPageTypes();
         List<ClientSiteLinksDetails> GetSiteLinksPageDetails(int type);
         int SaveClientSiteLinksPageType(ClientSiteLinksPageType ClientSiteLinksPageTypeRecord);
+        int SaveFeedbackType(FeedbackType FeedbackNewTypeRecord);
+        
         int SaveSiteLinkDetails(ClientSiteLinksDetails ClientSiteLinksDetailsRecord);
         void DeleteSiteLinkDetails(int id);
         int GetIncidentReportsPlatesCount(int PlateId, string TruckNo, int? userId);
@@ -77,6 +79,7 @@ namespace CityWatch.Data.Providers
         List<ClientSiteLinksDetails> GetSiteLinkDetailsUsingTypeAndState(int type);
         string GetSiteLinksTypeUsingId(int typeId);
         int DeleteClientSiteLinksPageType(int typeId);
+        int DeleteFeedBackType(int typeId);
         List<KeyVehcileLogField> GetKeyVehicleLogFieldsByTruckId(int TruckConfig);
 
     }
@@ -759,8 +762,56 @@ namespace CityWatch.Data.Providers
 
             return saveStatus;
         }
+        //to save  the feedback type-start
+        public int SaveFeedbackType(FeedbackType FeedbackNewTypeRecord)
+        {
+            int saveStatus = -1;
+            if (FeedbackNewTypeRecord != null)
+            {
+
+                if (FeedbackNewTypeRecord.Id == 0)
+                {
+                    var FeedbackNewTypeToUpdate = _context.FeedbackType.SingleOrDefault(x => x.Name == FeedbackNewTypeRecord.Name);
+
+                    if (FeedbackNewTypeToUpdate == null)
+                    {
+                        _context.FeedbackType.Add(new FeedbackType() { Name = FeedbackNewTypeRecord.Name });
+
+                        saveStatus = 1;
+
+                    }
+                    else
+                    {
+                        saveStatus = -1;
+                    }
+
+                }
+                else
+                {
+                    var FeedbackNewTypeToUpdate = _context.FeedbackType.SingleOrDefault(x => x.Id == FeedbackNewTypeRecord.Id);
+                    if (FeedbackNewTypeToUpdate != null)
+                    {
+
+                        FeedbackNewTypeToUpdate.Name = FeedbackNewTypeRecord.Name;
+                        saveStatus = 1;
+                    }
 
 
+                }
+
+
+                _context.SaveChanges();
+                if (saveStatus != -1)
+                {
+                    var lastInsertedId = _context.FeedbackType.SingleOrDefault(x => x.Name == FeedbackNewTypeRecord.Name);
+                    saveStatus = lastInsertedId.Id;
+
+                }
+            }
+
+            return saveStatus;
+        }
+        //to save  the feedback type-end
         public int SaveSiteLinkDetails(ClientSiteLinksDetails ClientSiteLinksDetailsRecord)
         {
             int saveStatus = 0;
@@ -887,7 +938,28 @@ namespace CityWatch.Data.Providers
                 return 1;
             }
         }
-        
+        //to delete the feedback type-start
+        public int DeleteFeedBackType(int typeId)
+        {
+            if (typeId == -1)
+                return 0;
+
+            var feedBackTypeToDelete = _context.FeedbackType.SingleOrDefault(x => x.Id == typeId);
+            if (feedBackTypeToDelete == null)
+            {
+
+                return 0;
+            }
+            else
+            {
+                
+
+                _context.FeedbackType.Remove(feedBackTypeToDelete);
+                _context.SaveChanges();
+                return 1;
+            }
+        }
+        //to delete the feedback type-end
         public List<KeyVehcileLogField> GetKeyVehicleLogFieldsByTruckId(int TruckConfig)
         {
             return GetKeyVehicleLogFields()

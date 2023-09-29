@@ -43,5 +43,15 @@ namespace CityWatch.Web.Models
         public int? ClientSiteLocationId { get; set; }
 
         public string KeyNo { get; set; }
+        //public int? PersonOfInterest { get; set; }
+        public string PersonOfInterest { get; set; }
+        public int[] PersonOfInterestIds
+        {
+            get
+            {
+                return PersonOfInterest?.Split(",").Select(z => int.Parse(z)).ToArray() ?? Array.Empty<int>();
+            }
+        }
+
     }
 }

@@ -43,7 +43,8 @@ namespace CityWatch.Web.Services
         List<SelectListItem> GuardMonth { get; }
         List<SelectListItem> VehicleRegos { get; }
         string GetFeedbackTemplateText(int id);
-        List<SelectListItem> GetFeedbackTemplatesByType(FeedbackType type);
+        //List<SelectListItem> GetFeedbackTemplatesByType(FeedbackType type);
+        List<SelectListItem> GetFeedbackTemplatesByType(int type);
         List<SelectListItem> GetOfficerPositions(OfficerPositionFilter positionFilter = OfficerPositionFilter.All);
         List<SelectListItem> GetUserClientTypes(int? userId);
         List<SelectListItem> GetUserClientSites(int? userId, string type = "");
@@ -297,8 +298,19 @@ namespace CityWatch.Web.Services
             }
             return sites;
         }
-        
-        public List<SelectListItem> GetFeedbackTemplatesByType(FeedbackType type)
+
+        //public List<SelectListItem> GetFeedbackTemplatesByType(FeedbackType type)
+        //{
+        //    var feedbackTemplates = _configDataProvider.GetFeedbackTemplates().Where(z => z.Type == type.Id);
+        //    var items = new List<SelectListItem>() { new SelectListItem("Select Template", "", true) };
+        //    foreach (var item in feedbackTemplates)
+        //    {
+        //        items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+        //    }
+
+        //    return items;
+        //}
+        public List<SelectListItem> GetFeedbackTemplatesByType(int type)
         {
             var feedbackTemplates = _configDataProvider.GetFeedbackTemplates().Where(z => z.Type == type);
             var items = new List<SelectListItem>() { new SelectListItem("Select Template", "", true) };
@@ -309,7 +321,6 @@ namespace CityWatch.Web.Services
 
             return items;
         }
-
         public string GetFeedbackTemplateText(int id)
         {
             return _configDataProvider.GetFeedbackTemplates().SingleOrDefault(x => x.Id == id)?.Text;
@@ -561,7 +572,7 @@ namespace CityWatch.Web.Services
             foreach (var profile in profiles)
             {
                 profile.KeyVehicleLogProfile.KeyVehicleLog = kvls.SingleOrDefault(z => z.Id == profile.KeyVehicleLogProfile.CreatedLogId);
-                if (profile.IsPOIAlert == true)
+                if (profile.PersonOfInterest !=null)
                 {
                     profile.POIImageDisplay = "<img  src=" + profile.POIImage + " height=35px width=35px class=ml-2 />";
                   //  profile.POIImage = "Yes";

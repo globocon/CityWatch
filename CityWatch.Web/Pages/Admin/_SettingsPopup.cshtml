@@ -132,3 +132,67 @@
         </div>
     </div>
 </div>
+<!-- Category modal -->
+<div class="modal" tabindex="-1" role="dialog" id="category-modal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Category</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group row">
+                        <label for="feedBackType" class="ml-3 col-form-label">Category</label>
+                        <div class="col-sm-7">
+                            <input type="text" class="form-control" id="feedBackType">
+                        </div>
+                        <button type="button" id="btnSaveFeedBackType" class="btn btn-outline-primary">Save</button>
+                    </div>
+                    <table class="table gj-grid gj-grid-bootstrap gj-grid-bootstrap-4 table-bordered table-sm" id="feedbackType_settings">
+                        <thead>
+                            <tr data-role="caption">
+                                <th data-field="title" width="80%" style="text-align: left;">
+                                    <div data-role="title">Category</div>
+                                </th>
+                                <th data-field="" width="20%" style="text-align: center;">
+                                    <i class="fa fa-cogs" aria-hidden="true"></i>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="2" class="p-0 b-0">
+                                    <ul id="itemfeedbackList" class="list-group d-block w-auto">
+                                        @if (@Model.ConfigDataProiver.GetFeedbackTypes() != null)
+                                        {
+
+                                            foreach (var item in @Model.ConfigDataProiver.GetFeedbackTypes())
+                                            {
+                                                <li class="list-group-item" id="attach_@item.Id" data-index="@item.Id" style="border-left: 0;border-right: 0;">
+                                                    @item.Name
+                                                    <i class="fa fa-trash-o ml-2 text-danger btn-delete-feedback-type" title="Delete" style="cursor: pointer;float:right"></i>
+
+                                                </li>
+
+                                            }
+                                        }
+                                    </ul>
+                                </td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+
+                    <div class="form-group row">
+                        <div class="col-sm-8">
+                            <span id="feedBackType-modal-validation" class="text-danger hide"></span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
