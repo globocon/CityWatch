@@ -37,7 +37,7 @@ namespace CityWatch.Data.Services
             //var feedbackTemplates = _configDataProvider.GetFeedbackTemplates().Where(x => x.Type == FeedbackType.ColourCodes);
 
             //To get the feedback id for Colour Codes -start
-            int feedbackTypes= Convert.ToInt16(_configDataProvider.GetFeedbackTypes().Where(x => x.Name == "Colour Codes").Select(x=> x.Id));
+            var feedbackTypes= _configDataProvider.GetFeedbackTypes().Where(x => x.Name == "Colour Codes").Select(x=> x.Id).FirstOrDefault();
             var feedbackTemplates = _configDataProvider.GetFeedbackTemplates().Where(x => x.Type == feedbackTypes);
             //To get the feedback id for Colour Codes -end
 
