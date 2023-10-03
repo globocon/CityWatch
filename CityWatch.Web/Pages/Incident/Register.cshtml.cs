@@ -22,6 +22,8 @@ using System.Text.Json;
 using Azure.Storage.Blobs;
 using Microsoft.Extensions.Configuration;
 using Azure.Storage.Blobs.Models;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 
 namespace CityWatch.Web.Pages.Incident
@@ -73,9 +75,108 @@ namespace CityWatch.Web.Pages.Incident
             _configuration = configuration;
         }
         public IConfigDataProvider ConfigDataProiver { get { return _configDataProvider; } }
-        public void OnGet()
+        public IActionResult OnGet()
         {
+            // Deserialize the object back into the complex object
+
+
             HttpContext.Session.SetString("ReportReference", Guid.NewGuid().ToString());
+            var httpContext = HttpContext;
+
+            // Check if the Referer header is present in the request
+            if (httpContext.Request.Headers.ContainsKey("Referer"))
+            {
+                // Get the Referer URL
+                string refererUrl = httpContext.Request.Headers["Referer"].ToString();
+                //https://localhost:44356/Incident/Notify
+                if (HttpContext.Session.GetString("IRReport") != null)
+                {
+                    var serializedObject = HttpContext.Session.GetString("IRReport");
+                    var IrPreviousObject = JsonSerializer.Deserialize<IncidentRequest>(serializedObject);
+
+                    Report = new IncidentRequest
+                    {
+                        EventType = new EventType
+                        {
+                            HrRelated = IrPreviousObject.EventType.HrRelated,
+                            OhsMatters = IrPreviousObject.EventType.HrRelated,
+                            SecurtyBreach = IrPreviousObject.EventType.SecurtyBreach,
+                            EquipmentDamage = IrPreviousObject.EventType.EquipmentDamage,
+                            Thermal = IrPreviousObject.EventType.Thermal,
+                            Emergency = IrPreviousObject.EventType.Emergency,
+                            SiteColour = IrPreviousObject.EventType.SiteColour,
+                            HealthDepart = IrPreviousObject.EventType.HealthDepart,
+                            GeneralSecurity = IrPreviousObject.EventType.GeneralSecurity,
+                            AlarmActive = IrPreviousObject.EventType.AlarmActive,
+                            AlarmDisabled = IrPreviousObject.EventType.AlarmDisabled,
+                            AuthorisedPerson = IrPreviousObject.EventType.AlarmDisabled,
+                            Equipment = IrPreviousObject.EventType.AlarmDisabled,
+                            Other = IrPreviousObject.EventType.AlarmDisabled,
+                        },
+                        SiteColourCodeId = IrPreviousObject.SiteColourCodeId,
+                        WandScannedYes3a = IrPreviousObject.WandScannedYes3a,
+                        WandScannedYes3b = IrPreviousObject.WandScannedYes3b,
+                        WandScannedNo = IrPreviousObject.WandScannedNo,
+                        BodyCameraYes = IrPreviousObject.BodyCameraYes,
+                        BodyCameraNo = IrPreviousObject.BodyCameraNo,
+                        Officer = new Officer
+                        {
+                            FirstName = IrPreviousObject.Officer.FirstName,
+                            LastName = IrPreviousObject.Officer.LastName,
+                            Gender = IrPreviousObject.Officer.Gender,
+                            Phone = IrPreviousObject.Officer.Phone,
+                            Position = IrPreviousObject.Officer.Position,
+                            Email = IrPreviousObject.Officer.Email,
+                            LicenseNumber = IrPreviousObject.Officer.LicenseNumber,
+                            LicenseState = IrPreviousObject.Officer.LicenseState,
+                            CallSign = IrPreviousObject.Officer.CallSign,
+                            GuardMonth = IrPreviousObject.Officer.GuardMonth,
+                            NotifiedBy = IrPreviousObject.Officer.NotifiedBy,
+                            Billing = IrPreviousObject.Officer.Billing,
+                        },
+                        IsPositionPatrolCar = IrPreviousObject.IsPositionPatrolCar,
+                        DateLocation = new DateLocation
+                        {
+                            IncidentDate = IrPreviousObject.DateLocation.IncidentDate,
+                            ReportDate = IrPreviousObject.DateLocation.ReportDate,
+                            ReimbursementNo = IrPreviousObject.DateLocation.ReimbursementNo,
+                            ReimbursementYes = IrPreviousObject.DateLocation.ReimbursementYes,
+                            JobNumber = IrPreviousObject.DateLocation.JobNumber,
+                            JobTime = IrPreviousObject.DateLocation.JobTime,
+                            Duration = IrPreviousObject.DateLocation.Duration,
+                            Travel = IrPreviousObject.DateLocation.Travel,
+                            PatrolExternal = IrPreviousObject.DateLocation.PatrolExternal,
+                            PatrolInternal = IrPreviousObject.DateLocation.PatrolInternal,
+                            ClientType = IrPreviousObject.DateLocation.ClientType,
+                            ClientSite = IrPreviousObject.DateLocation.ClientSite,
+                            ClientArea = IrPreviousObject.DateLocation.ClientArea,
+                            ShowIncidentLocationAddress = IrPreviousObject.DateLocation.ShowIncidentLocationAddress,
+                            ClientAddress = IrPreviousObject.DateLocation.ClientAddress,
+                            State = IrPreviousObject.DateLocation.State,
+                            ClientStatus = IrPreviousObject.DateLocation.ClientStatus,
+                            ClientSiteLiveGps = IrPreviousObject.DateLocation.ClientSiteLiveGps,
+                        },
+                        LinkedSerialNos = IrPreviousObject.LinkedSerialNos,
+                        Feedback = IrPreviousObject.Feedback,
+                        ReportedBy = IrPreviousObject.ReportedBy,
+                    };
+                    //Report.EventType.HrRelated = IrPreviousObject.EventType.HrRelated;
+                }
+                else
+                {
+                    Report = new IncidentRequest
+                    {
+                        Officer = new Officer
+                        {
+
+                            Phone = "+61 4",
+
+                        },
+                    };
+                }
+
+            }
+            return Page();
         }
 
         public IActionResult OnGetClientSites(string type)
@@ -114,7 +215,7 @@ namespace CityWatch.Web.Pages.Incident
         }
         //To get feedback template by selecting the type-end
 
-     
+
         public IActionResult OnGetOfficerPositions(OfficerPositionFilter filter)
         {
             return new JsonResult(_ViewDataService.GetOfficerPositions((OfficerPositionFilter)filter));
@@ -282,7 +383,8 @@ namespace CityWatch.Web.Pages.Incident
                     BlobClient blobClient = containerClient.GetBlobClient(new string(blobName.Take(8).ToArray()) + "/" + blobName);
                     using FileStream fs = System.IO.File.OpenRead(fileName);
                     var blobHttpHeader = new BlobHttpHeaders { ContentType = "application/pdf" };
-                    blobClient.Upload(fs, new BlobUploadOptions { HttpHeaders = blobHttpHeader });
+                    /*Commented for local testing ,uncomment when go on live*/
+                    /* blobClient.Upload(fs, new BlobUploadOptions { HttpHeaders = blobHttpHeader });*/
                     fs.Close();
                     messageHtml = messageHtml + "<p>Please " +
                     "<a href=\" https://c4istorage1.blob.core.windows.net/irfiles/" + (new string(blobName.Take(8).ToArray()) + "/" + blobName) + "\" target=\"_blank\">" +
@@ -452,6 +554,9 @@ namespace CityWatch.Web.Pages.Incident
             // var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite);
             try
             {
+                /* Store the value of the Irresquest Object to seesion for create the Ir from the session start */
+                HttpContext.Session.SetString("IRReport", JsonSerializer.Serialize(Report));
+                /* Store the value of the Irresquest Object to seesion for create the Ir from the session end */
                 fileName = _incidentReportGenerator.GeneratePdf(Report, clientSite);
                 reportGenerated = true;
                 TempData["ReportFileName"] = fileName;
