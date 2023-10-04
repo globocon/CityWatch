@@ -495,7 +495,7 @@ namespace CityWatch.Web.Pages.Incident
                     using FileStream fs = System.IO.File.OpenRead(fileName);
                     var blobHttpHeader = new BlobHttpHeaders { ContentType = "application/pdf" };
                     /*Commented for local testing ,uncomment when go on live*/
-                    /* blobClient.Upload(fs, new BlobUploadOptions { HttpHeaders = blobHttpHeader });*/
+                    blobClient.Upload(fs, new BlobUploadOptions { HttpHeaders = blobHttpHeader });
                     fs.Close();
                     messageHtml = messageHtml + "<p>Please " +
                     "<a href=\" https://c4istorage1.blob.core.windows.net/irfiles/" + (new string(blobName.Take(8).ToArray()) + "/" + blobName) + "\" target=\"_blank\">" +
