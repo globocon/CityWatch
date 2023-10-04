@@ -11,11 +11,11 @@
         <p>
             <h4>Incident Report Submitted Successfully</h4>
             <a href="@Model.FilePath" target="_blank" class="btn btn-success btn-lg">Download Report</a>
-        </p>        
+        </p>
         <p class="pt-2">
             <h4>Thank You!</h4>
             <h5>Your report has automatically been emailed to CityWatch HQ,<br>and where applicable, also to the client.</h5>
-            <img src="~/images/warning.png" alt="Warning" width="120" height="120" />            
+            <img src="~/images/warning.png" alt="Warning" width="120" height="120" />
             <h5>Subject to site SOP's, some events will require the Client to be called <br>on their mobile or SMS sent to client to alert them (ie: FIRE issue, EPA issue, Flood, Break In etc)</h5>
         </p>
     </div>
@@ -27,15 +27,19 @@ else
         <p>There were some errors while processing this request. So, the operation is not complete.</p>
         <h5 class="mt-4">Error details:</h5>
         <pre>@Model.ErrorMessage</pre>
-        
+
         @if (Model.ReportGenerated)
         {
             <div class="mt-3">
                 <hr />
                 <p>However, the incident report is generated and ready to dowload.</p>
                 <a href="@Model.FilePath" target="_blank" class="btn btn-success btn-lg">Download Report</a>
-                <a href="/Incident/Register" class="btn btn-success btn-lg">Re-use Content for another IR</a>
             </div>
+            /* New button for Re-use Start*/
+            <div class="mt-3">
+                <a href="/Incident/Register?reuse=yes" class="btn btn-outline-success btn-lg"><i class="fa fa-play" aria-hidden="true"></i> Re-use Content for another IR ?</a>
+            </div>
+            /* New button for Re-use end*/
         }
     </div>
 }
