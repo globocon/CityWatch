@@ -32,7 +32,7 @@
         <div class="col-md-8">
             <div class="card">
                 <h4 class="card-header">Event Type</h4>
-                <div class="card-body" id="events-list">                    
+                <div class="card-body" id="events-list">
                     <div class="form-check event-type-check">
                         <label class="form-check-label">HR related; Staff Sick; Staff Late; Shift Swaps; Extra Guard Requests; Overtime</label>
                         <input asp-for="@Model.Report.EventType.HrRelated" class="form-check-input event-type">
@@ -56,7 +56,7 @@
                     <div class="form-check event-type-check">
                         <label class="form-check-label">Emergency Services on Site; inc Police, other LEA engagement, Ambulance or Fire Fighting Responses;</label>
                         <input asp-for="@Model.Report.EventType.Emergency" class="form-check-input event-type">
-                    </div>                   
+                    </div>
                     <div class="form-check event-type-check">
                         <label class="form-check-label">
                             <div class="d-flex flex-row align-content-start flex-wrap">
@@ -67,9 +67,9 @@
                                 @*Template type is directly taken from database -jisha-end *@
                                 <input type="hidden" asp-for="@Model.Report.SiteColourCode" />
                             </div>
-                        </label>                            
+                        </label>
                         <input asp-for="@Model.Report.EventType.SiteColour" class="form-check-input event-type">
-                    </div>                   
+                    </div>
                     <div class="form-check event-type-check">
                         <label class="form-check-label">Department of Health - Restraints or Seclusion / Isolation / SASH Watch</label>
                         <input asp-for="@Model.Report.EventType.HealthDepart" class="form-check-input event-type">
@@ -169,7 +169,7 @@
                         </div>
                         <div class="form-group col-md-3">
                             <label asp-for="@Model.Report.Officer.Phone"></label>
-                            <input asp-for="@Model.Report.Officer.Phone" class="form-control" >
+                            <input asp-for="@Model.Report.Officer.Phone" class="form-control">
                         </div>
                     </div>
                     <div class="form-row">
@@ -181,8 +181,8 @@
                                     <label class="custom-control-label" for="positionfilter">Patrol Car</label>
                                 </div>
                             </div>
-                            <select asp-for="@Model.Report.Officer.Position" asp-items="@Model.ViewDataService.GetOfficerPositions(OfficerPositionFilter.NonPatrolOnly)" class="form-control"></select>
-                            <input type="hidden" asp-for="@Model.Report.IsPositionPatrolCar" value="false"/>
+                            <select asp-for="@Model.Report.Officer.Position" asp-items="@Model.OfficerPosition" class="form-control"></select>
+                            <input type="hidden" asp-for="@Model.Report.IsPositionPatrolCar" value="false" />
                         </div>
                         <div class="form-group col-md-3">
                             <label asp-for="@Model.Report.Officer.Email"></label>
@@ -207,9 +207,9 @@
                                 }
                             </select>
                         </div>
-                         <div class="form-group col-md-3">
+                        <div class="form-group col-md-3">
                             <label asp-for="@Model.Report.Officer.GuardMonth"></label>
-                            <select asp-for="@Model.Report.Officer.GuardMonth"  asp-items="@Model.ViewDataService.GuardMonth" class="form-control"></select>
+                            <select asp-for="@Model.Report.Officer.GuardMonth" asp-items="@Model.ViewDataService.GuardMonth" class="form-control"></select>
                         </div>
                         <div class="form-group col-md-3">
                             <label asp-for="@Model.Report.Officer.NotifiedBy"></label>
@@ -259,10 +259,10 @@
                                 </div>
                                 <div class="form-check form-check-inline">
                                     <input asp-for="@Model.Report.DateLocation.ReimbursementYes" class="form-check-input">
-                                    <label class="form-check-label font-weight-normal">YES (& Receipt Attached)</label>   
+                                    <label class="form-check-label font-weight-normal">YES (& Receipt Attached)</label>
                                 </div>
                             </div>
-                        </div>                    
+                        </div>
                         <div class="form-group col-md-2 col-ipad-25">
                             <label>JOB No. & Times:</label>
                             <div class="d-flex flex-column">
@@ -272,7 +272,7 @@
                                 </div>
                                 <div class="form-group form-check-inline">
                                     <label asp-for="@Model.Report.DateLocation.JobTime" class="font-weight-normal mr-2"></label>
-                                    <input type="time" asp-for="@Model.Report.DateLocation.JobTime" pattern="^([0-1]?[0-9]|2[0-4]):([0-5][0-9])(:[0-5][0-9])?$"  class="form-control inputs time">
+                                    <input type="time" asp-for="@Model.Report.DateLocation.JobTime" pattern="^([0-1]?[0-9]|2[0-4]):([0-5][0-9])(:[0-5][0-9])?$" class="form-control inputs time">
                                 </div>
                                 <div class="form-group form-check-inline">
                                     <label asp-for="@Model.Report.DateLocation.Duration" class="font-weight-normal mr-2"></label>
@@ -281,7 +281,7 @@
                                 <div class="form-group form-check-inline">
                                     <label asp-for="@Model.Report.DateLocation.Travel" class="font-weight-normal mr-2"></label>
                                     <input asp-for="@Model.Report.DateLocation.Travel" readonly class="form-control bg-light">
-                                </div>                                
+                                </div>
                             </div>
                         </div>
                         <div class="form-group col-md-2 col-ipad-25 pl-md-3">
@@ -292,7 +292,7 @@
                                     <input asp-for="@Model.Report.DateLocation.PatrolExternal" class="form-check-input">
                                 </div>
                                 <div class="form-check form-check-inline">
-                                    <label asp-for="@Model.Report.DateLocation.PatrolInternal" class="form-check-label font-weight-normal mr-2"></label>   
+                                    <label asp-for="@Model.Report.DateLocation.PatrolInternal" class="form-check-label font-weight-normal mr-2"></label>
                                     <input asp-for="@Model.Report.DateLocation.PatrolInternal" class="form-check-input">
                                 </div>
                                 <div class="pt-3" style="font-size:0.8rem">NOTE: If WAND points do not exist, or are missing you <u>must</u> take photos <b>AND</b> mention in notes that there are NO WAND points</div>
@@ -304,74 +304,74 @@
                                 <div class="col-md-5 pt-2">
                                     <label asp-for="@Model.Report.DateLocation.ClientType" class="font-weight-normal"></label>
                                     <select asp-for="@Model.Report.DateLocation.ClientType" asp-items="@Model.ViewDataService.GetUserClientTypes(AuthUserHelper.LoggedInUserId)" class="form-control"></select>
-                                    <span asp-validation-for="@Model.Report.DateLocation.ClientType"></span> 
+                                    <span asp-validation-for="@Model.Report.DateLocation.ClientType"></span>
                                 </div>
                                 <div class="col-md-5 pt-2">
                                     <label asp-for="@Model.Report.DateLocation.ClientSite" class="font-weight-normal"></label>
-                                    <select asp-for="@Model.Report.DateLocation.ClientSite" class="form-control"></select>                                    
+                                    <select asp-for="@Model.Report.DateLocation.ClientSite" class="form-control" asp-items="@Model.ClientSites"></select>
                                     <span asp-validation-for="@Model.Report.DateLocation.ClientSite"></span>
                                 </div>
                                 <div class="col-md-2 pt-2">
                                     <label asp-for="@Model.Report.DateLocation.ClientArea" class="font-weight-normal"></label>
                                     <select asp-for="@Model.Report.DateLocation.ClientArea" class="form-control">
-                                          @foreach (var item in @Model.ViewDataService.ClientArea)
-                                            {
-                                                 <option value="@item.Value">@item.Text</option>
-                                            }
+                                        @foreach (var item in @Model.ViewDataService.ClientArea)
+                                        {
+                                            <option value="@item.Value">@item.Text</option>
+                                        }
                                     </select>
                                 </div>
                             </div>
                             <div class="form-row">
-                               <div class="col-md-8 pt-2">
+                                <div class="col-md-8 pt-2">
                                     <div class="d-flex flex-row justify-content-between">
                                         <label asp-for="@Model.Report.DateLocation.ClientAddress" class="font-weight-normal"></label>
                                         <div class="text-right">
-                                            <input type="checkbox"  asp-for="@Model.Report.DateLocation.ShowIncidentLocationAddress"  class="form-check-input" />
+                                            <input type="checkbox" asp-for="@Model.Report.DateLocation.ShowIncidentLocationAddress" class="form-check-input" />
                                             <label class="font-weight-normal">Incident Location</label>
                                         </div>
                                     </div>
-                                   <input asp-for="@Model.Report.DateLocation.ClientAddress" class="form-control"/>
-                                   <input type="hidden" id="clientSiteAddress" />
-                               </div>
-                                <div class="col-md-2 pt-2">
-                                   <label asp-for="@Model.Report.DateLocation.State" class="font-weight-normal"></label>
-                                   <select asp-for="@Model.Report.DateLocation.State" asp-items="@Model.ViewDataService.States" class="form-control"></select>                            
+                                    <input asp-for="@Model.Report.DateLocation.ClientAddress" class="form-control" />
+                                    <input type="hidden" id="clientSiteAddress" />
                                 </div>
                                 <div class="col-md-2 pt-2">
-                                   <label class="font-weight-normal">GPS Map Link</label>
-                                   <div class="d-block">
+                                    <label asp-for="@Model.Report.DateLocation.State" class="font-weight-normal"></label>
+                                    <select asp-for="@Model.Report.DateLocation.State" asp-items="@Model.ViewDataService.States" class="form-control"></select>
+                                </div>
+                                <div class="col-md-2 pt-2">
+                                    <label class="font-weight-normal">GPS Map Link</label>
+                                    <div class="d-block">
                                         <a href="#" id="clientGpsLink" class="btn btn-outline-secondary disabled" target="_blank"><i class="fa fa-map"></i></a>
-                                       <input type="hidden" id="clientSiteGps" />
-                                   </div>
+                                        <input type="hidden" id="clientSiteGps" />
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-row">
-                               <div class="col-md-8 pt-2">
-                                   <label asp-for="@Model.Report.DateLocation.ClientStatus" class="font-weight-normal"></label>
-                                   <div class="row">
-                                       <div class="col-md-3"><span><i class="fa fa-circle mr-2 client-status-circle" id="client_status_0"></i>Ongoing</span></div>
-                                       <div class="col-md-3">
-                                           <span><i class="fa fa-circle mr-2 client-status-circle" id="client_status_1"></i>Expiring</span>
-                                           <span id="client_status_date_1" class="small"></span>
-                                       </div>
-                                       <div class="col-md-6">
-                                           <span><i class="fa fa-circle mr-2 client-status-circle" id="client_status_2"></i>Expired</span>
-                                           <span id="client_status_date_2" class="small"></span>
-                                           <span class="small d-none text-danger" id="client_site_expiring_msg">Site is inactive – please confirm with Citywatch if guarding is actually required</span>
-                                       </div>
-                                   </div>
-                               </div> 
-                               <div class="col-md-4 pt-2"> 
-                                   <label class="font-weight-normal">GPS Coordinates</label>
-                                   <div id="liveGpsWrapper">n/a</div>
-                                   <input asp-for="@Model.Report.DateLocation.ClientSiteLiveGps" />
-                               </div>
+                                <div class="col-md-8 pt-2">
+                                    <label asp-for="@Model.Report.DateLocation.ClientStatus" class="font-weight-normal"></label>
+                                    <div class="row">
+                                        <div class="col-md-3"><span><i class="fa fa-circle mr-2 client-status-circle" id="client_status_0"></i>Ongoing</span></div>
+                                        <div class="col-md-3">
+                                            <span><i class="fa fa-circle mr-2 client-status-circle" id="client_status_1"></i>Expiring</span>
+                                            <span id="client_status_date_1" class="small"></span>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <span><i class="fa fa-circle mr-2 client-status-circle" id="client_status_2"></i>Expired</span>
+                                            <span id="client_status_date_2" class="small"></span>
+                                            <span class="small d-none text-danger" id="client_site_expiring_msg">Site is inactive – please confirm with Citywatch if guarding is actually required</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 pt-2">
+                                    <label class="font-weight-normal">GPS Coordinates</label>
+                                    <div id="liveGpsWrapper">n/a</div>
+                                    <input asp-for="@Model.Report.DateLocation.ClientSiteLiveGps" />
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div> 
+        </div>
     </div>
     <!-- Main Number Plates/ID's of Incident -->
     <div class="row mt-5 mt-md-3">
@@ -380,7 +380,7 @@
                 <h4 class="card-header">Main Number Plates/ID's of Incident:</h4>
                 <div class="card-body">
                     <div class="form-row" id="plateloaded">
-                       
+
                         <div class="form-group  col-md-3 mr-5">
                             <label class="col-form-label">Plates Loaded into KV?:</label>
                             <div>
@@ -395,33 +395,33 @@
                                 </div>
                             </div>
                         </div>
-                        
-                       
-                        
+
+
+
                         <div class="form-group  mr-3" id="plateLoadedCarOrTruckRegoDetails">
-                            
-                                <label>ID No. / Car or Truck Rego.</label>
-                                <input class="form-control" type="text" asp-for="@Model.Report.VehicleRego" autocomplete="off" style="width:200px;" disabled />
-                                
-                            
+
+                            <label>ID No. / Car or Truck Rego.</label>
+                            <input class="form-control" type="text" asp-for="@Model.Report.VehicleRego" autocomplete="off" style="width:200px;" disabled />
+
+
                         </div>
                         <div class="form-group col-md-5 " id="plateLoadedCarOrTruckPlateDetails">
 
-                            
+
                             <label>ID / Plate (State or AU)</label>
                             <select class="form-control" disabled id="kvl_list_plates" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.Plate)" style="width:200px;">
                             </select>
                             <input type="hidden" asp-for="@Model.Report.PlateId" id="PlateId" />
-                            <input type="hidden"  id="CompanyName" />
+                            <input type="hidden" id="CompanyName" />
                             <input type="hidden" id="TruckConfigure" />
                         </div>
                         <div class="form-group mt-4">
-                            
+
                             <button type="button" class="btn btn-primary mb-2" id="btnAddNewPlateLoadedEntry" disabled>+ Add Entry</button>
 
                         </div>
-                        
-                        
+
+
                     </div>
                     <div class="form-row">
                         <table class="table table-bordered table-striped" id="register_plate_loaded">
@@ -455,28 +455,28 @@
                                     <label><strong>Situation / Incident Report or Feedback:</strong></label>
                                     <div class="d-flex flex-row">
                                         <i class="fa fa-file-pdf-o text-danger mr-2"></i>
-                                        <span style="font-size:0.8rem" class="d-block">                                            
+                                        <span style="font-size:0.8rem" class="d-block">
                                             NOTE: The IR Portal works on almost all tasks but it is not a Word Processor. For long reports or complex matters use Word first, then save as PDF, then run the IR, and add a short note, with your PDF report as an attachment
                                         </span>
                                     </div>
                                 </div>
-                                
+
                                 <div class="col-md-7">
                                     <div class="form-group row">
 
 
 
-                                        
+
                                         <label class="col-form-label col-md-5">Serial Numbers of any Linked IR's:</label>
                                         <div class="col-md-7">
-                                            <input type="text" class="form-control" asp-for="@Model.Report.LinkedSerialNos" placeholder="n/a">                                            
+                                            <input type="text" class="form-control" asp-for="@Model.Report.LinkedSerialNos" placeholder="n/a">
                                         </div>
                                     </div>
                                     <div class="form-group row">
                                         <div class="col-md-3 ml-3">
                                             @*<select id="ddFeedbackTemplateType" class="form-control mb-3 mb-md-0" asp-items="@Html.GetEnumSelectList<FeedbackType>()"></select>*@
                                             @*Template type is directly taken from database -jisha-start*@
-                                                <select id="ddFeedbackTemplateType" class="form-control mb-3 mb-md-0">
+                                            <select id="ddFeedbackTemplateType" class="form-control mb-3 mb-md-0" asp-for="@Model.Report.FeedbackType">
                                                 @foreach (var item in Model.ConfigDataProiver.GetFeedbackTypes())
                                                 {
                                                     <option value="@item.Id">@item.Name</option>
@@ -487,7 +487,7 @@
                                         <div class="col-md-8">
                                             @*<select id="ddFeedbackTemplate" class="form-control" asp-items="@Model.ViewDataService.GetFeedbackTemplatesByType(FeedbackType.General)"></select>*@
                                             @*Template type is directly taken from database -jisha-start*@
-                                            <select id="ddFeedbackTemplate" class="form-control" asp-items="@Model.ViewDataService.GetFeedbackTemplatesByType(Convert.ToInt16(general))"></select>
+                                            <select id="ddFeedbackTemplate" class="form-control" asp-items="@Model.FeedBackTemplates" asp-for="@Model.Report.FeedbackTemplates"></select>
                                             @*Template type is directly taken from database -jisha-end*@
                                         </div>
                                     </div>
@@ -515,7 +515,7 @@
         <div class="col">
             <h4>File Attachments</h4>
             <i class="text-muted">Click Browse and select one or more files (.jpg, .jpeg, .png, .bmp, .pdf)</i>
-            <div class="custom-file mt-3">                
+            <div class="custom-file mt-3">
                 <input type="file" id="file_upload" class="custom-file-input" accept=".jpg, .jpeg, .png, .bmp, .pdf" multiple>
                 <label class="custom-file-label" for="attachments">Choose file to upload</label>
             </div>
@@ -525,15 +525,15 @@
         <div class="col-md-6">
             <ul id="files-to-upload" class="list-group d-block w-auto pt-2"></ul>
         </div>
-    </div>    
+    </div>
 </form>
 <!-- Submit Form -->
 <div class="row mt-3">
     <div class="col">
         <div asp-validation-summary="All" id="validation-summary"></div>
         <div class="custom-control custom-switch mb-3">
-          <input type="checkbox" class="custom-control-input" id="Report.DisableEmail" name="Report.DisableEmail">
-          <label class="custom-control-label" for="Report.DisableEmail">Download completed IR without sending emails</label>
+            <input type="checkbox" class="custom-control-input" id="Report.DisableEmail" name="Report.DisableEmail">
+            <label class="custom-control-label" for="Report.DisableEmail">Download completed IR without sending emails</label>
         </div>
         <button type="button" class="btn btn-primary mr-4 mb-2" id="btnSumbit">Submit Incident Report</button>
         <a href="@Url.Content("~/Pdf/Template/IR_Form_Template.pdf")" target="_blank" class="btn btn-outline-primary mb-2">Download Blank IR Template</a>
@@ -543,37 +543,37 @@
     <div class="col">
         <div style="color:red;">
             <p class="mb-md-1">
-                Clicking <u><b>SUBMIT</b></u> will automatically email CWS-HQ & Client your IR as a version 1.0 and auto-dump into Dropbox for you.<br />                
+                Clicking <u><b>SUBMIT</b></u> will automatically email CWS-HQ & Client your IR as a version 1.0 and auto-dump into Dropbox for you.<br />
             </p>
             <p class="mb-md-1">
                 A completed IR as a PDF (Offline) <u><b>OR</b></u> updates to the original IR can also be manually emailed to: <span style="color:#0366d6;"><b>cws-ir@citywatchsecurity.com.au</b></span> <br />
             </p>
             <p class="mb-md-1">
                 Updates, additional pages, and corrections, may occur post the initial release and will have a higher version number
-            </p>            
+            </p>
         </div>
     </div>
 </div>
 @section PageHeader {
-    <h3 class="text-center">INCIDENT REPORT & FEEDBACK FORM</h3>    
+    <h3 class="text-center">INCIDENT REPORT & FEEDBACK FORM</h3>
 }
 <div class="modal" tabindex="-1" role="dialog" id="msg-modal">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title"><i class="fa fa-exclamation-circle text-danger" aria-hidden="true"></i> Error</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <p>Submit failed. Please fill all required fields</p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-primary" data-dismiss="modal">Ok</button>
-      </div>
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-exclamation-circle text-danger" aria-hidden="true"></i> Error</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Submit failed. Please fill all required fields</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" data-dismiss="modal">Ok</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 <!--    Vehicle Profiles Modal -->
 <div class="modal" tabindex="-1" role="dialog" id="incident-report-profiles-modal" data-backdrop="static" data-keyboard="false">
@@ -638,7 +638,7 @@
     document.getElementById("Report_DateLocation_ReportDate").addEventListener('change', onReportDateTimeChange);
     document.getElementById("Report_DateLocation_JobTime").addEventListener('change', onJobTimeChange);
     document.getElementById("file_upload").addEventListener('change', onFileUpload);
-    //document.getElementById("cwsir-form").addEventListener('submit', onFormSubmit); 
+    //document.getElementById("cwsir-form").addEventListener('submit', onFormSubmit);
     document.getElementById("btnSumbit").addEventListener('click', onbtnSumbitClick);
     document.getElementById("clientGpsLink").addEventListener('click', onGpsLinkClick);
     document.getElementById("Report_DateLocation_ShowIncidentLocationAddress").addEventListener('change', onShowLiveAddressChange);
@@ -647,24 +647,25 @@
     document.getElementById("Report_PlateLoadedNo").addEventListener('change', onPlateLoadedChange);
     document.getElementById("Report_PlateLoadedYes").addEventListener('change', onPlateLoadedChange);
     document.getElementById("Report_VehicleRego").addEventListener('change', onPlateLoadedChange);
-    
-   
+
+
     function onWindowLoad(event) {
+        setAllControlsForIrFromPreviousIR();
         const autoCompleteLocation = new google.maps.places.Autocomplete(document.getElementById("Report_DateLocation_ClientAddress"), {
-                types: ['address'],
-                componentRestrictions: { country: 'AU' },
-                fields: ['place_id', 'geometry', 'name']
+            types: ['address'],
+            componentRestrictions: { country: 'AU' },
+            fields: ['place_id', 'geometry', 'name']
         });
         autoCompleteLocation.addListener('place_changed', function () {
-                const place = this.getPlace();
-                if (place.geometry) {
-                    var lat = place.geometry.location.lat();
-                    var lon = place.geometry.location.lng();
-                    const liveGps = lat + ',' +lon;
-                    document.getElementById("Report_DateLocation_ClientSiteLiveGps").value = liveGps;                    
-                    toggleClientGpsLink(true, liveGps);
-                }
-            });
+            const place = this.getPlace();
+            if (place.geometry) {
+                var lat = place.geometry.location.lat();
+                var lon = place.geometry.location.lng();
+                const liveGps = lat + ',' + lon;
+                document.getElementById("Report_DateLocation_ClientSiteLiveGps").value = liveGps;
+                toggleClientGpsLink(true, liveGps);
+            }
+        });
     }
 
     function onReportOfficerPositionChange(event) {
@@ -672,8 +673,8 @@
         document.getElementById("Report_IsPositionPatrolCar").value = isPositionPatrolCar;
     }
 
-    function onGpsLinkClick(event){
-        if (this.href === window.location.href+'#')
+    function onGpsLinkClick(event) {
+        if (this.href === window.location.href + '#')
             event.preventDefault();
     }
 
@@ -682,14 +683,13 @@
         onJobTimeChange();
     }
 
-    function onReportDateTimeChange(event){
+    function onReportDateTimeChange(event) {
         var incidentdate = document.getElementById("Report_DateLocation_IncidentDate").value;
-        var reportdate = document.getElementById("Report_DateLocation_ReportDate").value;        
-        if(incidentdate != "" && reportdate != "")
-        {
-             var datediff = Date.parse(reportdate) - Date.parse(incidentdate);
-             var mins = Math.abs((datediff/1000)/60);
-             document.getElementById("Report_DateLocation_Duration").value = mins;
+        var reportdate = document.getElementById("Report_DateLocation_ReportDate").value;
+        if (incidentdate != "" && reportdate != "") {
+            var datediff = Date.parse(reportdate) - Date.parse(incidentdate);
+            var mins = Math.abs((datediff / 1000) / 60);
+            document.getElementById("Report_DateLocation_Duration").value = mins;
         }
     }
 
@@ -747,10 +747,10 @@
         if (this.id == "Report_WandScannedYes3b" && this.checked) {
             document.getElementById("Report_WandScannedYes3a").checked = false;
             document.getElementById("Report_WandScannedNo").checked = false;
-        
+
             getLiveGpsCoordinates();
         }
-        
+
         if (this.id == "Report_WandScannedNo" && this.checked) {
             new MessageModal({ message: "Only click N/A if you do not have a Smart WAND – are you sure you want to continue?" }).showWarning();
             document.getElementById("Report_WandScannedYes3a").checked = false;
@@ -760,11 +760,11 @@
 
     function onEventTypeOtherChange(event) {
         if (this.id == "Report_EventType_Other" && this.checked) {
-            new MessageModal({ message: "Are you sure situation is OTHER and not a more accurate option above?" }).showWarning();            
+            new MessageModal({ message: "Are you sure situation is OTHER and not a more accurate option above?" }).showWarning();
         }
-   }
+    }
 
-    function onEventTypeSiteColourChange(event){
+    function onEventTypeSiteColourChange(event) {
         document.getElementById("Report_SiteColourCodeId").disabled = !this.checked;
         document.getElementById("Report_SiteColourCodeId").value = '';
         document.getElementById("Report_SiteColourCode").value = '';
@@ -780,7 +780,7 @@
         if (this.id == yesCheckId && this.checked) {
             document.getElementById(noCheckId).checked = false;
         }
-        
+
         if (this.id == noCheckId && this.checked) {
             document.getElementById(yesCheckId).checked = false;
         }
@@ -795,14 +795,14 @@
         const bodyCameraNo = "Report_BodyCameraNo";
 
         if (this.id == bodyCameraYes && this.checked) {
-             document.getElementById(bodyCameraNo).checked = false;
+            document.getElementById(bodyCameraNo).checked = false;
         }
 
-         if (this.id == bodyCameraNo && this.checked) {
-             document.getElementById(bodyCameraYes).checked = false;
+        if (this.id == bodyCameraNo && this.checked) {
+            document.getElementById(bodyCameraYes).checked = false;
         }
 
-        if (!document.getElementById(bodyCameraYes).checked && 
+        if (!document.getElementById(bodyCameraYes).checked &&
             !document.getElementById(bodyCameraNo).checked) {
             document.getElementById(bodyCameraNo).checked = true;
         }
@@ -811,7 +811,7 @@
     function onFileUpload(event) {
         const fileUpload = this;
         if (fileUpload.files.length > 0) {
-            
+
             let arIndex = [];
             const attachmentList = document.getElementById('files-to-upload').getElementsByTagName('li');
             for (let i = 0; i < attachmentList.length; i++)
@@ -824,19 +824,19 @@
                 const attachment_id = 'attach_' + attachIndex;
                 const li = document.createElement('li');
                 li.id = attachment_id;
-                li.className = 'list-group-item';   
-                li.dataset.index = attachIndex;                
-                let liText = document.createTextNode(file.name);  
-                
+                li.className = 'list-group-item';
+                li.dataset.index = attachIndex;
+                let liText = document.createTextNode(file.name);
+
                 const icon = document.createElement("i");
                 icon.className = 'fa fa-circle-o-notch fa-spin ml-2 text-success';
-                icon.title = 'Uploading...';                      
+                icon.title = 'Uploading...';
                 icon.style = 'cursor:pointer';
 
                 li.appendChild(liText);
                 li.appendChild(icon);
                 document.getElementById('files-to-upload').appendChild(li);
-                
+
                 // upload file to server
                 const fileForm = new FormData();
                 fileForm.append('attachments', fileUpload.files.item(i))
@@ -846,19 +846,19 @@
                     headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value },
                     body: fileForm,
                 }).then(response => response.json())
-                .then(result => {
-                    const icon = document.getElementById(result.attachmentId).getElementsByTagName('i').item(0);
-                    if (result.success) {                            
-                        icon.className = 'fa fa-trash-o ml-2 text-danger';
-                        icon.onclick = onDeleteAttachment;
-                        icon.title = 'Delete';
-                    } else {
-                        icon.className = 'fa fa-exclamation-triangle ml-2 text-warning';
-                        icon.title = 'Error';
-                    }
-                }).catch(error => {
+                    .then(result => {
+                        const icon = document.getElementById(result.attachmentId).getElementsByTagName('i').item(0);
+                        if (result.success) {
+                            icon.className = 'fa fa-trash-o ml-2 text-danger';
+                            icon.onclick = onDeleteAttachment;
+                            icon.title = 'Delete';
+                        } else {
+                            icon.className = 'fa fa-exclamation-triangle ml-2 text-warning';
+                            icon.title = 'Error';
+                        }
+                    }).catch(error => {
 
-                });
+                    });
             }
         }
     }
@@ -883,25 +883,23 @@
 
         return false;
     }
-    function truckRegistrationNumberIsValid()
-    {
+    function truckRegistrationNumberIsValid() {
         const truckregistrationNumber = document.getElementById('Report_VehicleRego').value.trim();
         if (!truckregistrationNumber) {
             return false;
         }
         return true;
     }
-    function plateIdIsValid()
-    {
+    function plateIdIsValid() {
         const plateid = document.getElementById('PlateId').value.trim();
-        if (plateid==0) {
+        if (plateid == 0) {
             return false;
         }
         return true;
     }
 
     function jobNumberIsValid() {
-        const isSecMobPatrolCar = document.getElementById("Report_IsPositionPatrolCar").value;        
+        const isSecMobPatrolCar = document.getElementById("Report_IsPositionPatrolCar").value;
         const jobNumber = document.getElementById('Report_DateLocation_JobNumber').value.trim();
         if (isSecMobPatrolCar === 'true' && !jobNumber)
             return false;
@@ -912,44 +910,43 @@
     function patrolOffsiteDateIsValid() {
         const incidentdate = document.getElementById("Report_DateLocation_IncidentDate").value;
         const reportdate = document.getElementById("Report_DateLocation_ReportDate").value;
-        
+
         if (!incidentdate) return true;
         if (new Date(incidentdate) < new Date(reportdate)) return true;
 
         return false;
     }
 
-    function siteColourCodeIsValid(){
+    function siteColourCodeIsValid() {
         const isSiteColourCodeEventType = document.getElementById("Report_EventType_SiteColour").checked;
         return !isSiteColourCodeEventType || (isSiteColourCodeEventType && document.getElementById("Report_SiteColourCodeId").value !== '');
     }
     function siteKVLCheckValid() {
         const isPlateAlert = document.getElementById("Report_PlateLoadedYes").checked;
-        var rowcount=$("#register_plate_loaded tr").length;
-        
-        return ((!isPlateAlert) || rowcount > 1  );
+        var rowcount = $("#register_plate_loaded tr").length;
+
+        return ((!isPlateAlert) || rowcount > 1);
     }
-   
-    function onbtnSumbitClick(event) {        
+
+    function onbtnSumbitClick(event) {
         const result = validateForm();
-        if (!result.isValid) {            
+        if (!result.isValid) {
             $('#msg-modal').modal();
             displayValidationSummary(result.errors);
             event.preventDefault();
             return false;
         }
-        
+
         const mainForm = document.getElementById("cwsir-form");
         const attachments = mainForm.querySelectorAll('input[name="Report.Attachments"]');
         if (attachments.length > 0) {
-            attachments.forEach(function(item){
+            attachments.forEach(function (item) {
                 mainForm.removeChild(item);
             });
         }
 
-        const attachmentList = document.getElementById('files-to-upload').getElementsByTagName('li');        
-        for (let i = 0; i < attachmentList.length; i++)
-        {
+        const attachmentList = document.getElementById('files-to-upload').getElementsByTagName('li');
+        for (let i = 0; i < attachmentList.length; i++) {
             const input = document.createElement('input');
             input.setAttribute('name', 'Report.Attachments');
             input.setAttribute('value', attachmentList[i].innerText.trim());
@@ -962,47 +959,46 @@
         input.setAttribute('value', document.getElementById("Report.DisableEmail").checked);
         input.setAttribute('type', 'hidden');
         mainForm.appendChild(input);
-       // var plateLoaded = [];
+        // var plateLoaded = [];
         var plateLoaded;
-        var i=1;
+        var i = 1;
         document.getElementById('loader').style.display = 'block';
         $('#register_plate_loaded tr:gt(0)').each(function () {
-            
-            var  plateid = $(this).find("td").eq(1).text();
-            
+
+            var plateid = $(this).find("td").eq(1).text();
+
             var truckNo = $(this).find("td").eq(2).text();
-            
-            if ((truckNo !== null || truckNo != '') && (plateid !== null || plateid !== 'undefined'))
-            {
+
+            if ((truckNo !== null || truckNo != '') && (plateid !== null || plateid !== 'undefined')) {
                 plateLoaded = {
-                        PlateId: plateid,
-                        TruckNo: truckNo
-                      }
+                    PlateId: plateid,
+                    TruckNo: truckNo
+                }
             }
-            i=i+1;
-            
+            i = i + 1;
+
         });
         fetch('/Incident/Register?handler=submit', {
             method: 'POST',
-            headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value  },
-           
+            headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value },
+
             body: new FormData(mainForm),
         }).then(response => response.json())
-        .then(result => {
-            document.getElementById('loader').style.display = 'none';
-            if (result.success) {
-                window.location.replace('/Incident/Notify');
-            } else {
-                result.errors.forEach(function(item){
-                    const span = document.querySelector("span[data-valmsg-for='" + item.propertyName + "']");
-                    span.innerText = item.errorList[0];
-                    span.className = "field-validation-error";
-                });
-                displayValidationSummary(result.errors)
-            }
-        }).catch(error => {
+            .then(result => {
+                document.getElementById('loader').style.display = 'none';
+                if (result.success) {
+                    window.location.replace('/Incident/Notify');
+                } else {
+                    result.errors.forEach(function (item) {
+                        const span = document.querySelector("span[data-valmsg-for='" + item.propertyName + "']");
+                        span.innerText = item.errorList[0];
+                        span.className = "field-validation-error";
+                    });
+                    displayValidationSummary(result.errors)
+                }
+            }).catch(error => {
 
-        });
+            });
         //$.ajax({
         //    url: '/Incident/Register?handler=submit',
         //    data: { $('#cwsir-form').serialize(), 'plateLoaded': plateLoaded },
@@ -1028,43 +1024,43 @@
     function validateForm() {
         let errors = [];
 
-        if(!eventTypeSelected()) {
-            errors.push({field: 'Event Type', errorList: ['Please select an event type']});
-        }        
+        if (!eventTypeSelected()) {
+            errors.push({ field: 'Event Type', errorList: ['Please select an event type'] });
+        }
 
         if (!smartWandScanned()) {
-            errors.push({field: 'Smart Wand Scanned', errorList: ['Please select "was smart wand scanned?"']});
+            errors.push({ field: 'Smart Wand Scanned', errorList: ['Please select "was smart wand scanned?"'] });
         }
 
         if (!jobNumberIsValid()) {
-            errors.push({field: 'Job Number', errorList: ['Please fill "job number"']});
+            errors.push({ field: 'Job Number', errorList: ['Please fill "job number"'] });
         }
 
-        if(!patrolOffsiteDateIsValid()){
-            errors.push({field: 'Date of Incident', errorList: ['Date / Time of Patrol Onsite must be less than Patrol Offsite']});
+        if (!patrolOffsiteDateIsValid()) {
+            errors.push({ field: 'Date of Incident', errorList: ['Date / Time of Patrol Onsite must be less than Patrol Offsite'] });
         }
 
-        if (!siteColourCodeIsValid()) {          
-            errors.push({field: 'Site Colour Code', errorList: ['Please select Site Colour Code']});
+        if (!siteColourCodeIsValid()) {
+            errors.push({ field: 'Site Colour Code', errorList: ['Please select Site Colour Code'] });
         }
         if (!siteKVLCheckValid()) {
             errors.push({ field: 'Plate Lodaed', errorList: ['Please add the plates if you click on the Yes checkbox in KV, Otherwise click on No'] });
         }
-        const requiredFields = ['Report_DateLocation_ReportDate', 'Report_DateLocation_ClientType', 
-        'Report_DateLocation_ClientSite', 'Report_Officer_GuardMonth'];
-        requiredFields.forEach(function(id){
+        const requiredFields = ['Report_DateLocation_ReportDate', 'Report_DateLocation_ClientType',
+            'Report_DateLocation_ClientSite', 'Report_Officer_GuardMonth'];
+        requiredFields.forEach(function (id) {
             let field = document.getElementById(id);
             if (field.value === '') {
-                errors.push({field: id, errorList: [field.getAttribute('data-val-required')] });
+                errors.push({ field: id, errorList: [field.getAttribute('data-val-required')] });
             }
         });
 
-        return { isValid: errors.length === 0 , errors: errors };
+        return { isValid: errors.length === 0, errors: errors };
     }
     function validatePlateIds() {
         let errors = [];
 
-        
+
         if (!truckRegistrationNumberIsValid()) {
             errors.push({ field: 'Truck Registration Number', errorList: ['Please fill the ID or Truck Registation Number'] });
         }
@@ -1073,7 +1069,7 @@
             errors.push({ field: 'Plates Selected', errorList: ['Please select the Plate ID'] });
         }
 
-        
+
 
         const requiredFields = ['Report_VehicleRego', '#PlateId'];
         requiredFields.forEach(function (id) {
@@ -1090,8 +1086,8 @@
         const summaryDiv = document.getElementById('validation-summary');
         summaryDiv.className = "validation-summary-errors";
         summaryDiv.querySelector('ul').innerHTML = '';
-        errors.forEach(function(item){
-            const li = document.createElement('li');                    
+        errors.forEach(function (item) {
+            const li = document.createElement('li');
             li.appendChild(document.createTextNode(item.errorList[0]));
             summaryDiv.querySelector('ul').appendChild(li);
         });
@@ -1112,19 +1108,19 @@
     }
 
     function onShowLiveAddressChange(event) {
-        document.getElementById("Report_DateLocation_ClientAddress").value = '';        
+        document.getElementById("Report_DateLocation_ClientAddress").value = '';
         toggleClientGpsLink(false);
 
         if (!this.checked) {
             const address = document.getElementById('clientSiteAddress').value;
-		    const gps = document.getElementById('clientSiteGps').value;
-		    
-            document.getElementById('Report_DateLocation_ClientAddress').value = address;		    
-            if (gps === '') toggleClientGpsLink(false); 
+            const gps = document.getElementById('clientSiteGps').value;
+
+            document.getElementById('Report_DateLocation_ClientAddress').value = address;
+            if (gps === '') toggleClientGpsLink(false);
             else toggleClientGpsLink(true, gps);
         }
-    } 
-    
+    }
+
     function onPlateLoadedChange(event) {
         const yesPlateId = "Report_PlateLoadedYes";
         const noPlateId = "Report_PlateLoadedNo";
@@ -1134,12 +1130,12 @@
             $('#btnAddNewPlateLoadedEntry').attr('disabled', false);
             $('#Report_VehicleRego').attr('disabled', false);
             $('#kvl_list_plates').attr('disabled', 'disabled');
-            
+
         }
 
         if (this.id == noPlateId && this.checked) {
             document.getElementById(yesPlateId).checked = false;
-            
+
             $('#btnAddNewPlateLoadedEntry').attr('disabled', 'disabled');
             $('#Report_VehicleRego').val('');
             $('#Report_VehicleRego').attr('disabled', 'disabled');
@@ -1169,8 +1165,7 @@
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function (result) {
                 var rowCount = $('#register_plate_loaded  tr').length;
-                for(var i=rowCount;i>1;i--)
-                {
+                for (var i = rowCount; i > 1; i--) {
                     $('#register_plate_loaded  tr:last').remove();
                 }
             })
@@ -1181,83 +1176,80 @@
     document.getElementById("Report_VehicleRego").addEventListener('keyup', vehicleRegoToUpperCase);
     document.getElementById("Report_VehicleRego").addEventListener('keypress', vehicleRegoValidateSplChars);
     document.getElementById("Report_VehicleRego").addEventListener('blur', vehicleRegoDisableKeyListPlates);
-    
+
     document.getElementById("kvl_list_plates").addEventListener('change', kvlListPlatesChange);
     //document.getElementById("btn_delete_plate").addEventListener('click', deletePlates);
-   
+
     function kvlListPlatesChange() {
 
         const option = $(this).find(":selected");
-       
+
         if (option.val() !== '') {
             $('#PlateId').val(option.val());
         }
     }
-    var emp=null;
+    var emp = null;
     function onbtnAddNewPlateLoadedEntryClick() {
-        if ($('#Report_VehicleRego').val()!='')
-        {
+        if ($('#Report_VehicleRego').val() != '') {
             if ($('#PlateId').val() != '') {
-        //const result = validatePlateIds();
-        //if (!result.isValid) {
-        //    $('#msg-modal').modal();
-        //    displayValidationSummary(result.errors);
-        //    event.preventDefault();
-        //    return false;
-        //}
-            var obj=
-            {
-                PlateId:$('#PlateId').val(),
-                TruckNo: $('#Report_VehicleRego').val(),
-                IncidentReportId:0,
-               LogId:0
-           
-            }
-            $.ajax({
-                url: '/Incident/Register?handler=IfPlateExists',
-                data: { 'PlateId': $('#PlateId').val(), 'TruckNo': $('#Report_VehicleRego').val() },
-                type: 'GET',
-                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-            }).done(function (result1) {
-                
-                if (result1.count == 0) {
-                    $.ajax({
-                        url: '/Incident/Register?handler=PlateLoaded',
-                        data: { 'report': obj },
-                        type: 'POST',
-                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                    }).done(function (result) {
-                        if (result.status) {
-                            if (result.message !== '') {
-                                getPlatesLoaded();
-                                //showStatusNotification(true, 'Company details modified successfully');
-
-                            }
-
-                        } else {
-                            displayGuardValidationSummary(result.message);
-                        }
-                    });
-                }
-                else
+                //const result = validatePlateIds();
+                //if (!result.isValid) {
+                //    $('#msg-modal').modal();
+                //    displayValidationSummary(result.errors);
+                //    event.preventDefault();
+                //    return false;
+                //}
+                var obj =
                 {
-                    alert("Entry Already Exists")
+                    PlateId: $('#PlateId').val(),
+                    TruckNo: $('#Report_VehicleRego').val(),
+                    IncidentReportId: 0,
+                    LogId: 0
+
                 }
-            });
+                $.ajax({
+                    url: '/Incident/Register?handler=IfPlateExists',
+                    data: { 'PlateId': $('#PlateId').val(), 'TruckNo': $('#Report_VehicleRego').val() },
+                    type: 'GET',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (result1) {
+
+                    if (result1.count == 0) {
+                        $.ajax({
+                            url: '/Incident/Register?handler=PlateLoaded',
+                            data: { 'report': obj },
+                            type: 'POST',
+                            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                        }).done(function (result) {
+                            if (result.status) {
+                                if (result.message !== '') {
+                                    getPlatesLoaded();
+                                    //showStatusNotification(true, 'Company details modified successfully');
+
+                                }
+
+                            } else {
+                                displayGuardValidationSummary(result.message);
+                            }
+                        });
+                    }
+                    else {
+                        alert("Entry Already Exists")
+                    }
+                });
             }
             else {
                 alert("Please Enter The Correct Truck Registration Number And Select the Plates From The List Appear")
             }
         }
-        else{
+        else {
             alert("Please Enter The Truck Registration Number")
         }
-       
+
 
     }
-    
-    function getPlatesLoaded()
-    {
+
+    function getPlatesLoaded() {
         //var obj =
         //{
         //    PlateId: $('#PlateId').val(),
@@ -1267,47 +1259,46 @@
 
         //}
 
-      
-                    if ($('#register_plate_loaded  tr').length > 1) {
-                        var rowCount = $('#register_plate_loaded  tr').length;
-                        $('#register_plate_loaded  tr:last').after('<tr><td hidden>' + rowCount + '</td>' +
-                            '<td hidden>' + $('#PlateId').val() + '</td>' +
-                            '<td>' + $("#Report_VehicleRego").val() + '</td>' +
 
-                            '<td>' + $('#kvl_list_plates').find(":selected").text() + ' </td>' +
-                '<td>' + $('#TruckConfigure').val() + ' </td>' +
-                    '<td>' + $("#CompanyName").val() + ' </td>' +
-                    '<td> <button  class= "btn btn-outline-danger" id = "btn_delete_plate"> <i class="fa fa-trash"> </i></button >  </td>' +
-                            '</tr > ');
-                        // CLEAR ALL TEXTBOXES.
-                        $('#PlateId').val('');
-                        $("#Report_VehicleRego").val('');
-                        $('#kvl_list_plates').val('');
-                    }
-                    else {
-                        var rowCount = $('#register_plate_loaded  tr').length;
-                        $('#register_plate_loaded  tr:last').after('<tr><td hidden>' + rowCount + '</td>' +
-                            '<td hidden>' + $('#PlateId').val() + '</td>' +
-                            '<td>' + $("#Report_VehicleRego").val() + '</td>' +
+        if ($('#register_plate_loaded  tr').length > 1) {
+            var rowCount = $('#register_plate_loaded  tr').length;
+            $('#register_plate_loaded  tr:last').after('<tr><td hidden>' + rowCount + '</td>' +
+                '<td hidden>' + $('#PlateId').val() + '</td>' +
+                '<td>' + $("#Report_VehicleRego").val() + '</td>' +
 
-                            '<td>' + $('#kvl_list_plates').find(":selected").text() + ' </td>' +
+                '<td>' + $('#kvl_list_plates').find(":selected").text() + ' </td>' +
                 '<td>' + $('#TruckConfigure').val() + ' </td>' +
-                    '<td>' + $("#CompanyName").val() + ' </td>' +
-                    '<td>' + '<button  class= "btn btn-outline-danger " id = "btn_delete_plate"> <i class="fa fa-trash"> </i></button >' + '</td>' +
-                            '</tr >');
-                        // CLEAR ALL TEXTBOXES.
-                        $('#PlateId').val('');
-                        $("#Report_VehicleRego").val('');
-                        $('#kvl_list_plates').val('');
-                        $('#kvl_list_plates').attr('disabled', 'disabled');
-                    }
-                
-       
-        
+                '<td>' + $("#CompanyName").val() + ' </td>' +
+                '<td> <button  class= "btn btn-outline-danger" id = "btn_delete_plate"> <i class="fa fa-trash"> </i></button >  </td>' +
+                '</tr > ');
+            // CLEAR ALL TEXTBOXES.
+            $('#PlateId').val('');
+            $("#Report_VehicleRego").val('');
+            $('#kvl_list_plates').val('');
+        }
+        else {
+            var rowCount = $('#register_plate_loaded  tr').length;
+            $('#register_plate_loaded  tr:last').after('<tr><td hidden>' + rowCount + '</td>' +
+                '<td hidden>' + $('#PlateId').val() + '</td>' +
+                '<td>' + $("#Report_VehicleRego").val() + '</td>' +
+
+                '<td>' + $('#kvl_list_plates').find(":selected").text() + ' </td>' +
+                '<td>' + $('#TruckConfigure').val() + ' </td>' +
+                '<td>' + $("#CompanyName").val() + ' </td>' +
+                '<td>' + '<button  class= "btn btn-outline-danger " id = "btn_delete_plate"> <i class="fa fa-trash"> </i></button >' + '</td>' +
+                '</tr >');
+            // CLEAR ALL TEXTBOXES.
+            $('#PlateId').val('');
+            $("#Report_VehicleRego").val('');
+            $('#kvl_list_plates').val('');
+            $('#kvl_list_plates').attr('disabled', 'disabled');
+        }
+
+
+
     }
-    function deletePlates()
-    {
-       
+    function deletePlates() {
+
         var obj =
         {
             PlateId: $('#PlateId').val(),
@@ -1325,7 +1316,7 @@
             if (result.status) {
                 if (result.message !== '') {
                     getPlatesLoaded();
-                   // showStatusNotification(true, 'Company details modified successfully');
+                    // showStatusNotification(true, 'Company details modified successfully');
 
                 }
 
@@ -1335,8 +1326,7 @@
         });
 
     }
-    function vehicleRegoDisableKeyListPlates() 
-    {
+    function vehicleRegoDisableKeyListPlates() {
         const vehicleRegoHasVal = $(this).val() !== '';
         $('#kvl_list_plates').attr('disabled', !vehicleRegoHasVal);
         $('#kvl_list_plates').attr('disabled', 'disabled');
@@ -1346,8 +1336,8 @@
         }
         emp = $(this).val();
     }
-  
-        
+
+
     //})
     function vehicleRegoToUpperCase() {
         let regoToUpper = $(this).val().toUpperCase();
@@ -1363,10 +1353,117 @@
             e.preventDefault();
         }
     }
-    
+
+    /* Code For relaod the Site Location details create Ir  from Previous Ir Start*/
+
+    /** Client Site Status & Status Date **/
+    const clientSiteStatuses = {
+        data: [
+            { id: 0, text: 'Ongoing', color: 'text-success' },
+            { id: 1, text: 'Expiring', color: 'text-warning' },
+            { id: 2, text: 'Expired', color: 'text-danger' }
+        ],
+        getText: function (value) {
+            const item = this.data.find((e) => e.id === value);
+            return item ? item.text : '';
+        },
+        getValue: function (text) {
+            const item = this.data.find((e) => e.text === text);
+            return item ? item.id : -1;
+        },
+        getColorByText: function (text) {
+            const item = this.data.find((e) => e.text === text);
+            return item ? item.color : '';
+        },
+        getColorByValue: function (value) {
+            const item = this.data.find((e) => e.id === value);
+            return item ? item.color : '';
+        }
+    }
+
+    function setSelectedClientStatus(clientSite) {
+        $('#client_status_0').removeClass('text-success');
+        $('#client_status_1').removeClass('text-warning');
+        $('#client_status_2').removeClass('text-danger');
+        $('#client_status_date_1').text('');
+        $('#client_status_date_2').text('');
+        $('#client_site_expiring_msg').removeClass('d-block').addClass('d-none');
+
+
+        let status = clientSite.status;
+        if (status === 1 && new Date(clientSite.statusDate) < new Date())
+            status = 2;
+        $('#client_status_' + status).addClass(clientSiteStatuses.getColorByValue(status));
+
+        const calIcon = '<i class="fa fa-calendar mx-2"></i>'
+        if (status === 1) {
+            $('#client_status_date_1').html(calIcon + clientSite.formattedStatusDate);
+        }
+        else if (status === 2) {
+            $('#client_site_expiring_msg').addClass('d-block');
+            $('#client_status_date_2').html(calIcon + clientSite.formattedStatusDate);
+        }
+    }
+    function setAllControlsForIrFromPreviousIR() {
+        $.ajax({
+            url: '/Incident/Register?handler=IrDetails',
+            type: 'GET'
+        }).done(function (data) {
+            if (data.success) {
+                $('#Report_DateLocation_ClientAddress').val(data.clientSite.address);
+                $('#Report_DateLocation_State').val(data.clientSite.state);
+                $('#Report_Officer_Billing').val(data.clientSite.billing);
+                if (data.clientSite.gps) toggleClientGpsLink(true, data.clientSite.gps);
+                else toggleClientGpsLink(false);
+                setSelectedClientStatus(data.clientSite);
+                $('#Report_DateLocation_ShowIncidentLocationAddress').prop('checked', false);
+                $('#clientSiteAddress').val(data.clientSite.address);
+                $('#clientSiteGps').val(data.clientSite.gps);
+                if (data.bodyCameraYes) {
+
+                    document.getElementById('Report_BodyCameraYes').checked = true;
+                    document.getElementById('Report_BodyCameraNo').checked = false;
+
+                }
+                else {
+                     document.getElementById('Report_BodyCameraNo').checked = true;
+                    document.getElementById('Report_BodyCameraYes').checked = false;
+                }
+                if (data.reimbursementYes) {
+
+                    document.getElementById('Report_DateLocation_ReimbursementYes').checked = true;
+                    document.getElementById('Report_DateLocation_ReimbursementNo').checked = false;
+
+                }
+                else {
+                    document.getElementById('Report_DateLocation_ReimbursementNo').checked = true;
+                    document.getElementById('Report_DateLocation_ReimbursementYes').checked = false;
+                }
+                if (data.isPositionPatrolCar) {
+
+                   document.getElementById('positionfilter').checked=true;
+
+                }
+                else {
+                  document.getElementById('positionfilter').checked=false;
+                }
+
+               
+
+                
+            }
+        }).fail(function () {
+        });
+
+
+
+
+        /* Code For relaod the Site Location details create Ir  from Previous Ir end*/
+    }
+
 </script>
 <partial name="_MessagePopup" />
 @section scripts {
-    <partial name="_ValidationScriptsPartial" />    
+    <partial name="_ValidationScriptsPartial" />
     <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&libraries=places"></script>
 }

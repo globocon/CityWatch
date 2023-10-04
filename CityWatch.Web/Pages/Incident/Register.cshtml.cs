@@ -24,7 +24,8 @@ using Microsoft.Extensions.Configuration;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using DocumentFormat.OpenXml.Wordprocessing;
-
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Dropbox.Api.Users;
 
 namespace CityWatch.Web.Pages.Incident
 {
@@ -46,6 +47,10 @@ namespace CityWatch.Web.Pages.Incident
 
         [BindProperty]
         public IncidentRequest Report { get; set; }
+        public List<SelectListItem> ClientSites { get; set; }
+        public List<SelectListItem> FeedBackTemplates { get; set; }
+        public List<SelectListItem> OfficerPosition { get; set; }
+
 
         public IViewDataService ViewDataService { get { return _ViewDataService; } }
 
@@ -77,93 +82,122 @@ namespace CityWatch.Web.Pages.Incident
         public IConfigDataProvider ConfigDataProiver { get { return _configDataProvider; } }
         public IActionResult OnGet()
         {
-            // Deserialize the object back into the complex object
+           
 
 
             HttpContext.Session.SetString("ReportReference", Guid.NewGuid().ToString());
+            /* Code for Re-create the Ir from already existing one 04102023 Start*/
             var httpContext = HttpContext;
-
             // Check if the Referer header is present in the request
             if (httpContext.Request.Headers.ContainsKey("Referer"))
             {
                 // Get the Referer URL
                 string refererUrl = httpContext.Request.Headers["Referer"].ToString();
                 //https://localhost:44356/Incident/Notify
-                if (HttpContext.Session.GetString("IRReport") != null)
+                if (refererUrl.ToLower().Contains("notify"))
                 {
-                    var serializedObject = HttpContext.Session.GetString("IRReport");
-                    var IrPreviousObject = JsonSerializer.Deserialize<IncidentRequest>(serializedObject);
-
-                    Report = new IncidentRequest
+                    if (HttpContext.Session.GetString("IRReport") != null)
                     {
-                        EventType = new EventType
+                        var serializedObject = HttpContext.Session.GetString("IRReport");
+                        var IrPreviousObject = JsonSerializer.Deserialize<IncidentRequest>(serializedObject);
+
+                        Report = new IncidentRequest
                         {
-                            HrRelated = IrPreviousObject.EventType.HrRelated,
-                            OhsMatters = IrPreviousObject.EventType.HrRelated,
-                            SecurtyBreach = IrPreviousObject.EventType.SecurtyBreach,
-                            EquipmentDamage = IrPreviousObject.EventType.EquipmentDamage,
-                            Thermal = IrPreviousObject.EventType.Thermal,
-                            Emergency = IrPreviousObject.EventType.Emergency,
-                            SiteColour = IrPreviousObject.EventType.SiteColour,
-                            HealthDepart = IrPreviousObject.EventType.HealthDepart,
-                            GeneralSecurity = IrPreviousObject.EventType.GeneralSecurity,
-                            AlarmActive = IrPreviousObject.EventType.AlarmActive,
-                            AlarmDisabled = IrPreviousObject.EventType.AlarmDisabled,
-                            AuthorisedPerson = IrPreviousObject.EventType.AlarmDisabled,
-                            Equipment = IrPreviousObject.EventType.AlarmDisabled,
-                            Other = IrPreviousObject.EventType.AlarmDisabled,
-                        },
-                        SiteColourCodeId = IrPreviousObject.SiteColourCodeId,
-                        WandScannedYes3a = IrPreviousObject.WandScannedYes3a,
-                        WandScannedYes3b = IrPreviousObject.WandScannedYes3b,
-                        WandScannedNo = IrPreviousObject.WandScannedNo,
-                        BodyCameraYes = IrPreviousObject.BodyCameraYes,
-                        BodyCameraNo = IrPreviousObject.BodyCameraNo,
-                        Officer = new Officer
+                            EventType = new EventType
+                            {
+                                HrRelated = IrPreviousObject.EventType.HrRelated,
+                                OhsMatters = IrPreviousObject.EventType.OhsMatters,
+                                SecurtyBreach = IrPreviousObject.EventType.SecurtyBreach,
+                                EquipmentDamage = IrPreviousObject.EventType.EquipmentDamage,
+                                Thermal = IrPreviousObject.EventType.Thermal,
+                                Emergency = IrPreviousObject.EventType.Emergency,
+                                SiteColour = IrPreviousObject.EventType.SiteColour,
+                                HealthDepart = IrPreviousObject.EventType.HealthDepart,
+                                GeneralSecurity = IrPreviousObject.EventType.GeneralSecurity,
+                                AlarmActive = IrPreviousObject.EventType.AlarmActive,
+                                AlarmDisabled = IrPreviousObject.EventType.AlarmDisabled,
+                                AuthorisedPerson = IrPreviousObject.EventType.AuthorisedPerson,
+                                Equipment = IrPreviousObject.EventType.Equipment,
+                                Other = IrPreviousObject.EventType.Other,
+                            },
+                            SiteColourCodeId = IrPreviousObject.SiteColourCodeId,
+                            WandScannedYes3a = IrPreviousObject.WandScannedYes3a,
+                            WandScannedYes3b = IrPreviousObject.WandScannedYes3b,
+                            WandScannedNo = IrPreviousObject.WandScannedNo,
+                            BodyCameraYes = IrPreviousObject.BodyCameraYes,
+                            BodyCameraNo = IrPreviousObject.BodyCameraNo,
+                            Officer = new Officer
+                            {
+                                FirstName = IrPreviousObject.Officer.FirstName,
+                                LastName = IrPreviousObject.Officer.LastName,
+                                Gender = IrPreviousObject.Officer.Gender,
+                                Phone = IrPreviousObject.Officer.Phone,
+                                Position = IrPreviousObject.Officer.Position,
+                                Email = IrPreviousObject.Officer.Email,
+                                LicenseNumber = IrPreviousObject.Officer.LicenseNumber,
+                                LicenseState = IrPreviousObject.Officer.LicenseState,
+                                CallSign = IrPreviousObject.Officer.CallSign,
+                                GuardMonth = IrPreviousObject.Officer.GuardMonth,
+                                NotifiedBy = IrPreviousObject.Officer.NotifiedBy,
+                                Billing = IrPreviousObject.Officer.Billing,
+                            },
+                            IsPositionPatrolCar = IrPreviousObject.IsPositionPatrolCar,
+                            DateLocation = new DateLocation
+                            {
+                                IncidentDate = IrPreviousObject.DateLocation.IncidentDate,
+                                ReportDate = IrPreviousObject.DateLocation.ReportDate,
+                                ReimbursementNo = IrPreviousObject.DateLocation.ReimbursementNo,
+                                ReimbursementYes = IrPreviousObject.DateLocation.ReimbursementYes,
+                                JobNumber = IrPreviousObject.DateLocation.JobNumber,
+                                JobTime = IrPreviousObject.DateLocation.JobTime,
+                                Duration = IrPreviousObject.DateLocation.Duration,
+                                Travel = IrPreviousObject.DateLocation.Travel,
+                                PatrolExternal = IrPreviousObject.DateLocation.PatrolExternal,
+                                PatrolInternal = IrPreviousObject.DateLocation.PatrolInternal,
+                                ClientType = IrPreviousObject.DateLocation.ClientType,
+                                ClientSite = IrPreviousObject.DateLocation.ClientSite,
+                                ClientArea = IrPreviousObject.DateLocation.ClientArea,
+                                ShowIncidentLocationAddress = IrPreviousObject.DateLocation.ShowIncidentLocationAddress,
+                                ClientAddress = IrPreviousObject.DateLocation.ClientAddress,
+                                State = IrPreviousObject.DateLocation.State,
+                                ClientStatus = IrPreviousObject.DateLocation.ClientStatus,
+                                ClientSiteLiveGps = IrPreviousObject.DateLocation.ClientSiteLiveGps,
+                            },
+                            LinkedSerialNos = IrPreviousObject.LinkedSerialNos,
+                            Feedback = IrPreviousObject.Feedback,
+                            ReportedBy = IrPreviousObject.ReportedBy,
+                            FeedbackType = IrPreviousObject.FeedbackType,
+                            FeedbackTemplates = IrPreviousObject.FeedbackTemplates,
+
+                        };
+
+                        ClientSites = _ViewDataService.GetUserClientSites(AuthUserHelper.LoggedInUserId, IrPreviousObject.DateLocation.ClientType);
+                        FeedBackTemplates = _ViewDataService.GetFeedbackTemplatesByType((int)IrPreviousObject.FeedbackType);
+                        if (IrPreviousObject.IsPositionPatrolCar)
+                            OfficerPosition = ViewDataService.GetOfficerPositions(OfficerPositionFilter.PatrolOnly);
+                        else
+                            OfficerPosition = ViewDataService.GetOfficerPositions(OfficerPositionFilter.NonPatrolOnly);
+                        //Report.EventType.HrRelated = IrPreviousObject.EventType.HrRelated;
+                    }
+                    else
+                    {
+                        Report = new IncidentRequest
                         {
-                            FirstName = IrPreviousObject.Officer.FirstName,
-                            LastName = IrPreviousObject.Officer.LastName,
-                            Gender = IrPreviousObject.Officer.Gender,
-                            Phone = IrPreviousObject.Officer.Phone,
-                            Position = IrPreviousObject.Officer.Position,
-                            Email = IrPreviousObject.Officer.Email,
-                            LicenseNumber = IrPreviousObject.Officer.LicenseNumber,
-                            LicenseState = IrPreviousObject.Officer.LicenseState,
-                            CallSign = IrPreviousObject.Officer.CallSign,
-                            GuardMonth = IrPreviousObject.Officer.GuardMonth,
-                            NotifiedBy = IrPreviousObject.Officer.NotifiedBy,
-                            Billing = IrPreviousObject.Officer.Billing,
-                        },
-                        IsPositionPatrolCar = IrPreviousObject.IsPositionPatrolCar,
-                        DateLocation = new DateLocation
-                        {
-                            IncidentDate = IrPreviousObject.DateLocation.IncidentDate,
-                            ReportDate = IrPreviousObject.DateLocation.ReportDate,
-                            ReimbursementNo = IrPreviousObject.DateLocation.ReimbursementNo,
-                            ReimbursementYes = IrPreviousObject.DateLocation.ReimbursementYes,
-                            JobNumber = IrPreviousObject.DateLocation.JobNumber,
-                            JobTime = IrPreviousObject.DateLocation.JobTime,
-                            Duration = IrPreviousObject.DateLocation.Duration,
-                            Travel = IrPreviousObject.DateLocation.Travel,
-                            PatrolExternal = IrPreviousObject.DateLocation.PatrolExternal,
-                            PatrolInternal = IrPreviousObject.DateLocation.PatrolInternal,
-                            ClientType = IrPreviousObject.DateLocation.ClientType,
-                            ClientSite = IrPreviousObject.DateLocation.ClientSite,
-                            ClientArea = IrPreviousObject.DateLocation.ClientArea,
-                            ShowIncidentLocationAddress = IrPreviousObject.DateLocation.ShowIncidentLocationAddress,
-                            ClientAddress = IrPreviousObject.DateLocation.ClientAddress,
-                            State = IrPreviousObject.DateLocation.State,
-                            ClientStatus = IrPreviousObject.DateLocation.ClientStatus,
-                            ClientSiteLiveGps = IrPreviousObject.DateLocation.ClientSiteLiveGps,
-                        },
-                        LinkedSerialNos = IrPreviousObject.LinkedSerialNos,
-                        Feedback = IrPreviousObject.Feedback,
-                        ReportedBy = IrPreviousObject.ReportedBy,
-                    };
-                    //Report.EventType.HrRelated = IrPreviousObject.EventType.HrRelated;
+                            Officer = new Officer
+                            {
+
+                                Phone = "+61 4",
+
+                            },
+                        };
+                        FeedBackTemplates = _ViewDataService.GetFeedbackTemplatesByType(ConfigDataProiver.GetFeedbackTypesId("General"));
+                        OfficerPosition = ViewDataService.GetOfficerPositions(OfficerPositionFilter.NonPatrolOnly);
+                    }
+
                 }
                 else
                 {
+                    HttpContext.Session.Remove("IRReport");
                     Report = new IncidentRequest
                     {
                         Officer = new Officer
@@ -173,10 +207,56 @@ namespace CityWatch.Web.Pages.Incident
 
                         },
                     };
+                    FeedBackTemplates = _ViewDataService.GetFeedbackTemplatesByType(ConfigDataProiver.GetFeedbackTypesId("General"));
+                    OfficerPosition = ViewDataService.GetOfficerPositions(OfficerPositionFilter.NonPatrolOnly);
+
                 }
 
             }
+            else
+            {
+                Report = new IncidentRequest
+                {
+                    Officer = new Officer
+                    {
+
+                        Phone = "+61 4",
+
+                    },
+                };
+                FeedBackTemplates = _ViewDataService.GetFeedbackTemplatesByType(ConfigDataProiver.GetFeedbackTypesId("General"));
+                OfficerPosition = ViewDataService.GetOfficerPositions(OfficerPositionFilter.NonPatrolOnly);
+            }
+
             return Page();
+            /* Code for Re-create the Ir from already existing one 04102023 end*/
+        }
+
+
+        public IActionResult OnGetIrDetails()
+        {
+            var clientSite = new ClientSite();
+            var success = false;
+            var currentPage = Request.Path;
+            var bodyCameraYes = false;
+            var reimbursementYes = false;
+            var isPositionPatrolCar = false;
+
+
+            if (currentPage.ToString().ToLower().Contains("register"))
+            {
+                if (HttpContext.Session.GetString("IRReport") != null)
+                {
+                    var serializedObject = HttpContext.Session.GetString("IRReport");
+                    var IrPreviousObject = JsonSerializer.Deserialize<IncidentRequest>(serializedObject);
+                    clientSite = _clientDataProvider.GetClientSitesUsingName(IrPreviousObject.DateLocation.ClientSite);
+                    bodyCameraYes = IrPreviousObject.BodyCameraYes;
+                    reimbursementYes= IrPreviousObject.DateLocation.ReimbursementYes;
+                    isPositionPatrolCar = IrPreviousObject.IsPositionPatrolCar;
+                    success = true;
+                }
+            }
+            return new JsonResult(new { success, clientSite, bodyCameraYes, reimbursementYes, isPositionPatrolCar });
         }
 
         public IActionResult OnGetClientSites(string type)
