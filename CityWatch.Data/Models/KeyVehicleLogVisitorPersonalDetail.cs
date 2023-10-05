@@ -1,4 +1,5 @@
 ﻿using Dropbox.Api.TeamLog;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -20,6 +21,15 @@ namespace CityWatch.Data.Models
             PersonType = keyVehicleLog.PersonType;
             PersonOfInterest = keyVehicleLog.PersonOfInterest;
             POIImage = keyVehicleLog.POIImage;
+            IndividualTitle = keyVehicleLog.IndividualTitle;
+            Gender = keyVehicleLog.Gender;
+            CompanyABN = keyVehicleLog.CompanyABN;
+            CompanyLandline = keyVehicleLog.CompanyLandline;
+            Email = keyVehicleLog.Email;
+            Website = keyVehicleLog.Website;
+            CRMId = keyVehicleLog.CRMId;
+            BDMList = keyVehicleLog.BDMList;
+            IsBDM = keyVehicleLog.IsBDM;
         }
 
         [Key]
@@ -37,7 +47,19 @@ namespace CityWatch.Data.Models
         public string POIImageDisplay { get; set; }
 
         public int? PersonType { get; set; }
+        [HiddenInput]
+        public bool IsBDM { get; set; }
+        public string IndividualTitle { get; set; }
+        public string Gender { get; set; }
+        public string CompanyABN { get; set; }
+        public string CompanyLandline { get; set; }
+        public string Email { get; set; }
+        public string Website { get; set; }
+        public string CRMId { get; set; }
+        public string BDMList { get; set; }
 
+        [NotMapped]
+        public string POIOrBDM { get; set; }
         [ForeignKey("ProfileId")]
         public KeyVehicleLogProfile KeyVehicleLogProfile { get; set; }
         [NotMapped]

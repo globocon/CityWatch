@@ -504,7 +504,7 @@ namespace CityWatch.Web.Pages.Admin
             var message = string.Empty;
             try
             {
-                var existingField = _guardLogDataProvider.GetKeyVehicleLogFields(true).SingleOrDefault(z => z.TypeId == record.TypeId && z.Name == record.Name);
+                var existingField = _guardLogDataProvider.GetKeyVehicleLogFields(true).SingleOrDefault(z => z.TypeId == record.TypeId && z.Name.ToUpper() == record.Name.ToUpper());
                 if (existingField != null)
                 {
                     if (existingField.IsDeleted)

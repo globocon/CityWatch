@@ -175,7 +175,71 @@ namespace CityWatch.Web.Pages.Guard
                     }
 
                 }
+                var individualType = _viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.IndividualType).Where(x => x.Value == KeyVehicleLog.PersonType.ToString()).Select(x => x.Text).FirstOrDefault();
+                if(individualType == "CRM (BDM Activity)")
+                {
+                    var personalDetails = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetailsWithIndividualType(Convert.ToInt32(KeyVehicleLog.PersonType));
+                    if (personalDetails.Count>0)
+                    {
+                        var crmid = personalDetails.Where(x => x.CRMId != null);
+                        if (crmid.Count()==0)
+                        {
+                            KeyVehicleLog.CRMId = "CRM000001";
+                        }
+                        else
+                        {
+                            var bdm = crmid.Where(x => x.PersonName == KeyVehicleLog.PersonName && x.CompanyName==KeyVehicleLog.CompanyName && x.KeyVehicleLogProfile.VehicleRego==KeyVehicleLog.VehicleRego);
+                            if (bdm.Count() == 0)
+                            {
+                                var maxid = crmid.Max(x => x.Id);
+                                //var crmnew = crmid.Where(x => x.Id == maxid).Select(x => x.CRMId).FirstOrDefault();
+                                var countid = crmid.Count() + 1;
+                                int numberOfDigits = countid / 10 + 1;
+                                string latestcrm = null;
+                                if(numberOfDigits==1)
+                                {
+                                    latestcrm = "CRM00000" + countid.ToString();
+                                }
+                                else if(numberOfDigits==2)
+                                {
+                                    latestcrm = "CRM0000" + countid.ToString();
+                                }
+                                else if (numberOfDigits == 3)
+                                {
+                                    latestcrm = "CRM000" + countid.ToString();
+                                }
+                                else if (numberOfDigits == 4)
+                                {
+                                    latestcrm = "CRM00" + countid.ToString();
+                                }
+                                else if (numberOfDigits == 5)
+                                {
+                                    latestcrm = "CRM0" + countid.ToString();
+                                }
+                                else if (numberOfDigits == 6)
+                                {
+                                    latestcrm = "CRM" + countid.ToString();
+                                }
+                                else
+                                {
+                                    latestcrm = null;
+                                }
+                                if(latestcrm!=null)
+                                {
+                                    KeyVehicleLog.CRMId = latestcrm;
+                                }
 
+
+
+                            }
+                            else
+                            {
+                                
+                                KeyVehicleLog.CRMId = bdm.Select(x => x.CRMId).FirstOrDefault();
+                            }
+                        }
+                    }
+                }
                 KeyVehicleLogAuditHistory keyVehicleLogAuditHistory = null;
                 keyVehicleLogAuditHistory = GetKvlAuditHistory(KeyVehicleLog);
                 _guardLogDataProvider.SaveKeyVehicleLog(KeyVehicleLog);

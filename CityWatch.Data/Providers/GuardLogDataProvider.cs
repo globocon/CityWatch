@@ -43,6 +43,7 @@ namespace CityWatch.Data.Providers
         List<string> GetSenderNames(string senderNameStart);
         KeyVehicleLogProfile GetKeyVehicleLogVisitorProfile(string truckRego);
         List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetails(string truckRego);
+        List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetailsWithIndividualType(int individualtype);
         List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetails(string truckRego, string personName);
         KeyVehicleLogVisitorPersonalDetail GetKeyVehicleLogProfileWithPersonalDetails(int id);
         int SaveKeyVehicleLogProfileWithPersonalDetail(KeyVehicleLogVisitorPersonalDetail keyVehicleLogProfile);
@@ -298,6 +299,19 @@ namespace CityWatch.Data.Providers
                 keyVehicleLogToUpdate.Sender = keyVehicleLog.Sender;
                 keyVehicleLogToUpdate.IsSender = keyVehicleLog.IsSender;
                 keyVehicleLogToUpdate.PersonOfInterest = keyVehicleLog.PersonOfInterest;
+                keyVehicleLogToUpdate.IsBDM = keyVehicleLog.IsBDM;
+                if (keyVehicleLog.CRMId != null)
+                {
+                    keyVehicleLogToUpdate.CRMId = keyVehicleLog.CRMId;
+                    keyVehicleLogToUpdate.IndividualTitle = keyVehicleLog.IndividualTitle;
+                    keyVehicleLogToUpdate.Gender = keyVehicleLog.Gender;
+                    keyVehicleLogToUpdate.CompanyABN = keyVehicleLog.CompanyABN;
+                    keyVehicleLogToUpdate.CompanyLandline = keyVehicleLog.CompanyLandline;
+                    keyVehicleLogToUpdate.Email = keyVehicleLog.Email;
+                    keyVehicleLogToUpdate.Website = keyVehicleLog.Website;
+                    keyVehicleLogToUpdate.BDMList = keyVehicleLog.BDMList;
+
+                }
             }
             _context.SaveChanges();
         }
@@ -532,7 +546,14 @@ namespace CityWatch.Data.Providers
                 .Where(z => string.Equals(z.KeyVehicleLogProfile.VehicleRego, truckRego) && string.Equals(z.PersonName, personName))
                 .ToList();
         }
-
+        
+        public List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetailsWithIndividualType(int individualtype)
+        {
+            return _context.KeyVehicleLogVisitorPersonalDetails
+                .Include(z => z.KeyVehicleLogProfile)
+                .Where(z => z.PersonType== individualtype)
+                .ToList();
+        }
         public int SaveKeyVehicleLogProfileWithPersonalDetail(KeyVehicleLogVisitorPersonalDetail kvlVisitorPersonalDetail)
         {
             kvlVisitorPersonalDetail.ProfileId = SaveKeyVehicleLogProfile(kvlVisitorPersonalDetail.KeyVehicleLogProfile);
@@ -556,6 +577,19 @@ namespace CityWatch.Data.Providers
             {
                 string imagepath = "~/images/ziren.png";
                 kvlPersonalDetailsToDb.POIImage = keyVehicleLogVisitorPersonalDetail.POIImage;
+            }
+            kvlPersonalDetailsToDb.IsBDM = keyVehicleLogVisitorPersonalDetail.IsBDM;
+            if (keyVehicleLogVisitorPersonalDetail.CRMId != null)
+            {
+                kvlPersonalDetailsToDb.CRMId = keyVehicleLogVisitorPersonalDetail.CRMId;
+                kvlPersonalDetailsToDb.IndividualTitle = keyVehicleLogVisitorPersonalDetail.IndividualTitle;
+                kvlPersonalDetailsToDb.Gender = keyVehicleLogVisitorPersonalDetail.Gender;
+                kvlPersonalDetailsToDb.CompanyABN = keyVehicleLogVisitorPersonalDetail.CompanyABN;
+                kvlPersonalDetailsToDb.CompanyLandline = keyVehicleLogVisitorPersonalDetail.CompanyLandline;
+                kvlPersonalDetailsToDb.Email = keyVehicleLogVisitorPersonalDetail.Email;
+                kvlPersonalDetailsToDb.Website = keyVehicleLogVisitorPersonalDetail.Website;
+                kvlPersonalDetailsToDb.BDMList = keyVehicleLogVisitorPersonalDetail.BDMList;
+
             }
            
             if (kvlPersonalDetailsToDb.Id == 0)

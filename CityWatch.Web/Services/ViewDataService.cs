@@ -42,6 +42,7 @@ namespace CityWatch.Web.Services
         List<SelectListItem> ClientArea { get; }
         List<SelectListItem> GuardMonth { get; }
         List<SelectListItem> VehicleRegos { get; }
+        List<SelectListItem> POIBDMSupplier { get; }
         string GetFeedbackTemplateText(int id);
         //List<SelectListItem> GetFeedbackTemplatesByType(FeedbackType type);
         List<SelectListItem> GetFeedbackTemplatesByType(int type);
@@ -65,6 +66,7 @@ namespace CityWatch.Web.Services
         List<KeyVehicleLogViewModel> GetKeyVehicleLogs(int logBookId, KvlStatusFilter kvlStatusFilter);
         List<SelectListItem> GetKeyVehicleLogFieldsByType(KvlFieldType type, bool withoutSelect = false);
         List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRego(string truckRego);
+        List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRego(string truckRego,string poi);
         List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRegoNew(string truckRego,string ImagePath);
         IEnumerable<string> GetKeyVehicleLogAttachments(string uploadsDir, string reportReference);
         IEnumerable<ClientSiteKey> GetKeyVehicleLogKeys(KeyVehicleLog keyVehicleLog);
@@ -557,11 +559,71 @@ namespace CityWatch.Web.Services
             foreach (var profile in profiles)
             {
                profile.KeyVehicleLogProfile.KeyVehicleLog = kvls.SingleOrDefault(z => z.Id == profile.KeyVehicleLogProfile.CreatedLogId);
-              
+                
+                //for checking whether the entry is  either POI,BDM OR SUPPLIER-start
+                if(profile.PersonOfInterest!=null)
+                {
+                    profile.POIOrBDM = "POI";
+                }
+                else if (profile.IsBDM == true && profile.BDMList!=null)
+                {
+                    profile.POIOrBDM = "BDM";
+                }
+                else if(profile.IsBDM == false)
+                {
+                    profile.POIOrBDM = "Supplier";
+                }
+                else
+                {
+                    profile.POIOrBDM = null;
+                }
+                //for checking whether the entry is  either POI,BDM OR SUPPLIER-end
+
             }
+            
+
 
             return profiles.Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
         }
+
+        //to check with bdm also-start
+        public List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRego(string truckRego,string poi)
+        {
+            var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
+            var profiles = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(truckRego);
+
+            var createdLogIds = profiles.Select(z => z.KeyVehicleLogProfile.CreatedLogId).Where(z => z > 0).ToArray();
+            var kvls = _guardLogDataProvider.GetKeyVehicleLogByIds(createdLogIds);
+            foreach (var profile in profiles)
+            {
+                profile.KeyVehicleLogProfile.KeyVehicleLog = kvls.SingleOrDefault(z => z.Id == profile.KeyVehicleLogProfile.CreatedLogId);
+
+                //for checking whether the entry is  either POI,BDM OR SUPPLIER-start
+                if (profile.PersonOfInterest != null)
+                {
+                    profile.POIOrBDM = "POI";
+                }
+                else if (profile.IsBDM == true && profile.BDMList != null)
+                {
+                    profile.POIOrBDM = "BDM";
+                }
+                else if (profile.IsBDM == false)
+                {
+                    profile.POIOrBDM = "Supplier";
+                }
+                else
+                {
+                    profile.POIOrBDM = null;
+                }
+                //for checking whether the entry is  either POI,BDM OR SUPPLIER-end
+
+            }
+
+
+
+            return profiles.Where(z => string.IsNullOrEmpty(poi) || string.Equals(z.POIOrBDM, poi)).Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
+        }
+        //to check with bdm also-end
         public List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRegoNew(string truckRego,string Image)
         {
             var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
@@ -601,6 +663,25 @@ namespace CityWatch.Web.Services
                 {
                     items.Add(new SelectListItem(item, item));
                 }
+                return items;
+            }
+
+        }
+        public List<SelectListItem> POIBDMSupplier
+        {
+            get
+            {
+                var items = new List<SelectListItem>()
+                {
+                    new SelectListItem("All", string.Empty, true)
+                };
+
+
+                items.Add(new SelectListItem("POI", "POI"));
+                items.Add(new SelectListItem("BDM", "BDM"));
+                items.Add(new SelectListItem("Supplier", "Supplier"));
+
+
                 return items;
             }
 
