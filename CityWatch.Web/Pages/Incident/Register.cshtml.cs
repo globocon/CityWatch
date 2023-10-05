@@ -295,7 +295,16 @@ namespace CityWatch.Web.Pages.Incident
             {
                 HtmlBody = messageHtml
             };
-            builder.Attachments.Add(fileName);
+            /* Add attachment (IR PDF) to mail if Size <=12 MB , the link to download always add to  mail body Start*/
+            FileInfo fileInfo = new FileInfo(fileName);
+            var fileSizeInMB =  (fileInfo.Length) / 1048576d;
+            if (fileSizeInMB <= 12) // You can change this limit as needed
+            {
+                builder.Attachments.Add(fileName);
+
+            }
+            /* Add attachment to mail if Size <=12 MB end*/
+
             message.Body = builder.ToMessageBody();
             using (var client = new SmtpClient())
             {
