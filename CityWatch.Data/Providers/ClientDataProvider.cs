@@ -82,6 +82,7 @@ namespace CityWatch.Data.Providers
         int DeleteClientSiteLinksPageType(int typeId);
         int DeleteFeedBackType(int typeId);
         List<KeyVehcileLogField> GetKeyVehicleLogFieldsByTruckId(int TruckConfig);
+        ClientSite GetClientSitesUsingName(string name);
 
         List<ClientSite> GetClientSiteDetails(int[] clientSiteIds);
 
@@ -158,6 +159,16 @@ namespace CityWatch.Data.Providers
                 .OrderBy(x => x.ClientType.Name)
                 .ThenBy(x => x.Name)
                 .ToList();
+        }
+
+        public ClientSite GetClientSitesUsingName(string name)
+        {
+            return _context.ClientSites
+                .Where(x => x.Name.Trim() == name.Trim())
+                .Include(x => x.ClientType)
+                .OrderBy(x => x.ClientType.Name)
+                .ThenBy(x => x.Name)
+                .FirstOrDefault();
         }
         public List<ClientSite> GetClientSitesUsingGuardId(int? GuardId)
         {

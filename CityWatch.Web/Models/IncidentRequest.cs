@@ -123,6 +123,9 @@ namespace CityWatch.Web.Models
                 return eventTypes;
             }
         }
+
+        public int? FeedbackType { get; set; }
+        public int? FeedbackTemplates { get; set; }
     }
 
     public class EventType
