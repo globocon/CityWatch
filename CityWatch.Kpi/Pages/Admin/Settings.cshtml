@@ -105,7 +105,14 @@
                         <div class="col-md-5">
                             <select class="form-control" id="cs_client_type" asp-items="@Model.ViewDataService.ClientTypesUsingLoginUserId(@Model.GuardId)"></select>
                         </div>
+                        <div class="input-group offset-md-1 col-md-4">
+                            <input type="text" id="search_sites_guard_settings" class="form-control" placeholder="Search Client Site">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-primary" style="height:33px" id="btnSearchSitesOnDailyGuard"><i class="fa fa-search"></i></button>
+                            </div>
+                        </div>
                     </div>
+                    
                 </div>
             </div>
             <div class="row">

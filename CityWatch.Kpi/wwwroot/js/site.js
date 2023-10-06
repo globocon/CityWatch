@@ -824,12 +824,19 @@ $(function () {
     */
 
     /***** Client Site KPI Settings *****/
+    /* code added to search client site*/
+    $('#search_sites_guard_settings').on('keydown', function (e) {
+        if (e.which === 13) {
+            gridLogSiteSettings.reload({ type: $('#cs_client_type').val(), searchTerm: $('#search_sites_guard_settings').val() });
+        }
+    });
     let gridClientSiteSettings;
 
     function settingsButtonRenderer(value, record) {
         return '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#kpi-settings-modal" ' +
             'data-cs-id="' + record.id + '" data-cs-name="' + record.clientSiteName + '"><i class="fa fa-pencil mr-2"></i>Edit</button>';
     }
+   
 
     gridClientSiteSettings = $('#kpi_client_site_settings').grid({
         dataSource: '/Admin/Settings?handler=ClientSiteWithSettings',
@@ -849,7 +856,7 @@ $(function () {
 
     $('#cs_client_type').on('change', function () {
         gridClientSiteSettings.clear();
-        gridClientSiteSettings.reload({ type: $(this).val() });
+        gridClientSiteSettings.reload({ type: $(this).val(), searchTerm: $('#search_sites_guard_settings1').val() });
     });
     var currentDiv = 1;
     $('#kpi-settings-modal').on('shown.bs.modal', function (event) {
