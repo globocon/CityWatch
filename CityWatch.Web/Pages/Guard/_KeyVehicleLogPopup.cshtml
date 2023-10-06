@@ -81,6 +81,11 @@
                         <i class="fa fa-key mr-2"></i>Keys or FOB<span class="badge badge-primary ml-2">@kvlKeysCount</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="crm-details-tab" data-toggle="tab" data-target="#crm-details" role="tab" aria-controls="crm-details" aria-selected="true">
+                        <i class="fa fa-user"></i> CRM
+                    </a>
+                </li>
             </ul>
             <div class="tab-content">
                 <div class="tab-pane fade show active p-2" id="vehicle-details" role="tabpanel" aria-labelledby="vehicle-details-tab">
@@ -216,6 +221,94 @@
                         </table>
                     </div>
                 </div>
+                <div class="tab-pane fade p-2" id="crm-details" role="tabpanel" aria-labelledby="crm-details-tab">
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label>ID No. / Car or Truck Rego.</label>
+                            <input class="form-control" type="text" asp-for="@Model.VehicleRego" id="crmVehicleRego" autocomplete="off"  />
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>ID / Plate (State or AU)</label>
+                            <select class="form-control" disabled id="crm_list_plates" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.Plate)" >
+                            </select>
+                            <input type="hidden" asp-for="@Model.PlateId" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label>Vehicle Config</label>
+                            <select asp-for="@Model.TruckConfig"  id="crmTruckConfig" class="form-control" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.VehicleConfig)"></select>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>Trailer Type</label>
+                            <select asp-for="@Model.TrailerType"  id="crmTrailerType" class="form-control" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.TrailerType)"></select>
+                        </div>
+                       
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-8">
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>Individual Company Title</label>
+                                    <input class="form-control" type="text" asp-for="@Model.IndividualTitle" />
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Gender</label>
+                                    <select asp-for="@Model.Gender" asp-items="@viewDataService.Genders" class="form-control"></select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>Company ABN</label>
+                                    <input class="form-control" type="text" asp-for="@Model.CompanyABN" number id="crmCompanyABN" />
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Company LandLine</label>
+                                    @{
+                                        var landNumber = @Model.MobileNumber ?? "+61 (0) ";
+                                    }
+                                    <input class="form-control" value="@landNumber" id="LandLineNumber" type="text" asp-for="@Model.CompanyLandline" />
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>Email</label>
+                                    <input class="form-control" type="text" asp-for="@Model.Email" />
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Website</label>
+                                    <input class="form-control" type="text" asp-for="@Model.Website" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <div class="d-flex flex-row justify-content-between">
+                                <label id="lblIsBDMOrSales" class="ml-5 mr-2">BDM/Sales</label>
+                                <div class="custom-control custom-switch duty-day-switch">
+                                    <input type="checkbox" class="custom-control-input" id="cbIsBDMOrSales">
+                                    <label class="custom-control-label" for="cbIsBDMOrSales"></label>
+                                    <input hidden asp-for="@Model.IsBDM" />
+                                </div>
+                            </div>
+                            <ul role="listbox" tabindex="0" aria-label="emails list" style="list-style:none" id="list_BDM" >
+                                @foreach (var item in @viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.CRMActivity))
+                                {
+                                    if (@item.Text != "Select")
+                                    {
+                                        <li tabindex="-1" role="option"  marker="false">
+                                            <input tabindex="-1" type="checkbox" id="cbCRMActivity">@item.Text
+                                            <input type="hidden" value="@item.Value" id="IsCRMIndividualId">
+                                        </li>
+                                    }
+                                }
+                                <input type="hidden" id="IsCRMId" asp-for="@Model.BDMList">
+                                
+                            </ul>
+                        </div>
+                    </div>
+                    
+                </div>
+
             </div>
         </div>
         <div class="col-md-6">

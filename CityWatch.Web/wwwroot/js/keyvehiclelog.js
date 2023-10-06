@@ -546,7 +546,50 @@ $(function () {
                 $('#titlePOIWarning').attr('hidden', true);
                 $('#imagesiren').attr('hidden', true);
             }
-            
+            /*to load the common fields to crmtab -start*/
+            $('#crm_list_plates').val(result.keyVehicleLogProfile.plateId);
+            $('#crmTruckConfig').val(result.keyVehicleLogProfile.truckConfig);
+            $('#crmTrailerType').val(result.keyVehicleLogProfile.trailerType);
+
+            $('#IndividualTitle').val(result.individualTitle);
+            $('#Gender').val(result.gender);
+            $('#crmCompanyABN').val(result.companyABN);
+            if (result.companyLandline == null)
+                $('#LandLineNumber').val('+61 (0) ');
+            else
+                $('#LandLineNumber').val(result.companyLandline);
+            $('#Email').val(result.email);
+            /*for cheking  the BDM is true-start*/
+            let isBDM = $('#IsBDM').val(result.isBDM);
+            $('#cbIsBDMOrSales').prop('checked', result.isBDM);
+
+            if (result.isBDM == true) {
+                $('#lblIsBDMOrSales').text('BDM/Sales');
+                $('#list_BDM').prop('hidden', false);
+            }
+            else {
+                $('#lblIsBDMOrSales').text('Supplier/Partner');
+                $('#list_BDM').prop('hidden', true);
+            }
+
+           
+
+            /*for cheking  the BDM is true-end*/
+            $('#IsCRMId').val(result.bdmList);
+            var checkedornot = $('#IsCRMId').val();
+
+            /* to load the selected items in BDM-start*/
+            $("#list_BDM  input[type=checkbox]").each(function () {
+                crmindivid = $(this).closest('li').find('#IsCRMIndividualId').val();
+                if (checkedornot.indexOf(crmindivid) != -1) {
+                    $(this).prop('checked', true);
+                }
+                else {
+                    $(this).prop('checked', false);
+                }
+
+            });
+            /*to load the plate to crmtab -end*/
            
             const isChecked = $('#chbIsPOIAlert1').is(':checked');
             loadAuditHistory(result.keyVehicleLogProfile.vehicleRego);
@@ -744,7 +787,10 @@ $(function () {
             $('#cbIsTimeSlotNo').prop('checked', true);
             $('#IsSender').val(true);
             $('#cbIsSender').prop('checked', true);
-            //$('#chbIsPOIAlert1').prop('checked', false);  
+             /*for initializing the BDM to true-start*/
+            $('#cbIsBDMOrSales').prop('checked', true);
+            $('#IsBDM').val(true);
+            /*for initializing the BDM to true-end*/
         }
         else {
             let isTimeSlot = $('#IsTimeSlotNo').val().toLowerCase() === 'true';
@@ -754,6 +800,23 @@ $(function () {
             let isSender = $('#IsSender').val().toLowerCase() === 'true';
             $('#lblIsSender').text(isSender ? 'Sender Address' : 'Reciever Address');
             $('#cbIsSender').prop('checked', isSender);
+
+            /*for cheking  the BDM is true-start*/
+            let isBDM = $('#IsBDM').val().toLowerCase() === 'true';
+            if (isBDM == true) {
+                $('#lblIsBDMOrSales').text('BDM/Sales');
+                $('#list_BDM').prop('hidden', false);
+            }
+            else {
+                $('#lblIsBDMOrSales').text('Supplier/Partner');
+                $('#list_BDM').prop('hidden', true);
+            }
+          
+            $('#cbIsBDMOrSales').prop('checked', isBDM);
+           
+            /*for cheking  the BDM is true-end*/
+
+
             //for checking whether the person is under scam or not(jisha james)
             if ($('#PersonOfInterest').val() != '') {
                 $('#titlePOIWarning').attr('hidden', false);
@@ -767,20 +830,21 @@ $(function () {
                 $('#imagesiren').attr('hidden', true);
             }
 
-            //let isPOIAlert = $('#IsPOIAlert').val().toLowerCase() === 'true';
-
-            //$('#chbIsPOIAlert1').prop('checked', isPOIAlert);
-            //if (isPOIAlert == true) {
-            //    $('#titlePOIWarning').attr('hidden', false);
-            //    $('#imagesiren').attr('hidden', false);
-            //}
-            //else {
-            //    $('#titlePOIWarning').attr('hidden', true);
-            //    $('#imagesiren').attr('hidden', true);
-            //}
+           
 
 
             loadAuditHistory($('#VehicleRego').val());
+            var checkedornot = $('#IsCRMId').val();
+
+           /* to load the selected items in BDM-start*/
+            $("#list_BDM  input[type=checkbox]").each(function () {
+                crmindivid = $(this).closest('li').find('#IsCRMIndividualId').val();
+                if (checkedornot.indexOf(crmindivid) != -1) {
+                    $(this).prop('checked', true);
+                }
+               
+            });
+            /* to load the selected items in BDM-end*/
         }
 
         $('#cbIsTimeSlotNo').on('change', function () {
@@ -794,6 +858,52 @@ $(function () {
             $('#lblIsSender').text(isChecked ? 'Sender Address' : 'Reciever Address');
             $('#IsSender').val(isChecked);
         });
+        /*for changing the BDM-start*/
+        $('#cbIsBDMOrSales').on('change', function () {
+            
+            const isChecked = $(this).is(':checked');
+            if (isChecked == true) {
+                $('#lblIsBDMOrSales').text('BDM/Sales');
+                $('#list_BDM').prop('hidden', false);
+            }
+            else {
+                $('#lblIsBDMOrSales').text('Supplier/Partner');
+                $('#list_BDM').prop('hidden', true);
+                //to uncheck the ticked options-start
+                $("#list_BDM  input[type=checkbox]:checked").each(function () {
+                    var isChecked1 = $(this).is(':checked');
+                    if (isChecked1 == true) {
+                        $(this).prop('checked', false);
+                    }
+
+                });
+                $('#IsCRMId').val('');
+                //to uncheck the ticked options-end
+            }
+            $('#IsBDM').val(isChecked);
+        });
+      
+        $('#list_BDM li').on('change', '#cbCRMActivity', function () {
+            
+            
+              $('#IsCRMId').val('');
+               
+                $("#list_BDM  input[type=checkbox]:checked").each(function () {
+                    var isChecked1 = $(this).is(':checked');
+                    if (isChecked1 == true) {
+                        crmindivid = $(this).closest('li').find('#IsCRMIndividualId').val();
+                        if ($('#IsCRMId').val() == '') {
+                            $('#IsCRMId').val(crmindivid);
+                        }
+                        else {
+                            var crmindividnew = $('#IsCRMId').val() + ',' + crmindivid;
+                            $('#IsCRMId').val(crmindividnew);
+                        }
+                    }
+                });
+               
+        });
+        /*for changing the BDM-end*/
 
         //to check whether the person of interest is selected or not 
         $('#PersonOfInterest').on('change', function () {
@@ -808,7 +918,7 @@ $(function () {
                 $('#titlePOIWarning').attr('hidden', true);
                 $('#imagesiren').attr('hidden', true);
             }
-            $('#IsPOIAlert').val(isChecked);
+            //$('#IsPOIAlert').val(isChecked);
         });
          /*to confirm whether the image is person vehicle or other -start*/
         $('#chbIsPerson').on('change', function () {
@@ -1002,16 +1112,38 @@ $(function () {
         $('#VehicleRego').on('blur', function () {
             const vehicleRegoHasVal = $(this).val() !== '';
             $('#kvl_list_plates').attr('disabled', !vehicleRegoHasVal);
+            $('#crm_list_plates').attr('disabled', !vehicleRegoHasVal);
             if (!vehicleRegoHasVal) {
                 // TODO: clear previous auto populated profile values
             }
+            $('#crmVehicleRego').val($('#VehicleRego').val());
 
         });
+        /*same changes in vehicle rego-start*/
+        $('#crmVehicleRego').on('blur', function () {
+            const vehicleRegoHasVal = $(this).val() !== '';
+            $('#kvl_list_plates').attr('disabled', !vehicleRegoHasVal);
+            $('#crm_list_plates').attr('disabled', !vehicleRegoHasVal);
+            if (!vehicleRegoHasVal) {
+                // TODO: clear previous auto populated profile values
+            }
+            $('#VehicleRego').val($('#crmVehicleRego').val());
+
+        });
+        $('#crmVehicleRego').on('change', function () {
+            const vehicleRegoHasVal = $(this).val() !== '';
+            $('#VehicleRego').val($('#crmVehicleRego').val());
+            GetVehicleImage();
+
+        });
+        /*same changes in vehicle rego-start*/
+
         /* to display the corresponding image on changing the reg no,person type,company name and person name-start*/
         $('#VehicleRego').on('change', function () {
             const vehicleRegoHasVal = $(this).val() !== '';
+            $('#crmVehicleRego').val($('#VehicleRego').val());
             GetVehicleImage();
-           
+            
         });
         $('#CompanyName').on('change', function () {
             
@@ -1026,9 +1158,9 @@ $(function () {
             GetPersonImage();
         });
         /* to display the corresponding image on changing the reg no,person type,company name and person name-end*/
-        $('#VehicleRego, #Trailer1Rego, #Trailer2Rego, #Trailer3Rego, #Trailer4Rego').on('keyup', vehicleRegoToUpperCase);
+        $('#VehicleRego, #Trailer1Rego, #Trailer2Rego, #Trailer3Rego, #Trailer4Rego','#crmVehicleRego').on('keyup', vehicleRegoToUpperCase);
 
-        $('#VehicleRego, #Trailer1Rego, #Trailer2Rego, #Trailer3Rego, #Trailer4Rego').on('keypress', vehicleRegoValidateSplChars);
+        $('#VehicleRego, #Trailer1Rego, #Trailer2Rego, #Trailer3Rego, #Trailer4Rego','#crmVehicleRego').on('keypress', vehicleRegoValidateSplChars);
 
         $('#clear_initialcall_time').on('click', function () {
             $('#new_log_initial_call').val('');
@@ -1064,8 +1196,77 @@ $(function () {
             const option = $(this).find(":selected");
             if (option.val() !== '') {
                 $('#PlateId').val(option.val());
+                /*to load the plate to crmtab -start*/
+                $('#crm_list_plates').val(option.val());
+                /*to load the plate to crmtab -end*/
             }
         });
+        $('#crm_list_plates').on('change', function () {
+            const option = $(this).find(":selected");
+            if (option.val() !== '') {
+                $('#PlateId').val(option.val());
+                /*to load the plate to crmtab -start*/
+                $('#kvl_list_plates').val(option.val());
+                /*to load the plate to crmtab -end*/
+            }
+        });
+        /*to load the plate to crmtab -start*/
+        $('#TruckConfig').on('change', function () {
+            const option = $(this).find(":selected");
+            if (option.val() !== '') {
+
+
+                $('#crmTruckConfig').val(option.val());
+
+            }
+        });
+
+            $('#TrailerType').on('change', function () {
+                const option = $(this).find(":selected");
+                if (option.val() !== '') {
+
+
+                    $('#crmTrailerType').val(option.val());
+
+                }
+            });
+        $('#crmTruckConfig').on('change', function () {
+            const option = $(this).find(":selected");
+            if (option.val() !== '') {
+
+
+                $('#TruckConfig').val(option.val());
+
+            }
+        });
+
+        $('#crmTrailerType').on('change', function () {
+            const option = $(this).find(":selected");
+            if (option.val() !== '') {
+
+
+                $('#TrailerType').val(option.val());
+
+            }
+        });
+        /*to load the plate to crmtab -end*/
+        /*to check whether the fields are restricted to characters -start*/
+        //$('#crmCompanyABN').on('keypress', function (e) {
+        //    var x = e.which || e.keycode;
+        //    if ((x >= 48 && x <= 57))
+        //        return true;
+        //    else
+        //        return false;
+        //});
+
+        //$('#LandLineNumber').on('keypress', function (e) {
+        //        var x = e.which || e.keycode;
+        //        if ((x >= 48 && x <= 57))
+        //            return true;
+        //        else
+        //            return false;
+        //});
+        /*to load the plate to crmtab -end*/
 
         $('#list_clientsite_keys').on('change', function () {
             const option = $(this).find(":selected");
@@ -1799,7 +2000,7 @@ $(function () {
             },
         });
 
-        $('#VehicleRego').typeahead({
+        $('#VehicleRego ,#crmVehicleRego').typeahead({
             minLength: 3,
             autoSelect: true,
             source: function (request, response) {
@@ -1913,6 +2114,7 @@ $(function () {
             url: '/Admin/AuditSiteLog?handler=KeyVehicleLogProfiles',
             data: function (d) {
                 d.truckRego = $('#kvlProfileRegos').find(':selected').val();
+                d.poi = $('#kvlProfileIsPOIBDMSupplier').find(':selected').val();
             },
             dataSrc: ''
         },
@@ -1926,6 +2128,8 @@ $(function () {
             },
             { data: 'detail.keyVehicleLogProfile.vehicleRego', width: '8%' },
             { data: 'plate', orderable: false, width: '4%' },
+            
+            { data: 'detail.poiOrBDM',  width: '2%' },
             { data: 'detail.companyName', width: '8%' },
             { data: 'detail.personName', orderable: false, width: '8%' },
             { data: 'clientSite', orderable: false, width: '8%' },
@@ -1933,7 +2137,7 @@ $(function () {
             { data: 'trailerTypeText', orderable: false, width: '8%' },
             {
                 orderable: false,
-                width: '9%',
+                width: '10%',
                 targets: -1,
                 data: null,
                 defaultContent: '<button id="btnEditKvlProfile" type="button" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
@@ -1980,6 +2184,28 @@ $(function () {
         theme: 'bootstrap4',
         ajax: {
             url: '/Admin/AuditSiteLog?handler=VehicleRegos',
+            dataType: 'json',
+            delay: 250,
+            processResults: function (data) {
+                return {
+                    results: $.map(data, function (item) {
+                        return {
+                            id: item.value || '',
+                            text: item.text,
+                            value: item.value
+                        }
+                    })
+                };
+            },
+            cache: true
+        },
+    }).on("select2:select", function (e) {
+        gridKeyVehicleLogProfiles.ajax.reload();
+    });
+    $('#kvlProfileIsPOIBDMSupplier').select2({
+        theme: 'bootstrap4',
+        ajax: {
+            url: '/Admin/AuditSiteLog?handler=POIBDMSupplier',
             dataType: 'json',
             delay: 250,
             processResults: function (data) {
@@ -2084,6 +2310,13 @@ $(function () {
         const selFieldTypeId = $('#kvl_fields_types').val();
         if (!selFieldTypeId) {
             alert('Please select a field type to update');
+            return;
+        }
+        var rowCount = $('#tbl_kvl_fields tr').length;
+      
+        if (selFieldTypeId == '9' && rowCount == 8)
+        {
+            alert('Maximum number of CRM/BDM Activity exeeded');
             return;
         }
 
