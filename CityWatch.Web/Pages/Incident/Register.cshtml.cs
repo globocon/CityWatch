@@ -287,6 +287,7 @@ namespace CityWatch.Web.Pages.Incident
                     messageHtml = messageHtml + "<p>Please " +
                     "<a href=\" https://c4istorage1.blob.core.windows.net/irfiles/" + (new string(blobName.Take(8).ToArray()) + "/" + blobName) + "\" target=\"_blank\">" +
                     "click here</a> to download the Incident Report</p>";
+                    messageHtml = messageHtml + "<p>File name : "+ blobName+"</p>";
                 }
 
             }
@@ -295,7 +296,16 @@ namespace CityWatch.Web.Pages.Incident
             {
                 HtmlBody = messageHtml
             };
-            builder.Attachments.Add(fileName);
+            /* Add attachment (IR PDF) to mail if Size <=12 MB , the link to download always add to  mail body Start*/
+            FileInfo fileInfo = new FileInfo(fileName);
+            var fileSizeInMB =  (fileInfo.Length) / 1048576d;
+            if (fileSizeInMB <= 12) // You can change this limit as needed
+            {
+                builder.Attachments.Add(fileName);
+
+            }
+            /* Add attachment to mail if Size <=12 MB end*/
+
             message.Body = builder.ToMessageBody();
             using (var client = new SmtpClient())
             {
