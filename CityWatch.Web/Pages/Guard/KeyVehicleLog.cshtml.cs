@@ -369,7 +369,7 @@ namespace CityWatch.Web.Pages.Guard
             var success = false;
             var files = Request.Form.Files;
             var reportReference = Request.Form["report_reference"].ToString();
-            var vehicleRego = Request.Form["vehicleRego"].ToString();
+            var vehicleRego = Request.Form["vehicle_rego"].ToString();
             if (files.Count == 1)
             {
                 var file = files[0];
@@ -411,7 +411,8 @@ namespace CityWatch.Web.Pages.Guard
             var success = false;
             var files = Request.Form.Files;
             var vehicle_rego = Request.Form["vehicle_rego"].ToString();
-            
+            var foundit= Request.Form["foundit"].ToString();
+
             if (files.Count == 1)
             {
                 var file = files[0];
@@ -424,11 +425,44 @@ namespace CityWatch.Web.Pages.Guard
                         var folderPath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", vehicle_rego);
                         if (!IO.Directory.Exists(folderPath))
                             IO.Directory.CreateDirectory(folderPath);
-                        using (var stream = IO.File.Create(IO.Path.Combine(folderPath, uploadFileName)))
+                        if (foundit == "yes")
                         {
-                            file.CopyTo(stream);
+                            var fulePath = Path.Combine(folderPath, uploadFileName);
+                            if (IO.File.Exists(fulePath))
+                            {
+                                for (int i = 1; i <= 1000; i++)
+                                {
+                                    var newfilename = vehicle_rego + "_" + i + Path.GetExtension(file.FileName);
+                                    var fulePath1 = Path.Combine(folderPath, newfilename);
+                                    if (!IO.File.Exists(fulePath1))
+                                    {
+                                        FileInfo fileInfo = new FileInfo(IO.Path.GetFullPath(Path.Combine(folderPath, uploadFileName)));
+                                        
+                                        fileInfo.Name.Replace(uploadFileName, newfilename);
+                                        using (var stream1 = System.IO.File.OpenRead(fileInfo.FullName))
+                                        {
+
+
+                                            var file2 = new FormFile(stream1, 0, stream1.Length, null, Path.GetFileName(stream1.Name));
+
+                                            using (var stream = IO.File.Create(IO.Path.Combine(folderPath, newfilename)))
+                                            {
+                                                file2.CopyTo(stream);
+                                            }
+                                        }
+                                       
+                                        break;
+                                    }
+                                }
+                            }
                         }
-                        success = true;
+                            using (var stream = IO.File.Create(IO.Path.Combine(folderPath, uploadFileName)))
+                            {
+                                file.CopyTo(stream);
+                            }
+                            success = true;
+                        
+                        
                     }
                     catch (Exception)
                     {
