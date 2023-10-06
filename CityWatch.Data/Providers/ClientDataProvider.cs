@@ -82,6 +82,8 @@ namespace CityWatch.Data.Providers
         int DeleteFeedBackType(int typeId);
         List<KeyVehcileLogField> GetKeyVehicleLogFieldsByTruckId(int TruckConfig);
 
+        List<ClientSite> GetClientSiteDetails(int[] clientSiteIds);
+
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -262,6 +264,14 @@ namespace CityWatch.Data.Providers
                 .ToList();
 
             return clientSiteKpiSetting;
+        }
+
+        public List<ClientSite> GetClientSiteDetails(int[] clientSiteIds)
+        {
+            var clientSiteDetails = _context.ClientSites
+                .Where(x => clientSiteIds.Contains(x.Id))
+                .ToList();
+            return clientSiteDetails;
         }
 
         public void SaveClientSiteKpiSetting(ClientSiteKpiSetting setting)
