@@ -28,6 +28,7 @@ namespace CityWatch.Data.Providers
     }
     public interface IClientDataProvider
     {
+        List<ClientSite> GetUserClientSites(string type, string searchTerm);
         List<ClientType> GetClientTypes();
         void SaveClientType(ClientType clientType);
         void DeleteClientType(int id);
@@ -101,7 +102,16 @@ namespace CityWatch.Data.Providers
             _configuration = configuration;
             _webHostEnvironment = webHostEnvironment;
         }
+        //code added to search client name
+        public List<ClientSite> GetUserClientSites(string type, string searchTerm)
+        {
+            var clientSites = GetClientSites(null)
+                .Where(z => (string.IsNullOrEmpty(type) || z.ClientType.Name.Equals(type)) &&
+                            (string.IsNullOrEmpty(searchTerm) || z.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
 
+            return clientSites;
+        }
         public List<ClientType> GetClientTypes()
         {
             return _context.ClientTypes.OrderBy(x => x.Name).ToList();

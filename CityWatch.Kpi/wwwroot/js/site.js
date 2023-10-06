@@ -823,7 +823,9 @@ $(function () {
     });
     */
 
+  
     /***** Client Site KPI Settings *****/
+
     let gridClientSiteSettings;
 
     function settingsButtonRenderer(value, record) {
@@ -847,10 +849,27 @@ $(function () {
         }
     });
 
-    $('#cs_client_type').on('change', function () {
-        gridClientSiteSettings.clear();
-        gridClientSiteSettings.reload({ type: $(this).val() });
+    /*code added for search client start */
+    $('#search_sites_settings').on('keyup', function (e) {
+        var SearchTextbox = $("#search_sites_settings");
+        var searchText = SearchTextbox.val();
+        if (searchText.length >= 3) {     
+            gridClientSiteSettings.reload({ type: $('#cs_client_type').val(), searchTerm: $(this).val() });
+       
+        }
+      
     });
+    $('#btnSearchSites').on('click', function () {
+        gridClientSiteSettings.reload({ type: $('#cs_client_type').val(), searchTerm: $('#search_sites_settings').val() });
+    });
+
+    $('#cs_client_type').on('change', function () {
+        var SearchTextbox = $("#search_sites_settings");
+        SearchTextbox.val("");
+        var searchitem = '';
+        gridClientSiteSettings.reload({ type: $(this).val(), searchTerm: searchitem });
+    });
+    /*code added for search client stop */
     var currentDiv = 1;
     $('#kpi-settings-modal').on('shown.bs.modal', function (event) {
         currentDiv = 1;

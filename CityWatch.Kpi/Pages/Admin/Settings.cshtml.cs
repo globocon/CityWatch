@@ -108,16 +108,35 @@ namespace CityWatch.Kpi.Pages.Admin
             await _importDataService.Run(jobId);
         }
 
-        public JsonResult OnGetClientSiteWithSettings(string type)
+        //code added to search client name start
+
+        public JsonResult OnGetClientSiteWithSettings(string type, string searchTerm)
         {
-            if (!string.IsNullOrEmpty(type))
+            if (!string.IsNullOrEmpty(type) || !string.IsNullOrEmpty(searchTerm))
             {
                 var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Name == type);
                 if (clientType != null)
                 {
-                    var clientSites = _clientDataProvider.GetClientSites(clientType.Id);
+                    var clientSites = _clientDataProvider.GetUserClientSites(type, searchTerm);
                     GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
-                    if (GuardId!=0)
+                    if (GuardId != 0)
+                        clientSites = _clientDataProvider.GetClientSitesUsingGuardId(GuardId);
+                    var clientSiteWithSettings = _clientDataProvider.GetClientSiteKpiSettings().Select(z => z.ClientSiteId).ToList();
+
+                    return new JsonResult(clientSites.Select(z => new
+                    {
+                        z.Id,
+                        ClientTypeName = z.ClientType.Name,
+                        ClientSiteName = z.Name,
+                        HasSettings = clientSiteWithSettings.Any(x => x == z.Id)
+                    }));
+                       
+                }
+                else
+                {
+                    var clientSites = _clientDataProvider.GetUserClientSites(type, searchTerm);
+                    GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+                    if (GuardId != 0)
                         clientSites = _clientDataProvider.GetClientSitesUsingGuardId(GuardId);
                     var clientSiteWithSettings = _clientDataProvider.GetClientSiteKpiSettings().Select(z => z.ClientSiteId).ToList();
 
@@ -129,10 +148,11 @@ namespace CityWatch.Kpi.Pages.Admin
                         HasSettings = clientSiteWithSettings.Any(x => x == z.Id)
                     }));
                 }
-            }
+            }   
             return new JsonResult(new { });
         }
 
+        //code added to search client name start
         public PartialViewResult OnGetClientSiteKpiSettings(int siteId)
         {
             var clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
