@@ -1511,8 +1511,9 @@
             gritdSmartWands.addRow({ 'id': -1, 'smartWandId': '', phoneNumber: '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
         }
     });
-
+  /*  code added to 1000 pages in Excel */
     let gridClientSiteKeys = $('#cs_client_site_keys').DataTable({
+        lengthMenu: [[10, 25,50,100,1000], [10, 25,50,100,1000]],
         paging: true,
         ordering: true,
         order: [[1, "asc"]],
