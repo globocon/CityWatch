@@ -1647,7 +1647,7 @@ $(function () {
 
 
 
-                                    fileForm.append('vehicleRego', $('#VehicleRego').val());
+                                    fileForm.append('vehicle_rego', $('#VehicleRego').val());
 
                                     $.ajax({
                                         url: '/Guard/KeyVehiclelog?handler=Upload',
