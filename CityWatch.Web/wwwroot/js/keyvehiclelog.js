@@ -1660,8 +1660,9 @@ $(function () {
                                     }).done(function (result) {
                                         const icon = document.getElementById(result.attachmentId).getElementsByTagName('i').item(0);
                                         if (result.success) {
-                                            icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-kvl-attachment';
-                                            icon.title = 'Delete';
+                                            //icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-kvl-attachment';
+                                            //icon.title = 'Delete';
+                                            GetAttachmentLists()
                                         } else {
                                             icon.className = 'fa fa-exclamation-triangle ml-2 text-warning';
                                             icon.title = 'Error';
@@ -2061,7 +2062,7 @@ $(function () {
                 const maxAllowedSize = 30 * 1024 * 1024;
                 var fileSizeCheck = true;
                 var FileName = "";
-                for (let i = 0; i < fileUpload.length; i++, attachIndex++) {
+                for (let i = 0; i < fileUpload.length; i++) {
                     const filecheck = fileUpload.item(i);
                     if (filecheck.size > maxAllowedSize) {
                         fileSizeCheck = false;
@@ -2109,8 +2110,9 @@ $(function () {
                     }).done(function (result) {
                         const icon = document.getElementById(result.attachmentId).getElementsByTagName('i').item(0);
                         if (result.success) {
-                            icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-kvl-attachment';
-                            icon.title = 'Delete';
+                            //icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-kvl-attachment';
+                            //icon.title = 'Delete';
+                            GetAttachmentLists();
                         } else {
                             icon.className = 'fa fa-exclamation-triangle ml-2 text-warning';
                             icon.title = 'Error';
