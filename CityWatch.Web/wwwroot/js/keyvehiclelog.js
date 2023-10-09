@@ -569,7 +569,7 @@ $(function () {
             }
             else {
                 $('#lblIsBDMOrSales').text('Supplier/Partner');
-                $('#list_BDM').prop('hidden', true);
+                $('#list_BDM').prop('hidden', false);
             }
 
            
@@ -809,7 +809,7 @@ $(function () {
             }
             else {
                 $('#lblIsBDMOrSales').text('Supplier/Partner');
-                $('#list_BDM').prop('hidden', true);
+                $('#list_BDM').prop('hidden', false);
             }
           
             $('#cbIsBDMOrSales').prop('checked', isBDM);
@@ -865,10 +865,17 @@ $(function () {
             if (isChecked == true) {
                 $('#lblIsBDMOrSales').text('BDM/Sales');
                 $('#list_BDM').prop('hidden', false);
+                $("#list_BDM  input[type=checkbox]:checked").each(function () {
+                    var isChecked1 = $(this).is(':checked');
+                    if (isChecked1 == true) {
+                        $(this).prop('checked', false);
+                    }
+
+                });
             }
             else {
                 $('#lblIsBDMOrSales').text('Supplier/Partner');
-                $('#list_BDM').prop('hidden', true);
+                $('#list_BDM').prop('hidden', false);
                 //to uncheck the ticked options-start
                 $("#list_BDM  input[type=checkbox]:checked").each(function () {
                     var isChecked1 = $(this).is(':checked');
@@ -1152,6 +1159,31 @@ $(function () {
         $('#PersonType').on('change', function () {
 
             GetPersonImage();
+            if ($('#PersonType').find('option:selected').text() == 'CRM (BDM Activity)') {
+                $.ajax({
+                    url: '/Guard/KeyVehiclelog?handler=CRMNumber',
+                    type: 'GET',
+                    data: { 'IndividualType': $('#PersonType').val() },
+
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (result) {
+                    $('#VehicleRego').val(result);
+                    $('#crm_list_plates').attr('disabled', false);
+                    $('#kvl_list_plates').attr('disabled', false);
+
+                    if (result.success) {
+
+                        $('#crmVehicleRego').val(result);
+                        $('#VehicleRego').val(result);
+                        $('#crm_list_plates').attr('disabled', false);
+                        $('#kvl_list_plates').attr('disabled', false);
+                    } else {
+                        $('#crmVehicleRego').val(result);
+                    }
+
+                });
+            }
+            
         });
         $('#PersonName').on('change', function () {
 

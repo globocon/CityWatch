@@ -611,6 +611,69 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(success);
         }
         //to delete the vehicle image-end
+
+        //to get next crm number-start
+        public JsonResult OnGetCRMNumber(int IndividualType)
+        {
+            string crmNumber=null;
+            var personType = _viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.IndividualType).Where(x => x.Value == IndividualType.ToString()).Select(x => x.Text).FirstOrDefault();
+            if (personType == "CRM (BDM Activity)")
+            {
+                var personalDetails = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetailsWithIndividualType(Convert.ToInt32(IndividualType));
+                if (personalDetails.Count > 0)
+                {
+                    var crmid = personalDetails.Where(x => x.CRMId != null);
+                    if (crmid.Count() == 0)
+                    {
+                        crmNumber = "CRM000001";
+                    }
+                    else
+                    {
+                        var maxid = crmid.Max(x => x.Id);
+                        //var crmnew = crmid.Where(x => x.Id == maxid).Select(x => x.CRMId).FirstOrDefault();
+                        var countid = crmid.Count() + 1;
+                        int numberOfDigits = countid / 10 + 1;
+                        string latestcrm = null;
+                        if (numberOfDigits == 1)
+                        {
+                            latestcrm = "CRM00000" + countid.ToString();
+                        }
+                        else if (numberOfDigits == 2)
+                        {
+                            latestcrm = "CRM0000" + countid.ToString();
+                        }
+                        else if (numberOfDigits == 3)
+                        {
+                            latestcrm = "CRM000" + countid.ToString();
+                        }
+                        else if (numberOfDigits == 4)
+                        {
+                            latestcrm = "CRM00" + countid.ToString();
+                        }
+                        else if (numberOfDigits == 5)
+                        {
+                            latestcrm = "CRM0" + countid.ToString();
+                        }
+                        else if (numberOfDigits == 6)
+                        {
+                            latestcrm = "CRM" + countid.ToString();
+                        }
+                        else
+                        {
+                            latestcrm = null;
+                        }
+                        if(latestcrm!=null)
+                        {
+                            crmNumber = latestcrm;
+                        }
+                    }
+                }
+            }
+                return new JsonResult(crmNumber);
+        }
+
+        //to get next crm number-end
+
         public JsonResult OnGetCompanyNames(string companyNamePart)
         {
             return new JsonResult(_viewDataService.GetCompanyNames(companyNamePart).ToList());

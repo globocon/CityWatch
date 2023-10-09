@@ -296,7 +296,8 @@
                                     if (@item.Text != "Select")
                                     {
                                         <li tabindex="-1" role="option"  marker="false">
-                                            <input tabindex="-1" type="checkbox" id="cbCRMActivity">@item.Text
+                                            <input tabindex="-1" class="mr-2" type="checkbox" id="cbCRMActivity">@item.Text
+                                            
                                             <input type="hidden" value="@item.Value" id="IsCRMIndividualId">
                                         </li>
                                     }
