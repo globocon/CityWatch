@@ -130,7 +130,7 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     ClientSiteId = GuardLog.ClientSiteLogBook.ClientSite.Id,
                     GuardId = GuardLog.GuardLogin.GuardId,
-                    GuardLoginTime = DateTime.Now,
+                    LastLBCreatedTime = DateTime.Now,
                     LBDescription = GuardLog.Notes,
                     ActivityType = "LB"
                 };

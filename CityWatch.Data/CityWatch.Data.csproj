@@ -4,9 +4,6 @@
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="Models\ClientSiteLinksDetails - Copy.cs" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="itext7" Version="7.2.0" />
