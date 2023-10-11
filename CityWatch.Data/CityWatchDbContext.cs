@@ -61,6 +61,7 @@ namespace CityWatch.Data
         public DbSet<ClientSiteDuress> ClientSiteDuress { get; set; }
         public DbSet<ClientSiteLinksPageType> ClientSiteLinksPageType { get; set; }
         public DbSet<ClientSiteLinksDetails> ClientSiteLinksDetails { get; set; }
+        public DbSet<ClientSiteRadioChecksActivityStatus> ClientSiteRadioChecksActivityStatus { get; set; }
 
     }
 }

@@ -99,6 +99,7 @@ namespace CityWatch.Web.Pages.Guard
                 if (LogBookType == LogBookType.DailyGuardLog)
                 {
                     CreateLogbookLoggedInEntry(logBookId, guardLoginId);
+
                 }
 
                 if (LogBookType == LogBookType.VehicleAndKeyLog && isNewLogBook)
@@ -257,6 +258,8 @@ namespace CityWatch.Web.Pages.Guard
                 IsSystemEntry = true
             };
             _guardLogDataProvider.SaveGuardLog(signInEntry);
+
+           
         }
     }
 }

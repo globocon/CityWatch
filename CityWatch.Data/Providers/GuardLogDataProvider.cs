@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Globalization;
 using System.Linq;
 
@@ -13,6 +14,11 @@ namespace CityWatch.Data.Providers
         List<GuardLog> GetGuardLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
         GuardLog GetLatestGuardLog(int clientSiteId, int guardId);
         void SaveGuardLog(GuardLog guardLog);
+
+        //logBookId entry for radio checklist-start
+        void SaveRadioChecklistEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity);
+
+        //logBookId entry for radio checklist-end
         void DeleteGuardLog(int id);
         List<KeyVehicleLog> GetOpenKeyVehicleLogsByVehicleRego(string vehicleRego);
         List<KeyVehicleLog> GetKeyVehicleLogs(int logBookId);
@@ -728,6 +734,36 @@ namespace CityWatch.Data.Providers
         public List<CompanyDetails> GetCompanyDetails()
         {
             return _context.CompanyDetails.ToList();
+        }
+        public void SaveRadioChecklistEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity)
+        {
+            if (clientSiteActivity.Id == 0)
+            {
+                _context.ClientSiteRadioChecksActivityStatus.Add(new ClientSiteRadioChecksActivityStatus()
+                {
+                    ClientSiteId = clientSiteActivity.ClientSiteId,
+                    GuardId = clientSiteActivity.GuardId,
+                    LastIRCreatedTime = clientSiteActivity.LastIRCreatedTime,
+                    LastKVCreatedTime = clientSiteActivity.LastKVCreatedTime,
+                    LastLBCreatedTime = clientSiteActivity.LastLBCreatedTime,
+                    GuardLoginTime = clientSiteActivity.GuardLoginTime,
+                    GuardLogoutTime = clientSiteActivity.GuardLogoutTime,
+                    IRDescription = clientSiteActivity.IRDescription,
+                    KVDescription = clientSiteActivity.KVDescription,
+                    LBDescription = clientSiteActivity.LBDescription,
+                    ActivityType = clientSiteActivity.ActivityType,
+                });
+                
+            }
+            //else
+            //{
+            //    var guardLogToUpdate = _context.GuardLogs.SingleOrDefault(x => x.Id == guardLog.Id);
+            //    if (guardLogToUpdate == null)
+            //        throw new InvalidOperationException();
+
+            //    guardLogToUpdate.Notes = guardLog.Notes;
+            //}
+            _context.SaveChanges();
         }
     }
 }

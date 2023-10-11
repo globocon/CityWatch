@@ -125,6 +125,17 @@ namespace CityWatch.Web.Pages.Guard
             try
             {
                 _guardLogDataProvider.SaveGuardLog(GuardLog);
+                //logBookId entry for radio checklist-start
+                var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                {
+                    ClientSiteId = GuardLog.ClientSiteLogBook.ClientSite.Id,
+                    GuardId = GuardLog.GuardLogin.GuardId,
+                    GuardLoginTime = DateTime.Now,
+                    LBDescription = GuardLog.Notes,
+                    ActivityType = "LB"
+                };
+                _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
+                //logBookId entry for radio checklist-end
             }
             catch (Exception ex)
             {
