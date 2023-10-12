@@ -35,6 +35,7 @@ namespace CityWatch.Web.Services
     public interface IViewDataService
     {
         List<SelectListItem> Genders { get; }
+        List<SelectListItem> PSPFType { get; }
         List<SelectListItem> States { get; }
         List<SelectListItem> LicenseStates { get; }
         List<SelectListItem> NotifiedBy { get; }
@@ -125,7 +126,29 @@ namespace CityWatch.Web.Services
                 };
             }
         }
+        //code added for PSPF dropdown start
+        public List<SelectListItem> PSPFType
+        {
+            get
+            {
+                var pspfTypes = _clientDataProvider.GetPSPF();
+                var items = new List<SelectListItem>() { new SelectListItem("Select", "", true) };
+                foreach (var item in pspfTypes)
+                {
+                    var selectListItem = new SelectListItem(item.Name, item.Name);
+                    var selectListItem1 = item.Name;
+                    var Default = item.IsDefault;
+                    if (Default==true)
+                    {
+                        selectListItem.Selected = true;
+                    }
+                    items.Add(selectListItem);
+                }
 
+                return items;
+            }
+        }
+        //code added for PSPF dropdown stop
         public List<SelectListItem> GetOfficerPositions(OfficerPositionFilter positionFilter = OfficerPositionFilter.All)
         {
             var items = new List<SelectListItem>()

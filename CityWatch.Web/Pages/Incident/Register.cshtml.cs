@@ -448,7 +448,7 @@ namespace CityWatch.Web.Pages.Incident
             }
             var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Name == Report.DateLocation.ClientType);
             var clientSite = _clientDataProvider.GetClientSites(clientType.Id).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite);
-
+            var PSPFName = _clientDataProvider.GetPSPF().SingleOrDefault(z => z.Name == Report.PSPFName);
             // var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite);
             try
             {
@@ -487,7 +487,8 @@ namespace CityWatch.Web.Pages.Incident
                 PlateId = 0,
                 VehicleRego = null,
                 LogId = AuthUserHelper.LoggedInUserId.GetValueOrDefault(),
-                IncidentReportEventTypes = Report.IrEventTypes.Select(z => new IncidentReportEventType() { EventType = z }).ToList()
+                IncidentReportEventTypes = Report.IrEventTypes.Select(z => new IncidentReportEventType() { EventType = z }).ToList(),
+                PSPFId = PSPFName.Id
             };
 
             if (!reportGenerated)

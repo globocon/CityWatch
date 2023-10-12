@@ -29,6 +29,7 @@ namespace CityWatch.Data.Providers
     public interface IClientDataProvider
     {
         List<ClientType> GetClientTypes();
+        List<IncidentReportPSPF> GetPSPF();
         void SaveClientType(ClientType clientType);
         void DeleteClientType(int id);
         List<ClientSite> GetClientSites(int? typeId);
@@ -104,7 +105,12 @@ namespace CityWatch.Data.Providers
         {
             return _context.ClientTypes.OrderBy(x => x.Name).ToList();
         }
-
+        //code added to PSPF Dropdown start
+        public List<IncidentReportPSPF> GetPSPF()
+        {
+            return _context.IncidentReportPSPF.OrderBy(z => z.ReferenceNo).ToList();
+        }
+        //code added to PSPF Dropdown stop
         public void SaveClientType(ClientType clientType)
         {
             if (clientType == null)
