@@ -749,46 +749,6 @@ namespace CityWatch.Data.Providers
                 if (clientSiteActivity.Id == 0)
                 {
 
-                    ClientSiteId = clientSiteActivity.ClientSiteId,
-                    GuardId = clientSiteActivity.GuardId,
-                    LastIRCreatedTime = clientSiteActivity.LastIRCreatedTime,
-                    LastKVCreatedTime = clientSiteActivity.LastKVCreatedTime,
-                    LastLBCreatedTime = clientSiteActivity.LastLBCreatedTime,
-                    GuardLoginTime = clientSiteActivity.GuardLoginTime,
-                    GuardLogoutTime = clientSiteActivity.GuardLogoutTime,
-                    IRDescription = clientSiteActivity.IRDescription,
-                    KVDescription = clientSiteActivity.KVDescription,
-                    LBDescription = clientSiteActivity.LBDescription,
-                    ActivityType = clientSiteActivity.ActivityType,
-                });
-
-            }
-
-            _context.SaveChanges();
-        }
-
-        public List<ClientSiteRadioChecksActivityStatus> GetClientSiteRadioChecksActivityDetails()
-        {
-            return _context.ClientSiteRadioChecksActivityStatus.ToList();
-        }
-        public List<RadioCheckListGuardData> GetActiveGuardDetails()
-        {
-          
-            var allvalues = _context.RadioCheckListGuardData.FromSqlRaw($"EXEC sp_GetActiveGuardDetailsForRC").ToList();
-            foreach( var item in allvalues ){
-                
-                item.SiteName= item.SiteName+ " <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x=>x.PhoneNumber).ToList());
-            }
-            return allvalues;
-        }
-       
-        public void DeleteClientSiteRadioChecksActivity(ClientSiteRadioChecksActivityStatus ClientSiteRadioChecksActivityStatus)
-        {
-            var ClientSiteRadioChecksActivity = _context.ClientSiteRadioChecksActivityStatus.SingleOrDefault(x => x.Id == ClientSiteRadioChecksActivityStatus.Id);
-            if (ClientSiteRadioChecksActivity != null)
-                _context.ClientSiteRadioChecksActivityStatus.Remove(ClientSiteRadioChecksActivity);
-
-
                     _context.ClientSiteRadioChecksActivityStatus.Add(new ClientSiteRadioChecksActivityStatus()
                     {
                         ClientSiteId = clientSiteActivity.ClientSiteId,
@@ -827,11 +787,28 @@ namespace CityWatch.Data.Providers
 
                 _context.SaveChanges();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
 
             }
         }
+
+        public List<ClientSiteRadioChecksActivityStatus> GetClientSiteRadioChecksActivityDetails()
+        {
+            return _context.ClientSiteRadioChecksActivityStatus.ToList();
+        }
+        public List<RadioCheckListGuardData> GetActiveGuardDetails()
+        {
+          
+            var allvalues = _context.RadioCheckListGuardData.FromSqlRaw($"EXEC sp_GetActiveGuardDetailsForRC").ToList();
+            foreach( var item in allvalues ){
+                
+                item.SiteName= item.SiteName+ " <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x=>x.PhoneNumber).ToList());
+            }
+            return allvalues;
+        }
+       
+       
         //logBookId delete for radio checklist-start
         public void DeleteClientSiteRadioCheckActivityStatusForLogBookEntry(int id)
         {
@@ -862,5 +839,14 @@ namespace CityWatch.Data.Providers
 
         }
         //logBookId delete for radio checklist-end
+
+        public void DeleteClientSiteRadioChecksActivity(ClientSiteRadioChecksActivityStatus ClientSiteRadioChecksActivityStatus)
+        {
+            var ClientSiteRadioChecksActivity = _context.ClientSiteRadioChecksActivityStatus.SingleOrDefault(x => x.Id == ClientSiteRadioChecksActivityStatus.Id);
+            if (ClientSiteRadioChecksActivity != null)
+                _context.ClientSiteRadioChecksActivityStatus.Remove(ClientSiteRadioChecksActivity);
+            _context.SaveChanges();
+
+        }
     }
 }

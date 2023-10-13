@@ -222,8 +222,11 @@ namespace CityWatch.Data.Providers
         public void UpdateDefault()
         {
             var pspfDefaultval = _context.IncidentReportPSPF.Where(z => z.IsDefault == true).Select(z => z.Id).FirstOrDefault();
-             var PSPFToUpdate = _context.IncidentReportPSPF.SingleOrDefault(x => x.Id == pspfDefaultval);
-            PSPFToUpdate.IsDefault = false;
+            if (pspfDefaultval != 0)
+            {
+                var PSPFToUpdate = _context.IncidentReportPSPF.SingleOrDefault(x => x.Id == pspfDefaultval);
+                PSPFToUpdate.IsDefault = false;
+            }
             _context.SaveChanges();
         }
         public string GetPSPFName(string name)
