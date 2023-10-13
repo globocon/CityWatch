@@ -7,6 +7,7 @@ using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Services;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -805,6 +806,19 @@ namespace CityWatch.Web.Pages.Admin
                             SuccessMessage = "Guard is inactive";
                         }
                     }
+                    if(type=="IR")
+                    {
+                        /* Store the value of the Guard Id to seesion for create the Ir from the session-start */
+                        HttpContext.Session.SetString("GuardId", guard.Id.ToString());
+                        AccessPermission = true;
+                        if (AuthUserHelper.LoggedInUserId != null)
+                        {
+                            LoggedInUserId = AuthUserHelper.LoggedInUserId;
+                        }
+                        SuccessCode = 1;
+                    }
+                    /* Store the value of the Guard Id to seesion for create the Ir from the session-end */
+                
                 }
                 else
                 {
