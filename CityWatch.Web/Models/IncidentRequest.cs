@@ -65,7 +65,8 @@ namespace CityWatch.Web.Models
 
         public List<string> Attachments { get; set; }
 
-        public bool IsPositionPatrolCar { get; set; }        
+        public bool IsPositionPatrolCar { get; set; }
+        
 
         public string OccurrenceNo
         {
@@ -124,8 +125,12 @@ namespace CityWatch.Web.Models
             }
         }
 
+        public string PSPFName { get; set; }
+
+
         public int? FeedbackType { get; set; }
         public int? FeedbackTemplates { get; set; }
+
     }
 
     public class EventType
@@ -242,6 +247,7 @@ namespace CityWatch.Web.Models
 
         [HiddenInput]
         public string ClientSiteLiveGps { get; set; }
+       
 
         public string ClientSiteLiveGpsInDegrees 
         {

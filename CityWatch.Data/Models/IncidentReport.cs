@@ -35,5 +35,6 @@ namespace CityWatch.Data.Models
         public string VehicleRego { get; set; }
         public int? LogId { get; set; }
         public ICollection<IncidentReportEventType> IncidentReportEventTypes { get; set; }
+        public int? PSPFId { get; set; }
     }
 }

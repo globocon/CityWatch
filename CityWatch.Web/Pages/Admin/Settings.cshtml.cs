@@ -3,7 +3,9 @@ using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Services;
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -686,7 +688,85 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { status = status, message = message });
         }
+        //code added for PSPF sub datas start
+        public JsonResult OnGetLastNo()
+        {
+            return new JsonResult(_configDataProvider.GetLastValue());
+        }
+        public JsonResult OnGetPSPF()
+        {
+            return new JsonResult(_configDataProvider.GetPSPF());
+        }
 
+        public JsonResult OnPostSavePSPF(IncidentReportPSPF record)
+        {
+            if (record.IsDefault = true && record.Id!=-1)
+            {
+                _configDataProvider.UpdateDefault();
+            }
+            var PsPFName = _configDataProvider.GetPSPFName(record.Name);
+            
+            if (record.Id== -1)
+            {
+                int LastOne = _configDataProvider.GetLastValue();
+                if (LastOne != null)
+                {
+                    LastOne++;
+                    string numberAsString = LastOne.ToString();
+                    if (numberAsString.Length == 1)
+                    {
+
+                        record.ReferenceNo = "0" + LastOne;
+                    }
+                    else
+                    {
+                        record.ReferenceNo = LastOne.ToString();
+                    }
+
+
+                }
+            }
+            
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                if (PsPFName==record.Name && record.Id == -1)
+                {
+                    
+                    success = false;
+                }
+                else
+                {
+                    _configDataProvider.SavePSPF(record);
+                    success = true;
+                }
+               
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnPostDeletePSPF(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _configDataProvider.DeletePSPF(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+
+        }
+        //code added for PSPF sub datas stop
         public JsonResult OnGetPositions()
         {
             return new JsonResult(_configDataProvider.GetPositions());

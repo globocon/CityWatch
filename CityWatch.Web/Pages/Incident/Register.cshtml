@@ -102,15 +102,24 @@
             </div>
         </div>
         <div class="col-md-4 mt-3 mt-md-0">
-            <div class="card h-100">
-                <h4 class="card-header">IoT</h4>
-                <div class="card-body">
+             <div class="card h-30">
+                <h4 class="card-header">PSPF</h4>
+                 <div class="card-body">
                     <div class="form-row">
-                        <div class="col-6">
+                        <select asp-for="@Model.Report.PSPFName" class="form-control" asp-items="@Model.ViewDataService.PSPFType"></select>
+                        </div>
+                        </div>
+                 </div>
+                 <br />
+            <div class="card h-40">
+                <h4 class="card-header">IoT</h4>
+                <div class="card-body" style="padding-top:0px">
+                    <div class="form-row">
+                        <div class="col-4">
                             <img src="~/images/smartWAND.jpg" alt="Smart WAND" class="img-fluid" max-height="150px">
                         </div>
                         <div class="col-6">
-                            <h6 class="pt-lg-5">Was Smart WAND used to Create (3B) <u>or</u> <br />Register (3A) this IR?</h6>
+                            <h6 class="pt-lg-2">Was Smart WAND used to Create (3B) <u>or</u> <br />Register (3A) this IR?</h6>
                             <div class="form-check pt-3">
                                 <input asp-for="@Model.Report.WandScannedYes3a" class="form-check-input">
                                 <label class="form-check-label fw-bold">YES (3a) <br />REGISTER</label>
@@ -928,7 +937,9 @@
         return ((!isPlateAlert) || rowcount > 1);
     }
 
+
     function onbtnSumbitClick(event) {
+
         const result = validateForm();
         if (!result.isValid) {
             $('#msg-modal').modal();

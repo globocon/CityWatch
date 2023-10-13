@@ -1,7 +1,9 @@
 ﻿using CityWatch.Data.Models;
+using Dropbox.Api.Users;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static Dropbox.Api.TeamLog.EventCategory;
 
 namespace CityWatch.Data.Providers
 {
@@ -23,7 +25,13 @@ namespace CityWatch.Data.Providers
         void SaveReportField(IncidentReportField incidentReportField);
         void DeleteReportField(int id);
         List<IncidentReportPosition> GetPositions();
+        List<IncidentReportPSPF> GetPSPF();
+        int GetLastValue();
         void SavePostion(IncidentReportPosition incidentReportPosition);
+        void SavePSPF(IncidentReportPSPF incidentReportPSPF);
+        void DeletePSPF(int id);
+        string GetPSPFName(string name);
+        void UpdateDefault();
         void DeletePosition(int id);
         void CrPrimaryLogoUpload(DateTime dateTimeUploaded, string primaryLogoPath);
         List<IncidentReportsPlatesLoaded> GetPlatesLoaded(int LogId);
@@ -210,7 +218,63 @@ namespace CityWatch.Data.Providers
             }
             _context.SaveChanges();
         }
+        //code added For PSPF Report start
+        public void UpdateDefault()
+        {
+            var pspfDefaultval = _context.IncidentReportPSPF.Where(z => z.IsDefault == true).Select(z => z.Id).FirstOrDefault();
+             var PSPFToUpdate = _context.IncidentReportPSPF.SingleOrDefault(x => x.Id == pspfDefaultval);
+            PSPFToUpdate.IsDefault = false;
+            _context.SaveChanges();
+        }
+        public string GetPSPFName(string name)
+        {
+         return _context.IncidentReportPSPF.Where(x => x.Name == name).Select(x => x.Name).FirstOrDefault();
 
+        }
+        public List<IncidentReportPSPF> GetPSPF()
+        {
+            return _context.IncidentReportPSPF.OrderBy(z => z.ReferenceNo).ToList();
+        }
+        public int GetLastValue()
+        {
+            return _context.IncidentReportPSPF.Count();
+        }
+        public void SavePSPF(IncidentReportPSPF incidentReportPSPF)
+        {
+            if (incidentReportPSPF.Id == -1)
+            {
+                _context.IncidentReportPSPF.Add(new IncidentReportPSPF()
+                {
+                    ReferenceNo = incidentReportPSPF.ReferenceNo,
+                    Name = incidentReportPSPF.Name,
+                    IsDefault = incidentReportPSPF.IsDefault
+                });
+            }
+            else
+            {
+                var PSPFToUpdate = _context.IncidentReportPSPF.SingleOrDefault(x => x.Id == incidentReportPSPF.Id);
+                if (PSPFToUpdate != null)
+                {
+                    PSPFToUpdate.ReferenceNo = incidentReportPSPF.ReferenceNo;
+                    PSPFToUpdate.Name = incidentReportPSPF.Name;
+                    PSPFToUpdate.IsDefault = incidentReportPSPF.IsDefault;
+                }
+            }
+            _context.SaveChanges();
+        }
+        public void DeletePSPF(int id)
+        {
+            if (id == -1)
+                return;
+
+            var PSPFToDelete = _context.IncidentReportPSPF.SingleOrDefault(x => x.Id == id);
+            if (PSPFToDelete == null)
+                throw new InvalidOperationException();
+
+            _context.IncidentReportPSPF.Remove(PSPFToDelete);
+            _context.SaveChanges();
+        }
+        //code added For PSPF Report stop
         public List<IncidentReportPosition> GetPositions()
         {
             return _context.IncidentReportPositions.OrderBy(z => z.Name).ToList();
