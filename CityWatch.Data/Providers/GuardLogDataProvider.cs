@@ -17,7 +17,7 @@ namespace CityWatch.Data.Providers
         void SaveGuardLog(GuardLog guardLog);
         void DeleteGuardLog(int id);
         //logBookId delete for radio checklist-start
-        void  DeleteClientSiteRadioCheckActivityStatusForLogBookEntry(int id);
+        void DeleteClientSiteRadioCheckActivityStatusForLogBookEntry(int id);
         void SignOffClientSiteRadioCheckActivityStatusForLogBookEntry(int GuardId, int ClientSiteId);
 
         //logBookId delete for radio checklist-end
@@ -71,6 +71,7 @@ namespace CityWatch.Data.Providers
         List<ClientSiteRadioChecksActivityStatus> GetClientSiteRadioChecksActivityDetails();
         void DeleteClientSiteRadioChecksActivity(ClientSiteRadioChecksActivityStatus ClientSiteRadioChecksActivityStatus);
         List<RadioCheckListGuardData> GetActiveGuardDetails();
+        List<RadioCheckListInActiveGuardData> GetInActiveGuardDetails();
         //logBookId entry for radio checklist-end
     }
 
@@ -799,16 +800,29 @@ namespace CityWatch.Data.Providers
         }
         public List<RadioCheckListGuardData> GetActiveGuardDetails()
         {
-          
+
             var allvalues = _context.RadioCheckListGuardData.FromSqlRaw($"EXEC sp_GetActiveGuardDetailsForRC").ToList();
-            foreach( var item in allvalues ){
-                
-                item.SiteName= item.SiteName+ " <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x=>x.PhoneNumber).ToList());
+            foreach (var item in allvalues)
+            {
+
+                item.SiteName = item.SiteName + " <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x => x.PhoneNumber).ToList());
             }
             return allvalues;
         }
-       
-       
+
+        public List<RadioCheckListInActiveGuardData> GetInActiveGuardDetails()
+        {
+
+            var allvalues = _context.RadioCheckListInActiveGuardData.FromSqlRaw($"EXEC sp_GetInActiveGuardDetailsForRC").ToList();
+            foreach (var item in allvalues)
+            {
+
+                item.SiteName = item.SiteName + " <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x => x.PhoneNumber).ToList());
+            }
+            return allvalues;
+        }
+
+
         //logBookId delete for radio checklist-start
         public void DeleteClientSiteRadioCheckActivityStatusForLogBookEntry(int id)
         {
@@ -820,12 +834,12 @@ namespace CityWatch.Data.Providers
                 _context.Remove(item);
             }
 
-            
+
             _context.SaveChanges();
         }
-        public void SignOffClientSiteRadioCheckActivityStatusForLogBookEntry(int GuardId,int ClientSiteId)
+        public void SignOffClientSiteRadioCheckActivityStatusForLogBookEntry(int GuardId, int ClientSiteId)
         {
-            var clientSiteRadioCheckActivityStatusToDelete = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.GuardId == GuardId && x.ClientSiteId==ClientSiteId);
+            var clientSiteRadioCheckActivityStatusToDelete = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.GuardId == GuardId && x.ClientSiteId == ClientSiteId);
             if (clientSiteRadioCheckActivityStatusToDelete == null)
                 throw new InvalidOperationException();
             foreach (var item in clientSiteRadioCheckActivityStatusToDelete)

@@ -64,8 +64,8 @@ namespace CityWatch.Data
         public DbSet<ClientSiteLinksDetails> ClientSiteLinksDetails { get; set; }
         public DbSet<ClientSiteRadioChecksActivityStatus> ClientSiteRadioChecksActivityStatus { get; set; }
         public DbSet<RadioCheckListGuardData> RadioCheckListGuardData { get; set; }
+        public DbSet<RadioCheckListInActiveGuardData> RadioCheckListInActiveGuardData { get; set; }
 
-        
 
     }
 }

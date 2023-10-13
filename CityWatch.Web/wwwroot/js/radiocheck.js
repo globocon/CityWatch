@@ -259,6 +259,81 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 });
 
 
+
+
+
+let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
+    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+    ordering: true,
+    "columnDefs": [
+        { "visible": false, "targets": 1 } // Hide the group column initially
+    ],
+    order: [[groupColumn, 'asc']],
+    info: false,
+    searching: true,
+    autoWidth: false,
+    fixedHeader: true,
+    "scrollY": "300px", // Set the desired height for the scrollable area
+    "paging": false,
+    "footer": true,
+    ajax: {
+        url: '/Radio/RadioCheckNew?handler=ClientSiteInActivityStatus',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteIds = 'test,';
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'clientSiteId', visible: false },
+        {
+            data: 'siteName',
+            width: '20%',
+            render: function (value, type, data) {
+
+                return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
+            }
+        },
+        {
+            data: 'guardName',
+            width: '20%',
+            render: function (value, type, data) {
+                return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                    '<a href="#" class="ml-2"><i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i></a>';
+            }
+        },
+
+        {
+            data: 'guardLoginTime',
+            width: '9%',
+            className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return  '<i class="fa fa-clock-o text-success rc-client-status"></i> ' +  value  ;
+            }
+        },
+
+    ],
+    drawCallback: function () {
+        var api = this.api();
+        var rows = api.rows({ page: 'current' }).nodes();
+        var last = null;
+
+        api.column(groupColumn, { page: 'current' })
+            .data()
+            .each(function (group, i) {
+                if (last !== group) {
+                    $(rows)
+                        .eq(i)
+                        .before('<tr class="group bg-info text-white"><td colspan="25">' + group + '</td></tr>');
+
+                    last = group;
+                }
+            });
+    },
+});
+
+
 $('#guardInfoModal').on('shown.bs.modal', function (event) {
     $('#lbl_guard_name').html('');
     $('#lbl_guard_security_no').html('');
