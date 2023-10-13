@@ -27,5 +27,11 @@ namespace CityWatch.Web.Pages.Radio
            
             return new JsonResult(_guardLogDataProvider.GetActiveGuardDetails());
         }
+
+        public IActionResult OnGetClientSiteInActivityStatus(string clientSiteIds)
+        {
+
+            return new JsonResult(_guardLogDataProvider.GetInActiveGuardDetails());
+        }
     }
 }

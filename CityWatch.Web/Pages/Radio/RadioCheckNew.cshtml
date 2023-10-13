@@ -7,32 +7,73 @@
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.RadioCheck;
 }
 <div id="rcloader"></div>
+<!-----------------In Acive List -------------------->
 
+<div class="card">
+    <h4 class="card-header">No Activity</h4>
+    <div class="card-body" id="events-list">
+        <div class="row mt-2">
+            <div class="col-md-12">
+                <table id="clientSiteInActiveGuards" class="table table-bordered" style="width:100%;">
+                    <thead>
+                        <tr>
+                            <th>ClientSiteId</th>
+                            <th>Site Name</th>
+                            <th>Site Name/Guard</th>
+                            <th>Login Time</th>
+
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            <th>ClientSiteId</th>
+                            <th>Site Name</th>
+                            <th>Site Name/Guard</th>
+                            <th>Login Time</th>
+
+                        </tr>
+                        <!-- Footer content here (will be styled to look like the header) -->
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="row mt-2">
     <div class="col-md-12">
-        <table id="clientSiteActiveGuards" class="table table-bordered" style="width:100%;">
-            <thead>
-                <tr>
-                    <th>ClientSiteId</th>
-                    <th>Site Name</th>
-                    <th>Site Name/Guard</th>
-                    <th>LB</th>
-                    <th>KV</th>
-                    <th>IR</th>
-                </tr>
-            </thead>
-            <tfoot>
-                <tr>
-                    <th>ClientSiteId</th>
-                    <th>Site Name</th>
-                    <th>Site Name/Guard</th>
-                    <th>LB</th>
-                    <th>KV</th>
-                    <th>IR</th>
-                </tr>
-                <!-- Footer content here (will be styled to look like the header) -->
-            </tfoot>
-        </table>
+    </div>
+</div>
+<!----------------- Acive List -------------------->
+<div class="card">
+    <h4 class="card-header">Activity in Last 2 hrs</h4>
+    <div class="card-body" id="events-list">
+        <div class="row mt-2">
+            <div class="col-md-12">
+                <table id="clientSiteActiveGuards" class="table table-bordered" style="width:100%;">
+                    <thead>
+                        <tr>
+                            <th>ClientSiteId</th>
+                            <th>Site Name</th>
+                            <th>Site Name/Guard</th>
+                            <th>LB</th>
+                            <th>KV</th>
+                            <th>IR</th>
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            <th>ClientSiteId</th>
+                            <th>Site Name</th>
+                            <th>Site Name/Guard</th>
+                            <th>LB</th>
+                            <th>KV</th>
+                            <th>IR</th>
+                        </tr>
+                        <!-- Footer content here (will be styled to look like the header) -->
+                    </tfoot>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 <!----------------- Guard Details Modal -------------------->

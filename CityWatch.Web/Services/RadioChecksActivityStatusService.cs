@@ -69,6 +69,20 @@ namespace CityWatch.Web.Services
                         _guardLogDataProvider.DeleteClientSiteRadioChecksActivity(ClientSiteRadioChecksActivity);
                 }
 
+                /* remove all the logn time >8 */
+                if (ClientSiteRadioChecksActivity.GuardLoginTime != null)
+                {
+                    var isActive = (DateTime.Now - ClientSiteRadioChecksActivity.GuardLoginTime).Value.TotalHours < 8;
+                    if (!isActive)
+                        _guardLogDataProvider.DeleteClientSiteRadioChecksActivity(ClientSiteRadioChecksActivity);
+                }
+                /* LogoutTime time exits remove all the activity for that  */
+                if (ClientSiteRadioChecksActivity.GuardLogoutTime != null)
+                {
+
+                    _guardLogDataProvider.SignOffClientSiteRadioCheckActivityStatusForLogBookEntry(ClientSiteRadioChecksActivity.GuardId, ClientSiteRadioChecksActivity.ClientSiteId);
+                }
+
             }
         }
 
