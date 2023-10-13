@@ -247,20 +247,6 @@ namespace CityWatch.Web.Pages.Guard
                
             
 
-                //logBookId entry for radio checklist-start
-
-                //var logbookId = _clientDataProvider.GetClientSiteLogBooks(KeyVehicleLog.ClientSiteLogBookId,LogBookType.VehicleAndKeyLog);
-                //foreach(var item in logbookId)
-                //{
-                //    ClientSiteLogBook logbookcl = new ClientSiteLogBook();
-
-                //   // logbookcl.Id = item.Id;
-                //    logbookcl.ClientSiteId = item.ClientSiteId;
-                //    //logbookcl.Date = item.Date;
-                //    //logbookcl.DbxUploaded = item.DbxUploaded;
-                //    //logbookcl.FileName = item.FileName;
-                //    KeyVehicleLog.ClientSiteLogBook = logbookcl;
-                //}
                 var gaurdlogin = _clientDataProvider.GetGuardLogin(KeyVehicleLog.GuardLoginId, KeyVehicleLog.ClientSiteLogBookId);
                 if (gaurdlogin.Count != 0)
                 {
