@@ -54,26 +54,42 @@ namespace CityWatch.Web.Services
             {
                 return string.Empty;
             }
-
+            var zipFolderPath = GetZipFolderPath();
+            var fileNamePart = string.Empty;
             var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientSiteIds).Where(z => !string.IsNullOrEmpty(z.DropboxImagesDir)).ToList();
             if (!clientSiteKpiSettings.Any())
             {
-                return string.Empty;
+                //return string.Empty;
+                /* No DropboxImagesDir set for these sites 06102023*/
+                var clientSiteDetails = _clientDataProvider.GetClientSiteDetails(clientSiteIds);
+                fileNamePart = clientSiteDetails[0].Name;
+                foreach (var clientSiteDetail in clientSiteDetails)
+                {
+                    var clientSiteLogBooks = _clientDataProvider.GetClientSiteLogBooks(clientSiteDetail.Id, logBookType, logFromDate, logToDate);
+                    if (!clientSiteLogBooks.Any())
+                        continue;
+                    var logbooksToCreate = GetLogBooksFailedToDownload(clientSiteLogBooks, zipFolderPath);
+                    CreateLogBookReports(logbooksToCreate, zipFolderPath);
+                }
             }
-
-            var zipFolderPath = GetZipFolderPath();
-            var fileNamePart = clientSiteKpiSettings[0].ClientSite.Name;
-
-            foreach (var clientSiteKpiSetting in clientSiteKpiSettings)
+            else
             {
-                var clientSiteLogBooks = _clientDataProvider.GetClientSiteLogBooks(clientSiteKpiSetting.ClientSiteId, logBookType, logFromDate, logToDate);
-                if (!clientSiteLogBooks.Any())
-                    continue;
+                /* DropboxImagesDir set for these sites*/
+                fileNamePart = clientSiteKpiSettings[0].ClientSite.Name;
+                foreach (var clientSiteKpiSetting in clientSiteKpiSettings)
+                {
+                    var clientSiteLogBooks = _clientDataProvider.GetClientSiteLogBooks(clientSiteKpiSetting.ClientSiteId, logBookType, logFromDate, logToDate);
+                    if (!clientSiteLogBooks.Any())
+                        continue;
+                    if (clientSiteKpiSetting.DropboxImagesDir != string.Empty)
+                    {
+                        await DownloadLogBooksFromDropbox(clientSiteLogBooks, zipFolderPath, clientSiteKpiSetting.DropboxImagesDir);
+                    }
 
-                await DownloadLogBooksFromDropbox(clientSiteLogBooks, zipFolderPath, clientSiteKpiSetting.DropboxImagesDir);
+                    var logbooksToCreate = GetLogBooksFailedToDownload(clientSiteLogBooks, zipFolderPath);
+                    CreateLogBookReports(logbooksToCreate, zipFolderPath);
+                }
 
-                var logbooksToCreate = GetLogBooksFailedToDownload(clientSiteLogBooks, zipFolderPath);
-                CreateLogBookReports(logbooksToCreate, zipFolderPath);
             }
 
             return GetZipFileName(zipFolderPath, logFromDate, logToDate, fileNamePart);

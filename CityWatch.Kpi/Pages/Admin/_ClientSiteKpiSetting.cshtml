@@ -199,13 +199,22 @@
 
                             var rowIndextemp = 0;
 
+
                             <hr />
                             <div class="row">
                                 <div class="col-md-12">
 
+
+
                                     @for (int rowIndex = rowIndexFirst; rowIndex < (4 + rowIndexFirst); rowIndex++)
                                     {
-
+                                        /*Monthly Hours Start*/
+                                        var monthilyHours = 0.0;
+                                        var totalMin = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId).Select(x => x.SumOfHours).Sum();
+                                        var guardQty = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId).Select(x => x.NoOfPatrols ?? 0).FirstOrDefault();
+                                        if (totalMin != null && guardQty != null)
+                                            monthilyHours = Math.Round(((totalMin) * guardQty * 52.143) / 12);
+                                        /*Monthly Hours End*/
                                         <div class="form-row">
                                             <div class="col-md-3">
                                                 @if (rowIndextemp == 0)
@@ -243,9 +252,23 @@
                                                         }
                                                     </div>
                                                 }
+                                                @*New Code for Monthly Hours Start*@
+
+                                                @if (rowIndextemp == 3)
+                                                {
+
+                                                    <div class="d-flex flex-row justify-content-between">
+                                                        <label class="form-label">Monthly Hrs :</label>
+                                                        <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
+                                                            <input type="text" class="form-control mb-2 patrols-count" asp-for="@monthilyHours" id="monthlyHrs" name="monthlyHrs" style="width:120px" readonly />
+                                                        </div>
+                                                    </div>
+
+                                                }
+                                                @*New Code for Monthly Hours end*@
                                             </div>
                                             <div class="col-md-1 p-0">
-                                              @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
+                                                @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
                                                 {
                                                     <label class="form-label">@rowTitleManningGuard[rowIndextemp]</label>
 
@@ -253,21 +276,28 @@
                                                 else
                                                 {
                                                     <label class="form-label">@rowTitleManningPatrolCar[rowIndextemp]</label>
-                                                    
+
                                                 }
                                             </div>
                                             @for (var colIndex = rowIndexFirst; colIndex < (7 + rowIndexFirst); colIndex++)
                                             {
+
+
+
                                                 <div class="col-md-1 mx-1" id="divGuardInner_+@rowIndex+_+@colIndex">
+
                                                     @switch (rowIndextemp)
                                                     {
                                                         case 0:
                                                             <label class="form-label">@Model.ClientSiteManningGuardKpiSettings[colIndex].WeekDay.ToString().Substring(0, 3)</label>
                                                             break;
                                                         case 1:
+
                                                             <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursStart">
                                                             break;
+
                                                         case 2:
+
                                                             <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursEnd">
                                                             break;
                                                         case 3:
@@ -325,7 +355,20 @@
                                                         <select asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[rowIndex2].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.NonPatrolOnly)" class="form-control"></select>
                                                     </div>
                                                 }
+                                                @*New Code for Monthly Hours Start*@
 
+                                                @if (rowIndex2 == 3)
+                                                {
+
+                                                    <div class="d-flex flex-row justify-content-between">
+                                                        <label class="form-label">Monthly Hrs :</label>
+                                                        <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
+                                                            <input type="text" class="form-control mb-2 patrols-count" id="monthlyHrs" name="monthlyHrs" style="width:120px" readonly />
+                                                        </div>
+                                                    </div>
+
+                                                }
+                                                @*New Code for Monthly Hours end*@
 
 
                                             </div>

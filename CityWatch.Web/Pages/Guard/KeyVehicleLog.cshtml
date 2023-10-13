@@ -236,7 +236,7 @@
         <div class="modal-content">
             <div class="modal-header col-md-12">
 
-                <h5 class="modal-title col-md-8">Is this image the ID  of the Person or ID of the Vehicle </h5>
+                <h5 class="modal-title col-md-8">Is this image the ID  of the Person or ID of the Vehicle ?</h5>
                 @*<h5 style="color:red; text-align:right" class="col-md-6 ml-5" id="titlePOIWarning" hidden>POI Warning</h5>
                 <i id="imagesiren" hidden><img  id="img1" src="~/images/ziren.png" height="25px;" /></i>*@
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -281,7 +281,7 @@
                 <div class="form-row">
                     <div class="col-md-12">
                         <span style="font-size:0.8rem;font:italic; color:red" class="col-md-12">
-                            Note :Recommended Format Height: 130 px Width: 230 px
+                            Note: Recommended Format Height: 130 px Width: 230 px
                         </span>
                     </div>
                 </div>
@@ -290,6 +290,52 @@
                 <button class="btn btn-success " id="btnIsPersonOrVehicle">Ok</button>
                 
             </div>
+        </div>
+    </div>
+</div>
+@*to check whether the uploaded image is of person or vehicle - end*@
+
+@*to check whether the copy and replace image is of person or vehicle - start*@
+<div class="modal" tabindex="-1" role="dialog" id="vkl-copyorreplace-modal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8">Attachment with same name already exists. Do you want to Replace it? </h5>
+                <input type="hidden" id="txtPersonOrVehicle" />
+                @*<h5 style="color:red; text-align:right" class="col-md-6 ml-5" id="titlePOIWarning" hidden>POI Warning</h5>
+                <i id="imagesiren" hidden><img  id="img1" src="~/images/ziren.png" height="25px;" /></i>*@
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-8">
+                        <button class="btn btn-link" id="btnReplace"><i class="fa fa-copy"></i> Replace the files in the Destination</button>
+                    </div>
+                   
+
+                   
+                </div>
+                <div class="form-row">
+                    <div class="col-md-8">
+                        <button class="btn btn-link" id="btnSkip"><i class="fa fa-history"></i> Skip these files</button>
+                    </div>
+
+
+
+                </div>
+                <div class="form-row">
+                    <div class="col-md-8">
+                        <button class="btn btn-link" id="btnLetmeDecide"><i class="fa fa-plus"></i> Keep both the files</button>
+                    </div>
+
+
+
+                </div>
+            </div>
+            
         </div>
     </div>
 </div>

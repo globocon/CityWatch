@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.RegularExpressions;
 
 namespace CityWatch.Data.Models
 {
@@ -15,6 +16,7 @@ namespace CityWatch.Data.Models
         public int ClientSiteLogBookId { get; set; }
 
         public int GuardLoginId { get; set; }
+       
 
         [NotMapped]
         public int? ActiveGuardLoginId { get; set; }
@@ -40,6 +42,14 @@ namespace CityWatch.Data.Models
         public string Trailer3Rego { get; set; }
 
         public string Trailer4Rego { get; set; }
+        public string IndividualTitle { get; set; }
+        public string Gender { get; set; }
+        public string CompanyABN { get; set; }
+        public string CompanyLandline { get; set; }
+        public string Email { get; set; }
+        public string Website { get; set; }
+        public string CRMId { get; set; }
+        public string BDMList { get; set; }
 
         public int PlateId { get; set; }
        
@@ -96,7 +106,8 @@ namespace CityWatch.Data.Models
         [HiddenInput]
         public bool IsSender { get; set; }
 
-        
+        [HiddenInput]
+        public bool IsBDM { get; set; }
         public int? PersonOfInterest { get; set; }
 
         public string Sender { get; set; }
@@ -130,6 +141,8 @@ namespace CityWatch.Data.Models
 
         [ForeignKey("ClientSitePocId")]
         public ClientSitePoc ClientSitePoc { get; set; }
+        //[ForeignKey("CRMId")]
+        //public  CRMPersonalDec  { get; set; }
 
         public bool MoistureDeduction { get; set; }
 
@@ -169,6 +182,16 @@ namespace CityWatch.Data.Models
 
             if (MaxWeight.HasValue && MaxWeight.Value < 0)
                 errors.Add(new ValidationResult("Max Weight is invalid"));
+
+            if (!string.IsNullOrEmpty(Email))
+            {
+                string regex = @"^[^@\s]+@[^@\s]+\.(com|net|org|gov)$";
+                if (!Regex.IsMatch( Email, regex))
+                {
+
+                    errors.Add(new ValidationResult("Email is invalid"));
+                }
+            }
 
             return errors;
         }

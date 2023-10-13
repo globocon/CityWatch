@@ -2,6 +2,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Globalization;
 using System.Text.Json.Serialization;
 
 namespace CityWatch.Data.Models
@@ -34,5 +35,26 @@ namespace CityWatch.Data.Models
         public bool DefaultValue { get; set; }
         
         public int? OrderId { get; set; }
+        [NotMapped]
+        public double SumOfHours
+        {
+            get {
+                if (!string.IsNullOrEmpty(EmpHoursEnd) && !string.IsNullOrEmpty(EmpHoursStart))
+                {
+                   
+                    var totalMin = (TimeSpan.Parse(EmpHoursEnd + ":00") - TimeSpan.Parse(EmpHoursStart + ":00")).TotalMinutes;
+                    var hours = Math.Ceiling(totalMin / 60);
+                    return hours;
+                }
+                else
+                {
+                    return 0.0;
+                }
+
+
+            }
+        
+        
+        }
     }
 }

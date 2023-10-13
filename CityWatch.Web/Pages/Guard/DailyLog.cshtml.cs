@@ -125,6 +125,37 @@ namespace CityWatch.Web.Pages.Guard
             try
             {
                 _guardLogDataProvider.SaveGuardLog(GuardLog);
+                //logBookId entry for radio checklist-start
+                if (GuardLog.Id == 0)
+                {
+                    GuardLog.Id = _clientDataProvider.GetGuardLogs(Convert.ToInt32(GuardLog.GuardLoginId), GuardLog.ClientSiteLogBookId).Max(x => x.Id);
+                }
+                var gaurdlogin = _clientDataProvider.GetGuardLogin(Convert.ToInt32(GuardLog.GuardLoginId), GuardLog.ClientSiteLogBookId);
+                if (gaurdlogin.Count != 0)
+                {
+                    foreach (var item in gaurdlogin)
+                    {
+                        var logbookcl = new GuardLogin();
+
+                        logbookcl.Id = item.Id;
+                        logbookcl.ClientSiteId = item.ClientSiteId;
+                        logbookcl.GuardId = item.GuardId;
+
+
+                        GuardLog.GuardLogin = logbookcl;
+                    }
+
+                    var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                    {
+                        ClientSiteId = GuardLog.GuardLogin.ClientSiteId,
+                        GuardId = GuardLog.GuardLogin.GuardId,
+                        LastLBCreatedTime = DateTime.Now,
+                        LBId = GuardLog.Id,
+                        ActivityType = "LB"
+                    };
+                    _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
+                }
+                //logBookId entry for radio checklist-end
             }
             catch (Exception ex)
             {
@@ -141,6 +172,11 @@ namespace CityWatch.Web.Pages.Guard
             var message = "Success";
             try
             {
+                //logBookId delete for radio checklist-start
+
+
+                _guardLogDataProvider.DeleteClientSiteRadioCheckActivityStatusForLogBookEntry(id);
+                //logBookId delete for radio checklist-end
                 _guardLogDataProvider.DeleteGuardLog(id);
             }
             catch (Exception ex)
@@ -168,6 +204,25 @@ namespace CityWatch.Web.Pages.Guard
                 };
                 _guardLogDataProvider.SaveGuardLog(signOffEntry);
                 _guardDataProvider.UpdateGuardOffDuty(guardLoginId, DateTime.Now);
+                //logOff entry for radio checklist-start
+
+                var gaurdlogin = _clientDataProvider.GetGuardLogin(guardLoginId, clientSiteLogBookId);
+                if (gaurdlogin.Count != 0)
+                {
+                    foreach (var item in gaurdlogin)
+                    {
+                        var logbookcl = new GuardLogin();
+
+                        logbookcl.Id = item.Id;
+                        logbookcl.ClientSiteId = item.ClientSiteId;
+                        logbookcl.GuardId = item.GuardId;
+
+                        _guardLogDataProvider.SignOffClientSiteRadioCheckActivityStatusForLogBookEntry(item.GuardId, item.ClientSiteId);
+
+                    }
+                }
+
+                //logOff entry for radio checklist-end
             }
             catch (Exception ex)
             {

@@ -495,7 +495,9 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
     text-align: center;
 }
 
-
+.grouped-column {
+    background-color: #EFEFEF; 
+}
 
 /* Dark Mode Change 20/09/2023 Start*/
 .dark-mode {

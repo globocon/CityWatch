@@ -39,7 +39,8 @@ using iText.Layout;
 using iText.Layout.Borders;
 using iText.Layout.Element;
 using iText.Layout.Properties;
-
+using Serilog;
+using static Dropbox.Api.TeamLog.EventCategory;
 
 namespace CityWatch.Web.Pages.Guard
 {
@@ -175,10 +176,104 @@ namespace CityWatch.Web.Pages.Guard
                     }
 
                 }
+                var individualType = _viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.IndividualType).Where(x => x.Value == KeyVehicleLog.PersonType.ToString()).Select(x => x.Text).FirstOrDefault();
+                if(individualType == "CRM (BDM Activity)")
+                {
+                    var personalDetails = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetailsWithIndividualType(Convert.ToInt32(KeyVehicleLog.PersonType));
+                    if (personalDetails.Count>0)
+                    {
+                        var crmid = personalDetails.Where(x => x.CRMId != null);
+                        if (crmid.Count()==0)
+                        {
+                            KeyVehicleLog.CRMId = "CRM000001";
+                        }
+                        else
+                        {
+                            var bdm = crmid.Where(x => x.PersonName == KeyVehicleLog.PersonName && x.CompanyName==KeyVehicleLog.CompanyName && x.KeyVehicleLogProfile.VehicleRego==KeyVehicleLog.VehicleRego);
+                            if (bdm.Count() == 0)
+                            {
+                                var maxid = crmid.Max(x => x.Id);
+                                //var crmnew = crmid.Where(x => x.Id == maxid).Select(x => x.CRMId).FirstOrDefault();
+                                var countid = crmid.Count() + 1;
+                                int numberOfDigits = countid / 10 + 1;
+                                string latestcrm = null;
+                                if(numberOfDigits==1)
+                                {
+                                    latestcrm = "CRM00000" + countid.ToString();
+                                }
+                                else if(numberOfDigits==2)
+                                {
+                                    latestcrm = "CRM0000" + countid.ToString();
+                                }
+                                else if (numberOfDigits == 3)
+                                {
+                                    latestcrm = "CRM000" + countid.ToString();
+                                }
+                                else if (numberOfDigits == 4)
+                                {
+                                    latestcrm = "CRM00" + countid.ToString();
+                                }
+                                else if (numberOfDigits == 5)
+                                {
+                                    latestcrm = "CRM0" + countid.ToString();
+                                }
+                                else if (numberOfDigits == 6)
+                                {
+                                    latestcrm = "CRM" + countid.ToString();
+                                }
+                                else
+                                {
+                                    latestcrm = null;
+                                }
+                                if(latestcrm!=null)
+                                {
+                                    KeyVehicleLog.CRMId = latestcrm;
+                                }
 
+
+
+                            }
+                            else
+                            {
+                                
+                                KeyVehicleLog.CRMId = bdm.Select(x => x.CRMId).FirstOrDefault();
+                            }
+                        }
+                    }
+                }
                 KeyVehicleLogAuditHistory keyVehicleLogAuditHistory = null;
                 keyVehicleLogAuditHistory = GetKvlAuditHistory(KeyVehicleLog);
                 _guardLogDataProvider.SaveKeyVehicleLog(KeyVehicleLog);
+               
+            
+
+                //var gaurdlogin = _clientDataProvider.GetGuardLogin(KeyVehicleLog.GuardLoginId, KeyVehicleLog.ClientSiteLogBookId);
+                //if (gaurdlogin.Count != 0)
+                //{
+                //    foreach (var item in gaurdlogin)
+                //    {
+                //        var logbookcl = new GuardLogin();
+
+                //        //logbookcl.Id = item.Id;
+                //        logbookcl.ClientSiteId = item.ClientSiteId;
+                //        logbookcl.GuardId = item.GuardId;
+
+                //        KeyVehicleLog.GuardLogin = logbookcl;
+                //    }
+                //}
+
+                //var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                //{
+                //    ClientSiteId = KeyVehicleLog.GuardLogin.ClientSiteId,
+                //    GuardId = KeyVehicleLog.GuardLogin.GuardId,
+                //    LastKVCreatedTime = DateTime.Now,
+                //    KVId = KeyVehicleLog.Id,
+                //    ActivityType = "KV"
+                //};
+
+                //_guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
+                
+                //logBookId entry for radio checklist-end
                 var img = _guardLogDataProvider.GetCompanyDetails();
                 string imagepath = null;
                 foreach (var item in img)
@@ -267,6 +362,23 @@ namespace CityWatch.Web.Pages.Guard
             /* New Change for attachements#P7#97 end 19/09/2023 */
             return new JsonResult(keyVehicleLogDetails);
         }
+        //to get the attachments updated-start
+        public JsonResult OnGetAttachments(string truck)
+        {
+            
+
+
+               var keyVehicleLogDetails = _viewDataService.GetKeyVehicleLogAttachments(
+                    IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), truck)
+                    .ToList();
+
+
+
+
+
+            
+            return new JsonResult(keyVehicleLogDetails);
+        }
 
         public JsonResult OnGetClientSiteKeyDescription(int keyId, int clientSiteId)
         {
@@ -305,7 +417,7 @@ namespace CityWatch.Web.Pages.Guard
             var success = false;
             var files = Request.Form.Files;
             var reportReference = Request.Form["report_reference"].ToString();
-            var vehicleRego = Request.Form["vehicleRego"].ToString();
+            var vehicleRego = Request.Form["vehicle_rego"].ToString();
             if (files.Count == 1)
             {
                 var file = files[0];
@@ -347,7 +459,8 @@ namespace CityWatch.Web.Pages.Guard
             var success = false;
             var files = Request.Form.Files;
             var vehicle_rego = Request.Form["vehicle_rego"].ToString();
-            
+            var foundit = Request.Form["foundit"].ToString();
+
             if (files.Count == 1)
             {
                 var file = files[0];
@@ -360,11 +473,44 @@ namespace CityWatch.Web.Pages.Guard
                         var folderPath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", vehicle_rego);
                         if (!IO.Directory.Exists(folderPath))
                             IO.Directory.CreateDirectory(folderPath);
+                        if (foundit == "yes")
+                        {
+                            var fulePath = Path.Combine(folderPath, uploadFileName);
+                            if (IO.File.Exists(fulePath))
+                            {
+                                for (int i = 1; i <= 1000; i++)
+                                {
+                                    var newfilename = vehicle_rego + "_" + i + Path.GetExtension(file.FileName);
+                                    var fulePath1 = Path.Combine(folderPath, newfilename);
+                                    if (!IO.File.Exists(fulePath1))
+                                    {
+                                        FileInfo fileInfo = new FileInfo(IO.Path.GetFullPath(Path.Combine(folderPath, uploadFileName)));
+
+                                        fileInfo.Name.Replace(uploadFileName, newfilename);
+                                        using (var stream1 = System.IO.File.OpenRead(fileInfo.FullName))
+                                        {
+
+
+                                            var file2 = new FormFile(stream1, 0, stream1.Length, null, Path.GetFileName(stream1.Name));
+
+                                            using (var stream = IO.File.Create(IO.Path.Combine(folderPath, newfilename)))
+                                            {
+                                                file2.CopyTo(stream);
+                                            }
+                                        }
+
+                                        break;
+                                    }
+                                }
+                            }
+                        }
                         using (var stream = IO.File.Create(IO.Path.Combine(folderPath, uploadFileName)))
                         {
                             file.CopyTo(stream);
                         }
                         success = true;
+
+
                     }
                     catch (Exception)
                     {
@@ -415,6 +561,7 @@ namespace CityWatch.Web.Pages.Guard
             var company_name = Request.Form["company_name"].ToString();
             var person_type = Request.Form["person_type"].ToString();
             var person_name = Request.Form["person_name"].ToString();
+            var foundit = Request.Form["foundit"].ToString();
             if (files.Count == 1)
             {
                 var file = files[0];
@@ -434,6 +581,37 @@ namespace CityWatch.Web.Pages.Guard
                         var folderPathNew = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", vehicle_rego);
                         if (!IO.Directory.Exists(folderPathNew))
                             IO.Directory.CreateDirectory(folderPathNew);
+                        if (foundit == "yes")
+                        {
+                            var fulePath = Path.Combine(folderPathNew, uploadFileName);
+                            if (IO.File.Exists(fulePath))
+                            {
+                                for (int i = 1; i <= 1000; i++)
+                                {
+                                    var newfilename = company_name + "-" + person_type + "-" + person_name + "_" + i + Path.GetExtension(file.FileName);
+                                    var fulePath1 = Path.Combine(folderPathNew, newfilename);
+                                    if (!IO.File.Exists(fulePath1))
+                                    {
+                                        FileInfo fileInfo = new FileInfo(IO.Path.GetFullPath(Path.Combine(folderPathNew, uploadFileName)));
+
+                                        fileInfo.Name.Replace(uploadFileName, newfilename);
+                                        using (var stream1 = System.IO.File.OpenRead(fileInfo.FullName))
+                                        {
+
+
+                                            var file2 = new FormFile(stream1, 0, stream1.Length, null, Path.GetFileName(stream1.Name));
+
+                                            using (var stream = IO.File.Create(IO.Path.Combine(folderPathNew, newfilename)))
+                                            {
+                                                file2.CopyTo(stream);
+                                            }
+                                        }
+
+                                        break;
+                                    }
+                                }
+                            }
+                        }
                         using (var stream = IO.File.Create(IO.Path.Combine(folderPathNew, uploadFileName)))
                         {
                             file.CopyTo(stream);
@@ -490,6 +668,20 @@ namespace CityWatch.Web.Pages.Guard
                     {
                         IO.File.Delete(filePath);
                         success = true;
+                        var sucessnew=OnPostDeletePersonImage(reportReference, fileName);
+                    }
+                    catch
+                    {
+
+                    }
+                }
+                var filePathnew = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", "Person", fileName);
+                if (IO.File.Exists(filePathnew))
+                {
+                    try
+                    {
+                        IO.File.Delete(filePathnew);
+                        success = true;
                     }
                     catch
                     {
@@ -503,7 +695,7 @@ namespace CityWatch.Web.Pages.Guard
         public JsonResult OnPostDeletePersonImage(string reportReference, string fileName)
 
         {
-            var success = false;
+            var success = "false";
             if ( !string.IsNullOrEmpty(fileName))
             {
                 var filePath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", "Person", fileName);
@@ -512,7 +704,7 @@ namespace CityWatch.Web.Pages.Guard
                     try
                     {
                         IO.File.Delete(filePath);
-                        success = true;
+                        success = "true";
                     }
                     catch
                     {
@@ -520,7 +712,7 @@ namespace CityWatch.Web.Pages.Guard
                     }
                 }
             }
-            return new JsonResult(success);
+            return new JsonResult(success); ;
         }
         //to delete the person image-end
         //to delete the vehicle image-start
@@ -547,6 +739,69 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(success);
         }
         //to delete the vehicle image-end
+
+        //to get next crm number-start
+        public JsonResult OnGetCRMNumber(int IndividualType)
+        {
+            string crmNumber=null;
+            var personType = _viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.IndividualType).Where(x => x.Value == IndividualType.ToString()).Select(x => x.Text).FirstOrDefault();
+            if (personType == "CRM (BDM Activity)")
+            {
+                var personalDetails = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetailsWithIndividualType(Convert.ToInt32(IndividualType));
+                if (personalDetails.Count > 0)
+                {
+                    var crmid = personalDetails.Where(x => x.CRMId != null);
+                    if (crmid.Count() == 0)
+                    {
+                        crmNumber = "CRM000001";
+                    }
+                    else
+                    {
+                        var maxid = crmid.Max(x => x.Id);
+                        //var crmnew = crmid.Where(x => x.Id == maxid).Select(x => x.CRMId).FirstOrDefault();
+                        var countid = crmid.Count() + 1;
+                        int numberOfDigits = countid / 10 + 1;
+                        string latestcrm = null;
+                        if (numberOfDigits == 1)
+                        {
+                            latestcrm = "CRM00000" + countid.ToString();
+                        }
+                        else if (numberOfDigits == 2)
+                        {
+                            latestcrm = "CRM0000" + countid.ToString();
+                        }
+                        else if (numberOfDigits == 3)
+                        {
+                            latestcrm = "CRM000" + countid.ToString();
+                        }
+                        else if (numberOfDigits == 4)
+                        {
+                            latestcrm = "CRM00" + countid.ToString();
+                        }
+                        else if (numberOfDigits == 5)
+                        {
+                            latestcrm = "CRM0" + countid.ToString();
+                        }
+                        else if (numberOfDigits == 6)
+                        {
+                            latestcrm = "CRM" + countid.ToString();
+                        }
+                        else
+                        {
+                            latestcrm = null;
+                        }
+                        if(latestcrm!=null)
+                        {
+                            crmNumber = latestcrm;
+                        }
+                    }
+                }
+            }
+                return new JsonResult(crmNumber);
+        }
+
+        //to get next crm number-end
+
         public JsonResult OnGetCompanyNames(string companyNamePart)
         {
             return new JsonResult(_viewDataService.GetCompanyNames(companyNamePart).ToList());

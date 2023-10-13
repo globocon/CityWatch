@@ -126,11 +126,17 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message, fileName = @Url.Content($"~/Pdf/FromDropbox/{zipFileName}") });
         }
 
-        public JsonResult OnGetKeyVehicleLogProfiles(string truckRego)
+        //public JsonResult OnGetKeyVehicleLogProfiles(string truckRego)
+        //{
+        //    return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego));
+        //}
+        
+        //to check with bdm-start
+        public JsonResult OnGetKeyVehicleLogProfiles(string truckRego,string poi)
         {
-            return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego));
+            return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego,poi));
         }
-
+        //to check with bdm-end
         public JsonResult OnPostUpdateKeyVehicleLogProfile(KeyVehicleLogVisitorPersonalDetail keyVehicleLogVisitorPersonalDetail)
         {
             var results = new List<ValidationResult>();
@@ -177,6 +183,10 @@ namespace CityWatch.Web.Pages.Admin
         public JsonResult OnGetVehicleRegos(string q)
         {
             return new JsonResult(_viewDataService.VehicleRegos.Where(z => string.IsNullOrEmpty(q) || z.Value.Contains(q, StringComparison.OrdinalIgnoreCase)));
+        }
+        public JsonResult OnGetPOIBDMSupplier(string q)
+        {
+            return new JsonResult(_viewDataService.POIBDMSupplier.Where(z => string.IsNullOrEmpty(q) || z.Value.Contains(q, StringComparison.OrdinalIgnoreCase)));
         }
 
         public JsonResult OnGetClientSites(string types)

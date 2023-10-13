@@ -99,6 +99,7 @@ namespace CityWatch.Web.Pages.Guard
                 if (LogBookType == LogBookType.DailyGuardLog)
                 {
                     CreateLogbookLoggedInEntry(logBookId, guardLoginId);
+
                 }
 
                 if (LogBookType == LogBookType.VehicleAndKeyLog && isNewLogBook)
@@ -109,6 +110,53 @@ namespace CityWatch.Web.Pages.Guard
                         _viewDataService.CopyOpenLogbookEntriesFromPreviousDay(previousDayLogBook.Id, logBookId, guardLoginId);
                     }
                 }
+                //logBookId entry for radio checklist-start
+
+                var gaurdlogin = _clientDataProvider.GetGuardLogin(guardLoginId, logBookId);
+                if (gaurdlogin.Count != 0)
+                {
+                    foreach (var item in gaurdlogin)
+                    {
+                        var logbookcl = new GuardLogin();
+
+                        logbookcl.Id = item.Id;
+                        logbookcl.ClientSiteId = item.ClientSiteLogBook.ClientSiteId;
+                        logbookcl.GuardId = item.GuardId;
+
+
+                        //signInEntry.GuardLogin = logbookcl;
+                        var radioChecklist = _clientDataProvider.GetClientSiteRadioChecksActivityStatus(logbookcl.GuardId, logbookcl.ClientSiteId);
+                        if (radioChecklist.Count == 0)
+                        {
+                            var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                            {
+                                ClientSiteId = logbookcl.ClientSiteId,
+                                GuardId = logbookcl.GuardId,
+                                GuardLoginTime = DateTime.Now,
+
+                            };
+                            _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
+                        }
+                        else
+                        {
+                            var ActivityStatusId = _clientDataProvider.GetClientSiteRadioChecksActivityStatus(logbookcl.GuardId, logbookcl.ClientSiteId).Max(x => x.Id);
+                            
+                                var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                                {
+                                    ClientSiteId = logbookcl.ClientSiteId,
+                                    GuardId = logbookcl.GuardId,
+                                    GuardLoginTime = DateTime.Now,
+                                    Id = Convert.ToInt32(ActivityStatusId),
+
+                                };
+                                _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
+                            
+                        }
+                    }
+
+                    
+                }
+                //logBookId entry for radio checklist-end
 
                 HttpContext.Session.SetInt32("LogBookId", logBookId);
                 HttpContext.Session.SetInt32("GuardLoginId", guardLoginId);
@@ -257,6 +305,39 @@ namespace CityWatch.Web.Pages.Guard
                 IsSystemEntry = true
             };
             _guardLogDataProvider.SaveGuardLog(signInEntry);
+
+
+            ////logBookId entry for radio checklist-start
+            
+            //var gaurdlogin = _clientDataProvider.GetGuardLogin(guardLoginId,logBookId);
+            //if (gaurdlogin.Count != 0)
+            //{
+            //    foreach (var item in gaurdlogin)
+            //    {
+            //        var logbookcl = new GuardLogin();
+
+            //        logbookcl.Id = item.Id;
+            //        logbookcl.ClientSiteId = item.ClientSiteLogBook.ClientSiteId;
+            //        logbookcl.GuardId = item.GuardId;
+
+
+            //        signInEntry.GuardLogin = logbookcl;
+            //    }
+
+            //    var radioChecklist = _clientDataProvider.GetClientSiteRadioChecksActivityStatus(signInEntry.GuardLogin.GuardId, signInEntry.GuardLogin.ClientSiteId);
+            //    if (radioChecklist.Count == 0)
+            //    {
+            //        var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+            //        {
+            //            ClientSiteId = signInEntry.GuardLogin.ClientSiteId,
+            //            GuardId = signInEntry.GuardLogin.GuardId,
+            //            GuardLoginTime = DateTime.Now,
+
+            //        };
+            //        _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
+            //    }
+            //}
+            ////logBookId entry for radio checklist-end
         }
     }
 }

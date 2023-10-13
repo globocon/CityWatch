@@ -28,6 +28,7 @@ namespace CityWatch.Data.Providers
     }
     public interface IClientDataProvider
     {
+        List<ClientSite> GetUserClientSites(string type, string searchTerm);
         List<ClientType> GetClientTypes();
         List<IncidentReportPSPF> GetPSPF();
         void SaveClientType(ClientType clientType);
@@ -82,6 +83,14 @@ namespace CityWatch.Data.Providers
         int DeleteClientSiteLinksPageType(int typeId);
         int DeleteFeedBackType(int typeId);
         List<KeyVehcileLogField> GetKeyVehicleLogFieldsByTruckId(int TruckConfig);
+        List<GuardLogin> GetGuardLogin(int GuardLoginId,int logBookId);
+        List<GuardLog> GetGuardLogs(int GuardLoginId, int logBookId);
+
+
+        ClientSite GetClientSitesUsingName(string name);
+
+        List<ClientSite> GetClientSiteDetails(int[] clientSiteIds);
+        List<ClientSiteRadioChecksActivityStatus> GetClientSiteRadioChecksActivityStatus(int GuardId, int ClientSiteId);
 
     }
 
@@ -100,7 +109,16 @@ namespace CityWatch.Data.Providers
             _configuration = configuration;
             _webHostEnvironment = webHostEnvironment;
         }
+        //code added to search client name
+        public List<ClientSite> GetUserClientSites(string type, string searchTerm)
+        {
+            var clientSites = GetClientSites(null)
+                .Where(z => (string.IsNullOrEmpty(type) || z.ClientType.Name.Equals(type)) &&
+                            (string.IsNullOrEmpty(searchTerm) || z.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
 
+            return clientSites;
+        }
         public List<ClientType> GetClientTypes()
         {
             return _context.ClientTypes.OrderBy(x => x.Name).ToList();
@@ -152,6 +170,16 @@ namespace CityWatch.Data.Providers
                 .OrderBy(x => x.ClientType.Name)
                 .ThenBy(x => x.Name)
                 .ToList();
+        }
+
+        public ClientSite GetClientSitesUsingName(string name)
+        {
+            return _context.ClientSites
+                .Where(x => x.Name.Trim() == name.Trim())
+                .Include(x => x.ClientType)
+                .OrderBy(x => x.ClientType.Name)
+                .ThenBy(x => x.Name)
+                .FirstOrDefault();
         }
         public List<ClientSite> GetClientSitesUsingGuardId(int? GuardId)
         {
@@ -268,6 +296,14 @@ namespace CityWatch.Data.Providers
                 .ToList();
 
             return clientSiteKpiSetting;
+        }
+
+        public List<ClientSite> GetClientSiteDetails(int[] clientSiteIds)
+        {
+            var clientSiteDetails = _context.ClientSites
+                .Where(x => clientSiteIds.Contains(x.Id))
+                .ToList();
+            return clientSiteDetails;
         }
 
         public void SaveClientSiteKpiSetting(ClientSiteKpiSetting setting)
@@ -974,6 +1010,31 @@ namespace CityWatch.Data.Providers
                 .ToList();
         }
 
+        //logBookId entry for radio checklist-start
+    
+        public List<GuardLogin> GetGuardLogin(int GuardLoginId,int logBookId)
+        {
+            return _context.GuardLogins
+                .Where(z => z.Id == GuardLoginId && z.ClientSiteLogBookId== logBookId)
+                
+                .ToList();
+        }
+        public List<GuardLog> GetGuardLogs(int GuardLoginId, int logBookId)
+        {
+            return _context.GuardLogs
+                .Where(z => z.GuardLoginId == GuardLoginId && z.ClientSiteLogBookId == logBookId)
+
+                .ToList();
+        }
+
+        public List<ClientSiteRadioChecksActivityStatus> GetClientSiteRadioChecksActivityStatus(int GuardId,int ClientSiteId)
+        {
+            return _context.ClientSiteRadioChecksActivityStatus
+                .Where(z => z.GuardId == GuardId && z.ClientSiteId==ClientSiteId && z.GuardLoginTime !=null)
+
+                .ToList();
+        }
+        //logBookId entry for radio checklist-end
 
     }
 }

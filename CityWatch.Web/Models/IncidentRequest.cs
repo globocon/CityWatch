@@ -124,7 +124,13 @@ namespace CityWatch.Web.Models
                 return eventTypes;
             }
         }
+
         public string PSPFName { get; set; }
+
+
+        public int? FeedbackType { get; set; }
+        public int? FeedbackTemplates { get; set; }
+
     }
 
     public class EventType

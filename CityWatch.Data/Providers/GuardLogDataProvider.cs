@@ -1,7 +1,9 @@
 ﻿using CityWatch.Data.Models;
+using iText.Layout.Element;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Globalization;
 using System.Linq;
 
@@ -14,13 +16,18 @@ namespace CityWatch.Data.Providers
         GuardLog GetLatestGuardLog(int clientSiteId, int guardId);
         void SaveGuardLog(GuardLog guardLog);
         void DeleteGuardLog(int id);
+        //logBookId delete for radio checklist-start
+        void  DeleteClientSiteRadioCheckActivityStatusForLogBookEntry(int id);
+        void SignOffClientSiteRadioCheckActivityStatusForLogBookEntry(int GuardId, int ClientSiteId);
+
+        //logBookId delete for radio checklist-end
         List<KeyVehicleLog> GetOpenKeyVehicleLogsByVehicleRego(string vehicleRego);
         List<KeyVehicleLog> GetKeyVehicleLogs(int logBookId);
         List<KeyVehicleLog> GetKeyVehicleLogs(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate);
-        List<KeyVehicleLog> GetKeyVehicleLogsWithPOI(int[] clientSiteIds,int[] personOfInterestIds, DateTime logFromDate, DateTime logToDate);
+        List<KeyVehicleLog> GetKeyVehicleLogsWithPOI(int[] clientSiteIds, int[] personOfInterestIds, DateTime logFromDate, DateTime logToDate);
         KeyVehicleLog GetKeyVehicleLogById(int id);
         List<KeyVehicleLog> GetKeyVehicleLogByIds(int[] ids);
-        List<KeyVehicleLog> GetPOIAlert( string companyname, string individualname, int individualtype);
+        List<KeyVehicleLog> GetPOIAlert(string companyname, string individualname, int individualtype);
         void SaveDocketSerialNo(int id, string serialNo);
         void SaveKeyVehicleLog(KeyVehicleLog keyVehicleLog);
         void DeleteKeyVehicleLog(int id);
@@ -43,6 +50,7 @@ namespace CityWatch.Data.Providers
         List<string> GetSenderNames(string senderNameStart);
         KeyVehicleLogProfile GetKeyVehicleLogVisitorProfile(string truckRego);
         List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetails(string truckRego);
+        List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetailsWithIndividualType(int individualtype);
         List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetails(string truckRego, string personName);
         KeyVehicleLogVisitorPersonalDetail GetKeyVehicleLogProfileWithPersonalDetails(int id);
         int SaveKeyVehicleLogProfileWithPersonalDetail(KeyVehicleLogVisitorPersonalDetail keyVehicleLogProfile);
@@ -58,6 +66,12 @@ namespace CityWatch.Data.Providers
         void SaveClientSiteDuress(int clientSiteId, int guardId);
         ClientSiteDuress GetClientSiteDuress(int clientSiteId);
         List<CompanyDetails> GetCompanyDetails();
+        //logBookId entry for radio checklist-start
+        void SaveRadioChecklistEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity);
+        List<ClientSiteRadioChecksActivityStatus> GetClientSiteRadioChecksActivityDetails();
+        void DeleteClientSiteRadioChecksActivity(ClientSiteRadioChecksActivityStatus ClientSiteRadioChecksActivityStatus);
+        List<RadioCheckListGuardData> GetActiveGuardDetails();
+        //logBookId entry for radio checklist-end
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -208,7 +222,7 @@ namespace CityWatch.Data.Providers
 
         {
             var results = _context.KeyVehicleLogs
-               .Where(z => clientSiteIds.Contains(z.ClientSiteLogBook.ClientSiteId)  && z.ClientSiteLogBook.Type == LogBookType.VehicleAndKeyLog
+               .Where(z => clientSiteIds.Contains(z.ClientSiteLogBook.ClientSiteId) && z.ClientSiteLogBook.Type == LogBookType.VehicleAndKeyLog
                             && z.EntryTime >= logFromDate && z.EntryTime < logToDate.AddDays(1))
                .Include(z => z.GuardLogin.Guard)
                .Include(x => x.ClientSiteLocation)
@@ -238,7 +252,7 @@ namespace CityWatch.Data.Providers
                 .ThenInclude(z => z.ClientSite)
                 .ToList();
         }
-        public List<KeyVehicleLog> GetPOIAlert( string companyname, string individualname, int individualtype)
+        public List<KeyVehicleLog> GetPOIAlert(string companyname, string individualname, int individualtype)
         {
             //return _context.KeyVehicleLogs.Where(z =>  z.CompanyName==companyname && z.PersonName==individualname && z.PersonType==individualtype && z.IsPOIAlert==true)
             // .Include(z => z.ClientSiteLogBook)
@@ -298,6 +312,19 @@ namespace CityWatch.Data.Providers
                 keyVehicleLogToUpdate.Sender = keyVehicleLog.Sender;
                 keyVehicleLogToUpdate.IsSender = keyVehicleLog.IsSender;
                 keyVehicleLogToUpdate.PersonOfInterest = keyVehicleLog.PersonOfInterest;
+                keyVehicleLogToUpdate.IsBDM = keyVehicleLog.IsBDM;
+                if (keyVehicleLog.CRMId != null)
+                {
+                    keyVehicleLogToUpdate.CRMId = keyVehicleLog.CRMId;
+                    keyVehicleLogToUpdate.IndividualTitle = keyVehicleLog.IndividualTitle;
+                    keyVehicleLogToUpdate.Gender = keyVehicleLog.Gender;
+                    keyVehicleLogToUpdate.CompanyABN = keyVehicleLog.CompanyABN;
+                    keyVehicleLogToUpdate.CompanyLandline = keyVehicleLog.CompanyLandline;
+                    keyVehicleLogToUpdate.Email = keyVehicleLog.Email;
+                    keyVehicleLogToUpdate.Website = keyVehicleLog.Website;
+                    keyVehicleLogToUpdate.BDMList = keyVehicleLog.BDMList;
+
+                }
             }
             _context.SaveChanges();
         }
@@ -533,6 +560,13 @@ namespace CityWatch.Data.Providers
                 .ToList();
         }
 
+        public List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetailsWithIndividualType(int individualtype)
+        {
+            return _context.KeyVehicleLogVisitorPersonalDetails
+                .Include(z => z.KeyVehicleLogProfile)
+                .Where(z => z.PersonType == individualtype)
+                .ToList();
+        }
         public int SaveKeyVehicleLogProfileWithPersonalDetail(KeyVehicleLogVisitorPersonalDetail kvlVisitorPersonalDetail)
         {
             kvlVisitorPersonalDetail.ProfileId = SaveKeyVehicleLogProfile(kvlVisitorPersonalDetail.KeyVehicleLogProfile);
@@ -557,7 +591,20 @@ namespace CityWatch.Data.Providers
                 string imagepath = "~/images/ziren.png";
                 kvlPersonalDetailsToDb.POIImage = keyVehicleLogVisitorPersonalDetail.POIImage;
             }
-           
+            kvlPersonalDetailsToDb.IsBDM = keyVehicleLogVisitorPersonalDetail.IsBDM;
+            if (keyVehicleLogVisitorPersonalDetail.CRMId != null)
+            {
+                kvlPersonalDetailsToDb.CRMId = keyVehicleLogVisitorPersonalDetail.CRMId;
+                kvlPersonalDetailsToDb.IndividualTitle = keyVehicleLogVisitorPersonalDetail.IndividualTitle;
+                kvlPersonalDetailsToDb.Gender = keyVehicleLogVisitorPersonalDetail.Gender;
+                kvlPersonalDetailsToDb.CompanyABN = keyVehicleLogVisitorPersonalDetail.CompanyABN;
+                kvlPersonalDetailsToDb.CompanyLandline = keyVehicleLogVisitorPersonalDetail.CompanyLandline;
+                kvlPersonalDetailsToDb.Email = keyVehicleLogVisitorPersonalDetail.Email;
+                kvlPersonalDetailsToDb.Website = keyVehicleLogVisitorPersonalDetail.Website;
+                kvlPersonalDetailsToDb.BDMList = keyVehicleLogVisitorPersonalDetail.BDMList;
+
+            }
+
             if (kvlPersonalDetailsToDb.Id == 0)
             {
                 _context.KeyVehicleLogVisitorPersonalDetails.Add(kvlPersonalDetailsToDb);
@@ -695,5 +742,125 @@ namespace CityWatch.Data.Providers
         {
             return _context.CompanyDetails.ToList();
         }
+        public void SaveRadioChecklistEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity)
+        {
+            try
+            {
+                if (clientSiteActivity.Id == 0)
+                {
+
+                    ClientSiteId = clientSiteActivity.ClientSiteId,
+                    GuardId = clientSiteActivity.GuardId,
+                    LastIRCreatedTime = clientSiteActivity.LastIRCreatedTime,
+                    LastKVCreatedTime = clientSiteActivity.LastKVCreatedTime,
+                    LastLBCreatedTime = clientSiteActivity.LastLBCreatedTime,
+                    GuardLoginTime = clientSiteActivity.GuardLoginTime,
+                    GuardLogoutTime = clientSiteActivity.GuardLogoutTime,
+                    IRDescription = clientSiteActivity.IRDescription,
+                    KVDescription = clientSiteActivity.KVDescription,
+                    LBDescription = clientSiteActivity.LBDescription,
+                    ActivityType = clientSiteActivity.ActivityType,
+                });
+
+            }
+
+            _context.SaveChanges();
+        }
+
+        public List<ClientSiteRadioChecksActivityStatus> GetClientSiteRadioChecksActivityDetails()
+        {
+            return _context.ClientSiteRadioChecksActivityStatus.ToList();
+        }
+        public List<RadioCheckListGuardData> GetActiveGuardDetails()
+        {
+          
+            var allvalues = _context.RadioCheckListGuardData.FromSqlRaw($"EXEC sp_GetActiveGuardDetailsForRC").ToList();
+            foreach( var item in allvalues ){
+                
+                item.SiteName= item.SiteName+ " <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x=>x.PhoneNumber).ToList());
+            }
+            return allvalues;
+        }
+       
+        public void DeleteClientSiteRadioChecksActivity(ClientSiteRadioChecksActivityStatus ClientSiteRadioChecksActivityStatus)
+        {
+            var ClientSiteRadioChecksActivity = _context.ClientSiteRadioChecksActivityStatus.SingleOrDefault(x => x.Id == ClientSiteRadioChecksActivityStatus.Id);
+            if (ClientSiteRadioChecksActivity != null)
+                _context.ClientSiteRadioChecksActivityStatus.Remove(ClientSiteRadioChecksActivity);
+
+
+                    _context.ClientSiteRadioChecksActivityStatus.Add(new ClientSiteRadioChecksActivityStatus()
+                    {
+                        ClientSiteId = clientSiteActivity.ClientSiteId,
+                        GuardId = clientSiteActivity.GuardId,
+                        LastIRCreatedTime = clientSiteActivity.LastIRCreatedTime,
+                        LastKVCreatedTime = clientSiteActivity.LastKVCreatedTime,
+                        LastLBCreatedTime = clientSiteActivity.LastLBCreatedTime,
+                        GuardLoginTime = clientSiteActivity.GuardLoginTime,
+                        GuardLogoutTime = clientSiteActivity.GuardLogoutTime,
+                        IRId = clientSiteActivity.IRId,
+                        KVId = clientSiteActivity.KVId,
+                        LBId = clientSiteActivity.LBId,
+                        ActivityType = clientSiteActivity.ActivityType,
+                    });
+
+                }
+                else
+                {
+
+                    var clientSiteActivityToUpdate = _context.ClientSiteRadioChecksActivityStatus.SingleOrDefault(x => x.Id == clientSiteActivity.Id);
+                    if (clientSiteActivityToUpdate == null)
+                        throw new InvalidOperationException();
+
+                    clientSiteActivityToUpdate.ClientSiteId = clientSiteActivity.ClientSiteId;
+                    clientSiteActivityToUpdate.GuardId = clientSiteActivity.GuardId;
+                    clientSiteActivityToUpdate.LastIRCreatedTime = clientSiteActivity.LastIRCreatedTime;
+                    clientSiteActivityToUpdate.LastKVCreatedTime = clientSiteActivity.LastKVCreatedTime;
+                    clientSiteActivityToUpdate.LastLBCreatedTime = clientSiteActivity.LastLBCreatedTime;
+                    clientSiteActivityToUpdate.GuardLoginTime = clientSiteActivity.GuardLoginTime;
+                    clientSiteActivityToUpdate.GuardLogoutTime = clientSiteActivity.GuardLogoutTime;
+                    clientSiteActivityToUpdate.IRId = clientSiteActivity.IRId;
+                    clientSiteActivityToUpdate.KVId = clientSiteActivity.KVId;
+                    clientSiteActivityToUpdate.LBId = clientSiteActivity.LBId;
+                    clientSiteActivityToUpdate.ActivityType = clientSiteActivity.ActivityType;
+                }
+
+                _context.SaveChanges();
+            }
+            catch(Exception ex)
+            {
+
+            }
+        }
+        //logBookId delete for radio checklist-start
+        public void DeleteClientSiteRadioCheckActivityStatusForLogBookEntry(int id)
+        {
+            var clientSiteRadioCheckActivityStatusToDelete = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.LBId == id);
+            if (clientSiteRadioCheckActivityStatusToDelete == null)
+                throw new InvalidOperationException();
+            foreach (var item in clientSiteRadioCheckActivityStatusToDelete)
+            {
+                _context.Remove(item);
+            }
+
+            
+            _context.SaveChanges();
+        }
+        public void SignOffClientSiteRadioCheckActivityStatusForLogBookEntry(int GuardId,int ClientSiteId)
+        {
+            var clientSiteRadioCheckActivityStatusToDelete = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.GuardId == GuardId && x.ClientSiteId==ClientSiteId);
+            if (clientSiteRadioCheckActivityStatusToDelete == null)
+                throw new InvalidOperationException();
+            foreach (var item in clientSiteRadioCheckActivityStatusToDelete)
+            {
+                _context.Remove(item);
+            }
+
+
+
+            _context.SaveChanges();
+
+        }
+        //logBookId delete for radio checklist-end
     }
 }
