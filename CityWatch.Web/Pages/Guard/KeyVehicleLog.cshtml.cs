@@ -247,31 +247,31 @@ namespace CityWatch.Web.Pages.Guard
                
             
 
-                var gaurdlogin = _clientDataProvider.GetGuardLogin(KeyVehicleLog.GuardLoginId, KeyVehicleLog.ClientSiteLogBookId);
-                if (gaurdlogin.Count != 0)
-                {
-                    foreach (var item in gaurdlogin)
-                    {
-                        var logbookcl = new GuardLogin();
+                //var gaurdlogin = _clientDataProvider.GetGuardLogin(KeyVehicleLog.GuardLoginId, KeyVehicleLog.ClientSiteLogBookId);
+                //if (gaurdlogin.Count != 0)
+                //{
+                //    foreach (var item in gaurdlogin)
+                //    {
+                //        var logbookcl = new GuardLogin();
 
-                        //logbookcl.Id = item.Id;
-                        logbookcl.ClientSiteId = item.ClientSiteId;
-                        logbookcl.GuardId = item.GuardId;
+                //        //logbookcl.Id = item.Id;
+                //        logbookcl.ClientSiteId = item.ClientSiteId;
+                //        logbookcl.GuardId = item.GuardId;
 
-                        KeyVehicleLog.GuardLogin = logbookcl;
-                    }
-                }
+                //        KeyVehicleLog.GuardLogin = logbookcl;
+                //    }
+                //}
 
-                var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
-                {
-                    ClientSiteId = KeyVehicleLog.GuardLogin.ClientSiteId,
-                    GuardId = KeyVehicleLog.GuardLogin.GuardId,
-                    LastKVCreatedTime = DateTime.Now,
-                    KVId = KeyVehicleLog.Id,
-                    ActivityType = "KV"
-                };
+                //var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                //{
+                //    ClientSiteId = KeyVehicleLog.GuardLogin.ClientSiteId,
+                //    GuardId = KeyVehicleLog.GuardLogin.GuardId,
+                //    LastKVCreatedTime = DateTime.Now,
+                //    KVId = KeyVehicleLog.Id,
+                //    ActivityType = "KV"
+                //};
 
-                _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
+                //_guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
                 
                 //logBookId entry for radio checklist-end
                 var img = _guardLogDataProvider.GetCompanyDetails();
