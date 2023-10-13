@@ -2585,6 +2585,56 @@
         $("#modelGuardLoginConRc").modal("show");
         return false;
     });
+    /*Show login confirmation for IR*/
+    $("#LoginConformationBtnIR").on('click', function () {
+        $('#txt_securityLicenseNoRC').val('');
+        clearGuardValidationSummary('GuardLoginValidationSummaryRC');
+        $("#modelGuardLoginConIR").modal("show");
+        return false;
+    });
+    /* Check if Guard can access IR*/
+    /* Check if Guard can access the IR-start */
+    /*used for accessing the SecurityLicenseNumber if a guard is entering the incident report*/
+    $('#btnGuardLoginIR').on('click', function () {
+        const securityLicenseNo = $('#txt_securityLicenseNoIR').val();
+        if (securityLicenseNo === '') {
+            displayGuardValidationSummary('GuardLoginValidationSummaryIR', 'Please enter the security license No ');
+        }
+        else {
+            
+                
+                    $('#txt_securityLicenseNoIR').val('');
+            $('#modelGuardLoginConIR').modal('hide');
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+                type: 'POST',
+                data: {
+                    securityLicenseNo: securityLicenseNo,
+                    type: 'IR'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.accessPermission) {
+                    $('#txt_securityLicenseNoIR').val('');
+                    $('#modelGuardLoginConIR').modal('hide');
+                    
+                    clearGuardValidationSummary('GuardLoginValidationSummaryIR');
+                    window.location.href = '/Incident/Register';
+                }
+                else {
+                    $('#txt_securityLicenseNo').val('');
+                    if (result.successCode === 0) {
+                        displayGuardValidationSummary('GuardLoginValidationSummaryIR', result.successMessage);
+                    }
+                }
+            });
+            
+                   clearGuardValidationSummary('GuardLoginValidationSummaryIR');
+                
+
+        }
+    });
+    /* Check if Guard can access the IR-END */
 
     $('#btnGuardLoginRC').on('click', function () {
         $('#Access_permission_RC_status').hide();

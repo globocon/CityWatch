@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using CityWatch.Web.Helpers;
+using DocumentFormat.OpenXml.Drawing.Diagrams;
 
 namespace CityWatch.Web.Helpers
 {
@@ -47,8 +48,16 @@ namespace CityWatch.Web.Helpers
             if (pageName == PageNameHelper.Index || pageName == PageNameHelper.Notify || pageName == PageNameHelper.Settings)
             {
                 menuHtml.AppendLine("<div>");
-                menuHtml.AppendLine(@"<a href=""/Incident/Register"" class=""nav-link py-0""><i class=""fa fa-file-pdf-o mr-2""></i>Incident Report (IR)</a>");
-                menuHtml.AppendLine("</div>");
+                if (!AuthUserHelper.IsAdminUserLoggedIn)
+                {   /* Check the guard Login Conformation*/
+                    menuHtml.AppendLine(@"<a href=""/Incident/Register"" id=""LoginConformationBtnIR"" class=""nav-link py-0""><i class=""fa fa-file-pdf-o mr-2""></i>Incident Report (IR)</a>");
+
+                }
+                else
+                {
+                    menuHtml.AppendLine(@"<a href=""/Incident/Register"" class=""nav-link py-0""><i class=""fa fa-file-pdf-o mr-2""></i>Incident Report (IR)</a>");
+                }
+                    menuHtml.AppendLine("</div>");
             }
 
             if (pageName == PageNameHelper.Index)
