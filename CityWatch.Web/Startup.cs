@@ -60,7 +60,7 @@ namespace CityWatch.Web
             services.AddScoped<IGuardReminderService, GuardReminderService>();               
             services.AddScoped<IClientSiteActivityStatusDataProvider, ClientSiteActivityStatusDataProvider>();
             services.AddScoped<IRadioCheckViewDataService, RadioCheckViewDataService>();
-
+            services.AddScoped<IRadioChecksActivityStatusService, RadioChecksActivityStatusService>();
             services.AddRazorPages(options => 
             {
                 options.Conventions.AuthorizePage("/Index");
