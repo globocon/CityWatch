@@ -13,15 +13,24 @@ namespace CityWatch.Data.Models
        
 
         public int GuardId { get; set; }
+
         
-        public DateTime? LastIRCreatedTime { get; set; }
-        public DateTime? LastKVCreatedTime { get; set; }
-        public DateTime? LastLBCreatedTime { get; set; }
-        public DateTime? GuardLoginTime { get; set; }
-        public DateTime? GuardLogoutTime { get; set; }
-        public string IRDescription { get; set; }
-        public string KVDescription { get; set; }
-        public string LBDescription { get; set; }
+        public Nullable <DateTime> LastIRCreatedTime { get; set; }
+
+        
+        public Nullable <DateTime> LastKVCreatedTime { get; set; }
+
+        
+        public Nullable <DateTime> LastLBCreatedTime { get; set; }
+
+        
+        public Nullable <DateTime> GuardLoginTime { get; set; }
+
+        
+        public Nullable <DateTime> GuardLogoutTime { get; set; }
+        public int? IRId { get; set; }
+        public int? KVId { get; set; }
+        public int? LBId { get; set; }
         
         public string ActivityType { get; set; }
         [ForeignKey("GuardId")]
@@ -29,5 +38,12 @@ namespace CityWatch.Data.Models
 
         [ForeignKey("ClientSiteId")]
         public ClientSite ClientSite { get; set; }
+
+        [ForeignKey("IRId")]
+        public IncidentReport IncidentReport { get; set; }
+        [ForeignKey("LBId")]
+        public GuardLog GuardLog { get; set; }
+        [ForeignKey("KVId")]
+        public KeyVehicleLog KeyVehicleLog { get; set; }
     }
 }

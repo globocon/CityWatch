@@ -733,6 +733,24 @@ namespace CityWatch.Web.Pages.Incident
                 try
                 {
                     _irDataProvider.SaveReport(report);
+
+
+                    //for adding showing the IR information if an IR is created-start
+                    if (HttpContext.Session.GetString("GuardId") != null)
+                    {
+                        var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                        {
+                            ClientSiteId = Convert.ToInt32(report.ClientSiteId),
+                            GuardId = Convert.ToInt32(HttpContext.Session.GetString("GuardId")),
+                            LastIRCreatedTime = DateTime.Now,
+                            IRId = report.Id,
+                            ActivityType = "IR"
+                        };
+                        _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
+                    }
+                  
+                    //for adding showing the IR information if an IR is created-end
+                    HttpContext.Session.Remove("GuardId");
                     if (report.IsPlateLoaded == true)
                     {
                         var incidentreportid = _clientDataProvider.GetMaxIncidentReportId(AuthUserHelper.LoggedInUserId.GetValueOrDefault());

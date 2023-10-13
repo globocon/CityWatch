@@ -20,6 +20,11 @@ namespace CityWatch.Data.Providers
 
         //logBookId entry for radio checklist-end
         void DeleteGuardLog(int id);
+        //logBookId delete for radio checklist-start
+        void  DeleteClientSiteRadioCheckActivityStatusForLogBookEntry(int id);
+        void SignOffClientSiteRadioCheckActivityStatusForLogBookEntry(int GuardId, int ClientSiteId);
+
+        //logBookId delete for radio checklist-end
         List<KeyVehicleLog> GetOpenKeyVehicleLogsByVehicleRego(string vehicleRego);
         List<KeyVehicleLog> GetKeyVehicleLogs(int logBookId);
         List<KeyVehicleLog> GetKeyVehicleLogs(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate);
@@ -737,33 +742,81 @@ namespace CityWatch.Data.Providers
         }
         public void SaveRadioChecklistEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity)
         {
-            if (clientSiteActivity.Id == 0)
+            try
             {
-                _context.ClientSiteRadioChecksActivityStatus.Add(new ClientSiteRadioChecksActivityStatus()
+                if (clientSiteActivity.Id == 0)
                 {
-                    ClientSiteId = clientSiteActivity.ClientSiteId,
-                    GuardId = clientSiteActivity.GuardId,
-                    LastIRCreatedTime = clientSiteActivity.LastIRCreatedTime,
-                    LastKVCreatedTime = clientSiteActivity.LastKVCreatedTime,
-                    LastLBCreatedTime = clientSiteActivity.LastLBCreatedTime,
-                    GuardLoginTime = clientSiteActivity.GuardLoginTime,
-                    GuardLogoutTime = clientSiteActivity.GuardLogoutTime,
-                    IRDescription = clientSiteActivity.IRDescription,
-                    KVDescription = clientSiteActivity.KVDescription,
-                    LBDescription = clientSiteActivity.LBDescription,
-                    ActivityType = clientSiteActivity.ActivityType,
-                });
-                
-            }
-            //else
-            //{
-            //    var guardLogToUpdate = _context.GuardLogs.SingleOrDefault(x => x.Id == guardLog.Id);
-            //    if (guardLogToUpdate == null)
-            //        throw new InvalidOperationException();
 
-            //    guardLogToUpdate.Notes = guardLog.Notes;
-            //}
+                    _context.ClientSiteRadioChecksActivityStatus.Add(new ClientSiteRadioChecksActivityStatus()
+                    {
+                        ClientSiteId = clientSiteActivity.ClientSiteId,
+                        GuardId = clientSiteActivity.GuardId,
+                        LastIRCreatedTime = clientSiteActivity.LastIRCreatedTime,
+                        LastKVCreatedTime = clientSiteActivity.LastKVCreatedTime,
+                        LastLBCreatedTime = clientSiteActivity.LastLBCreatedTime,
+                        GuardLoginTime = clientSiteActivity.GuardLoginTime,
+                        GuardLogoutTime = clientSiteActivity.GuardLogoutTime,
+                        IRId = clientSiteActivity.IRId,
+                        KVId = clientSiteActivity.KVId,
+                        LBId = clientSiteActivity.LBId,
+                        ActivityType = clientSiteActivity.ActivityType,
+                    });
+
+                }
+                else
+                {
+
+                    var clientSiteActivityToUpdate = _context.ClientSiteRadioChecksActivityStatus.SingleOrDefault(x => x.Id == clientSiteActivity.Id);
+                    if (clientSiteActivityToUpdate == null)
+                        throw new InvalidOperationException();
+
+                    clientSiteActivityToUpdate.ClientSiteId = clientSiteActivity.ClientSiteId;
+                    clientSiteActivityToUpdate.GuardId = clientSiteActivity.GuardId;
+                    clientSiteActivityToUpdate.LastIRCreatedTime = clientSiteActivity.LastIRCreatedTime;
+                    clientSiteActivityToUpdate.LastKVCreatedTime = clientSiteActivity.LastKVCreatedTime;
+                    clientSiteActivityToUpdate.LastLBCreatedTime = clientSiteActivity.LastLBCreatedTime;
+                    clientSiteActivityToUpdate.GuardLoginTime = clientSiteActivity.GuardLoginTime;
+                    clientSiteActivityToUpdate.GuardLogoutTime = clientSiteActivity.GuardLogoutTime;
+                    clientSiteActivityToUpdate.IRId = clientSiteActivity.IRId;
+                    clientSiteActivityToUpdate.KVId = clientSiteActivity.KVId;
+                    clientSiteActivityToUpdate.LBId = clientSiteActivity.LBId;
+                    clientSiteActivityToUpdate.ActivityType = clientSiteActivity.ActivityType;
+                }
+
+                _context.SaveChanges();
+            }
+            catch(Exception ex)
+            {
+
+            }
+        }
+        //logBookId delete for radio checklist-start
+        public void DeleteClientSiteRadioCheckActivityStatusForLogBookEntry(int id)
+        {
+            var clientSiteRadioCheckActivityStatusToDelete = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.LBId == id);
+            if (clientSiteRadioCheckActivityStatusToDelete == null)
+                throw new InvalidOperationException();
+            foreach (var item in clientSiteRadioCheckActivityStatusToDelete)
+            {
+                _context.Remove(item);
+            }
+
+            
             _context.SaveChanges();
         }
+        public void SignOffClientSiteRadioCheckActivityStatusForLogBookEntry(int GuardId,int ClientSiteId)
+        {
+            var clientSiteRadioCheckActivityStatusToDelete = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.GuardId == GuardId && x.ClientSiteId==ClientSiteId);
+            if (clientSiteRadioCheckActivityStatusToDelete == null)
+                throw new InvalidOperationException();
+            foreach (var item in clientSiteRadioCheckActivityStatusToDelete)
+            {
+                _context.Remove(item);
+            }
+
+
+            _context.SaveChanges();
+        }
+        //logBookId delete for radio checklist-end
     }
 }
