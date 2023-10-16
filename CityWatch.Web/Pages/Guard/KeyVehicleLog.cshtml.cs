@@ -177,19 +177,19 @@ namespace CityWatch.Web.Pages.Guard
 
                 }
                 var individualType = _viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.IndividualType).Where(x => x.Value == KeyVehicleLog.PersonType.ToString()).Select(x => x.Text).FirstOrDefault();
-                if(individualType == "CRM (BDM Activity)")
+                if (individualType == "CRM (BDM Activity)")
                 {
                     var personalDetails = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetailsWithIndividualType(Convert.ToInt32(KeyVehicleLog.PersonType));
-                    if (personalDetails.Count>0)
+                    if (personalDetails.Count > 0)
                     {
                         var crmid = personalDetails.Where(x => x.CRMId != null);
-                        if (crmid.Count()==0)
+                        if (crmid.Count() == 0)
                         {
                             KeyVehicleLog.CRMId = "CRM000001";
                         }
                         else
                         {
-                            var bdm = crmid.Where(x => x.PersonName == KeyVehicleLog.PersonName && x.CompanyName==KeyVehicleLog.CompanyName && x.KeyVehicleLogProfile.VehicleRego==KeyVehicleLog.VehicleRego);
+                            var bdm = crmid.Where(x => x.PersonName == KeyVehicleLog.PersonName && x.CompanyName == KeyVehicleLog.CompanyName && x.KeyVehicleLogProfile.VehicleRego == KeyVehicleLog.VehicleRego);
                             if (bdm.Count() == 0)
                             {
                                 var maxid = crmid.Max(x => x.Id);
@@ -197,11 +197,11 @@ namespace CityWatch.Web.Pages.Guard
                                 var countid = crmid.Count() + 1;
                                 int numberOfDigits = countid / 10 + 1;
                                 string latestcrm = null;
-                                if(numberOfDigits==1)
+                                if (numberOfDigits == 1)
                                 {
                                     latestcrm = "CRM00000" + countid.ToString();
                                 }
-                                else if(numberOfDigits==2)
+                                else if (numberOfDigits == 2)
                                 {
                                     latestcrm = "CRM0000" + countid.ToString();
                                 }
@@ -225,7 +225,7 @@ namespace CityWatch.Web.Pages.Guard
                                 {
                                     latestcrm = null;
                                 }
-                                if(latestcrm!=null)
+                                if (latestcrm != null)
                                 {
                                     KeyVehicleLog.CRMId = latestcrm;
                                 }
@@ -235,7 +235,7 @@ namespace CityWatch.Web.Pages.Guard
                             }
                             else
                             {
-                                
+
                                 KeyVehicleLog.CRMId = bdm.Select(x => x.CRMId).FirstOrDefault();
                             }
                         }
@@ -243,37 +243,43 @@ namespace CityWatch.Web.Pages.Guard
                 }
                 KeyVehicleLogAuditHistory keyVehicleLogAuditHistory = null;
                 keyVehicleLogAuditHistory = GetKvlAuditHistory(KeyVehicleLog);
-                _guardLogDataProvider.SaveKeyVehicleLog(KeyVehicleLog);
-               
-            
 
-                //var gaurdlogin = _clientDataProvider.GetGuardLogin(KeyVehicleLog.GuardLoginId, KeyVehicleLog.ClientSiteLogBookId);
-                //if (gaurdlogin.Count != 0)
-                //{
-                //    foreach (var item in gaurdlogin)
-                //    {
-                //        var logbookcl = new GuardLogin();
 
-                //        //logbookcl.Id = item.Id;
-                //        logbookcl.ClientSiteId = item.ClientSiteId;
-                //        logbookcl.GuardId = item.GuardId;
+                //logBookId entry for radio checklist-start
+                if (KeyVehicleLog.Id != 0) 
+                { 
+                    var gaurdlogin = _clientDataProvider.GetGuardLogin(KeyVehicleLog.GuardLoginId, KeyVehicleLog.ClientSiteLogBookId);
+                    if (gaurdlogin.Count != 0)
+                    {
+                        foreach (var item in gaurdlogin)
+                        {
+                            var logbookcl = new GuardLogin();
 
-                //        KeyVehicleLog.GuardLogin = logbookcl;
-                //    }
-                //}
+                            //logbookcl.Id = item.Id;
+                            logbookcl.ClientSiteId = item.ClientSiteId;
+                            logbookcl.GuardId = item.GuardId;
 
-                //var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
-                //{
-                //    ClientSiteId = KeyVehicleLog.GuardLogin.ClientSiteId,
-                //    GuardId = KeyVehicleLog.GuardLogin.GuardId,
-                //    LastKVCreatedTime = DateTime.Now,
-                //    KVId = KeyVehicleLog.Id,
-                //    ActivityType = "KV"
-                //};
+                            KeyVehicleLog.GuardLogin = logbookcl;
+                        }
+                    }
 
-                //_guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
-                
+                    var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                    {
+                        ClientSiteId = KeyVehicleLog.GuardLogin.ClientSiteId,
+                        GuardId = KeyVehicleLog.GuardLogin.GuardId,
+                        LastKVCreatedTime = DateTime.Now,
+                        KVId = KeyVehicleLog.Id,
+                        ActivityType = "KV"
+                    };
+
+                    _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
+                }
                 //logBookId entry for radio checklist-end
+
+
+                _guardLogDataProvider.SaveKeyVehicleLog(KeyVehicleLog);
+
+                
                 var img = _guardLogDataProvider.GetCompanyDetails();
                 string imagepath = null;
                 foreach (var item in img)
