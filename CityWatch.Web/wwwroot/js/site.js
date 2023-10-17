@@ -926,7 +926,7 @@
                 'id': -1,
                 'ReferenceNo':'',
                 'name': '',
-                'isdefault': false
+                'isDefault': ''
             }).edit(-1);
         }
     });
