@@ -7,6 +7,7 @@ using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Services;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -280,7 +281,7 @@ namespace CityWatch.Web.Pages.Admin
                 clientSite.UploadGuardLog = enableLogDump;
                 clientSite.LandLine = landLine;
                 clientSite.GuardLogEmailTo = guardEmailTo;
-                clientSite.DuressEmail= duressEmail;
+                clientSite.DuressEmail = duressEmail;
                 clientSite.DuressSms = duressSms;
             }
 
@@ -570,6 +571,8 @@ namespace CityWatch.Web.Pages.Admin
         public JsonResult OnPostSaveGuardLicense(GuardLicense guardLicense)
         {
             ModelState.Remove("guardLicense.Id");
+            ModelState.Remove("guardLicense.LicenseTypeText");
+            ModelState.Remove("guardLicense.LicenseType");
             if (!ModelState.IsValid)
             {
                 return new JsonResult(new
@@ -586,7 +589,26 @@ namespace CityWatch.Web.Pages.Admin
 
             try
             {
+               
                 dbxUploaded = UploadGuardLicenseToDropbox(guardLicense);
+                if (guardLicense.LicenseType==null && guardLicense.Id!=null && guardLicense.LicenseTypeName!=null)
+                {
+                    int intValueToCompare = -1;
+                    guardLicense.LicenseType = (GuardLicenseType)intValueToCompare;
+                    guardLicense.LicenseTypeName = guardLicense.LicenseTypeName;
+
+                }
+                else if(guardLicense.LicenseType == null)
+                {
+                    //int intValueToCompare = -1;
+                    //guardLicense.LicenseType = (GuardLicenseType)intValueToCompare;
+                    return new JsonResult(new
+                    {
+                        status = false,
+                        message = "LicenseType Required"
+                    });
+                }
+
                 _guardDataProvider.SaveGuardLicense(guardLicense);
             }
             catch (Exception ex)
@@ -745,8 +767,8 @@ namespace CityWatch.Web.Pages.Admin
         {
             var AccessPermission = false;
             int? LoggedInUserId = 0;
-            string  SuccessMessage = string.Empty;
-            int ? SuccessCode = 0;
+            string SuccessMessage = string.Empty;
+            int? SuccessCode = 0;
             int? GuId = 0;
             if (!string.IsNullOrEmpty(securityLicenseNo))
             {
@@ -761,11 +783,11 @@ namespace CityWatch.Web.Pages.Admin
                             if (guard.IsKPIAccess)
                             {
                                 AccessPermission = true;
-                                GuId=guard.Id;
+                                GuId = guard.Id;
                                 if (AuthUserHelper.LoggedInUserId != null)
                                 {
                                     LoggedInUserId = AuthUserHelper.LoggedInUserId;
-                                    
+
                                 }
 
                                 SuccessCode = 1;
@@ -805,6 +827,19 @@ namespace CityWatch.Web.Pages.Admin
                             SuccessMessage = "Guard is inactive";
                         }
                     }
+                    if (type == "IR")
+                    {
+                        /* Store the value of the Guard Id to seesion for create the Ir from the session-start */
+                        HttpContext.Session.SetString("GuardId", guard.Id.ToString());
+                        AccessPermission = true;
+                        if (AuthUserHelper.LoggedInUserId != null)
+                        {
+                            LoggedInUserId = AuthUserHelper.LoggedInUserId;
+                        }
+                        SuccessCode = 1;
+                    }
+                    /* Store the value of the Guard Id to seesion for create the Ir from the session-end */
+
                 }
                 else
                 {

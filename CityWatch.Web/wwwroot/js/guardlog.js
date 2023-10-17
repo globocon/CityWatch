@@ -203,7 +203,7 @@
                     if (result.guard.mobile != null) {
                         $("#divGuardMobile").hide();
                     }
-                    
+
                     $('#GuardLogin_Guard_Email').val(result.guard.email);
                     $('#GuardLogin_Guard_Mobile').val(result.guard.mobile);
                     $('#GuardLogin_Guard_Initial').val(result.guard.initial);
@@ -608,11 +608,11 @@
     gridGuardLog = $('#guard_daily_log').grid(gridGuardLogSettings);
 
     if (gridGuardLog) {
-        
+
         const bg_color_pale_yellow = '#fcf8d1';
         const bg_color_pale_red = '#ffcccc';
         const irEntryTypeIsAlarm = 2;
-     
+
         gridGuardLog.on('rowDataBound', function (e, $row, id, record) {
             if (record.irEntryType) {
                 $row.css('background-color', record.irEntryType === irEntryTypeIsAlarm ? bg_color_pale_red : bg_color_pale_yellow);
@@ -668,7 +668,7 @@
                 }).fail(function () {
                     console.log('error');
                 });
-            } else {    
+            } else {
                 gridGuardLog.clear();
                 gridGuardLog.reload();
             }
@@ -979,7 +979,7 @@
                 $('#duress_btn').removeClass('normal').addClass('active');
                 $("#duress_status").addClass('font-weight-bold');
                 $("#duress_status").text("Active");
-            }           
+            }
             gridGuardLog.clear();
             gridGuardLog.reload();
         });
@@ -1204,7 +1204,7 @@
         $('#KeyVehicleLogAuditLogRequest_LogFromDate').val($('#vklAudtitFromDate').val());
         $('#KeyVehicleLogAuditLogRequest_LogToDate').val($('#vklAudtitToDate').val());
         $('#KeyVehicleLogAuditLogRequest_LogBookType').val(2);
-        
+
         $('#KeyVehicleLogAuditLogRequest_PersonOfInterest').val($('#vklPersonOfInterest').val());
         $.ajax({
             url: '/Admin/AuditSiteLog?handler=KeyVehicleSiteLogs',
@@ -1235,9 +1235,9 @@
     //code addded  to download Excel start
 
     $("#add_Downloadbtn").click(function () {
-       
+
         var Key = $('#site-settings-for').html();
-     
+
         var type = 'xlsx';
         var name = Key + '.';
         var data = document.getElementById('cs_client_site_keys');
@@ -1280,14 +1280,14 @@
         }
 
 
-        
+
 
         var excelFile = XLSX.utils.table_to_book(tableClone, { sheet: "Keys" });
 
         // Use XLSX.writeFile to generate and download the Excel file
         XLSX.writeFile(excelFile, name + type);
     });
-     //code addded  to download Excel end
+    //code addded  to download Excel end
 
     $('#ClientSiteCustomField_Name').editableSelect({
         effects: 'slide'
@@ -1511,9 +1511,9 @@
             gritdSmartWands.addRow({ 'id': -1, 'smartWandId': '', phoneNumber: '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
         }
     });
-  /*  code added to 1000 pages in Excel */
+    /*  code added to 1000 pages in Excel */
     let gridClientSiteKeys = $('#cs_client_site_keys').DataTable({
-        lengthMenu: [[10, 25,50,100,1000], [10, 25,50,100,1000]],
+        lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
         paging: true,
         ordering: true,
         order: [[1, "asc"]],
@@ -2041,7 +2041,7 @@
     $('#btn_save_guard').on('click', function () {
         clearGuardValidationSummary('glValidationSummary');
         $('#guard_saved_status').hide();
-        $('#Guard_IsActive').val($(cbIsActive).is(':checked'));       
+        $('#Guard_IsActive').val($(cbIsActive).is(':checked'));
         $('#Guard_IsRCAccess').val($(cbIsRCAccess).is(':checked'));
         $('#Guard_IsKPIAccess').val($(cbIsKPIAccess).is(':checked'));
         $.ajax({
@@ -2282,8 +2282,25 @@
             dataSrc: ''
         },
         columns: [
+           
             { data: 'licenseNo', width: "10%" },
-            { data: 'licenseTypeText', width: '5%' },
+            //{ data: 'licenseTypeName', width: "5%" },
+            {
+                
+                data: 'licenseTypeText',
+                width: '5%',
+                render: function (data, type, row) {
+                    if (type === 'display') {
+                        if (data === null) {
+                            return row.licenseTypeName; 
+                        } else {
+                            return data;
+                        }
+                    } else {
+                        return data; 
+                    }
+                }
+            },
             { data: 'expiryDate', width: '10%', orderable: true },
             { data: 'reminder1', width: "3%" },
             { data: 'reminder2', width: '3%' },
@@ -2315,12 +2332,32 @@
         resetGuardLicenseAddModal();
         $('#addGuardLicenseModal').modal('show');
     });
+    /*code added for Licence Type Dropdown Textbox start*/
+    $('#GuardLicense_LicenseType').attr('placeholder', 'Select Or Edit').editableSelect({
+        effects: 'slide'
+    }).on('select.editable-select', function (e, li) {
+        $('#GuardLicense_License').val(li.text());
+    });
 
+    if ($('#GuardLicense_License').val() !== '') {
+        let itemToSelect = $('#GuardLicense_LicenseType').siblings('.es-list').find('li:contains("' + $('#GuardLicense_License').val() + '")')[0];
+        if (itemToSelect) {
+            $('#GuardLicense_LicenseType').editableSelect('select', $(itemToSelect));
+
+        }
+    }
+ /*code added for Licence Type Dropdown Textbox stop*/
     $('#tbl_guard_licenses tbody').on('click', 'button[name=btn_edit_guard_license]', function () {
         resetGuardLicenseAddModal();
         var data = gridGuardLicenses.row($(this).parents('tr')).data();
         $('#GuardLicense_LicenseNo').val(data.licenseNo);
-        $('#GuardLicense_LicenseType').val(data.licenseType);
+        if (data.licenseTypeText == null) {
+            $('#GuardLicense_LicenseType').val(data.licenseTypeName);
+        }
+        else {
+            $('#GuardLicense_LicenseType').val(data.licenseTypeText);
+        }
+        
         $('#GuardLicense_Reminder1').val(data.reminder1);
         $('#GuardLicense_Reminder2').val(data.reminder2);
         if (data.expiryDate) {
@@ -2407,6 +2444,10 @@
 
     $('#btn_save_guard_license').on('click', function () {
         clearGuardValidationSummary('licenseValidationSummary');
+        /*To get the text inside the product dropdown*/
+        var inputElement = document.querySelector(".es-input");
+        // Get the value of the input element
+        if (inputElement) { var inputValue = inputElement.value; $('#LicenseTypeOther').val(inputValue); }
         $('#loader').show();
         $.ajax({
             url: '/Admin/GuardSettings?handler=SaveGuardLicense',
@@ -2585,6 +2626,56 @@
         $("#modelGuardLoginConRc").modal("show");
         return false;
     });
+    /*Show login confirmation for IR*/
+    $("#LoginConformationBtnIR").on('click', function () {
+        $('#txt_securityLicenseNoRC').val('');
+        clearGuardValidationSummary('GuardLoginValidationSummaryRC');
+        $("#modelGuardLoginConIR").modal("show");
+        return false;
+    });
+    /* Check if Guard can access IR*/
+    /* Check if Guard can access the IR-start */
+    /*used for accessing the SecurityLicenseNumber if a guard is entering the incident report*/
+    $('#btnGuardLoginIR').on('click', function () {
+        const securityLicenseNo = $('#txt_securityLicenseNoIR').val();
+        if (securityLicenseNo === '') {
+            displayGuardValidationSummary('GuardLoginValidationSummaryIR', 'Please enter the security license No ');
+        }
+        else {
+
+
+            $('#txt_securityLicenseNoIR').val('');
+            $('#modelGuardLoginConIR').modal('hide');
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+                type: 'POST',
+                data: {
+                    securityLicenseNo: securityLicenseNo,
+                    type: 'IR'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.accessPermission) {
+                    $('#txt_securityLicenseNoIR').val('');
+                    $('#modelGuardLoginConIR').modal('hide');
+
+                    clearGuardValidationSummary('GuardLoginValidationSummaryIR');
+                    window.location.href = '/Incident/Register';
+                }
+                else {
+                    $('#txt_securityLicenseNo').val('');
+                    if (result.successCode === 0) {
+                        displayGuardValidationSummary('GuardLoginValidationSummaryIR', result.successMessage);
+                    }
+                }
+            });
+
+            clearGuardValidationSummary('GuardLoginValidationSummaryIR');
+
+
+        }
+    });
+    /* Check if Guard can access the IR-END */
 
     $('#btnGuardLoginRC').on('click', function () {
         $('#Access_permission_RC_status').hide();
@@ -2608,7 +2699,7 @@
                     clearGuardValidationSummary('GuardLoginValidationSummaryRC');
                     $('#Access_permission_RC_status').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Redirecting to Radio Checklist (RC). Please wait...').show();
                     window.location.href = '/Radio/Check';
-                    
+
                 }
                 else {
                     $('#txt_securityLicenseNoRC').val('');
