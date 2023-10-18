@@ -72,6 +72,7 @@ namespace CityWatch.Data.Providers
         void DeleteClientSiteRadioChecksActivity(ClientSiteRadioChecksActivityStatus ClientSiteRadioChecksActivityStatus);
         List<RadioCheckListGuardData> GetActiveGuardDetails();
         List<RadioCheckListInActiveGuardData> GetInActiveGuardDetails();
+        public Guard GetGuards(int guardId);
         //logBookId entry for radio checklist-end
     }
 
@@ -861,6 +862,11 @@ namespace CityWatch.Data.Providers
                 _context.ClientSiteRadioChecksActivityStatus.Remove(ClientSiteRadioChecksActivity);
             _context.SaveChanges();
 
+        }
+        public Guard GetGuards( int guardId)
+        {
+
+            return _context.Guards.Where(x => x.Id == guardId).FirstOrDefault();
         }
     }
 }
