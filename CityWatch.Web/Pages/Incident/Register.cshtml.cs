@@ -251,7 +251,26 @@ namespace CityWatch.Web.Pages.Incident
                 OfficerPosition = ViewDataService.GetOfficerPositions(OfficerPositionFilter.NonPatrolOnly);
 
             }
+            // to get the guard details while the guard is logging into the system-start
+            if (HttpContext.Session.GetString("GuardId") != null)
+            {
+                var guardList = _ViewDataService.GetGuards().Where(x => x.Id == Convert.ToInt32(HttpContext.Session.GetString("GuardId")));
+                foreach (var item in guardList)
+                {
+                    Report = new IncidentRequest
+                    {
+                        Officer = new Officer
+                        {
 
+                            Phone = item.Mobile,
+                            LicenseNumber = item.SecurityNo,
+                            Email=item.Email,
+
+                        },
+                    };
+                }
+            }
+            // to get the guard details while the guard is logging into the system-end
             return Page();
             /* Code for Re-create the Ir from already existing one 04102023 end*/
         }

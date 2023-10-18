@@ -278,8 +278,6 @@ namespace CityWatch.Web.Pages.Guard
 
 
                 _guardLogDataProvider.SaveKeyVehicleLog(KeyVehicleLog);
-
-                
                 var img = _guardLogDataProvider.GetCompanyDetails();
                 string imagepath = null;
                 foreach (var item in img)
@@ -966,7 +964,9 @@ namespace CityWatch.Web.Pages.Guard
                     ProfileId = vehicleKeyLogProfile.ProfileId,
                     CompanyName = vehicleKeyLogProfile.CompanyName,
                     PersonType = vehicleKeyLogProfile.PersonType,
-                    PersonName = personName
+                    PersonName = personName,
+
+                    IsBDM=true
                 });
             }
             catch (Exception ex)

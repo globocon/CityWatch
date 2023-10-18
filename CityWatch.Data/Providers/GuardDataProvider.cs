@@ -301,9 +301,44 @@ namespace CityWatch.Data.Providers
 
         public List<GuardLicense> GetGuardLicenses(int guardId)
         {
-            return _context.GuardLicenses
+           // var LicenceType= _context.GuardLicenses.Where(x => x.GuardId == guardId).Select(x=>x.LicenseType).F
+           var result= _context.GuardLicenses
                 .Where(x => x.GuardId == guardId)
                 .Include(z => z.Guard).ToList();
+            //GuardLicenseType? licenseType = null;
+           // int intValueToCompare = 3;
+            
+            foreach (var item in result)
+            {
+                //GuardLicenseType? licenseType = null;
+                int intValueToCompare = -1;
+                if ((int)item.LicenseType== intValueToCompare)
+                {
+
+                    result = _context.GuardLicenses
+                    .Where(x => x.GuardId == guardId)
+                    .Include(z => z.Guard)
+                    .Select(x => new GuardLicense
+                    {  
+                        Id=x.Id,
+                       LicenseNo=x.LicenseNo,
+                        LicenseType = x.LicenseType,
+                      ExpiryDate =x.ExpiryDate,
+                      Reminder1=x.Reminder1,
+                      Reminder2=x.Reminder2,
+                      FileName=x.FileName,
+                      LicenseTypeName=x.LicenseTypeName,
+                      GuardId=x.GuardId
+                    })
+                    .ToList();
+
+                }
+
+            }
+            return result;
+
+
+
         }
 
         public void SaveGuardLicense(GuardLicense guardLicense)
@@ -317,12 +352,14 @@ namespace CityWatch.Data.Providers
                 var guardLicenseToUpdate = _context.GuardLicenses.SingleOrDefault(x => x.Id == guardLicense.Id);
                 if (guardLicenseToUpdate != null)
                 {
+                    
                     guardLicenseToUpdate.LicenseNo = guardLicense.LicenseNo;
                     guardLicenseToUpdate.LicenseType = guardLicense.LicenseType;
                     guardLicenseToUpdate.Reminder1 = guardLicense.Reminder1;
                     guardLicenseToUpdate.Reminder2 = guardLicense.Reminder2;
                     guardLicenseToUpdate.ExpiryDate = guardLicense.ExpiryDate;
                     guardLicenseToUpdate.FileName = guardLicense.FileName;
+                    guardLicenseToUpdate.LicenseTypeName = guardLicense.LicenseTypeName;
                 }
             }
             _context.SaveChanges();

@@ -700,7 +700,8 @@ namespace CityWatch.Web.Pages.Admin
 
         public JsonResult OnPostSavePSPF(IncidentReportPSPF record)
         {
-            if (record.IsDefault = true && record.Id!=-1)
+            int CountPSPF= _configDataProvider.GetLastValue();
+            if (record.IsDefault==true && CountPSPF >= 1)
             {
                 _configDataProvider.UpdateDefault();
             }
@@ -708,6 +709,7 @@ namespace CityWatch.Web.Pages.Admin
             
             if (record.Id== -1)
             {
+              
                 int LastOne = _configDataProvider.GetLastValue();
                 if (LastOne != null)
                 {
@@ -738,6 +740,7 @@ namespace CityWatch.Web.Pages.Admin
                 }
                 else
                 {
+                   
                     _configDataProvider.SavePSPF(record);
                     success = true;
                 }

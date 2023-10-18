@@ -1,4 +1,4 @@
-﻿@using CityWatch.Data.Models;
+﻿﻿@using CityWatch.Data.Models;
 <div class="modal fade" id="addGuardLicenseModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="addLicenceModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -22,6 +22,8 @@
                             <select class="form-control" id="GuardLicense_LicenseType" name="GuardLicense.LicenseType" asp-items="@Html.GetEnumSelectList<GuardLicenseType>().OrderBy(z => z.Text)">
                                 <option value="">Select</option>
                             </select>
+                            <input type="hidden" id="GuardLicense_License" name="GuardLicense.LicenseType" />
+                            <input type="hidden" id="LicenseTypeOther" name="GuardLicense.LicenseTypeName" />
                         </div>
                     </div>
                     <div class="form-row">
