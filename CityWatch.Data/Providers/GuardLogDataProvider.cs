@@ -1,9 +1,11 @@
 ﻿using CityWatch.Data.Models;
 using iText.Layout.Element;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Data;
 using System.Globalization;
 using System.Linq;
 
@@ -73,6 +75,24 @@ namespace CityWatch.Data.Providers
         List<RadioCheckListGuardData> GetActiveGuardDetails();
         List<RadioCheckListInActiveGuardData> GetInActiveGuardDetails();
         //logBookId entry for radio checklist-end
+
+        //for getting logBook details of the  guard-start
+
+        List<RadioCheckListGuardLoginData> GetActiveGuardlogBookDetails(int clientSiteId,int guardId);
+        //for getting logBook details of the  guard-end
+
+        //for getting list of guards not available-start
+        List<RadioCheckListNotAvailableGuardData> GetNotAvailableGuardDetails();
+        //for getting list of guards not available-end
+        //for getting key vehicle log details of the  guard-start
+
+        List<RadioCheckListGuardKeyVehicleData> GetActiveGuardKeyVehicleLogDetails(int clientSiteId, int guardId);
+        //for getting  key vehicle log details of the  guard-end
+
+        //for getting incident report details of the  guard-start
+
+        List<RadioCheckListGuardIncidentReportData> GetActiveGuardIncidentReportDetails(int clientSiteId, int guardId);
+        //for getting  incident report details of the  guard-end
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -862,5 +882,80 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
 
         }
+        //for getting logbookdetails of the guard-start
+        public List<RadioCheckListGuardLoginData> GetActiveGuardlogBookDetails(int clientSiteId,int guardId)
+        {
+            var param1 = new SqlParameter();
+            param1.ParameterName = "@ClientSiteId";
+            param1.SqlDbType = SqlDbType.Int;
+            param1.SqlValue = clientSiteId;
+
+            var param2 = new SqlParameter();
+            param2.ParameterName = "@GuardId";
+            param2.SqlDbType = SqlDbType.Int;
+            param2.SqlValue = guardId;
+
+            
+            var allvalues = _context.RadioCheckListGuardLoginData.FromSqlRaw($"EXEC sp_GetActiveGuardLogBookDetailsForRC @ClientSiteId,@GuardId",param1,param2).ToList();
+            
+            return allvalues;
+        }
+        //for getting logbookdetails of the guard-end
+
+        //for getting the details of guards not available-start
+        public List<RadioCheckListNotAvailableGuardData> GetNotAvailableGuardDetails()
+        {
+
+            var allvalues = _context.RadioCheckListNotAvailableGuardData.FromSqlRaw($"EXEC sp_GetNotAvailableGuardDetailsForRC").ToList();
+            foreach (var item in allvalues)
+            {
+
+                item.SiteName = item.SiteName + " <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x => x.PhoneNumber).ToList());
+            }
+            return allvalues;
+        }
+        //for getting the details of guards not available-end//for getting key vehicle log details of the  guard-start
+
+        public List<RadioCheckListGuardKeyVehicleData> GetActiveGuardKeyVehicleLogDetails(int clientSiteId, int guardId)
+        {
+            var param1 = new SqlParameter();
+            param1.ParameterName = "@ClientSiteId";
+            param1.SqlDbType = SqlDbType.Int;
+            param1.SqlValue = clientSiteId;
+
+            var param2 = new SqlParameter();
+            param2.ParameterName = "@GuardId";
+            param2.SqlDbType = SqlDbType.Int;
+            param2.SqlValue = guardId;
+
+
+            var allvalues = _context.RadioCheckListGuardKeyVehicleData.FromSqlRaw($"EXEC sp_GetActiveGuardKeyVehicleDetailsForRC @ClientSiteId,@GuardId", param1, param2).ToList();
+
+            return allvalues;
+        }
+        //for getting  key vehicle log details of the  guard-end
+
+        //for getting incident report details of the  guard-start
+
+        public List<RadioCheckListGuardIncidentReportData> GetActiveGuardIncidentReportDetails(int clientSiteId, int guardId)
+        {
+            var param1 = new SqlParameter();
+            param1.ParameterName = "@ClientSiteId";
+            param1.SqlDbType = SqlDbType.Int;
+            param1.SqlValue = clientSiteId;
+
+            var param2 = new SqlParameter();
+            param2.ParameterName = "@GuardId";
+            param2.SqlDbType = SqlDbType.Int;
+            param2.SqlValue = guardId;
+
+
+            var allvalues = _context.RadioCheckListGuardIncidentReportData.FromSqlRaw($"EXEC sp_GetActiveGuardIncidentReportsDetailsForRC @ClientSiteId,@GuardId", param1, param2).ToList();
+
+            return allvalues;
+        }
+        //for getting  incident report details of the  guard-end
+
+
     }
 }
