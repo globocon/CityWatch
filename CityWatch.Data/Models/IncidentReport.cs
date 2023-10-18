@@ -36,5 +36,8 @@ namespace CityWatch.Data.Models
         public int? LogId { get; set; }
         public ICollection<IncidentReportEventType> IncidentReportEventTypes { get; set; }
         public int? PSPFId { get; set; }
+        public int? GuardId { get; set; }
+        [ForeignKey("GuardId")]
+        public Guard Guard { get; set; }
     }
 }

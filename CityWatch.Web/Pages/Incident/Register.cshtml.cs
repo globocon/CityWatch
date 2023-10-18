@@ -734,7 +734,12 @@ namespace CityWatch.Web.Pages.Incident
                 LogId = AuthUserHelper.LoggedInUserId.GetValueOrDefault(),
                 IncidentReportEventTypes = Report.IrEventTypes.Select(z => new IncidentReportEventType() { EventType = z }).ToList(),
                 PSPFId = PSPFName.Id
+                
             };
+            if (HttpContext.Session.GetString("GuardId") != null)
+            {
+                report.GuardId = Convert.ToInt32(HttpContext.Session.GetString("GuardId"));
+            }
 
             if (!reportGenerated)
             {
@@ -756,18 +761,18 @@ namespace CityWatch.Web.Pages.Incident
 
 
                     //for adding showing the IR information if an IR is created-start
-                    if (HttpContext.Session.GetString("GuardId") != null)
-                    {
-                        var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
-                        {
-                            ClientSiteId = Convert.ToInt32(report.ClientSiteId),
-                            GuardId = Convert.ToInt32(HttpContext.Session.GetString("GuardId")),
-                            LastIRCreatedTime = DateTime.Now,
-                            IRId = report.Id,
-                            ActivityType = "IR"
-                        };
-                        _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
-                    }
+                    //if (HttpContext.Session.GetString("GuardId") != null)
+                    //{
+                    //    var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                    //    {
+                    //        ClientSiteId = Convert.ToInt32(report.ClientSiteId),
+                    //        GuardId = Convert.ToInt32(HttpContext.Session.GetString("GuardId")),
+                    //        LastIRCreatedTime = DateTime.Now,
+                    //        IRId = report.Id,
+                    //        ActivityType = "IR"
+                    //    };
+                    //    _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
+                    //}
                   
                     //for adding showing the IR information if an IR is created-end
                     HttpContext.Session.Remove("GuardId");
