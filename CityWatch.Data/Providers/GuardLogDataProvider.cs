@@ -957,7 +957,15 @@ namespace CityWatch.Data.Providers
             return allvalues;
         }
         //for getting  incident report details of the  guard-end
+        public Guard GetGuards(int guardId)
+        {
 
+
+
+
+
+            return _context.Guards.Where(x => x.Id == guardId).FirstOrDefault();
+        }
 
 
     }

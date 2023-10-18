@@ -21,7 +21,6 @@ function startClock() {
             display.textContent = minutes + " min" + " " + seconds + " sec";
 
             if (--timer < 0) {
-
                 location.reload();
                 //$.ajax({
                 //    url: '/Radio/Check?handler=UpdateLatestActivityStatus',
@@ -88,7 +87,6 @@ let clientSiteActivityStatus = $('#clientSiteActivityStatus').DataTable({
         }
     ]
 });
-
 
 
 $('#rcClientType').on('change', function () {
@@ -163,7 +161,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     "paging": false,
     "footer": true,
     ajax: {
-        url: 'RadioCheckNew?handler=ClientSiteActivityStatus',
+        url: '/RadioCheckNew?handler=ClientSiteActivityStatus',
         datatype: 'json',
         data: function (d) {
             d.clientSiteIds = 'test,';
@@ -187,15 +185,14 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
                     '<a href="#" class="ml-2"><i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i></a>';
             }
-        },   
-
+        },
         {
             data: 'logBook',
             width: '9%',
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
-                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + value + '] ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i>';
+                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#"  id="btnLogBookDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" text="' + data.clientSiteId + '"><input type="hidden" id="GuardId" text="' + data.guardId + '"> ';
             }
         }, 
         {
@@ -204,7 +201,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
-                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + value + '] ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i>';
+                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#" id="btnKeyVehicleDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
             }
         },   
         {
@@ -213,7 +210,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
-                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + value + '] ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i>';
+                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#" id="btnIncidentReportdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '"> ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
             }
         },   
        
@@ -241,7 +238,6 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
 
 
-
 let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
     ordering: true,
@@ -257,7 +253,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
     "paging": false,
     "footer": true,
     ajax: {
-        url: 'RadioCheckNew?handler=ClientSiteInActivityStatus',
+        url: '/RadioCheckNew?handler=ClientSiteInActivityStatus',
         datatype: 'json',
         data: function (d) {
             d.clientSiteIds = 'test,';
@@ -324,7 +320,7 @@ $('#guardInfoModal').on('shown.bs.modal', function (event) {
     const id = button.data('id');
 
     $.ajax({
-        url: 'RadioCheckNew?handler=GuardData',
+        url: '/RadioCheckNew?handler=GuardData',
         data: { id: id },
         type: 'GET',
     }).done(function (result) {
@@ -344,3 +340,371 @@ const renderGuardInitialColumn = function (value, record, $cell, $displayEl) {
     }
     else return value;
 }
+
+
+/*to get the guards that are not available-start*/
+$('#btnNonActiveList').on('click', function () {
+    window.open("../NonActiveGuards")
+});
+let clientSiteNotAvailableGuards = $('#clientSiteNotAvailableGuards').DataTable({
+    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+    ordering: true,
+    "columnDefs": [
+        { "visible": false, "targets": 1 } // Hide the group column initially
+    ],
+    order: [[groupColumn, 'asc']],
+    info: false,
+    searching: true,
+    autoWidth: false,
+    fixedHeader: true,
+    "scrollY": "300px", // Set the desired height for the scrollable area
+    "paging": false,
+    "footer": true,
+    ajax: {
+        url: '/RadioCheckNew?handler=ClientSiteNotAvailableStatus',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteIds = 'test,';
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'clientSiteId', visible: false },
+        {
+            data: 'siteName',
+            width: '20%',
+            render: function (value, type, data) {
+
+                return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
+            }
+        },
+        {
+            data: 'guardName',
+            width: '20%',
+            render: function (value, type, data) {
+                return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                    '<a href="#" class="ml-2"><i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i></a>';
+            }
+        },
+
+        {
+            data: 'guardLastLoginDate',
+            width: '9%',
+            className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return '<i class="fa fa-clock-o text-success rc-client-status"></i> ' + value;
+            }
+        },
+
+    ],
+    drawCallback: function () {
+        var api = this.api();
+        var rows = api.rows({ page: 'current' }).nodes();
+        var last = null;
+
+        api.column(groupColumn, { page: 'current' })
+            .data()
+            .each(function (group, i) {
+                if (last !== group) {
+                    $(rows)
+                        .eq(i)
+                        .before('<tr class="group bg-info text-white"><td colspan="25">' + group + '</td></tr>');
+
+                    last = group;
+                }
+            });
+    },
+});
+
+/*to get the guards that are not available-start*/
+
+/* for logbook details of the guard-start*/
+
+let clientSiteActiveGuardsLogBookDetails = $('#clientSiteActiveGuardsLogBookDetails').DataTable({
+    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+    ordering: true,
+    "columnDefs": [
+        { "visible": false, "targets": 1 } // Hide the group column initially
+    ],
+    order: [[groupColumn, 'asc']],
+    info: false,
+    searching: true,
+    autoWidth: false,
+    fixedHeader: true,
+    "scrollY": "300px", // Set the desired height for the scrollable area
+    "paging": false,
+    "footer": true,
+    ajax: {
+        url: '/RadioCheckNew?handler=ClientSitelogBookActivityStatus',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteId = $('#txtClientSiteId').val();
+            d.guardId = $('#txtGuardId').val();
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'id', visible: false },
+        {
+            data: 'siteName',
+            width: '20%',
+            render: function (value, type, data) {
+
+                return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
+            }
+        },
+        {
+            data: 'logBookId',
+            width: '20%',
+            visible:false,
+
+        },
+
+        {
+            data: 'activity',
+            width: '9%',
+            className: "text-center",
+           
+        },
+        {
+            data: 'logBookCreatedTime',
+            width: '9%',
+            className: "text-center",
+
+        },
+
+
+    ],
+    drawCallback: function () {
+        var api = this.api();
+        var rows = api.rows({ page: 'current' }).nodes();
+        var last = null;
+
+        api.column(groupColumn, { page: 'current' })
+            .data()
+            .each(function (group, i) {
+                if (last !== group) {
+                    $(rows)
+                        .eq(i)
+                        .before('<tr class="group bg-info text-white"><td colspan="25">' + group + '</td></tr>');
+
+                    last = group;
+                }
+            });
+    },
+});
+
+$('#clientSiteActiveGuards tbody').on('click', '#btnLogBookDetailsByGuard', function (value, record) {
+    $('#guardLogBookInfoModal').modal('show');
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
+    var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    // $('#lbl_GuardActivityHeader').val($(this).closest("tr").find("td").eq(2).text() + 'Log Book Details');
+    $('#lbl_GuardActivityHeader').text(GuardName + '-' + 'Log Book Details');
+    clientSiteActiveGuardsLogBookDetails.ajax.reload();
+    
+});
+/*for logbook details of the guard - end*/
+
+/* for key vehicle details of the guard-start*/
+
+let clientSiteActiveGuardsKeyVehicleDetails = $('#clientSiteActiveGuardsKeyVehicleDetails').DataTable({
+    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+    ordering: true,
+    "columnDefs": [
+        { "visible": false, "targets": 1 } // Hide the group column initially
+    ],
+    order: [[groupColumn, 'asc']],
+    info: false,
+    searching: true,
+    autoWidth: false,
+    fixedHeader: true,
+    "scrollY": "300px", // Set the desired height for the scrollable area
+    "paging": false,
+    "footer": true,
+    ajax: {
+        url: '/RadioCheckNew?handler=ClientSiteKeyVehicleLogActivityStatus',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteId = $('#txtClientSiteId').val();
+            d.guardId = $('#txtGuardId').val();
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'id', visible: false },
+        {
+            data: 'siteName',
+            width: '20%',
+            render: function (value, type, data) {
+
+                return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
+            }
+        },
+        {
+            data: 'keyVehicleId',
+            width: '20%',
+            visible: false
+
+        },
+        {
+            data: 'truckNo',
+            width: '20%'
+
+        },
+        {
+            data: 'individual',
+            width: '20%'
+
+        },
+        {
+            data: 'company',
+            width: '20%'
+
+        },
+
+        {
+            data: 'activity',
+            width: '9%',
+            className: "text-center",
+            
+        },
+        {
+            data: 'keyVehicleLogCreatedTime',
+            width: '9%',
+            className: "text-center",
+
+        },
+
+
+    ],
+    drawCallback: function () {
+        var api = this.api();
+        var rows = api.rows({ page: 'current' }).nodes();
+        var last = null;
+
+        api.column(groupColumn, { page: 'current' })
+            .data()
+            .each(function (group, i) {
+                if (last !== group) {
+                    $(rows)
+                        .eq(i)
+                        .before('<tr class="group bg-info text-white"><td colspan="25">' + group + '</td></tr>');
+
+                    last = group;
+                }
+            });
+    },
+});
+
+$('#clientSiteActiveGuards tbody').on('click', '#btnKeyVehicleDetailsByGuard', function (value, record) {
+    $('#guardKeyVehicleInfoModal').modal('show');
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
+    var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    // $('#lbl_GuardActivityHeader').val($(this).closest("tr").find("td").eq(2).text() + 'Log Book Details');
+    $('#lbl_GuardActivityHeader1').text(GuardName + '-' + 'Key Vehicle Log Details');
+    clientSiteActiveGuardsKeyVehicleDetails.ajax.reload();
+
+});
+/*for key vehicle details of the guard - end*/
+
+/* for incident report details of the guard-start*/
+
+let clientSiteActiveGuardsIncidentReportsDetails = $('#clientSiteActiveGuardsIncidentReportsDetails').DataTable({
+    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+    ordering: true,
+    "columnDefs": [
+        { "visible": false, "targets": 1 } // Hide the group column initially
+    ],
+    order: [[groupColumn, 'asc']],
+    info: false,
+    searching: true,
+    autoWidth: false,
+    fixedHeader: true,
+    "scrollY": "300px", // Set the desired height for the scrollable area
+    "paging": false,
+    "footer": true,
+    ajax: {
+        url: '/RadioCheckNew?handler=ClientSiteIncidentReportActivityStatus',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteId = $('#txtClientSiteId').val();
+            d.guardId = $('#txtGuardId').val();
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'id', visible: false },
+        {
+            data: 'siteName',
+            width: '20%',
+            render: function (value, type, data) {
+
+                return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
+            }
+        },
+        {
+            data: 'incidentReportId',
+            width: '10%',
+            visible: false
+
+        },
+        {
+            data: 'fileName',
+            width: '20%'
+
+        },
+
+        {
+            data: 'activity',
+            width: '9%',
+            className: "text-center",
+           
+        },
+        {
+            data: 'incidentReportCreatedTime',
+            width: '9%',
+            className: "text-center",
+
+        },
+
+
+    ],
+    drawCallback: function () {
+        var api = this.api();
+        var rows = api.rows({ page: 'current' }).nodes();
+        var last = null;
+
+        api.column(groupColumn, { page: 'current' })
+            .data()
+            .each(function (group, i) {
+                if (last !== group) {
+                    $(rows)
+                        .eq(i)
+                        .before('<tr class="group bg-info text-white"><td colspan="25">' + group + '</td></tr>');
+
+                    last = group;
+                }
+            });
+    },
+});
+
+$('#clientSiteActiveGuards tbody').on('click', '#btnIncidentReportdetails', function (value, record) {
+    $('#guardIncidentReportsInfoModal').modal('show');
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
+    var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    // $('#lbl_GuardActivityHeader').val($(this).closest("tr").find("td").eq(2).text() + 'Log Book Details');
+    $('#lbl_GuardActivityHeader2').text(GuardName + '-' + 'Incident Report Details');
+    clientSiteActiveGuardsIncidentReportsDetails.ajax.reload();
+
+});
+/*for incident report details of the guard - end*/
