@@ -2604,7 +2604,7 @@
             
                 
                     $('#txt_securityLicenseNoIR').val('');
-            $('#modelGuardLoginConIR').modal('hide');
+          
             $.ajax({
                 url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
                 type: 'POST',
@@ -2622,7 +2622,7 @@
                     window.location.href = '/Incident/Register';
                 }
                 else {
-                    $('#txt_securityLicenseNo').val('');
+                    $('#txt_securityLicenseNoIR').val('');
                     if (result.successCode === 0) {
                         displayGuardValidationSummary('GuardLoginValidationSummaryIR', result.successMessage);
                     }
