@@ -244,9 +244,9 @@ namespace CityWatch.Web.Pages.Guard
                 KeyVehicleLogAuditHistory keyVehicleLogAuditHistory = null;
                 keyVehicleLogAuditHistory = GetKvlAuditHistory(KeyVehicleLog);
                 _guardLogDataProvider.SaveKeyVehicleLog(KeyVehicleLog);
-               
-            
 
+
+                //logBookId entry for radio checklist-start
                 //var gaurdlogin = _clientDataProvider.GetGuardLogin(KeyVehicleLog.GuardLoginId, KeyVehicleLog.ClientSiteLogBookId);
                 //if (gaurdlogin.Count != 0)
                 //{
@@ -272,7 +272,7 @@ namespace CityWatch.Web.Pages.Guard
                 //};
 
                 //_guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
-                
+
                 //logBookId entry for radio checklist-end
                 var img = _guardLogDataProvider.GetCompanyDetails();
                 string imagepath = null;
@@ -960,7 +960,9 @@ namespace CityWatch.Web.Pages.Guard
                     ProfileId = vehicleKeyLogProfile.ProfileId,
                     CompanyName = vehicleKeyLogProfile.CompanyName,
                     PersonType = vehicleKeyLogProfile.PersonType,
-                    PersonName = personName
+                    PersonName = personName,
+
+                    IsBDM=true
                 });
             }
             catch (Exception ex)
