@@ -1,0 +1,658 @@
+﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+a.navbar-brand {
+    white-space: normal;
+    text-align: center;
+    word-break: break-all;
+}
+
+/* Provide sufficient contrast against white background */
+a {
+    color: #0366d6;
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: #1b6ec2;
+    border-color: #1861ac;
+}
+
+.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+    color: #fff;
+    background-color: #1b6ec2;
+    border-color: #1861ac;
+}
+
+.form-group label {
+    font-weight: 500;
+}
+
+span.field-validation-error,
+.validation-summary-errors {
+    color: #dc3545;
+    font-size: smaller;
+}
+
+html {
+    font-size: 14px !important;
+}
+
+.border-top {
+    border-top: 1px solid #e5e5e5;
+}
+
+.border-bottom {
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.box-shadow {
+    box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    /* Margin bottom by footer height */
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+}
+
+.footer {
+    width: 100%;
+    white-space: nowrap;
+    line-height: 60px; /* Vertically center the text there */
+}
+
+input[type=datetime-local] {
+    width: 80%;
+}
+
+img.img-body-cam {
+    max-width: 80% !important;
+    height: auto;
+}
+
+td.gj-grid-management-column i.gj-icon {
+    font-size: 1rem;
+}
+
+    td.gj-grid-management-column i.gj-icon.pencil,
+    td.gj-grid-management-column i.gj-icon.cancel {
+        color: #007bff;
+    }
+
+    td.gj-grid-management-column i.gj-icon.delete {
+        color: #dc3545;
+    }
+
+    td.gj-grid-management-column i.gj-icon.check-circle {
+        color: #28a745;
+    }
+
+.es-list {
+    max-height: 320px !important;
+}
+
+.form-control {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+a.cws-footer-link,
+a.cws-footer-link :hover,
+a.cws-footer-link :visited {
+    color: #EA6326;
+    text-decoration: none;
+}
+
+.bg-cws-orange {
+    background-color: #EA6326;
+}
+
+#loader,
+#loader-p {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    background: rgba(0,0,0,0.5) url(../images/loading.gif) no-repeat center center;
+    z-index: 1000;
+}
+
+.wand-scan-subtext {
+    display: block;
+    font-size: 13.5px;
+}
+
+.fw-bold {
+    font-weight: 500;
+}
+
+.tbl-settings thead th {
+    background-color: #f5f5f5;
+}
+
+#client_type_settings th:last-child,
+#client_site_settings th:last-child {
+    width: 180px !important;
+}
+
+#ucaTreeView {
+    max-height: 60vh;
+    overflow-y: scroll;
+}
+
+#events-list {
+    padding-left: 1rem;
+}
+
+.event-type-check {
+    padding-left: 0px;
+    margin-bottom: 0.8rem;
+}
+
+    .event-type-check > .form-check-label {
+        width: 92%;
+    }
+
+.event-type {
+    margin-left: 0.8rem;
+}
+
+i.client-status-circle {
+    color: rgba(0,0,0,.4);
+}
+
+.container.slogan {
+    width: 100%;
+}
+
+/* -- media -- */
+@media (min-width: 1024px) {
+    .container.slogan {
+        width: 50%;
+    }
+
+    #Report_SiteColourCodeId {
+        width: 30% !important;
+    }
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 14px !important;
+    }
+
+    .footer {
+        line-height: 60px !important;
+    }
+
+    .event-type-check > .form-check-label {
+        width: 98%;
+        font-size: 0.97rem;
+    }
+}
+
+@media screen and (width: 768px) {
+    .col-ipad-100 {
+        -ms-flex: 0 0 100%;
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    .col-ipad-50 {
+        -ms-flex: 0 0 50%;
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+
+    .col-ipad-30 {
+        -ms-flex: 0 0 33.33%;
+        flex: 0 0 33.33%;
+        max-width: 33.33%;
+    }
+
+    .col-ipad-25 {
+        -ms-flex: 0 0 25%;
+        flex: 0 0 25%;
+        max-width: 25%;
+    }
+}
+
+/* -- patrol data report -- */
+
+.full-width {
+    width: 99vw; /* 100vw is adding a horizontal page scroll */
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    padding-left: 5%;
+    padding-right: 5%;
+}
+
+#monthly_patrol_data_wrapper {
+    width: 100%;
+}
+
+#monthly_patrol_data td {
+    white-space: nowrap;
+}
+
+.action-taken {
+    min-width: 350px;
+    white-space: pre-wrap !important;
+}
+
+.alarm {
+    min-width: 80px;
+    white-space: pre-wrap !important;
+}
+
+button.multiselect-option.dropdown-item > .form-check > label {
+    font-weight: 400;
+}
+
+.custom-switch.duty-day-switch .custom-control-label::before {
+    color: #fff;
+    border-color: #17a2b8;
+    background-color: #17a2b8;
+}
+
+.custom-switch.duty-day-switch .custom-control-label::after {
+    background-color: #fff;
+}
+
+.custom-switch.duty-day-switch .custom-control-input:checked ~ .custom-control-label::before {
+    color: #fff;
+    border-color: #007bff;
+    background-color: #007bff;
+}
+
+/* -- daily guard log -- */
+
+.btn-dgl-edit {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    font-size: 13px;
+}
+
+#patrol_cars_log.table td,
+#custom_field_log.table td {
+    padding: 0.5rem
+}
+
+    #patrol_cars_log.table td[data-mode=edit] [data-role=edit] input[type=text],
+    #custom_field_log.table td[data-mode=edit] [data-role=edit] input[type=text] {
+        padding-left: 0px;
+    }
+
+#cs-pocs th:last-child,
+#cs-locations th:last-child {
+    width: 150px !important;
+}
+
+.site-cf-col-lbl {
+    position: relative;
+    width: 100px;
+    padding-right: 0;
+    padding-left: 15px;
+}
+
+.site-cf-col-ctrl {
+    position: relative;
+    width: 150px;
+    padding-right: 0;
+    padding-left: 0;
+    margin-right: 0;
+}
+
+.tel-input-box {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding-left: 0.5rem;
+    overflow: hidden;
+    font-family: sans-serif;
+}
+
+    .tel-input-box .prefix {
+        font-weight: 300;
+        font-size: 14px;
+        color: #495057;
+        min-width: 45px;
+    }
+
+    .tel-input-box input {
+        flex-grow: 1;
+        font-size: 14px;
+        background: #fff;
+        border: none;
+        outline: none;
+        padding: 0.5rem;
+        color: #495057;
+    }
+
+    .tel-input-box:focus-within {
+        color: #495057;
+        background-color: #fff;
+        border-color: #80bdff;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    .tel-input-box > .form-control:focus {
+        box-shadow: 0 0 0 0 !important;
+    }
+
+.btn-duress.btn-md {
+    width: 80px;
+    height: 80px;
+    padding: 7px 10px;
+    border-radius: 40px;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    color: #fff;
+    border: 5px solid #C0C0C0;
+    background-color: #9a0707;
+}
+
+    .btn-duress.btn-md.active {
+        border-color: #C0C0C0 !important;
+        background-color: #ff0000;
+    }
+
+/*  gijgo grid group column set bg-light color */
+tr[role=group] {
+    background-color: #f8f9fa !important;
+}
+
+@media (min-width: 1024px) {
+    .col-md-2-tight {
+        -ms-flex: 0 0 13%;
+        flex: 0 0 13%;
+        max-width: 13%;
+    }
+}
+
+/* -- vehicle key log -- */
+
+.kvl-rec-filter > .btn-outline-primary:hover,
+.kvl-rec-filter.show > .btn-outline-primary {
+    color: #007bff !important;
+    background-color: white !important;
+    border-color: #007bff !important;
+}
+
+table.dataTable td.dt-control:before {
+    font-family: FontAwesome;
+    content: "\f055";
+    color: #28a745;
+    background-color: #fff;
+}
+
+table.dataTable tr.dt-hasChild td.dt-control:before {
+    font-family: FontAwesome;
+    content: "\f056";
+    color: #dc3545;
+    background-color: #fff;
+}
+
+#tbl_kvl_fields th:last-child {
+    width: 180px !important;
+}
+
+#vehicle_key_daily_log_filter {
+    display: none;
+}
+
+#form_new_vehicle_and_key_log label {
+    font-size: 13px;
+}
+
+#key_vehicle_log_profiles tbody tr.selected {
+    background-color: #e5ecf8;
+}
+
+/* -- radio check -- */
+
+.rc-client-status {
+    font-size: 1.25em;
+}
+
+/* -- */
+/* -- DownloadSelecter Page -- */
+#dvDownloadSelecterOuter {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    text-align: center
+}
+
+#dvcompanysop {
+    width: 25%;
+}
+
+#dvtraining {
+    width: 25%;
+}
+
+#dvformsandtemplates {
+    width: 25%;
+}
+
+.center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+}
+
+.centerIcon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+@media (max-width:992px) {
+    #dvDownloadSelecterOuter {
+        flex-direction: column;
+    }
+
+    #dvcompanysop, #dvtraining, #dvformsandtemplates {
+        width: 100%;
+        margin-bottom: 7px;
+    }
+}
+
+.imgIcon {
+    width: 25px;
+    height: 25px;
+}
+
+#container {
+    text-align: center;
+}
+
+.dynamic-link {
+    width: 150px;
+    margin: 3px;
+}
+
+.button-container-div {
+    text-align: center;
+}
+
+.grouped-column {
+    background-color: #EFEFEF; 
+}
+
+/* Dark Mode Change 20/09/2023 Start*/
+.dark-mode {
+    background-color: #333;
+    color: #fff;
+}
+
+    .dark-mode .bg-white {
+        background-color: #333 !important;
+        color: #fff;
+    }
+
+    .dark-mode .bg-cws-orange {
+        background-color: #EA6326 !important;
+    }
+
+    .dark-mode .odd {
+        background-color: #333 !important;
+    }
+
+    .dark-mode table.dataTable tbody tr {
+        background-color: #333 !important;
+    }
+
+    .dark-mode table.dataTable tbody > tr td {
+        background-color: #333 !important;
+    }
+
+    .dark-mode .table-bordered {
+        color: #fff;
+    }
+
+    .dark-mode .modal-content {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        pointer-events: auto;
+        background-color: #333 !important;
+        background-clip: padding-box;
+        border: 1px solid #fff;
+    }
+
+    .dark-mode .es-list {
+        max-height: 320px !important;
+        background-color: #fff;
+        color: #333
+    }
+
+    .dark-mode #list_product {
+        background-color: #fff;
+        color: #333
+    }
+
+    .dark-mode .fa-clipboard {
+        background-color: #fff;
+        color: #333
+    }
+
+    .dark-mode .table-hover tbody tr:hover {
+        color: #fff;
+        background-color: rgba(0,0,0,.075);
+    }
+
+
+    .dark-mode.btn-primary {
+        color: #fff;
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+
+    .dark-mode.fa-sign-out {
+        background-color: transparent !important;
+    }
+
+    .dark-mode a:hover {
+        color: #F36523;
+        text-decoration: none;
+    }
+
+    .dark-mode.bg-cws-orange {
+        background-color: #EA6326 !important;
+    }
+
+    .dark-mode.border-dark {
+        border-color: #fff !important;
+    }
+
+    .dark-mode.d-md-inline-flex {
+        background-color: transparent !important;
+    }
+
+    .dark-mode.fa-search {
+        background-color: transparent !important;
+    }
+
+    .dark-mode.card {
+        border-color: #fff !important;
+    }
+
+    .dark-mode.text-muted {
+        color: #fff !important;
+    }
+
+    .dark-mode.fa-plus {
+        background-color: transparent !important;
+    }
+
+    .dark-mode.list-group-item {
+        color: #333 !important;
+    }
+
+    .dark-mode #Report_SiteColourCodeId {
+        background-color: #4D4746 !important;
+    }
+
+    .dark-mode #kvl_list_plates {
+        color: #4D4746 !important;
+    }
+
+    .dark-mode #myTable th {
+        /* Your CSS styles for <th> elements here */
+        background-color: lightblue;
+        color: white;
+        font-weight: bold;
+    }
+
+    .dark-mode.gj-grid thead th {
+        background-color: #333;
+        color: #fff;
+    }
+
+    .dark-mode.fa-sign-in {
+        background-color: transparent !important;
+    }
+
+    .dark-mode .list-group-item {
+        color: white !important;
+    }
+    .dark-mode #kvl-attachment-list li {
+        color: #333 !important;
+    }
+
+    
+
+
+
+
+
+
+
+
+
+
+
+/* Dark Mode Change 20/09/2023 End*/
+
+
