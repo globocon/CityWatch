@@ -31,6 +31,7 @@ namespace CityWatch.Data.Providers
         void SaveGuardCompliance(GuardCompliance guardCompliance);
         void DeleteGuardCompliance(int id);
         Guard GetGuardDetailsbySecurityLicenseNo(string securityLicenseNo);
+        
     }
 
     public class GuardDataProvider : IGuardDataProvider

@@ -1,0 +1,346 @@
+let nIntervId;
+const duration = 60 * 3;
+
+window.onload = function () {
+    if (document.querySelector('#clockRefresh')) {
+        startClock();
+    }
+};
+
+function startClock() {
+    let timer = duration, minutes, seconds;
+    display = document.querySelector('#clockRefresh');
+    if (!nIntervId) {
+        nIntervId = setInterval(function () {
+            minutes = parseInt(timer / 60, 10);
+            seconds = parseInt(timer % 60, 10);
+
+            minutes = minutes < 10 ? "0" + minutes : minutes;
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+
+            display.textContent = minutes + " min" + " " + seconds + " sec";
+
+            if (--timer < 0) {
+
+                location.reload();
+                //$.ajax({
+                //    url: '/Radio/Check?handler=UpdateLatestActivityStatus',
+                //    type: 'POST',
+                //    dataType: 'json',
+                //    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                //}).done(function () {
+                //    clientSiteActivityStatus.ajax.reload();
+                //    timer = duration;
+                //});
+            }
+        }, 1000);
+    }
+}
+
+$('#btnRefreshActivityStatus').on('click', function () {
+    clearInterval(nIntervId);
+    nIntervId = null;
+    location.reload();
+});
+
+let clientSiteActivityStatus = $('#clientSiteActivityStatus').DataTable({
+    paging: false,
+    ordering: false,
+    info: false,
+    searching: false,
+    fixedColumns: {
+        left: 1
+    },
+    scrollCollapse: true,
+    scrollX: true,
+    autoWidth: false,
+    ajax: {
+        url: '/Radio/Check?handler=ClientSiteActivityStatus',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteIds = $('#rcClientSiteId').val().join(',');
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'activityStatus.clientSite.name' },
+        { data: 'guardLicenseNo' },
+        {
+            data: 'activityStatus.status',
+            width: '9%',
+            className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return value === true ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' : '<i class="fa fa-times-circle text-danger rc-client-status"></i>';
+            }
+        },        
+        { data: 'recentActivity' },
+        {
+            targets: -1,
+            data: null,
+            width: '12%',
+            defaultContent: '',
+            render: function (value, type, data) {
+                if (data.guardLicenseNo !== '-' && data.activityStatus.status === false) {
+                    return '<button name="btnRadioCheckStatus" class="btn btn-outline-primary">Radio Check</button>';
+                }
+            }
+        }
+    ]
+});
+
+
+
+$('#rcClientType').on('change', function () {
+    const clientType = $(this).val().join(';');
+    const clientSiteControl = $('#rcClientSiteId');
+    clientSiteControl.html('');
+    $.ajax({
+        url: '/Radio/Check?handler=ClientSites&type=' + encodeURIComponent(clientType),
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            data.map(function (site) {
+                clientSiteControl.append('<option value="' + site.value + '">' + site.text + '</option>');
+            });
+            clientSiteControl.multiselect('rebuild');
+        }
+    });
+
+});
+
+$('#rcFilterClientSites').on('click', function () {
+    clientSiteActivityStatus.ajax.reload();
+});
+
+$('#clientSiteActivityStatus').on('click', 'button[name="btnRadioCheckStatus"]', function () {
+    var data = clientSiteActivityStatus.row($(this).parents('tr')).data();
+    var rowClientSiteId = data.activityStatus.clientSiteId;
+    var rowGuardId = data.activityStatus.guardId;
+    $('#clientSiteId').val(rowClientSiteId);
+    $('#guardId').val(rowGuardId);
+    $('#selectRadioCheckStatus').modal('show');
+});
+
+$('#btnSaveRadioStatus').on('click', function () {
+    const checkedStatus = $('#selectRadioStatus').val();
+    var clientSiteId = $('#clientSiteId').val();
+    var guardId = $('#guardId').val();
+    if (checkedStatus === '') {
+        return;
+    }
+    $.ajax({
+        url: '/Radio/Check?handler=SaveRadioStatus',
+        type: 'POST',
+        data: {
+            clientSiteId: clientSiteId,
+            guardId: guardId,
+            checkedStatus: checkedStatus,
+        },
+        dataType: 'json',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function () {
+        $('#selectRadioCheckStatus').modal('hide');
+        $('#selectRadioStatus').val('');
+        $('#btnRefreshActivityStatus').trigger('click');
+    });    
+});
+
+/* V2 Changes start 12102023 */
+const groupColumn = 1;
+let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
+    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+    ordering: true,
+    "columnDefs": [
+        { "visible": false, "targets": 1 } // Hide the group column initially
+    ],
+    order: [[groupColumn, 'asc']],
+    info: false,
+    searching: true,
+    autoWidth: false,
+    fixedHeader: true,
+    "scrollY": "300px", // Set the desired height for the scrollable area
+    "paging": false,
+    "footer": true,
+    ajax: {
+        url: 'RadioCheckNew?handler=ClientSiteActivityStatus',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteIds = 'test,';
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'clientSiteId', visible: false },
+        {
+            data: 'siteName',
+            width: '20%',
+            render: function (value, type, data) {
+                
+                return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
+            }
+        },      
+        {
+            data: 'guardName',
+            width: '20%',
+            render: function (value, type, data) {
+                return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                    '<a href="#" class="ml-2"><i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i></a>';
+            }
+        },   
+
+        {
+            data: 'logBook',
+            width: '9%',
+            className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + value + '] ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i>';
+            }
+        }, 
+        {
+            data: 'keyVehicle',
+            width: '9%',
+            className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + value + '] ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i>';
+            }
+        },   
+        {
+            data: 'incidentReport',
+            width: '9%',
+            className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + value + '] ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i>';
+            }
+        },   
+       
+       
+    ],
+    drawCallback: function () {
+        var api = this.api();
+        var rows = api.rows({ page: 'current' }).nodes();
+        var last = null;
+
+        api.column(groupColumn, { page: 'current' })
+            .data()
+            .each(function (group, i) {
+                if (last !== group) {
+                    $(rows)
+                        .eq(i)
+                        .before('<tr class="group bg-info text-white"><td colspan="25">' + group + '</td></tr>');
+
+                    last = group;
+                }
+            });
+    },
+});
+
+
+
+
+
+let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
+    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+    ordering: true,
+    "columnDefs": [
+        { "visible": false, "targets": 1 } // Hide the group column initially
+    ],
+    order: [[groupColumn, 'asc']],
+    info: false,
+    searching: true,
+    autoWidth: false,
+    fixedHeader: true,
+    "scrollY": "300px", // Set the desired height for the scrollable area
+    "paging": false,
+    "footer": true,
+    ajax: {
+        url: 'RadioCheckNew?handler=ClientSiteInActivityStatus',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteIds = 'test,';
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'clientSiteId', visible: false },
+        {
+            data: 'siteName',
+            width: '20%',
+            render: function (value, type, data) {
+
+                return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
+            }
+        },
+        {
+            data: 'guardName',
+            width: '20%',
+            render: function (value, type, data) {
+                return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                    '<a href="#" class="ml-2"><i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i></a>';
+            }
+        },
+
+        {
+            data: 'guardLoginTime',
+            width: '9%',
+            className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return  '<i class="fa fa-clock-o text-success rc-client-status"></i> ' +  value  ;
+            }
+        },
+
+    ],
+    drawCallback: function () {
+        var api = this.api();
+        var rows = api.rows({ page: 'current' }).nodes();
+        var last = null;
+
+        api.column(groupColumn, { page: 'current' })
+            .data()
+            .each(function (group, i) {
+                if (last !== group) {
+                    $(rows)
+                        .eq(i)
+                        .before('<tr class="group bg-info text-white"><td colspan="25">' + group + '</td></tr>');
+
+                    last = group;
+                }
+            });
+    },
+});
+
+
+$('#guardInfoModal').on('shown.bs.modal', function (event) {
+    $('#lbl_guard_name').html('');
+    $('#lbl_guard_security_no').html('');
+    $('#lbl_guard_state').html('');
+    $('#lbl_guard_provider').html('');
+
+    const button = $(event.relatedTarget);
+    const id = button.data('id');
+
+    $.ajax({
+        url: 'RadioCheckNew?handler=GuardData',
+        data: { id: id },
+        type: 'GET',
+    }).done(function (result) {
+        if (result) {
+            $('#lbl_guard_name').html(result.name);
+            $('#lbl_guard_security_no').html(result.securityNo);
+            $('#lbl_guard_state').html(result.state);
+            $('#lbl_guard_email').html(result.email);
+            $('#lbl_guard_mobile').html(result.mobile);
+            $('#lbl_guard_provider').html(result.provider);
+        }
+    });
+});
+const renderGuardInitialColumn = function (value, record, $cell, $displayEl) {
+    if (record.guardId !== null) {
+        return value + '<a href="#" class="ml-2"><i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + record.guardId + '"></i></a>';
+    }
+    else return value;
+}

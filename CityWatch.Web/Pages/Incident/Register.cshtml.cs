@@ -251,7 +251,26 @@ namespace CityWatch.Web.Pages.Incident
                 OfficerPosition = ViewDataService.GetOfficerPositions(OfficerPositionFilter.NonPatrolOnly);
 
             }
+            // to get the guard details while the guard is logging into the system-start
+            if (HttpContext.Session.GetString("GuardId") != null)
+            {
+                var guardList = _ViewDataService.GetGuards().Where(x => x.Id == Convert.ToInt32(HttpContext.Session.GetString("GuardId")));
+                foreach (var item in guardList)
+                {
+                    Report = new IncidentRequest
+                    {
+                        Officer = new Officer
+                        {
 
+                            Phone = item.Mobile,
+                            LicenseNumber = item.SecurityNo,
+                            Email=item.Email,
+
+                        },
+                    };
+                }
+            }
+            // to get the guard details while the guard is logging into the system-end
             return Page();
             /* Code for Re-create the Ir from already existing one 04102023 end*/
         }
@@ -671,7 +690,7 @@ namespace CityWatch.Web.Pages.Incident
             }
             var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Name == Report.DateLocation.ClientType);
             var clientSite = _clientDataProvider.GetClientSites(clientType.Id).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite);
-
+            var PSPFName = _clientDataProvider.GetPSPF().SingleOrDefault(z => z.Name == Report.PSPFName);
             // var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite);
             try
             {
@@ -713,7 +732,8 @@ namespace CityWatch.Web.Pages.Incident
                 PlateId = 0,
                 VehicleRego = null,
                 LogId = AuthUserHelper.LoggedInUserId.GetValueOrDefault(),
-                IncidentReportEventTypes = Report.IrEventTypes.Select(z => new IncidentReportEventType() { EventType = z }).ToList()
+                IncidentReportEventTypes = Report.IrEventTypes.Select(z => new IncidentReportEventType() { EventType = z }).ToList(),
+                PSPFId = PSPFName.Id
             };
 
             if (!reportGenerated)
@@ -733,6 +753,24 @@ namespace CityWatch.Web.Pages.Incident
                 try
                 {
                     _irDataProvider.SaveReport(report);
+
+
+                    //for adding showing the IR information if an IR is created-start
+                    if (HttpContext.Session.GetString("GuardId") != null)
+                    {
+                        var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                        {
+                            ClientSiteId = Convert.ToInt32(report.ClientSiteId),
+                            GuardId = Convert.ToInt32(HttpContext.Session.GetString("GuardId")),
+                            LastIRCreatedTime = DateTime.Now,
+                            IRId = report.Id,
+                            ActivityType = "IR"
+                        };
+                        _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
+                    }
+                  
+                    //for adding showing the IR information if an IR is created-end
+                    HttpContext.Session.Remove("GuardId");
                     if (report.IsPlateLoaded == true)
                     {
                         var incidentreportid = _clientDataProvider.GetMaxIncidentReportId(AuthUserHelper.LoggedInUserId.GetValueOrDefault());

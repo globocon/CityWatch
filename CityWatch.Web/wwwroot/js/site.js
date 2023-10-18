@@ -541,13 +541,27 @@
         } else if (selFieldTypeId === '1') { // Position
             $('#fieldSettings').hide();
             $('#positionSettings').show();
+            $('#PSPFSettings').hide();
 
             gridReportFields.clear();
             gridPositions.reload();
-        } else {
-            $('#fieldSettings').show();
+            gridPSPF.clear();
+        }
+        else if (selFieldTypeId === '5') {
+            $('#PSPFSettings').show();
+            $('#fieldSettings').hide();
             $('#positionSettings').hide();
 
+            gridPositions.clear();
+            gridReportFields.clear();
+            gridPSPF.reload();
+        }
+        else {
+            $('#fieldSettings').show();
+            $('#positionSettings').hide();
+            $('#PSPFSettings').hide();
+
+            gridPSPF.clear();
             gridPositions.clear();
             gridReportFields.reload({ typeId: selFieldTypeId });
         }
@@ -900,7 +914,81 @@
         }
     });
 
+    /* code added for PSPF subfields start*/
+    
 
+    $('#add_PSPF_settings').on('click', function () {
+        if (isPSPFAdding) {
+            alert('Unsaved changes in the grid. Refresh the page');
+        } else {
+            isPSPFAdding = true;
+            gridPSPF.addRow({
+                'id': -1,
+                'ReferenceNo':'',
+                'name': '',
+                'isDefault': ''
+            }).edit(-1);
+        }
+    });
+    let gridPSPF;
+
+    gridPSPF = $('#PSPF_settings').grid({
+        dataSource: '/Admin/Settings?handler=PSPF',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        inlineEditing: { mode: 'command' },
+        columns: [
+            { field: 'referenceNo', title: 'Reference No', width: 200, editor: false },
+            { field: 'name', title: 'Name', width: 250, editor: true },
+            { field: 'isDefault', title: 'Default', type: 'checkbox', align: 'center', width: 100, editor: true }
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+    let isPSPFAdding = false;
+   
+    if (gridPSPF) {
+        gridPSPF.on('rowDataChanged', function (e, id, record) {
+            const data = $.extend(true, {}, record);
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '/Admin/Settings?handler=SavePSPF',
+                data: { record: data },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function () {
+                gridPSPF.reload();
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isPSPFAdding)
+                    isPSPFAdding = false;
+            });
+        });
+
+        gridPSPF.on('rowRemoving', function (e, id, record) {
+            if (confirm('Are you sure want to delete this field?')) {
+                const token = $('input[name="__RequestVerificationToken"]').val();
+                $.ajax({
+                    url: '/Admin/Settings?handler=DeletePSPF',
+                    data: { id: record },
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': token },
+                }).done(function () {
+                    gridPSPF.reload();
+                }).fail(function () {
+                    console.log('error');
+                }).always(function () {
+                    if (isPSPFAdding)
+                        isPSPFAdding = false;
+                });
+            }
+        });
+    }
+
+    /* code added for PSPF subfields stop*/
 
     /****** Report tools end *******/
 

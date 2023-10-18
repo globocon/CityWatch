@@ -827,7 +827,10 @@ namespace CityWatch.Web.Pages.Admin
                             SuccessMessage = "Guard is inactive";
                         }
                     }
-                    if (type == "IR")
+
+
+                    if(type=="IR")
+
                     {
                         /* Store the value of the Guard Id to seesion for create the Ir from the session-start */
                         HttpContext.Session.SetString("GuardId", guard.Id.ToString());

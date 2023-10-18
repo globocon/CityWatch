@@ -2644,8 +2644,10 @@
         else {
 
 
+
             $('#txt_securityLicenseNoIR').val('');
             $('#modelGuardLoginConIR').modal('hide');
+
             $.ajax({
                 url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
                 type: 'POST',
@@ -2663,14 +2665,18 @@
                     window.location.href = '/Incident/Register';
                 }
                 else {
+
                     $('#txt_securityLicenseNo').val('');
+                    $('#txt_securityLicenseNoIR').val('');
                     if (result.successCode === 0) {
                         displayGuardValidationSummary('GuardLoginValidationSummaryIR', result.successMessage);
                     }
                 }
             });
 
-            clearGuardValidationSummary('GuardLoginValidationSummaryIR');
+            
+                   clearGuardValidationSummary('GuardLoginValidationSummaryIR');
+                
 
 
         }
@@ -2698,7 +2704,9 @@
                     $('#modelGuardLoginConRC').modal('hide');
                     clearGuardValidationSummary('GuardLoginValidationSummaryRC');
                     $('#Access_permission_RC_status').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Redirecting to Radio Checklist (RC). Please wait...').show();
-                    window.location.href = '/Radio/Check';
+
+                    /*window.location.href = '/Radio/Check';*/
+                    window.location.href = 'https://localhost:7083/RadioCheckNew?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
 
                 }
                 else {

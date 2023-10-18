@@ -165,3 +165,202 @@ $('#btnSaveRadioStatus').on('click', function () {
         $('#btnRefreshActivityStatus').trigger('click');
     });    
 });
+
+/* V2 Changes start 12102023 */
+const groupColumn = 1;
+let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
+    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+    ordering: true,
+    "columnDefs": [
+        { "visible": false, "targets": 1 } // Hide the group column initially
+    ],
+    order: [[groupColumn, 'asc']],
+    info: false,
+    searching: true,
+    autoWidth: false,
+    fixedHeader: true,
+    "scrollY": "300px", // Set the desired height for the scrollable area
+    "paging": false,
+    "footer": true,
+    ajax: {
+        url: '/Radio/RadioCheckNew?handler=ClientSiteActivityStatus',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteIds = 'test,';
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'clientSiteId', visible: false },
+        {
+            data: 'siteName',
+            width: '20%',
+            render: function (value, type, data) {
+                
+                return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
+            }
+        },      
+        {
+            data: 'guardName',
+            width: '20%',
+            render: function (value, type, data) {
+                return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                    '<a href="#" class="ml-2"><i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i></a>';
+            }
+        },   
+
+        {
+            data: 'logBook',
+            width: '9%',
+            className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + value + '] ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i>';
+            }
+        }, 
+        {
+            data: 'keyVehicle',
+            width: '9%',
+            className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + value + '] ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i>';
+            }
+        },   
+        {
+            data: 'incidentReport',
+            width: '9%',
+            className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + value + '] ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i>';
+            }
+        },   
+       
+       
+    ],
+    drawCallback: function () {
+        var api = this.api();
+        var rows = api.rows({ page: 'current' }).nodes();
+        var last = null;
+
+        api.column(groupColumn, { page: 'current' })
+            .data()
+            .each(function (group, i) {
+                if (last !== group) {
+                    $(rows)
+                        .eq(i)
+                        .before('<tr class="group bg-info text-white"><td colspan="25">' + group + '</td></tr>');
+
+                    last = group;
+                }
+            });
+    },
+});
+
+
+
+
+
+let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
+    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+    ordering: true,
+    "columnDefs": [
+        { "visible": false, "targets": 1 } // Hide the group column initially
+    ],
+    order: [[groupColumn, 'asc']],
+    info: false,
+    searching: true,
+    autoWidth: false,
+    fixedHeader: true,
+    "scrollY": "300px", // Set the desired height for the scrollable area
+    "paging": false,
+    "footer": true,
+    ajax: {
+        url: '/Radio/RadioCheckNew?handler=ClientSiteInActivityStatus',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteIds = 'test,';
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'clientSiteId', visible: false },
+        {
+            data: 'siteName',
+            width: '20%',
+            render: function (value, type, data) {
+
+                return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
+            }
+        },
+        {
+            data: 'guardName',
+            width: '20%',
+            render: function (value, type, data) {
+                return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                    '<a href="#" class="ml-2"><i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i></a>';
+            }
+        },
+
+        {
+            data: 'guardLoginTime',
+            width: '9%',
+            className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return  '<i class="fa fa-clock-o text-success rc-client-status"></i> ' +  value  ;
+            }
+        },
+
+    ],
+    drawCallback: function () {
+        var api = this.api();
+        var rows = api.rows({ page: 'current' }).nodes();
+        var last = null;
+
+        api.column(groupColumn, { page: 'current' })
+            .data()
+            .each(function (group, i) {
+                if (last !== group) {
+                    $(rows)
+                        .eq(i)
+                        .before('<tr class="group bg-info text-white"><td colspan="25">' + group + '</td></tr>');
+
+                    last = group;
+                }
+            });
+    },
+});
+
+
+$('#guardInfoModal').on('shown.bs.modal', function (event) {
+    $('#lbl_guard_name').html('');
+    $('#lbl_guard_security_no').html('');
+    $('#lbl_guard_state').html('');
+    $('#lbl_guard_provider').html('');
+
+    const button = $(event.relatedTarget);
+    const id = button.data('id');
+
+    $.ajax({
+        url: '/Admin/AuditSiteLog?handler=GuardData',
+        data: { id: id },
+        type: 'GET',
+    }).done(function (result) {
+        if (result) {
+            $('#lbl_guard_name').html(result.name);
+            $('#lbl_guard_security_no').html(result.securityNo);
+            $('#lbl_guard_state').html(result.state);
+            $('#lbl_guard_email').html(result.email);
+            $('#lbl_guard_mobile').html(result.mobile);
+            $('#lbl_guard_provider').html(result.provider);
+        }
+    });
+});
+const renderGuardInitialColumn = function (value, record, $cell, $displayEl) {
+    if (record.guardId !== null) {
+        return value + '<a href="#" class="ml-2"><i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + record.guardId + '"></i></a>';
+    }
+    else return value;
+}

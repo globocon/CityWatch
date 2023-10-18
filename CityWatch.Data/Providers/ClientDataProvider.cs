@@ -30,6 +30,7 @@ namespace CityWatch.Data.Providers
     {
         List<ClientSite> GetUserClientSites(string type, string searchTerm);
         List<ClientType> GetClientTypes();
+        List<IncidentReportPSPF> GetPSPF();
         void SaveClientType(ClientType clientType);
         void DeleteClientType(int id);
         List<ClientSite> GetClientSites(int? typeId);
@@ -82,9 +83,14 @@ namespace CityWatch.Data.Providers
         int DeleteClientSiteLinksPageType(int typeId);
         int DeleteFeedBackType(int typeId);
         List<KeyVehcileLogField> GetKeyVehicleLogFieldsByTruckId(int TruckConfig);
+        List<GuardLogin> GetGuardLogin(int GuardLoginId,int logBookId);
+        List<GuardLog> GetGuardLogs(int GuardLoginId, int logBookId);
+
+
         ClientSite GetClientSitesUsingName(string name);
 
         List<ClientSite> GetClientSiteDetails(int[] clientSiteIds);
+        List<ClientSiteRadioChecksActivityStatus> GetClientSiteRadioChecksActivityStatus(int GuardId, int ClientSiteId);
 
     }
 
@@ -117,7 +123,12 @@ namespace CityWatch.Data.Providers
         {
             return _context.ClientTypes.OrderBy(x => x.Name).ToList();
         }
-
+        //code added to PSPF Dropdown start
+        public List<IncidentReportPSPF> GetPSPF()
+        {
+            return _context.IncidentReportPSPF.OrderBy(z => z.ReferenceNo).ToList();
+        }
+        //code added to PSPF Dropdown stop
         public void SaveClientType(ClientType clientType)
         {
             if (clientType == null)
@@ -999,6 +1010,31 @@ namespace CityWatch.Data.Providers
                 .ToList();
         }
 
+        //logBookId entry for radio checklist-start
+    
+        public List<GuardLogin> GetGuardLogin(int GuardLoginId,int logBookId)
+        {
+            return _context.GuardLogins
+                .Where(z => z.Id == GuardLoginId && z.ClientSiteLogBookId== logBookId)
+                
+                .ToList();
+        }
+        public List<GuardLog> GetGuardLogs(int GuardLoginId, int logBookId)
+        {
+            return _context.GuardLogs
+                .Where(z => z.GuardLoginId == GuardLoginId && z.ClientSiteLogBookId == logBookId)
+
+                .ToList();
+        }
+
+        public List<ClientSiteRadioChecksActivityStatus> GetClientSiteRadioChecksActivityStatus(int GuardId,int ClientSiteId)
+        {
+            return _context.ClientSiteRadioChecksActivityStatus
+                .Where(z => z.GuardId == GuardId && z.ClientSiteId==ClientSiteId && z.GuardLoginTime !=null)
+
+                .ToList();
+        }
+        //logBookId entry for radio checklist-end
 
     }
 }

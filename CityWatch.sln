@@ -15,6 +15,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CityWatch.Common.Tests", "C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CityWatch.Data.Tests", "CityWatch.Data.Tests\CityWatch.Data.Tests.csproj", "{A3071D45-C78B-4046-ACBD-479989CD4A21}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CityWatch.RadioCheck", "CityWatch.RadioCheck\CityWatch.RadioCheck.csproj", "{42BE1E6B-9F44-402C-89E4-91E31C610C69}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{A3071D45-C78B-4046-ACBD-479989CD4A21}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A3071D45-C78B-4046-ACBD-479989CD4A21}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A3071D45-C78B-4046-ACBD-479989CD4A21}.Release|Any CPU.Build.0 = Release|Any CPU
+		{42BE1E6B-9F44-402C-89E4-91E31C610C69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42BE1E6B-9F44-402C-89E4-91E31C610C69}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{42BE1E6B-9F44-402C-89E4-91E31C610C69}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42BE1E6B-9F44-402C-89E4-91E31C610C69}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

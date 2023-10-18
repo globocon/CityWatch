@@ -35,6 +35,7 @@ namespace CityWatch.Data
         public DbSet<ClientSiteSmartWand> ClientSiteSmartWands { get; set; }
         public DbSet<GuardLogin> GuardLogins { get; set; }
         public DbSet<IncidentReportPosition> IncidentReportPositions { get; set; }
+        public DbSet<IncidentReportPSPF> IncidentReportPSPF { get; set; }
         public DbSet<KpiSendScheduleSummaryNote> KpiSendScheduleSummaryNotes { get; set; }
         public DbSet<IncidentReportEventType> IncidentReportEventTypes { get; set; }
         public DbSet<KeyVehicleLog> KeyVehicleLogs { get; set; }
@@ -62,6 +63,9 @@ namespace CityWatch.Data
         public DbSet<ClientSiteLinksPageType> ClientSiteLinksPageType { get; set; }
         public DbSet<ClientSiteLinksDetails> ClientSiteLinksDetails { get; set; }
         public DbSet<ClientSiteRadioChecksActivityStatus> ClientSiteRadioChecksActivityStatus { get; set; }
+        public DbSet<RadioCheckListGuardData> RadioCheckListGuardData { get; set; }
+        public DbSet<RadioCheckListInActiveGuardData> RadioCheckListInActiveGuardData { get; set; }
+
 
     }
 }

@@ -39,7 +39,8 @@ using iText.Layout;
 using iText.Layout.Borders;
 using iText.Layout.Element;
 using iText.Layout.Properties;
-
+using Serilog;
+using static Dropbox.Api.TeamLog.EventCategory;
 
 namespace CityWatch.Web.Pages.Guard
 {
@@ -243,6 +244,36 @@ namespace CityWatch.Web.Pages.Guard
                 KeyVehicleLogAuditHistory keyVehicleLogAuditHistory = null;
                 keyVehicleLogAuditHistory = GetKvlAuditHistory(KeyVehicleLog);
                 _guardLogDataProvider.SaveKeyVehicleLog(KeyVehicleLog);
+
+
+                //logBookId entry for radio checklist-start
+                //var gaurdlogin = _clientDataProvider.GetGuardLogin(KeyVehicleLog.GuardLoginId, KeyVehicleLog.ClientSiteLogBookId);
+                //if (gaurdlogin.Count != 0)
+                //{
+                //    foreach (var item in gaurdlogin)
+                //    {
+                //        var logbookcl = new GuardLogin();
+
+                //        //logbookcl.Id = item.Id;
+                //        logbookcl.ClientSiteId = item.ClientSiteId;
+                //        logbookcl.GuardId = item.GuardId;
+
+                //        KeyVehicleLog.GuardLogin = logbookcl;
+                //    }
+                //}
+
+                //var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                //{
+                //    ClientSiteId = KeyVehicleLog.GuardLogin.ClientSiteId,
+                //    GuardId = KeyVehicleLog.GuardLogin.GuardId,
+                //    LastKVCreatedTime = DateTime.Now,
+                //    KVId = KeyVehicleLog.Id,
+                //    ActivityType = "KV"
+                //};
+
+                //_guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
+
+                //logBookId entry for radio checklist-end
                 var img = _guardLogDataProvider.GetCompanyDetails();
                 string imagepath = null;
                 foreach (var item in img)
@@ -929,7 +960,9 @@ namespace CityWatch.Web.Pages.Guard
                     ProfileId = vehicleKeyLogProfile.ProfileId,
                     CompanyName = vehicleKeyLogProfile.CompanyName,
                     PersonType = vehicleKeyLogProfile.PersonType,
-                    PersonName = personName
+                    PersonName = personName,
+
+                    IsBDM=true
                 });
             }
             catch (Exception ex)
