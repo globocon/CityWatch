@@ -69,5 +69,6 @@ namespace CityWatch.Data.Models
 
         [ForeignKey("GuardId")]
         public Guard Guard { get; set; }
+        public string LicenseTypeName { get; set; }
     }
 }
