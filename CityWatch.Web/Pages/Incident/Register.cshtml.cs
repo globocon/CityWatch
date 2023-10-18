@@ -773,7 +773,7 @@ namespace CityWatch.Web.Pages.Incident
                     //    };
                     //    _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
                     //}
-                  
+
                     //for adding showing the IR information if an IR is created-end
                     HttpContext.Session.Remove("GuardId");
                     if (report.IsPlateLoaded == true)

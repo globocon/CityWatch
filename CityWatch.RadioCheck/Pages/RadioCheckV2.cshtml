@@ -21,6 +21,9 @@
     <div class="col-md-12">
     </div>
 </div>
+@*----------------Hidden Inputs---------------------*@
+<input type="hidden" id="txtClientSiteId" />
+<input type="hidden" id="txtGuardId" />
 <!-----------------In Acive List -------------------->
 
 <div class="card">
@@ -69,6 +72,8 @@
                             <th>ClientSiteId</th>
                             <th>Site Name</th>
                             <th>Site Name/Guard</th>
+                            
+
                             <th>LB</th>
                             <th>KV</th>
                             <th>IR</th>
@@ -79,6 +84,7 @@
                             <th>ClientSiteId</th>
                             <th>Site Name</th>
                             <th>Site Name/Guard</th>
+                            
                             <th>LB</th>
                             <th>KV</th>
                             <th>IR</th>
@@ -86,6 +92,19 @@
                         <!-- Footer content here (will be styled to look like the header) -->
                     </tfoot>
                 </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*------------------Non Active List------------------*@
+
+<div class="card">
+    <h4 class="card-header">Guards Not Active</h4>
+    <div class="card-body" id="events-list">
+        <div class="row mt-2">
+            <div class="col-md-12 text-center">
+                <a id="btnNonActiveList" href="../Pages/Radio/RadioCheckNew.cshtml" target="_blank">Click here to view </a>
             </div>
         </div>
     </div>
@@ -134,7 +153,120 @@
         </div>
     </div>
 </div>
-@section PageHeader {
-    <h3 class="text-center">RADIO CHECK</h3>
-    }
+
+<!----------------- Log Book,Key Vehicle And Incident Reports Details Modal -------------------->
+<div class="modal" tabindex="-1" role="dialog" id="guardLogBookInfoModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><i class="fa fa-vcard-o mr-2"></i><label id="lbl_GuardActivityHeader"></label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <table id="clientSiteActiveGuardsLogBookDetails" class="table table-bordered" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>Id</th>
+                                    <th>SiteName</th>
+                                    <th>LogBook Id</th>
+                                    <th>Activity Type</th>
+                                    <th>Created Time</th>
+
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                </div>
+                
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<!----------------- Vehicle  Details Modal -------------------->
+<div class="modal" tabindex="-1" role="dialog" id="guardKeyVehicleInfoModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><i class="fa fa-vcard-o mr-2"></i><label id="lbl_GuardActivityHeader1"></label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <table id="clientSiteActiveGuardsKeyVehicleDetails" class="table table-bordered" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>Id</th>
+                                    <th>SiteName</th>
+                                    <th>KeyVehicleLog Id</th>
+                                    <th>License No</th>
+                                    <th>Individual</th>
+                                    <th>Company</th>
+                                    <th>Activity Type</th>
+                                    <th>Created Time</th>
+
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!----------------- Incident Reports  Details Modal -------------------->
+<div class="modal" tabindex="-1" role="dialog" id="guardIncidentReportsInfoModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><i class="fa fa-vcard-o mr-2"></i><label id="lbl_GuardActivityHeader2"></label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <table id="clientSiteActiveGuardsIncidentReportsDetails" class="table table-bordered" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>Id</th>
+                                    <th>SiteName</th>
+                                    <th>IncidentReport Id</th>
+                                    <th>File</th>
+                                    
+                                    <th>Activity Type</th>
+                                    <th>Created Time</th>
+
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
 @Html.AntiForgeryToken()
+@section PageHeader {
+    <h3 class="text-center">RADIO CHECKLIST</h3>
+}
