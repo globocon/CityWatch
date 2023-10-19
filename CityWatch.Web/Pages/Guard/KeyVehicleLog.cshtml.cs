@@ -311,7 +311,11 @@ namespace CityWatch.Web.Pages.Guard
             var status = true;
             var message = "Success";
             try
-            {
+            {//logBookId delete for radio checklist-start
+
+
+                _guardLogDataProvider.DeleteClientSiteRadioCheckActivityStatusForKeyVehicleEntry(Id);
+                //logBookId delete for radio checklist-end
                 _guardLogDataProvider.DeleteKeyVehicleLog(Id);
             }
             catch (Exception ex)

@@ -20,6 +20,7 @@ namespace CityWatch.Data.Providers
         void DeleteGuardLog(int id);
         //logBookId delete for radio checklist-start
         void DeleteClientSiteRadioCheckActivityStatusForLogBookEntry(int id);
+        void DeleteClientSiteRadioCheckActivityStatusForKeyVehicleEntry(int id);
         void SignOffClientSiteRadioCheckActivityStatusForLogBookEntry(int GuardId, int ClientSiteId);
 
         //logBookId delete for radio checklist-end
@@ -965,6 +966,19 @@ namespace CityWatch.Data.Providers
 
 
             return _context.Guards.Where(x => x.Id == guardId).FirstOrDefault();
+        }
+        public void DeleteClientSiteRadioCheckActivityStatusForKeyVehicleEntry(int id)
+        {
+            var clientSiteRadioCheckActivityStatusToDelete = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.KVId == id);
+            if (clientSiteRadioCheckActivityStatusToDelete == null)
+                throw new InvalidOperationException();
+            foreach (var item in clientSiteRadioCheckActivityStatusToDelete)
+            {
+                _context.Remove(item);
+            }
+
+
+            _context.SaveChanges();
         }
 
 
