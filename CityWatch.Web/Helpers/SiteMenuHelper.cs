@@ -100,11 +100,11 @@ namespace CityWatch.Web.Helpers
                 menuHtml.AppendLine("<div>");
                 if (!AuthUserHelper.IsAdminUserLoggedIn)
                 {   /* Check the guard Login Conformation*/
-                    menuHtml.AppendLine(@"<a href=""/Radio/Check"" id=""LoginConformationBtnRC"" class=""nav-link py-0""><i class=""fa fa-user mr-2""></i>Radio Checklist (RC)</a>");
+                    menuHtml.AppendLine(@"<a href=""http://rc.cws-ir.com/RadioCheckV2"" id=""LoginConformationBtnRC"" class=""nav-link py-0"" target=""_blank""><i class=""fa fa-user mr-2""></i>Radio Checklist (RC)</a>");
                 }
                 else
                 {
-                    menuHtml.AppendLine(@"<a href=""/Radio/Check"" class=""nav-link py-0"" ><i class=""fa fa-user mr-2""></i>Radio Checklist (RC)</a>");
+                    menuHtml.AppendLine(@"<a href=""http://rc.cws-ir.com/RadioCheckV2"" class=""nav-link py-0"" target=""_blank"" ><i class=""fa fa-user mr-2""></i>Radio Checklist (RC)</a>");
                 }
                 menuHtml.AppendLine("</div>");
             }

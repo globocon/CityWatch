@@ -161,7 +161,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     "paging": false,
     "footer": true,
     ajax: {
-        url: '/RadioCheckNew?handler=ClientSiteActivityStatus',
+        url: '/RadioCheckV2?handler=ClientSiteActivityStatus',
         datatype: 'json',
         data: function (d) {
             d.clientSiteIds = 'test,';
@@ -253,7 +253,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
     "paging": false,
     "footer": true,
     ajax: {
-        url: '/RadioCheckNew?handler=ClientSiteInActivityStatus',
+        url: '/RadioCheckV2?handler=ClientSiteInActivityStatus',
         datatype: 'json',
         data: function (d) {
             d.clientSiteIds = 'test,';
@@ -320,7 +320,7 @@ $('#guardInfoModal').on('shown.bs.modal', function (event) {
     const id = button.data('id');
 
     $.ajax({
-        url: '/RadioCheckNew?handler=GuardData',
+        url: '/RadioCheckV2?handler=GuardData',
         data: { id: id },
         type: 'GET',
     }).done(function (result) {
@@ -361,7 +361,7 @@ let clientSiteNotAvailableGuards = $('#clientSiteNotAvailableGuards').DataTable(
     "paging": false,
     "footer": true,
     ajax: {
-        url: '/RadioCheckNew?handler=ClientSiteNotAvailableStatus',
+        url: '/RadioCheckV2?handler=ClientSiteNotAvailableStatus',
         datatype: 'json',
         data: function (d) {
             d.clientSiteIds = 'test,';
@@ -436,7 +436,7 @@ let clientSiteActiveGuardsLogBookDetails = $('#clientSiteActiveGuardsLogBookDeta
     "paging": false,
     "footer": true,
     ajax: {
-        url: '/RadioCheckNew?handler=ClientSitelogBookActivityStatus',
+        url: '/RadioCheckV2?handler=ClientSitelogBookActivityStatus',
         datatype: 'json',
         data: function (d) {
             d.clientSiteId = $('#txtClientSiteId').val();
@@ -526,7 +526,7 @@ let clientSiteActiveGuardsKeyVehicleDetails = $('#clientSiteActiveGuardsKeyVehic
     "paging": false,
     "footer": true,
     ajax: {
-        url: '/RadioCheckNew?handler=ClientSiteKeyVehicleLogActivityStatus',
+        url: '/RadioCheckV2?handler=ClientSiteKeyVehicleLogActivityStatus',
         datatype: 'json',
         data: function (d) {
             d.clientSiteId = $('#txtClientSiteId').val();
@@ -631,7 +631,7 @@ let clientSiteActiveGuardsIncidentReportsDetails = $('#clientSiteActiveGuardsInc
     "paging": false,
     "footer": true,
     ajax: {
-        url: '/RadioCheckNew?handler=ClientSiteIncidentReportActivityStatus',
+        url: '/RadioCheckV2?handler=ClientSiteIncidentReportActivityStatus',
         datatype: 'json',
         data: function (d) {
             d.clientSiteId = $('#txtClientSiteId').val();
