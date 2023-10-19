@@ -32,7 +32,7 @@ namespace CityWatch.Kpi.Pages.Account
         public IActionResult OnPost(string returnUrl)
         {
             if (string.IsNullOrEmpty(returnUrl))
-                returnUrl = Url.Page("/RadioCheckNew");
+                returnUrl = Url.Page("/RadioCheckV2");
            
             var isValidLogin = _userAuthentication.TryGetLoginUser(LoginUser, out User user);
 

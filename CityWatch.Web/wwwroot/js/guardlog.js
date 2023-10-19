@@ -2706,7 +2706,7 @@
                     $('#Access_permission_RC_status').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Redirecting to Radio Checklist (RC). Please wait...').show();
 
                     /*window.location.href = '/Radio/Check';*/
-                    window.location.href = 'https://localhost:7083/RadioCheckNew?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
+                    window.location.href = 'http://rc.cws-ir.com/RadioCheckV2?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
 
                 }
                 else {

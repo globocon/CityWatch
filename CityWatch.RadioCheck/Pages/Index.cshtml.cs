@@ -15,7 +15,7 @@ namespace CityWatch.RadioCheck.Pages
 
         public ActionResult OnGet()
         {
-            return Redirect("/RadioCheckNew");
+            return Redirect("/RadioCheckV2");
         }
     }
 }
