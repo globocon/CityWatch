@@ -2646,7 +2646,7 @@
 
 
             $('#txt_securityLicenseNoIR').val('');
-            $('#modelGuardLoginConIR').modal('hide');
+            
 
             $.ajax({
                 url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
@@ -2668,6 +2668,7 @@
 
                     $('#txt_securityLicenseNo').val('');
                     $('#txt_securityLicenseNoIR').val('');
+                    $('#modelGuardLoginConIR').modal('show');
                     if (result.successCode === 0) {
                         displayGuardValidationSummary('GuardLoginValidationSummaryIR', result.successMessage);
                     }
