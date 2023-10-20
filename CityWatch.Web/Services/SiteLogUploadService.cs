@@ -18,6 +18,7 @@ namespace CityWatch.Web.Services
     public interface ISiteLogUploadService
     {
         void ProcessDailyGuardLogs();
+        void ProcessDailyGuardLogsSecondRun();
     }
 
     public class SiteLogUploadService : ISiteLogUploadService
@@ -76,6 +77,36 @@ namespace CityWatch.Web.Services
 
                     if (File.Exists(fileToUpload))
                         File.Delete(fileToUpload);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"Daily Guard Log Upload | Failed | Log Book Id: {siteLogBook.Id}. Error: {ex.Message}");
+                }
+            }
+        }
+        public void ProcessDailyGuardLogsSecondRun()
+        {
+            var siteLogBooksToUpload = _clientDataProvider.GetClientSiteLogBooks().Where(z => z.ClientSite.UploadGuardLog && z.Date == DateTime.Now.Date && !z.DbxUploaded);
+            foreach (var siteLogBook in siteLogBooksToUpload)
+            {
+                try
+                {
+                    string logFileName = GetLogFilePath(siteLogBook);
+                    if (string.IsNullOrEmpty(logFileName))
+                        continue;
+
+                    var fileToUpload = Path.Combine(_reportRootDir, "Output", logFileName);
+
+                    var uploaded = ProcessDailyGuardLogUpload(siteLogBook, fileToUpload);
+
+                    if (uploaded)
+                    {
+                        if (!string.IsNullOrEmpty(siteLogBook.ClientSite.GuardLogEmailTo))
+                            SendEmail(fileToUpload, siteLogBook);
+                        _clientDataProvider.MarkClientSiteLogBookAsUploaded(siteLogBook.Id, logFileName);
+                    }
+
+                  
                 }
                 catch (Exception ex)
                 {
