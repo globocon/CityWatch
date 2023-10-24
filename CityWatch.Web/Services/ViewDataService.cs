@@ -1,6 +1,7 @@
 ﻿using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Models;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
@@ -84,6 +85,7 @@ namespace CityWatch.Web.Services
         IEnumerable<string> GetCompanyNames(string startsWith);
         bool IsClientSiteDuressEnabled(int clientSiteId);
         void EnableClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId);
+        
     }
 
     public class ViewDataService : IViewDataService
@@ -892,5 +894,7 @@ namespace CityWatch.Web.Services
                 });
             }
         }
+
+       
     }
 }

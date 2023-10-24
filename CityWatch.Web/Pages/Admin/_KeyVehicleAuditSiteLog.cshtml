@@ -44,6 +44,8 @@
                     <input type="hidden" asp-for="@Model.KeyVehicleLogAuditLogRequest.LogBookType" />
                     <input type="hidden" asp-for="@Model.KeyVehicleLogAuditLogRequest.LogFromDate" />
                     <input type="hidden" asp-for="@Model.KeyVehicleLogAuditLogRequest.LogToDate" />
+                    <input type="hidden" asp-for="@Model.KeyVehicleLogAuditLogRequest.ClientSiteLocationIdNew" />
+                    <input type="hidden" asp-for="@Model.KeyVehicleLogAuditLogRequest.ClientSitePocIdNew" />
                     <div class="form-group col-md-2">
                         <label>ID No. / Car or Truck Rego.</label>
                         <input type="text" class="form-control" asp-for="@Model.KeyVehicleLogAuditLogRequest.VehicleRego" />
@@ -87,14 +89,15 @@
                     </div>
                     <div class="form-group col-md-2">
                         <label>Site POC</label>
-                        <select class="form-control" asp-for="@Model.KeyVehicleLogAuditLogRequest.ClientSitePocId">
-                            <option value="">Select</option>
+                        <select class="form-control" multiple="multiple" id="vklSitePOC" >
+                            
                         </select>
+                      
                     </div>
                     <div class="form-group col-md-2">
                         <label class="mx-1">Site Location</label>
-                        <select class="form-control" asp-for="@Model.KeyVehicleLogAuditLogRequest.ClientSiteLocationId">
-                            <option value="">Select</option>
+                        <select class="form-control" multiple="multiple"id="vklSiteLoc" >
+                            
                         </select>
                     </div>
                     <div class="form-group col-md-2">
