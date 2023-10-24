@@ -103,19 +103,29 @@ $(function () {
         );
     }
 
-    function vehicleRegoToUpperCase() {
-        let regoToUpper = $(this).val().toUpperCase();
-        $(this).val(regoToUpper);
+    function vehicleRegoToUpperCase(e) {
+        if (e.which != 35 && e.which == 32 || e.which == 45 && e.which < 48 ||
+            (e.which > 57 && e.which < 65) ||
+            (e.which > 90 && e.which < 97) ||
+            e.which > 122) {
+            $(this).val($(this).val().replace(/[^a-z0-9]/gi, ''));
+        }
+        else {
+            let regoToUpper = $(this).val().toUpperCase();
+            $(this).val(regoToUpper);
+        }
+       
     }
 
     function vehicleRegoValidateSplChars(e) {
         //  blocking special charactors
-        if (e.which != 35 && e.which != 32 && e.which < 48 ||
+        if (e.which != 35 && e.which == 32 || e.which == 45 && e.which < 48 ||
             (e.which > 57 && e.which < 65) ||
             (e.which > 90 && e.which < 97) ||
             e.which > 122) {
             e.preventDefault();
         }
+       
     }
 
     let keyVehicleLog;
@@ -1154,7 +1164,8 @@ $(function () {
             const vehicleRegoHasVal = $(this).val() !== '';
             $('#crmVehicleRego').val($('#VehicleRego').val());
             GetVehicleImage();
-            
+            let regoToUpper = $(this).val().toUpperCase();
+            $(this).val(regoToUpper);
         });
         $('#CompanyName').on('change', function () {
             
@@ -1194,10 +1205,11 @@ $(function () {
             GetPersonImage();
         });
         /* to display the corresponding image on changing the reg no,person type,company name and person name-end*/
-        $('#VehicleRego, #Trailer1Rego, #Trailer2Rego, #Trailer3Rego, #Trailer4Rego','#crmVehicleRego').on('keyup', vehicleRegoToUpperCase);
+        
 
-        $('#VehicleRego, #Trailer1Rego, #Trailer2Rego, #Trailer3Rego, #Trailer4Rego','#crmVehicleRego').on('keypress', vehicleRegoValidateSplChars);
-
+       /* $('#VehicleRego, #Trailer1Rego, #Trailer2Rego, #Trailer3Rego, #Trailer4Rego,#crmVehicleRego').on('keypress', vehicleRegoValidateSplChars);*/
+        $('#VehicleRego, #Trailer1Rego, #Trailer2Rego, #Trailer3Rego, #Trailer4Rego,#crmVehicleRego').on('keyup', vehicleRegoToUpperCase);
+        
         $('#clear_initialcall_time').on('click', function () {
             $('#new_log_initial_call').val('');
             $('#InitialCallTime').val('');
@@ -2205,6 +2217,7 @@ $(function () {
                             items.push(item);
                         });
                         response(items);
+                        
                     },
                     error: function (response) {
                         alert(response.responseText);
@@ -2231,7 +2244,9 @@ $(function () {
                     });
                 }
             }
+            
         });
+
 
         if (!gridAuditHistory) {
             $('#key_vehicle_log_audit_history').DataTable({
