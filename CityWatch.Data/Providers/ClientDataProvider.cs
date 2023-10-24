@@ -30,6 +30,7 @@ namespace CityWatch.Data.Providers
     {
         List<ClientSite> GetUserClientSites(string type, string searchTerm);
         List<ClientType> GetClientTypes();
+        List<GuardAccess> GetGuardAccess();
         List<IncidentReportPSPF> GetPSPF();
         void SaveClientType(ClientType clientType);
         void DeleteClientType(int id);
@@ -118,6 +119,12 @@ namespace CityWatch.Data.Providers
                 .ToList();
 
             return clientSites;
+        }
+
+        //code added to get Guard Access
+        public List<GuardAccess> GetGuardAccess()
+        {
+            return _context.GuardAccess.OrderBy(x => x.Id).ToList();
         }
         public List<ClientType> GetClientTypes()
         {

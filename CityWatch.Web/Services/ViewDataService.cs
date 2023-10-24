@@ -54,8 +54,10 @@ namespace CityWatch.Web.Services
         List<object> GetAllUsersClientSiteAccess();
         List<object> GetUserClientSiteAccess(int userId);
         List<object> GetAllCoreSettings(int companyId);
-
+       
         List<ClientType> GetUserClientTypesHavingAccess(int? userId);
+        List<SelectListItem> GetAccessTypes(bool withoutSelect = false);
+
         List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm);
         DataTable PatrolDataToDataTable(List<DailyPatrolData> dailyPatrolData);
 
@@ -429,7 +431,29 @@ namespace CityWatch.Web.Services
 
             return results;
         }
+        //code added for Guard Access Dropdown start
+        //public List<GuardAccess> GetAccessTypes()
+        //{
+        //    return _clientDataProvider.GetGuardAccess();
+        public List<SelectListItem> GetAccessTypes(bool withoutSelect = true)
+        {
+            var Access = _clientDataProvider.GetGuardAccess();
+            var items = new List<SelectListItem>();
 
+            if (!withoutSelect)
+            {
+                items.Add(new SelectListItem("Select", "", true));
+            }
+
+            foreach (var item in Access)
+            {
+                items.Add(new SelectListItem(item.AccessName, item.Id.ToString()));
+            }
+
+            return items;
+        }
+        //}
+        //code added for Guard Access Dropdown stop
         public List<ClientType> GetUserClientTypesHavingAccess(int? userId)
         {
             var clientTypes = _clientDataProvider.GetClientTypes();

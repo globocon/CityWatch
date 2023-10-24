@@ -171,6 +171,8 @@
         if ($(this).val() === '')
             return;
 
+        securityLicenseNo = $(this).val();
+
         $('#loader').show();
 
         $.ajax({
@@ -185,52 +187,72 @@
                     showGuardSearchResult('A guard with given security license number is disabled. Please contact admin to activate', true);
                 }
                 else {
-                    $('#GuardLogin_IsNewGuard').prop('checked', false);
 
-                    const hasLastLogin = result.lastLogin !== null;
-                    showGuardSearchResult('Hello ' + result.guard.name + '. Please ' + (hasLastLogin ? 'verify' : 'fill') + ' your details and click Enter Log Book');
+                    $.ajax({
+                        url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+                        type: 'POST',
+                        data: {
+                            securityLicenseNo: securityLicenseNo,
+                            type: 'IR'
+                        },
+                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                    }).done(function (result1) {
+                        if (result1.accessPermission) {
+                            $('#GuardLogin_IsNewGuard').prop('checked', false);
 
-                    $('#GuardLogin_ClientType').prop('disabled', false);
-                    $('#GuardLogin_ClientSiteName').prop('disabled', false);
-                    $('#GuardLogin_OnDuty_Time').prop('disabled', false);
-                    $('#GuardLogin_OnDuty_Time').val(getTimeFromDateTime(new Date()));
-                    $('#GuardLogin_OffDuty_Time').prop('disabled', false);
+                            const hasLastLogin = result.lastLogin !== null;
+                            showGuardSearchResult('Hello ' + result.guard.name + '. Please ' + (hasLastLogin ? 'verify' : 'fill') + ' your details and click Enter Log Book');
 
-                    $('#GuardLogin_Guard_Name').val(result.guard.name);
-                    if (result.guard.email != null) {
-                        $("#divGuardEmail").hide();
-                    }
-                    if (result.guard.mobile != null) {
-                        $("#divGuardMobile").hide();
-                    }
-                    
-                    $('#GuardLogin_Guard_Email').val(result.guard.email);
-                    $('#GuardLogin_Guard_Mobile').val(result.guard.mobile);
-                    $('#GuardLogin_Guard_Initial').val(result.guard.initial);
-                    $('#guardLoginDetails').show();
-                    $('#GuardLogin_Guard_Id').val(result.guard.id);
+                            $('#GuardLogin_ClientType').prop('disabled', false);
+                            $('#GuardLogin_ClientSiteName').prop('disabled', false);
+                            $('#GuardLogin_OnDuty_Time').prop('disabled', false);
+                            $('#GuardLogin_OnDuty_Time').val(getTimeFromDateTime(new Date()));
+                            $('#GuardLogin_OffDuty_Time').prop('disabled', false);
 
-                    if (hasLastLogin) {
-                        const lastLogin = result.lastLogin;
+                            $('#GuardLogin_Guard_Name').val(result.guard.name);
+                            if (result.guard.email != null) {
+                                $("#divGuardEmail").hide();
+                            }
+                            if (result.guard.mobile != null) {
+                                $("#divGuardMobile").hide();
+                            }
 
-                        $('#GuardLogin_Id').val(lastLogin.id);
-                        $('#GuardLogin_ClientType').val(lastLogin.clientSite.clientType.name);
-                        populateClientSites(lastLogin.clientSite.name);
-                        const isPosition = lastLogin.smartWandId === null ? true : false;
-                        const smartWandOrPositionName = isPosition ? lastLogin.position.name : lastLogin.smartWand.smartWandId;
-                        getSmartWandOrOfficerPosition(isPosition, lastLogin.clientSite.name, smartWandOrPositionName);
-                        $('#GuardLogin_IsPosition').prop('checked', isPosition);
-                        $('#GuardLogin_OnDuty_Time').val(getTimeFromDateTime(new Date(lastLogin.onDuty)));
+                            $('#GuardLogin_Guard_Email').val(result.guard.email);
+                            $('#GuardLogin_Guard_Mobile').val(result.guard.mobile);
+                            $('#GuardLogin_Guard_Initial').val(result.guard.initial);
+                            $('#guardLoginDetails').show();
+                            $('#GuardLogin_Guard_Id').val(result.guard.id);
 
-                        let isOffDutyDateToday = true;
-                        if (lastLogin.offDuty) {
-                            $('#GuardLogin_OffDuty_Time').val(getTimeFromDateTime(new Date(lastLogin.offDuty)));
-                            isOffDutyDateToday = getDateFromDateTime(lastLogin.onDuty) > getDateFromDateTime(lastLogin.offDuty);
+                            if (hasLastLogin) {
+                                const lastLogin = result.lastLogin;
+
+                                $('#GuardLogin_Id').val(lastLogin.id);
+                                $('#GuardLogin_ClientType').val(lastLogin.clientSite.clientType.name);
+                                populateClientSites(lastLogin.clientSite.name);
+                                const isPosition = lastLogin.smartWandId === null ? true : false;
+                                const smartWandOrPositionName = isPosition ? lastLogin.position.name : lastLogin.smartWand.smartWandId;
+                                getSmartWandOrOfficerPosition(isPosition, lastLogin.clientSite.name, smartWandOrPositionName);
+                                $('#GuardLogin_IsPosition').prop('checked', isPosition);
+                                $('#GuardLogin_OnDuty_Time').val(getTimeFromDateTime(new Date(lastLogin.onDuty)));
+
+                                let isOffDutyDateToday = true;
+                                if (lastLogin.offDuty) {
+                                    $('#GuardLogin_OffDuty_Time').val(getTimeFromDateTime(new Date(lastLogin.offDuty)));
+                                    isOffDutyDateToday = getDateFromDateTime(lastLogin.onDuty) > getDateFromDateTime(lastLogin.offDuty);
+                                }
+
+                                $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
+                                onGuardLoginDutyTimeChange(isOffDutyDateToday);
+                            }
                         }
+                        else {
 
-                        $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
-                        onGuardLoginDutyTimeChange(isOffDutyDateToday);
-                    }
+                            if (result1.successCode === 0) {
+                                showGuardSearchResult('Not authorized to access this page', true);
+                            }
+                        }
+                    });
+
                 }
             },
             complete: function () {
@@ -1129,6 +1151,15 @@
         includeSelectAllOption: true,
     });
 
+    /* code for AccesGuard Dropdown*/
+    $('#Guard_Access').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
+
     $('#vklClientSiteId').on('change', function () {
         if ($('#vklClientSiteId').val().length === 0) {
             alert('Please select a client site');
@@ -2008,7 +2039,25 @@
         $('#addGuardModal').modal('show');
         $('#GuardLicense_GuardId').val(data.id);
         $('#GuardCompliance_GuardId').val(data.id);
-
+       
+       // var selectedValues = [data.isRCAccess, data.isKPIAccess];
+        var selectedValues = [];
+        if (data.isRCAccess) {
+            selectedValues.push(4);
+        }
+        if (data.isKPIAccess) {
+            selectedValues.push(3);
+        }
+        if (data.isLB_KV_IR) {
+            selectedValues.push(1);
+        }
+        if (data.isSTATS) {
+            selectedValues.push(2);
+        }
+        selectedValues.forEach(function (value) {
+           
+            $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+        });
         gridGuardLicenses.ajax.reload();
         gridGuardCompliances.ajax.reload();
     });
@@ -2020,9 +2069,15 @@
         $('.btn-add-guard-addl-details').hide();
         resetGuardDetailsModal();
         $('#addGuardModal').modal('show');
+        let value = 1;
+        $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+
+        // Initialize the multiselect dropdown
+        $("#Guard_Access").multiselect();
     });
 
     function resetGuardDetailsModal() {
+       
         $('#Guard_Name').val('');
         $('#Guard_SecurityNo').val('');
         $('#Guard_Initial').val('');
@@ -2036,14 +2091,17 @@
         $('#cbIsRCAccess').prop('checked', false);
         $('#cbIsKPIAccess').prop('checked', false);
         $('#glValidationSummary').html('');
+        $(".multiselect-option input[type=checkbox]").prop("checked", false);
+        
     }
-
+   
+   
     $('#btn_save_guard').on('click', function () {
         clearGuardValidationSummary('glValidationSummary');
         $('#guard_saved_status').hide();
         $('#Guard_IsActive').val($(cbIsActive).is(':checked'));       
-        $('#Guard_IsRCAccess').val($(cbIsRCAccess).is(':checked'));
-        $('#Guard_IsKPIAccess').val($(cbIsKPIAccess).is(':checked'));
+       // $('#Guard_IsRCAccess').val($(cbIsRCAccess).is(':checked'));
+        //$('#Guard_IsKPIAccess').val($(cbIsKPIAccess).is(':checked'));
         $.ajax({
             url: '/Admin/GuardSettings?handler=Guards',
             data: $('#frm_add_guard').serialize(),
@@ -2578,7 +2636,46 @@
             $('#upload_compliance_file').val('');
         });
     });
+    /*Show login confirmation for Patrols & Alarm Statistics start*/
+    $("#LoginConformationBtnPatrols").on('click', function () {
+        $('#txt_securityLicenseNoPatrols').val('');
+        clearGuardValidationSummary('GuardLoginValidationSummaryRC');
+        $("#modelGuardLoginConPatrol").modal("show");
+        return false;
+    });
+    $('#btnGuardLoginPatrols').on('click', function () {
+        const securityLicenseNo = $('#txt_securityLicenseNoPatrols').val();
+        if (securityLicenseNo === '') {
+            displayGuardValidationSummary('GuardLoginValidationSummary', 'Please enter the security license No ');
+        }
+        else {
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+                type: 'POST',
+                data: {
+                    securityLicenseNo: securityLicenseNo,
+                    type: 'Patrols'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.accessPermission) {
+                    $('#txt_securityLicenseNo').val('');
+                    $('#modelGuardLoginCon').modal('hide');
+                    window.location.href = 'Account/Unauthorized';
+                   
+                    clearGuardValidationSummary('GuardLoginValidationSummary');
+                }
+                else {
+                    $('#txt_securityLicenseNo').val('');
+                    if (result.successCode === 0) {
+                        displayGuardValidationSummary('GuardLoginValidationSummary', result.successMessage);
+                    }
+                }
+            });
 
+        }
+    });
+    /*Show login confirmation for Patrols & Alarm Statistics stop*/
     $("#LoginConformationBtnRC").on('click', function () {
         $('#txt_securityLicenseNoRC').val('');
         clearGuardValidationSummary('GuardLoginValidationSummaryRC');
@@ -2711,6 +2808,8 @@
 
         }
     });
+
+    
 
 
 
