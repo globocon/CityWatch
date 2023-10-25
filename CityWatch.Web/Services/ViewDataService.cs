@@ -1,6 +1,7 @@
 ﻿using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Models;
+using DocumentFormat.OpenXml.Office.CustomUI;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
@@ -84,6 +85,8 @@ namespace CityWatch.Web.Services
         IEnumerable<string> GetCompanyNames(string startsWith);
         bool IsClientSiteDuressEnabled(int clientSiteId);
         void EnableClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId);
+        //For Access Type
+        List<SelectListItem> GetAccessTypes(bool withoutSelect = false);
     }
 
     public class ViewDataService : IViewDataService
@@ -151,6 +154,7 @@ namespace CityWatch.Web.Services
             }
         }
         //code added for PSPF dropdown stop
+
         public List<SelectListItem> GetOfficerPositions(OfficerPositionFilter positionFilter = OfficerPositionFilter.All)
         {
             var items = new List<SelectListItem>()
@@ -892,5 +896,29 @@ namespace CityWatch.Web.Services
                 });
             }
         }
+
+        //code added for Guard Access Dropdown start
+        //public List<GuardAccess> GetAccessTypes()
+        //{
+        //    return _clientDataProvider.GetGuardAccess();
+        public List<SelectListItem> GetAccessTypes(bool withoutSelect = true)
+        {
+            var Access = _clientDataProvider.GetGuardAccess();
+            var items = new List<SelectListItem>();
+
+            if (!withoutSelect)
+            {
+                items.Add(new SelectListItem("Select", "", true));
+            }
+
+            foreach (var item in Access)
+            {
+                items.Add(new SelectListItem(item.AccessName, item.Id.ToString()));
+            }
+
+            return items;
+        }
+        //}
+        //code added for Guard Access Dropdown stop
     }
 }

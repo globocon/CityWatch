@@ -71,7 +71,14 @@
             }
         });
     }
-
+    /* code for AccesGuard Dropdown*/
+    $('#Guard_Access').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
     function getSmartWandOrOfficerPosition(isPosition, clientSiteName, smartWandOrPositionId) {
         const url = isPosition ?
             '/Guard/Login?handler=OfficerPositions' :
@@ -1134,7 +1141,24 @@
             alert('Please select a client site');
             return;
         }
+        // var selectedValues = [data.isRCAccess, data.isKPIAccess];
+        var selectedValues = [];
+        if (data.isRCAccess) {
+            selectedValues.push(4);
+        }
+        if (data.isKPIAccess) {
+            selectedValues.push(3);
+        }
+        if (data.isLB_KV_IR) {
+            selectedValues.push(1);
+        }
+        if (data.isSTATS) {
+            selectedValues.push(2);
+        }
+        selectedValues.forEach(function (value) {
 
+            $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+        });
         $.ajax({
             url: '/Admin/AuditSiteLog?handler=ClientSiteLocationsAndPocs&clientSiteIds=' + $(this).val().join(';'),
             type: 'GET',
@@ -2019,7 +2043,13 @@
 
         $('.btn-add-guard-addl-details').hide();
         resetGuardDetailsModal();
+        let value = 1;
+        $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+
+        // Initialize the multiselect dropdown
+        $("#Guard_Access").multiselect();
         $('#addGuardModal').modal('show');
+
     });
 
     function resetGuardDetailsModal() {

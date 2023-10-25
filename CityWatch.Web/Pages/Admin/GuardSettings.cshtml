@@ -1,6 +1,8 @@
 ﻿@page
 @using CityWatch.Data.Models;
 @using CityWatch.Web.Helpers
+@using CityWatch.Web.Services;
+@inject IViewDataService viewDataService
 @model CityWatch.Web.Pages.Admin.GuardSettingsModel
 @{
     ViewData["Title"] = "CityWatch Security | Guard Settings";
@@ -149,16 +151,29 @@
                                 </div>
                             </div>
                             <div class="form-group row">
-                               
-                                <label class="col-md-2 form-check-label">RC Access</label>
+
+                                <label class="col-md-2 form-check-label">Access</label>
                                 <div class="col-md-3">
-                                    <input type="checkbox" class="form-check" id="cbIsRCAccess">
-                                    <input type="hidden" id="Guard_IsRCAccess" name="Guard.IsRCAccess">
+                                    <select class="form-control" multiple="multiple" id="Guard_Access" name="Guard.GuardAccess">
+                                        @foreach (var AccessType in viewDataService.GetAccessTypes(true))
+                                        {
+
+                                            <option value="@AccessType.Value">@AccessType.Text</option>
+                                        }
+                                    </select>
+                                    @*   <select class="form-control" multiple="multiple" id="Guard_Access" name="Guard.GuardAccess" asp-items="@viewDataService.GetAccessTypes(true)"></select> *@
+                                    @*  <select class="form-control" multiple="multiple" id="Guard_Access" name="Guard.GuardAccess">
+                                    @foreach (var AccessType in viewDataService.GetAccessTypes())
+                                    {
+                                    <option value="@AccessType.AccessName">@AccessType.AccessName</option>
+                                    }
+                                    </select> *@
+
                                 </div>
-                                <label class="col-md-1 form-check-label">KPI Access</label>
+                                <label class="col-md-1 form-check-label">Is Active</label>
                                 <div class="col-md-2">
-                                    <input type="checkbox" class="form-check" id="cbIsKPIAccess">
-                                    <input type="hidden" id="Guard_IsKPIAccess" name="Guard.IsKPIAccess">
+                                    <input type="checkbox" class="form-check" id="cbIsActive">
+                                    <input type="hidden" id="Guard_IsActive" name="Guard.IsActive">
                                 </div>
                                 <label class="col-md-1 col-form-label">Provider</label>
                                 <div class="col-md-3">
@@ -166,13 +181,14 @@
                                 </div>
                             </div>
 
-                            <div class="form-group row">
+
+                         @*    <div class="form-group row">
                                 <label class="col-md-2 form-check-label">Is Active</label>
                                 <div class="col-md-3">
                                     <input type="checkbox" class="form-check" id="cbIsActive">
                                     <input type="hidden" id="Guard_IsActive" name="Guard.IsActive">
                                 </div>
-                            </div>
+                            </div> *@
                             <div class="form-row">
                                 <div class="col-md-12">
                                     <div class="alert alert-success" role="alert" style="display:none" id="guard_saved_status">
