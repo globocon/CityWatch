@@ -130,11 +130,11 @@ namespace CityWatch.Web.Pages.Admin
         //{
         //    return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego));
         //}
-        
+
         //to check with bdm-start
-        public JsonResult OnGetKeyVehicleLogProfiles(string truckRego,string poi)
+        public JsonResult OnGetKeyVehicleLogProfiles(string truckRego, string poi)
         {
-            return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego,poi));
+            return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego, poi));
         }
         //to check with bdm-end
         public JsonResult OnPostUpdateKeyVehicleLogProfile(KeyVehicleLogVisitorPersonalDetail keyVehicleLogVisitorPersonalDetail)

@@ -103,19 +103,29 @@ $(function () {
         );
     }
 
-    function vehicleRegoToUpperCase() {
-        let regoToUpper = $(this).val().toUpperCase();
-        $(this).val(regoToUpper);
+    function vehicleRegoToUpperCase(e) {
+        if (e.which != 35 && e.which == 32 || e.which == 45 && e.which < 48 ||
+            (e.which > 57 && e.which < 65) ||
+            (e.which > 90 && e.which < 97) ||
+            e.which > 122) {
+            $(this).val($(this).val().replace(/[^a-z0-9]/gi, ''));
+        }
+        else {
+            let regoToUpper = $(this).val().toUpperCase();
+            $(this).val(regoToUpper);
+        }
+
     }
 
     function vehicleRegoValidateSplChars(e) {
         //  blocking special charactors
-        if (e.which != 35 && e.which != 32 && e.which < 48 ||
+        if (e.which != 35 && e.which == 32 || e.which == 45 && e.which < 48 ||
             (e.which > 57 && e.which < 65) ||
             (e.which > 90 && e.which < 97) ||
             e.which > 122) {
             e.preventDefault();
         }
+
     }
 
     let keyVehicleLog;
@@ -229,7 +239,7 @@ $(function () {
     $('#vehicle_key_daily_log tbody').on('click', '#btnEditVkl', function () {
         var data = keyVehicleLog.row($(this).parents('tr')).data();
         loadVklPopup(data.detail.id);
-       
+
     });
 
     $('#vehicle_key_daily_log tbody').on('click', '.btn-exit-quick', function () {
@@ -438,7 +448,7 @@ $(function () {
         populateKvlModal(data.detail.id);
 
         GetVehicleImage()
-        
+
 
     });
     /*to get the vehicle image-start*/
@@ -473,7 +483,7 @@ $(function () {
     }
 
     /*to get the vehicle image-end*/
-   
+
     /*to get the person image-start*/
 
     function GetPersonImage() {
@@ -490,8 +500,8 @@ $(function () {
         }).done(function (result) {
 
             if (result.success) {
-               
-                $('#imagepersondisplay').attr('href',result.fulePath);
+
+                $('#imagepersondisplay').attr('href', result.fulePath);
                 $('#img_PersonId').attr('src', result.fulePath);
                 $
                 $('#img_PersonId').prop('hidden', false);
@@ -576,7 +586,7 @@ $(function () {
                 $('#list_BDM').prop('hidden', false);
             }
 
-           
+
 
             /*for cheking  the BDM is true-end*/
             $('#IsCRMId').val(result.bdmList);
@@ -594,12 +604,12 @@ $(function () {
 
             });
             /*to load the plate to crmtab -end*/
-           
+
             const isChecked = $('#chbIsPOIAlert1').is(':checked');
             loadAuditHistory(result.keyVehicleLogProfile.vehicleRego);
 
             GetPersonImage()
-           
+
 
             /* For attachements Start  */
             $("#kvl-attachment-list").empty();
@@ -639,7 +649,7 @@ $(function () {
 
         });
         $('#kvl-profiles-modal').modal('hide');
-      
+
     }
     $('#key_vehicle_log_profiles tbody').on('click', 'tr', function () {
         gridKeyVehicleLogProfile.$('tr.selected').removeClass('selected');
@@ -767,7 +777,7 @@ $(function () {
 
 
             }
-            
+
         }).always(function () {
             $('#loader').hide();
         });
@@ -791,7 +801,7 @@ $(function () {
             $('#cbIsTimeSlotNo').prop('checked', true);
             $('#IsSender').val(true);
             $('#cbIsSender').prop('checked', true);
-             /*for initializing the BDM to true-start*/
+            /*for initializing the BDM to true-start*/
             $('#cbIsBDMOrSales').prop('checked', true);
             $('#IsBDM').val(true);
             /*for initializing the BDM to true-end*/
@@ -815,9 +825,9 @@ $(function () {
                 $('#lblIsBDMOrSales').text('Supplier/Partner');
                 $('#list_BDM').prop('hidden', false);
             }
-          
+
             $('#cbIsBDMOrSales').prop('checked', isBDM);
-           
+
             /*for cheking  the BDM is true-end*/
 
 
@@ -834,19 +844,19 @@ $(function () {
                 $('#imagesiren').attr('hidden', true);
             }
 
-           
+
 
 
             loadAuditHistory($('#VehicleRego').val());
             var checkedornot = $('#IsCRMId').val();
 
-           /* to load the selected items in BDM-start*/
+            /* to load the selected items in BDM-start*/
             $("#list_BDM  input[type=checkbox]").each(function () {
                 crmindivid = $(this).closest('li').find('#IsCRMIndividualId').val();
                 if (checkedornot.indexOf(crmindivid) != -1) {
                     $(this).prop('checked', true);
                 }
-               
+
             });
             /* to load the selected items in BDM-end*/
         }
@@ -864,7 +874,7 @@ $(function () {
         });
         /*for changing the BDM-start*/
         $('#cbIsBDMOrSales').on('change', function () {
-            
+
             const isChecked = $(this).is(':checked');
             if (isChecked == true) {
                 $('#lblIsBDMOrSales').text('BDM/Sales');
@@ -893,26 +903,26 @@ $(function () {
             }
             $('#IsBDM').val(isChecked);
         });
-      
+
         $('#list_BDM li').on('change', '#cbCRMActivity', function () {
-            
-            
-              $('#IsCRMId').val('');
-               
-                $("#list_BDM  input[type=checkbox]:checked").each(function () {
-                    var isChecked1 = $(this).is(':checked');
-                    if (isChecked1 == true) {
-                        crmindivid = $(this).closest('li').find('#IsCRMIndividualId').val();
-                        if ($('#IsCRMId').val() == '') {
-                            $('#IsCRMId').val(crmindivid);
-                        }
-                        else {
-                            var crmindividnew = $('#IsCRMId').val() + ',' + crmindivid;
-                            $('#IsCRMId').val(crmindividnew);
-                        }
+
+
+            $('#IsCRMId').val('');
+
+            $("#list_BDM  input[type=checkbox]:checked").each(function () {
+                var isChecked1 = $(this).is(':checked');
+                if (isChecked1 == true) {
+                    crmindivid = $(this).closest('li').find('#IsCRMIndividualId').val();
+                    if ($('#IsCRMId').val() == '') {
+                        $('#IsCRMId').val(crmindivid);
                     }
-                });
-               
+                    else {
+                        var crmindividnew = $('#IsCRMId').val() + ',' + crmindivid;
+                        $('#IsCRMId').val(crmindividnew);
+                    }
+                }
+            });
+
         });
         /*for changing the BDM-end*/
 
@@ -931,20 +941,20 @@ $(function () {
             }
             //$('#IsPOIAlert').val(isChecked);
         });
-         /*to confirm whether the image is person vehicle or other -start*/
+        /*to confirm whether the image is person vehicle or other -start*/
         $('#chbIsPerson').on('change', function () {
             const isChecked = $(this).is(':checked');
             if (isChecked == true) {
-                
+
                 $('#IsVehicle').val(false);
                 $('#chbIsVehicle').prop('checked', false)
                 $('#IsNone').val(false);
                 $('#chbIsNone').prop('checked', false)
 
             }
-            
+
             $('#IsPerson').val(isChecked);
-            
+
         });
         $('#chbIsVehicle').on('change', function () {
             const isChecked = $(this).is(':checked');
@@ -1118,7 +1128,7 @@ $(function () {
             }
         }
 
-       
+
 
         $('#VehicleRego').on('blur', function () {
             const vehicleRegoHasVal = $(this).val() !== '';
@@ -1154,10 +1164,11 @@ $(function () {
             const vehicleRegoHasVal = $(this).val() !== '';
             $('#crmVehicleRego').val($('#VehicleRego').val());
             GetVehicleImage();
-            
+            let regoToUpper = $(this).val().toUpperCase();
+            $(this).val(regoToUpper);
         });
         $('#CompanyName').on('change', function () {
-            
+
             GetPersonImage();
         });
         $('#PersonType').on('change', function () {
@@ -1187,16 +1198,17 @@ $(function () {
 
                 });
             }
-            
+
         });
         $('#PersonName').on('change', function () {
 
             GetPersonImage();
         });
         /* to display the corresponding image on changing the reg no,person type,company name and person name-end*/
-        $('#VehicleRego, #Trailer1Rego, #Trailer2Rego, #Trailer3Rego, #Trailer4Rego','#crmVehicleRego').on('keyup', vehicleRegoToUpperCase);
 
-        $('#VehicleRego, #Trailer1Rego, #Trailer2Rego, #Trailer3Rego, #Trailer4Rego','#crmVehicleRego').on('keypress', vehicleRegoValidateSplChars);
+
+        /* $('#VehicleRego, #Trailer1Rego, #Trailer2Rego, #Trailer3Rego, #Trailer4Rego,#crmVehicleRego').on('keypress', vehicleRegoValidateSplChars);*/
+        $('#VehicleRego, #Trailer1Rego, #Trailer2Rego, #Trailer3Rego, #Trailer4Rego,#crmVehicleRego').on('keyup', vehicleRegoToUpperCase);
 
         $('#clear_initialcall_time').on('click', function () {
             $('#new_log_initial_call').val('');
@@ -1257,15 +1269,15 @@ $(function () {
             }
         });
 
-            $('#TrailerType').on('change', function () {
-                const option = $(this).find(":selected");
-                if (option.val() !== '') {
+        $('#TrailerType').on('change', function () {
+            const option = $(this).find(":selected");
+            if (option.val() !== '') {
 
 
-                    $('#crmTrailerType').val(option.val());
+                $('#crmTrailerType').val(option.val());
 
-                }
-            });
+            }
+        });
         $('#crmTruckConfig').on('change', function () {
             const option = $(this).find(":selected");
             if (option.val() !== '') {
@@ -1372,9 +1384,9 @@ $(function () {
                 });
             }
         });
-        
-        
-        
+
+
+
         //$('#btn-delete-PersonImage').on('click', function (e) {
         //    if (confirm('Are you sure want to remove this Person Image?')) {
         //        e.preventDefault();
@@ -1402,32 +1414,32 @@ $(function () {
 
         /*to delete person image - start*/
 
-        function DeletePersonImage() { 
-            
-                /*e.preventDefault();*/
-                const fileName = $('#CompanyName').val() + '-' + $('#PersonType').find('option:selected').text() + '-' + $('#PersonName').val() + '.jpg';
-                const vehicleRego = $('#VehicleRego').val()
-                $.ajax({
-                    url: '/Guard/KeyVehiclelog?handler=DeletePersonImage',
-                    type: 'POST',
-                    dataType: 'json',
-                    data: {
-                        reportReference: $('#ReportReference').val(),
-                        fileName: fileName
-                    },
-                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                }).done(function (result) {
-                    if (result) {
-                        $('#img_PersonId').prop('hidden', true)
-                        $('#head_PersonId').prop('hidden', false)
-                        $('#btn-delete-PersonImage').prop('hidden', true)
-                    }
-                });
-            }
+        function DeletePersonImage() {
+
+            /*e.preventDefault();*/
+            const fileName = $('#CompanyName').val() + '-' + $('#PersonType').find('option:selected').text() + '-' + $('#PersonName').val() + '.jpg';
+            const vehicleRego = $('#VehicleRego').val()
+            $.ajax({
+                url: '/Guard/KeyVehiclelog?handler=DeletePersonImage',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    reportReference: $('#ReportReference').val(),
+                    fileName: fileName
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result) {
+                    $('#img_PersonId').prop('hidden', true)
+                    $('#head_PersonId').prop('hidden', false)
+                    $('#btn-delete-PersonImage').prop('hidden', true)
+                }
+            });
+        }
 
 
 
-      /*  to delete person image - end*/
+        /*  to delete person image - end*/
 
         //$('#btn-delete-VehicleImage').on('click', function (e) {
         //    if (confirm('Are you sure want to remove this Vehicle Image?')) {
@@ -1458,29 +1470,29 @@ $(function () {
 
         /*todelete the vehicle image - start*/
         function DeleteVehicleImage() {
-            
-                //e.preventDefault();
-                const fileName = $('#VehicleRego').val() + '.jpg';
-                const vehicleRego = $('#VehicleRego').val()
-                $.ajax({
-                    url: '/Guard/KeyVehiclelog?handler=DeleteVehicleImage',
-                    type: 'POST',
-                    dataType: 'json',
-                    data: {
-                        reportReference: $('#ReportReference').val(),
-                        fileName: fileName,
-                        vehicleRego: vehicleRego
-                    },
-                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                }).done(function (result) {
-                    if (result) {
-                        $('#img_VehicleId').prop('hidden', true)
-                        $('#head_VehicleId').prop('hidden', false)
-                        $('#btn-delete-VehicleImage').prop('hidden', true)
 
-                    }
-                });
-            
+            //e.preventDefault();
+            const fileName = $('#VehicleRego').val() + '.jpg';
+            const vehicleRego = $('#VehicleRego').val()
+            $.ajax({
+                url: '/Guard/KeyVehiclelog?handler=DeleteVehicleImage',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    reportReference: $('#ReportReference').val(),
+                    fileName: fileName,
+                    vehicleRego: vehicleRego
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result) {
+                    $('#img_VehicleId').prop('hidden', true)
+                    $('#head_VehicleId').prop('hidden', false)
+                    $('#btn-delete-VehicleImage').prop('hidden', true)
+
+                }
+            });
+
         }
 
         /*todelete the vehicle image - end*/
@@ -1564,7 +1576,7 @@ $(function () {
         });
 
 
-       
+
         $('#kvl_attachment_upload').on("change", function (e) {
             var vehicleRego = $('#VehicleRego').val();
             /*to check whether  the vehicle number is entered*/
@@ -1690,7 +1702,7 @@ $(function () {
 
         });
 
-       /* to get the  attachments automatically-start*/
+        /* to get the  attachments automatically-start*/
         function GetAttachmentLists() {
             $.ajax({
                 url: '/Guard/KeyVehicleLog?handler=Attachments&truck=' + $('#VehicleRego').val(),
@@ -1745,9 +1757,9 @@ $(function () {
                 else {
                     //if (confirm('Attachment with same name already exists. Do you want to Replace it?')) {
                     DeletePersonImage();
-                        $('#vkl-copyorreplace-modal').modal('show');
-                        $('#txtPersonOrVehicle').val('Person');
-                       /* PersonImageUpload('yes')*/
+                    $('#vkl-copyorreplace-modal').modal('show');
+                    $('#txtPersonOrVehicle').val('Person');
+                    /* PersonImageUpload('yes')*/
                     //}
                 }
             }
@@ -1780,18 +1792,18 @@ $(function () {
             if ($('#txtPersonOrVehicle').val() == 'Vehicle') {
                 VehicleImageUpload('replace')
             }
-          
+
             $('#vkl-copyorreplace-modal').modal('hide');
-            
+
         });
-        
+
         $('#btnSkip').on("click", function (e) {
-            
+
 
             $('#vkl-copyorreplace-modal').modal('hide');
 
         });
-        
+
         $('#btnLetmeDecide').on("click", function (e) {
 
 
@@ -1833,7 +1845,7 @@ $(function () {
         function ReplacePersonImage() {
             var foundit = 'cancel';
             $("#kvl-attachment-list li").each((id, elem) => {
-                if (elem.innerText == $('#CompanyName').val() + "-" + $('#PersonType').find('option:selected').text() + "-" + $('#PersonName').val()  + "." + "jpg") {
+                if (elem.innerText == $('#CompanyName').val() + "-" + $('#PersonType').find('option:selected').text() + "-" + $('#PersonName').val() + "." + "jpg") {
                     foundit = 'yes';
 
 
@@ -1929,7 +1941,7 @@ $(function () {
                             icon.title = 'Error';
                         }
                         GetVehicleImage();
-                        
+
 
                     });
 
@@ -2024,7 +2036,7 @@ $(function () {
                             icon.className = 'fa fa-exclamation-triangle ml-2 text-warning';
                             icon.title = 'Error';
                         }
-                       
+
                         GetPersonImage();
 
 
@@ -2205,6 +2217,7 @@ $(function () {
                             items.push(item);
                         });
                         response(items);
+
                     },
                     error: function (response) {
                         alert(response.responseText);
@@ -2231,7 +2244,9 @@ $(function () {
                     });
                 }
             }
+
         });
+
 
         if (!gridAuditHistory) {
             $('#key_vehicle_log_audit_history').DataTable({
@@ -2317,8 +2332,8 @@ $(function () {
             },
             { data: 'detail.keyVehicleLogProfile.vehicleRego', width: '8%' },
             { data: 'plate', orderable: false, width: '4%' },
-            
-            { data: 'detail.poiOrBDM',  width: '2%' },
+
+            { data: 'detail.poiOrBDM', width: '2%' },
             { data: 'detail.companyName', width: '8%' },
             { data: 'detail.personName', orderable: false, width: '8%' },
             { data: 'clientSite', orderable: false, width: '8%' },
@@ -2502,9 +2517,8 @@ $(function () {
             return;
         }
         var rowCount = $('#tbl_kvl_fields tr').length;
-      
-        if (selFieldTypeId == '9' && rowCount == 8)
-        {
+
+        if (selFieldTypeId == '9' && rowCount == 8) {
             alert('Maximum number of CRM/BDM Activity exeeded');
             return;
         }
