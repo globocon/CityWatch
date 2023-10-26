@@ -79,6 +79,16 @@
         buttonTextAlignment: 'left',
         includeSelectAllOption: true,
     });
+    //$('#Guard_Access').on('change', function () {
+    //    $(".multiselect-option input[type=checkbox]:checked").each(function () {
+    //        var isChecked1 = $(this).is(':checked');
+    //        if (isChecked1 == true) {
+    //            crmindivid = $(this).closest('checkbox').find('#IsCRMIndividualId').val();
+    //        }
+
+    //    });
+
+    //});
     function getSmartWandOrOfficerPosition(isPosition, clientSiteName, smartWandOrPositionId) {
         const url = isPosition ?
             '/Guard/Login?handler=OfficerPositions' :
@@ -2699,7 +2709,7 @@
 
 
 
-            $('#txt_securityLicenseNoIR').val('');
+           /* $('#txt_securityLicenseNoIR').val('');*/
             
 
             $.ajax({
@@ -2712,7 +2722,7 @@
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function (result) {
                 if (result.accessPermission) {
-                    $('#txt_securityLicenseNoIR').val('');
+                   /* $('#txt_securityLicenseNoIR').val('');*/
                     $('#modelGuardLoginConIR').modal('hide');
 
                     clearGuardValidationSummary('GuardLoginValidationSummaryIR');
@@ -2721,7 +2731,7 @@
                 else {
 
                     $('#txt_securityLicenseNo').val('');
-                    $('#txt_securityLicenseNoIR').val('');
+                    /*$('#txt_securityLicenseNoIR').val('');*/
                     $('#modelGuardLoginConIR').modal('show');
                     if (result.successCode === 0) {
                         displayGuardValidationSummary('GuardLoginValidationSummaryIR', result.successMessage);

@@ -299,7 +299,7 @@ namespace CityWatch.Web.Pages.Admin
             {
                 foreach (var item in guard.GuardAccess)
                 {
-                    guard.IsLB_KV_IR = true;
+                    
                     int val = Convert.ToInt32(item);
                     if (val == 1)
                     {
@@ -888,12 +888,33 @@ namespace CityWatch.Web.Pages.Admin
                     {
                         /* Store the value of the Guard Id to seesion for create the Ir from the session-start */
                         HttpContext.Session.SetString("GuardId", guard.Id.ToString());
-                        AccessPermission = true;
-                        if (AuthUserHelper.LoggedInUserId != null)
+                        if (guard.IsActive)
                         {
-                            LoggedInUserId = AuthUserHelper.LoggedInUserId;
+                            if (guard.IsLB_KV_IR)
+                            {
+                                AccessPermission = true;
+                                GuId = guard.Id;
+                                if (AuthUserHelper.LoggedInUserId != null)
+                                {
+                                    LoggedInUserId = AuthUserHelper.LoggedInUserId;
+                                }
+                                SuccessCode = 1;
+                            }
+                            else
+                            {
+                                SuccessMessage = "Not authorized to access this page";
+                            }
                         }
-                        SuccessCode = 1;
+                        else
+                        {
+                            SuccessMessage = "Guard is inactive";
+                        }
+                        
+                        //if (AuthUserHelper.LoggedInUserId != null)
+                        //{
+                        //    LoggedInUserId = AuthUserHelper.LoggedInUserId;
+                        //}
+                        //SuccessCode = 1;
                     }
                     /* Store the value of the Guard Id to seesion for create the Ir from the session-end */
 

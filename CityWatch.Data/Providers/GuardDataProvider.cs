@@ -83,31 +83,15 @@ namespace CityWatch.Data.Providers
                 {
                     updateGuard.Initial = guard.Initial;
                 }
-                
                     updateGuard.State = guard.State;
-                
-                    updateGuard.Provider = guard.Provider;
-                
+                    updateGuard.Provider = guard.Provider;               
                 updateGuard.Mobile = guard.Mobile;
                 updateGuard.Email = guard.Email;
                 updateGuard.IsKPIAccess = guard.IsKPIAccess;
                 updateGuard.IsRCAccess = guard.IsRCAccess;
-                if (guard.IsKPIAccess == true)
-                {
-                    updateGuard.IsKPIAccess = guard.IsKPIAccess;
-                }
-                else if (guard.IsRCAccess == true)
-                {
-                    updateGuard.IsRCAccess = guard.IsRCAccess;
-                }
-                else if (guard.IsSTATS == true)
-                {
                     updateGuard.IsSTATS = guard.IsSTATS;
-                }
-                else if (guard.IsLB_KV_IR == true)
-                {
                     updateGuard.IsLB_KV_IR = guard.IsLB_KV_IR;
-                }
+                
             }
 
             _context.SaveChanges();
