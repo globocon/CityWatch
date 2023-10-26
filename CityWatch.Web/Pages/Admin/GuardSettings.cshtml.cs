@@ -801,6 +801,34 @@ namespace CityWatch.Web.Pages.Admin
                 var guard = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(securityLicenseNo);
                 if (guard != null)
                 {
+                    //code to check the SecurityNo of Type Patrols&Alarm Statics
+                    if (type == "Patrols")
+                    {
+                        if (guard.IsActive)
+                        {
+                            if (guard.IsSTATS)
+                            {
+                                AccessPermission = true;
+                                GuId = guard.Id;
+                                if (AuthUserHelper.LoggedInUserId != null)
+                                {
+                                    LoggedInUserId = AuthUserHelper.LoggedInUserId;
+
+                                }
+
+                                SuccessCode = 1;
+                            }
+                            else
+                            {
+                                SuccessMessage = "Not authorized to access this page";
+                            }
+                        }
+                        else
+                        {
+                            SuccessMessage = "Guard is inactive";
+                        }
+
+                    }
 
                     if (type == "KPI")
                     {
