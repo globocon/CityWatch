@@ -2,7 +2,7 @@
 using CityWatch.Data.Providers;
 using CityWatch.Web.Models;
 using DocumentFormat.OpenXml.Office.CustomUI;
-using DocumentFormat.OpenXml.Spreadsheet
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;

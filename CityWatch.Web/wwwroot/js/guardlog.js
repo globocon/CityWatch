@@ -1154,29 +1154,13 @@
             return;
         }
 
-        // var selectedValues = [data.isRCAccess, data.isKPIAccess];
-        var selectedValues = [];
-        if (data.isRCAccess) {
-            selectedValues.push(4);
-        }
-        if (data.isKPIAccess) {
-            selectedValues.push(3);
-        }
-        if (data.isLB_KV_IR) {
-            selectedValues.push(1);
-        }
-        if (data.isSTATS) {
-            selectedValues.push(2);
-        }
-        selectedValues.forEach(function (value) {
+       
 
         const clientSitePocControl = $('#vklSitePOC');
         const clientSiteLocControl = $('#vklSiteLoc');
 
 
 
-            $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
-        });
         $.ajax({
             url: '/Admin/AuditSiteLog?handler=ClientSiteLocationsAndPocs&clientSiteIds=' + $(this).val().join(';'),
             type: 'GET',
