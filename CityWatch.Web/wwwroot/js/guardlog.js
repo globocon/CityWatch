@@ -1944,47 +1944,6 @@
 
     /****** Guards *******/
 
-    /*Show login confirmation for Patrols & Alarm Statistics start*/
-    $("#LoginConformationBtnPatrols").on('click', function () {
-        $('#txt_securityLicenseNoPatrols').val('');
-        clearGuardValidationSummary('GuardLoginValidationSummaryRC');
-        $("#modelGuardLoginConPatrol").modal("show");
-        return false;
-    });
-    $('#btnGuardLoginPatrols').on('click', function () {
-        const securityLicenseNo = $('#txt_securityLicenseNoPatrols').val();
-        if (securityLicenseNo === '') {
-            displayGuardValidationSummary('GuardLoginValidationSummary', 'Please enter the security license No ');
-        }
-        else {
-            $.ajax({
-                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
-                type: 'POST',
-                data: {
-                    securityLicenseNo: securityLicenseNo,
-                    type: 'Patrols'
-                },
-                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-            }).done(function (result) {
-                if (result.accessPermission) {
-                    $('#txt_securityLicenseNo').val('');
-                    $('#modelGuardLoginCon').modal('hide');
-                    window.location.href = 'Account/Unauthorized';
-
-                    clearGuardValidationSummary('GuardLoginValidationSummary');
-                }
-                else {
-                    $('#txt_securityLicenseNo').val('');
-                    if (result.successCode === 0) {
-                        displayGuardValidationSummary('GuardLoginValidationSummary', result.successMessage);
-                    }
-                }
-            });
-
-        }
-    });
-    /*Show login confirmation for Patrols & Alarm Statistics stop*/
-
     function renderGuardActiveCell(value, type, data) {
         if (type === 'display') {
             let cellValue = value ? '<i class="fa fa-check-circle text-success"></i>' : '<i class="fa fa-times-circle text-danger"></i>';
@@ -2074,7 +2033,7 @@
         $('#GuardLicense_GuardId').val(data.id);
         $('#GuardCompliance_GuardId').val(data.id);
 
-        // To Select the values of Guard Access in dropdown;
+        // ;
         var selectedValues = [];
         if (data.isRCAccess) {
             selectedValues.push(4);
@@ -2094,6 +2053,9 @@
         });
         gridGuardLicenses.ajax.reload();
         gridGuardCompliances.ajax.reload();
+        $("#Guard_Access").multiselect();
+        $("#Guard_Access").val(selectedValues);
+        $("#Guard_Access").multiselect("refresh");
     });
 
     $('#btn_add_guard_top, #btn_add_guard_bottom').on('click', function () {
@@ -2107,6 +2069,8 @@
 
         // Initialize the multiselect dropdown
         $("#Guard_Access").multiselect();
+        $("#Guard_Access").val(value);
+        $("#Guard_Access").multiselect("refresh");
         $('#addGuardModal').modal('show');
 
     });
