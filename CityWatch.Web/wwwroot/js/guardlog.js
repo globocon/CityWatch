@@ -2072,8 +2072,8 @@
         clearGuardValidationSummary('glValidationSummary');
         $('#guard_saved_status').hide();
         $('#Guard_IsActive').val($(cbIsActive).is(':checked'));
-        $('#Guard_IsRCAccess').val($(cbIsRCAccess).is(':checked'));
-        $('#Guard_IsKPIAccess').val($(cbIsKPIAccess).is(':checked'));
+        //$('#Guard_IsRCAccess').val($(cbIsRCAccess).is(':checked'));
+        //$('#Guard_IsKPIAccess').val($(cbIsKPIAccess).is(':checked'));
         $.ajax({
             url: '/Admin/GuardSettings?handler=Guards',
             data: $('#frm_add_guard').serialize(),

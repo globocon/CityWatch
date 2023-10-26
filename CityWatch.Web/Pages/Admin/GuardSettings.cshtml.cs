@@ -299,6 +299,7 @@ namespace CityWatch.Web.Pages.Admin
             {
                 foreach (var item in guard.GuardAccess)
                 {
+                    guard.IsLB_KV_IR = true;
                     int val = Convert.ToInt32(item);
                     if (val == 1)
                     {
