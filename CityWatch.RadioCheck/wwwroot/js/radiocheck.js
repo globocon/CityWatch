@@ -460,6 +460,12 @@ let clientSiteActiveGuardsLogBookDetails = $('#clientSiteActiveGuardsLogBookDeta
             visible:false,
 
         },
+        {
+            data: 'notes',
+            width: '9%',
+            className: "text-center",
+
+        },
 
         {
             data: 'activity',

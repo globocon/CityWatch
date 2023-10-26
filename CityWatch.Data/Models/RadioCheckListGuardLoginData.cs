@@ -16,6 +16,7 @@ namespace CityWatch.Data.Models
         public int LogBookId { get; set; }
         public string Activity { get; set; }
         public string LogBookCreatedTime { get; set; }
+        public string Notes { get; set; }
 
     }
 }
