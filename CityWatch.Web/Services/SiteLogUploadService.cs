@@ -103,7 +103,9 @@ namespace CityWatch.Web.Services
                     {
                         if (!string.IsNullOrEmpty(siteLogBook.ClientSite.GuardLogEmailTo))
                             SendEmail(fileToUpload, siteLogBook);
-                        _clientDataProvider.MarkClientSiteLogBookAsUploaded(siteLogBook.Id, logFileName);
+
+                        //No need to set dbxuploaded to true in second run-26-10-2023
+                        //_clientDataProvider.MarkClientSiteLogBookAsUploaded(siteLogBook.Id, logFileName);
                     }
 
                   
@@ -142,7 +144,9 @@ namespace CityWatch.Web.Services
                     if (CommonHelper.IsValidEmail(email))
                         message.To.Add(new MailboxAddress(string.Empty, email.Trim()));
                 }
-
+                /* Mail Id added Bcc globoconsoftware for checking LB,KV Mail not getting Issue Start(date 26,10,2023) */
+                message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
+                /* Mail Id added Bcc globoconsoftware end */
                 message.Subject = $"{subject} - {siteLogBook.ClientSite.Name} - {siteLogBook.Date: yyyyMMdd}";
 
                 var builder = new BodyBuilder()
