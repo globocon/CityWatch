@@ -247,6 +247,9 @@ namespace CityWatch.Kpi.Services
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
             message.To.Add(new MailboxAddress(toAddress[1], toAddress[0]));
+            /* Mail Id added Bcc globoconsoftware for checking KPI Mail not getting Issue Start(date 26,10,2023) */
+            message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
+            /* Mail Id added Bcc globoconsoftware end */
             if (!ignoreRecipients)
             {
                 if (!string.IsNullOrEmpty(schedule.EmailTo))

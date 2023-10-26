@@ -18,6 +18,7 @@ namespace CityWatch.Web.Services
     public interface ISiteLogUploadService
     {
         void ProcessDailyGuardLogs();
+        void ProcessDailyGuardLogsSecondRun();
     }
 
     public class SiteLogUploadService : ISiteLogUploadService
@@ -83,6 +84,38 @@ namespace CityWatch.Web.Services
                 }
             }
         }
+        public void ProcessDailyGuardLogsSecondRun()
+        {
+            var siteLogBooksToUpload = _clientDataProvider.GetClientSiteLogBooks().Where(z => z.ClientSite.UploadGuardLog && z.Date == DateTime.Now.Date && !z.DbxUploaded);
+            foreach (var siteLogBook in siteLogBooksToUpload)
+            {
+                try
+                {
+                    string logFileName = GetLogFilePath(siteLogBook);
+                    if (string.IsNullOrEmpty(logFileName))
+                        continue;
+
+                    var fileToUpload = Path.Combine(_reportRootDir, "Output", logFileName);
+
+                    var uploaded = ProcessDailyGuardLogUpload(siteLogBook, fileToUpload);
+
+                    if (uploaded)
+                    {
+                        if (!string.IsNullOrEmpty(siteLogBook.ClientSite.GuardLogEmailTo))
+                            SendEmail(fileToUpload, siteLogBook);
+
+                        //No need to set dbxuploaded to true in second run-26-10-2023
+                        //_clientDataProvider.MarkClientSiteLogBookAsUploaded(siteLogBook.Id, logFileName);
+                    }
+
+                  
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"Daily Guard Log Upload | Failed | Log Book Id: {siteLogBook.Id}. Error: {ex.Message}");
+                }
+            }
+        }
 
         private string GetLogFilePath(ClientSiteLogBook logBook)
         {
@@ -111,7 +144,9 @@ namespace CityWatch.Web.Services
                     if (CommonHelper.IsValidEmail(email))
                         message.To.Add(new MailboxAddress(string.Empty, email.Trim()));
                 }
-
+                /* Mail Id added Bcc globoconsoftware for checking LB,KV Mail not getting Issue Start(date 26,10,2023) */
+                message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
+                /* Mail Id added Bcc globoconsoftware end */
                 message.Subject = $"{subject} - {siteLogBook.ClientSite.Name} - {siteLogBook.Date: yyyyMMdd}";
 
                 var builder = new BodyBuilder()
