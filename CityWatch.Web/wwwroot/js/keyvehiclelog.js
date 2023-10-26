@@ -1207,9 +1207,9 @@ $(function () {
         /* to display the corresponding image on changing the reg no,person type,company name and person name-end*/
 
 
-        /* $('#VehicleRego, #Trailer1Rego, #Trailer2Rego, #Trailer3Rego, #Trailer4Rego,#crmVehicleRego').on('keypress', vehicleRegoValidateSplChars);*/
+       /* $('#VehicleRego, #Trailer1Rego, #Trailer2Rego, #Trailer3Rego, #Trailer4Rego,#crmVehicleRego').on('keypress', vehicleRegoValidateSplChars);*/
         $('#VehicleRego, #Trailer1Rego, #Trailer2Rego, #Trailer3Rego, #Trailer4Rego,#crmVehicleRego').on('keyup', vehicleRegoToUpperCase);
-
+        
         $('#clear_initialcall_time').on('click', function () {
             $('#new_log_initial_call').val('');
             $('#InitialCallTime').val('');
@@ -2217,8 +2217,7 @@ $(function () {
                             items.push(item);
                         });
                         response(items);
-
-                    },
+    },
                     error: function (response) {
                         alert(response.responseText);
                     },
