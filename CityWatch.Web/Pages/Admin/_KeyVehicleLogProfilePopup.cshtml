@@ -131,8 +131,8 @@
                                     {
                                         <tr>
                                             <td>@auditHistory.AuditTime.ToString("dd MMM yyyy @ HH:mm")</td>
-                                            <td>@auditHistory.GuardLogin.Guard.Initial</td>
-                                            <td>@auditHistory.AuditMessage</td>
+                                            <td>@auditHistory.GuardLogin.Guard.Initial <a href="#" class="ml-2"><i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="@auditHistory.GuardLogin.GuardId"></i></a></td>
+                                            <td>@auditHistory.AuditMessage </td>
                                         </tr>
                                     }
                                 }

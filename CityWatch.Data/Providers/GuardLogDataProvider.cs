@@ -80,7 +80,7 @@ namespace CityWatch.Data.Providers
 
         //for getting logBook details of the  guard-start
 
-        List<RadioCheckListGuardLoginData> GetActiveGuardlogBookDetails(int clientSiteId,int guardId);
+        List<RadioCheckListGuardLoginData> GetActiveGuardlogBookDetails(int clientSiteId, int guardId);
         //for getting logBook details of the  guard-end
 
         //for getting list of guards not available-start
@@ -886,7 +886,7 @@ namespace CityWatch.Data.Providers
         }
 
         //for getting logbookdetails of the guard-start
-        public List<RadioCheckListGuardLoginData> GetActiveGuardlogBookDetails(int clientSiteId,int guardId)
+        public List<RadioCheckListGuardLoginData> GetActiveGuardlogBookDetails(int clientSiteId, int guardId)
         {
             var param1 = new SqlParameter();
             param1.ParameterName = "@ClientSiteId";
@@ -898,9 +898,9 @@ namespace CityWatch.Data.Providers
             param2.SqlDbType = SqlDbType.Int;
             param2.SqlValue = guardId;
 
-            
-            var allvalues = _context.RadioCheckListGuardLoginData.FromSqlRaw($"EXEC sp_GetActiveGuardLogBookDetailsForRC @ClientSiteId,@GuardId",param1,param2).ToList();
-            
+
+            var allvalues = _context.RadioCheckListGuardLoginData.FromSqlRaw($"EXEC sp_GetActiveGuardLogBookDetailsForRC @ClientSiteId,@GuardId", param1, param2).ToList();
+
             return allvalues;
         }
         //for getting logbookdetails of the guard-end
