@@ -130,11 +130,11 @@ namespace CityWatch.Web.Pages.Admin
         //{
         //    return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego));
         //}
-        
+
         //to check with bdm-start
-        public JsonResult OnGetKeyVehicleLogProfiles(string truckRego,string poi)
+        public JsonResult OnGetKeyVehicleLogProfiles(string truckRego, string poi)
         {
-            return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego,poi));
+            return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego, poi));
         }
         //to check with bdm-end
         public JsonResult OnPostUpdateKeyVehicleLogProfile(KeyVehicleLogVisitorPersonalDetail keyVehicleLogVisitorPersonalDetail)
@@ -200,8 +200,8 @@ namespace CityWatch.Web.Pages.Admin
             var sitePocs = new List<SelectListItem>();
             var arClientSiteIds = clientSiteIds.Split(";").Select(z => int.Parse(z)).ToArray();
 
-            siteLocations = _clientViewDataService.GetClientSiteLocations(arClientSiteIds);
-            sitePocs = _clientViewDataService.GetClientSitePocs(arClientSiteIds);
+            siteLocations = _clientViewDataService.GetClientSiteLocationsNew(arClientSiteIds);
+            sitePocs = _clientViewDataService.GetClientSitePocsNew(arClientSiteIds);
 
             return new JsonResult(new { siteLocations, sitePocs });
         }

@@ -1013,8 +1013,9 @@
         $('#KeyVehicleLogAuditLogRequest_Product').val('');
         $('#KeyVehicleLogAuditLogRequest_TruckConfig').val('');
         $('#KeyVehicleLogAuditLogRequest_TrailerType').val('');
-        $('#KeyVehicleLogAuditLogRequest_ClientSitePocId').val('');
-        $('#KeyVehicleLogAuditLogRequest_ClientSiteLocationId').val('');
+        $('#vklSitePOC').val('');
+        
+        $('#vklSiteLoc').val('');
         $('#KeyVehicleLogAuditLogRequest_KeyNo').val('');
         $('#listKeyVehicleLogAuditLogRequestKeyNo').val(null).trigger('change');
     });
@@ -1146,11 +1147,13 @@
         includeSelectAllOption: true,
     });
 
+  
     $('#vklClientSiteId').on('change', function () {
         if ($('#vklClientSiteId').val().length === 0) {
             alert('Please select a client site');
             return;
         }
+
         // var selectedValues = [data.isRCAccess, data.isKPIAccess];
         var selectedValues = [];
         if (data.isRCAccess) {
@@ -1167,6 +1170,11 @@
         }
         selectedValues.forEach(function (value) {
 
+        const clientSitePocControl = $('#vklSitePOC');
+        const clientSiteLocControl = $('#vklSiteLoc');
+
+
+
             $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
         });
         $.ajax({
@@ -1174,14 +1182,17 @@
             type: 'GET',
             datatype: 'json',
         }).done(function (data) {
-            $('#KeyVehicleLogAuditLogRequest_ClientSitePocId').html('');
-            $('#KeyVehicleLogAuditLogRequest_ClientSiteLocationId').html('');
+            clientSitePocControl.html('');
+            clientSiteLocControl.html('');
             data.sitePocs.map(function (result) {
-                $('#KeyVehicleLogAuditLogRequest_ClientSitePocId').append('<option value="' + result.value + '">' + result.text + '</option>');
+                
+                clientSitePocControl.append('<option value="' + result.value + '">' + result.text + '</option>');
             });
             data.siteLocations.map(function (result) {
-                $('#KeyVehicleLogAuditLogRequest_ClientSiteLocationId').append('<option value="' + result.value + '">' + result.text + '</option>');
+                clientSiteLocControl.append('<option value="' + result.value + '">' + result.text + '</option>');
             });
+            clientSitePocControl.multiselect('rebuild');
+            clientSiteLocControl.multiselect('rebuild');
         });
     });
 
@@ -1200,6 +1211,24 @@
         buttonTextAlignment: 'left',
         includeSelectAllOption: true,
     });
+    // for selecting more than one Site Poc-start
+    $('#vklSitePOC').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
+      // for selecting more than one Site Poc-end
+      // for selecting more than one Site Loc-start
+    $('#vklSiteLoc').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
+    // for selecting more than one Site Loc-end
     $('#vklPersonOfInterest').on('change', function () {
         const personOfInterestId = $(this).val();
         $("#vklPersonOfInterest").val(personOfInterestId);
@@ -1240,6 +1269,8 @@
         $('#KeyVehicleLogAuditLogRequest_LogBookType').val(2);
 
         $('#KeyVehicleLogAuditLogRequest_PersonOfInterest').val($('#vklPersonOfInterest').val());
+        $('#KeyVehicleLogAuditLogRequest_ClientSitePocIdNew').val($('#vklSitePOC').val());
+        $('#KeyVehicleLogAuditLogRequest_ClientSiteLocationIdNew').val($('#vklSiteLoc').val());
         $.ajax({
             url: '/Admin/AuditSiteLog?handler=KeyVehicleSiteLogs',
             type: 'POST',

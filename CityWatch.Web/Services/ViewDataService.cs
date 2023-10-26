@@ -2,6 +2,7 @@
 using CityWatch.Data.Providers;
 using CityWatch.Web.Models;
 using DocumentFormat.OpenXml.Office.CustomUI;
+using DocumentFormat.OpenXml.Spreadsheet
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
@@ -85,8 +86,10 @@ namespace CityWatch.Web.Services
         IEnumerable<string> GetCompanyNames(string startsWith);
         bool IsClientSiteDuressEnabled(int clientSiteId);
         void EnableClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId);
+
         //For Access Type
         List<SelectListItem> GetAccessTypes(bool withoutSelect = false);
+
     }
 
     public class ViewDataService : IViewDataService
@@ -897,6 +900,7 @@ namespace CityWatch.Web.Services
             }
         }
 
+
         //code added for Guard Access Dropdown start
         //public List<GuardAccess> GetAccessTypes()
         //{
@@ -920,5 +924,6 @@ namespace CityWatch.Web.Services
         }
         //}
         //code added for Guard Access Dropdown stop
+
     }
 }
