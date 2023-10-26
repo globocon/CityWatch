@@ -200,8 +200,8 @@ namespace CityWatch.Web.Pages.Admin
             var sitePocs = new List<SelectListItem>();
             var arClientSiteIds = clientSiteIds.Split(";").Select(z => int.Parse(z)).ToArray();
 
-            siteLocations = _clientViewDataService.GetClientSiteLocations(arClientSiteIds);
-            sitePocs = _clientViewDataService.GetClientSitePocs(arClientSiteIds);
+            siteLocations = _clientViewDataService.GetClientSiteLocationsNew(arClientSiteIds);
+            sitePocs = _clientViewDataService.GetClientSitePocsNew(arClientSiteIds);
 
             return new JsonResult(new { siteLocations, sitePocs });
         }
