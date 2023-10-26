@@ -71,7 +71,24 @@
             }
         });
     }
+    /* code for AccesGuard Dropdown*/
+    $('#Guard_Access').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
+    //$('#Guard_Access').on('change', function () {
+    //    $(".multiselect-option input[type=checkbox]:checked").each(function () {
+    //        var isChecked1 = $(this).is(':checked');
+    //        if (isChecked1 == true) {
+    //            crmindivid = $(this).closest('checkbox').find('#IsCRMIndividualId').val();
+    //        }
 
+    //    });
+
+    //});
     function getSmartWandOrOfficerPosition(isPosition, clientSiteName, smartWandOrPositionId) {
         const url = isPosition ?
             '/Guard/Login?handler=OfficerPositions' :
@@ -1136,11 +1153,30 @@
             alert('Please select a client site');
             return;
         }
+
+        // var selectedValues = [data.isRCAccess, data.isKPIAccess];
+        var selectedValues = [];
+        if (data.isRCAccess) {
+            selectedValues.push(4);
+        }
+        if (data.isKPIAccess) {
+            selectedValues.push(3);
+        }
+        if (data.isLB_KV_IR) {
+            selectedValues.push(1);
+        }
+        if (data.isSTATS) {
+            selectedValues.push(2);
+        }
+        selectedValues.forEach(function (value) {
+
         const clientSitePocControl = $('#vklSitePOC');
         const clientSiteLocControl = $('#vklSiteLoc');
 
-        
 
+
+            $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+        });
         $.ajax({
             url: '/Admin/AuditSiteLog?handler=ClientSiteLocationsAndPocs&clientSiteIds=' + $(this).val().join(';'),
             type: 'GET',
@@ -2038,8 +2074,29 @@
         $('#GuardLicense_GuardId').val(data.id);
         $('#GuardCompliance_GuardId').val(data.id);
 
+        // ;
+        var selectedValues = [];
+        if (data.isRCAccess) {
+            selectedValues.push(4);
+        }
+        if (data.isKPIAccess) {
+            selectedValues.push(3);
+        }
+        if (data.isLB_KV_IR) {
+            selectedValues.push(1);
+        }
+        if (data.isSTATS) {
+            selectedValues.push(2);
+        }
+        selectedValues.forEach(function (value) {
+
+            $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+        });
         gridGuardLicenses.ajax.reload();
         gridGuardCompliances.ajax.reload();
+        $("#Guard_Access").multiselect();
+        $("#Guard_Access").val(selectedValues);
+        $("#Guard_Access").multiselect("refresh");
     });
 
     $('#btn_add_guard_top, #btn_add_guard_bottom').on('click', function () {
@@ -2048,7 +2105,15 @@
 
         $('.btn-add-guard-addl-details').hide();
         resetGuardDetailsModal();
+        let value = 1;
+        $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+
+        // Initialize the multiselect dropdown
+        $("#Guard_Access").multiselect();
+        $("#Guard_Access").val(value);
+        $("#Guard_Access").multiselect("refresh");
         $('#addGuardModal').modal('show');
+
     });
 
     function resetGuardDetailsModal() {
@@ -2065,14 +2130,15 @@
         $('#cbIsRCAccess').prop('checked', false);
         $('#cbIsKPIAccess').prop('checked', false);
         $('#glValidationSummary').html('');
+        $(".multiselect-option input[type=checkbox]").prop("checked", false);
     }
 
     $('#btn_save_guard').on('click', function () {
         clearGuardValidationSummary('glValidationSummary');
         $('#guard_saved_status').hide();
         $('#Guard_IsActive').val($(cbIsActive).is(':checked'));
-        $('#Guard_IsRCAccess').val($(cbIsRCAccess).is(':checked'));
-        $('#Guard_IsKPIAccess').val($(cbIsKPIAccess).is(':checked'));
+        //$('#Guard_IsRCAccess').val($(cbIsRCAccess).is(':checked'));
+        //$('#Guard_IsKPIAccess').val($(cbIsKPIAccess).is(':checked'));
         $.ajax({
             url: '/Admin/GuardSettings?handler=Guards',
             data: $('#frm_add_guard').serialize(),
@@ -2674,7 +2740,7 @@
 
 
 
-            $('#txt_securityLicenseNoIR').val('');
+           /* $('#txt_securityLicenseNoIR').val('');*/
             
 
             $.ajax({
@@ -2687,7 +2753,7 @@
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function (result) {
                 if (result.accessPermission) {
-                    $('#txt_securityLicenseNoIR').val('');
+                   /* $('#txt_securityLicenseNoIR').val('');*/
                     $('#modelGuardLoginConIR').modal('hide');
 
                     clearGuardValidationSummary('GuardLoginValidationSummaryIR');
@@ -2696,7 +2762,7 @@
                 else {
 
                     $('#txt_securityLicenseNo').val('');
-                    $('#txt_securityLicenseNoIR').val('');
+                    /*$('#txt_securityLicenseNoIR').val('');*/
                     $('#modelGuardLoginConIR').modal('show');
                     if (result.successCode === 0) {
                         displayGuardValidationSummary('GuardLoginValidationSummaryIR', result.successMessage);

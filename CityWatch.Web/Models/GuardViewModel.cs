@@ -62,5 +62,7 @@ namespace CityWatch.Web.Models
         public string Mobile { get { return _guard.Mobile; } }
         public bool IsRCAccess { get { return _guard.IsRCAccess; } }
         public bool IsKPIAccess { get { return _guard.IsKPIAccess; } }
+        public bool IsLB_KV_IR { get { return _guard.IsLB_KV_IR; } }
+        public bool IsSTATS { get { return _guard.IsSTATS; } }
     }
 }

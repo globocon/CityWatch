@@ -111,8 +111,18 @@ namespace CityWatch.Web.Helpers
 
             if (pageName == PageNameHelper.ControlRoom)
             {
+                var kpiWebUrl = IsDevEnv ? string.Empty : "//kpi.cws-ir.com";
                 menuHtml.AppendLine("<div>");
-                menuHtml.AppendLine(@"<a href=""/Reports/PatrolData"" class=""nav-link py-0""><i class=""fa fa-car mr-2""></i>Patrols & Alarm Statistics</a>");
+                //menuHtml.AppendLine(@"<a href=""/Reports/PatrolData"" class=""nav-link py-0""><i class=""fa fa-car mr-2""></i>Patrols & Alarm Statistics</a>");
+                if (!AuthUserHelper.IsAdminUserLoggedIn)
+                {   /* Check the guard Login Conformation*/
+                    menuHtml.AppendFormat(@"<a href=""{0}"" class=""nav-link py-0"" id=""LoginConformationBtnPatrols"" target=""_blank""><i class=""fa fa-car mr-2""></i>Patrols & Alarm Statistics</a>", string.Empty).AppendLine();
+                }
+                else
+                {
+                    menuHtml.AppendFormat(@"<a href=""{0}"" class=""nav-link py-0"" target=""_blank""><i class=""fa fa-car mr-2""></i>Patrols & Alarm Statistics</a>", kpiWebUrl).AppendLine();
+
+                }
                 menuHtml.AppendLine("</div>");
             }
 

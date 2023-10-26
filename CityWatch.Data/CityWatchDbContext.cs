@@ -12,6 +12,7 @@ namespace CityWatch.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<ClientType> ClientTypes { get; set; }
+        public DbSet<GuardAccess> GuardAccess { get; set; }
         public DbSet<ClientSite> ClientSites { get; set; }
         public DbSet<ClientSiteKpiSetting> ClientSiteKpiSettings { get; set; }
         public DbSet<ClientSiteDayKpiSetting> ClientSiteDayKpiSettings { get; set; }

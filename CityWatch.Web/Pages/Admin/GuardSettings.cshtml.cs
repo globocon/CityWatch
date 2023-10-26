@@ -293,12 +293,38 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { data = _viewDataService.GetGuards() });
         }
 
-        public JsonResult OnPostGuards(Data.Models.Guard guard)
+        public JsonResult OnPostGuards(Data.Models.Guard guard, string ClientSiteIds)
         {
+            if (guard.GuardAccess != null)
+            {
+                foreach (var item in guard.GuardAccess)
+                {
+                    
+                    int val = Convert.ToInt32(item);
+                    if (val == 1)
+                    {
+                        guard.IsLB_KV_IR = true;
+                    }
+                    else if (val == 2)
+                    {
+                        guard.IsSTATS = true
+    ;
+                    }
+                    else if (val == 3)
+                    {
+                        guard.IsKPIAccess = true;
+                    }
+                    else if (val == 4)
+                    {
+                        guard.IsRCAccess = true;
+                    }
+                }
+            }
             if (!ModelState.IsValid)
             {
                 return new JsonResult(new { success = false, message = ModelState.Where(x => x.Value.Errors.Count > 0).Select(x => string.Join(',', x.Value.Errors.Select(y => y.ErrorMessage))) });
             }
+
 
             var status = true;
             var message = "Success";
@@ -775,6 +801,34 @@ namespace CityWatch.Web.Pages.Admin
                 var guard = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(securityLicenseNo);
                 if (guard != null)
                 {
+                    //code to check the SecurityNo of Type Patrols&Alarm Statics
+                    if (type == "Patrols")
+                    {
+                        if (guard.IsActive)
+                        {
+                            if (guard.IsSTATS)
+                            {
+                                AccessPermission = true;
+                                GuId = guard.Id;
+                                if (AuthUserHelper.LoggedInUserId != null)
+                                {
+                                    LoggedInUserId = AuthUserHelper.LoggedInUserId;
+
+                                }
+
+                                SuccessCode = 1;
+                            }
+                            else
+                            {
+                                SuccessMessage = "Not authorized to access this page";
+                            }
+                        }
+                        else
+                        {
+                            SuccessMessage = "Guard is inactive";
+                        }
+
+                    }
 
                     if (type == "KPI")
                     {
@@ -834,12 +888,33 @@ namespace CityWatch.Web.Pages.Admin
                     {
                         /* Store the value of the Guard Id to seesion for create the Ir from the session-start */
                         HttpContext.Session.SetString("GuardId", guard.Id.ToString());
-                        AccessPermission = true;
-                        if (AuthUserHelper.LoggedInUserId != null)
+                        if (guard.IsActive)
                         {
-                            LoggedInUserId = AuthUserHelper.LoggedInUserId;
+                            if (guard.IsLB_KV_IR)
+                            {
+                                AccessPermission = true;
+                                GuId = guard.Id;
+                                if (AuthUserHelper.LoggedInUserId != null)
+                                {
+                                    LoggedInUserId = AuthUserHelper.LoggedInUserId;
+                                }
+                                SuccessCode = 1;
+                            }
+                            else
+                            {
+                                SuccessMessage = "Not authorized to access this page";
+                            }
                         }
-                        SuccessCode = 1;
+                        else
+                        {
+                            SuccessMessage = "Guard is inactive";
+                        }
+                        
+                        //if (AuthUserHelper.LoggedInUserId != null)
+                        //{
+                        //    LoggedInUserId = AuthUserHelper.LoggedInUserId;
+                        //}
+                        //SuccessCode = 1;
                     }
                     /* Store the value of the Guard Id to seesion for create the Ir from the session-end */
 

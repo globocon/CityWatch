@@ -86,7 +86,7 @@ namespace CityWatch.Data.Providers
         List<GuardLogin> GetGuardLogin(int GuardLoginId,int logBookId);
         List<GuardLog> GetGuardLogs(int GuardLoginId, int logBookId);
 
-
+        List<GuardAccess> GetGuardAccess();
         ClientSite GetClientSitesUsingName(string name);
 
         List<ClientSite> GetClientSiteDetails(int[] clientSiteIds);
@@ -108,6 +108,11 @@ namespace CityWatch.Data.Providers
             _context = context;
             _configuration = configuration;
             _webHostEnvironment = webHostEnvironment;
+        }
+        //code added to get Guard Access
+        public List<GuardAccess> GetGuardAccess()
+        {
+            return _context.GuardAccess.OrderBy(x => x.Id).ToList();
         }
         //code added to search client name
         public List<ClientSite> GetUserClientSites(string type, string searchTerm)

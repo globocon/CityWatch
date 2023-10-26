@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -25,6 +26,10 @@ namespace CityWatch.Data.Models
         public DateTime? DateEnrolled { get; set; }
 
         public bool IsActive { get; set; }
+        public bool IsLB_KV_IR { get; set; }
+        public bool IsSTATS { get; set; }
+        [NotMapped]
+        public List<string> GuardAccess { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
