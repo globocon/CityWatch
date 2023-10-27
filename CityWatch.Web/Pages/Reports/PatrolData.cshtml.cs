@@ -37,8 +37,8 @@ namespace CityWatch.Web.Pages.Reports
 
         public ActionResult OnGet()
         {
-            if (!AuthUserHelper.IsAdminUserLoggedIn)
-                return Redirect(Url.Page("/Account/Unauthorized"));
+            //if (!AuthUserHelper.IsAdminUserLoggedIn)
+            //    return Redirect(Url.Page("/Account/Unauthorized"));
 
             return Page();
         }
