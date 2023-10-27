@@ -2699,6 +2699,7 @@
         });
     });
 
+
     $("#LoginConformationBtnRC").on('click', function () {
         $('#txt_securityLicenseNoRC').val('');
         clearGuardValidationSummary('GuardLoginValidationSummaryRC');
@@ -2712,6 +2713,14 @@
         $("#modelGuardLoginConIR").modal("show");
         return false;
     });
+    /*Show login confirmation for Patrol-start*/
+    $("#LoginConformationBtnPatrols").on('click', function () {
+        $('#txt_securityLicenseNoPatrols').val('');
+        clearGuardValidationSummary('GuardLoginValidationSummaryRC');
+        $("#modelGuardLoginConPatrol").modal("show");
+        return false;
+    });
+    /*Show login confirmation for Patrol-end*/
     /* Check if Guard can access IR*/
     /* Check if Guard can access the IR-start */
     /*used for accessing the SecurityLicenseNumber if a guard is entering the incident report*/
@@ -2869,4 +2878,54 @@
             });
         }
     });
+
+    /* Check if Guard can access the patrol -start */
+    /*used for accessing the SecurityLicenseNumber if a guard is entering the incident report*/
+    $('#btnGuardLoginPatrols').on('click', function () {
+        const securityLicenseNo = $('#txt_securityLicenseNoPatrols').val();
+        if (securityLicenseNo === '') {
+            displayGuardValidationSummary('GuardLoginValidationSummaryPatrols', 'Please enter the security license No ');
+        }
+        else {
+
+
+
+            /* $('#txt_securityLicenseNoIR').val('');*/
+
+
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+                type: 'POST',
+                data: {
+                    securityLicenseNo: securityLicenseNo,
+                    type: 'Patrols'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.accessPermission) {
+                    /* $('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginConPatrol').modal('hide');
+
+                    clearGuardValidationSummary('GuardLoginValidationSummaryPatrols');
+                    window.location.href = '/Reports/PatrolData';
+                }
+                else {
+
+                   // $('#txt_securityLicenseNo').val('');
+                    /*$('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginConPatrol').modal('show');
+                    if (result.successCode === 0) {
+                        displayGuardValidationSummary('GuardLoginValidationSummaryPatrols', result.successMessage);
+                    }
+                }
+            });
+
+
+            clearGuardValidationSummary('GuardLoginValidationSummaryIR');
+
+
+
+        }
+    });
+    /* Check if Guard can access the IR-END */
 });

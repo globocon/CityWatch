@@ -120,7 +120,7 @@ namespace CityWatch.Web.Helpers
                 }
                 else
                 {
-                    menuHtml.AppendFormat(@"<a href=""{0}"" class=""nav-link py-0"" target=""_blank""><i class=""fa fa-car mr-2""></i>Patrols & Alarm Statistics</a>", kpiWebUrl).AppendLine();
+                    menuHtml.AppendFormat(@"<a href=""/Reports/PatrolData"" class=""nav-link py-0"" target=""_blank""><i class=""fa fa-car mr-2""></i>Patrols & Alarm Statistics</a>", kpiWebUrl).AppendLine();
 
                 }
                 menuHtml.AppendLine("</div>");
