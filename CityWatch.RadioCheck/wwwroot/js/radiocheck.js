@@ -182,7 +182,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             data: 'guardName',
             width: '20%',
             render: function (value, type, data) {
-                return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
                     '<a href="#" class="ml-2"><i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i></a>';
             }
         },
@@ -274,7 +274,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             data: 'guardName',
             width: '20%',
             render: function (value, type, data) {
-                return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
                     '<a href="#" class="ml-2"><i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i></a>';
             }
         },
@@ -382,7 +382,7 @@ let clientSiteNotAvailableGuards = $('#clientSiteNotAvailableGuards').DataTable(
             data: 'guardName',
             width: '20%',
             render: function (value, type, data) {
-                return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i><i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
                     '<a href="#" class="ml-2"><i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i></a>';
             }
         },
