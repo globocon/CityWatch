@@ -72,7 +72,7 @@ let clientSiteActivityStatus = $('#clientSiteActivityStatus').DataTable({
                 if (value === null) return 'N/A';
                 return value === true ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' : '<i class="fa fa-times-circle text-danger rc-client-status"></i>';
             }
-        },        
+        },
         { data: 'recentActivity' },
         {
             targets: -1,
@@ -141,7 +141,7 @@ $('#btnSaveRadioStatus').on('click', function () {
         $('#selectRadioCheckStatus').modal('hide');
         $('#selectRadioStatus').val('');
         $('#btnRefreshActivityStatus').trigger('click');
-    });    
+    });
 });
 
 /* V2 Changes start 12102023 */
@@ -174,10 +174,10 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             data: 'siteName',
             width: '20%',
             render: function (value, type, data) {
-                
+
                 return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
             }
-        },      
+        },
         {
             data: 'guardName',
             width: '20%',
@@ -194,7 +194,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 if (value === null) return 'N/A';
                 return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#"  id="btnLogBookDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" text="' + data.clientSiteId + '"><input type="hidden" id="GuardId" text="' + data.guardId + '"> ';
             }
-        }, 
+        },
         {
             data: 'keyVehicle',
             width: '9%',
@@ -203,7 +203,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 if (value === null) return 'N/A';
                 return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#" id="btnKeyVehicleDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
             }
-        },   
+        },
         {
             data: 'incidentReport',
             width: '9%',
@@ -212,9 +212,25 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 if (value === null) return 'N/A';
                 return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#" id="btnIncidentReportdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '"> ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
             }
-        },   
-       
-       
+        },
+
+        {
+            data: 'rcStatus',
+            width: '5%',
+            className: "text-center",
+        },
+        {
+            targets: -1,
+            data: null,
+            width: '5%',
+            defaultContent: '',
+            render: function (value, type, data) {
+
+                return '<button name="btnRadioCheckStatusActive" class="btn btn-outline-primary">Radio Check</button>';
+
+            }
+        },
+
     ],
     drawCallback: function () {
         var api = this.api();
@@ -244,7 +260,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
     "columnDefs": [
         { "visible": false, "targets": 1 } // Hide the group column initially
     ],
-    order: [[groupColumn, 'asc']],
+    order: [[groupColumn, 'asc']],   
     info: false,
     searching: true,
     autoWidth: false,
@@ -285,7 +301,33 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
-                return  '<i class="fa fa-clock-o text-success rc-client-status"></i> ' +  value  ;
+                return '<i class="fa fa-clock-o text-success rc-client-status"></i> ' + value;
+            }
+        },
+
+        {
+            data: 'twoHrAlert',
+            width: '5%',
+            render: function (value, type, data) {
+                if (value === 'Green') return '<i class="fa fa-circle text-success"></i>';
+                return '<i class="fa fa-circle text-danger"></i>';
+            }
+        },
+
+        {
+            data: 'rcStatus',
+            width: '5%',
+            className: "text-center",
+        },
+        {
+            targets: -1,
+            data: null,
+            width: '5%',
+            defaultContent: '',
+            render: function (value, type, data) {
+
+                return '<button name="btnRadioCheckStatus" class="btn btn-outline-primary">Radio Check</button>';
+
             }
         },
 
@@ -457,7 +499,7 @@ let clientSiteActiveGuardsLogBookDetails = $('#clientSiteActiveGuardsLogBookDeta
         {
             data: 'logBookId',
             width: '20%',
-            visible:false,
+            visible: false,
 
         },
         {
@@ -471,7 +513,7 @@ let clientSiteActiveGuardsLogBookDetails = $('#clientSiteActiveGuardsLogBookDeta
             data: 'activity',
             width: '9%',
             className: "text-center",
-           
+
         },
         {
             data: 'logBookCreatedTime',
@@ -511,7 +553,7 @@ $('#clientSiteActiveGuards tbody').on('click', '#btnLogBookDetailsByGuard', func
     // $('#lbl_GuardActivityHeader').val($(this).closest("tr").find("td").eq(2).text() + 'Log Book Details');
     $('#lbl_GuardActivityHeader').text(GuardName + '-' + 'Log Book Details');
     clientSiteActiveGuardsLogBookDetails.ajax.reload();
-    
+
 });
 /*for logbook details of the guard - end*/
 
@@ -576,7 +618,7 @@ let clientSiteActiveGuardsKeyVehicleDetails = $('#clientSiteActiveGuardsKeyVehic
             data: 'activity',
             width: '9%',
             className: "text-center",
-            
+
         },
         {
             data: 'keyVehicleLogCreatedTime',
@@ -671,7 +713,7 @@ let clientSiteActiveGuardsIncidentReportsDetails = $('#clientSiteActiveGuardsInc
             data: 'activity',
             width: '9%',
             className: "text-center",
-           
+
         },
         {
             data: 'incidentReportCreatedTime',
@@ -714,3 +756,78 @@ $('#clientSiteActiveGuards tbody').on('click', '#btnIncidentReportdetails', func
 
 });
 /*for incident report details of the guard - end*/
+
+/*For radio check dropdown start*/
+
+$('#clientSiteInActiveGuards').on('click', 'button[name="btnRadioCheckStatus"]', function () {
+    var data = clientSiteInActiveGuards.row($(this).parents('tr')).data();
+    var rowClientSiteId = data.clientSiteId;
+    var rowGuardId = data.guardId;
+    var rcSatus = data.rcStatus;
+    $("#selectRadioStatus").val(rcSatus);
+    $('#clientSiteId').val(rowClientSiteId);
+    $('#guardId').val(rowGuardId);
+    $('#selectRadioCheckStatus').modal('show');
+});
+
+$('#clientSiteActiveGuards').on('click', 'button[name="btnRadioCheckStatusActive"]', function () {
+    var data = clientSiteActiveGuards.row($(this).parents('tr')).data();
+    var rowClientSiteId = data.clientSiteId;
+    var rowGuardId = data.guardId;
+    var rcSatus = data.rcStatus;
+    $("#selectRadioStatusActive").val(rcSatus);
+    $('#clientSiteId').val(rowClientSiteId);
+    $('#guardId').val(rowGuardId);
+    $('#selectRadioCheckStatusActive').modal('show');
+});
+
+$('#btnSaveRadioStatus').on('click', function () {
+    const checkedStatus = $('#selectRadioStatus').val();
+    var clientSiteId = $('#clientSiteId').val();
+    var guardId = $('#guardId').val();
+    if (checkedStatus === '') {
+        return;
+    }
+    $.ajax({
+        url: '/RadioCheckV2?handler=SaveRadioStatus',
+        type: 'POST',
+        data: {
+            clientSiteId: clientSiteId,
+            guardId: guardId,
+            checkedStatus: checkedStatus,
+        },
+        dataType: 'json',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function () {
+        $('#selectRadioCheckStatus').modal('hide');
+        $('#selectRadioStatus').val('');
+        $('#btnRefreshActivityStatus').trigger('click');
+    });
+});
+$('#btnSaveRadioStatusActive').on('click', function () {
+    const checkedStatus = $('#selectRadioStatusActive').val();
+    var clientSiteId = $('#clientSiteId').val();
+    var guardId = $('#guardId').val();
+    if (checkedStatus === '') {
+        return;
+    }
+    $.ajax({
+        url: '/RadioCheckV2?handler=SaveRadioStatus',
+        type: 'POST',
+        data: {
+            clientSiteId: clientSiteId,
+            guardId: guardId,
+            checkedStatus: checkedStatus,
+            active:true,
+        },
+        dataType: 'json',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function () {
+        $('#selectRadioCheckStatusActive').modal('hide');
+        $('#selectRadioStatus').val('');
+        $('#btnRefreshActivityStatus').trigger('click');
+    });
+});
+
+
+/*For radio check dropdown  end - end*/
