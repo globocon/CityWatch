@@ -261,18 +261,28 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 $('#clientSiteActiveGuards tbody').on('click', 'tr.dt-control', function () {
     
 
-    //if (row.child.isShown()) {
-    //    row.child.hide();
-    //    tr.removeClass('shown');
-    //} else {
-    //    row.child(format_kvl_child_row(row.data()), 'bg-light').show();
-    //    tr.addClass('shown');
-    //$('#group2').toggle();
-    $(this).closest('tr').find('#btnUpArrow').removeClass('fa-caret-down')
-    $(this).closest('tr').find('#btnUpArrow').addClass('fa-caret-up')
-    $(this).closest('tr').next('tr').toggle();
+    if ($(this).closest('tr').next('tr').is(':hidden') == true) {
+        $(this).closest('tr').next('tr').prop('hidden', false);
+        $(this).closest('tr').find('#btnUpArrow').removeClass('fa-caret-down')
+        $(this).closest('tr').find('#btnUpArrow').addClass('fa-caret-up')
+        /* $(this).closest('tr').next('tr').toggle();*/
+    }
+    else {
+        $(this).closest('tr').next('tr').prop('hidden', 'hidden');
+        $(this).closest('tr').find('#btnUpArrow').removeClass('fa-caret-up')
+        $(this).closest('tr').find('#btnUpArrow').addClass('fa-caret-down')
+
+    }
+    
     
     //}
+});
+$('#clientSiteActiveGuards tbody').on('click', '#btnActiveGuardsMap', function (value, record) {
+   
+    var Gps = $(this).closest("tr").find("#txtGPSActiveguards").text();
+    alert(Gps);
+   
+
 });
 function format_kvl_child_row(d) {
     return (
