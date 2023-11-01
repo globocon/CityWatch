@@ -28,7 +28,13 @@
                             <th>Site Name</th>
                             <th>Site Name/Guard</th>
                             <th>Login Time</th>
+
+                            <th>Two Hr Alert</th>
+                            <th>Radio Check</th>
+                            <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+
                             <th>Name</th>
+
 
                         </tr>
                     </thead>
@@ -38,7 +44,13 @@
                             <th>Site Name</th>
                             <th>Site Name/Guard</th>
                             <th>Login Time</th>
+
+                            <th>Two Hr Alert</th>
+                            <th>Radio Check</th>
+                            <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+
                             <th>Name</th>
+
 
                         </tr>
                         <!-- Footer content here (will be styled to look like the header) -->
@@ -64,15 +76,18 @@
                             <th>ClientSiteId</th>
                             <th>Site Name</th>
                             <th>Site Name/Guard</th>
-                            
-
                             <th>LB</th>
                             <th>KV</th>
                             <th>IR</th>
 
+                            <th>Radio Check</th>
+                            <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+
+
                             <th>SW</th>
 
                             <th>Name</th>
+
 
                         </tr>
                     </thead>
@@ -81,12 +96,16 @@
                             <th>ClientSiteId</th>
                             <th>Site Name</th>
                             <th>Site Name/Guard</th>
-                            
                             <th>LB</th>
                             <th>KV</th>
                             <th>IR</th>
+
+                            <th>Radio Check</th>
+                            <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+
                             <th>SW</th>
                             <th>Name</th>
+
                         </tr>
                         <!-- Footer content here (will be styled to look like the header) -->
                     </tfoot>
@@ -183,9 +202,9 @@
                         </table>
                     </div>
                 </div>
-                
+
             </div>
-            
+
         </div>
     </div>
 </div>
@@ -250,7 +269,7 @@
                                     <th>SiteName</th>
                                     <th>IncidentReport Id</th>
                                     <th>File</th>
-                                    
+
                                     <th>Activity Type</th>
                                     <th>Created Time</th>
 
@@ -263,6 +282,74 @@
 
             </div>
 
+        </div>
+    </div>
+</div>
+
+
+<!----------------- Radio Check Status pop up -------------------->
+<div class="modal fade" id="selectRadioCheckStatus" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="selectRadioCheckStatusLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Radio Check Status</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="col-form-label" for="selectRadioStatus">Select Radio Check Status</label>
+                    <select id="selectRadioStatus" class="form-control">
+                        <option value="" selected>Select</option>
+                        <option value="N/A">N/A</option>
+                        <option value="Off Duty">Off Duty</option>
+                        <option value="N/A Only W/E">N/A Only W/E</option>
+                        <option value="N/A Only Summer">N/A Only Summer</option>
+                        <option value="On Standby">On Standby</option>
+                        <option value="Incoming Call">Incoming Call</option>
+                        <option value="Outgoing Call Radio">Outgoing Call Radio</option>
+                        <option value="Outgoing Call Mobile">Outgoing Call Mobile</option>
+                        <option value="No Answer">No Answer</option>
+                    </select>
+                    <input type="hidden" id="clientSiteId" value="" />
+                    <input type="hidden" id="guardId" value="" />
+                </div>
+            </div>
+            <div class="modal-footer justify-content-start">
+                <button type="button" id="btnSaveRadioStatus" class="btn btn-primary">Save Status</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="selectRadioCheckStatusActive" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="selectRadioCheckStatusActiveLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Radio Check Status</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="col-form-label" for="selectRadioStatusActive">Select Radio Check Status</label>
+                    <select id="selectRadioStatusActive" class="form-control">
+                        <option value="" selected>Select</option>
+                        <option value="N/A">N/A</option>
+                        <option value="Off Duty">Off Duty</option>
+                        <option value="N/A Only W/E">N/A Only W/E</option>
+                        <option value="N/A Only Summer">N/A Only Summer</option>
+                        <option value="On Standby">On Standby</option>
+                        <option value="Incoming Call">Incoming Call</option>
+                        <option value="Outgoing Call Radio">Outgoing Call Radio</option>
+                        <option value="Outgoing Call Mobile">Outgoing Call Mobile</option>
+                        <option value="No Answer">No Answer</option>
+                    </select>
+                    <input type="hidden" id="clientSiteId" value="" />
+                    <input type="hidden" id="guardId" value="" />
+                </div>
+            </div>
+            <div class="modal-footer justify-content-start">
+                <button type="button" id="btnSaveRadioStatusActive" class="btn btn-primary">Save Status</button>
+            </div>
         </div>
     </div>
 </div>
