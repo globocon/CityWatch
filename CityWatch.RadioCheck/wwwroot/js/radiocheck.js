@@ -221,7 +221,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         },
        
 
-        },   
+           
         {
             data: 'siteName',
             visible: false,
