@@ -188,7 +188,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         },
         {
             data: 'logBook',
-            width: '9%',
+            width: '6%',
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
@@ -197,7 +197,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         },
         {
             data: 'keyVehicle',
-            width: '9%',
+            width: '6%',
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
@@ -206,7 +206,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         },
         {
             data: 'incidentReport',
-            width: '9%',
+            width: '6%',
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
@@ -214,7 +214,11 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             }
 
         },
-
+        {
+            data: 'smartWands',
+            width: '6%',
+            className: "text-center",
+        },
         {
             data: 'rcStatus',
             width: '5%',
@@ -233,11 +237,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         },
 
 
-        {
-            data: 'smartWands',
-            width: '9%',
-            className: "text-center",
-        },
+       
        
 
            
