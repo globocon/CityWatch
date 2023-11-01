@@ -1,4 +1,5 @@
-﻿using CityWatch.Data.Helpers;
+﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Models;
@@ -24,6 +25,7 @@ namespace CityWatch.Web.Services
     {
         
         private readonly IGuardLogDataProvider _guardLogDataProvider;
+        
         public RadioChecksActivityStatusService(IGuardLogDataProvider guardLogDataProvider)
         {
           
@@ -74,7 +76,34 @@ namespace CityWatch.Web.Services
                 {
                     var isActive = (DateTime.Now - ClientSiteRadioChecksActivity.GuardLoginTime).Value.TotalHours < 8;
                     if (!isActive)
+                    {
                         _guardLogDataProvider.DeleteClientSiteRadioChecksActivity(ClientSiteRadioChecksActivity);
+                    }
+                    /* TO GIVE A WARNING TO THOSE WHO ARE DID NOT DO ANY ACTIVITY FOR 2 HOURS - start*/
+                    else
+                    {
+                        isActive = (DateTime.Now - ClientSiteRadioChecksActivity.GuardLoginTime).Value.TotalHours < 2;
+                        if (!isActive)
+                        {
+                            var noActivity = ClientSiteRadioChecksActivityDetails.Where(x => x.GuardId == ClientSiteRadioChecksActivity.GuardId && x.ClientSiteId == ClientSiteRadioChecksActivity.ClientSiteId && x.GuardLoginTime == null).Count();
+                            if(noActivity==0)
+                            {
+                                var logbooktype = LogBookType.DailyGuardLog;
+                                var clientsiteId = ClientSiteRadioChecksActivity.ClientSiteId;
+                                var logBookId = _guardLogDataProvider.GetClientSiteLogBookId(clientsiteId, logbooktype, DateTime.Today);
+                                var guardLog = new GuardLog()
+                                {
+                                    ClientSiteLogBookId = logBookId,
+                                    EventDateTime = DateTime.Now,
+                                    Notes = "Caution Alarm: There has been '0' activity  in KV & LB for 2 hours. There is also not IR currently  to justify KPI low performance",
+                                    IsSystemEntry = true,
+                                    IrEntryType =  IrEntryType.Normal 
+                                };
+                                _guardLogDataProvider.SaveGuardLog(guardLog);
+                            }
+                        }
+                    }
+                    /* TO GIVE A WARNING TO THOSE WHO ARE DID NOT DO ANY ACTIVITY FOR 2 HOURS - end*/
                 }
                 /* LogoutTime time exits remove all the activity for that  */
                 if (ClientSiteRadioChecksActivity.GuardLogoutTime != null)
@@ -82,7 +111,8 @@ namespace CityWatch.Web.Services
 
                     _guardLogDataProvider.SignOffClientSiteRadioCheckActivityStatusForLogBookEntry(ClientSiteRadioChecksActivity.GuardId, ClientSiteRadioChecksActivity.ClientSiteId);
                 }
-
+                
+               
             }
         }
 
