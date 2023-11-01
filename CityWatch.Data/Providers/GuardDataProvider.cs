@@ -120,6 +120,10 @@ namespace CityWatch.Data.Providers
                 initalsUsed = MakeGuardInitials(guard.Initial);
                 guard.Initial = initalsUsed;
                 guard.DateEnrolled = DateTime.Today;
+                guard.IsLB_KV_IR = true;
+                guard.IsKPIAccess = false;
+                guard.IsRCAccess = false;
+                guard.IsSTATS = false;
                 _context.Guards.Add(guard);
             }
             else
@@ -130,7 +134,7 @@ namespace CityWatch.Data.Providers
                 updateGuard.Mobile = guard.Mobile;
                 updateGuard.Email = guard.Email;
                 updateGuard.State = state;
-
+                
 
             }
 
