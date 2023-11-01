@@ -213,7 +213,12 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#" id="btnIncidentReportdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '"> ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
             }
         },   
-       
+        {
+            data: 'siteName',
+            visible: false,
+            width: '20%',
+
+        },
        
     ],
     drawCallback: function () {
@@ -288,6 +293,12 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                 return  '<i class="fa fa-clock-o text-success rc-client-status"></i> ' +  value  ;
             }
         },
+        {
+            data: 'siteName',
+            visible: false,
+            width: '20%',
+           
+        },
 
     ],
     drawCallback: function () {
@@ -307,7 +318,11 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                 }
             });
     },
+    
+
 });
+
+
 
 
 $('#guardInfoModal').on('shown.bs.modal', function (event) {
