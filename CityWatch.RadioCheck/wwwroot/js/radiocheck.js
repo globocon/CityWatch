@@ -279,7 +279,7 @@ $('#clientSiteActiveGuards tbody').on('click', 'tr.dt-control', function () {
 });
 $('#clientSiteActiveGuards tbody').on('click', '#btnActiveGuardsMap', function (value, record) {
    
-    var Gps = $(this).closest("tr").find("#txtGPSActiveguards").text();
+    var Gps = $(this).closest("tr").find("#txtGPSActiveguards").val();
     alert(Gps);
    
 
