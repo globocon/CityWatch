@@ -146,11 +146,13 @@ $('#btnSaveRadioStatus').on('click', function () {
 
 /* V2 Changes start 12102023 */
 const groupColumn = 1;
+const groupColumn2 = 2;
 let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
     ordering: true,
     "columnDefs": [
-        { "visible": false, "targets": 1 } // Hide the group column initially
+        { "visible": false, "targets": 1 } ,// Hide the group column initially
+        { "visible": false, "targets": 2 } 
     ],
     order: [[groupColumn, 'asc']],
     info: false,
@@ -173,11 +175,21 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         {
             data: 'siteName',
             width: '20%',
+            class:'dt-control',
             render: function (value, type, data) {
                 
                 return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
             }
-        },      
+        }, 
+        {
+            data: 'address',
+            width: '20%',
+            visible: false,
+            render: function (value, type, data) {
+
+                return '<tr class="group group-start sho"><td class="' + (groupColumn2 == '2' ? 'bg-danger' : (groupColumn2 == '0' ? 'bg-danger' : 'bg-danger')) + ' " colspan="5">' + groupColumn2 + '</td></tr>';
+            }
+        },
         {
             data: 'guardName',
             width: '20%',
@@ -220,22 +232,61 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;
-
+        var last2 = null;
         api.column(groupColumn, { page: 'current' })
             .data()
             .each(function (group, i) {
                 if (last !== group) {
                     $(rows)
                         .eq(i)
-                        .before('<tr class="group bg-info text-white"><td colspan="25">' + group + '</td></tr>');
+                        .before('<tr class="group bg-info text-white dt-control"><td colspan="25">' + group + '</td></tr>');
 
                     last = group;
+                }
+            });
+        api.column(groupColumn2, { page: 'current' })
+            .data()
+            .each(function (group, i) {
+                if (last2 !== group) {
+                    $(rows)
+                        .eq(i)
+                        .before('<tr class="group bg-info text-white hide" id="group2" hidden><td colspan="25">' + group + '</td></tr>');
+
+                    last2 = group;
                 }
             });
     },
 });
 
+$('#clientSiteActiveGuards tbody').on('click', 'tr.dt-control', function () {
+    
 
+    //if (row.child.isShown()) {
+    //    row.child.hide();
+    //    tr.removeClass('shown');
+    //} else {
+    //    row.child(format_kvl_child_row(row.data()), 'bg-light').show();
+    //    tr.addClass('shown');
+    //$('#group2').toggle();
+    $(this).closest('tr').find('#btnUpArrow').removeClass('fa-caret-down')
+    $(this).closest('tr').find('#btnUpArrow').addClass('fa-caret-up')
+    $(this).closest('tr').next('tr').toggle();
+    
+    //}
+});
+function format_kvl_child_row(d) {
+    return (
+        '<table cellpadding="7" cellspacing="0"  border="0" style="padding-left:50px;">' +
+        
+        '<tr>' +
+        '<td>' + d.address + '</td>' +
+       
+        '</tr>' +
+        '<tr>' +
+       
+        '</table>'
+    );
+}
 
 
 let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
