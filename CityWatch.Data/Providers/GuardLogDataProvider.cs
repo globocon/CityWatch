@@ -96,9 +96,13 @@ namespace CityWatch.Data.Providers
         List<RadioCheckListGuardIncidentReportData> GetActiveGuardIncidentReportDetails(int clientSiteId, int guardId);
         //for getting  incident report details of the  guard-end
 
+
         //rc status save Start
         void SaveClientSiteRadioCheck(ClientSiteRadioCheck clientSiteRadioCheck);
         //rc status save end
+
+        int GetClientSiteLogBookId(int clientsiteId, LogBookType type, DateTime date);
+
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -992,7 +996,11 @@ namespace CityWatch.Data.Providers
 
             _context.SaveChanges();
         }
-
+        public int GetClientSiteLogBookId(int clientsiteId, LogBookType type, DateTime date)
+        {
+            return _context.ClientSiteLogBooks
+                 .SingleOrDefault(z => z.ClientSiteId == clientsiteId && z.Type == type && z.Date == date).Id;
+        }
 
         public void SaveClientSiteRadioCheck(ClientSiteRadioCheck clientSiteRadioCheck)
         {

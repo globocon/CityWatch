@@ -27,30 +27,65 @@
             <div class="container">
                 @if (User.Identity.IsAuthenticated)
                 {
-                    <a href="@Url.Page("/Index")" class="" nav-link py-0""><i class=" fa fa-home mr-2 mb-5"></i></a>
+                    <a href="https://www.cws-ir.com/" class="" nav-link py-0""><i class=" fa fa-home mr-2 mb-5"></i></a>
                 }
                 <a class="navbar-brand" href="https://www.citywatchsecurity.com.au" target="_blank">
                     <img src="~/images/CWSLogo.png" alt="cws logo" height="60px" />
                 </a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse"
-                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex">
-                    <ul class="navbar-nav ml-auto">
-                        <li class="nav-item"></li>
-                    </ul>
-                </div>
-                @if (IsSectionDefined("PageHeader"))
-                {
-                    @RenderSection("PageHeader");
-                }
+
+
+
                 @if (User.Identity.IsAuthenticated)
                 {
-                    <p class="mx-auto ml-md-3">
-                        <span class="d-block">Hello @User.Identity.Name</span>
-                        <a href="@Url.Page("/Account/Logout")" class="btn btn-sm btn-primary"><i class="fa fa-sign-out mr-2"></i>Log Out</a>
-                    </p>
+
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse"
+                            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="navbar-collapse collapse d-sm-inline-flex">
+                        <ul class="navbar-nav ml-auto">
+                            <li class="nav-item"></li>
+                        </ul>
+                    </div>
+
+                    @if (IsSectionDefined("PageHeader"))
+                    {
+                        <div class="col-6 text-center">
+                            @RenderSection("PageHeader")
+                        </div>
+
+                    }
+                    <div class="col-4 text-right">
+                        Auto refresh in <span id="clockRefresh">03 min 00 sec</span>
+                        <button type="button" class="btn btn-sm btn-success" id="btnRefreshActivityStatus"><i class="fa fa-refresh" aria-hidden="true"></i> Refresh Now</button>
+
+                    </div>
+                   
+                    @*   <div class="col-2 text-right">
+
+                <span class="d-block">Hello @User.Identity.Name</span>
+                <a href="@Url.Page("/Account/Logout")" class="btn btn-sm btn-primary"><i class="fa fa-sign-out mr-2"></i>Log Out</a>
+                </div>*@
+                }
+                else
+                {
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse"
+                            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="navbar-collapse collapse d-sm-inline-flex">
+                        <ul class="navbar-nav ml-auto">
+                            <li class="nav-item"></li>
+                        </ul>
+                    </div>
+
+                    @if (IsSectionDefined("PageHeader"))
+                    {
+                        <div class="col-6 text-center">
+                            @RenderSection("PageHeader")
+                        </div>
+
+                    }
                 }
             </div>
         </nav>
@@ -70,7 +105,7 @@
                 </div>
                 <div class="col-sm-12 col-md-6 d-flex justify-content-center">
                     <div>
-                        <a href="@(environment.IsDevelopment() ? "" : @Url.Page("/Index"))" class="nav-link py-0" ><i class="fa fa-home mr-2"></i>Home Page</a>
+                        <a href="https://www.cws-ir.com/" class="nav-link py-0"><i class="fa fa-home mr-2"></i>Home Page</a>
                     </div>
                 </div>
             </div>
