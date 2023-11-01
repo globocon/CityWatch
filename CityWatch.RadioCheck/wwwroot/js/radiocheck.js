@@ -277,13 +277,34 @@ $('#clientSiteActiveGuards tbody').on('click', 'tr.dt-control', function () {
     
     //}
 });
-$('#clientSiteActiveGuards tbody').on('click', '#btnActiveGuardsMap', function (value, record) {
+//$('#clientSiteActiveGuards tbody').on('click', '#btnActiveGuardsMap', function (value, record) {
    
-    var Gps = $(this).closest("tr").find("#txtGPSActiveguards").val();
-    alert(Gps);
+//    var Gps = $(this).closest("tr").find("#txtGPSActiveguards").val();
+//    var loc=getGpsAsHyperLink(Gps);
+//    window.open('https://www.google.com/maps?q=' + value,'_blank' )
+   
+//    '<a href="https://www.google.com/maps?q=' + value + '" target="_blank">' + loc + '</a>'
    
 
-});
+//});
+function getGpsAsHyperLink(value) {
+    const gps = value.split(',');
+    let lat = gps[0];
+    let lon = gps[1];
+    let latDir = (lat >= 0 ? "N" : "S");
+    lat = Math.abs(lat);
+    let latMinPart = ((lat - Math.trunc(lat) / 1) * 60);
+    let latSecPart = ((latMinPart - Math.trunc(latMinPart) / 1) * 60);
+    let lonDir = (lon >= 0 ? "E" : "W");
+    lon = Math.abs(lon);
+    let lonMinPart = ((lon - Math.trunc(lon) / 1) * 60);
+    let lonSecPart = ((lonMinPart - Math.trunc(lonMinPart) / 1) * 60);
+    let latitude = Math.trunc(lat) + "." + Math.trunc(latMinPart) + "" + Math.trunc(latSecPart) + '\u00B0 ' + latDir;
+    let longitude = Math.trunc(lon) + "." + Math.trunc(lonMinPart) + "" + Math.trunc(lonSecPart) + '\u00B0 ' + lonDir;
+    let loc = latitude + ' ' + longitude;
+    return loc;
+    //return '<a href="https://www.google.com/maps?q=' + value + '" target="_blank">' + loc + '</a>';
+}
 function format_kvl_child_row(d) {
     return (
         '<table cellpadding="7" cellspacing="0"  border="0" style="padding-left:50px;">' +

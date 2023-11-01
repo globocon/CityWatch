@@ -828,7 +828,7 @@ namespace CityWatch.Data.Providers
             {
 
                 item.SiteName = item.SiteName + " <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x => x.PhoneNumber).ToList()) + " <i class=\"fa fa-caret-down\" aria-hidden=\"true\" id=\"btnUpArrow\"></i> ";
-                item.Address = " <button id=\"btnActiveGuardsMap\" class=\"btn\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i> </button>" +  item.Address + " <input type=\"hidden\" class=\"form-control\" value=\""+ item.GPS +"\" id=\"txtGPSActiveguards\" />";
+                item.Address = " <a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q=" +item.GPS + "\"target=\"_blank\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i> </a>" +  item.Address + " <input type=\"hidden\" class=\"form-control\" value=\""+ item.GPS +"\" id=\"txtGPSActiveguards\" />";
             }
             return allvalues;
         }
