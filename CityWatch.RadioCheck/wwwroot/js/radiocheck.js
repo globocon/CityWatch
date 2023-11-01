@@ -155,7 +155,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     order: [[groupColumn, 'asc']],
     info: false,
     searching: true,
-    autoWidth: false,
+    autoWidth: true,
     fixedHeader: true,
     "scrollY": "300px", // Set the desired height for the scrollable area
     "paging": false,
@@ -169,7 +169,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         dataSrc: ''
     },
     columns: [
-        { data: 'clientSiteId', visible: false },
+        { data: 'clientSiteId', visible: false  },
         {
             data: 'siteName',
             width: '20%',
@@ -212,6 +212,15 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 if (value === null) return 'N/A';
                 return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#" id="btnIncidentReportdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '"> ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
             }
+
+        },  
+        {
+            data: 'smartWands',
+            width: '9%',
+            className: "text-center",
+        },
+       
+
         },   
         {
             data: 'siteName',
@@ -219,6 +228,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             width: '20%',
 
         },
+
        
     ],
     drawCallback: function () {
@@ -252,8 +262,9 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
     order: [[groupColumn, 'asc']],
     info: false,
     searching: true,
-    autoWidth: false,
+    autoWidth: true,
     fixedHeader: true,
+    
     "scrollY": "300px", // Set the desired height for the scrollable area
     "paging": false,
     "footer": true,
@@ -277,6 +288,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         },
         {
             data: 'guardName',
+            
             width: '20%',
             render: function (value, type, data) {
                 return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
@@ -326,6 +338,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
 
 $('#guardInfoModal').on('shown.bs.modal', function (event) {
+   
     $('#lbl_guard_name').html('');
     $('#lbl_guard_security_no').html('');
     $('#lbl_guard_state').html('');
@@ -370,7 +383,7 @@ let clientSiteNotAvailableGuards = $('#clientSiteNotAvailableGuards').DataTable(
     order: [[groupColumn, 'asc']],
     info: false,
     searching: true,
-    autoWidth: false,
+    autoWidth: true,
     fixedHeader: true,
     "scrollY": "300px", // Set the desired height for the scrollable area
     "paging": false,
@@ -384,7 +397,7 @@ let clientSiteNotAvailableGuards = $('#clientSiteNotAvailableGuards').DataTable(
         dataSrc: ''
     },
     columns: [
-        { data: 'clientSiteId', visible: false },
+        { data: 'clientSiteId', visible: false},
         {
             data: 'siteName',
             width: '20%',
