@@ -329,6 +329,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         {
             data: 'twoHrAlert',
             width: '5%',
+            className: "text-center",
             render: function (value, type, data) {
                 if (value === 'Green') return '<i class="fa fa-circle text-success"></i>';
                 return '<i class="fa fa-circle text-danger"></i>';
