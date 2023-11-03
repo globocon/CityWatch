@@ -4,26 +4,48 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Linq;
 using System.Security.Claims;
+
+
 
 namespace CityWatch.Web.Pages.Radio
 {
     public class RadioCheckNewModel : PageModel
     {
 
-
         
+
         private readonly IGuardLogDataProvider _guardLogDataProvider;
-        public RadioCheckNewModel(IGuardLogDataProvider guardLogDataProvider)
+        public readonly IClientDataProvider _clientDataProvider;
+        public readonly IGuardDataProvider _guardDataProvider;
+       
+        public RadioCheckNewModel(IGuardLogDataProvider guardLogDataProvider,
+              IClientDataProvider clientDataProvider,
+                IGuardDataProvider guardDataProvider
+              )
         {
 
             _guardLogDataProvider = guardLogDataProvider;
+            _clientDataProvider = clientDataProvider;
+            _guardDataProvider = guardDataProvider;
+            
         }
         public int UserId { get; set; }
         public int GuardId { get; set; }
+       
+       
         public IActionResult OnGet()
         {
+            //code added for duress Button start
+            var logBookId = HttpContext.Session.GetInt32("LogBookId");
+            var clientSiteId = _clientDataProvider.GetClientSiteLogBooks(logBookId, LogBookType.VehicleAndKeyLog)
+                                .FirstOrDefault()?
+                                .ClientSiteId;
+            ViewData["IsDuressEnabled"] = clientSiteId != null && IsClientSiteDuressEnabled(clientSiteId.Value);
+            //code added for duress Button stop
+
             /* The following changes done for allowing guard to access the KPI*/
             var claimsIdentity = User.Identity as ClaimsIdentity;
             /* For Guard Login using securityLicenseNo*/
@@ -59,6 +81,11 @@ namespace CityWatch.Web.Pages.Radio
                 return Redirect(Url.Page("/Account/Login"));
             }
         }
+        public bool IsClientSiteDuressEnabled(int clientSiteId)
+        {
+            return _guardLogDataProvider.GetClientSiteDuress(clientSiteId)?.IsEnabled ?? false;
+        }
+    
 
         public IActionResult OnGetClientSiteActivityStatus(string clientSiteIds)
         {
