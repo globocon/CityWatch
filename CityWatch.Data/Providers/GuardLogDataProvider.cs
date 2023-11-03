@@ -1,4 +1,5 @@
-﻿using CityWatch.Data.Models;
+﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Models;
 using iText.Layout.Element;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -102,7 +103,10 @@ namespace CityWatch.Data.Providers
         //rc status save end
 
         int GetClientSiteLogBookId(int clientsiteId, LogBookType type, DateTime date);
-
+        int GetGuardLoginId(int clientsitelogbookId, int guardId, DateTime date);
+        List<GuardLog> GetGuardLogsId(int logBookId, DateTime logDate, int guardLoginId, IrEntryType type, string notes);
+        void UpdateRadioChecklistEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity);
+        List<GuardLogin> GetGuardLogins(int guardLoginId);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -1023,6 +1027,44 @@ namespace CityWatch.Data.Providers
 
             }
         }
+        public int GetGuardLoginId(int clientsitelogbookId, int guardId, DateTime date)
+        {
+            return _context.GuardLogins
+                 .SingleOrDefault(z => z.ClientSiteLogBookId == clientsitelogbookId && z.GuardId == guardId && z.OnDuty.Date == date.Date).Id;
+        }
+        public List<GuardLog> GetGuardLogsId(int logBookId, DateTime logDate,int guardLoginId, IrEntryType type,string notes)
+        {
+            return _context.GuardLogs
+               .Where(z => z.ClientSiteLogBookId == logBookId && z.EventDateTime >= logDate && z.EventDateTime < logDate.AddDays(1)
+               && z.GuardLoginId == guardLoginId && z.IrEntryType == type && z.Notes == notes).ToList();
+               
+               
+        }
+        public void UpdateRadioChecklistEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity)
+        {
+            try
+            {
+                
 
+                    var clientSiteActivityToUpdate = _context.ClientSiteRadioChecksActivityStatus.SingleOrDefault(x => x.Id == clientSiteActivity.Id);
+                    if (clientSiteActivityToUpdate == null)
+                        throw new InvalidOperationException();
+
+                    
+                    clientSiteActivityToUpdate.NotificationCreatedTime = clientSiteActivity.NotificationCreatedTime;
+                    
+                
+
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+        public List<GuardLogin> GetGuardLogins(int guardLoginId)
+        {
+            return _context.GuardLogins.Where(z => z.Id == guardLoginId).ToList();
+        }
     }
 }
