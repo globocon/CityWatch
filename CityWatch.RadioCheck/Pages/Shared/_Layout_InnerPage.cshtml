@@ -7,10 +7,9 @@
 
 }
 
-
 <!DOCTYPE html>
+<html lang="en">
 
-<html>
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -26,10 +25,15 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom mb-3">
             <div class="container">
-              
+                
+            
+                <a href="javascript:history.go(-1)" class="" nav-link py-0""><i class=" fa fa-home mr-2 mb-5"></i></a>
+
+
                 <a class="navbar-brand" href="https://www.citywatchsecurity.com.au" target="_blank">
-                    <img src="~/images/CWSLogo.png" alt="cws logo" height="60px"/>
+                    <img src="~/images/CWSLogo.png" alt="cws logo" height="60px" />
                 </a>
+
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse"
                         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -39,27 +43,30 @@
                         <li class="nav-item"></li>
                     </ul>
                 </div>
+
                 @if (IsSectionDefined("PageHeader"))
                 {
-                    @RenderSection("PageHeader");
+                    <div class="col-6 text-center">
+                        @RenderSection("PageHeader")
+                    </div>
+
                 }
-              @*  @if (User.Identity.IsAuthenticated)
-                {
-                    <p class="mx-auto ml-md-3">
-                        <span class="d-block">Hello @User.Identity.Name</span>
-                        <a href="@Url.Page("/Account/Logout")" class="btn btn-sm btn-primary"><i class="fa fa-sign-out mr-2"></i>Log Out</a>
-                    </p>
-                }*@
+                <div class="col-4 text-right">
+                    Auto refresh in <span id="clockRefresh">03 min 00 sec</span>
+                    <button type="button" class="btn btn-sm btn-success" id="btnRefreshActivityStatus"><i class="fa fa-refresh" aria-hidden="true"></i> Refresh Now</button>
+
+                </div>
+
+
             </div>
         </nav>
     </header>
 
-    <div class="container flex-fill">
+    <div class="container-fluid flex-fill">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
-  
 
     <footer class="border-top footer text-muted">
         <div class="container-fluid">
