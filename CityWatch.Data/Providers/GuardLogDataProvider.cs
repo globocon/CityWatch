@@ -1018,7 +1018,8 @@ namespace CityWatch.Data.Providers
             {
                 /* off duty remove all the records*/
                 var ClientSiteRadioChecksActivity = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId).ToList();
-                _context.ClientSiteRadioChecksActivityStatus.RemoveRange(ClientSiteRadioChecksActivity);
+               _context.ClientSiteRadioChecksActivityStatus.RemoveRange(ClientSiteRadioChecksActivity);
+                _context.SaveChanges();
             }
             else
             {
