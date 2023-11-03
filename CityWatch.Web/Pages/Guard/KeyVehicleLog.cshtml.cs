@@ -297,6 +297,18 @@ namespace CityWatch.Web.Pages.Guard
                 _guardLogDataProvider.SaveKeyVehicleLogAuditHistory(keyVehicleLogAuditHistory);
 
                 _guardLogDataProvider.SaveKeyVehicleLogProfileNotes(KeyVehicleLog.VehicleRego, KeyVehicleLog.Notes);
+                   var guardlogins = _guardLogDataProvider.GetGuardLogins(Convert.ToInt32(KeyVehicleLog.GuardLoginId));
+                foreach (var item in guardlogins)
+                {
+
+                    var ClientSiteRadioChecksActivityDetails = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == item.GuardId && x.ClientSiteId==item.ClientSiteId && x.GuardLoginTime!=null);
+                    foreach (var ClientSiteRadioChecksActivity in ClientSiteRadioChecksActivityDetails)
+                    {
+                        ClientSiteRadioChecksActivity.NotificationCreatedTime = DateTime.Now;
+                        _guardLogDataProvider.UpdateRadioChecklistEntry(ClientSiteRadioChecksActivity);
+                    }
+                }
+
             }
             catch (Exception ex)
             {

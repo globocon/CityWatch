@@ -26,6 +26,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Dropbox.Api.Users;
+using static Dropbox.Api.Paper.ListPaperDocsSortBy;
 
 namespace CityWatch.Web.Pages.Incident
 {
@@ -758,7 +759,15 @@ namespace CityWatch.Web.Pages.Incident
                 try
                 {
                     _irDataProvider.SaveReport(report);
+                   
 
+                        var ClientSiteRadioChecksActivityDetails = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == report.GuardId && x.ClientSiteId == report.ClientSiteId && x.GuardLoginTime != null);
+                        foreach (var ClientSiteRadioChecksActivity in ClientSiteRadioChecksActivityDetails)
+                        {
+                        ClientSiteRadioChecksActivity.NotificationCreatedTime = DateTime.Now;
+                            _guardLogDataProvider.UpdateRadioChecklistEntry(ClientSiteRadioChecksActivity);
+                        }
+                    
 
                     //for adding showing the IR information if an IR is created-start
                     //if (HttpContext.Session.GetString("GuardId") != null)
