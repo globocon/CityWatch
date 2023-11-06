@@ -106,6 +106,7 @@ namespace CityWatch.Web.Services
                                         IrEntryType = IrEntryType.Normal
                                     };
                                     _guardLogDataProvider.SaveGuardLog(guardLog);
+                                    ClientSiteRadioChecksActivity.NotificationCreatedTime = guardLog.EventDateTime;
                                     _guardLogDataProvider.UpdateRadioChecklistEntry(ClientSiteRadioChecksActivity);
                                 }
                             }
