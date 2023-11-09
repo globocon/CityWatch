@@ -152,7 +152,7 @@ namespace CityWatch.Web.Pages.Radio
         //SaveRadioStatus -end
 
         //Send Text Notifications-start
-        public JsonResult OnPostSavePushNotificationTestMessages(int clientSiteId, bool checkedLB, bool checkedSiteEmail, bool checkedSMSPersonal,bool checkedSMSSmartWand,string Notifications)
+        public JsonResult OnPostSavePushNotificationTestMessages(int clientSiteId, bool checkedLB, bool checkedSiteEmail, bool checkedSMSPersonal, bool checkedSMSSmartWand, string Notifications, string Subject)
         {
             var success = true;
             var message = "success";
@@ -164,7 +164,7 @@ namespace CityWatch.Web.Pages.Radio
                     var logBookId = _guardLogDataProvider.GetClientSiteLogBookId(clientSiteId, logbooktype, DateTime.Today);
                     var guardid = HttpContext.Session.GetInt32("GuardId");
                     var guardLoginId = _guardLogDataProvider.GetGuardLoginId(Convert.ToInt32(guardid), DateTime.Today);
-                   // var guardName = _guardLogDataProvider.GetGuards(ClientSiteRadioChecksActivity.GuardId).Name;
+                    // var guardName = _guardLogDataProvider.GetGuards(ClientSiteRadioChecksActivity.GuardId).Name;
                     var guardLog = new GuardLog()
                     {
                         ClientSiteLogBookId = logBookId,
@@ -179,27 +179,55 @@ namespace CityWatch.Web.Pages.Radio
                 }
                 if (checkedSiteEmail == true)
                 {
-                   
+
                     var clientSites = _guardLogDataProvider.GetClientSites(clientSiteId);
                     string smsSiteEmails = null;
                     foreach (var item in clientSites)
                     {
-                        if (item.SiteEmail != null )
+                        if (item.SiteEmail != null)
                         {
                             smsSiteEmails = item.SiteEmail;
                         }
+                        else
+                        {
+                            success = false;
+                            message = "Please Enter the Site Email";
+                            return new JsonResult(new { success, message });
+                        }
 
                     }
+                    var guardlogins = _guardLogDataProvider.GetGuardLoginsByClientSiteId(clientSiteId, DateTime.Now);
+                    string guardEmails = null;
+                    foreach (var item in guardlogins)
+                    {
+                        if (item.Guard.Email != null )
+                        {
+                            
+                            if (guardEmails == null)
+                            {
+                                guardEmails = item.Guard.Mobile;
+                            }
+                            else
+                            {
+                                guardEmails = guardEmails + "," + item.Guard.Email;
+                            }
+                        }
+
+                    }
+
                     var fromAddress = _EmailOptions.FromAddress.Split('|');
-                    var toAddress = smsSiteEmails
-                        .Split(',');
-                    var subject = "Control Room Notification";
+                    var toAddress = smsSiteEmails.Split(',');
+                    var ccAddress = guardEmails.Split(',');
+                    var subject = Subject;
                     var messageHtml = Notifications;
 
                     var messagenew = new MimeMessage();
                     messagenew.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
                     foreach (var address in GetToEmailAddressList(toAddress))
                         messagenew.To.Add(address);
+                    foreach (var address in GetToEmailAddressList(ccAddress))
+                        messagenew.Cc.Add(address);
+
                     messagenew.Subject = $"{subject}";
 
                     var builder = new BodyBuilder()
@@ -221,17 +249,17 @@ namespace CityWatch.Web.Pages.Radio
 
 
                 }
-                if (checkedSMSPersonal==true)
+                if (checkedSMSPersonal == true)
                 {
                     var logbooktype = LogBookType.DailyGuardLog;
-                    var guardlogins = _guardLogDataProvider.GetGuardLoginsByClientSiteId(clientSiteId,DateTime.Now);
-                    string smsPersonalEmails=null;
-                    foreach(var item in guardlogins)
+                    var guardlogins = _guardLogDataProvider.GetGuardLoginsByClientSiteId(clientSiteId, DateTime.Now);
+                    string smsPersonalEmails = null;
+                    foreach (var item in guardlogins)
                     {
-                        if(item.Guard.Mobile !=null || item.Guard.Mobile!= "+61 4")
+                        if (item.Guard.Mobile != null || item.Guard.Mobile != "+61 4")
                         {
-                            item.Guard.Mobile = item.Guard.Mobile.Replace(" ","") + "@smsglobal.com";
-                            if (smsPersonalEmails==null)
+                            item.Guard.Mobile = item.Guard.Mobile.Replace(" ", "") + "@smsglobal.com";
+                            if (smsPersonalEmails == null)
                             {
                                 smsPersonalEmails = item.Guard.Mobile;
                             }
@@ -240,11 +268,11 @@ namespace CityWatch.Web.Pages.Radio
                                 smsPersonalEmails = smsPersonalEmails + "," + item.Guard.Mobile;
                             }
                         }
-                        
+
                     }
                     var fromAddress = _EmailOptions.FromAddress.Split('|');
                     var toAddress = smsPersonalEmails.Split(',');
-                    var subject = "Control Room Notification";
+                    var subject = Subject;
                     var messageHtml = Notifications;
 
                     var messagenew = new MimeMessage();
@@ -257,7 +285,7 @@ namespace CityWatch.Web.Pages.Radio
                     {
                         HtmlBody = messageHtml
                     };
-                   
+
                     messagenew.Body = builder.ToMessageBody();
 
                     using (var client = new SmtpClient())
@@ -281,7 +309,7 @@ namespace CityWatch.Web.Pages.Radio
                     {
                         if (item.PhoneNumber != null || item.PhoneNumber != "+61 4")
                         {
-                            item.PhoneNumber = item.PhoneNumber.Replace("(0)","") + "@smsglobal.com";
+                            item.PhoneNumber = item.PhoneNumber.Replace("(0)", "") + "@smsglobal.com";
                             if (smsPersonalEmails == null)
                             {
                                 smsPersonalEmails = item.PhoneNumber;
@@ -295,7 +323,7 @@ namespace CityWatch.Web.Pages.Radio
                     }
                     var fromAddress = _EmailOptions.FromAddress.Split('|');
                     var toAddress = smsPersonalEmails.Split(',');
-                    var subject = _EmailOptions.Subject;
+                    var subject = Subject;
                     var messageHtml = Notifications;
 
                     var messagenew = new MimeMessage();
@@ -342,6 +370,7 @@ namespace CityWatch.Web.Pages.Radio
 
             return emailAddressList;
         }
+     
         //Send Text Notifications-end
 
 
@@ -354,6 +383,8 @@ namespace CityWatch.Web.Pages.Radio
         //    var clientsitesmartwands = _guardLogDataProvider.GetClientSiteSmartWands(id);
         //    return new JsonResult(_guardLogDataProvider.GetGuards(id));
         //}
+
+       
 
     }
 }

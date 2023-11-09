@@ -876,7 +876,7 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     $('#chkLB').prop('checked', true);
     $('#chkSiteEmail').prop('checked', true);
     $('#chkSMSPersonal').prop('checked', false);
-    $('#chkSMSSmartWand').prop('checked', false);
+    $('#chkSMSSmartWand').prop('checked', false); $('#txtPushNotificationMessage').val('');
     //$.ajax({
     //    url: '/RadioCheckV2?handler=CompanyTextMessageData',
     //    data: { id: id },
@@ -929,6 +929,7 @@ $('#btnSendPushLotificationMessage').on('click', function () {
     const checkedSMSSmartWand = $('#chkSMSSmartWand').is(':checked');
     var clientSiteId = $('#txtNotificationsCompanyId').val();
     var Notifications = $('#txtPushNotificationMessage').val();
+    var Subject = $('#txtPushNotificationSubject').val();
    
     if (Notifications === '') {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
@@ -948,11 +949,17 @@ $('#btnSendPushLotificationMessage').on('click', function () {
                 checkedSMSPersonal: checkedSMSPersonal,
                 checkedSMSSmartWand: checkedSMSSmartWand,
                 Notifications: Notifications,
+                Subject: Subject,
             },
             dataType: 'json',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function () {
-            //$('#selectRadioCheckStatusActive').modal('hide');
+            if (success == true) {
+                $('#pushNoTificationsControlRoomModal').modal('hide');
+            }
+            else {
+                displayGuardValidationSummary('PushNotificationsValidationSummary', message);
+            }
             //$('#selectRadioStatus').val('');
             //$('#btnRefreshActivityStatus').trigger('click');
         });
