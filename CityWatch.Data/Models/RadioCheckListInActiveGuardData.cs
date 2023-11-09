@@ -15,6 +15,8 @@ namespace CityWatch.Data.Models
         public string SiteName { get; set; }
         public string GuardName { get; set; }
         public string GuardLoginTime { get; set; }
-        
+        public string Address { get; set; }
+        public string GPS { get; set; }
+
     }
 }

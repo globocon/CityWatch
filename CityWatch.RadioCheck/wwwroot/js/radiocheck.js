@@ -277,6 +277,8 @@ $('#clientSiteActiveGuards tbody').on('click', 'tr.dt-control', function () {
     
     //}
 });
+
+
 //$('#clientSiteActiveGuards tbody').on('click', '#btnActiveGuardsMap', function (value, record) {
    
 //    var Gps = $(this).closest("tr").find("#txtGPSActiveguards").val();
@@ -324,7 +326,11 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
     ordering: true,
     "columnDefs": [
-        { "visible": false, "targets": 1 } // Hide the group column initially
+        {
+            "visible": false, "targets": 1
+
+        },
+        { "visible": false, "targets": 2 } // Hide the group column initially
     ],
     order: [[groupColumn, 'asc']],
     info: false,
@@ -347,11 +353,22 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         {
             data: 'siteName',
             width: '20%',
+            class: 'dt-control',
             render: function (value, type, data) {
 
-                return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
+                return '<tr class="group group-start "><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
             }
         },
+        {
+            data: 'address',
+            width: '20%',
+            visible: false,
+            render: function (value, type, data) {
+
+                return '<tr class="group group-start sho"><td class="' + (groupColumn2 == '2' ? 'bg-danger' : (groupColumn2 == '0' ? 'bg-danger' : 'bg-danger')) + ' " colspan="5">' + groupColumn2 + '</td></tr>';
+            }
+        },
+
         {
             data: 'guardName',
             width: '20%',
@@ -376,22 +393,51 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;
-
+        var last2 = null;
         api.column(groupColumn, { page: 'current' })
             .data()
             .each(function (group, i) {
                 if (last !== group) {
                     $(rows)
                         .eq(i)
-                        .before('<tr class="group bg-info text-white"><td colspan="25">' + group + '</td></tr>');
+                        .before('<tr class="group bg-info text-white dt-control "><td colspan="25">' + group + '</td></tr>');
 
                     last = group;
+                }
+            });
+        api.column(groupColumn2, { page: 'current' })
+            .data()
+            .each(function (group, i) {
+                if (last2 !== group) {
+                    $(rows)
+                        .eq(i)
+                        .before('<tr class="group bg-info text-white hide" id="group2" hidden><td colspan="25">' + group + '</td></tr>');
+
+                    last2 = group;
                 }
             });
     },
 });
 
+$('#clientSiteInActiveGuards tbody').on('click', 'tr.dt-control', function () {
 
+
+    if ($(this).closest('tr').next('tr').is(':hidden') == true) {
+        $(this).closest('tr').next('tr').prop('hidden', false);
+        $(this).closest('tr').find('#btnUpArrow').removeClass('fa-caret-down')
+        $(this).closest('tr').find('#btnUpArrow').addClass('fa-caret-up')
+        /* $(this).closest('tr').next('tr').toggle();*/
+    }
+    else {
+        $(this).closest('tr').next('tr').prop('hidden', 'hidden');
+        $(this).closest('tr').find('#btnUpArrow').removeClass('fa-caret-up')
+        $(this).closest('tr').find('#btnUpArrow').addClass('fa-caret-down')
+
+    }
+
+
+    //}
+});
 $('#guardInfoModal').on('shown.bs.modal', function (event) {
     $('#lbl_guard_name').html('');
     $('#lbl_guard_security_no').html('');
@@ -432,7 +478,9 @@ let clientSiteNotAvailableGuards = $('#clientSiteNotAvailableGuards').DataTable(
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
     ordering: true,
     "columnDefs": [
-        { "visible": false, "targets": 1 } // Hide the group column initially
+        { "visible": false, "targets": 1 }
+        ,
+        { "visible": false, "targets": 2 }// Hide the group column initially
     ],
     order: [[groupColumn, 'asc']],
     info: false,
@@ -455,11 +503,22 @@ let clientSiteNotAvailableGuards = $('#clientSiteNotAvailableGuards').DataTable(
         {
             data: 'siteName',
             width: '20%',
+            class: 'dt-control',
             render: function (value, type, data) {
 
                 return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
             }
         },
+        {
+            data: 'address',
+            width: '20%',
+            visible: false,
+            render: function (value, type, data) {
+
+                return '<tr class="group group-start sho"><td class="' + (groupColumn2 == '2' ? 'bg-danger' : (groupColumn2 == '0' ? 'bg-danger' : 'bg-danger')) + ' " colspan="5">' + groupColumn2 + '</td></tr>';
+            }
+        },
+
         {
             data: 'guardName',
             width: '20%',
@@ -484,22 +543,52 @@ let clientSiteNotAvailableGuards = $('#clientSiteNotAvailableGuards').DataTable(
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;
-
+        var last2 = null;
         api.column(groupColumn, { page: 'current' })
             .data()
             .each(function (group, i) {
                 if (last !== group) {
                     $(rows)
                         .eq(i)
-                        .before('<tr class="group bg-info text-white"><td colspan="25">' + group + '</td></tr>');
+                        .before('<tr class="group bg-info text-white dt-control"><td colspan="25">' + group + '</td></tr>');
 
                     last = group;
+                }
+            });
+        api.column(groupColumn2, { page: 'current' })
+            .data()
+            .each(function (group, i) {
+                if (last2 !== group) {
+                    $(rows)
+                        .eq(i)
+                        .before('<tr class="group bg-info text-white hide" id="group2" hidden><td colspan="25">' + group + '</td></tr>');
+
+                    last2 = group;
                 }
             });
     },
 });
 
 /*to get the guards that are not available-start*/
+$('#clientSiteNotAvailableGuards tbody').on('click', 'tr.dt-control', function () {
+
+
+    if ($(this).closest('tr').next('tr').is(':hidden') == true) {
+        $(this).closest('tr').next('tr').prop('hidden', false);
+        $(this).closest('tr').find('#btnUpArrow').removeClass('fa-caret-down')
+        $(this).closest('tr').find('#btnUpArrow').addClass('fa-caret-up')
+        /* $(this).closest('tr').next('tr').toggle();*/
+    }
+    else {
+        $(this).closest('tr').next('tr').prop('hidden', 'hidden');
+        $(this).closest('tr').find('#btnUpArrow').removeClass('fa-caret-up')
+        $(this).closest('tr').find('#btnUpArrow').addClass('fa-caret-down')
+
+    }
+
+
+    //}
+});
 
 /* for logbook details of the guard-start*/
 
