@@ -13,8 +13,10 @@ namespace CityWatch.Data.Models
 
         public int ClientSiteId { get; set; }
 
-        [Display(Name = "Koios Site Id")]
+        [Display(Name = "Koios Site Id A")]
         public int? KoiosClientSiteId { get; set; }
+        [Display(Name = "Koios Site Id B")]
+        public int? KoiosClientSiteIdB { get; set; }
 
         [Display(Name = "Dropbox Directory")]
         public string DropboxImagesDir { get; set; }
