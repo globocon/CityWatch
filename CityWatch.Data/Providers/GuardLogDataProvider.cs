@@ -107,6 +107,12 @@ namespace CityWatch.Data.Providers
         List<GuardLog> GetGuardLogsId(int logBookId, DateTime logDate, int guardLoginId, IrEntryType type, string notes);
         void UpdateRadioChecklistEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity);
         List<GuardLogin> GetGuardLogins(int guardLoginId);
+
+        //listing clientsites for radio check
+        List<ClientSite> GetClientSites(int? Id);
+        List<ClientSiteSmartWand> GetClientSiteSmartWands(int? clientSiteId);
+        int GetGuardLoginId(int guardId, DateTime date);
+        List<GuardLogin> GetGuardLoginsByClientSiteId(int clientsiteId, DateTime date);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -1066,6 +1072,36 @@ namespace CityWatch.Data.Providers
         public List<GuardLogin> GetGuardLogins(int guardLoginId)
         {
             return _context.GuardLogins.Where(z => z.Id == guardLoginId).ToList();
+        }
+
+        //listing clientsites for radio check
+        public List<ClientSite> GetClientSites(int? Id)
+        {
+            return _context.ClientSites
+                .Where(x => !Id.HasValue || (Id.HasValue && x.Id == Id.Value)).ToList();
+                
+        }
+        public List<ClientSiteSmartWand> GetClientSiteSmartWands(int? clientSiteId)
+        {
+            return _context.ClientSiteSmartWands
+                .Where(x => !clientSiteId.HasValue || (clientSiteId.HasValue && x.ClientSiteId == clientSiteId.Value))
+                .Include(x => x.ClientSite)
+                .ToList();
+        }
+        public int GetGuardLoginId( int guardId, DateTime date)
+        {
+            return _context.GuardLogins
+                 .Where(z => z.GuardId == guardId && z.OnDuty.Date == date.Date).Max(x=>x.Id);
+        }
+        public List<GuardLogin> GetGuardLoginsByClientSiteId(int clientsiteId,DateTime date)
+        {
+            var guarlogins = _context.GuardLogins.Where(z => z.ClientSiteId == clientsiteId && z.OnDuty.Date == date.Date).ToList();
+                
+            foreach(var item in guarlogins)
+            {
+                item.Guard = GetGuards(item.GuardId);
+            }
+            return guarlogins;
         }
     }
 }

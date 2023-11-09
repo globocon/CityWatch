@@ -864,3 +864,117 @@ $('#btnSaveRadioStatusActive').on('click', function () {
 
 
 /*For radio check dropdown  end - end*/
+
+/*for pushing notifications from the control room - start*/
+$('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
+
+  
+
+    const button = $(event.relatedTarget);
+    const id = button.data('id');
+    $('#txtNotificationsCompanyId').val(id);
+    $('#chkLB').prop('checked', true);
+    $('#chkSiteEmail').prop('checked', true);
+    $('#chkSMSPersonal').prop('checked', false);
+    $('#chkSMSSmartWand').prop('checked', false);
+    //$.ajax({
+    //    url: '/RadioCheckV2?handler=CompanyTextMessageData',
+    //    data: { id: id },
+    //    type: 'GET',
+    //}).done(function (result) {
+    //    if (result) {
+    //        $('#lbl_guard_name').html(result.name);
+    //        $('#lbl_guard_security_no').html(result.securityNo);
+    //        $('#lbl_guard_state').html(result.state);
+    //        $('#lbl_guard_email').html(result.email);
+    //        $('#lbl_guard_mobile').html(result.mobile);
+    //        $('#lbl_guard_provider').html(result.provider);
+    //    }
+    //});
+});
+//$('#chkLB').on('change', function () {
+//    const isChecked = $(this).is(':checked');
+//    $('#IsLB').val(isChecked);
+//});
+//$('#chkSiteEmail').on('change', function () {
+//    const isChecked = $(this).is(':checked');
+//    $('#IsSiteEmail').val(isChecked);
+//});
+//$('#chkSMSPersonal').on('change', function () {
+//    const isChecked = $(this).is(':checked');
+//    $('#IsSMSPersonal').val(isChecked);
+//});
+//$('#chkSMSSmartWand').on('change', function () {
+//    const isChecked = $(this).is(':checked');
+//    $('#IsSMSSmartWand').val(isChecked);
+//});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+$('#btnSendPushLotificationMessage').on('click', function () {
+    const checkedLB = $('#chkLB').is(':checked');
+    const checkedSiteEmail = $('#chkSiteEmail').is(':checked');
+    const checkedSMSPersonal = $('#chkSMSPersonal').is(':checked');
+    const checkedSMSSmartWand = $('#chkSMSSmartWand').is(':checked');
+    var clientSiteId = $('#txtNotificationsCompanyId').val();
+    var Notifications = $('#txtPushNotificationMessage').val();
+   
+    if (Notifications === '') {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
+    }
+    else if (checkedLB == false && checkedSiteEmail == false && checkedSMSPersonal == false && checkedSMSSmartWand == false) {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select any one of the transfer options ');
+
+    }
+    else {
+        $.ajax({
+            url: '/RadioCheckV2?handler=SavePushNotificationTestMessages',
+            type: 'POST',
+            data: {
+                clientSiteId: clientSiteId,
+                checkedLB: checkedLB,
+                checkedSiteEmail: checkedSiteEmail,
+                checkedSMSPersonal: checkedSMSPersonal,
+                checkedSMSSmartWand: checkedSMSSmartWand,
+                Notifications: Notifications,
+            },
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function () {
+            //$('#selectRadioCheckStatusActive').modal('hide');
+            //$('#selectRadioStatus').val('');
+            //$('#btnRefreshActivityStatus').trigger('click');
+        });
+    }
+});
+function displayGuardValidationSummary(validationControl, errors) {
+    $('#' + validationControl).removeClass('validation-summary-valid').addClass('validation-summary-errors');
+    $('#' + validationControl).html('');
+    $('#' + validationControl).append('<ul></ul>');
+    if (!Array.isArray(errors)) {
+        $('#' + validationControl + ' ul').append('<li>' + errors + '</li>');
+    } else {
+        errors.forEach(function (item) {
+            if (item.indexOf(',') > 0) {
+                item.split(',').forEach(function (itemInner) {
+                    $('#' + validationControl + ' ul').append('<li>' + itemInner + '</li>');
+                });
+            } else {
+                $('#' + validationControl + ' ul').append('<li>' + item + '</li>');
+            }
+        });
+    }
+}
+
+/*for pushing notifications from the control room - end*/
