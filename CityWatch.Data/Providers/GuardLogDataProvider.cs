@@ -107,6 +107,12 @@ namespace CityWatch.Data.Providers
         List<GuardLog> GetGuardLogsId(int logBookId, DateTime logDate, int guardLoginId, IrEntryType type, string notes);
         void UpdateRadioChecklistEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity);
         List<GuardLogin> GetGuardLogins(int guardLoginId);
+        /* new Change by dileep for p4 task 17 start*/
+        void UpdateRadioChecklistLogOffEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity);
+        void GetGuardManningDetails(DayOfWeek CurrentDay);
+        void RemoveTheeRadioChecksActivityWithNotifcationtypeOne(int GuardId, int ClientSiteId);
+        public void RemoveClientSiteRadioChecksGreaterthanTwoHours();
+        /* new Change by dileep for p4 task 17 end*/
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -797,6 +803,8 @@ namespace CityWatch.Data.Providers
                         KVId = clientSiteActivity.KVId,
                         LBId = clientSiteActivity.LBId,
                         ActivityType = clientSiteActivity.ActivityType,
+                        OnDuty = clientSiteActivity.OnDuty,
+                        OffDuty = clientSiteActivity.OffDuty
                     });
 
                 }
@@ -1018,7 +1026,7 @@ namespace CityWatch.Data.Providers
             {
                 /* off duty remove all the records*/
                 var ClientSiteRadioChecksActivity = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId).ToList();
-               _context.ClientSiteRadioChecksActivityStatus.RemoveRange(ClientSiteRadioChecksActivity);
+                _context.ClientSiteRadioChecksActivityStatus.RemoveRange(ClientSiteRadioChecksActivity);
                 _context.SaveChanges();
             }
             else
@@ -1033,29 +1041,46 @@ namespace CityWatch.Data.Providers
             return _context.GuardLogins
                  .SingleOrDefault(z => z.ClientSiteLogBookId == clientsitelogbookId && z.GuardId == guardId && z.OnDuty.Date == date.Date).Id;
         }
-        public List<GuardLog> GetGuardLogsId(int logBookId, DateTime logDate,int guardLoginId, IrEntryType type,string notes)
+        public List<GuardLog> GetGuardLogsId(int logBookId, DateTime logDate, int guardLoginId, IrEntryType type, string notes)
         {
             return _context.GuardLogs
                .Where(z => z.ClientSiteLogBookId == logBookId && z.EventDateTime >= logDate && z.EventDateTime < logDate.AddDays(1)
                && z.GuardLoginId == guardLoginId && z.IrEntryType == type && z.Notes == notes).ToList();
-               
-               
+
+
         }
         public void UpdateRadioChecklistEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity)
         {
             try
             {
-                
 
-                    var clientSiteActivityToUpdate = _context.ClientSiteRadioChecksActivityStatus.SingleOrDefault(x => x.Id == clientSiteActivity.Id);
-                    if (clientSiteActivityToUpdate == null)
-                        throw new InvalidOperationException();
 
-                    
-                    clientSiteActivityToUpdate.NotificationCreatedTime = clientSiteActivity.NotificationCreatedTime;
-                    
-                
+                var clientSiteActivityToUpdate = _context.ClientSiteRadioChecksActivityStatus.SingleOrDefault(x => x.Id == clientSiteActivity.Id);
+                if (clientSiteActivityToUpdate == null)
+                    throw new InvalidOperationException();
+                clientSiteActivityToUpdate.NotificationCreatedTime = clientSiteActivity.NotificationCreatedTime;
 
+
+
+
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+
+        public void UpdateRadioChecklistLogOffEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity)
+        {
+            try
+            {
+
+
+                var clientSiteActivityToUpdate = _context.ClientSiteRadioChecksActivityStatus.SingleOrDefault(x => x.Id == clientSiteActivity.Id);
+                if (clientSiteActivityToUpdate == null)
+                    throw new InvalidOperationException();
+                clientSiteActivityToUpdate.GuardLogoutTime = clientSiteActivity.GuardLogoutTime;
                 _context.SaveChanges();
             }
             catch (Exception ex)
@@ -1067,5 +1092,115 @@ namespace CityWatch.Data.Providers
         {
             return _context.GuardLogins.Where(z => z.Id == guardLoginId).ToList();
         }
+        /* New Change by dileep for P7 task 17 Start */
+        public void GetGuardManningDetails(DayOfWeek currentDay)
+        {
+            try
+            {
+                /* get the manning details corresponding to the currentDay*/
+                var clientSiteManningKpiSettings = _context.ClientSiteManningKpiSettings.Include(x => x.ClientSiteKpiSetting).Where(x => x.WeekDay == currentDay).ToList();
+                foreach (var manning in clientSiteManningKpiSettings)
+                {
+                    if (manning.EmpHoursStart != null)
+                    {
+                        /* Check the number of logins */
+                        var numberOfLogin = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.GuardLoginTime != null).Count() == 0;
+                        if (numberOfLogin)
+                        {    /* No login found */
+                            /* find the emp Hours  Start time -5 (ie show notification 5 min before the guard login in the site) */
+                            var dateTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None).AddMinutes(-5);
+                            if (DateTime.Now >= dateTime)
+                            {
+
+                                var radioChecklist = _context.ClientSiteRadioChecksActivityStatus.Where(z => z.GuardId == 4 && z.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && z.GuardLoginTime != null && z.NotificationType == 1)
+                                  .ToList();
+                                if (radioChecklist.Count == 0)
+                                {
+                                    var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                                    {
+                                        ClientSiteId = manning.ClientSiteKpiSetting.ClientSiteId,
+                                        GuardId = 4,/* temp Gurad(bruno) Id because forin key is set*/
+                                        GuardLoginTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None),/* Expected Time for Login
+                                    /* New Field Added for NotificationType only for manning notification*/
+                                        NotificationType = 1
+                                    };
+                                    _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
+                                    _context.SaveChanges();
+                                }
+                            }
+
+                        }
+                        else
+                        {
+                            /* if login  found  remove the notification*/
+                            var notificationCountIsZero = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1).Count() == 0;
+                            if (!notificationCountIsZero)
+                            {
+                                /* Remove notification because login found */
+                                var notificationDetails = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1);
+                                _context.ClientSiteRadioChecksActivityStatus.RemoveRange(notificationDetails);
+                                _context.SaveChanges();
+                            }
+                        }
+
+                    }
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+
+
+        public void RemoveTheeRadioChecksActivityWithNotifcationtypeOne(int GuardId, int ClientSiteId)
+        {
+            var clientSiteRadioCheckActivityStatusToDelete = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.GuardId == GuardId && x.ClientSiteId == ClientSiteId && x.NotificationType == 1);
+            if (clientSiteRadioCheckActivityStatusToDelete == null)
+                throw new InvalidOperationException();
+            else
+
+            {
+                _context.RemoveRange(clientSiteRadioCheckActivityStatusToDelete);
+                _context.SaveChanges();
+            }
+
+        }
+
+        public void RemoveClientSiteRadioChecksGreaterthanTwoHours()
+        {
+            var clientSiteRadioChecksToDelete = _context.ClientSiteRadioChecks.Where(x => 1 == 1).ToList();
+            if (clientSiteRadioChecksToDelete == null)
+            {
+                throw new InvalidOperationException();
+            }
+            else
+            {
+                foreach (var item in clientSiteRadioChecksToDelete)
+                {
+
+
+                    var isActive = (DateTime.Now - item.CheckedAt).TotalHours < 2;
+                    if (!isActive)
+                    {
+                        var clientSiteRadioCheckActivityStatusToDelete = _context.ClientSiteRadioChecks.Where(x => x.Id==item.Id);
+                        if (clientSiteRadioCheckActivityStatusToDelete == null)
+                            throw new InvalidOperationException();
+                        else
+
+                        {
+                            _context.RemoveRange(clientSiteRadioCheckActivityStatusToDelete);
+                            _context.SaveChanges();
+                        }
+                       
+                      
+                    }
+                }
+            }
+        }
+
+        /* New Change by dileep for P7 task 17 end */
     }
 }

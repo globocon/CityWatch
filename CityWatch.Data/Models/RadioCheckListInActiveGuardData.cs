@@ -17,5 +17,6 @@ namespace CityWatch.Data.Models
         public string GuardLoginTime { get; set; }
         public string TwoHrAlert { get; set; }
         public string RcStatus { get; set; }
+        public int? NotificationType { get; set; }
     }
 }

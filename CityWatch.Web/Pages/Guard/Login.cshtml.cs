@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 
@@ -94,7 +95,7 @@ namespace CityWatch.Web.Pages.Guard
                 }
 
                 var logBookId = GetLogBookId(out var isNewLogBook);
-                var guardLoginId = GetGuardLoginId(logBookId);                
+                var guardLoginId = GetGuardLoginId(logBookId);
 
                 if (LogBookType == LogBookType.DailyGuardLog)
                 {
@@ -128,33 +129,49 @@ namespace CityWatch.Web.Pages.Guard
                         var radioChecklist = _clientDataProvider.GetClientSiteRadioChecksActivityStatus(logbookcl.GuardId, logbookcl.ClientSiteId);
                         if (radioChecklist.Count == 0)
                         {
+
                             var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
                             {
                                 ClientSiteId = logbookcl.ClientSiteId,
                                 GuardId = logbookcl.GuardId,
                                 GuardLoginTime = DateTime.Now,
+                                /* New Field Added for Logoff the Gurad after OffDuty in Rc*/
+                                OnDuty = GuardLogin.OnDuty,
+                                OffDuty = GuardLogin.OffDuty
 
                             };
                             _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
                         }
-                        //else
-                        //{
-                        //    var ActivityStatusId = _clientDataProvider.GetClientSiteRadioChecksActivityStatus(logbookcl.GuardId, logbookcl.ClientSiteId).Max(x => x.Id);
-                            
-                        //        var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
-                        //        {
-                        //            ClientSiteId = logbookcl.ClientSiteId,
-                        //            GuardId = logbookcl.GuardId,
-                        //            GuardLoginTime = DateTime.Now,
-                        //            Id = Convert.ToInt32(ActivityStatusId),
+                        else
+                        {
+                            /* Check if the NotificationType == 1 the remove  notification and insert the orginal login*/
+                            var select = radioChecklist.Where(x => x.NotificationType == 1).ToList();
+                            if (select.Count != 0)
+                            {
+                                /*remove NotificationType*/
+                                _guardLogDataProvider.RemoveTheeRadioChecksActivityWithNotifcationtypeOne(logbookcl.GuardId, logbookcl.ClientSiteId);
+                                var radioChecklistNew = _clientDataProvider.GetClientSiteRadioChecksActivityStatus(logbookcl.GuardId, logbookcl.ClientSiteId);
+                                if (radioChecklistNew.Count == 0)
+                                {
+                                    var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                                    {
+                                        ClientSiteId = logbookcl.ClientSiteId,
+                                        GuardId = logbookcl.GuardId,
+                                        GuardLoginTime = DateTime.Now,
+                                        /* New Field Added for Logoff the Gurad after OffDuty in Rc*/
+                                        OnDuty = GuardLogin.OnDuty,
+                                        OffDuty = GuardLogin.OffDuty
 
-                        //        };
-                        //        _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
-                            
-                        //}
+                                    };
+                                    _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
+                                }
+                            }
+                        }
+
+
                     }
 
-                    
+
                 }
                 //logBookId entry for radio checklist-end
 
@@ -308,7 +325,7 @@ namespace CityWatch.Web.Pages.Guard
 
 
             ////logBookId entry for radio checklist-start
-            
+
             //var gaurdlogin = _clientDataProvider.GetGuardLogin(guardLoginId,logBookId);
             //if (gaurdlogin.Count != 0)
             //{
