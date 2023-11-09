@@ -110,7 +110,7 @@ namespace CityWatch.Data.Providers
         /* new Change by dileep for p4 task 17 start*/
         void UpdateRadioChecklistLogOffEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity);
         void GetGuardManningDetails(DayOfWeek CurrentDay);
-        void RemoveTheeRadioChecksActivityWithNotifcationtypeOne(int GuardId, int ClientSiteId);
+        void RemoveTheeRadioChecksActivityWithNotifcationtypeOne( int ClientSiteId);
         public void RemoveClientSiteRadioChecksGreaterthanTwoHours();
         /* new Change by dileep for p4 task 17 end*/
     }
@@ -1092,11 +1092,19 @@ namespace CityWatch.Data.Providers
         {
             return _context.GuardLogins.Where(z => z.Id == guardLoginId).ToList();
         }
-        /* New Change by dileep for P7 task 17 Start */
+        /* New Change by dileep for P4 task 17 Start */
         public void GetGuardManningDetails(DayOfWeek currentDay)
         {
             try
             {
+                /*remove all the manning notification Start for showing today's manning*/
+
+                var notificationDetailsAll = _context.ClientSiteRadioChecksActivityStatus.Where(x =>  x.GuardLoginTime != null && x.NotificationType == 1);
+                _context.ClientSiteRadioChecksActivityStatus.RemoveRange(notificationDetailsAll);
+                _context.SaveChanges();
+
+                /* remove all the manning notification end */
+
                 /* get the manning details corresponding to the currentDay*/
                 var clientSiteManningKpiSettings = _context.ClientSiteManningKpiSettings.Include(x => x.ClientSiteKpiSetting).Where(x => x.WeekDay == currentDay).ToList();
                 foreach (var manning in clientSiteManningKpiSettings)
@@ -1104,7 +1112,7 @@ namespace CityWatch.Data.Providers
                     if (manning.EmpHoursStart != null)
                     {
                         /* Check the number of logins */
-                        var numberOfLogin = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.GuardLoginTime != null).Count() == 0;
+                        var numberOfLogin = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.GuardLoginTime != null &&x.NotificationType==null).Count() == 0;
                         if (numberOfLogin)
                         {    /* No login found */
                             /* find the emp Hours  Start time -5 (ie show notification 5 min before the guard login in the site) */
@@ -1119,7 +1127,7 @@ namespace CityWatch.Data.Providers
                                     var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
                                     {
                                         ClientSiteId = manning.ClientSiteKpiSetting.ClientSiteId,
-                                        GuardId = 4,/* temp Gurad(bruno) Id because forin key is set*/
+                                        GuardId = 4,/* temp Guard(bruno) Id because forgin key  is set*/
                                         GuardLoginTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None),/* Expected Time for Login
                                     /* New Field Added for NotificationType only for manning notification*/
                                         NotificationType = 1
@@ -1155,9 +1163,9 @@ namespace CityWatch.Data.Providers
         }
 
 
-        public void RemoveTheeRadioChecksActivityWithNotifcationtypeOne(int GuardId, int ClientSiteId)
+        public void RemoveTheeRadioChecksActivityWithNotifcationtypeOne( int ClientSiteId)
         {
-            var clientSiteRadioCheckActivityStatusToDelete = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.GuardId == GuardId && x.ClientSiteId == ClientSiteId && x.NotificationType == 1);
+            var clientSiteRadioCheckActivityStatusToDelete = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == ClientSiteId && x.NotificationType == 1);
             if (clientSiteRadioCheckActivityStatusToDelete == null)
                 throw new InvalidOperationException();
             else
@@ -1201,6 +1209,6 @@ namespace CityWatch.Data.Providers
             }
         }
 
-        /* New Change by dileep for P7 task 17 end */
+        /* New Change by dileep for P4 task 17 end */
     }
 }

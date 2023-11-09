@@ -129,6 +129,8 @@ namespace CityWatch.Web.Pages.Guard
                         var radioChecklist = _clientDataProvider.GetClientSiteRadioChecksActivityStatus(logbookcl.GuardId, logbookcl.ClientSiteId);
                         if (radioChecklist.Count == 0)
                         {
+                            /*remove NotificationType=1*/
+                            _guardLogDataProvider.RemoveTheeRadioChecksActivityWithNotifcationtypeOne(logbookcl.ClientSiteId);
 
                             var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
                             {
@@ -148,8 +150,8 @@ namespace CityWatch.Web.Pages.Guard
                             var select = radioChecklist.Where(x => x.NotificationType == 1).ToList();
                             if (select.Count != 0)
                             {
-                                /*remove NotificationType*/
-                                _guardLogDataProvider.RemoveTheeRadioChecksActivityWithNotifcationtypeOne(logbookcl.GuardId, logbookcl.ClientSiteId);
+                                /*remove NotificationType=1*/
+                                _guardLogDataProvider.RemoveTheeRadioChecksActivityWithNotifcationtypeOne( logbookcl.ClientSiteId);
                                 var radioChecklistNew = _clientDataProvider.GetClientSiteRadioChecksActivityStatus(logbookcl.GuardId, logbookcl.ClientSiteId);
                                 if (radioChecklistNew.Count == 0)
                                 {
