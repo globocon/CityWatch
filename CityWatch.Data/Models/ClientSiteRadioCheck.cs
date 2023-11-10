@@ -15,5 +15,8 @@ namespace CityWatch.Data.Models
         public DateTime CheckedAt { get; set; }
 
         public string Status { get; set; }
+
+        public bool Active { get; set; }
+        
     }
 }

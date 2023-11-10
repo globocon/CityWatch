@@ -137,21 +137,21 @@ namespace CityWatch.Web.Pages.Guard
                             };
                             _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
                         }
-                        else
-                        {
-                            var ActivityStatusId = _clientDataProvider.GetClientSiteRadioChecksActivityStatus(logbookcl.GuardId, logbookcl.ClientSiteId).Max(x => x.Id);
+                        //else
+                        //{
+                        //    var ActivityStatusId = _clientDataProvider.GetClientSiteRadioChecksActivityStatus(logbookcl.GuardId, logbookcl.ClientSiteId).Max(x => x.Id);
                             
-                                var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
-                                {
-                                    ClientSiteId = logbookcl.ClientSiteId,
-                                    GuardId = logbookcl.GuardId,
-                                    GuardLoginTime = DateTime.Now,
-                                    Id = Convert.ToInt32(ActivityStatusId),
+                        //        var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                        //        {
+                        //            ClientSiteId = logbookcl.ClientSiteId,
+                        //            GuardId = logbookcl.GuardId,
+                        //            GuardLoginTime = DateTime.Now,
+                        //            Id = Convert.ToInt32(ActivityStatusId),
 
-                                };
-                                _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
+                        //        };
+                        //        _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
                             
-                        }
+                        //}
                     }
 
                     

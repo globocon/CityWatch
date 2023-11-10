@@ -1,4 +1,5 @@
-﻿using CityWatch.Data.Models;
+﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Models;
 using iText.Layout.Element;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -95,6 +96,17 @@ namespace CityWatch.Data.Providers
 
         List<RadioCheckListGuardIncidentReportData> GetActiveGuardIncidentReportDetails(int clientSiteId, int guardId);
         //for getting  incident report details of the  guard-end
+
+
+        //rc status save Start
+        void SaveClientSiteRadioCheck(ClientSiteRadioCheck clientSiteRadioCheck);
+        //rc status save end
+
+        int GetClientSiteLogBookId(int clientsiteId, LogBookType type, DateTime date);
+        int GetGuardLoginId(int clientsitelogbookId, int guardId, DateTime date);
+        List<GuardLog> GetGuardLogsId(int logBookId, DateTime logDate, int guardLoginId, IrEntryType type, string notes);
+        void UpdateRadioChecklistEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity);
+        List<GuardLogin> GetGuardLogins(int guardLoginId);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -882,7 +894,15 @@ namespace CityWatch.Data.Providers
         {
             var ClientSiteRadioChecksActivity = _context.ClientSiteRadioChecksActivityStatus.SingleOrDefault(x => x.Id == ClientSiteRadioChecksActivityStatus.Id);
             if (ClientSiteRadioChecksActivity != null)
+            {
+                var clientSiteRcStatus = _context.ClientSiteRadioChecks.Where(x => x.GuardId == ClientSiteRadioChecksActivity.GuardId && x.ClientSiteId == ClientSiteRadioChecksActivity.ClientSiteId);
+                /* remove the Pervious Status*/
+                if (clientSiteRcStatus != null)
+                    _context.ClientSiteRadioChecks.RemoveRange(clientSiteRcStatus);
+
                 _context.ClientSiteRadioChecksActivityStatus.Remove(ClientSiteRadioChecksActivity);
+
+            }
             _context.SaveChanges();
 
         }
@@ -983,7 +1003,72 @@ namespace CityWatch.Data.Providers
 
             _context.SaveChanges();
         }
+        public int GetClientSiteLogBookId(int clientsiteId, LogBookType type, DateTime date)
+        {
+            return _context.ClientSiteLogBooks
+                 .SingleOrDefault(z => z.ClientSiteId == clientsiteId && z.Type == type && z.Date == date).Id;
+        }
 
+        public void SaveClientSiteRadioCheck(ClientSiteRadioCheck clientSiteRadioCheck)
+        {
 
+            var clientSiteRcStatus = _context.ClientSiteRadioChecks.Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId);
+            /* remove the Pervious Status*/
+            if (clientSiteRcStatus != null)
+                _context.ClientSiteRadioChecks.RemoveRange(clientSiteRcStatus);
+
+            if (clientSiteRadioCheck.Status == "Off Duty")
+            {
+                /* off duty remove all the records*/
+                var ClientSiteRadioChecksActivity = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId).ToList();
+               _context.ClientSiteRadioChecksActivityStatus.RemoveRange(ClientSiteRadioChecksActivity);
+                _context.SaveChanges();
+            }
+            else
+            {
+                _context.ClientSiteRadioChecks.Add(clientSiteRadioCheck);
+                _context.SaveChanges();
+
+            }
+        }
+        public int GetGuardLoginId(int clientsitelogbookId, int guardId, DateTime date)
+        {
+            return _context.GuardLogins
+                 .SingleOrDefault(z => z.ClientSiteLogBookId == clientsitelogbookId && z.GuardId == guardId && z.OnDuty.Date == date.Date).Id;
+        }
+        public List<GuardLog> GetGuardLogsId(int logBookId, DateTime logDate,int guardLoginId, IrEntryType type,string notes)
+        {
+            return _context.GuardLogs
+               .Where(z => z.ClientSiteLogBookId == logBookId && z.EventDateTime >= logDate && z.EventDateTime < logDate.AddDays(1)
+               && z.GuardLoginId == guardLoginId && z.IrEntryType == type && z.Notes == notes).ToList();
+               
+               
+        }
+        public void UpdateRadioChecklistEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity)
+        {
+            try
+            {
+                
+
+                    var clientSiteActivityToUpdate = _context.ClientSiteRadioChecksActivityStatus.SingleOrDefault(x => x.Id == clientSiteActivity.Id);
+                    if (clientSiteActivityToUpdate == null)
+                        throw new InvalidOperationException();
+
+                    
+                    clientSiteActivityToUpdate.NotificationCreatedTime = clientSiteActivity.NotificationCreatedTime;
+                    
+                
+
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+        public List<GuardLogin> GetGuardLogins(int guardLoginId)
+        {
+            return _context.GuardLogins.Where(z => z.Id == guardLoginId).ToList();
+        }
     }
 }

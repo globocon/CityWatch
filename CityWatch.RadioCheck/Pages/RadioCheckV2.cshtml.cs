@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Linq;
 using System.Security.Claims;
 
@@ -110,5 +111,30 @@ namespace CityWatch.Web.Pages.Radio
         {
             return new JsonResult(_guardLogDataProvider.GetGuards(id));
         }
+
+        //SaveRadioStatus -start
+        public JsonResult OnPostSaveRadioStatus(int clientSiteId, int guardId, string checkedStatus,bool active)
+        {
+            var success = true;
+            var message = "success";
+            try
+            {
+                _guardLogDataProvider.SaveClientSiteRadioCheck(new ClientSiteRadioCheck()
+                {
+                    ClientSiteId = clientSiteId,
+                    GuardId = guardId,
+                    Status = checkedStatus,
+                    CheckedAt = DateTime.Now,
+                    Active = active
+                }) ;
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        //SaveRadioStatus -end
     }
 }

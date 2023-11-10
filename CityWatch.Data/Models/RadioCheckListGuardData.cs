@@ -19,7 +19,7 @@ namespace CityWatch.Data.Models
         public int KeyVehicle { get; set; }
         public int IncidentReport { get; set; }
         public string SmartWands { get; set; }
-        
+        public string RcStatus { get; set; }
 
     }
 

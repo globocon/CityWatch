@@ -3,20 +3,10 @@
 @{
     ViewData["Title"] = "Radio Check";
     ViewData["PageName"] = "Radio Check";
+    Layout = "_Layout_InnerPage";
 }
 
-<div class="card">
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="col-13 text-right">
-                    Auto refresh in <span id="clockRefresh">03 min 00 sec</span>
-                    <button type="button" class="btn btn-success" id="btnRefreshActivityStatus"><i class="fa fa-refresh" aria-hidden="true"></i> Refresh Now</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
 <div class="row mt-2">
     <div class="col-md-12">
     </div>
@@ -31,6 +21,7 @@
     <div class="card-body" id="events-list">
         <div class="row mt-2">
             <div class="col-md-12">
+              
                 <table id="clientSiteInActiveGuards" class="table table-bordered" style="width:100%;">
                     <thead>
                         <tr>
@@ -39,6 +30,13 @@
                             <th>Address</th>
                             <th>Site Name/Guard</th>
                             <th>Login Time</th>
+
+                            <th>Two Hr Alert</th>
+                            <th>Radio Check</th>
+                            <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+
+                            <th>Name</th>
+
 
                         </tr>
                     </thead>
@@ -50,9 +48,16 @@
                             <th>Site Name/Guard</th>
                             <th>Login Time</th>
 
+                            <th>Two Hr Alert</th>
+                            <th>Radio Check</th>
+                            <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+
+                            <th>Name</th>
+
+
                         </tr>
                         <!-- Footer content here (will be styled to look like the header) -->
-                    </tfoot>
+                    @*</tfoot>*@
                 </table>
             </div>
         </div>
@@ -75,11 +80,19 @@
                             <th>Site Name</th>
                             <th>Address</th>
                             <th>Site Name/Guard</th>
-                            
-
                             <th>LB</th>
                             <th>KV</th>
                             <th>IR</th>
+                            <th>SW</th>
+                            <th>Radio Check</th>
+                            <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+
+
+                           
+
+                            <th>Name</th>
+
+
                         </tr>
                     </thead>
                     <tfoot>
@@ -88,10 +101,16 @@
                             <th>Site Name</th>
                             <th>Address</th>
                             <th>Site Name/Guard</th>
-                            
                             <th>LB</th>
                             <th>KV</th>
                             <th>IR</th>
+                            <th>SW</th>
+                            <th>Radio Check</th>
+                            <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+
+                            
+                            <th>Name</th>
+
                         </tr>
                         <!-- Footer content here (will be styled to look like the header) -->
                     </tfoot>
@@ -116,7 +135,7 @@
 <!----------------- Guard Details Modal -------------------->
 
 <div class="modal fade" id="guardInfoModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="guardInfoModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered  modal-sm">
+    <div class="modal-dialog modal-dialog-centered  ">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title"><i class="fa fa-vcard-o mr-2"></i>Guard Details</h5>
@@ -128,27 +147,27 @@
                 <div class="row">
                     <ul class="list-unstyled col-md-12">
                         <li class="row">
-                            <label class="col-md-5 col-form-label">Guard Name: </label>
+                            <label class="col-md-3 col-form-label">Guard Name: </label>
                             <label class="col-form-label" id="lbl_guard_name"></label>
                         </li>
                         <li class="row">
-                            <label class="col-md-5 col-form-label">Security No: </label>
+                            <label class="col-md-3 col-form-label">Security No: </label>
                             <label class="col-form-label" id="lbl_guard_security_no"></label>
                         </li>
                         <li class="row">
-                            <label class="col-md-5 col-form-label">State: </label>
+                            <label class="col-md-3 col-form-label">State: </label>
                             <label class="col-form-label" id="lbl_guard_state"></label>
                         </li>
                         <li class="row">
-                            <label class="col-md-5 col-form-label">Mobile: </label>
+                            <label class="col-md-3 col-form-label">Mobile: </label>
                             <label class="col-form-label" id="lbl_guard_mobile"></label>
                         </li>
                         <li class="row">
-                            <label class="col-md-5 col-form-label">Email: </label>
+                            <label class="col-md-3 col-form-label">Email: </label>
                             <label class="col-form-label" id="lbl_guard_email"></label>
                         </li>
                         <li class="row">
-                            <label class="col-md-5 col-form-label">Provider:</label>
+                            <label class="col-md-3 col-form-label">Provider:</label>
                             <label class="col-form-label" id="lbl_guard_provider"></label>
                         </li>
                     </ul>
@@ -188,9 +207,9 @@
                         </table>
                     </div>
                 </div>
-                
+
             </div>
-            
+
         </div>
     </div>
 </div>
@@ -255,7 +274,7 @@
                                     <th>SiteName</th>
                                     <th>IncidentReport Id</th>
                                     <th>File</th>
-                                    
+
                                     <th>Activity Type</th>
                                     <th>Created Time</th>
 
@@ -268,6 +287,74 @@
 
             </div>
 
+        </div>
+    </div>
+</div>
+
+
+<!----------------- Radio Check Status pop up -------------------->
+<div class="modal fade" id="selectRadioCheckStatus" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="selectRadioCheckStatusLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Radio Check Status</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="col-form-label" for="selectRadioStatus">Select Radio Check Status</label>
+                    <select id="selectRadioStatus" class="form-control">
+                        <option value="" selected>Select</option>
+                        <option value="N/A">N/A</option>
+                        <option value="Off Duty">Off Duty</option>
+                        <option value="N/A Only W/E">N/A Only W/E</option>
+                        <option value="N/A Only Summer">N/A Only Summer</option>
+                        <option value="On Standby">On Standby</option>
+                        <option value="Incoming Call">Incoming Call</option>
+                        <option value="Outgoing Call Radio">Outgoing Call Radio</option>
+                        <option value="Outgoing Call Mobile">Outgoing Call Mobile</option>
+                        <option value="No Answer">No Answer</option>
+                    </select>
+                    <input type="hidden" id="clientSiteId" value="" />
+                    <input type="hidden" id="guardId" value="" />
+                </div>
+            </div>
+            <div class="modal-footer justify-content-start">
+                <button type="button" id="btnSaveRadioStatus" class="btn btn-primary">Save Status</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="selectRadioCheckStatusActive" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="selectRadioCheckStatusActiveLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Radio Check Status</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="col-form-label" for="selectRadioStatusActive">Select Radio Check Status</label>
+                    <select id="selectRadioStatusActive" class="form-control">
+                        <option value="" selected>Select</option>
+                        <option value="N/A">N/A</option>
+                        <option value="Off Duty">Off Duty</option>
+                        <option value="N/A Only W/E">N/A Only W/E</option>
+                        <option value="N/A Only Summer">N/A Only Summer</option>
+                        <option value="On Standby">On Standby</option>
+                        <option value="Incoming Call">Incoming Call</option>
+                        <option value="Outgoing Call Radio">Outgoing Call Radio</option>
+                        <option value="Outgoing Call Mobile">Outgoing Call Mobile</option>
+                        <option value="No Answer">No Answer</option>
+                    </select>
+                    <input type="hidden" id="clientSiteId" value="" />
+                    <input type="hidden" id="guardId" value="" />
+                </div>
+            </div>
+            <div class="modal-footer justify-content-start">
+                <button type="button" id="btnSaveRadioStatusActive" class="btn btn-primary">Save Status</button>
+            </div>
         </div>
     </div>
 </div>

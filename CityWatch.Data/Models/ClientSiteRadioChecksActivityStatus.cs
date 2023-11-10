@@ -28,6 +28,7 @@ namespace CityWatch.Data.Models
 
         
         public Nullable <DateTime> GuardLogoutTime { get; set; }
+        public Nullable<DateTime> NotificationCreatedTime { get; set; }
         public int? IRId { get; set; }
         public int? KVId { get; set; }
         public int? LBId { get; set; }
