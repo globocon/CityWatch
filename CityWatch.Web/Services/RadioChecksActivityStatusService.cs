@@ -130,7 +130,7 @@ namespace CityWatch.Web.Services
                                     var logbooktype = LogBookType.DailyGuardLog;
                                     var clientsiteId = ClientSiteRadioChecksActivity.ClientSiteId;
                                     var logBookId = _guardLogDataProvider.GetClientSiteLogBookId(clientsiteId, logbooktype, DateTime.Today);
-                                    var guardLoginId = _guardLogDataProvider.GetGuardLoginId(logBookId, ClientSiteRadioChecksActivity.GuardId, DateTime.Today);
+                                    //var guardLoginId = _guardLogDataProvider.GetGuardLoginId(logBookId, ClientSiteRadioChecksActivity.GuardId, DateTime.Today);
                                     var guardName = _guardLogDataProvider.GetGuards(ClientSiteRadioChecksActivity.GuardId).Name;
                                     var guardLog = new GuardLog()
                                     {
@@ -159,7 +159,7 @@ namespace CityWatch.Web.Services
                                     var logbooktype = LogBookType.DailyGuardLog;
                                     var clientsiteId = ClientSiteRadioChecksActivity.ClientSiteId;
                                     var logBookId = _guardLogDataProvider.GetClientSiteLogBookId(clientsiteId, logbooktype, DateTime.Today);
-                                    var guardLoginId = _guardLogDataProvider.GetGuardLoginId(logBookId, ClientSiteRadioChecksActivity.GuardId, DateTime.Today);
+                                 //   var guardLoginId = _guardLogDataProvider.GetGuardLoginId(logBookId, ClientSiteRadioChecksActivity.GuardId, DateTime.Today);
                                     var guardName = _guardLogDataProvider.GetGuards(ClientSiteRadioChecksActivity.GuardId).Name;
                                     var guardLog = new GuardLog()
                                     {
