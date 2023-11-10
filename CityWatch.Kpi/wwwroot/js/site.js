@@ -1116,7 +1116,7 @@ $(function () {
         const isChecked = $(this).is(':checked');
         const filter = isChecked ? 1 : 2;
         if (filter === 1) { $("#lbl_ManningPatrolCar_3").text("No of Patrols"); }
-        else { $("#lbl_ManningPatrolCar_3").text("No of Workers"); }
+        else { $("#lbl_ManningPatrolCar_3").text("Workers"); }
         $("#ClientSiteManningPatrolCarKpiSettings_0__Type").val(filter);
         $("#ClientSiteManningPatrolCarKpiSettings_1__Type").val(filter);
         $("#ClientSiteManningPatrolCarKpiSettings_2__Type").val(filter);
