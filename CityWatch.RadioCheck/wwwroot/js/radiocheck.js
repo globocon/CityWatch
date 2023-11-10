@@ -295,7 +295,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     },
 });
 
-$('#clientSiteActiveGuards tbody').on('click', 'tr.dt-control', function () {
+$('#clientSiteActiveGuards tbody').on('click', '#btnUpArrow', function () {
     
 
     if ($(this).closest('tr').next('tr').is(':hidden') == true) {
@@ -493,7 +493,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
 });
 
-$('#clientSiteInActiveGuards tbody').on('click', 'tr.dt-control', function () {
+$('#clientSiteInActiveGuards tbody').on('click', '#btnUpArrow', function () {
 
 
 
@@ -647,7 +647,7 @@ let clientSiteNotAvailableGuards = $('#clientSiteNotAvailableGuards').DataTable(
 });
 
 /*to get the guards that are not available-start*/
-$('#clientSiteNotAvailableGuards tbody').on('click', 'tr.dt-control', function () {
+$('#clientSiteNotAvailableGuards tbody').on('click', '#btnUpArrow', function () {
 
 
     if ($(this).closest('tr').next('tr').is(':hidden') == true) {
@@ -1126,12 +1126,12 @@ $('#btnSendPushLotificationMessage').on('click', function () {
             },
             dataType: 'json',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function () {
-            if (success == true) {
+        }).done(function (data) {
+            if (data.success == true) {
                 $('#pushNoTificationsControlRoomModal').modal('hide');
             }
             else {
-                displayGuardValidationSummary('PushNotificationsValidationSummary', message);
+                displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
             }
             //$('#selectRadioStatus').val('');
             //$('#btnRefreshActivityStatus').trigger('click');
