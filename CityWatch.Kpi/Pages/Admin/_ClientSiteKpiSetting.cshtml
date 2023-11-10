@@ -4,7 +4,7 @@
 @{
     var rowTitle = new string[6] { "", "Daily Employee Hours", "Patrol Frequency", "No Of Patrols", "Image Target", "Wand Scans Target" };
     var rowTitleManningGuard = new string[4] { "", "Start", "End", "Workers" };
-    var rowTitleManningPatrolCar = new string[4] { "", "Start", "End", "No of Workers" };
+    var rowTitleManningPatrolCar = new string[4] { "", "Start", "End", "No of Patrols" };
     var count = 0;
     if (Model.ClientSiteManningGuardKpiSettings.Count != 0)
         count++;
@@ -373,7 +373,7 @@
 
                                             </div>
                                             <div class="col-md-1 p-0">
-                                                <label class="form-label" id="lbl_ManningPatrolCar_@rowIndex2">@rowTitleManningPatrolCar[rowIndex2]</label>
+                                                <label class="form-label" id="lbl_ManningPatrolCar_@rowIndex2">@rowTitleManningGuard[rowIndex2]</label>
                                             </div>
                                             @for (var colIndex2 = 0; colIndex2 < 7; colIndex2++)
                                             {
