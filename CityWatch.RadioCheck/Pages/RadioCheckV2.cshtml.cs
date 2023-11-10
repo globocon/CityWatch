@@ -39,6 +39,10 @@ namespace CityWatch.Web.Pages.Radio
         public int GuardId { get; set; }
         public IActionResult OnGet()
         {
+
+          
+
+            var guardLoginId = HttpContext.Session.GetInt32("GuardLoginId");
             /* The following changes done for allowing guard to access the KPI*/
             var claimsIdentity = User.Identity as ClaimsIdentity;
             /* For Guard Login using securityLicenseNo*/
@@ -47,6 +51,25 @@ namespace CityWatch.Web.Pages.Radio
             /* For Guard Login using securityLicenseNo the office staff UserId*/
             string loginUserId = Request.Query["lud"];
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            string sidValue = "";
+            var UserId1 = claimsIdentity.Claims;
+            foreach (var item in UserId1)
+            {
+                if (item.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/sid")
+                {
+                     sidValue = item.Value;
+                  
+                    break;
+                }
+            }
+            if (int.TryParse(sidValue, out int sid))
+            {
+                int sids = int.Parse(sidValue);
+                ViewData["IsDuressEnabled"] = _guardLogDataProvider.IsRadiocheckDuressEnabled(sids);
+                
+            }
+            
+
             if (!string.IsNullOrEmpty(securityLicenseNo) && !string.IsNullOrEmpty(loginUserId) && !string.IsNullOrEmpty(LoginGuardId))
             {
                
@@ -73,8 +96,37 @@ namespace CityWatch.Web.Pages.Radio
                 HttpContext.Session.SetInt32("GuardId", 0);
                 return Redirect(Url.Page("/Account/Login"));
             }
+            
         }
+        //code added to save the duress button start
+        public JsonResult OnPostSaveDuress()
+        {
+            var claimsIdentity = User.Identity as ClaimsIdentity;
+            var UserId = claimsIdentity.Claims;
+            foreach (var item in UserId)
+            {
+                if (item.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/sid")
+                {
+                    string sidValue = item.Value;
+                    int Sid= int.Parse(sidValue);
+                    var UserIDDuress = _guardLogDataProvider.UserIDDuress(Sid);
+                    if (UserIDDuress==0)
+                    {
+                        _guardLogDataProvider.SaveRadioCheckDuress(sidValue);
+                    }
+                   
+                    break; 
+                }
+            }
+            
 
+            var status = true;
+            var message = "Success";
+            
+            ViewData["IsDuressEnabled"] = true;
+            return new JsonResult(new { status, message });
+        }
+        //code added to save the duress button stop
         public IActionResult OnGetClientSiteActivityStatus(string clientSiteIds)
         {
 

@@ -1010,6 +1010,21 @@ $('#btnSaveRadioStatus').on('click', function () {
         $('#btnRefreshActivityStatus').trigger('click');
     });
 });
+$('#radio_duress_btn').on('click', function () {
+    $.ajax({
+        url: '/RadioCheckV2?handler=SaveDuress',
+        type: 'POST',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        if (result.status) {
+            $('#radio_duress_btn').removeClass('normal').addClass('active');
+            $("#duress_status").addClass('font-weight-bold');
+            $("#duress_status").text("Active");
+        }
+        //gridGuardLog.clear();
+        //gridGuardLog.reload();
+    });
+});
 $('#btnSaveRadioStatusActive').on('click', function () {
     const checkedStatus = $('#selectRadioStatusActive').val();
     var clientSiteId = $('#clientSiteId').val();

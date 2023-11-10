@@ -70,6 +70,7 @@ namespace CityWatch.Data
         public DbSet<RadioCheckListNotAvailableGuardData> RadioCheckListNotAvailableGuardData { get; set; }
         public DbSet<RadioCheckListGuardKeyVehicleData> RadioCheckListGuardKeyVehicleData { get; set; }
         public DbSet<RadioCheckListGuardIncidentReportData> RadioCheckListGuardIncidentReportData { get; set; }
+        public DbSet<RadioCheckDuress> RadioCheckDuress { get; set; }
 
 
     }
