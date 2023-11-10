@@ -146,11 +146,13 @@ $('#btnSaveRadioStatus').on('click', function () {
 
 /* V2 Changes start 12102023 */
 const groupColumn = 1;
+const groupColumn2 = 2;
 let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
     ordering: true,
     "columnDefs": [
-        { "visible": false, "targets": 1 } // Hide the group column initially
+        { "visible": false, "targets": 1 } ,// Hide the group column initially
+        { "visible": false, "targets": 2 } 
     ],
     order: [[groupColumn, 'asc']],
     info: false,
@@ -173,17 +175,29 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         {
             data: 'siteName',
             width: '20%',
+            class:'dt-control',
             render: function (value, type, data) {
 
                 return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
             }
+
+        }, 
+        {
+            data: 'address',
+            width: '20%',
+            visible: false,
+            render: function (value, type, data) {
+
+                return '<tr class="group group-start sho"><td class="' + (groupColumn2 == '2' ? 'bg-danger' : (groupColumn2 == '0' ? 'bg-danger' : 'bg-danger')) + ' " colspan="5">' + groupColumn2 + '</td></tr>';
+            }
+
         },
         {
             data: 'guardName',
             width: '20%',
             render: function (value, type, data) {
                 return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                    '<a href="#" class="ml-2"><i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i></a>';
+                    '<i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
             }
         },
         {
@@ -192,7 +206,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
-                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#"  id="btnLogBookDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" text="' + data.clientSiteId + '"><input type="hidden" id="GuardId" text="' + data.guardId + '"> ';
+                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a  id="btnLogBookDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" text="' + data.clientSiteId + '"><input type="hidden" id="GuardId" text="' + data.guardId + '"> ';
             }
         },
         {
@@ -255,29 +269,105 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;
-
+        var last2 = null;
         api.column(groupColumn, { page: 'current' })
             .data()
             .each(function (group, i) {
                 if (last !== group) {
                     $(rows)
                         .eq(i)
-                        .before('<tr class="group bg-info text-white"><td colspan="25">' + group + '</td></tr>');
+                        .before('<tr class="group bg-info text-white dt-control"><td colspan="25">' + group + '</td></tr>');
 
                     last = group;
+                }
+            });
+        api.column(groupColumn2, { page: 'current' })
+            .data()
+            .each(function (group, i) {
+                if (last2 !== group) {
+                    $(rows)
+                        .eq(i)
+                        .before('<tr class="group bg-info text-white hide" id="group2" hidden><td colspan="25">' + group + '</td></tr>');
+
+                    last2 = group;
                 }
             });
     },
 });
 
+$('#clientSiteActiveGuards tbody').on('click', '#btnUpArrow', function () {
+    
 
+    if ($(this).closest('tr').next('tr').is(':hidden') == true) {
+        $(this).closest('tr').next('tr').prop('hidden', false);
+        $(this).closest('tr').find('#btnUpArrow').removeClass('fa-caret-down')
+        $(this).closest('tr').find('#btnUpArrow').addClass('fa-caret-up')
+        /* $(this).closest('tr').next('tr').toggle();*/
+    }
+    else {
+        $(this).closest('tr').next('tr').prop('hidden', 'hidden');
+        $(this).closest('tr').find('#btnUpArrow').removeClass('fa-caret-up')
+        $(this).closest('tr').find('#btnUpArrow').addClass('fa-caret-down')
+
+    }
+    
+    
+    //}
+});
+
+
+//$('#clientSiteActiveGuards tbody').on('click', '#btnActiveGuardsMap', function (value, record) {
+   
+//    var Gps = $(this).closest("tr").find("#txtGPSActiveguards").val();
+//    var loc=getGpsAsHyperLink(Gps);
+//    window.open('https://www.google.com/maps?q=' + value,'_blank' )
+   
+//    '<a href="https://www.google.com/maps?q=' + value + '" target="_blank">' + loc + '</a>'
+   
+
+//});
+function getGpsAsHyperLink(value) {
+    const gps = value.split(',');
+    let lat = gps[0];
+    let lon = gps[1];
+    let latDir = (lat >= 0 ? "N" : "S");
+    lat = Math.abs(lat);
+    let latMinPart = ((lat - Math.trunc(lat) / 1) * 60);
+    let latSecPart = ((latMinPart - Math.trunc(latMinPart) / 1) * 60);
+    let lonDir = (lon >= 0 ? "E" : "W");
+    lon = Math.abs(lon);
+    let lonMinPart = ((lon - Math.trunc(lon) / 1) * 60);
+    let lonSecPart = ((lonMinPart - Math.trunc(lonMinPart) / 1) * 60);
+    let latitude = Math.trunc(lat) + "." + Math.trunc(latMinPart) + "" + Math.trunc(latSecPart) + '\u00B0 ' + latDir;
+    let longitude = Math.trunc(lon) + "." + Math.trunc(lonMinPart) + "" + Math.trunc(lonSecPart) + '\u00B0 ' + lonDir;
+    let loc = latitude + ' ' + longitude;
+    return loc;
+    //return '<a href="https://www.google.com/maps?q=' + value + '" target="_blank">' + loc + '</a>';
+}
+function format_kvl_child_row(d) {
+    return (
+        '<table cellpadding="7" cellspacing="0"  border="0" style="padding-left:50px;">' +
+        
+        '<tr>' +
+        '<td>' + d.address + '</td>' +
+       
+        '</tr>' +
+        '<tr>' +
+       
+        '</table>'
+    );
+}
 
 
 let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
     ordering: true,
     "columnDefs": [
-        { "visible": false, "targets": 1 } // Hide the group column initially
+        {
+            "visible": false, "targets": 1
+
+        },
+        { "visible": false, "targets": 2 } // Hide the group column initially
     ],
     order: [[groupColumn, 'asc']],   
     info: false,
@@ -301,18 +391,29 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         {
             data: 'siteName',
             width: '20%',
+            class: 'dt-control',
             render: function (value, type, data) {
 
-                return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
+                return '<tr class="group group-start "><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
             }
         },
+        {
+            data: 'address',
+            width: '20%',
+            visible: false,
+            render: function (value, type, data) {
+
+                return '<tr class="group group-start sho"><td class="' + (groupColumn2 == '2' ? 'bg-danger' : (groupColumn2 == '0' ? 'bg-danger' : 'bg-danger')) + ' " colspan="5">' + groupColumn2 + '</td></tr>';
+            }
+        },
+
         {
             data: 'guardName',
             
             width: '20%',
             render: function (value, type, data) {
                 return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                    '<a href="#" class="ml-2"><i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i></a>';
+                    '<i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
             }
         },
 
@@ -364,16 +465,27 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;
-
+        var last2 = null;
         api.column(groupColumn, { page: 'current' })
             .data()
             .each(function (group, i) {
                 if (last !== group) {
                     $(rows)
                         .eq(i)
-                        .before('<tr class="group bg-info text-white"><td colspan="25">' + group + '</td></tr>');
+                        .before('<tr class="group bg-info text-white dt-control "><td colspan="25">' + group + '</td></tr>');
 
                     last = group;
+                }
+            });
+        api.column(groupColumn2, { page: 'current' })
+            .data()
+            .each(function (group, i) {
+                if (last2 !== group) {
+                    $(rows)
+                        .eq(i)
+                        .before('<tr class="group bg-info text-white hide" id="group2" hidden><td colspan="25">' + group + '</td></tr>');
+
+                    last2 = group;
                 }
             });
     },
@@ -381,8 +493,26 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
 });
 
+$('#clientSiteInActiveGuards tbody').on('click', '#btnUpArrow', function () {
 
 
+
+    if ($(this).closest('tr').next('tr').is(':hidden') == true) {
+        $(this).closest('tr').next('tr').prop('hidden', false);
+        $(this).closest('tr').find('#btnUpArrow').removeClass('fa-caret-down')
+        $(this).closest('tr').find('#btnUpArrow').addClass('fa-caret-up')
+        /* $(this).closest('tr').next('tr').toggle();*/
+    }
+    else {
+        $(this).closest('tr').next('tr').prop('hidden', 'hidden');
+        $(this).closest('tr').find('#btnUpArrow').removeClass('fa-caret-up')
+        $(this).closest('tr').find('#btnUpArrow').addClass('fa-caret-down')
+
+    }
+
+
+    //}
+});
 
 $('#guardInfoModal').on('shown.bs.modal', function (event) {
    
@@ -425,7 +555,9 @@ let clientSiteNotAvailableGuards = $('#clientSiteNotAvailableGuards').DataTable(
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
     ordering: true,
     "columnDefs": [
-        { "visible": false, "targets": 1 } // Hide the group column initially
+        { "visible": false, "targets": 1 }
+        ,
+        { "visible": false, "targets": 2 }// Hide the group column initially
     ],
     order: [[groupColumn, 'asc']],
     info: false,
@@ -448,11 +580,22 @@ let clientSiteNotAvailableGuards = $('#clientSiteNotAvailableGuards').DataTable(
         {
             data: 'siteName',
             width: '20%',
+            class: 'dt-control',
             render: function (value, type, data) {
 
                 return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
             }
         },
+        {
+            data: 'address',
+            width: '20%',
+            visible: false,
+            render: function (value, type, data) {
+
+                return '<tr class="group group-start sho"><td class="' + (groupColumn2 == '2' ? 'bg-danger' : (groupColumn2 == '0' ? 'bg-danger' : 'bg-danger')) + ' " colspan="5">' + groupColumn2 + '</td></tr>';
+            }
+        },
+
         {
             data: 'guardName',
             width: '20%',
@@ -477,22 +620,52 @@ let clientSiteNotAvailableGuards = $('#clientSiteNotAvailableGuards').DataTable(
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;
-
+        var last2 = null;
         api.column(groupColumn, { page: 'current' })
             .data()
             .each(function (group, i) {
                 if (last !== group) {
                     $(rows)
                         .eq(i)
-                        .before('<tr class="group bg-info text-white"><td colspan="25">' + group + '</td></tr>');
+                        .before('<tr class="group bg-info text-white dt-control"><td colspan="25">' + group + '</td></tr>');
 
                     last = group;
+                }
+            });
+        api.column(groupColumn2, { page: 'current' })
+            .data()
+            .each(function (group, i) {
+                if (last2 !== group) {
+                    $(rows)
+                        .eq(i)
+                        .before('<tr class="group bg-info text-white hide" id="group2" hidden><td colspan="25">' + group + '</td></tr>');
+
+                    last2 = group;
                 }
             });
     },
 });
 
 /*to get the guards that are not available-start*/
+$('#clientSiteNotAvailableGuards tbody').on('click', '#btnUpArrow', function () {
+
+
+    if ($(this).closest('tr').next('tr').is(':hidden') == true) {
+        $(this).closest('tr').next('tr').prop('hidden', false);
+        $(this).closest('tr').find('#btnUpArrow').removeClass('fa-caret-down')
+        $(this).closest('tr').find('#btnUpArrow').addClass('fa-caret-up')
+        /* $(this).closest('tr').next('tr').toggle();*/
+    }
+    else {
+        $(this).closest('tr').next('tr').prop('hidden', 'hidden');
+        $(this).closest('tr').find('#btnUpArrow').removeClass('fa-caret-up')
+        $(this).closest('tr').find('#btnUpArrow').addClass('fa-caret-down')
+
+    }
+
+
+    //}
+});
 
 /* for logbook details of the guard-start*/
 
@@ -879,3 +1052,124 @@ $('#btnSaveRadioStatusActive').on('click', function () {
 
 
 /*For radio check dropdown  end - end*/
+
+/*for pushing notifications from the control room - start*/
+$('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
+
+  
+
+    const button = $(event.relatedTarget);
+    const id = button.data('id');
+    $('#txtNotificationsCompanyId').val(id);
+    $('#chkLB').prop('checked', true);
+    $('#chkSiteEmail').prop('checked', true);
+    $('#chkSMSPersonal').prop('checked', false);
+    $('#chkSMSSmartWand').prop('checked', false); $('#txtPushNotificationMessage').val('');
+    //$.ajax({
+    //    url: '/RadioCheckV2?handler=CompanyTextMessageData',
+    //    data: { id: id },
+    //    type: 'GET',
+    //}).done(function (result) {
+    //    if (result) {
+    //        $('#lbl_guard_name').html(result.name);
+    //        $('#lbl_guard_security_no').html(result.securityNo);
+    //        $('#lbl_guard_state').html(result.state);
+    //        $('#lbl_guard_email').html(result.email);
+    //        $('#lbl_guard_mobile').html(result.mobile);
+    //        $('#lbl_guard_provider').html(result.provider);
+    //    }
+    //});
+});
+//$('#chkLB').on('change', function () {
+//    const isChecked = $(this).is(':checked');
+//    $('#IsLB').val(isChecked);
+//});
+//$('#chkSiteEmail').on('change', function () {
+//    const isChecked = $(this).is(':checked');
+//    $('#IsSiteEmail').val(isChecked);
+//});
+//$('#chkSMSPersonal').on('change', function () {
+//    const isChecked = $(this).is(':checked');
+//    $('#IsSMSPersonal').val(isChecked);
+//});
+//$('#chkSMSSmartWand').on('change', function () {
+//    const isChecked = $(this).is(':checked');
+//    $('#IsSMSSmartWand').val(isChecked);
+//});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+$('#btnSendPushLotificationMessage').on('click', function () {
+    const checkedLB = $('#chkLB').is(':checked');
+    const checkedSiteEmail = $('#chkSiteEmail').is(':checked');
+    const checkedSMSPersonal = $('#chkSMSPersonal').is(':checked');
+    const checkedSMSSmartWand = $('#chkSMSSmartWand').is(':checked');
+    var clientSiteId = $('#txtNotificationsCompanyId').val();
+    var Notifications = $('#txtPushNotificationMessage').val();
+    var Subject = $('#txtPushNotificationSubject').val();
+   
+    if (Notifications === '') {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
+    }
+    else if (checkedLB == false && checkedSiteEmail == false && checkedSMSPersonal == false && checkedSMSSmartWand == false) {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select any one of the transfer options ');
+
+    }
+    else {
+        $.ajax({
+            url: '/RadioCheckV2?handler=SavePushNotificationTestMessages',
+            type: 'POST',
+            data: {
+                clientSiteId: clientSiteId,
+                checkedLB: checkedLB,
+                checkedSiteEmail: checkedSiteEmail,
+                checkedSMSPersonal: checkedSMSPersonal,
+                checkedSMSSmartWand: checkedSMSSmartWand,
+                Notifications: Notifications,
+                Subject: Subject,
+            },
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data.success == true) {
+                $('#pushNoTificationsControlRoomModal').modal('hide');
+            }
+            else {
+                displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
+            }
+            //$('#selectRadioStatus').val('');
+            //$('#btnRefreshActivityStatus').trigger('click');
+        });
+    }
+});
+function displayGuardValidationSummary(validationControl, errors) {
+    $('#' + validationControl).removeClass('validation-summary-valid').addClass('validation-summary-errors');
+    $('#' + validationControl).html('');
+    $('#' + validationControl).append('<ul></ul>');
+    if (!Array.isArray(errors)) {
+        $('#' + validationControl + ' ul').append('<li>' + errors + '</li>');
+    } else {
+        errors.forEach(function (item) {
+            if (item.indexOf(',') > 0) {
+                item.split(',').forEach(function (itemInner) {
+                    $('#' + validationControl + ' ul').append('<li>' + itemInner + '</li>');
+                });
+            } else {
+                $('#' + validationControl + ' ul').append('<li>' + item + '</li>');
+            }
+        });
+    }
+}
+
+/*for pushing notifications from the control room - end*/

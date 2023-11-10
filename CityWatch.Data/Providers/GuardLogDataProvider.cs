@@ -109,7 +109,14 @@ namespace CityWatch.Data.Providers
         List<GuardLog> GetGuardLogsId(int logBookId, DateTime logDate, int guardLoginId, IrEntryType type, string notes);
         void UpdateRadioChecklistEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity);
         List<GuardLogin> GetGuardLogins(int guardLoginId);
-        
+
+
+        //listing clientsites for radio check
+        List<ClientSite> GetClientSites(int? Id);
+        List<ClientSiteSmartWand> GetClientSiteSmartWands(int? clientSiteId);
+        int GetGuardLoginId(int guardId, DateTime date);
+        List<GuardLogin> GetGuardLoginsByClientSiteId(int clientsiteId, DateTime date);
+
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -842,7 +849,8 @@ namespace CityWatch.Data.Providers
             foreach (var item in allvalues)
             {
 
-                item.SiteName = item.SiteName + " <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x => x.PhoneNumber).ToList());
+                item.SiteName = item.SiteName + " <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x => x.PhoneNumber).ToList()) + " <i class=\"fa fa-caret-down\" aria-hidden=\"true\" id=\"btnUpArrow\"></i> ";
+                item.Address = " <a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q=" +item.GPS + "\"target=\"_blank\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i> </a>" +  item.Address + " <input type=\"hidden\" class=\"form-control\" value=\""+ item.GPS +"\" id=\"txtGPSActiveguards\" />";
             }
             return allvalues;
         }
@@ -854,7 +862,8 @@ namespace CityWatch.Data.Providers
             foreach (var item in allvalues)
             {
 
-                item.SiteName = item.SiteName + " <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x => x.PhoneNumber).ToList());
+                item.SiteName = item.SiteName + " <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x => x.PhoneNumber).ToList()) + " <i class=\"fa fa-caret-down\" aria-hidden=\"true\" id=\"btnUpArrow\"></i> ";
+                item.Address = " <a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q=" + item.GPS + "\"target=\"_blank\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i> </a>" + item.Address + " <input type=\"hidden\" class=\"form-control\" value=\"" + item.GPS + "\" id=\"txtGPSActiveguards\" />";
             }
             return allvalues;
         }
@@ -936,7 +945,8 @@ namespace CityWatch.Data.Providers
             foreach (var item in allvalues)
             {
 
-                item.SiteName = item.SiteName + " <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x => x.PhoneNumber).ToList());
+                item.SiteName = item.SiteName + " <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x => x.PhoneNumber).ToList()) + " <i class=\"fa fa-caret-down\" aria-hidden=\"true\" id=\"btnUpArrow\"></i> ";
+                item.Address = " <a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q=" + item.GPS + "\"target=\"_blank\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i> </a>" + item.Address + " <input type=\"hidden\" class=\"form-control\" value=\"" + item.GPS + "\" id=\"txtGPSActiveguards\" />";
             }
             return allvalues;
         }
@@ -1073,6 +1083,7 @@ namespace CityWatch.Data.Providers
             return _context.GuardLogins.Where(z => z.Id == guardLoginId).ToList();
         }
 
+
        
         //code added to save Duress radio check start
         public void SaveRadioCheckDuress(string UserID)
@@ -1100,6 +1111,37 @@ namespace CityWatch.Data.Providers
     .OrderByDescending(z => z.Id)
     .Select(z => z.UserID)
     .LastOrDefault();
+        }
+
+
+        //listing clientsites for radio check
+        public List<ClientSite> GetClientSites(int? Id)
+        {
+            return _context.ClientSites
+                .Where(x => !Id.HasValue || (Id.HasValue && x.Id == Id.Value)).ToList();
+                
+        }
+        public List<ClientSiteSmartWand> GetClientSiteSmartWands(int? clientSiteId)
+        {
+            return _context.ClientSiteSmartWands
+                .Where(x => !clientSiteId.HasValue || (clientSiteId.HasValue && x.ClientSiteId == clientSiteId.Value))
+                .Include(x => x.ClientSite)
+                .ToList();
+        }
+        public int GetGuardLoginId( int guardId, DateTime date)
+        {
+            return _context.GuardLogins
+                 .Where(z => z.GuardId == guardId && z.OnDuty.Date == date.Date).Max(x=>x.Id);
+        }
+        public List<GuardLogin> GetGuardLoginsByClientSiteId(int clientsiteId,DateTime date)
+        {
+            var guarlogins = _context.GuardLogins.Where(z => z.ClientSiteId == clientsiteId && z.OnDuty.Date == date.Date).ToList();
+                
+            foreach(var item in guarlogins)
+            {
+                item.Guard = GetGuards(item.GuardId);
+            }
+            return guarlogins;
         }
 
     }
