@@ -1001,7 +1001,7 @@ $(function () {
     }
 
     /*code added for No of Patrols sum start */
-    $('#div_site_settings').on('keyup', '.patrol-sum', function () {
+    $('#div_site_settings').on('input', function () {
         var sum = 0;
         $(".patrol-sum").each(function () {
             var value = parseFloat($(this).val()) || 0;
