@@ -15,7 +15,17 @@
 <input type="hidden" id="txtClientSiteId" />
 <input type="hidden" id="txtGuardId" />
 <!-----------------In Acive List -------------------->
-
+<div class="col-md-13 text-right">
+    @{
+        var isDuressActive = Convert.ToBoolean(ViewData["IsDuressEnabled"]);
+        var btnImage = isDuressActive ? "~/images/DuressButton.jpg" : "~/images/DuressButton_Inactive.jpg";
+        var duressStatus = isDuressActive ? "Active" : "Normal";
+    }
+    <button type="button" class="btn btn-duress btn-md @duressStatus.ToLower()" id="radio_duress_btn">DURESS</button>
+    <p class="mb-0 mt-2">
+        Status: <span id="duress_status" class="@(isDuressActive ? "font-weight-bold" : "")">@duressStatus</span>
+    </p>
+</div>
 <div class="card">
     <h4 class="card-header">No Activity</h4>
     <div class="card-body" id="events-list">

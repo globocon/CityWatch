@@ -96,7 +96,9 @@ namespace CityWatch.Data.Providers
 
         List<RadioCheckListGuardIncidentReportData> GetActiveGuardIncidentReportDetails(int clientSiteId, int guardId);
         //for getting  incident report details of the  guard-end
-
+        void SaveRadioCheckDuress(string UserID);
+        public bool IsRadiocheckDuressEnabled(int UserID);
+        public int UserIDDuress(int UserID);
 
         //rc status save Start
         void SaveClientSiteRadioCheck(ClientSiteRadioCheck clientSiteRadioCheck);
@@ -107,6 +109,7 @@ namespace CityWatch.Data.Providers
         List<GuardLog> GetGuardLogsId(int logBookId, DateTime logDate, int guardLoginId, IrEntryType type, string notes);
         void UpdateRadioChecklistEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity);
         List<GuardLogin> GetGuardLogins(int guardLoginId);
+        
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -1028,6 +1031,8 @@ namespace CityWatch.Data.Providers
 
             }
         }
+
+       
         public int GetGuardLoginId(int clientsitelogbookId, int guardId, DateTime date)
         {
             return _context.GuardLogins
@@ -1067,5 +1072,35 @@ namespace CityWatch.Data.Providers
         {
             return _context.GuardLogins.Where(z => z.Id == guardLoginId).ToList();
         }
+
+       
+        //code added to save Duress radio check start
+        public void SaveRadioCheckDuress(string UserID)
+        {
+            _context.RadioCheckDuress.Add(new RadioCheckDuress()
+            {
+                UserID = Convert.ToInt32(UserID),
+                IsActive = true,
+                CurrentDateTime = DateTime.Today
+            });
+            _context.SaveChanges();
+        }
+        public bool IsRadiocheckDuressEnabled(int UserID)
+        {
+            return _context.RadioCheckDuress
+    .Where(z => z.UserID == UserID)
+    .OrderByDescending(z => z.Id) 
+    .Select(z => z.IsActive)
+    .LastOrDefault();
+        }
+        public int UserIDDuress(int UserID)
+        {
+            return _context.RadioCheckDuress
+    .Where(z => z.UserID == UserID)
+    .OrderByDescending(z => z.Id)
+    .Select(z => z.UserID)
+    .LastOrDefault();
+        }
+
     }
 }
