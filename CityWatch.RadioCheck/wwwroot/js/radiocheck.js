@@ -848,8 +848,8 @@ $('#radio_duress_btn').on('click', function () {
             $("#duress_status").addClass('font-weight-bold');
             $("#duress_status").text("Active");
         }
-        gridGuardLog.clear();
-        gridGuardLog.reload();
+        //gridGuardLog.clear();
+        //gridGuardLog.reload();
     });
 });
 $('#btnSaveRadioStatusActive').on('click', function () {

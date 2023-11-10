@@ -44,8 +44,7 @@ namespace CityWatch.Web.Pages.Radio
                 if (item.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/sid")
                 {
                      sidValue = item.Value;
-                    _guardLogDataProvider.SaveRadioCheckDuress(sidValue);
-                    
+                  
                     break;
                 }
             }
@@ -97,7 +96,7 @@ namespace CityWatch.Web.Pages.Radio
                     string sidValue = item.Value;
                     int Sid= int.Parse(sidValue);
                     var UserIDDuress = _guardLogDataProvider.UserIDDuress(Sid);
-                    if (UserIDDuress==null)
+                    if (UserIDDuress==0)
                     {
                         _guardLogDataProvider.SaveRadioCheckDuress(sidValue);
                     }
