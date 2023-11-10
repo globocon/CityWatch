@@ -34,5 +34,22 @@ namespace CityWatch.Web.API
 
             return true;
         }
+
+        [Route("[action]", Name = "RadioChecksManningHours")]
+        [HttpGet]
+        public bool RadioChecksManningHours()
+        {
+
+            try
+            {
+                _radioChecksActivityStatusService.Process2();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.StackTrace);
+            }
+
+            return true;
+        }
     }
 }

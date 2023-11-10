@@ -217,23 +217,36 @@ namespace CityWatch.Web.Pages.Guard
                 _guardDataProvider.UpdateGuardOffDuty(guardLoginId, DateTime.Now);
                 //logOff entry for radio checklist-start
 
-                var gaurdlogin = _clientDataProvider.GetGuardLogin(guardLoginId, clientSiteLogBookId);
-                if (gaurdlogin.Count != 0)
-                {
-                    foreach (var item in gaurdlogin)
-                    {
-                        var logbookcl = new GuardLogin();
+                //var gaurdlogin = _clientDataProvider.GetGuardLogin(guardLoginId, clientSiteLogBookId);
+                //if (gaurdlogin.Count != 0)
+                //{
+                //    foreach (var item in gaurdlogin)
+                //    {
+                //        var logbookcl = new GuardLogin();
 
-                        logbookcl.Id = item.Id;
-                        logbookcl.ClientSiteId = item.ClientSiteId;
-                        logbookcl.GuardId = item.GuardId;
+                //        logbookcl.Id = item.Id;
+                //        logbookcl.ClientSiteId = item.ClientSiteId;
+                //        logbookcl.GuardId = item.GuardId;
 
-                        _guardLogDataProvider.SignOffClientSiteRadioCheckActivityStatusForLogBookEntry(item.GuardId, item.ClientSiteId);
+                //        _guardLogDataProvider.SignOffClientSiteRadioCheckActivityStatusForLogBookEntry(item.GuardId, item.ClientSiteId);
 
-                    }
-                }
+                //    }
+                //}
 
                 //logOff entry for radio checklist-end
+                /* new Change 07/11/2023 no need to remove the all the deatils when logoff remove after a buffer time Start */
+                var guardlogins = _guardLogDataProvider.GetGuardLogins(Convert.ToInt32(GuardLog.GuardLoginId));
+                foreach (var item in guardlogins)
+                {
+
+                    var ClientSiteRadioChecksActivityDetails = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == item.GuardId && x.ClientSiteId == item.ClientSiteId && x.GuardLoginTime != null);
+                    foreach (var ClientSiteRadioChecksActivity in ClientSiteRadioChecksActivityDetails)
+                    {
+                        ClientSiteRadioChecksActivity.GuardLogoutTime = DateTime.Now;
+                        _guardLogDataProvider.UpdateRadioChecklistLogOffEntry(ClientSiteRadioChecksActivity);
+                    }
+                }
+                /* new Change 07/11/2023 no need to remove the all the deatils when logoff remove after a buffer time end */
             }
             catch (Exception ex)
             {

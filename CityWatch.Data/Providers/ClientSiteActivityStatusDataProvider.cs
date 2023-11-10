@@ -83,5 +83,7 @@ namespace CityWatch.Data.Providers
                             .OrderBy(z => z.CheckedAt)
                             .LastOrDefault();
         }
+
+       
     }
 }
