@@ -215,19 +215,36 @@ namespace CityWatch.Web.Pages.Radio
                     var logbooktype = LogBookType.DailyGuardLog;
                     var logBookId = _guardLogDataProvider.GetClientSiteLogBookId(clientSiteId, logbooktype, DateTime.Today);
                     var guardid = HttpContext.Session.GetInt32("GuardId");
-                    var guardLoginId = _guardLogDataProvider.GetGuardLoginId(Convert.ToInt32(guardid), DateTime.Today);
-                    // var guardName = _guardLogDataProvider.GetGuards(ClientSiteRadioChecksActivity.GuardId).Name;
-                    var guardLog = new GuardLog()
+                    if (guardid != 0)
                     {
-                        ClientSiteLogBookId = logBookId,
-                        GuardLoginId = guardLoginId,
-                        EventDateTime = DateTime.Now,
-                        Notes = Notifications,
-                        //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
-                        IsSystemEntry = true,
-                        IrEntryType = IrEntryType.Alarm
-                    };
-                    _guardLogDataProvider.SaveGuardLog(guardLog);
+                        var guardLoginId = _guardLogDataProvider.GetGuardLoginId(Convert.ToInt32(guardid), DateTime.Today);
+                        // var guardName = _guardLogDataProvider.GetGuards(ClientSiteRadioChecksActivity.GuardId).Name;
+                        var guardLog = new GuardLog()
+                        {
+                            ClientSiteLogBookId = logBookId,
+                            GuardLoginId = guardLoginId,
+                            EventDateTime = DateTime.Now,
+                            Notes = Notifications,
+                            //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
+                            IsSystemEntry = true,
+                            IrEntryType = IrEntryType.Alarm
+                        };
+                        _guardLogDataProvider.SaveGuardLog(guardLog);
+                    }
+                    else
+                    {
+                        var guardLog = new GuardLog()
+                        {
+                            ClientSiteLogBookId = logBookId,
+                            EventDateTime = DateTime.Now,
+                            Notes = Notifications,
+                            //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
+                            IsSystemEntry = true,
+                            IrEntryType = IrEntryType.Alarm
+                        };
+                        _guardLogDataProvider.SaveGuardLog(guardLog);
+                    }
+                    
                 }
                 if (checkedSiteEmail == true)
                 {
@@ -257,7 +274,7 @@ namespace CityWatch.Web.Pages.Radio
                             
                             if (guardEmails == null)
                             {
-                                guardEmails = item.Guard.Mobile;
+                                guardEmails = item.Guard.Email;
                             }
                             else
                             {
