@@ -119,72 +119,73 @@ namespace CityWatch.Web.Services
                     /* TO GIVE A WARNING TO THOSE WHO ARE DID NOT DO ANY ACTIVITY FOR 2 HOURS - start*/
                     else
                     {
-                        if (ClientSiteRadioChecksActivity.NotificationCreatedTime != null)
-                        {
-                            isActive = (DateTime.Now - ClientSiteRadioChecksActivity.NotificationCreatedTime).Value.TotalHours < 2;
-                            if (!isActive)
-                            {
-                                var noActivity = ClientSiteRadioChecksActivityDetails.Where(x => x.GuardId == ClientSiteRadioChecksActivity.GuardId && x.ClientSiteId == ClientSiteRadioChecksActivity.ClientSiteId && x.GuardLoginTime == null).Count();
-                                if (noActivity == 0)
-                                {
-                                    var logbooktype = LogBookType.DailyGuardLog;
-                                    var clientsiteId = ClientSiteRadioChecksActivity.ClientSiteId;
-                                    var logBookId = _guardLogDataProvider.GetClientSiteLogBookId(clientsiteId, logbooktype, DateTime.Today);
-                                    //var guardLoginId = _guardLogDataProvider.GetGuardLoginId(logBookId, ClientSiteRadioChecksActivity.GuardId, DateTime.Today);
-                                    var guardName = _guardLogDataProvider.GetGuards(ClientSiteRadioChecksActivity.GuardId).Name;
-                                    var guardLog = new GuardLog()
-                                    {
-                                        ClientSiteLogBookId = logBookId,
-                                        // GuardLoginId = guardLoginId,
-                                        EventDateTime = DateTime.Now,
-                                        Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard [" + guardName + "]. There is also no IR currently to justify KPI low performance",
-                                        //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
-                                        IsSystemEntry = true,
-                                        IrEntryType = IrEntryType.Normal
-                                    };
-                                    _guardLogDataProvider.SaveGuardLog(guardLog);
-                                    ClientSiteRadioChecksActivity.NotificationCreatedTime = guardLog.EventDateTime;
-                                    _guardLogDataProvider.UpdateRadioChecklistEntry(ClientSiteRadioChecksActivity);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            isActive = (DateTime.Now - ClientSiteRadioChecksActivity.GuardLoginTime).Value.TotalHours < 2;
-                            if (!isActive)
-                            {
-                                var noActivity = ClientSiteRadioChecksActivityDetails.Where(x => x.GuardId == ClientSiteRadioChecksActivity.GuardId && x.ClientSiteId == ClientSiteRadioChecksActivity.ClientSiteId && x.GuardLoginTime == null).Count();
-                                if (noActivity == 0)
-                                {
-                                    var logbooktype = LogBookType.DailyGuardLog;
-                                    var clientsiteId = ClientSiteRadioChecksActivity.ClientSiteId;
-                                    var logBookId = _guardLogDataProvider.GetClientSiteLogBookId(clientsiteId, logbooktype, DateTime.Today);
-                                 //   var guardLoginId = _guardLogDataProvider.GetGuardLoginId(logBookId, ClientSiteRadioChecksActivity.GuardId, DateTime.Today);
-                                    var guardName = _guardLogDataProvider.GetGuards(ClientSiteRadioChecksActivity.GuardId).Name;
-                                    var guardLog = new GuardLog()
-                                    {
-                                        ClientSiteLogBookId = logBookId,
-                                        //GuardLoginId = guardLoginId,
-                                        EventDateTime = DateTime.Now,
-                                        Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard [" + guardName + "]. There is also no IR currently to justify KPI low performance",
-                                        //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
-                                        IsSystemEntry = true,
-                                        IrEntryType = IrEntryType.Normal
-                                    };
-                                    _guardLogDataProvider.SaveGuardLog(guardLog);
-                                    ClientSiteRadioChecksActivity.NotificationCreatedTime = guardLog.EventDateTime;
-                                    _guardLogDataProvider.UpdateRadioChecklistEntry(ClientSiteRadioChecksActivity);
-                                }
-                            }
+                        /* getting some error due to _guardLogDataProvider.GetGuards*/
+                        //if (ClientSiteRadioChecksActivity.NotificationCreatedTime != null)
+                        //{
+                        //    isActive = (DateTime.Now - ClientSiteRadioChecksActivity.NotificationCreatedTime).Value.TotalHours < 2;
+                        //    if (!isActive)
+                        //    {
+                        //        var noActivity = ClientSiteRadioChecksActivityDetails.Where(x => x.GuardId == ClientSiteRadioChecksActivity.GuardId && x.ClientSiteId == ClientSiteRadioChecksActivity.ClientSiteId && x.GuardLoginTime == null).Count();
+                        //        if (noActivity == 0)
+                        //        {
+                        //            var logbooktype = LogBookType.DailyGuardLog;
+                        //            var clientsiteId = ClientSiteRadioChecksActivity.ClientSiteId;
+                        //            var logBookId = _guardLogDataProvider.GetClientSiteLogBookId(clientsiteId, logbooktype, DateTime.Today);
+                        //            //var guardLoginId = _guardLogDataProvider.GetGuardLoginId(logBookId, ClientSiteRadioChecksActivity.GuardId, DateTime.Today);
+                        //            var guardName = _guardLogDataProvider.GetGuards(ClientSiteRadioChecksActivity.GuardId).Name;
+                        //            var guardLog = new GuardLog()
+                        //            {
+                        //                ClientSiteLogBookId = logBookId,
+                        //                // GuardLoginId = guardLoginId,
+                        //                EventDateTime = DateTime.Now,
+                        //                Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard [" + guardName + "]. There is also no IR currently to justify KPI low performance",
+                        //                //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
+                        //                IsSystemEntry = true,
+                        //                IrEntryType = IrEntryType.Normal
+                        //            };
+                        //            _guardLogDataProvider.SaveGuardLog(guardLog);
+                        //            ClientSiteRadioChecksActivity.NotificationCreatedTime = guardLog.EventDateTime;
+                        //            _guardLogDataProvider.UpdateRadioChecklistEntry(ClientSiteRadioChecksActivity);
+                        //        }
+                        //    }
+                        //}
+                        //else
+                        //{
+                        //    isActive = (DateTime.Now - ClientSiteRadioChecksActivity.GuardLoginTime).Value.TotalHours < 2;
+                        //    if (!isActive)
+                        //    {
+                        //        var noActivity = ClientSiteRadioChecksActivityDetails.Where(x => x.GuardId == ClientSiteRadioChecksActivity.GuardId && x.ClientSiteId == ClientSiteRadioChecksActivity.ClientSiteId && x.GuardLoginTime == null).Count();
+                        //        if (noActivity == 0)
+                        //        {
+                        //            var logbooktype = LogBookType.DailyGuardLog;
+                        //            var clientsiteId = ClientSiteRadioChecksActivity.ClientSiteId;
+                        //            var logBookId = _guardLogDataProvider.GetClientSiteLogBookId(clientsiteId, logbooktype, DateTime.Today);
+                        //         //   var guardLoginId = _guardLogDataProvider.GetGuardLoginId(logBookId, ClientSiteRadioChecksActivity.GuardId, DateTime.Today);
+                        //            var guardName = _guardLogDataProvider.GetGuards(ClientSiteRadioChecksActivity.GuardId).Name;
+                        //            var guardLog = new GuardLog()
+                        //            {
+                        //                ClientSiteLogBookId = logBookId,
+                        //                //GuardLoginId = guardLoginId,
+                        //                EventDateTime = DateTime.Now,
+                        //                Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard [" + guardName + "]. There is also no IR currently to justify KPI low performance",
+                        //                //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
+                        //                IsSystemEntry = true,
+                        //                IrEntryType = IrEntryType.Normal
+                        //            };
+                        //            _guardLogDataProvider.SaveGuardLog(guardLog);
+                        //            ClientSiteRadioChecksActivity.NotificationCreatedTime = guardLog.EventDateTime;
+                        //            _guardLogDataProvider.UpdateRadioChecklistEntry(ClientSiteRadioChecksActivity);
+                        //        }
+                        //    }
 
-                        }
+                        //}
                     }
                     /* TO GIVE A WARNING TO THOSE WHO ARE DID NOT DO ANY ACTIVITY FOR 2 HOURS - end*/
-                }
-                /* LogoutTime time exits remove all the activity for that  */
+                    }
+                    /* LogoutTime time exits remove all the activity for that  */
 
-               
-            }
+
+                }
 
 
             /*Remove the Radio check status <2 hrs*/
