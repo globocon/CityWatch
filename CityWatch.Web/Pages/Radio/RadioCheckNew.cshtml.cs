@@ -304,7 +304,7 @@ namespace CityWatch.Web.Pages.Radio
                     };
 
                     messagenew.Body = builder.ToMessageBody();
-
+                    
                     using (var client = new SmtpClient())
                     {
                         client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
@@ -355,7 +355,7 @@ namespace CityWatch.Web.Pages.Radio
                     };
 
                     messagenew.Body = builder.ToMessageBody();
-
+                    
                     using (var client = new SmtpClient())
                     {
                         client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
@@ -406,7 +406,7 @@ namespace CityWatch.Web.Pages.Radio
                     };
 
                     messagenew.Body = builder.ToMessageBody();
-
+                    
                     using (var client = new SmtpClient())
                     {
                         client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
@@ -432,7 +432,7 @@ namespace CityWatch.Web.Pages.Radio
             var emailAddressList = new List<MailboxAddress>();
             foreach (var item in toAddress)
             {
-                emailAddressList.Add(new MailboxAddress(item, string.Empty));
+                emailAddressList.Add(new MailboxAddress(string.Empty,item ));
             }
 
 

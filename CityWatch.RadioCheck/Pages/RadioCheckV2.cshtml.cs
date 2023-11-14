@@ -328,6 +328,7 @@ namespace CityWatch.Web.Pages.Radio
                         if (item.Guard.Mobile != null || item.Guard.Mobile != "+61 4")
                         {
                             item.Guard.Mobile = item.Guard.Mobile.Replace(" ", "") + "@smsglobal.com";
+                            item.Guard.Mobile = item.Guard.Mobile.Replace("+", "");
                             if (smsPersonalEmails == null)
                             {
                                 smsPersonalEmails = item.Guard.Mobile;
@@ -379,6 +380,8 @@ namespace CityWatch.Web.Pages.Radio
                         if (item.PhoneNumber != null || item.PhoneNumber != "+61 4")
                         {
                             item.PhoneNumber = item.PhoneNumber.Replace("(0)", "") + "@smsglobal.com";
+                            item.PhoneNumber = item.PhoneNumber.Replace("+", "");
+                            item.PhoneNumber = item.PhoneNumber.Replace(" ", "");
                             if (smsPersonalEmails == null)
                             {
                                 smsPersonalEmails = item.PhoneNumber;
@@ -433,7 +436,7 @@ namespace CityWatch.Web.Pages.Radio
             var emailAddressList = new List<MailboxAddress>();
             foreach (var item in toAddress)
             {
-                emailAddressList.Add(new MailboxAddress(item, string.Empty));
+                emailAddressList.Add(new MailboxAddress(string.Empty,item ));
             }
             
 
