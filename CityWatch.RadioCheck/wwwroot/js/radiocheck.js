@@ -1090,7 +1090,8 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     $('#chkSiteEmail').prop('checked', true);
     $('#chkSMSPersonal').prop('checked', false);
     $('#chkSMSSmartWand').prop('checked', false); $('#txtPushNotificationMessage').val('');
-    displayGuardValidationSummary('PushNotificationsValidationSummary', '');
+   
+    clearGuardValidationSummary('PushNotificationsValidationSummary');
     //$.ajax({
     //    url: '/RadioCheckV2?handler=CompanyTextMessageData',
     //    data: { id: id },
@@ -1122,7 +1123,10 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
 //    const isChecked = $(this).is(':checked');
 //    $('#IsSMSSmartWand').val(isChecked);
 //});
-
+function clearGuardValidationSummary(validationControl) {
+    $('#' + validationControl).removeClass('validation-summary-errors').addClass('validation-summary-valid');
+    $('#' + validationControl).html('');
+}
 
 
 
