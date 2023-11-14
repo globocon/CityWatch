@@ -304,7 +304,7 @@ namespace CityWatch.Web.Pages.Radio
                     };
 
                     messagenew.Body = builder.ToMessageBody();
-
+                    messagenew.From.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
                     using (var client = new SmtpClient())
                     {
                         client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
