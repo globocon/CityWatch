@@ -140,13 +140,16 @@ $('#btnSaveRadioStatus').on('click', function () {
     }).done(function () {
         $('#selectRadioCheckStatus').modal('hide');
         $('#selectRadioStatus').val('');
-        $('#btnRefreshActivityStatus').trigger('click');
+        clientSiteActiveGuards.ajax.reload();
+        clientSiteInActiveGuards.ajax.reload();
     });
 });
 
 /* V2 Changes start 12102023 */
 const groupColumn = 1;
 const groupColumn2 = 2;
+var scrollPosition2;
+var rowIndex2;
 let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
     ordering: true,
@@ -265,7 +268,12 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
        
 
     ],
+
+    preDrawCallback: function (settings) {
+        scrollPosition = $(".dataTables_scrollBody").scrollTop();
+    },
     drawCallback: function () {
+        $(".dataTables_scrollBody").scrollTop(scrollPosition);
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;
@@ -357,7 +365,8 @@ function format_kvl_child_row(d) {
         '</table>'
     );
 }
-
+var scrollPosition;
+var rowIndex;
 
 let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
@@ -469,7 +478,13 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         },
 
     ],
+
+    preDrawCallback: function (settings) {
+        scrollPosition = $(".dataTables_scrollBody").scrollTop();
+    },
     drawCallback: function () {
+        /* Retain the Scroll position*/
+        $(".dataTables_scrollBody").scrollTop(scrollPosition);
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;
@@ -1015,7 +1030,8 @@ $('#btnSaveRadioStatus').on('click', function () {
     }).done(function () {
         $('#selectRadioCheckStatus').modal('hide');
         $('#selectRadioStatus').val('');
-        $('#btnRefreshActivityStatus').trigger('click');
+        clientSiteActiveGuards.ajax.reload();
+        clientSiteInActiveGuards.ajax.reload();
     });
 });
 $('#radio_duress_btn').on('click', function () {
@@ -1053,8 +1069,9 @@ $('#btnSaveRadioStatusActive').on('click', function () {
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function () {
         $('#selectRadioCheckStatusActive').modal('hide');
-        $('#selectRadioStatus').val('');
-        $('#btnRefreshActivityStatus').trigger('click');
+        $('#selectRadioStatus').val('');      
+        clientSiteActiveGuards.ajax.reload();
+        clientSiteInActiveGuards.ajax.reload();
     });
 });
 

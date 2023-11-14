@@ -16,7 +16,7 @@
 <input type="hidden" id="txtClientSiteId" />
 <input type="hidden" id="txtGuardId" />
 <!-----------------In Acive List -------------------->
-<div class="col-md-13 text-right">
+@*<div class="col-md-13 text-right">
     @{
         var isDuressActive = Convert.ToBoolean(ViewData["IsDuressEnabled"]);
         var btnImage = isDuressActive ? "~/images/DuressButton.jpg" : "~/images/DuressButton_Inactive.jpg";
@@ -26,7 +26,7 @@
     <p class="mb-0 mt-2">
         Status: <span id="duress_status" class="@(isDuressActive ? "font-weight-bold" : "")">@duressStatus</span>
     </p>
-</div>
+</div>*@
 <div class="card">
     <h4 class="card-header">No Activity</h4>
     <div class="card-body" id="events-list">
@@ -41,14 +41,10 @@
                             <th>Address</th>
                             <th>Site Name/Guard</th>
                             <th>Login Time/Expected Login Time</th>
-
                             <th>Two Hr Alert</th>
                             <th>Radio Check</th>
                             <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
-
                             <th>Name</th>
-
-
                         </tr>
                     </thead>
                     <tfoot>
@@ -58,14 +54,10 @@
                             <th>Address</th>
                             <th>Site Name/Guard</th>
                             <th>Login Time/Expected Login Time</th>
-
                             <th>Two Hr Alert</th>
                             <th>Radio Check</th>
                             <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
-
                             <th>Name</th>
-
-
                         </tr>
                         <!-- Footer content here (will be styled to look like the header) -->
                     @*</tfoot>*@

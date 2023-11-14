@@ -2,6 +2,7 @@ using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Services;
+using DocumentFormat.OpenXml.Office2010.Word;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -244,6 +245,15 @@ namespace CityWatch.Web.Pages.Guard
                     {
                         ClientSiteRadioChecksActivity.GuardLogoutTime = DateTime.Now;
                         _guardLogDataProvider.UpdateRadioChecklistLogOffEntry(ClientSiteRadioChecksActivity);
+                        /* Update Radio check status logOff*/
+                        _guardLogDataProvider.SaveClientSiteRadioCheckStatusFromlogBook(new ClientSiteRadioCheck()
+                        {
+                            ClientSiteId = ClientSiteRadioChecksActivity.ClientSiteId,
+                            GuardId = ClientSiteRadioChecksActivity.GuardId,
+                            Status = "Off Duty",
+                            CheckedAt = DateTime.Now,
+                            Active = true
+                        }) ;
                     }
                 }
                 /* new Change 07/11/2023 no need to remove the all the deatils when logoff remove after a buffer time end */

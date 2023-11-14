@@ -3,6 +3,7 @@ using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Models;
+using DocumentFormat.OpenXml.Office2010.Word;
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -75,7 +76,7 @@ namespace CityWatch.Web.Services
                 /* Check if guard off duty time expired  New Change In Api by Dileep for task p4 task17 Start */
                 if (ClientSiteRadioChecksActivity.GuardLoginTime != null)
                 {
-                    if (ClientSiteRadioChecksActivity.OffDuty != null)
+                    if (ClientSiteRadioChecksActivity.OffDuty != null && ClientSiteRadioChecksActivity.GuardLogoutTime==null)
                     {
                         /*off duty time +90 min buffer time */
                         /*  allow90 minute buffer here ok in case guard is doing over time or working back*/
@@ -83,7 +84,19 @@ namespace CityWatch.Web.Services
                         if (!isActive)
                         {
                             /* if buffer time is over remove login */
-                            _guardLogDataProvider.SignOffClientSiteRadioCheckActivityStatusForLogBookEntry(ClientSiteRadioChecksActivity.GuardId, ClientSiteRadioChecksActivity.ClientSiteId);
+                            /* Check if any actvity in 90 min if no activity signing off else no signing off */
+                            if (!_guardLogDataProvider.getIfAnyActivityInbufferTime(ClientSiteRadioChecksActivity.GuardId, ClientSiteRadioChecksActivity.ClientSiteId))
+                            {
+                                _guardLogDataProvider.SaveClientSiteRadioCheck(new ClientSiteRadioCheck()
+                                {
+                                    ClientSiteId = ClientSiteRadioChecksActivity.ClientSiteId,
+                                    GuardId = ClientSiteRadioChecksActivity.GuardId,
+                                    Status = "Off Duty",
+                                    CheckedAt = DateTime.Now,
+                                    Active = true
+                                });
+
+                            }
                         }
                     }
                     if (ClientSiteRadioChecksActivity.GuardLogoutTime != null)
