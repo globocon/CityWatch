@@ -580,8 +580,22 @@
     }
 
     function renderDailyLogManagement(value, record, $cell, $displayEl, id) {
-        if (record.isSystemEntry || record.guardLogin.guardId != $('#GuardLog_GuardLogin_GuardId').val())
+        //if (record.isSystemEntry || record.guardLogin.guardId != $('#GuardLog_GuardLogin_GuardId').val())
+        //    return;
+        if (record.isSystemEntry)
             return;
+        /*to get the control room notification-start*/
+        var $messageBtn = $('<button class="btn btn-outline-primary mt-2" data-id="' + record.id + '"><i class="fa fa-envelope mr-2"></i></button>');
+
+        const irEntryTypeIsAlarm = 2;
+        if (record.irEntryType === irEntryTypeIsAlarm) {
+            $displayEl.append($messageBtn);
+            return;
+        }
+
+
+
+        /*to get the control room notification - end*/
 
         var $editBtn = $('<button class="btn btn-outline-primary mr-2" data-id="' + record.id + '"><i class="fa fa-pencil mr-2"></i>Edit</button>'),
             $deleteBtn = $('<button class="btn btn-outline-danger mt-2" data-id="' + record.id + '"><i class="fa fa-trash mr-2"></i>Delete</button>'),
