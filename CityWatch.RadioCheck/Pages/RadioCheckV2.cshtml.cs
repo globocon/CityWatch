@@ -224,7 +224,7 @@ namespace CityWatch.Web.Pages.Radio
                             ClientSiteLogBookId = logBookId,
                             GuardLoginId = guardLoginId,
                             EventDateTime = DateTime.Now,
-                            Notes = Notifications,
+                            Notes = Subject + ":"+ Notifications,
                             //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                             IsSystemEntry = true,
                             IrEntryType = IrEntryType.Alarm
@@ -237,7 +237,7 @@ namespace CityWatch.Web.Pages.Radio
                         {
                             ClientSiteLogBookId = logBookId,
                             EventDateTime = DateTime.Now,
-                            Notes = Notifications,
+                            Notes = Subject + ":" + Notifications,
                             //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                             IsSystemEntry = true,
                             IrEntryType = IrEntryType.Alarm
@@ -265,28 +265,11 @@ namespace CityWatch.Web.Pages.Radio
                         }
 
                     }
-                    var guardlogins = _guardLogDataProvider.GetGuardLoginsByClientSiteId(clientSiteId, DateTime.Now);
-                    string guardEmails = null;
-                    foreach (var item in guardlogins)
-                    {
-                        if (item.Guard.Email != null )
-                        {
-                            
-                            if (guardEmails == null)
-                            {
-                                guardEmails = item.Guard.Email;
-                            }
-                            else
-                            {
-                                guardEmails = guardEmails + "," + item.Guard.Email;
-                            }
-                        }
-
-                    }
+                  
 
                     var fromAddress = _EmailOptions.FromAddress.Split('|');
                     var toAddress = smsSiteEmails.Split(',');
-                    var ccAddress = guardEmails.Split(',');
+                    
                     var subject = Subject;
                     var messageHtml = Notifications;
 
@@ -294,8 +277,7 @@ namespace CityWatch.Web.Pages.Radio
                     messagenew.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
                     foreach (var address in GetToEmailAddressList(toAddress))
                         messagenew.To.Add(address);
-                    foreach (var address in GetToEmailAddressList(ccAddress))
-                        messagenew.Cc.Add(address);
+                    
 
                     messagenew.Subject = $"{subject}";
 
