@@ -18,6 +18,7 @@ namespace CityWatch.Data.Providers
         List<GuardLogin> GetGuardLoginsByLogBookId(int logBookId);
         GuardLogin GetGuardLoginById(int id);
         GuardLogin GetGuardLastLogin(int guardId);
+        GuardLogin GetGuardLastLogin(int guardId, int? userId);
         int SaveGuardLogin(GuardLogin guardLogin);
         void UpdateGuardOffDuty(int guardLoginId, DateTime offDuty);
         List<GuardLicense> GetAllGuardLicenses();
@@ -237,6 +238,19 @@ namespace CityWatch.Data.Providers
                 .Include(z => z.Position)
                 .Include(z => z.ClientSite.ClientType)
                 .Where(z => z.GuardId == guardId)
+                .OrderByDescending(z => z.LoginDate)
+                .FirstOrDefault();
+        }
+
+        //to get the details of the guard which is logined with a specific user id
+        public GuardLogin GetGuardLastLogin(int guardId,int? userId)
+        {
+            return _context.GuardLogins
+                .Include(z => z.ClientSite)
+                .Include(z => z.SmartWand)
+                .Include(z => z.Position)
+                .Include(z => z.ClientSite.ClientType)
+                .Where(z => z.GuardId == guardId && z.UserId==userId)
                 .OrderByDescending(z => z.LoginDate)
                 .FirstOrDefault();
         }
