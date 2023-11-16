@@ -585,11 +585,20 @@
         if (record.isSystemEntry)
             return;
         /*to get the control room notification-start*/
-        var $messageBtn = $('<button class="btn btn-outline-primary mt-2" data-id="' + record.id + '"><i class="fa fa-envelope mr-2"></i></button>');
+        var $messageBtn = $('<button class="btn btn-outline-primary mt-2"  data-id="' + record.id + '"><i class="fa fa-envelope mr-2"></i></button>');
+        $messageBtn.on('click', function (e) {
+            var id = $(this).data('id');
+            var message = $(this).closest('tr').find('td').eq(2).text();
+            $('#txtNotificationsControlRoomMessage').val(message);
+            $('#pushNoTificationsGuardModal').modal('show');
+        });
 
         const irEntryTypeIsAlarm = 2;
         if (record.irEntryType === irEntryTypeIsAlarm) {
             $displayEl.append($messageBtn);
+            return;
+        }
+        else {
             return;
         }
 
@@ -630,12 +639,19 @@
             gridGuardLog.removeRow($(this).data('id'));
         });
 
+       
+
         $displayEl.append($editBtn)
             .append($deleteBtn)
             .append($updateBtn)
             .append($cancelBtn);
     }
-
+    /*to display the popup to acknowledge the message-start*/
+    $('#guard_daily_log tbody').on('click', '#btnAcknowledgeButton', function  (value, record) {
+        var id = $(this).data('id');
+        var message = $(this).closest('tr').find('td').eq(2).val();
+    });
+        /*to display the popup to acknowledge the message-end*/
     gridGuardLog = $('#guard_daily_log').grid(gridGuardLogSettings);
 
     if (gridGuardLog) {
@@ -2942,4 +2958,92 @@
         }
     });
     /* Check if Guard can access the IR-END */
+    /*for pushing notifications from the control room - start*/
+    $('#pushNoTificationsGuardModal').on('shown.bs.modal', function (event) {
+
+
+
+        const button = $(event.relatedTarget);
+        const id = button.data('id');
+       
+        $('#chkAcknowledgeMessage').prop('checked', true);
+        $('#chkMessageBack').prop('checked', false);
+        $('#txtPushNotificationGuardReturnMessage').attr('disabled', 'disabled');
+        $('#txtPushNotificationGuardReturnMessage').val('');
+        clearGuardValidationSummary('PushNotificationsValidationSummary');
+        $('#IsAcknowledgeMessage').val($('#chkAcknowledgeMessage').is(':checked'));
+        $('#IsMessageBack').val($('#chkMessageBack').is(':checked'));
+     
+    });
+    $('#chkAcknowledgeMessage').on('change', function () {
+        const isChecked = $(this).is(':checked');
+        $('#IsAcknowledgeMessage').val(isChecked);
+        if (isChecked == true) {
+            $('#chkMessageBack').prop('checked', false);
+            $('#IsMessageBack').val($('#chkMessageBack').is(':checked'));
+            $('#txtPushNotificationGuardReturnMessage').attr('disabled', 'disabled');
+            $('#txtPushNotificationGuardReturnMessage').val('');
+        }
+    });
+    $('#chkMessageBack').on('change', function () {
+        const isChecked = $(this).is(':checked');
+        $('#IsMessageBack').val(isChecked);
+        if (isChecked == true) {
+            $('#chkAcknowledgeMessage').prop('checked', false);
+            $('#IsAcknowledgeMessage').val($('#chkAcknowledgeMessage').is(':checked'));
+            $('#txtPushNotificationGuardReturnMessage').attr('disabled', false);
+        }
+    });
+    function clearGuardValidationSummary(validationControl) {
+        $('#' + validationControl).removeClass('validation-summary-errors').addClass('validation-summary-valid');
+        $('#' + validationControl).html('');
+    }
+    $('#btnSendPushLotificationFromGuardMessage').on('click', function () {
+        const IsMessageBack = $('#chkMessageBack').is(':checked');
+        const IsAcknowledgeMessage = $('#chkAcknowledgeMessage').is(':checked');
+        
+        var controlRoomMessage = $('#txtNotificationsControlRoomMessage').val();
+        var Notifications = $('#txtPushNotificationGuardReturnMessage').val();
+
+        if (IsMessageBack == true) {
+            if (Notifications === '') {
+                displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter the Message to send ');
+            }
+            else {
+                Notifications =  '<h4>' + controlRoomMessage + '</h4>' + '<h6>' + '    -  ' + Notifications + '</h6>' 
+            }
+        }
+        if (IsAcknowledgeMessage == true) {
+            
+            Notifications = '<b>' + '<h4>' + controlRoomMessage + '</h4>' + '<h6>' + '     -  ' + 'ACKNOWLEDGED' + '</h6>';
+            
+        }
+       
+        
+            $.ajax({
+                url: '/Guard/DailyLog?handler=SavePushNotificationTestMessages',
+                type: 'POST',
+                data: {
+                    guardLoginId: $('#GuardLog_GuardLoginId').val(),
+                    clientSiteLogBookId: $('#GuardLog_ClientSiteLogBookId').val(),
+                    Notifications: Notifications
+                    
+                },
+                dataType: 'json',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (data) {
+                if (data.success == true) {
+                    $('#pushNoTificationsGuardModal').modal('hide');
+                    gridGuardLog.clear();
+                    gridGuardLog.reload();
+                }
+                else {
+                    displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
+                }
+                //$('#selectRadioStatus').val('');
+                //$('#btnRefreshActivityStatus').trigger('click');
+            });
+       
+        
+    });
 });

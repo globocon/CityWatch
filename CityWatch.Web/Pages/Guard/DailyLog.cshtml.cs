@@ -1,3 +1,5 @@
+using CityWatch.Data.Enums;
+using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
@@ -8,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
+using MimeKit;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -459,5 +462,30 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(new { status, message });
         }
+        public JsonResult OnPostSavePushNotificationTestMessages(int guardLoginId, int clientSiteLogBookId, string Notifications)
+        {
+            var success = true;
+            var message = "success";
+            try
+            {
+                var signOffEntry = new GuardLog()
+                {
+                    ClientSiteLogBookId = clientSiteLogBookId,
+                    GuardLoginId = guardLoginId,
+                    EventDateTime = DateTime.Now,
+                    Notes = Notifications,
+                    IrEntryType = IrEntryType.Normal
+                };
+                _guardLogDataProvider.SaveGuardLog(signOffEntry);
+              
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
     }
 }
