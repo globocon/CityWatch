@@ -223,7 +223,7 @@ namespace CityWatch.Web.Pages.Radio
                             ClientSiteLogBookId = logBookId,
                             GuardLoginId = guardLoginId,
                             EventDateTime = DateTime.Now,
-                            Notes = Subject + ":" + Notifications,
+                            Notes = Subject + " : " + Notifications,
                             //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                             IsSystemEntry = true,
                             IrEntryType = IrEntryType.Alarm
@@ -236,7 +236,7 @@ namespace CityWatch.Web.Pages.Radio
                         {
                             ClientSiteLogBookId = logBookId,
                             EventDateTime = DateTime.Now,
-                            Notes = Subject + ":" + Notifications,
+                            Notes = Subject + " : " + Notifications,
                             //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                             IsSystemEntry = true,
                             IrEntryType = IrEntryType.Alarm
