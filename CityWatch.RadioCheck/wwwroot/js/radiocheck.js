@@ -443,6 +443,15 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                 return '<i class="fa fa-clock-o text-success rc-client-status"></i> ' + value;
             }
         },
+        {
+            data: 'lastEvent',
+            width: '9%',
+            className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return '<i class="fa fa-clock-o text-success rc-client-status"></i> ' + value;
+            }
+        },
 
         {
             data: 'twoHrAlert',
