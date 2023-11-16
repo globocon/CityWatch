@@ -1157,7 +1157,7 @@ $('#btnSendPushLotificationMessage').on('click', function () {
 
     }
     else {
-        Notifications = '<h4>' + '<b>' + Notifications + '</h4>' + '</p>';
+        Notifications = '<h4>'  + Notifications + '</h4>' ;
         $.ajax({
             url: '/RadioCheckV2?handler=SavePushNotificationTestMessages',
             type: 'POST',
