@@ -17,7 +17,7 @@ namespace CityWatch.Data.Models
         public int  PositionId { get; set; }
         [ForeignKey("PositionId")]
         [JsonIgnore]
-        public DayOfWeek WeekDay { get; set; }
+        public CustomDayOfWeek WeekDay { get; set; }
 
         [ForeignKey("SettingsId")]
         [JsonIgnore]
@@ -56,5 +56,16 @@ namespace CityWatch.Data.Models
         
         
         }
+    }
+    public enum CustomDayOfWeek
+    {
+        Sunday = DayOfWeek.Sunday,
+        Monday = DayOfWeek.Monday,
+        Tuesday = DayOfWeek.Tuesday,
+        Wednesday = DayOfWeek.Wednesday,
+        Thursday = DayOfWeek.Thursday,
+        Friday = DayOfWeek.Friday,
+        Saturday = DayOfWeek.Saturday,
+        PHO // You can add additional values as needed
     }
 }

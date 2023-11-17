@@ -198,7 +198,7 @@
                     {
                         @*Get All Distinct order Id *@
                         var distinctOrderIds = Model.ClientSiteManningGuardKpiSettings.Select(order => order.OrderId).Distinct();
-                        @for (int rowIndexFirst = 0; rowIndexFirst < Model.ClientSiteManningGuardKpiSettings.Count(); rowIndexFirst = rowIndexFirst + 7)
+                        @for (int rowIndexFirst = 0; rowIndexFirst < Model.ClientSiteManningGuardKpiSettings.Count(); rowIndexFirst = rowIndexFirst + 8)
                         {
 
                             var rowIndextemp = 0;
@@ -219,8 +219,13 @@
                                         if (totalMin != null && guardQty != null)
                                             monthilyHours = Math.Round(((totalMin) * guardQty * 52.143) / 12);
                                         /*Monthly Hours End*/
+                                        // Patrol Sum start
+                                        var PatrolTotal = 0;
+                                        var totalPatrol = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId).Select(x => x.NoOfPatrols).Sum();
+                                        PatrolTotal = totalPatrol.Value;
+                                        // Patrol Sum stop
                                         <div class="form-row">
-                                            <div class="col-md-3">
+                                            <div class="col-md-2">
                                                 @if (rowIndextemp == 0)
                                                 {
 
@@ -262,9 +267,28 @@
                                                 {
 
                                                     <div class="d-flex flex-row justify-content-between">
-                                                        <label class="form-label">Monthly Hrs :</label>
+                                                        @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
+                                                        {
+                                                            <label class="form-label" id="monthlyHrslbl">Monthly Hrs :</label>
+                                                        }
+                                                        else
+                                                        {
+                                                            <label class="form-label" id="patrolSumlbl">Total patrols:</label>
+                                                        }
+
+                                                      
                                                         <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
-                                                            <input type="text" class="form-control mb-2 patrols-count" asp-for="@monthilyHours" id="monthlyHrs" name="monthlyHrs" style="width:120px" readonly />
+                                                            
+                                                            @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
+                                                            {
+                                                                <input type="text" class="form-control mb-2 patrols-count" asp-for="@monthilyHours" id="monthlyHrsTxt" name="monthlyHrs" style="width:84px" readonly />
+                                                            }
+                                                            else
+                                                            {
+                                                                <input type="text" class="form-control mb-2 patrols-count" asp-for="@PatrolTotal" id="PatrolSum" name="monthlyHrs" style="width:84px;" readonly />
+                                                               
+                                                            }
+
                                                         </div>
                                                     </div>
 
@@ -283,7 +307,7 @@
 
                                                 }
                                             </div>
-                                            @for (var colIndex = rowIndexFirst; colIndex < (7 + rowIndexFirst); colIndex++)
+                                            @for (var colIndex = rowIndexFirst; colIndex < (8 + rowIndexFirst); colIndex++)
                                             {
 
 
@@ -305,7 +329,7 @@
                                                             <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursEnd">
                                                             break;
                                                         case 3:
-                                                            <input class="form-control mb-2 patrols-count" min="0" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].NoOfPatrols" data-index="@colIndex">
+                                                            <input class="form-control mb-2 patrols-count patrol-sum" min="0" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].NoOfPatrols" data-index="@colIndex">
                                                             break;
 
                                                     }
@@ -340,7 +364,7 @@
                                     @for (int rowIndex2 = 0; rowIndex2 < 4; rowIndex2++)
                                     {
                                         <div class="form-row">
-                                            <div class="col-md-3">
+                                            <div class="col-md-2">
                                                 @if (rowIndex2 == 0)
                                                 {
 
@@ -365,11 +389,14 @@
                                                 {
 
                                                     <div class="d-flex flex-row justify-content-between">
-                                                        <label class="form-label">Monthly Hrs :</label>
+                                                        <label class="form-label" id="monthlyHrslbl">Monthly Hrs :</label>
+                                                        <label class="form-label" id="patrolSumlbl" style="display:none">Total patrols:</label>
                                                         <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
-                                                            <input type="text" class="form-control mb-2 patrols-count" id="monthlyHrs" name="monthlyHrs" style="width:120px" readonly />
+                                                            <input type="text" class="form-control mb-2 patrols-count" id="monthlyHrsTxt" name="monthlyHrs" style="width:84px" readonly />
+                                                            <input type="text" class="form-control mb-2 patrols-count" id="PatrolSum" name="monthlyHrs" style="width:84px;display: none;" readonly />
                                                         </div>
                                                     </div>
+
 
                                                 }
                                                 @*New Code for Monthly Hours end*@
@@ -379,7 +406,7 @@
                                             <div class="col-md-1 p-0">
                                                 <label class="form-label" id="lbl_ManningPatrolCar_@rowIndex2">@rowTitleManningGuard[rowIndex2]</label>
                                             </div>
-                                            @for (var colIndex2 = 0; colIndex2 < 7; colIndex2++)
+                                            @for (var colIndex2 = 0; colIndex2 < 8; colIndex2++)
                                             {
                                                 <div class="col-md-1 mx-1">
                                                     @switch (rowIndex2)
@@ -394,10 +421,12 @@
                                                             <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].EmpHoursEnd">
                                                             break;
                                                         case 3:
-                                                            <input class="form-control mb-2 patrols-count" min="0" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].NoOfPatrols" data-index="@colIndex2">
+                                                            <input class="form-control mb-2 patrols-count patrol-sum" min="0"  asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].NoOfPatrols" data-index="@colIndex2">
                                                             break;
 
                                                     }
+                                                  
+
                                                     <input asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].Type" value="2" style="display: none;">
                                                     <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].WeekDay" />
                                                     <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].Id" />
@@ -405,6 +434,7 @@
                                                     <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].SettingsId" />
 
                                                 </div>
+
                                             }
                                         </div>
                                     }
