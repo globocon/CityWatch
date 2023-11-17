@@ -19,7 +19,7 @@ using MailKit.Net.Smtp;
 
 namespace CityWatch.Web.Pages.Radio
 {
-    public class RadioCheckNewModel : PageModel
+    public class ActiveGuardSinglePage : PageModel
     {
 
 
@@ -27,7 +27,7 @@ namespace CityWatch.Web.Pages.Radio
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly EmailOptions _EmailOptions;
         private readonly IConfiguration _configuration;
-        public RadioCheckNewModel(IGuardLogDataProvider guardLogDataProvider, IOptions<EmailOptions> emailOptions,
+        public ActiveGuardSinglePage(IGuardLogDataProvider guardLogDataProvider, IOptions<EmailOptions> emailOptions,
             IConfiguration configuration)
         {
 
@@ -37,10 +37,8 @@ namespace CityWatch.Web.Pages.Radio
         }
         public int UserId { get; set; }
         public int GuardId { get; set; }
-
-       
         public int InActiveGuardCount { get; set; }
-       
+
         public int ActiveGuardCount { get; set; }
         public IActionResult OnGet()
         {
@@ -49,6 +47,7 @@ namespace CityWatch.Web.Pages.Radio
             ActiveGuardCount = activeGuardDetails.Count();
             var inActiveGuardDetails = _guardLogDataProvider.GetInActiveGuardDetails();
             InActiveGuardCount = inActiveGuardDetails.Count();
+
 
             var guardLoginId = HttpContext.Session.GetInt32("GuardLoginId");
             /* The following changes done for allowing guard to access the KPI*/
@@ -97,7 +96,6 @@ namespace CityWatch.Web.Pages.Radio
             {
 
                 HttpContext.Session.SetInt32("GuardId", GuardId);
-              
                 return Page();
             }
             else
@@ -105,8 +103,7 @@ namespace CityWatch.Web.Pages.Radio
                 HttpContext.Session.SetInt32("GuardId", 0);
                 return Redirect(Url.Page("/Account/Login"));
             }
-
-           
+            
         }
         //code added to save the duress button start
         public JsonResult OnPostSaveDuress()
@@ -139,14 +136,14 @@ namespace CityWatch.Web.Pages.Radio
         //code added to save the duress button stop
         public IActionResult OnGetClientSiteActivityStatus(string clientSiteIds)
         {
-            var activeGuardDetails = _guardLogDataProvider.GetActiveGuardDetails();           
-            return new JsonResult(activeGuardDetails);
+
+            return new JsonResult(_guardLogDataProvider.GetActiveGuardDetails());
         }
 
         public IActionResult OnGetClientSiteInActivityStatus(string clientSiteIds)
         {
-            var inActiveGuardDetails = _guardLogDataProvider.GetInActiveGuardDetails();            
-            return new JsonResult(inActiveGuardDetails);
+
+            return new JsonResult(_guardLogDataProvider.GetInActiveGuardDetails());
         }
         //for getting logBookDetails of Guards-start
         public IActionResult OnGetClientSitelogBookActivityStatus(int clientSiteId, int guardId)
