@@ -3,6 +3,7 @@ using CityWatch.Data;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
+using CityWatch.RadioCheck.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -44,7 +45,7 @@ namespace CityWatch.RadioCheck
             services.AddScoped<IGuardDataProvider, GuardDataProvider>();
             services.AddScoped<IGuardDataProvider, GuardDataProvider>();
             services.AddScoped<IGuardLogDataProvider, GuardLogDataProvider>();
-            
+            services.AddScoped<IRadioChecksActivityStatusService, RadioChecksActivityStatusService>();
 
 
             services.AddRazorPages(options => 

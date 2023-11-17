@@ -120,30 +120,7 @@ $('#clientSiteActivityStatus').on('click', 'button[name="btnRadioCheckStatus"]',
     $('#selectRadioCheckStatus').modal('show');
 });
 
-$('#btnSaveRadioStatus').on('click', function () {
-    const checkedStatus = $('#selectRadioStatus').val();
-    var clientSiteId = $('#clientSiteId').val();
-    var guardId = $('#guardId').val();
-    if (checkedStatus === '') {
-        return;
-    }
-    $.ajax({
-        url: '/Radio/Check?handler=SaveRadioStatus',
-        type: 'POST',
-        data: {
-            clientSiteId: clientSiteId,
-            guardId: guardId,
-            checkedStatus: checkedStatus,
-        },
-        dataType: 'json',
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function () {
-        $('#selectRadioCheckStatus').modal('hide');
-        $('#selectRadioStatus').val('');
-        clientSiteActiveGuards.ajax.reload();
-        clientSiteInActiveGuards.ajax.reload();
-    });
-});
+
 
 /* V2 Changes start 12102023 */
 const groupColumn = 1;
