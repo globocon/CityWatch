@@ -1000,17 +1000,6 @@ $(function () {
         }).fail(function () { });
     }
 
-    /*code added for No of Patrols sum start */
-    $('#div_site_settings').on('input', function () {
-        var sum = 0;
-        $(".patrol-sum").each(function () {
-            var value = parseFloat($(this).val()) || 0;
-            sum += value;
-        });
-        $("#PatrolSum").val(sum);
-        
-    });
-    /*code added for No of Patrols sum stop */
     $('#div_site_settings').on('keyup', '#ClientSiteKpiNote_Notes', function () {
         $('#lblSiteNoteRemainingCount').html(getSiteNoteLength($(this).val()));
     });
@@ -1121,20 +1110,13 @@ $(function () {
         });
         
     });
-    $(".patrol-sum").on("input", function () {
-        alert('ddd');
-        calculateSum();
-    });
+
     $('#div_site_settings').on('change', '#positionfilterPatrolCar', function () {
 
         const isChecked = $(this).is(':checked');
         const filter = isChecked ? 1 : 2;
-        if (filter === 1) {
-            $("#lbl_ManningPatrolCar_3").text("No of Patrols"); $("#PatrolSum").css("display", "block"); $("#monthlyHrsTxt").css("display", "none");
-            $("#patrolSumlbl").css("display", "block"); $("#monthlyHrslbl").css("display", "none"); }
-        else {
-            $("#lbl_ManningPatrolCar_3").text("Workers");
-            $("#PatrolSum").css("display", "none"); $("#monthlyHrsTxt").css("display", "block"); $("#patrolSumlbl").css("display", "none"); $("#monthlyHrslbl").css("display", "block");}
+        if (filter === 1) { $("#lbl_ManningPatrolCar_3").text("No of Patrols"); }
+        else { $("#lbl_ManningPatrolCar_3").text("Workers"); }
         $("#ClientSiteManningPatrolCarKpiSettings_0__Type").val(filter);
         $("#ClientSiteManningPatrolCarKpiSettings_1__Type").val(filter);
         $("#ClientSiteManningPatrolCarKpiSettings_2__Type").val(filter);

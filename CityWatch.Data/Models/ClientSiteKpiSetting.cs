@@ -199,15 +199,13 @@ namespace CityWatch.Data.Models
         {
             return new List<ClientSiteManningKpiSetting>
             {
-                new ClientSiteManningKpiSetting() { WeekDay = CustomDayOfWeek.Monday,DefaultValue=true},
-                new ClientSiteManningKpiSetting() { WeekDay = CustomDayOfWeek.Tuesday,DefaultValue=true},
-                new ClientSiteManningKpiSetting() { WeekDay = CustomDayOfWeek.Wednesday,DefaultValue=true},
-                new ClientSiteManningKpiSetting() { WeekDay = CustomDayOfWeek.Thursday, DefaultValue = true},
-                new ClientSiteManningKpiSetting() { WeekDay = CustomDayOfWeek.Friday, DefaultValue = true},
-                new ClientSiteManningKpiSetting() { WeekDay = CustomDayOfWeek.Saturday, DefaultValue = true},
-                new ClientSiteManningKpiSetting() { WeekDay = CustomDayOfWeek.Sunday, DefaultValue = true},
-                new ClientSiteManningKpiSetting() { WeekDay = CustomDayOfWeek.PHO, DefaultValue = true}
-
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Monday,DefaultValue=true},
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Tuesday,DefaultValue=true},
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Wednesday,DefaultValue=true},
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Thursday, DefaultValue = true},
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Friday, DefaultValue = true},
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Saturday, DefaultValue = true},
+                new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Sunday, DefaultValue = true}
             };
         }
     }
