@@ -452,7 +452,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         },
         {
             data: 'lastEvent',
-            width: '9%',
+            width: '7%',
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
@@ -462,7 +462,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
         {
             data: 'twoHrAlert',
-            width: '5%',
+            width: '4%',
             className: "text-center",
             render: function (value, type, data) {
                 if (value === 'Green') return '<i class="fa fa-circle text-success"></i>';
@@ -472,7 +472,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
         {
             data: 'rcStatus',
-            width: '5%',
+            width: '4%',
             className: "text-center",
         },
         {
