@@ -3033,12 +3033,12 @@
                 displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter the Message to send ');
             }
             else {
-                Notifications =  '<h4>' + controlRoomMessage + '</h4>' + '<h6>' + '    -  ' + Notifications + '</h6>' 
+                Notifications = controlRoomMessage + '</br>' + '    -  ' + Notifications;
             }
         }
         if (IsAcknowledgeMessage == true) {
             
-            Notifications = '<b>' + '<h4>' + controlRoomMessage + '</h4>' + '<h6>' + '     -  ' + 'ACKNOWLEDGED' + '</h6>';
+            Notifications = controlRoomMessage +'</br>' + '     -  ' + 'ACKNOWLEDGED' ;
             
         }
        
@@ -3071,7 +3071,7 @@
     });
 });
 
-});
+
 /*to get the warning - start*/
 $('#btn_confrim_wand_usok').on('click', function(){
     $('#alert-wand-in-use-modal').modal('hide')
