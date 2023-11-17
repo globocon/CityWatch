@@ -206,8 +206,8 @@ namespace CityWatch.Data.Models
                 new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Friday, DefaultValue = true},
                 new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Saturday, DefaultValue = true},
                 new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.Sunday, DefaultValue = true}
-                //,
-                //new ClientSiteManningKpiSetting() { WeekDay = DayOfWeek.PHO, DefaultValue = true}
+
+        
 
             };
         }
