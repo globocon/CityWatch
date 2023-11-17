@@ -217,7 +217,11 @@
                     if (result.guard.email != null) {
                         $("#divGuardEmail").hide();
                     }
-                    if (result.guard.mobile != null) {
+                    if (result.guard.mobile == null || result.guard.mobile == '+61 4') {
+                        $("#divGuardMobile").show();
+                        result.guard.mobile = '+61 4';
+                    }
+                    else {
                         $("#divGuardMobile").hide();
                     }
 
@@ -288,7 +292,7 @@
             $('#GuardLogin_OffDuty_Time').prop('disabled', false);
             $('#GuardLogin_Guard_Email').val('');
             $("#divGuardEmail").show();
-            $('#GuardLogin_Guard_Mobile').val('');
+            $('#GuardLogin_Guard_Mobile').val('+61 4');
             $('#guardLoginDetails').show();
             $("#divGuardMobile").show();
         }
@@ -335,33 +339,38 @@
 
     function submitGuardLogin() {
         calculateDutyDateTime();
+        var mobileno = $('#GuardLogin_Guard_Mobile').val();
+        if (mobileno == null || mobileno == '+61 4' || mobileno == '' ) {
+            new MessageModal({ message: "<b>The Control Room requires your personal mobile number in case of emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.<p> This request occurs only once. Please do not provide false numbers to trick system. It is an OH&S requirement we can contact you in an Emergency </p> </b>" }).showWarning();
+        }
+        else {
+            $('#loader').show();
+            $.ajax({
+                url: '/Guard/Login?handler=LoginGuard',
+                type: 'POST',
+                data: $('#frmGuardLogin').serialize(),
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+            }).done(function (result) {
+                if (result.success) {
+                    if (result.initalsChangedMessage !== '')
+                        alert(result.initalsChangedMessage);
 
-        $('#loader').show();
-        $.ajax({
-            url: '/Guard/Login?handler=LoginGuard',
-            type: 'POST',
-            data: $('#frmGuardLogin').serialize(),
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
-        }).done(function (result) {
-            if (result.success) {
-                if (result.initalsChangedMessage !== '')
-                    alert(result.initalsChangedMessage);
-
-                let toUrl = getTargetUrl(result.logBookType);
-                if (toUrl === '') alert('Invalid logbook type');
-                else {
-                    window.location.replace(toUrl);
-                    $('#btnGuardLogin').prop('disabled', true);
+                    let toUrl = getTargetUrl(result.logBookType);
+                    if (toUrl === '') alert('Invalid logbook type');
+                    else {
+                        window.location.replace(toUrl);
+                        $('#btnGuardLogin').prop('disabled', true);
+                    }
+                } else {
+                    if (result.errors)
+                        displayGuardValidationSummary('glValidationSummary', result.errors)
+                    else
+                        alert(result.message)
                 }
-            } else {
-                if (result.errors)
-                    displayGuardValidationSummary('glValidationSummary', result.errors)
-                else
-                    alert(result.message)
-            }
-        }).always(function () {
-            $('#loader').hide();
-        });
+            }).always(function () {
+                $('#loader').hide();
+            });
+        }
     }
 
     $('#offDutyIsToday').on('change', function () {
@@ -2745,6 +2754,7 @@
                 },
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function (result) {
+
                 if (result.accessPermission) {
                    /* $('#txt_securityLicenseNoIR').val('');*/
                     $('#modelGuardLoginConIR').modal('hide');
@@ -2758,7 +2768,19 @@
                     /*$('#txt_securityLicenseNoIR').val('');*/
                     $('#modelGuardLoginConIR').modal('show');
                     if (result.successCode === 0) {
-                        displayGuardValidationSummary('GuardLoginValidationSummaryIR', result.successMessage);
+                        if (result.successMessage == 'Mobile is null') {
+                            //var msg = '<b>The Control Room requires your personal mobile number in case of Emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.<p> This request occurs only once. Please donot provide false numbers to trick system. It is an OH&S requirement we can contact you in an emergency </p> </b>';
+                          //new MessageModal({ message: "<b>The Control Room requires your personal mobile number in case of Emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.<p> This request occurs only once. Please donot provide false numbers to trick system. It is an OH&S requirement we can contact you in an emergency </p> </b>" }).showWarning();
+                            //alert('<b>The Control Room requires your personal mobile number in case of Emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.<p> This request occurs only once. Please donot provide false numbers to trick system. It is an OH&S requirement we can contact you in an emergency </p> </b>')
+                            /*alert(msg);*/
+                            $('#alert-wand-in-use-modal').modal('show');
+                        }
+                        else {
+
+                        
+                            displayGuardValidationSummary('GuardLoginValidationSummaryIR', result.successMessage);
+                        }
+                        
                     }
                 }
             });
@@ -2929,3 +2951,7 @@
     });
     /* Check if Guard can access the IR-END */
 });
+/*to get the warning - start*/
+$('#btn_confrim_wand_usok').on('click', function(){
+    $('#alert-wand-in-use-modal').modal('hide')
+})
