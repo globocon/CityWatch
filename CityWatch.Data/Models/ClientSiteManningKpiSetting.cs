@@ -17,7 +17,7 @@ namespace CityWatch.Data.Models
         public int  PositionId { get; set; }
         [ForeignKey("PositionId")]
         [JsonIgnore]
-        public CustomDayOfWeek WeekDay { get; set; }
+        public DayOfWeek WeekDay { get; set; }
 
         [ForeignKey("SettingsId")]
         [JsonIgnore]
