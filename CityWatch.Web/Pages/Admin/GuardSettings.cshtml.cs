@@ -888,26 +888,33 @@ namespace CityWatch.Web.Pages.Admin
                     {
                         /* Store the value of the Guard Id to seesion for create the Ir from the session-start */
                         HttpContext.Session.SetString("GuardId", guard.Id.ToString());
-                        if (guard.IsActive)
+                        if (guard.Mobile == null || guard.Mobile == "+61 4")
                         {
-                            if (guard.IsLB_KV_IR)
-                            {
-                                AccessPermission = true;
-                                GuId = guard.Id;
-                                if (AuthUserHelper.LoggedInUserId != null)
-                                {
-                                    LoggedInUserId = AuthUserHelper.LoggedInUserId;
-                                }
-                                SuccessCode = 1;
-                            }
-                            else
-                            {
-                                SuccessMessage = "Not authorized to access this page";
-                            }
+                            SuccessMessage = "Mobile is null";
                         }
                         else
                         {
-                            SuccessMessage = "Guard is inactive";
+                            if (guard.IsActive)
+                            {
+                                if (guard.IsLB_KV_IR)
+                                {
+                                    AccessPermission = true;
+                                    GuId = guard.Id;
+                                    if (AuthUserHelper.LoggedInUserId != null)
+                                    {
+                                        LoggedInUserId = AuthUserHelper.LoggedInUserId;
+                                    }
+                                    SuccessCode = 1;
+                                }
+                                else
+                                {
+                                    SuccessMessage = "Not authorized to access this page";
+                                }
+                            }
+                            else
+                            {
+                                SuccessMessage = "Guard is inactive";
+                            }
                         }
                         
                         //if (AuthUserHelper.LoggedInUserId != null)
