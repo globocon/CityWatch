@@ -369,6 +369,36 @@ var scrollPosition;
 var rowIndex;
 
 let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
+    dom: 'Bfrtip',
+    buttons: [
+
+        {
+            extend: 'copy',
+            text: '<i class="fa fa-copy"></i>',
+            titleAttr: 'Copy',
+            className: 'btn btn-md mr-2 btn-copy'
+        },
+        {
+            extend: 'excel',
+            text: '<i class="fa fa-file-excel-o"></i>',
+            titleAttr: 'Excel',
+            className: 'btn btn-md mr-2 btn-excel'
+        },
+        {
+            extend: 'pdf',
+            text: '<i class="fa fa-file-pdf-o"></i>',
+            titleAttr: 'PDF',
+            className: 'btn btn-md mr-2 btn-pdf'
+        },
+        {
+            extend: 'print',
+            text: '<i class="fa fa-print"></i>',
+            titleAttr: 'Print',
+            className: 'btn btn-md mr-2 btn-print'
+        },
+
+
+    ],
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
     ordering: true,
     "columnDefs": [
