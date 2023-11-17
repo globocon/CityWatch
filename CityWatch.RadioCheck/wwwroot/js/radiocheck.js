@@ -581,7 +581,9 @@ const renderGuardInitialColumn = function (value, record, $cell, $displayEl) {
 
 /*to get the guards that are not available-start*/
 $('#btnNonActiveList').on('click', function () {
-    window.open("../NonActiveGuards")
+    let newTab = window.open();
+    newTab.location.href = "/NonActiveGuards";
+   
 });
 let clientSiteNotAvailableGuards = $('#clientSiteNotAvailableGuards').DataTable({
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
@@ -891,6 +893,12 @@ $('#clientSiteActiveGuards tbody').on('click', '#btnKeyVehicleDetailsByGuard', f
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
     var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
     var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    if (GuardId.length == 0 ) {
+         GuardId = $(this).closest("tr").find('td').eq(2).find('#GuardId').val();
+    }
+    if (ClientSiteId.length == 0) {
+         ClientSiteId = $(this).closest("tr").find('td').eq(2).find('#ClientSiteId').val();
+    }
     $('#txtClientSiteId').val(ClientSiteId);
     $('#txtGuardId').val(GuardId);
     // $('#lbl_GuardActivityHeader').val($(this).closest("tr").find("td").eq(2).text() + 'Log Book Details');
@@ -986,6 +994,13 @@ $('#clientSiteActiveGuards tbody').on('click', '#btnIncidentReportdetails', func
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
     var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
     var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    if (GuardId.length == 0) {
+        GuardId = $(this).closest("tr").find('td').eq(2).find('#GuardId').val();
+    }
+    if (ClientSiteId.length == 0) {
+        ClientSiteId = $(this).closest("tr").find('td').eq(2).find('#ClientSiteId').val();
+    }
+
     $('#txtClientSiteId').val(ClientSiteId);
     $('#txtGuardId').val(GuardId);
     // $('#lbl_GuardActivityHeader').val($(this).closest("tr").find("td").eq(2).text() + 'Log Book Details');
@@ -1216,3 +1231,16 @@ function clearGuardValidationSummary(validationControl) {
     $('#' + validationControl).removeClass('validation-summary-errors').addClass('validation-summary-valid');
     $('#' + validationControl).html('');
 }
+
+$('#openInActiveGuardInNewPage').on('click', function () {
+    let newTab = window.open();
+    newTab.location.href = "/InActiveGuardSinglePage";
+    
+});
+
+$('#openActiveGuardInNewPage').on('click', function () {
+    let newTab = window.open();
+    newTab.location.href = "/ActiveGuardSinglePage";
+
+});
+
