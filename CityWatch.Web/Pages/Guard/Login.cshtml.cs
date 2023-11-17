@@ -207,7 +207,16 @@ namespace CityWatch.Web.Pages.Guard
             var guard = _guardDataProvider.GetGuards().SingleOrDefault(z => string.Compare(z.SecurityNo, securityNumber, StringComparison.OrdinalIgnoreCase) == 0);
             GuardLogin lastLogin = null;
             if (guard != null)
-                lastLogin = _guardDataProvider.GetGuardLastLogin(guard.Id);
+                
+                if (AuthUserHelper.LoggedInUserId != null)
+                {
+                    lastLogin = _guardDataProvider.GetGuardLastLogin(guard.Id, AuthUserHelper.LoggedInUserId);
+                }
+                else
+                {
+                    lastLogin = _guardDataProvider.GetGuardLastLogin(guard.Id);
+                }
+
             return new JsonResult(new { guard, lastLogin });
         }
 

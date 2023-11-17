@@ -24,6 +24,7 @@ namespace CityWatch.Data.Models
         public string RcStatus { get; set; }
 
         public int? NotificationType { get; set; }
+        public string LastEvent { get; set; }
 
     }
 }

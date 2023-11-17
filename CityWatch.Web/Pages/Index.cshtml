@@ -1,4 +1,6 @@
 ﻿@page
+@using CityWatch.Data.Models
+@using CityWatch.Web.Helpers
 @model IndexModel
 @{
     ViewData["Title"] = "CityWatch Security | Login";
@@ -45,6 +47,26 @@
                 <div class="text-left">
                     <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+@*toget a warning*@
+<div class="modal fade" id="alert-wand-in-use-modal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="alertWandInUseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-exclamation-circle text-warning mr-2"></i>Warning</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <b>The Control Room requires your personal mobile number in case of emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.<p> This request occurs only once. Please do not provide false numbers to trick system. It is an OH&S requirement we can contact you in an Emergency </p> </b>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" id="btn_confrim_wand_usok">Ok</button>
+                
             </div>
         </div>
     </div>

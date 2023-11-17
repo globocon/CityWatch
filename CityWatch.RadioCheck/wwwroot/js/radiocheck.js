@@ -120,30 +120,7 @@ $('#clientSiteActivityStatus').on('click', 'button[name="btnRadioCheckStatus"]',
     $('#selectRadioCheckStatus').modal('show');
 });
 
-$('#btnSaveRadioStatus').on('click', function () {
-    const checkedStatus = $('#selectRadioStatus').val();
-    var clientSiteId = $('#clientSiteId').val();
-    var guardId = $('#guardId').val();
-    if (checkedStatus === '') {
-        return;
-    }
-    $.ajax({
-        url: '/Radio/Check?handler=SaveRadioStatus',
-        type: 'POST',
-        data: {
-            clientSiteId: clientSiteId,
-            guardId: guardId,
-            checkedStatus: checkedStatus,
-        },
-        dataType: 'json',
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function () {
-        $('#selectRadioCheckStatus').modal('hide');
-        $('#selectRadioStatus').val('');
-        clientSiteActiveGuards.ajax.reload();
-        clientSiteInActiveGuards.ajax.reload();
-    });
-});
+
 
 /* V2 Changes start 12102023 */
 const groupColumn = 1;
@@ -369,6 +346,36 @@ var scrollPosition;
 var rowIndex;
 
 let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
+    dom: 'Bfrtip',
+    buttons: [
+
+        {
+            extend: 'copy',
+            text: '<i class="fa fa-copy"></i>',
+            titleAttr: 'Copy',
+            className: 'btn btn-md mr-2 btn-copy'
+        },
+        {
+            extend: 'excel',
+            text: '<i class="fa fa-file-excel-o"></i>',
+            titleAttr: 'Excel',
+            className: 'btn btn-md mr-2 btn-excel'
+        },
+        {
+            extend: 'pdf',
+            text: '<i class="fa fa-file-pdf-o"></i>',
+            titleAttr: 'PDF',
+            className: 'btn btn-md mr-2 btn-pdf'
+        },
+        {
+            extend: 'print',
+            text: '<i class="fa fa-print"></i>',
+            titleAttr: 'Print',
+            className: 'btn btn-md mr-2 btn-print'
+        },
+
+
+    ],
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
     ordering: true,
     "columnDefs": [
@@ -436,6 +443,15 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
         {
             data: 'guardLoginTime',
+            width: '9%',
+            className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return '<i class="fa fa-clock-o text-success rc-client-status"></i> ' + value;
+            }
+        },
+        {
+            data: 'lastEvent',
             width: '9%',
             className: "text-center",
             render: function (value, type, data) {
@@ -572,7 +588,9 @@ const renderGuardInitialColumn = function (value, record, $cell, $displayEl) {
 
 /*to get the guards that are not available-start*/
 $('#btnNonActiveList').on('click', function () {
-    window.open("../NonActiveGuards")
+    let newTab = window.open();
+    newTab.location.href = "/NonActiveGuards";
+   
 });
 let clientSiteNotAvailableGuards = $('#clientSiteNotAvailableGuards').DataTable({
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
@@ -882,6 +900,12 @@ $('#clientSiteActiveGuards tbody').on('click', '#btnKeyVehicleDetailsByGuard', f
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
     var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
     var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    if (GuardId.length == 0 ) {
+         GuardId = $(this).closest("tr").find('td').eq(2).find('#GuardId').val();
+    }
+    if (ClientSiteId.length == 0) {
+         ClientSiteId = $(this).closest("tr").find('td').eq(2).find('#ClientSiteId').val();
+    }
     $('#txtClientSiteId').val(ClientSiteId);
     $('#txtGuardId').val(GuardId);
     // $('#lbl_GuardActivityHeader').val($(this).closest("tr").find("td").eq(2).text() + 'Log Book Details');
@@ -977,6 +1001,13 @@ $('#clientSiteActiveGuards tbody').on('click', '#btnIncidentReportdetails', func
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
     var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
     var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    if (GuardId.length == 0) {
+        GuardId = $(this).closest("tr").find('td').eq(2).find('#GuardId').val();
+    }
+    if (ClientSiteId.length == 0) {
+        ClientSiteId = $(this).closest("tr").find('td').eq(2).find('#ClientSiteId').val();
+    }
+
     $('#txtClientSiteId').val(ClientSiteId);
     $('#txtGuardId').val(GuardId);
     // $('#lbl_GuardActivityHeader').val($(this).closest("tr").find("td").eq(2).text() + 'Log Book Details');
@@ -1208,3 +1239,16 @@ function clearGuardValidationSummary(validationControl) {
     $('#' + validationControl).removeClass('validation-summary-errors').addClass('validation-summary-valid');
     $('#' + validationControl).html('');
 }
+
+$('#openInActiveGuardInNewPage').on('click', function () {
+    let newTab = window.open();
+    newTab.location.href = "/InActiveGuardSinglePage";
+    
+});
+
+$('#openActiveGuardInNewPage').on('click', function () {
+    let newTab = window.open();
+    newTab.location.href = "/ActiveGuardSinglePage";
+
+});
+

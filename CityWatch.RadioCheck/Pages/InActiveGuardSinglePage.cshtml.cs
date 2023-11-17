@@ -19,7 +19,7 @@ using MailKit.Net.Smtp;
 
 namespace CityWatch.Web.Pages.Radio
 {
-    public class RadioCheckNewModel : PageModel
+    public class InActiveGuardSinglePage : PageModel
     {
 
 
@@ -27,7 +27,7 @@ namespace CityWatch.Web.Pages.Radio
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly EmailOptions _EmailOptions;
         private readonly IConfiguration _configuration;
-        public RadioCheckNewModel(IGuardLogDataProvider guardLogDataProvider, IOptions<EmailOptions> emailOptions,
+        public InActiveGuardSinglePage(IGuardLogDataProvider guardLogDataProvider, IOptions<EmailOptions> emailOptions,
             IConfiguration configuration)
         {
 
@@ -38,17 +38,16 @@ namespace CityWatch.Web.Pages.Radio
         public int UserId { get; set; }
         public int GuardId { get; set; }
 
-       
         public int InActiveGuardCount { get; set; }
-       
+
         public int ActiveGuardCount { get; set; }
         public IActionResult OnGet()
         {
-
             var activeGuardDetails = _guardLogDataProvider.GetActiveGuardDetails();
             ActiveGuardCount = activeGuardDetails.Count();
             var inActiveGuardDetails = _guardLogDataProvider.GetInActiveGuardDetails();
             InActiveGuardCount = inActiveGuardDetails.Count();
+
 
             var guardLoginId = HttpContext.Session.GetInt32("GuardLoginId");
             /* The following changes done for allowing guard to access the KPI*/
@@ -97,7 +96,6 @@ namespace CityWatch.Web.Pages.Radio
             {
 
                 HttpContext.Session.SetInt32("GuardId", GuardId);
-              
                 return Page();
             }
             else
@@ -105,8 +103,7 @@ namespace CityWatch.Web.Pages.Radio
                 HttpContext.Session.SetInt32("GuardId", 0);
                 return Redirect(Url.Page("/Account/Login"));
             }
-
-           
+            
         }
         //code added to save the duress button start
         public JsonResult OnPostSaveDuress()
@@ -139,14 +136,14 @@ namespace CityWatch.Web.Pages.Radio
         //code added to save the duress button stop
         public IActionResult OnGetClientSiteActivityStatus(string clientSiteIds)
         {
-            var activeGuardDetails = _guardLogDataProvider.GetActiveGuardDetails();           
-            return new JsonResult(activeGuardDetails);
+
+            return new JsonResult(_guardLogDataProvider.GetActiveGuardDetails());
         }
 
         public IActionResult OnGetClientSiteInActivityStatus(string clientSiteIds)
         {
-            var inActiveGuardDetails = _guardLogDataProvider.GetInActiveGuardDetails();            
-            return new JsonResult(inActiveGuardDetails);
+
+            return new JsonResult(_guardLogDataProvider.GetInActiveGuardDetails());
         }
         //for getting logBookDetails of Guards-start
         public IActionResult OnGetClientSitelogBookActivityStatus(int clientSiteId, int guardId)
@@ -234,9 +231,9 @@ namespace CityWatch.Web.Pages.Radio
                             ClientSiteLogBookId = logBookId,
                             GuardLoginId = guardLoginId,
                             EventDateTime = DateTime.Now,
-                            Notes = Subject + " : "+ Notifications,
+                            Notes = Notifications,
                             //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
-                            //IsSystemEntry = true,
+                            IsSystemEntry = true,
                             IrEntryType = IrEntryType.Alarm
                         };
                         _guardLogDataProvider.SaveGuardLog(guardLog);
@@ -247,9 +244,9 @@ namespace CityWatch.Web.Pages.Radio
                         {
                             ClientSiteLogBookId = logBookId,
                             EventDateTime = DateTime.Now,
-                            Notes = Subject + " : " + Notifications,
+                            Notes = Notifications,
                             //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
-                            //IsSystemEntry = true,
+                            IsSystemEntry = true,
                             IrEntryType = IrEntryType.Alarm
                         };
                         _guardLogDataProvider.SaveGuardLog(guardLog);
@@ -275,11 +272,28 @@ namespace CityWatch.Web.Pages.Radio
                         }
 
                     }
-                  
+                    var guardlogins = _guardLogDataProvider.GetGuardLoginsByClientSiteId(clientSiteId, DateTime.Now);
+                    string guardEmails = null;
+                    foreach (var item in guardlogins)
+                    {
+                        if (item.Guard.Email != null )
+                        {
+                            
+                            if (guardEmails == null)
+                            {
+                                guardEmails = item.Guard.Email;
+                            }
+                            else
+                            {
+                                guardEmails = guardEmails + "," + item.Guard.Email;
+                            }
+                        }
+
+                    }
 
                     var fromAddress = _EmailOptions.FromAddress.Split('|');
                     var toAddress = smsSiteEmails.Split(',');
-                    
+                    var ccAddress = guardEmails.Split(',');
                     var subject = Subject;
                     var messageHtml = Notifications;
 
@@ -287,7 +301,8 @@ namespace CityWatch.Web.Pages.Radio
                     messagenew.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
                     foreach (var address in GetToEmailAddressList(toAddress))
                         messagenew.To.Add(address);
-                    
+                    foreach (var address in GetToEmailAddressList(ccAddress))
+                        messagenew.Cc.Add(address);
 
                     messagenew.Subject = $"{subject}";
 
