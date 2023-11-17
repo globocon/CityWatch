@@ -594,7 +594,7 @@
         if (record.isSystemEntry)
             return;
         /*to get the control room notification-start*/
-        var $messageBtn = $('<button class="btn btn-outline-primary mt-2"  data-id="' + record.id + '"><i class="fa fa-envelope mr-2"></i></button>');
+        var $messageBtn = $('<button class="btn btn-outline-primary mt-2"  data-id="' + record.id + '"><i class="fa fa-envelope"></i></button>');
         $messageBtn.on('click', function (e) {
             var id = $(this).data('id');
             var message = $(this).closest('tr').find('td').eq(2).text();
