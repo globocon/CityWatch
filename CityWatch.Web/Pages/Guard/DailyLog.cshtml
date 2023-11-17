@@ -190,6 +190,74 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="pushNoTificationsGuardModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="pushNoTificationsControlRoomModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-envelope-o mr-2"></i>Push Notifications</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="form_push_notifications_for_rc">
+                    <div class="container">
+                        <ul class="nav nav-tabs" id="pushNotificationTextMessageTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link active" id="textMessageTab" data-toggle="tab" href="#textMessage" role="tab" aria-controls="textMessage" aria-selected="true">Text Message</a>
+                            </li>
+                        </ul>
+                        <div class="tab-content p-2">
+                            <div class="tab-pane active" id="textMessage" role="tabpanel" aria-labelledby="textMessage">
+                                <input type="hidden" id="gl_client_site_id" />
+                                <div class="row m-0">
+                                    <div class="col-md-12">
+                                        <form>
+                                            <input type="hidden" id="txtNotificationsControlRoomMessage" />
+                                            <div class="form-group row mb-5">
+                                                <label for="gs_site_email" class="col-md-4 col-form-label">Acknowledge Message : </label>
+                                                <div class="col-md-6 mr-5 mt-2">
+                                                    <input type="checkbox" id="chkAcknowledgeMessage" checked>
+                                                    <input type="hidden" id="IsAcknowledgeMessage">
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="form-group row mb-1">
+                                                <label for="gs_site_email" class="col-md-4 col-form-label">Message Back Instead : </label>
+                                                <div class="col-md-6 mr-5 mt-2">
+                                                    <input type="checkbox" id="chkMessageBack">
+                                                    <input type="hidden" id="IsMessageBack">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <div class="col-md-4"></div>
+                                                <div class="col-md-6">
+                                                    <textarea id="txtPushNotificationGuardReturnMessage" style="width:450px;height:200px;" class="form-control" disabled></textarea>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-row text-right">
+                                                <div class="col-md-12  text-right">
+                                                    <button type="button" id="btnSendPushLotificationFromGuardMessage" class="btn btn-primary">Send >></button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left">
+                    <div asp-validation-summary="All" id="PushNotificationsValidationSummary"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <partial name="_MessagePopup" />
 @Html.AntiForgeryToken()
 @section PageHeader {
