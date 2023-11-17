@@ -499,6 +499,14 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
     background-color: #EFEFEF; 
 }
 
+.card-header .fa {
+    transition: .3s transform ease-in-out;
+}
+
+.card-header .collapsed .fa {
+    transform: rotate(90deg);
+}
+
 /* Dark Mode Change 20/09/2023 Start*/
 .dark-mode {
     background-color: #333;
