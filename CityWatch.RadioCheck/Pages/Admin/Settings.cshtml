@@ -1,0 +1,71 @@
+﻿@page
+@using CityWatch.Data.Helpers
+@using CityWatch.Data.Models
+@using Microsoft.Extensions.Configuration
+@using System.Security.Claims
+@model CityWatch.RadioCheck.Pages.Admin.SettingsModel
+@inject IConfiguration Configuration
+
+<div>
+  
+    <ul class="nav nav-tabs" id="settingsTab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="rcstype-tab" data-toggle="tab" href="#rcstype" role="tab" aria-controls="rcstype" aria-selected="true">Radio Check</a>
+        </li>
+      @*  <li class="nav-item">
+            <a class="nav-link" id="csite-tab" data-toggle="tab" href="#csite" role="tab" aria-controls="csite" aria-selected="false">Incident Client Site</a>
+        </li>*@
+        
+    </ul>
+    <div class="tab-content" id="settingsTabContent">
+        <div class="tab-pane fade show active py-3" id="rcstype" role="tabpanel" aria-labelledby="rcstype-tab">
+            <div class="row">
+                <div class="col text-right">
+                    <button class="btn btn-success mb-3" id="add_radiocheck_status"><i class="fa fa-plus mr-2"></i>Add New</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <table class="table" id="radiocheck_status_type_settings"></table>
+                </div>
+            </div>
+            
+            <div class="row mt-2">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between">
+                            <b><u>LEGEND</u></b>
+                            <i class="fa fa-chevron-up text-black-50" aria-hidden="true" data-toggle="collapse" data-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree"></i>
+                        </div>
+                       
+                        <div id="collapseThree" class="collapse multi-collapse show">
+                            <div class="card-body row m-0">
+                                <div class="col-md-12">
+                                    
+                                    <ul class="list-unstyled">
+                                        <li>GREEN 1 = Line stamped, event registered as a 2 hour event.</li>
+                                        <li>RED 1 = Line stamped, Guard Forced OFF DUTY, Yellow Caution into LB that Guard[XXX] did not logoff and Control Room had to correct.</li>
+                                        <li>RED 2 = Line stamped, No Change to Status, Yellow Caution into LB that Control Room tried to contact Guard[XXX] and no answer.</li>
+                                        <li>RED 3 = Line stamped,  No Change to Status, Yellow Caution into LB that Control Room tried to contact Guard[XXX] and they are on their way but running late.</li>
+                                        
+                                    </ul>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+
+       
+    </div>
+
+</div>
+
+<!-- modal popup -->
+
+
+@Html.AntiForgeryToken()
+

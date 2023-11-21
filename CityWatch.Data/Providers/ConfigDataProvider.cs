@@ -1,5 +1,6 @@
 ﻿using CityWatch.Data.Models;
 using Dropbox.Api.Users;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,6 +37,12 @@ namespace CityWatch.Data.Providers
         void CrPrimaryLogoUpload(DateTime dateTimeUploaded, string primaryLogoPath);
         List<IncidentReportsPlatesLoaded> GetPlatesLoaded(int LogId);
         List<StaffDocument> GetStaffDocumentsUsingType(int type);
+        //to get functions for settings in radio check-start
+        List<RadioCheckStatusColor> GetRadioCheckStatusColorCode(string name);
+        List<RadioCheckStatus> GetRadioCheckStatusWithOutcome();
+        int GetRadioCheckStatusCount();
+        List<SelectListItem> GetRadioCheckStatusForDropDown(bool withoutSelect = false);
+        //to get functions for settings in radio check-end
 
     }
 
@@ -333,5 +340,49 @@ namespace CityWatch.Data.Providers
         {
             return _context.IncidentReportsPlatesLoaded.Where(z => z.LogId == LogId).OrderBy(z => z.Id).ToList();
         }
+        //to get functions for settings in radio check-start
+        public List<RadioCheckStatusColor> GetRadioCheckStatusColorCode(string name)
+        {
+            return _context.RadioCheckStatusColor.Where(x => String.IsNullOrEmpty(name) || x.Name == name).ToList();
+        }
+        public List<RadioCheckStatus> GetRadioCheckStatusWithOutcome()
+        {
+            var radiocheckstatus = _context.RadioCheckStatus.ToList();
+            foreach (var item in radiocheckstatus)
+            {
+                var radioCheckStatusColor = _context.RadioCheckStatusColor.Where(x => x.Id == item.RadioCheckStatusColorId).ToList();
+                foreach (var item1 in radioCheckStatusColor)
+                {
+                    item.RadioCheckStatusColor.Name = item1.Name;
+                }
+               
+            }
+                // return _context.RadioCheckStatus.ToList();
+            return radiocheckstatus;
+        }
+        public int GetRadioCheckStatusCount()
+        {
+            return _context.RadioCheckStatus.Count();
+        }
+        public List<SelectListItem> GetRadioCheckStatusForDropDown(bool withoutSelect = true)
+        {
+            var radioCheckStatuses = GetRadioCheckStatusWithOutcome();
+            var items = new List<SelectListItem>();
+
+            if (!withoutSelect)
+            {
+                items.Add(new SelectListItem("Select", "", true));
+            }
+
+            foreach (var item in radioCheckStatuses)
+            {
+                //items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+                items.Add(new SelectListItem(item.Name, item.Name.ToString()));
+            }
+
+            return items;
+        }
+       
+        //to get functions for settings in radio check-end
     }
 }
