@@ -9,6 +9,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using static Dropbox.Api.Team.UsersSelectorArg;
 
 namespace CityWatch.Data.Providers
 {
@@ -126,7 +127,12 @@ namespace CityWatch.Data.Providers
         int GetGuardLoginId(int guardId, DateTime date);
         List<GuardLogin> GetGuardLoginsByClientSiteId(int clientsiteId, DateTime date);
 
-
+        List<ClientType> GetUserClientTypesHavingAccess(int? userId);
+        List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm);
+        List<State> GetStates();
+        List<ClientSite> GetClientSitesForState(string State);
+        int GetClientSiteLogBookIdGloablmessage(int clientsiteId, LogBookType type, DateTime date);
+         List<ClientSite> GetAllClientSites();
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -1030,7 +1036,20 @@ namespace CityWatch.Data.Providers
             return _context.ClientSiteLogBooks
                  .SingleOrDefault(z => z.ClientSiteId == clientsiteId && z.Type == type && z.Date == date).Id;
         }
-
+        public int GetClientSiteLogBookIdGloablmessage(int clientsiteId, LogBookType type, DateTime date)
+        {
+            var logBook = _context?.ClientSiteLogBooks
+    .FirstOrDefault(z => z.ClientSiteId == clientsiteId && z.Type == type && z.Date == date);
+            if (logBook != null && logBook.Id != null)
+            {
+                return logBook.Id;
+            }
+            else
+            {
+                // Handle the case where no matching log book is found or logBook.Id is null
+                return 0; // Return null or another suitable default value
+            }
+        }
         public void SaveClientSiteRadioCheck(ClientSiteRadioCheck clientSiteRadioCheck)
         {
 
@@ -1270,6 +1289,11 @@ namespace CityWatch.Data.Providers
                 .Where(x => !Id.HasValue || (Id.HasValue && x.Id == Id.Value)).ToList();
                 
         }
+        public List<ClientSite> GetAllClientSites()
+        {
+            return _context.ClientSites.ToList();
+
+        }
         public List<ClientSiteSmartWand> GetClientSiteSmartWands(int? clientSiteId)
         {
             return _context.ClientSiteSmartWands
@@ -1292,7 +1316,73 @@ namespace CityWatch.Data.Providers
             }
             return guarlogins;
         }
+        //code added for client site dropdown starts
+        public List<ClientType> GetUserClientTypesHavingAccess(int? userId)
+        {
+            var clientTypes = GetClientTypes();
+            if (userId == null)
+                return clientTypes;
 
+            var allUserAccess = GetUserClientSiteAccess(userId);
+            var clientTypeIds = allUserAccess.Select(x => x.ClientSite.TypeId).Distinct().ToList();
+            return clientTypes.Where(x => clientTypeIds.Contains(x.Id)).ToList();
+        }
+        public List<ClientType> GetClientTypes()
+        {
+            return _context.ClientTypes.OrderBy(x => x.Name).ToList();
+        }
+        public List<UserClientSiteAccess> GetUserClientSiteAccess(int? userId)
+        {
+            return _context.UserClientSiteAccess
+                .Where(x => !userId.HasValue || userId.HasValue && x.UserId == userId)
+                .Include(x => x.ClientSite)
+                .Include(x => x.ClientSite.ClientType)
+                .Include(x => x.User)
+                .ToList();
+        }
+        public List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm)
+        {
+            var results = new List<ClientSite>();
+            var clientSites = GetClientSites(typeId);
+            if (userId == null)
+                results = clientSites;
+            else
+            {
+                var allUserAccess = GetUserClientSiteAccess(userId);
+                var clientSiteIds = allUserAccess.Select(x => x.ClientSite.Id).Distinct().ToList();
+                results = clientSites.Where(x => clientSiteIds.Contains(x.Id)).ToList();
+            }
+
+            if (!string.IsNullOrEmpty(searchTerm))
+                results = results.Where(x => x.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                (!string.IsNullOrEmpty(x.Address) && x.Address.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))).ToList();
+
+            return results;
+        }
+        public List<State> GetStates()
+        {
+            return new List<State>()
+            {
+                new State() { Name = "ACT" },
+                new State() { Name = "NSW" },
+                new State() { Name = "NT" },
+                new State() { Name = "QLD" },
+                new State() { Name = "SA" },
+                new State() { Name = "TAS" },
+                new State() { Name = "VIC" },
+                new State() { Name = "WA" }
+            }
+            .OrderBy(x => x.Name)
+            .ToList();
+        }
+        //Start Glbal Message
+        public List<ClientSite> GetClientSitesForState(string State)
+        {
+            return _context.ClientSites
+                .Where(site => site.State == State)
+                        .ToList();
+
+        }
 
     }
 }

@@ -1179,5 +1179,122 @@ function displayGuardValidationSummary(validationControl, errors) {
         });
     }
 }
+/*code added for Global Messsage start*/
+$('#btnSendGlabalNotificationMessage').on('click', function () {
+    const checkedState = $('#chkSiteState').is(':checked');
+    const checkedSiteEmail = $('#chkSiteEmail').is(':checked');
+    const checkedSMSPersonal = $('#chkSMSPersonalGlobal').is(':checked');
+    const checkedSMSSmartWand = $('#chkSMSSmartWandGlobal').is(':checked');
+    var clientSiteId = $('#txtNotificationsCompanyId').val();
+    var Notifications = $('#txtGlobalNotificationMessage').val();
+    var Subject = $('#txtGlobalNotificationSubject').val();
+    var State = $('#State1').val();
+    var ClientType = $('#dglClientSiteId').val();
+    const chkClientType = $('#chkClientType').is(':checked');
+    const chkNationality = $('#chkNationality').is(':checked');
+
+    if (Notifications === '') {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
+    }
+    else if (checkedState == false && chkClientType == false && chkClientType == false && checkedSMSPersonal == false && checkedSMSSmartWand == false && chkNationality == false) {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select any one of the transfer options ');
+
+    }
+    else {
+        $.ajax({
+            url: '/RadioCheckV2?handler=SaveGlobalNotificationTestMessages',
+            type: 'POST',
+            data: {
+                checkedState: checkedState,
+                State: State,
+                Notifications: Notifications,
+                Subject: Subject,
+                chkClientType: chkClientType,
+                ClientType: ClientType,
+                chkNationality: chkNationality,
+                checkedSMSPersonal: checkedSMSPersonal,
+                checkedSMSSmartWand: checkedSMSSmartWand,
+                clientSiteId: clientSiteId
+
+            },
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data.success == true) {
+                $('#pushNoTificationsControlRoomModal').modal('hide');
+            }
+            else {
+                displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
+            }
+            //$('#selectRadioStatus').val('');
+            //$('#btnRefreshActivityStatus').trigger('click');
+        });
+    }
+});
+/*code added for Global Messsage stop*/
+/*code added for client site Dropdown start*/
+//$('#dglClientSiteId').select2({
+//    placeholder: 'Select',
+//    theme: 'bootstrap4'
+//});
+
+$('#dglClientType').on('change', function () {
+    const clientTypeId = $(this).val();
+    const clientSiteControl = $('#dglClientSiteId');
+    var selectedOption = $(this).find("option:selected");
+    var selectedText = selectedOption.text();
+    $("#vklClientType").val(selectedText);
+    /*$("#vklClientType").multiselect("refresh");*/
+   // gridsiteLog.clear();
+
+    //const clientSiteControlvkl = $('#vklClientSiteId');
+    //keyVehicleLogReport.clear().draw();
+    //clientSiteControlvkl.html('');
+
+    //clientSiteControl.html('');
+    $.ajax({
+        url: '/RadioCheckV2?handler=ClientSites&typeId=' + clientTypeId,
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            $('#dglClientSiteId').append(new Option('Select', '', true, true));
+            data.map(function (site) {
+                $('#dglClientSiteId').append(new Option(site.name, site.id, false, false));
+            });
+            /* vkl multiselect */
+            //data.map(function (site) {
+            //    clientSiteControlvkl.append('<option value="' + site.id + '">' + site.name + '</option>');
+            //});
+            //clientSiteControlvkl.multiselect('rebuild');
+        }
+    });
+
+
+});
+
+
+$('#dglClientSiteId').on('change', function () {
+    const clientTypeId = $(this).val();
+    $("#vklClientSiteId").val(clientTypeId);
+    $("#vklClientSiteId").multiselect("refresh");
+
+
+
+
+});
+$('.GlobalAlert-checkbox').on('change', function () {
+    if ($(this).prop('checked')) {
+       
+        $('.GlobalAlert-checkbox').not(this).prop('checked', false);
+    }
+});
+$('#chkSiteState').change(function () {
+    if ($(this).is(':checked')) {
+        $('#State1').prop('disabled', false); 
+    } else {
+        $('#State1').prop('disabled', true); 
+    }
+});
+/*code added for client site Dropdown stop*/
 
 /*for pushing notifications from the control room - end*/

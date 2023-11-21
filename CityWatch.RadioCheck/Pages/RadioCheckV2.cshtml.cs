@@ -439,7 +439,273 @@ namespace CityWatch.Web.Pages.Radio
 
             return emailAddressList;
         }
-     
+        // Save Global Text Alert Start
+        public JsonResult OnPostSaveGlobalNotificationTestMessages(bool checkedState,string state,string Notifications,string Subject,bool chkClientType,int ClientType,bool chkNationality,bool checkedSMSPersonal,bool checkedSMSSmartWand,int clientSiteId)
+        {
+            var success = true;
+            var message = "success";
+            try
+            {
+                if (checkedState==true)
+                {
+                    var clientSitesState = _guardLogDataProvider.GetClientSitesForState(state);
+                    foreach (var item in clientSitesState) {
+                        LogBookDetails(item.Id,Notifications);
+                        EmailSender(item.SiteEmail, item.Id, Subject, Notifications);
+                    }
+                }
+                if (chkClientType==true)
+                {
+                    var clientSitesClientType = _guardLogDataProvider.GetClientSites(ClientType);
+                    foreach (var clientSiteTypeID in clientSitesClientType)
+                    {
+                        LogBookDetails(clientSiteTypeID.Id, Notifications);
+                        EmailSender(clientSiteTypeID.SiteEmail, clientSiteTypeID.Id, Subject, Notifications);
+
+                    }
+                }
+                if (chkNationality==true)
+                {
+                    var clientsiteIDNationality = _guardLogDataProvider.GetAllClientSites();
+                    foreach (var itemAll in clientsiteIDNationality)
+                    {
+                        LogBookDetails(itemAll.Id, Notifications);
+                        EmailSender(itemAll.SiteEmail, itemAll.Id, Subject, Notifications);
+                    }
+                }
+
+                if (checkedSMSPersonal == true)
+                {
+                    var logbooktype = LogBookType.DailyGuardLog;
+                    var guardlogins = _guardLogDataProvider.GetGuardLoginsByClientSiteId(clientSiteId, DateTime.Now);
+                    string smsPersonalEmails = null;
+                    foreach (var item in guardlogins)
+                    {
+                        if (item.Guard.Mobile != null || item.Guard.Mobile != "+61 4")
+                        {
+                            item.Guard.Mobile = item.Guard.Mobile.Replace(" ", "") + "@smsglobal.com";
+                            if (smsPersonalEmails == null)
+                            {
+                                smsPersonalEmails = item.Guard.Mobile;
+                            }
+                            else
+                            {
+                                smsPersonalEmails = smsPersonalEmails + "," + item.Guard.Mobile;
+                            }
+                        }
+
+                    }
+                    if (guardlogins.Count>0)
+                    {
+                        var fromAddress = _EmailOptions.FromAddress.Split('|');
+                        var toAddress = smsPersonalEmails.Split(',');
+                        var subject = Subject;
+                        var messageHtml = Notifications;
+
+                        var messagenew = new MimeMessage();
+                        messagenew.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+                        foreach (var address in GetToEmailAddressList(toAddress))
+                            messagenew.To.Add(address);
+                        messagenew.Subject = $"{subject}";
+
+                        var builder = new BodyBuilder()
+                        {
+                            HtmlBody = messageHtml
+                        };
+
+                        messagenew.Body = builder.ToMessageBody();
+
+                        using (var client = new SmtpClient())
+                        {
+                            client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                            if (!string.IsNullOrEmpty(_EmailOptions.SmtpUserName) &&
+                                !string.IsNullOrEmpty(_EmailOptions.SmtpPassword))
+                                client.Authenticate(_EmailOptions.SmtpUserName, _EmailOptions.SmtpPassword);
+                            client.Send(messagenew);
+                            client.Disconnect(true);
+                        }
+
+                    }
+
+
+                }
+                if (checkedSMSSmartWand == true)
+                {
+                    var logbooktype = LogBookType.DailyGuardLog;
+                    var smartWands = _guardLogDataProvider.GetClientSiteSmartWands(clientSiteId);
+                    string smsPersonalEmails = null;
+                    foreach (var item in smartWands)
+                    {
+                        if (item.PhoneNumber != null || item.PhoneNumber != "+61 4")
+                        {
+                            item.PhoneNumber = item.PhoneNumber.Replace("(0)", "") + "@smsglobal.com";
+                            if (smsPersonalEmails == null)
+                            {
+                                smsPersonalEmails = item.PhoneNumber;
+                            }
+                            else
+                            {
+                                smsPersonalEmails = smsPersonalEmails + "," + item.PhoneNumber;
+                            }
+                        }
+
+                    }
+                    if (smartWands.Count>0)
+                    {
+                        var fromAddress = _EmailOptions.FromAddress.Split('|');
+                        var toAddress = smsPersonalEmails.Split(',');
+                        var subject = Subject;
+                        var messageHtml = Notifications;
+
+                        var messagenew = new MimeMessage();
+                        messagenew.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+                        foreach (var address in GetToEmailAddressList(toAddress))
+                            messagenew.To.Add(address);
+                        messagenew.Subject = $"{subject}";
+
+                        var builder = new BodyBuilder()
+                        {
+                            HtmlBody = messageHtml
+                        };
+
+                        messagenew.Body = builder.ToMessageBody();
+
+                        using (var client = new SmtpClient())
+                        {
+                            client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                            if (!string.IsNullOrEmpty(_EmailOptions.SmtpUserName) &&
+                                !string.IsNullOrEmpty(_EmailOptions.SmtpPassword))
+                                client.Authenticate(_EmailOptions.SmtpUserName, _EmailOptions.SmtpPassword);
+                            client.Send(messagenew);
+                            client.Disconnect(true);
+                        }
+                    }
+                   
+
+
+                }
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
+        public void LogBookDetails(int Id,string Notifications)
+        {
+            #region Logbook
+            if (Id != null)
+            {
+
+                var logbooktype = LogBookType.DailyGuardLog;
+                var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdGloablmessage(Id, logbooktype, DateTime.Today);
+                var guardid = HttpContext.Session.GetInt32("GuardId");
+                if (guardid != 0)
+                {
+                    var guardLoginId = _guardLogDataProvider.GetGuardLoginId(Convert.ToInt32(guardid), DateTime.Today);
+                    // var guardName = _guardLogDataProvider.GetGuards(ClientSiteRadioChecksActivity.GuardId).Name;
+                    var guardLog = new GuardLog()
+                    {
+                        ClientSiteLogBookId = logBookId,
+                        GuardLoginId = guardLoginId,
+                        EventDateTime = DateTime.Now,
+                        Notes = Notifications,
+                        //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
+                        IsSystemEntry = true,
+                        IrEntryType = IrEntryType.Alarm
+                    };
+                    _guardLogDataProvider.SaveGuardLog(guardLog);
+                }
+                else
+                {
+                    var guardLog = new GuardLog()
+                    {
+                        ClientSiteLogBookId = logBookId,
+                        EventDateTime = DateTime.Now,
+                        Notes = Notifications,
+                        //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
+                        IsSystemEntry = true,
+                        IrEntryType = IrEntryType.Alarm
+                    };
+                    if (guardLog.ClientSiteLogBookId!=0)
+                    {
+                        _guardLogDataProvider.SaveGuardLog(guardLog);
+                    }
+                    
+                }
+
+            }
+            #endregion
+        }
+        public JsonResult EmailSender(string SiteEmail,int Id,string Subject,string Notifications)
+        {
+            var success = true;
+            var message = "success";
+            #region Email
+            if (SiteEmail != null)
+            {
+                var clientSites = _guardLogDataProvider.GetClientSites(Id);
+                string smsSiteEmails = null;
+
+                if (SiteEmail != null)
+                {
+                    smsSiteEmails = SiteEmail;
+                }
+                else
+                {
+                    success = false;
+                    message = "Please Enter the Site Email";
+                    return new JsonResult(new { success, message });
+                }
+
+
+
+                var fromAddress = _EmailOptions.FromAddress.Split('|');
+                var toAddress = smsSiteEmails.Split(',');
+                var subject = Subject;
+                var messageHtml = Notifications;
+
+                var messagenew = new MimeMessage();
+                messagenew.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+                foreach (var address in GetToEmailAddressList(toAddress))
+                    messagenew.To.Add(address);
+
+                messagenew.Subject = $"{subject}";
+
+                var builder = new BodyBuilder()
+                {
+                    HtmlBody = messageHtml
+                };
+
+                messagenew.Body = builder.ToMessageBody();
+
+                using (var client = new SmtpClient())
+                {
+                    client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                    if (!string.IsNullOrEmpty(_EmailOptions.SmtpUserName) &&
+                        !string.IsNullOrEmpty(_EmailOptions.SmtpPassword))
+                        client.Authenticate(_EmailOptions.SmtpUserName, _EmailOptions.SmtpPassword);
+                    client.Send(messagenew);
+                    client.Disconnect(true);
+                }
+            }
+            #endregion
+            return new JsonResult(new { success, message });
+        }
+        // Save Global Text Alert Stop
+
+        //code added for clientsite dropdown start
+        public JsonResult OnGetClientSites(int? page, int? limit, int? typeId, string searchTerm)
+        {
+            return new JsonResult(_guardLogDataProvider.GetUserClientSitesHavingAccess(typeId, AuthUserHelperRadio.LoggedInUserId, searchTerm));
+        }
+        public JsonResult OnGetClientStates()
+        {
+            return new JsonResult(_guardLogDataProvider.GetStates());
+        }
+        //code added for clientsite dropdown stop
         //Send Text Notifications-end
 
 
@@ -453,7 +719,7 @@ namespace CityWatch.Web.Pages.Radio
         //    return new JsonResult(_guardLogDataProvider.GetGuards(id));
         //}
 
-       
+
 
     }
 }
