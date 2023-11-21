@@ -39,8 +39,8 @@ namespace CityWatch.Data.Providers
         void SaveCompanyDetails(CompanyDetails companyDetails);
         void SavePlateLoaded(IncidentReportsPlatesLoaded report);
         void DeletePlateLoaded(IncidentReportsPlatesLoaded report);
-        void DeleteFullPlateLoaded(IncidentReportsPlatesLoaded report,int Count);
-        
+        void DeleteFullPlateLoaded(IncidentReportsPlatesLoaded report, int Count);
+
         void DeleteClientSite(int id);
         List<ClientSiteKpiSetting> GetClientSiteKpiSettings();
         ClientSiteKpiSetting GetClientSiteKpiSetting(int clientSiteId);
@@ -60,7 +60,7 @@ namespace CityWatch.Data.Providers
         string ValidDateTime(ClientSiteKpiSetting setting);
 
         List<IncidentReportsPlatesLoaded> GetIncidentDetailsKvlReport(int logId);
-        List<KeyVehicleLog> GetKeyVehiclogWithPlateIdAndTruckNoByLogId(int[] plateid, string[] truckNo,int logId);
+        List<KeyVehicleLog> GetKeyVehiclogWithPlateIdAndTruckNoByLogId(int[] plateid, string[] truckNo, int logId);
         List<KeyVehicleLog> GetKeyVehiclogWithPlateIdAndTruckNoByLogIdIndividual(int plateid, string truckNo, int logId);
         List<KeyVehcileLogField> GetKeyVehicleLogFields(bool includeDeleted = false);
         int GetMaxIncidentReportId(int LogId);
@@ -73,17 +73,17 @@ namespace CityWatch.Data.Providers
         List<ClientSiteLinksDetails> GetSiteLinksPageDetails(int type);
         int SaveClientSiteLinksPageType(ClientSiteLinksPageType ClientSiteLinksPageTypeRecord);
         int SaveFeedbackType(FeedbackType FeedbackNewTypeRecord);
-        
+
         int SaveSiteLinkDetails(ClientSiteLinksDetails ClientSiteLinksDetailsRecord);
         void DeleteSiteLinkDetails(int id);
         int GetIncidentReportsPlatesCount(int PlateId, string TruckNo, int? userId);
-       
+
         List<ClientSiteLinksDetails> GetSiteLinkDetailsUsingTypeAndState(int type);
         string GetSiteLinksTypeUsingId(int typeId);
         int DeleteClientSiteLinksPageType(int typeId);
         int DeleteFeedBackType(int typeId);
         List<KeyVehcileLogField> GetKeyVehicleLogFieldsByTruckId(int TruckConfig);
-        List<GuardLogin> GetGuardLogin(int GuardLoginId,int logBookId);
+        List<GuardLogin> GetGuardLogin(int GuardLoginId, int logBookId);
         List<GuardLog> GetGuardLogs(int GuardLoginId, int logBookId);
 
         List<GuardAccess> GetGuardAccess();
@@ -91,6 +91,14 @@ namespace CityWatch.Data.Providers
 
         List<ClientSite> GetClientSiteDetails(int[] clientSiteIds);
         List<ClientSiteRadioChecksActivityStatus> GetClientSiteRadioChecksActivityStatus(int GuardId, int ClientSiteId);
+
+        int GetIncidentReportsPlatesCountWithOutPlateId(int? userId);
+
+        List<IncidentReportsPlatesLoaded> GetIncidentReportsPlatesLoadedWithGuardId(int? userId, int? guardId);
+
+        int RemoveIncidentReportsPlatesLoadedWithGuardId(List<IncidentReportsPlatesLoaded> platesLoaded);
+
+        int RemoveIncidentReportsPlatesLoadedWithUserId(int? userId);
 
     }
 
@@ -242,7 +250,7 @@ namespace CityWatch.Data.Providers
                 clientSiteToUpdate.StatusDate = clientSite.StatusDate;
                 clientSiteToUpdate.SiteEmail = clientSite.SiteEmail;
                 clientSiteToUpdate.DuressSms = clientSite.DuressSms;
-                clientSiteToUpdate.DuressEmail= clientSite.DuressEmail;
+                clientSiteToUpdate.DuressEmail = clientSite.DuressEmail;
             }
             _context.SaveChanges();
 
@@ -283,7 +291,7 @@ namespace CityWatch.Data.Providers
             if (clientSiteKpiSetting != null)
             {
 
-                
+
 
                 clientSiteKpiSetting.ClientSiteManningGuardKpiSettings = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == clientSiteKpiSetting.Id).OrderBy(x => x.OrderId).ThenBy(x => ((int)x.WeekDay + 6) % 7).ToList();
 
@@ -494,7 +502,7 @@ namespace CityWatch.Data.Providers
                                     }
 
                                 }
-                                
+
 
                             }
 
@@ -504,13 +512,13 @@ namespace CityWatch.Data.Providers
                         {
                             if (setting.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == false).Count() > 0)
                             {
-                                var positionIdGuard = setting.ClientSiteManningGuardKpiSettings.Where(x => x.PositionId != 0).ToList();                                
+                                var positionIdGuard = setting.ClientSiteManningGuardKpiSettings.Where(x => x.PositionId != 0).ToList();
                                 if (positionIdGuard != null)
                                 {
                                     foreach (var poId in positionIdGuard)
                                     {
-                                        if(poId!=null)
-                                        setting.ClientSiteManningGuardKpiSettings.Where(x=>x.OrderId== poId.OrderId).ToList().ForEach(x => { x.SettingsId = setting.Id;x.PositionId = poId.PositionId; });
+                                        if (poId != null)
+                                            setting.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == poId.OrderId).ToList().ForEach(x => { x.SettingsId = setting.Id; x.PositionId = poId.PositionId; });
 
                                     }
 
@@ -622,11 +630,7 @@ namespace CityWatch.Data.Providers
 
         public void SavePlateLoaded(IncidentReportsPlatesLoaded report)
         {
-            
-                
-
-                _context.IncidentReportsPlatesLoaded.Add(report);
-            
+            _context.IncidentReportsPlatesLoaded.Add(report);
             _context.SaveChanges();
         }
         public void DeletePlateLoaded(IncidentReportsPlatesLoaded report)
@@ -634,23 +638,24 @@ namespace CityWatch.Data.Providers
 
 
 
-            
 
 
-            var platesLoadedToDeleteId = _context.IncidentReportsPlatesLoaded.Where(x => x.LogId == report.LogId && x.PlateId==report.PlateId && x.TruckNo==report.TruckNo && x.IncidentReportId==0).Max(z => z.Id);
+
+            var platesLoadedToDeleteId = _context.IncidentReportsPlatesLoaded.Where(x => x.LogId == report.LogId && x.PlateId == report.PlateId && x.TruckNo == report.TruckNo && x.IncidentReportId == 0).Max(z => z.Id);
             var platesLoadedToDelete = _context.IncidentReportsPlatesLoaded.SingleOrDefault(x => x.Id == platesLoadedToDeleteId.Value);
             if (platesLoadedToDelete == null)
                 throw new InvalidOperationException();
-            
+
             _context.IncidentReportsPlatesLoaded.Remove(platesLoadedToDelete);
             _context.SaveChanges();
         }
-        
-        public void DeleteFullPlateLoaded(IncidentReportsPlatesLoaded report,int Count)
+
+        public void DeleteFullPlateLoaded(IncidentReportsPlatesLoaded report, int Count)
         {
 
-            var platesLoadedToDeleteId = _context.IncidentReportsPlatesLoaded.Where(x => x.LogId == report.LogId  && x.IncidentReportId == 0);
-           for(int i = 1; i < Count; i++) { 
+            var platesLoadedToDeleteId = _context.IncidentReportsPlatesLoaded.Where(x => x.LogId == report.LogId && x.IncidentReportId == 0);
+            for (int i = 1; i < Count; i++)
+            {
 
                 var platesLoadedToDelete = _context.IncidentReportsPlatesLoaded.Where(x => platesLoadedToDeleteId.Select(z => z.Id).Contains(x.Id));
                 if (platesLoadedToDelete == null)
@@ -665,25 +670,25 @@ namespace CityWatch.Data.Providers
         public List<IncidentReportsPlatesLoaded> GetIncidentDetailsKvlReport(int logId)
         {
             return _context.IncidentReportsPlatesLoaded
-                .Where(z => z.LogId ==logId && z.IncidentReportId ==0)
+                .Where(z => z.LogId == logId && z.IncidentReportId == 0)
                 .ToList();
         }
 
         public List<KeyVehicleLog> GetKeyVehiclogWithPlateIdAndTruckNoByLogId(int[] plateid, string[] truckNo, int logId)
         {
-            
-                return _context.KeyVehicleLogs.Where(z => truckNo.Contains(z.VehicleRego) && plateid.Contains(z.PlateId) && DateTime.Compare(z.ClientSiteLogBook.Date.Date, DateTime.Now.Date) == 0)
-                      .Include(z => z.ClientSiteLogBook)
-                    .ThenInclude(z => z.ClientSite)
 
-                    .ToList();
-            
+            return _context.KeyVehicleLogs.Where(z => truckNo.Contains(z.VehicleRego) && plateid.Contains(z.PlateId) && DateTime.Compare(z.ClientSiteLogBook.Date.Date, DateTime.Now.Date) == 0)
+                  .Include(z => z.ClientSiteLogBook)
+                .ThenInclude(z => z.ClientSite)
+
+                .ToList();
+
 
         }
         public List<KeyVehicleLog> GetKeyVehiclogWithPlateIdAndTruckNoByLogIdIndividual(int plateid, string truckNo, int logId)
         {
 
-            return _context.KeyVehicleLogs.Where(z => z.VehicleRego==truckNo && z.PlateId==plateid && DateTime.Compare(z.ClientSiteLogBook.Date.Date, DateTime.Now.Date) == 0)
+            return _context.KeyVehicleLogs.Where(z => z.VehicleRego == truckNo && z.PlateId == plateid && DateTime.Compare(z.ClientSiteLogBook.Date.Date, DateTime.Now.Date) == 0)
                   .Include(z => z.ClientSiteLogBook)
                 .ThenInclude(z => z.ClientSite)
 
@@ -698,10 +703,10 @@ namespace CityWatch.Data.Providers
                 .ThenBy(x => x.Name)
                 .ToList();
         }
-        public int GetMaxIncidentReportId (int LogId)
-            
+        public int GetMaxIncidentReportId(int LogId)
+
         {
-            var incidentReportid= _context.IncidentReports
+            var incidentReportid = _context.IncidentReports
                  .Where(z => z.LogId == LogId).Max(x => x.Id);
             return Convert.ToInt32(incidentReportid);
 
@@ -727,14 +732,14 @@ namespace CityWatch.Data.Providers
         public List<ClientSitePoc> GetClientSitePocs()
         {
             return _context.ClientSitePocs
-                .Where(z =>  !z.IsDeleted)
+                .Where(z => !z.IsDeleted)
                 .OrderBy(z => z.Name)
                 .ToList();
         }
         public List<ClientSiteLocation> GetClientSiteLocations()
         {
             return _context.ClientSiteLocations
-                .Where(z =>  !z.IsDeleted)
+                .Where(z => !z.IsDeleted)
                 .OrderBy(z => z.Name)
                 .ToList();
         }
@@ -746,7 +751,7 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.ClientSite)
                 .Include(x => x.ClientSite.ClientType)
                 .ToList();
-        }      
+        }
 
 
 
@@ -758,8 +763,8 @@ namespace CityWatch.Data.Providers
         }
         public List<ClientSiteLinksDetails> GetSiteLinksPageDetails(int type)
         {
-            return _context.ClientSiteLinksDetails.Where(x=>x.ClientSiteLinksTypeId == type).OrderBy(x => x.Title).ToList();
-            
+            return _context.ClientSiteLinksDetails.Where(x => x.ClientSiteLinksTypeId == type).OrderBy(x => x.Title).ToList();
+
         }
         public int SaveClientSiteLinksPageType(ClientSiteLinksPageType ClientSiteLinksPageTypeRecord)
         {
@@ -794,12 +799,12 @@ namespace CityWatch.Data.Providers
                         saveStatus = 1;
                     }
 
-                    
+
                 }
 
-               
+
                 _context.SaveChanges();
-                if(saveStatus!=-1)
+                if (saveStatus != -1)
                 {
                     var lastInsertedId = _context.ClientSiteLinksPageType.SingleOrDefault(x => x.PageTypeName == ClientSiteLinksPageTypeRecord.PageTypeName);
                     saveStatus = lastInsertedId.Id;
@@ -864,7 +869,7 @@ namespace CityWatch.Data.Providers
             int saveStatus = 0;
             if (ClientSiteLinksDetailsRecord != null)
             {
-                
+
                 if (ClientSiteLinksDetailsRecord.Id == -1)
                 {
                     /* for checking already exist this title  */
@@ -937,7 +942,7 @@ namespace CityWatch.Data.Providers
 
         public string GetSiteLinksTypeUsingId(int typeId)
         {
-           
+
             return _context.ClientSiteLinksPageType.SingleOrDefault(x => x.Id == typeId).PageTypeName;
         }
 
@@ -950,8 +955,61 @@ namespace CityWatch.Data.Providers
         public int GetIncidentReportsPlatesCount(int PlateId, string TruckNo, int? userId)
         {
             return _context.IncidentReportsPlatesLoaded
-               .Where(z => z.LogId == userId && z.IncidentReportId == 0 && z.PlateId==PlateId && z.TruckNo==TruckNo)
+               .Where(z => z.LogId == userId && z.IncidentReportId == 0 && z.PlateId == PlateId && z.TruckNo == TruckNo)
                .Count();
+        }
+
+        public int GetIncidentReportsPlatesCountWithOutPlateId(int? userId)
+        {
+            return _context.IncidentReportsPlatesLoaded
+               .Where(z => z.LogId == userId && z.IncidentReportId == 0)
+               .Count();
+        }
+
+        public List<IncidentReportsPlatesLoaded> GetIncidentReportsPlatesLoadedWithGuardId(int? userId, int? guardId)
+        {
+            return _context.IncidentReportsPlatesLoaded
+               .Where(z => z.LogId == userId && z.IncidentReportId == 0 && z.GuardId == guardId).ToList();
+
+        }
+
+        public int RemoveIncidentReportsPlatesLoadedWithGuardId(List<IncidentReportsPlatesLoaded> platesLoaded)
+        {
+            try
+            {
+                _context.IncidentReportsPlatesLoaded.RemoveRange(platesLoaded);
+                _context.SaveChanges();
+                return 1;
+            }
+            catch
+            {
+
+                return 0;
+            }
+
+        }
+        public int RemoveIncidentReportsPlatesLoadedWithUserId(int? userId)
+        {
+            try
+            {
+                var IncidentReportsPlatesLoaded = _context.IncidentReportsPlatesLoaded
+                .Where(z => z.LogId == userId && z.IncidentReportId == 0 ).ToList();
+                if (IncidentReportsPlatesLoaded.Count != 0)
+                {
+                    _context.IncidentReportsPlatesLoaded.RemoveRange(IncidentReportsPlatesLoaded);
+                    _context.SaveChanges();
+                }
+
+                return 1;
+            }
+
+
+            catch
+            {
+
+                return 0;
+            }
+
         }
 
 
@@ -963,20 +1021,20 @@ namespace CityWatch.Data.Providers
             var siteLinkTypeToDelete = _context.ClientSiteLinksPageType.SingleOrDefault(x => x.Id == typeId);
             if (siteLinkTypeToDelete == null)
             {
-               
+
                 return 0;
             }
             else
             {
                 var deatilsList = _context.ClientSiteLinksDetails.Where(x => x.ClientSiteLinksTypeId == typeId).ToList();
-                if(deatilsList.Count!=0)
+                if (deatilsList.Count != 0)
                 {
                     foreach (var det in deatilsList)
                     {
                         _context.ClientSiteLinksDetails.Remove(det);
                         _context.SaveChanges();
                     }
-                    
+
 
                 }
 
@@ -999,7 +1057,7 @@ namespace CityWatch.Data.Providers
             }
             else
             {
-                
+
 
                 _context.FeedbackType.Remove(feedBackTypeToDelete);
                 _context.SaveChanges();
@@ -1016,12 +1074,12 @@ namespace CityWatch.Data.Providers
         }
 
         //logBookId entry for radio checklist-start
-    
-        public List<GuardLogin> GetGuardLogin(int GuardLoginId,int logBookId)
+
+        public List<GuardLogin> GetGuardLogin(int GuardLoginId, int logBookId)
         {
             return _context.GuardLogins
-                .Where(z => z.Id == GuardLoginId && z.ClientSiteLogBookId== logBookId)
-                
+                .Where(z => z.Id == GuardLoginId && z.ClientSiteLogBookId == logBookId)
+
                 .ToList();
         }
         public List<GuardLog> GetGuardLogs(int GuardLoginId, int logBookId)
@@ -1032,10 +1090,10 @@ namespace CityWatch.Data.Providers
                 .ToList();
         }
 
-        public List<ClientSiteRadioChecksActivityStatus> GetClientSiteRadioChecksActivityStatus(int GuardId,int ClientSiteId)
+        public List<ClientSiteRadioChecksActivityStatus> GetClientSiteRadioChecksActivityStatus(int GuardId, int ClientSiteId)
         {
             return _context.ClientSiteRadioChecksActivityStatus
-                .Where(z => z.GuardId == GuardId && z.ClientSiteId==ClientSiteId && z.GuardLoginTime !=null)
+                .Where(z => z.GuardId == GuardId && z.ClientSiteId == ClientSiteId && z.GuardLoginTime != null)
 
                 .ToList();
         }
