@@ -89,7 +89,9 @@ namespace CityWatch.Web.Services
 
         //For Access Type
         List<SelectListItem> GetAccessTypes(bool withoutSelect = false);
+        string GetClientSiteKeyNo(int keyId, int clientSiteId);
 
+        List<ClientSiteKey> GetClientSiteKeysbySearchDesc(int clientSiteId, string searchKeyDesc);
     }
 
     public class ViewDataService : IViewDataService
@@ -735,6 +737,22 @@ namespace CityWatch.Web.Services
             return clientSiteKeys;
         }
 
+        public List<ClientSiteKey> GetClientSiteKeysbySearchDesc(int clientSiteId, string searchKeyDesc)
+        {
+            var clientSiteKeys = _guardSettingsDataProvider.GetClientSiteKeys(clientSiteId).ToList();
+
+            if (!string.IsNullOrEmpty(searchKeyDesc))
+            {
+                var searchTerms = searchKeyDesc.Split(new[] { ',', ' ', '.' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var term in searchTerms)
+                {
+                    clientSiteKeys = clientSiteKeys.Where(z => z.Description.Contains(term, StringComparison.OrdinalIgnoreCase)).ToList();
+                }
+            }
+
+            return clientSiteKeys;
+        }
+
         public int GetNewGuardLoginId(GuardLogin currentGuardLogin, DateTime? currentGuardLoginOffDutyActual, int newLogBookId)
         {
             var onDutyDate = DateTime.Today;
@@ -780,6 +798,11 @@ namespace CityWatch.Web.Services
         public string GetClientSiteKeyDescription(int keyId, int clientSiteId)
         {
             return _guardSettingsDataProvider.GetClientSiteKeys(clientSiteId).SingleOrDefault(z => z.Id == keyId)?.Description;
+        }
+
+        public string GetClientSiteKeyNo(int keyId, int clientSiteId)
+        {
+            return _guardSettingsDataProvider.GetClientSiteKeys(clientSiteId).SingleOrDefault(z => z.Id == keyId)?.KeyNo;
         }
 
         public void CopyOpenLogbookEntriesFromPreviousDay(int previousDayLogBookId, int logBookId, int guardLoginId)
