@@ -213,10 +213,27 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             width: '6%',
             className: "text-center",
         },
+        //{
+        //    data: 'rcStatus',
+        //    width: '5%',
+        //    className: "text-center",
+
+        //},
         {
-            data: 'rcStatus',
+            data: 'rcColorId',
             width: '5%',
             className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return '';
+                else if (value === 4)
+                    return '<i class="fa fa-check-circle text-success"></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover" >' + 1 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+                else if (value === 1)
+                    return '<i class="fa fa-check-circle text-danger"></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 1 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+                else if (value === 2)
+                    return '<i class="fa fa-check-circle text-danger "></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 2 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+                else  
+                    return '<i class="fa fa-check-circle text-danger "></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 3 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+            }
         },
         {
             targets: -1,
@@ -1042,8 +1059,10 @@ $('#clientSiteActiveGuards').on('click', 'button[name="btnRadioCheckStatusActive
 });
 
 $('#btnSaveRadioStatus').on('click', function () {
-    const checkedStatus = $('#selectRadioStatus').val();
+    //const checkedStatus = $('#selectRadioStatus').val();
     var clientSiteId = $('#clientSiteId').val();
+    const checkedStatus = $('#selectRadioStatus option:selected').text();
+    var statusId = $('#selectRadioStatus').val();
     var guardId = $('#guardId').val();
     if (checkedStatus === '') {
         return;
@@ -1055,6 +1074,8 @@ $('#btnSaveRadioStatus').on('click', function () {
             clientSiteId: clientSiteId,
             guardId: guardId,
             checkedStatus: checkedStatus,
+            active: true,
+            statusId: statusId,
         },
         dataType: 'json',
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -1081,7 +1102,8 @@ $('#radio_duress_btn').on('click', function () {
     });
 });
 $('#btnSaveRadioStatusActive').on('click', function () {
-    const checkedStatus = $('#selectRadioStatusActive').val();
+    const checkedStatus = $('#selectRadioStatusActive option:selected').text();
+    var statusId = $('#selectRadioStatusActive').val();
     var clientSiteId = $('#clientSiteId').val();
     var guardId = $('#guardId').val();
     if (checkedStatus === '') {
@@ -1094,7 +1116,8 @@ $('#btnSaveRadioStatusActive').on('click', function () {
             clientSiteId: clientSiteId,
             guardId: guardId,
             checkedStatus: checkedStatus,
-            active:true,
+            active: true,
+            statusId: statusId,
         },
         dataType: 'json',
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -1330,4 +1353,17 @@ $('#add_radiocheck_status').on('click', function () {
         }).edit(-1);
     }
 });
+//hover display tooltip-start
 
+$('#clientSiteActiveGuards tbody').on('click', '#btnGreen1hover', function (value, record) {
+    $('#hoverModal').modal('show');
+    var ColorName = $(this).closest("tr").find("td").eq(5).find('#RCColortype').val();
+    var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    $('#lblColorType').val(ColorName);
+
+
+});
+$('#btnhover').on('click', function () {
+    $('#hoverModal').modal('hide');
+});
+//hover display tooltip-end

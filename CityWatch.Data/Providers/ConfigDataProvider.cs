@@ -371,13 +371,13 @@ namespace CityWatch.Data.Providers
 
             if (!withoutSelect)
             {
-                items.Add(new SelectListItem("Select", "", true));
+                items.Add(new SelectListItem("Select","", true));
             }
 
             foreach (var item in radioCheckStatuses)
             {
                 //items.Add(new SelectListItem(item.Name, item.Id.ToString()));
-                items.Add(new SelectListItem(item.Name, item.Name.ToString()));
+                items.Add(new SelectListItem(item.Name, item.Id.ToString()));
             }
 
             return items;

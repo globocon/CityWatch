@@ -84,7 +84,8 @@ namespace CityWatch.RadioCheck.Services
                                     GuardId = ClientSiteRadioChecksActivity.GuardId,
                                     Status = "Off Duty",
                                     CheckedAt = DateTime.Now,
-                                    Active = true
+                                    Active = true,
+                                    RadioCheckStatusId=null,
                                 });
 
                             }

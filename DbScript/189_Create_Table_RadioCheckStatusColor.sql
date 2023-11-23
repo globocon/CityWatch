@@ -23,16 +23,10 @@ INSERT [dbo].[RadioCheckStatus] ([Id], [ReferenceNo], [Name], [RadioCheckStatusC
 GO
 SET IDENTITY_INSERT [dbo].[RadioCheckStatus] OFF
 
-<option value="N/A">N/A</option>
-                        <option value="Off Duty">Off Duty</option>
-                        <option value="N/A Only W/E">N/A Only W/E</option>
-                        <option value="N/A Only Summer">N/A Only Summer</option>
-                        <option value="On Standby">On Standby</option>
-                        <option value="Incoming Call">Incoming Call</option>
-                        <option value="Outgoing Call Radio">Outgoing Call Radio</option>
-                        <option value="Outgoing Call Mobile">Outgoing Call Mobile</option>
-                        <option value="No Answer">No Answer</option>
 
+alter table ClientSiteRadioChecks add RadioCheckStatusId int
+ALTER TABLE [dbo].[ClientSiteRadioChecks]  WITH CHECK ADD FOREIGN KEY([RadioCheckStatusId])
+REFERENCES [dbo].[RadioCheckStatus] ([Id])
 
 
 
