@@ -1354,7 +1354,7 @@ namespace CityWatch.Data.Providers
                 /* remove all the manning notification end */
 
                 /* get the manning details corresponding to the currentDay*/
-                var clientSiteManningKpiSettings = _context.ClientSiteManningKpiSettings.Include(x => x.ClientSiteKpiSetting).Where(x => x.WeekDay == currentDay && x.Type == "2").ToList();
+                var clientSiteManningKpiSettings = _context.ClientSiteManningKpiSettings.Include(x => x.ClientSiteKpiSetting).Where(x => x.WeekDay == currentDay && x.Type == "2" && x.IsPHO!=1).ToList();
                 foreach (var manning in clientSiteManningKpiSettings)
                 {
                     if (manning.EmpHoursStart != null)
