@@ -279,6 +279,7 @@ $(function () {
     let isKeyAllocatedModal;
     let isVehicleOnsiteModal
     let isVehicleInAnotherSiteModal;
+    let isKeyAllocatedModalDesc;
     if ($('#vehicle_key_daily_log').length === 1) {
         isVehicleOnsiteModal = new ConfirmationModal('vehicle-onsite', {
             message: 'This truck was already onsite today and there is no exit time recorded.<br/><br/>Are you sure you want to create a new entry when it appears they are already onsite?',
@@ -292,6 +293,11 @@ $(function () {
         isKeyAllocatedModal = new ConfirmationModal('key-alloc', {
             message: 'This key was already allocated and there is no exit time recorded.<br/><br/>Are you sure you want to create a new entry when it appears they are already allocated?',
             onYes: function () { selectKey(); }
+        });
+
+        isKeyAllocatedModalDesc = new ConfirmationModal('key-alloc', {
+            message: 'This key was already allocated and there is no exit time recorded.<br/><br/>Are you sure you want to create a new entry when it appears they are already allocated?',
+            onYes: function () { selectKey2() }
         });
     }
 
@@ -394,6 +400,41 @@ $(function () {
                 });
             }
             $("#list_clientsite_keys").val('').trigger('change');
+        }
+    }
+
+
+    function selectKey2() {
+        const option = $('#list_clientsite_keystext').find(":selected");
+        if (option.val() === '')
+            return;
+
+        const keyNo = option.text();
+        const keyId = option.val();
+        if (keyId !== '') {
+            const currentKeyNos = $('#KeyNo').val();
+
+            $.ajax({
+                url: '/Guard/KeyVehicleLog?handler=ClientSiteKeyNo',
+                type: 'GET',
+                data: {
+                    keyId: keyId,
+                    clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),
+                }
+            }).done(function (response) {
+                if (!currentKeyNos.includes(response)) {
+                    const rowHtml = '<tr>' +
+                        '<td>' + response + '</td>' +
+                        '<td>' + keyNo + '</td>' +
+                        '<td><i class="fa fa-trash-o text-danger btn-delete-kvl-Key" title="Delete" style="cursor: pointer;"></i></td>' +
+                        '</tr>';
+                    $("#kvl-keys-list").append(rowHtml);
+                    if (currentKeyNos === '') $('#KeyNo').val(response);
+                    else $('#KeyNo').val(currentKeyNos + '; ' + response);
+                }
+            });
+
+            $("#list_clientsite_keystext").val('').trigger('change');
         }
     }
 
@@ -1114,7 +1155,9 @@ $(function () {
                 }).done(function (response) {
                     const result = response.find(z => z.keyNo === selectedKeyNo);
                     if (result) {
-                        $('#list_clientsite_keys').append(new Option(result.keyNo, result.id, false, true))
+                        $('#list_clientsite_keys').append(new Option(result.keyNo, result.id, false, true));
+                        $('#list_clientsite_keystext').append(new Option(result.description, result.id, false, true));
+                        
                     };
                 });
             }
@@ -1128,6 +1171,69 @@ $(function () {
             }
         }
 
+
+        let list_clientsite_keystext = $('#list_clientsite_keystext').select2({
+            placeholder: "Select",
+            theme: 'bootstrap4',
+            allowClear: true,
+            dropdownAutoWidth: true,             
+            width: '100%', 
+            ajax: {
+                url: '/Guard/KeyVehicleLog?handler=ClientSiteKeysDesc',
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),
+                        searchKeyNo: params.term,
+                        searchKeyDesc: params.term
+                    }
+                },
+                processResults: function (data) {
+                    return {
+                        results: $.map(data, function (item) {
+                            return {
+                                text: item.description,
+                                id: item.id,
+                                title: item.description
+                            }
+                        })
+                    };
+                },
+                cache: true
+            }
+        });
+
+
+        $('#list_clientsite_keystext').on('change', function () {
+            const option = $(this).find(":selected");
+            const test = option.val();
+            if (option.val() === '')
+                return;
+            $.ajax({
+                url: '/Guard/KeyVehicleLog?handler=ClientSiteKeyNo',
+                type: 'GET',
+                data: {
+                    keyId: option.val(),
+                    clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),
+                }
+            }).done(function (response) {
+                $.ajax({
+                    url: '/Guard/KeyVehicleLog?handler=IsKeyAllocated',
+                    type: 'GET',
+                    data: {
+                        logbookId: $('#KeyVehicleLog_ClientSiteLogBookId').val(),
+                        keyNo: response,
+                    }
+                }).done(function (keyIsAllocated) {
+                    if (!keyIsAllocated) selectKey2();
+                    else isKeyAllocatedModalDesc.showConfirmation();
+                });
+            });
+        });
+
+
+       
 
 
         $('#VehicleRego').on('blur', function () {

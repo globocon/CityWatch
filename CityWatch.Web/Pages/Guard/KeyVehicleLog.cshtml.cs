@@ -404,6 +404,11 @@ namespace CityWatch.Web.Pages.Guard
         {
             return new JsonResult(_viewDataService.GetClientSiteKeyDescription(keyId, clientSiteId));
         }
+        public JsonResult OnGetClientSiteKeyNo(int keyId, int clientSiteId)
+        {
+            var test = _viewDataService.GetClientSiteKeyNo(keyId, clientSiteId);
+            return new JsonResult(_viewDataService.GetClientSiteKeyNo(keyId, clientSiteId));
+        }
 
         public JsonResult OnGetIsVehicleOnsite(int logbookId, string vehicleRego)
         {
@@ -427,9 +432,19 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(_viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open).Where(z => !string.IsNullOrEmpty(z.Detail.KeyNo)).Select(z => z.Detail.KeyNo).Any(x => x.Contains(keyNo)));
         }
 
+        public JsonResult OnGetIsKeyDescAllocated(int logbookId, string keyNo)
+        {
+            return new JsonResult(_viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open).Where(z => !string.IsNullOrEmpty(z.Detail.KeyNo)).Select(z => z.Detail.KeyNo).Any(x => x.Contains(keyNo)));
+        }
+
         public JsonResult OnGetClientSiteKeys(int clientSiteId, string searchKeyNo, string searchKeyDesc)
         {
             return new JsonResult(_viewDataService.GetClientSiteKeys(clientSiteId, searchKeyNo, searchKeyDesc));
+        }
+
+        public JsonResult OnGetClientSiteKeysDesc(int clientSiteId, string searchKeyNo, string searchKeyDesc)
+        {
+            return new JsonResult(_viewDataService.GetClientSiteKeysbySearchDesc(clientSiteId, searchKeyDesc));
         }
 
         public JsonResult OnPostUpload()
