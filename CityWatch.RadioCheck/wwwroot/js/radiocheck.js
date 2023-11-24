@@ -408,9 +408,10 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             data: 'siteName',
             width: '20%',
             class: 'dt-control',
-            render: function (value, type, data) {
 
-                return '<tr class="group group-start "><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
+            render: function (value, type, data) {
+                var rowClass = (data.isEnabled == 1) ? 'bg-danger' : ''; 
+                return '<tr class="group group-start ' + rowClass + '"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
             }
         },
         {
@@ -418,8 +419,8 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             width: '20%',
             visible: false,
             render: function (value, type, data) {
-
-                return '<tr class="group group-start sho"><td class="' + (groupColumn2 == '2' ? 'bg-danger' : (groupColumn2 == '0' ? 'bg-danger' : 'bg-danger')) + ' " colspan="5">' + groupColumn2 + '</td></tr>';
+                var rowClass = (data.isEnabled == 1) ? 'bg-danger' : ''; 
+                return '<tr class="group group-start ' + rowClass + 'sho"><td class="' + (groupColumn2 == '2' ? 'bg-danger' : (groupColumn2 == '0' ? 'bg-danger' : 'bg-danger')) + ' " colspan="5">' + groupColumn2 + '</td></tr>';
             }
         },
 
@@ -427,8 +428,14 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             data: 'guardName',
             
             width: '20%',
+            createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
+                // Define your conditions to add a class
+                if (rowData.isEnabled==1) {
+                    cell.classList.add('bg-danger');
+                } 
+            },
             render: function (value, type, data) {
-
+                var rowClass = (data.isEnabled == 1) ? 'bg-danger' : ''; 
                 if (data.notificationType != 1) {
                     return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
                         '<a href="#" class="ml-2"><i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i></a>';
@@ -445,6 +452,13 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             data: 'guardLoginTime',
             width: '9%',
             className: "text-center",
+            createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
+                // Define your conditions to add a class
+                if (rowData.isEnabled == 1) {
+                    cell.classList.add('bg-danger');
+                }
+                
+            },
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
                 return '<i class="fa fa-clock-o text-success rc-client-status"></i> ' + value;
@@ -454,6 +468,13 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             data: 'lastEvent',
             width: '7%',
             className: "text-center",
+            createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
+                // Define your conditions to add a class
+                if (rowData.isEnabled == 1) {
+                    cell.classList.add('bg-danger');
+                }
+
+            },
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
                 return '<i class="fa fa-clock-o text-success rc-client-status"></i> ' + value;
@@ -464,6 +485,13 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             data: 'twoHrAlert',
             width: '4%',
             className: "text-center",
+            createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
+                // Define your conditions to add a class
+                if (rowData.isEnabled == 1) {
+                    cell.classList.add('bg-danger');
+                }
+
+            },
             render: function (value, type, data) {
                 if (value === 'Green') return '<i class="fa fa-circle text-success"></i>';
                 return '<i class="fa fa-circle text-danger"></i>';
@@ -474,12 +502,26 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             data: 'rcStatus',
             width: '4%',
             className: "text-center",
+            createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
+                // Define your conditions to add a class
+                if (rowData.isEnabled == 1) {
+                    cell.classList.add('bg-danger');
+                }
+
+            },
         },
         {
             targets: -1,
             data: null,
             width: '5%',
             defaultContent: '',
+            createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
+                // Define your conditions to add a class
+                if (rowData.isEnabled == 1) {
+                    cell.classList.add('bg-danger');
+                }
+
+            },
             render: function (value, type, data) {
 
                 return '<button name="btnRadioCheckStatus" class="btn btn-outline-primary">Radio Check</button>';
@@ -1024,10 +1066,21 @@ $('#clientSiteInActiveGuards').on('click', 'button[name="btnRadioCheckStatus"]',
     var rowClientSiteId = data.clientSiteId;
     var rowGuardId = data.guardId;
     var rcSatus = data.rcStatus;
+   
+    var IsEnabled = data.isEnabled;
+    if (IsEnabled==0) {
+        // Remove the option based on its value
+        $("#selectRadioStatus option[value='Deactivate']").hide();
+    }
+    else {
+        $("#selectRadioStatus option[value='Deactivate']").show();
+    }
     $("#selectRadioStatus").val(rcSatus);
     $('#clientSiteId').val(rowClientSiteId);
     $('#guardId').val(rowGuardId);
+    
     $('#selectRadioCheckStatus').modal('show');
+    
 });
 
 $('#clientSiteActiveGuards').on('click', 'button[name="btnRadioCheckStatusActive"]', function () {
