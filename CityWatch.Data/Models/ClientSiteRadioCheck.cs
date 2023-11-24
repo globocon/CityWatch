@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CityWatch.Data.Models
 {
@@ -17,6 +18,10 @@ namespace CityWatch.Data.Models
         public string Status { get; set; }
 
         public bool Active { get; set; }
-        
+        public int? RadioCheckStatusId { get; set; }
+        [ForeignKey("RadioCheckStatusId")]
+        public RadioCheckStatus RadioCheckStatus { get; set; }
+
+
     }
 }

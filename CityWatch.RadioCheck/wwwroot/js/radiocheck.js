@@ -221,10 +221,27 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             width: '6%',
             className: "text-center",
         },
+        //{
+        //    data: 'rcStatus',
+        //    width: '5%',
+        //    className: "text-center",
+
+        //},
         {
-            data: 'rcStatus',
+            data: 'rcColorId',
             width: '5%',
             className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return '';
+                else if (value === 4)
+                    return '<i class="fa fa-check-circle text-success"></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover" >' + 1 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+                else if (value === 1)
+                    return '<i class="fa fa-check-circle text-danger"></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 1 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+                else if (value === 2)
+                    return '<i class="fa fa-check-circle text-danger "></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 2 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+                else  
+                    return '<i class="fa fa-check-circle text-danger "></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 3 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+            }
         },
         {
             targets: -1,
@@ -1052,8 +1069,10 @@ $('#clientSiteActiveGuards').on('click', 'button[name="btnRadioCheckStatusActive
 });
 
 $('#btnSaveRadioStatus').on('click', function () {
-    const checkedStatus = $('#selectRadioStatus').val();
+    //const checkedStatus = $('#selectRadioStatus').val();
     var clientSiteId = $('#clientSiteId').val();
+    const checkedStatus = $('#selectRadioStatus option:selected').text();
+    var statusId = $('#selectRadioStatus').val();
     var guardId = $('#guardId').val();
     if (checkedStatus === '') {
         return;
@@ -1065,6 +1084,8 @@ $('#btnSaveRadioStatus').on('click', function () {
             clientSiteId: clientSiteId,
             guardId: guardId,
             checkedStatus: checkedStatus,
+            active: true,
+            statusId: statusId,
         },
         dataType: 'json',
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -1093,7 +1114,8 @@ $('#radio_duress_btn').on('click', function () {
     });
 });
 $('#btnSaveRadioStatusActive').on('click', function () {
-    const checkedStatus = $('#selectRadioStatusActive').val();
+    const checkedStatus = $('#selectRadioStatusActive option:selected').text();
+    var statusId = $('#selectRadioStatusActive').val();
     var clientSiteId = $('#clientSiteId').val();
     var guardId = $('#guardId').val();
     if (checkedStatus === '') {
@@ -1106,7 +1128,8 @@ $('#btnSaveRadioStatusActive').on('click', function () {
             clientSiteId: clientSiteId,
             guardId: guardId,
             checkedStatus: checkedStatus,
-            active:true,
+            active: true,
+            statusId: statusId,
         },
         dataType: 'json',
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -1771,3 +1794,95 @@ $('#heading-example2').on('click', function () {
 
 /* Single page Grid end  */
 
+/*functions for settings-start*/
+let gridRadioCheckStatusTypeSettings;
+function settingsButtonRenderer(value, record) {
+    return '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#kpi-settings-modal" ' +
+        'data-cs-id="' + record.id + '" data-cs-name="' + record.clientSiteName + '"><i class="fa fa-pencil mr-2"></i>Edit</button>';
+}
+
+gridRadioCheckStatusTypeSettings = $('#radiocheck_status_type_settings').grid({
+   dataSource: '/Admin/Settings?handler=RadioCheckStatusWithOutcome',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    inlineEditing: { mode: 'command' },
+    columns: [
+        { width: 130, field: 'referenceNo', title: 'Reference No' },
+        { width: 500, field: 'name', title: 'Name', editor: true },
+        { width: 200, field: 'radioCheckStatusColorName', title: 'Outcome', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=RadioCheckStatusColorCode', valueField: 'name', textField: 'name' } },
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
+
+if (gridRadioCheckStatusTypeSettings) {
+    gridRadioCheckStatusTypeSettings.on('rowDataChanged', function (e, id, record) {
+        const data = $.extend(true, {}, record);
+        //data.radioCheckStatusColorId = !Number.isInteger(data.radioCheckStatusColorId) ? data.radioCheckStatusColorId.getValue() : data.radioCheckStatusColorId;
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            url: '/Admin/Settings?handler=RadioCheckStatus',
+            data: { record: data },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function () {
+            gridRadioCheckStatusTypeSettings.clear();
+            gridRadioCheckStatusTypeSettings.reload();
+        }).fail(function () {
+            console.log('error');
+        }).always(function () {
+            if (isRadionCheckStatusAdding)
+                isRadionCheckStatusAdding = false;
+        });
+    });
+
+    gridRadioCheckStatusTypeSettings.on('rowRemoving', function (e, id, record) {
+     
+
+        if (confirm('Are you sure want to delete this radio check status?')) {
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteRadioCheckStatus',
+                data: { id: record },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function () {
+                gridRadioCheckStatusTypeSettings.reload();
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isRadionCheckStatusAdding)
+                    isRadionCheckStatusAdding = false;
+            });
+        }
+    });
+}
+let isRadionCheckStatusAdding = false;
+$('#add_radiocheck_status').on('click', function () {
+  
+
+    if (isRadionCheckStatusAdding==true) {
+        alert('Unsaved changes in the grid. Refresh the page');
+    } else {
+        isRadionCheckStatusAdding = true;
+        gridRadioCheckStatusTypeSettings.addRow({
+            'id': -1
+        }).edit(-1);
+    }
+});
+//hover display tooltip-start
+
+$('#clientSiteActiveGuards tbody').on('click', '#btnGreen1hover', function (value, record) {
+    $('#hoverModal').modal('show');
+    var ColorName = $(this).closest("tr").find("td").eq(5).find('#RCColortype').val();
+    var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    $('#lblColorType').val(ColorName);
+
+
+});
+$('#btnhover').on('click', function () {
+    $('#hoverModal').modal('hide');
+});
+//hover display tooltip-end

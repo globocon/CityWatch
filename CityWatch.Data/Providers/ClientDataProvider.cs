@@ -91,6 +91,10 @@ namespace CityWatch.Data.Providers
 
         List<ClientSite> GetClientSiteDetails(int[] clientSiteIds);
         List<ClientSiteRadioChecksActivityStatus> GetClientSiteRadioChecksActivityStatus(int GuardId, int ClientSiteId);
+        //to add functions for settings in radio check-start
+        void SaveRadioCheckStatus(RadioCheckStatus radioCheckStatus);
+        void DeleteRadioCheckStatus(int id);
+        //to get functions for settings in radio check-end
 
         int GetIncidentReportsPlatesCountWithOutPlateId(int? userId);
 
@@ -1098,6 +1102,50 @@ namespace CityWatch.Data.Providers
                 .ToList();
         }
         //logBookId entry for radio checklist-end
+        //to add functions for settings in radio check-start
+        public void SaveRadioCheckStatus(RadioCheckStatus radioCheckStatus)
+        {
+            if (radioCheckStatus == null)
+                throw new ArgumentNullException();
+
+            if (radioCheckStatus.Id == -1)
+            {
+                var radionew = new RadioCheckStatus()
+                {
+                    Name = radioCheckStatus.Name,
+                    ReferenceNo = radioCheckStatus.ReferenceNo,
+                    RadioCheckStatusColorId = radioCheckStatus.RadioCheckStatusColorId,
+                    RadioCheckStatusColorName=radioCheckStatus.RadioCheckStatusColorName,
+                };
+                _context.RadioCheckStatus.Add(radionew);
+            }
+            else
+            {
+                var radioCheckStatusUpdate = _context.RadioCheckStatus.SingleOrDefault(x => x.Id == radioCheckStatus.Id);
+                if (radioCheckStatusUpdate == null)
+                    throw new InvalidOperationException();
+
+                radioCheckStatusUpdate.Name = radioCheckStatus.Name;
+                radioCheckStatusUpdate.ReferenceNo = radioCheckStatus.ReferenceNo;
+                radioCheckStatusUpdate.RadioCheckStatusColorId = radioCheckStatus.RadioCheckStatusColorId;
+                radioCheckStatusUpdate.RadioCheckStatusColorName = radioCheckStatus.RadioCheckStatusColorName;
+            }
+            _context.SaveChanges();
+        }
+
+        public void DeleteRadioCheckStatus(int id)
+        {
+            if (id == -1)
+                return;
+
+            var radioCheckStatusToDelete = _context.RadioCheckStatus.SingleOrDefault(x => x.Id == id);
+            if (radioCheckStatusToDelete == null)
+                throw new InvalidOperationException();
+
+            _context.RadioCheckStatus.Remove(radioCheckStatusToDelete);
+            _context.SaveChanges();
+        }
+        //to get functions for settings in radio check-end
 
     }
 }

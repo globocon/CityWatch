@@ -15,7 +15,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CityWatch.Common.Tests", "C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CityWatch.Data.Tests", "CityWatch.Data.Tests\CityWatch.Data.Tests.csproj", "{A3071D45-C78B-4046-ACBD-479989CD4A21}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CityWatch.RadioCheck", "CityWatch.RadioCheck\CityWatch.RadioCheck.csproj", "{42BE1E6B-9F44-402C-89E4-91E31C610C69}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CityWatch.RadioCheck", "CityWatch.RadioCheck\CityWatch.RadioCheck.csproj", "{42BE1E6B-9F44-402C-89E4-91E31C610C69}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
