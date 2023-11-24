@@ -389,6 +389,7 @@ namespace CityWatch.Kpi.Services
         {
             var wandScans = new Dictionary<DateTime, int>();
             var results = new List<DailyWandScanCount>();
+            var results2 = new List<DailyWandScanCount>();
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri(_settings.WandApiUrl);
@@ -405,13 +406,37 @@ namespace CityWatch.Kpi.Services
                     var resultString = await response.Content.ReadAsStringAsync();
                     results = JsonSerializer.Deserialize<List<DailyWandScanCount>>(resultString);
                 }
+
+
+                /* New KoiosClientSiteId update 22/11/2023 dileep start */
+                if (clientSiteKpiSetting.KoiosClientSiteIdB != null)
+                {
+                    if (!string.IsNullOrEmpty(clientSiteKpiSetting.KoiosClientSiteIdB.ToString()))
+                    {
+                        var url2 = $"reports-api/daily_data/?agency=citywatch&start_date={kpiDates.Min().ToString("yyyy-MM-dd")}" +
+                                   $"&end_date={kpiDates.Max().ToString("yyyy-MM-dd")}" +
+                                   $"&site_id={clientSiteKpiSetting.KoiosClientSiteIdB}" +
+                                   $"&limit=-1";
+                        HttpResponseMessage response2 = await client.GetAsync(url2);
+                        if (response2.IsSuccessStatusCode)
+                        {
+                            var resultString2 = await response2.Content.ReadAsStringAsync();
+                            results2 = JsonSerializer.Deserialize<List<DailyWandScanCount>>(resultString2);
+                        }
+
+                    }
+                }
+                /* New KoiosClientSiteId update 22/11/2023 dileep end */
             }
 
 
             foreach (var date in kpiDates)
             {
                 var wandScanResult = results.SingleOrDefault(x => x.Date == date)?.Count;
-                wandScans.Add(date, wandScanResult.GetValueOrDefault());
+                /* New KoiosClientSiteId update 22/11/2023 dileep start */
+                var wandScanResult2 = results2.SingleOrDefault(x => x.Date == date)?.Count;
+                /* New KoiosClientSiteId update 22/11/2023 dileep end  added the smartwand result2 with result */
+                wandScans.Add(date, wandScanResult.GetValueOrDefault()+ wandScanResult2.GetValueOrDefault());
             }
 
             return wandScans;
