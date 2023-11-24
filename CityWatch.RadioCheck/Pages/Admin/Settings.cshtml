@@ -1,10 +1,16 @@
 ﻿@page
 @using CityWatch.Data.Helpers
 @using CityWatch.Data.Models
+@using CityWatch.Data.Providers;
 @using Microsoft.Extensions.Configuration
 @using System.Security.Claims
 @model CityWatch.RadioCheck.Pages.Admin.SettingsModel
 @inject IConfiguration Configuration
+@inject IConfigDataProvider configDataProvider
+@{
+    Layout = "_Layout_SettingsPage";
+}
+
 
 <div>
   
