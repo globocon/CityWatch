@@ -161,8 +161,10 @@ namespace CityWatch.Data.Providers
                         && z.ClientSiteLogBook.Date >= logFromDate && z.ClientSiteLogBook.Date <= logToDate &&
                         (!excludeSystemLogs || (excludeSystemLogs && (!z.IsSystemEntry || z.IrEntryType.HasValue))))
                 .Include(z => z.GuardLogin.Guard)
-                .OrderBy(z => z.Id)
-                .ThenBy(z => z.EventDateTime)
+                .OrderBy(z => z.EventDateTime)
+                .ThenBy(z => z.Id)
+                //.OrderBy(z => z.Id)
+                //.ThenBy(z => z.EventDateTime)
                 .ToList();
         }
 
