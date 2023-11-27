@@ -1097,7 +1097,7 @@ namespace CityWatch.Data.Providers
                     _context.ClientSiteRadioChecks.RemoveRange(clientSiteRcStatus);
 
 
-                    if (clientSiteRadioCheck.Status == "Off Duty")
+                    if (clientSiteRadioCheck.Status == "Off Duty (CRO did manual stamp)")
                     {
                         /* Check if Manning type notfication */
                         var checkIfTypeOneManning = GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1).ToList();
@@ -1273,6 +1273,7 @@ namespace CityWatch.Data.Providers
                         ClientSiteId = ClientSiteRadioChecksActivity.ClientSiteId,
                         GuardId = ClientSiteRadioChecksActivity.GuardId,
                         Status = "Off Duty",
+                        RadioCheckStatusId=1,
                         CheckedAt = DateTime.Now,
                         Active = true
                     };
@@ -1596,7 +1597,8 @@ namespace CityWatch.Data.Providers
                                     ClientSiteLogBookId = logBookId,
                                     GuardLoginId = guardLoginId.Id,
                                     EventDateTime = DateTime.Now,
-                                    Notes = "Guard[" + guardInitials + "] did not logoff and Control Room had to correct",
+                                    //Notes = "Guard[" + guardInitials + "] did not logoff and Control Room had to correct",
+                                    Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
                                     // Notes = "Guard Off Duty (Logbook Signout)",
                                     IrEntryType = IrEntryType.Normal,
                                     IsSystemEntry = true
@@ -1625,7 +1627,8 @@ namespace CityWatch.Data.Providers
                                         GuardLoginId = latestRecord.Id,
                                         EventDateTime = DateTime.Now,
                                         // Notes = "Guard Off Duty (Logbook Signout)",
-                                        Notes = "Guard[" + guardInitials + "] did not logoff and Control Room had to correct",
+                                        // Notes = "Guard[" + guardInitials + "] did not logoff and Control Room had to correct",
+                                        Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
                                         // Notes = "Guard Off Duty (Logbook Signout)",
                                         IrEntryType = IrEntryType.Normal,
                                         IsSystemEntry = true
@@ -1741,9 +1744,10 @@ namespace CityWatch.Data.Providers
                                 var guardLog = new GuardLog()
                                 {
                                     ClientSiteLogBookId = logBookId,
-                                    GuardLoginId = guardLoginId.Id,
+                                    //GuardLoginId = guardLoginId.Id,
                                     EventDateTime = DateTime.Now,
-                                    Notes = "Control Room tried to contact Guard[" + guardInitials + "] and no answer.",
+                                    //Notes = "Control Room tried to contact Guard[" + guardInitials + "] and no answer.",
+                                    Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
                                     // Notes = "Guard Off Duty (Logbook Signout)",
                                     IrEntryType = IrEntryType.Normal,
                                     IsSystemEntry = true
@@ -1769,10 +1773,11 @@ namespace CityWatch.Data.Providers
                                     var guardLog = new GuardLog()
                                     {
                                         ClientSiteLogBookId = logBookId,
-                                        GuardLoginId = latestRecord.Id,
+                                        //GuardLoginId = latestRecord.Id,
                                         EventDateTime = DateTime.Now,
                                         // Notes = "Guard Off Duty (Logbook Signout)",
-                                        Notes = "Control Room tried to contact Guard[" + guardInitials + "] and no answer.",
+                                        //  Notes = "Control Room tried to contact Guard[" + guardInitials + "] and no answer.",
+                                        Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
                                         // Notes = "Guard Off Duty (Logbook Signout)",
                                         IrEntryType = IrEntryType.Normal,
                                         IsSystemEntry = true
@@ -1888,9 +1893,10 @@ namespace CityWatch.Data.Providers
                                 var guardLog = new GuardLog()
                                 {
                                     ClientSiteLogBookId = logBookId,
-                                    GuardLoginId = guardLoginId.Id,
+                                    //GuardLoginId = guardLoginId.Id,
                                     EventDateTime = DateTime.Now,
-                                    Notes = "Control Room tried to contact Guard[" + guardInitials + "] and they are on their way but running late.",
+                                    //Notes = "Control Room tried to contact Guard[" + guardInitials + "] and they are on their way but running late.",
+                                    Notes = "Control Room Alert:" + clientSiteRadioCheck.Status ,
                                     // Notes = "Guard Off Duty (Logbook Signout)",
                                     IrEntryType = IrEntryType.Normal,
                                     IsSystemEntry = true
@@ -1916,10 +1922,11 @@ namespace CityWatch.Data.Providers
                                     var guardLog = new GuardLog()
                                     {
                                         ClientSiteLogBookId = logBookId,
-                                        GuardLoginId = latestRecord.Id,
+                                      //  GuardLoginId = latestRecord.Id,
                                         EventDateTime = DateTime.Now,
                                         // Notes = "Guard Off Duty (Logbook Signout)",
-                                        Notes = "Control Room tried to contact Guard[" + guardInitials + "] and they are on their way but running late.",
+                                        // Notes = "Control Room tried to contact Guard[" + guardInitials + "] and they are on their way but running late.",
+                                        Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
                                         // Notes = "Guard Off Duty (Logbook Signout)",
                                         IrEntryType = IrEntryType.Normal,
                                         IsSystemEntry = true
