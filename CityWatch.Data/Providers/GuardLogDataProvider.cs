@@ -130,7 +130,7 @@ namespace CityWatch.Data.Providers
         List<ClientSite> GetClientSites(int? Id);
         List<ClientSiteSmartWand> GetClientSiteSmartWands(int? clientSiteId);
         int GetGuardLoginId(int guardId, DateTime date);
-        List<GuardLogin> GetGuardLoginsByClientSiteId(int clientsiteId, DateTime date);
+        List<GuardLogin> GetGuardLoginsByClientSiteId(int? clientsiteId, DateTime date);
 
         // for global push message- start
         List<ClientType> GetUserClientTypesHavingAccess(int? userId);
@@ -1524,9 +1524,9 @@ namespace CityWatch.Data.Providers
             return _context.GuardLogins
                  .Where(z => z.GuardId == guardId && z.OnDuty.Date == date.Date).Max(x => x.Id);
         }
-        public List<GuardLogin> GetGuardLoginsByClientSiteId(int clientsiteId, DateTime date)
+        public List<GuardLogin> GetGuardLoginsByClientSiteId(int? clientsiteId, DateTime date)
         {
-            var guarlogins = _context.GuardLogins.Where(z => z.ClientSiteId == clientsiteId && z.OnDuty.Date == date.Date).ToList();
+            var guarlogins = _context.GuardLogins.Where(z => (!clientsiteId.HasValue || z.ClientSiteId == clientsiteId) && z.OnDuty.Date == date.Date).ToList();
 
             foreach (var item in guarlogins)
             {

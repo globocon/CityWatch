@@ -449,7 +449,7 @@ namespace CityWatch.Web.Pages.Radio
         //}
 
         // Save Global Text Alert Start
-        public JsonResult OnPostSaveGlobalNotificationTestMessages(bool checkedState, string state, string Notifications, string Subject, bool chkClientType, int[] ClientType, bool chkNationality, bool checkedSMSPersonal, bool checkedSMSSmartWand, int clientSiteId)
+        public JsonResult OnPostSaveGlobalNotificationTestMessages(bool checkedState, string state, string Notifications, string Subject, bool chkClientType, int[] ClientType, bool chkNationality, bool checkedSMSPersonal, bool checkedSMSSmartWand, int[] clientSiteId)
         {
             var success = true;
             var message = "success";
@@ -466,12 +466,25 @@ namespace CityWatch.Web.Pages.Radio
                 }
                 if (chkClientType == true)
                 {
-                    var clientSitesClientType = _guardLogDataProvider.GetAllClientSites().Where(x=> ClientType.Contains(x.TypeId));
-                    foreach (var clientSiteTypeID in clientSitesClientType)
+                    if (clientSiteId == null)
                     {
-                        LogBookDetails(clientSiteTypeID.Id, Notifications, Subject);
-                        EmailSender(clientSiteTypeID.SiteEmail, clientSiteTypeID.Id, Subject, Notifications);
+                        var clientSitesClientType = _guardLogDataProvider.GetAllClientSites().Where(x => ClientType.Contains(x.TypeId));
+                        foreach (var clientSiteTypeID in clientSitesClientType)
+                        {
+                            LogBookDetails(clientSiteTypeID.Id, Notifications, Subject);
+                            EmailSender(clientSiteTypeID.SiteEmail, clientSiteTypeID.Id, Subject, Notifications);
 
+                        }
+                    }
+                    else
+                    {
+                        var clientSitesClientType = _guardLogDataProvider.GetAllClientSites().Where(x => clientSiteId.Contains(x.Id));
+                        foreach (var clientSiteTypeID in clientSitesClientType)
+                        {
+                            LogBookDetails(clientSiteTypeID.Id, Notifications, Subject);
+                            EmailSender(clientSiteTypeID.SiteEmail, clientSiteTypeID.Id, Subject, Notifications);
+
+                        }
                     }
                 }
                 if (chkNationality == true)
@@ -487,7 +500,7 @@ namespace CityWatch.Web.Pages.Radio
                 if (checkedSMSPersonal == true)
                 {
                     var logbooktype = LogBookType.DailyGuardLog;
-                    var guardlogins = _guardLogDataProvider.GetGuardLoginsByClientSiteId(clientSiteId, DateTime.Now);
+                    var guardlogins = _guardLogDataProvider.GetGuardLoginsByClientSiteId(null, DateTime.Now);
                     string smsPersonalEmails = null;
                     foreach (var item in guardlogins)
                     {
@@ -542,13 +555,14 @@ namespace CityWatch.Web.Pages.Radio
                 if (checkedSMSSmartWand == true)
                 {
                     var logbooktype = LogBookType.DailyGuardLog;
-                    var smartWands = _guardLogDataProvider.GetClientSiteSmartWands(clientSiteId);
+                    var smartWands = _guardLogDataProvider.GetClientSiteSmartWands(null);
                     string smsPersonalEmails = null;
                     foreach (var item in smartWands)
                     {
                         if (item.PhoneNumber != null || item.PhoneNumber != "+61 4")
                         {
                             item.PhoneNumber = item.PhoneNumber.Replace("(0)", "") + "@smsglobal.com";
+                            item.PhoneNumber = item.PhoneNumber.Replace(" ", "") ;
                             if (smsPersonalEmails == null)
                             {
                                 smsPersonalEmails = item.PhoneNumber;
@@ -716,7 +730,14 @@ namespace CityWatch.Web.Pages.Radio
         }
         public JsonResult OnGetClientSitesNew(string typeId)
         {
-            return new JsonResult(_guardLogDataProvider.GetAllClientSites().Where(x=> string.IsNullOrEmpty(typeId) || typeId.Contains(x.TypeId.ToString())).OrderBy(z => z.Name).ThenBy(z=>z.TypeId));
+            string[] typeId2 = typeId.Split(';');
+            int[] typeId3;
+            foreach(var item in typeId2)
+            {
+                typeId3.Add(Convert.ToInt32(item));
+            }
+            
+            return new JsonResult(_guardLogDataProvider.GetAllClientSites().Where(x=> typeId==null || typeId.Contains(x.TypeId.ToString())).OrderBy(z => z.Name).ThenBy(z=>z.TypeId));
         }
         public JsonResult OnGetClientStates()
         {
