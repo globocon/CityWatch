@@ -1396,16 +1396,25 @@ $('#chkClientType').change(function () {
         $('#dglClientType').multiselect("enable");
         $('#dglClientSiteId').multiselect("enable");
         $('#dglClientSiteId').val('');
+        $('#dglClientSiteId').html('');
         
     } else {
-        $('#dglClientType').multiselect("disable");
-        $('#dglClientSiteId').multiselect("disable");
+        $('#dglClientType').val('').trigger("change");
+        
+        $('#dglClientType').multiselect("refresh");
         $('#dglClientType').val('');
         $('#dglClientSiteId').val('');
+        $('#dglClientType').multiselect("disable");
+        $('#dglClientSiteId').multiselect("disable");
+        
+        $('#dglClientSiteId').html('');
+       
         
     }
     $('#dglClientType').on('change', function () {
         const clientTypeId = $(this).val().join(';');
+        $('#dglClientSiteId').multiselect("refresh");
+        $('#dglClientSiteId').html('');
         const clientSiteControl = $('#dglClientSiteId');
         var selectedOption = $(this).find("option:selected");
         var selectedText = selectedOption.text();
@@ -1428,7 +1437,7 @@ $('#chkClientType').change(function () {
             dataType: 'json',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (data) {
-            
+
             data.map(function (site) {
                 clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
             });
@@ -1442,4 +1451,5 @@ $('#chkClientType').change(function () {
     
 
 });
+/*to get the client type and site as multiselect-end*/
 

@@ -16,6 +16,7 @@ using System.Linq;
 using System.Security.Claims;
 using static Dropbox.Api.TeamLog.EventCategory;
 using MailKit.Net.Smtp;
+using static iText.Kernel.Pdf.Function.PdfFunction;
 
 namespace CityWatch.Web.Pages.Radio
 {
@@ -466,7 +467,7 @@ namespace CityWatch.Web.Pages.Radio
                 }
                 if (chkClientType == true)
                 {
-                    if (clientSiteId == null)
+                    if (clientSiteId.Length == 0)
                     {
                         var clientSitesClientType = _guardLogDataProvider.GetAllClientSites().Where(x => ClientType.Contains(x.TypeId));
                         foreach (var clientSiteTypeID in clientSitesClientType)
@@ -730,14 +731,23 @@ namespace CityWatch.Web.Pages.Radio
         }
         public JsonResult OnGetClientSitesNew(string typeId)
         {
-            string[] typeId2 = typeId.Split(';');
-            int[] typeId3;
-            foreach(var item in typeId2)
+            if (typeId != null)
             {
-                typeId3.Add(Convert.ToInt32(item));
+                string[] typeId2 = typeId.Split(';');
+                int[] typeId3 = new int[typeId2.Length];
+                int i = 0;
+                foreach (var item in typeId2)
+                {
+
+                    typeId3[i] = Convert.ToInt32(item);
+                    i++;
+
+
+                }
+
+                return new JsonResult(_guardLogDataProvider.GetAllClientSites().Where(x => typeId == null || typeId3.Contains(x.TypeId)).OrderBy(z => z.Name).ThenBy(z => z.TypeId));
             }
-            
-            return new JsonResult(_guardLogDataProvider.GetAllClientSites().Where(x=> typeId==null || typeId.Contains(x.TypeId.ToString())).OrderBy(z => z.Name).ThenBy(z=>z.TypeId));
+            return new JsonResult(_guardLogDataProvider.GetAllClientSites().Where(x => x.TypeId == 0 ).OrderBy(z => z.Name).ThenBy(z => z.TypeId));
         }
         public JsonResult OnGetClientStates()
         {
