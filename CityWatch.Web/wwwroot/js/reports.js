@@ -22,6 +22,7 @@
         columns: [
             { data: 'nameOfDay' },
             { data: 'date' },
+            { data: 'serialNo' },
             { data: 'controlRoomJobNo' },
             { data: 'siteName' },
             { data: 'siteAddress' },
