@@ -890,6 +890,10 @@
         ]
     });
     function linkClickRenderer(value, record) {
+        if (!/^https?:\/\//i.test(record.hyperlink)) {
+            record.hyperlink = 'http://' + record.hyperlink;
+        }
+
         return '<div class="centerIcon"><a href="' + record.hyperlink + '" target="_blank"><img src="../images/Blue_globe_icon.svg" class="imgIcon"/></a></div>'
     }
     $('#itemfeedbackList').on('click', '.btn-delete-feedback-type', function (event) {
