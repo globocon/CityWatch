@@ -1,6 +1,7 @@
 ﻿using CityWatch.Data.Enums;
 using CityWatch.Data.Models;
 using iText.Layout.Element;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -129,11 +130,23 @@ namespace CityWatch.Data.Providers
         List<ClientSite> GetClientSites(int? Id);
         List<ClientSiteSmartWand> GetClientSiteSmartWands(int? clientSiteId);
         int GetGuardLoginId(int guardId, DateTime date);
-        List<GuardLogin> GetGuardLoginsByClientSiteId(int clientsiteId, DateTime date);
+        List<GuardLogin> GetGuardLoginsByClientSiteId(int? clientsiteId, DateTime date);
+
+        // for global push message- start
+        List<ClientType> GetUserClientTypesHavingAccess(int? userId);
+        List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm);
+        List<State> GetStates();
+        List<ClientSite> GetClientSitesForState(string State);
+        int GetClientSiteLogBookIdGloablmessage(int clientsiteId, LogBookType type, DateTime date);
+        List<ClientSite> GetAllClientSites();
+        List<SelectListItem> GetUserClientSitesWithId(string types);
+        // for global push message- end
+
 
         //for saving status for active guards-start
         void SaveClientSiteRadioCheckNew(ClientSiteRadioCheck clientSiteRadioCheck);
         //for saving status for active guards-end
+
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -1520,9 +1533,9 @@ namespace CityWatch.Data.Providers
             return _context.GuardLogins
                  .Where(z => z.GuardId == guardId && z.OnDuty.Date == date.Date).Max(x => x.Id);
         }
-        public List<GuardLogin> GetGuardLoginsByClientSiteId(int clientsiteId, DateTime date)
+        public List<GuardLogin> GetGuardLoginsByClientSiteId(int? clientsiteId, DateTime date)
         {
-            var guarlogins = _context.GuardLogins.Where(z => z.ClientSiteId == clientsiteId && z.OnDuty.Date == date.Date).ToList();
+            var guarlogins = _context.GuardLogins.Where(z => (!clientsiteId.HasValue || z.ClientSiteId == clientsiteId) && z.OnDuty.Date == date.Date).ToList();
 
             foreach (var item in guarlogins)
             {
@@ -2021,6 +2034,103 @@ namespace CityWatch.Data.Providers
         }
         //for active guards-end
 
+        //for global push message-start
+        public int GetClientSiteLogBookIdGloablmessage(int clientsiteId, LogBookType type, DateTime date)
+        {
+            var logBook = _context?.ClientSiteLogBooks
+    .FirstOrDefault(z => z.ClientSiteId == clientsiteId && z.Type == type && z.Date == date);
+            if (logBook != null && logBook.Id != null)
+            {
+                return logBook.Id;
+            }
+            else
+            {
+                // Handle the case where no matching log book is found or logBook.Id is null
+                return 0; // Return null or another suitable default value
+            }
+        }
+        //code added for client site dropdown starts
+        public List<ClientType> GetUserClientTypesHavingAccess(int? userId)
+        {
+            var clientTypes = GetClientTypes();
+            if (userId == null)
+                return clientTypes;
 
+            var allUserAccess = GetUserClientSiteAccess(userId);
+            var clientTypeIds = allUserAccess.Select(x => x.ClientSite.TypeId).Distinct().ToList();
+            return clientTypes.Where(x => clientTypeIds.Contains(x.Id)).ToList();
+        }
+        public List<ClientType> GetClientTypes()
+        {
+            return _context.ClientTypes.OrderBy(x => x.Name).ToList();
+        }
+        public List<UserClientSiteAccess> GetUserClientSiteAccess(int? userId)
+        {
+            return _context.UserClientSiteAccess
+                .Where(x => !userId.HasValue || userId.HasValue && x.UserId == userId)
+                .Include(x => x.ClientSite)
+                .Include(x => x.ClientSite.ClientType)
+                .Include(x => x.User)
+                .ToList();
+        }
+        public List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm)
+        {
+            var results = new List<ClientSite>();
+            var clientSites = GetClientSites(typeId);
+            if (userId == null)
+                results = clientSites;
+            else
+            {
+                var allUserAccess = GetUserClientSiteAccess(userId);
+                var clientSiteIds = allUserAccess.Select(x => x.ClientSite.Id).Distinct().ToList();
+                results = clientSites.Where(x => clientSiteIds.Contains(x.Id)).ToList();
+            }
+
+            if (!string.IsNullOrEmpty(searchTerm))
+                results = results.Where(x => x.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                (!string.IsNullOrEmpty(x.Address) && x.Address.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))).ToList();
+
+            return results;
+        }
+        public List<State> GetStates()
+        {
+            return new List<State>()
+            {
+                new State() { Name = "ACT" },
+                new State() { Name = "NSW" },
+                new State() { Name = "NT" },
+                new State() { Name = "QLD" },
+                new State() { Name = "SA" },
+                new State() { Name = "TAS" },
+                new State() { Name = "VIC" },
+                new State() { Name = "WA" }
+            }
+            .OrderBy(x => x.Name)
+            .ToList();
+        }
+        public List<ClientSite> GetClientSitesForState(string State)
+        {
+            return _context.ClientSites
+                .Where(site => site.State == State)
+                        .ToList();
+
+        }
+        public List<ClientSite> GetAllClientSites()
+        {
+            return _context.ClientSites.ToList();
+
+        }
+        public List<SelectListItem> GetUserClientSitesWithId(string types)
+        {
+            if (string.IsNullOrEmpty(types))
+                return Enumerable.Empty<SelectListItem>().ToList();
+
+            return GetAllClientSites()
+                .Where(z => types.Split(';').Contains(z.ClientType.Name))
+                .Select(z => new SelectListItem(z.Name, z.Id.ToString()))
+                .ToList();
+        }
+
+        //for global push message-end
     }
 }
