@@ -1990,7 +1990,7 @@ namespace CityWatch.Data.Providers
 
                     }
                     //To Deactivate Duress button
-                    else if(clientSiteRadioCheck.Status== "Deactivate")
+                    else if(clientSiteRadioCheck.Status== "Duress Unlock - False Alarm or Testing")
                     {
                         var DuressEnabledUpdate = _context.ClientSiteDuress
                                                 .SingleOrDefault(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId);
