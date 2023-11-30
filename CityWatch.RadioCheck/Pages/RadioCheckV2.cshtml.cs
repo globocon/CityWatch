@@ -435,7 +435,7 @@ namespace CityWatch.Web.Pages.Radio
 
             return emailAddressList;
         }
-     
+
         //Send Text Notifications-end
 
 
@@ -449,7 +449,14 @@ namespace CityWatch.Web.Pages.Radio
         //    return new JsonResult(_guardLogDataProvider.GetGuards(id));
         //}
 
-       
+        //for getting logBookDetails of Guards-start
+        public IActionResult OnGetClientSiteRadiocheckStatus(int clientSiteId, int guardId,int ColorId)
+        {
+
+            return new JsonResult(_guardLogDataProvider.GetClientSiteRadiocheckStatus(clientSiteId, guardId));
+        }
+
+        //for getting logBookDetails of Guards-end
 
     }
 }

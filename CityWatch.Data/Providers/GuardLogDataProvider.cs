@@ -134,6 +134,7 @@ namespace CityWatch.Data.Providers
         //for saving status for active guards-start
         void SaveClientSiteRadioCheckNew(ClientSiteRadioCheck clientSiteRadioCheck);
         //for saving status for active guards-end
+        List<RadioCheckListGuardLoginData> GetClientSiteRadiocheckStatus(int clientSiteId, int guardId);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -1996,6 +1997,154 @@ namespace CityWatch.Data.Providers
                             }
 
                         }
+                        else if (colorId == 4)
+                        {
+                            /* Check if Manning type notfication */
+                            var checkIfTypeOneManning = GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1).ToList();
+
+                            if (checkIfTypeOneManning.Count == 0)
+                            {
+                                var logbook = _context.ClientSiteLogBooks
+                             .SingleOrDefault(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId && z.Type == LogBookType.DailyGuardLog && z.Date == DateTime.Today);
+
+                                int logBookId;
+                                if (logbook == null)
+                                {
+                                    var newLogBook = new ClientSiteLogBook()
+                                    {
+                                        ClientSiteId = clientSiteRadioCheck.ClientSiteId,
+                                        Type = LogBookType.DailyGuardLog,
+                                        Date = DateTime.Today
+                                    };
+
+                                    if (newLogBook.Id == 0)
+                                    {
+                                        _context.ClientSiteLogBooks.Add(newLogBook);
+                                    }
+                                    else
+                                    {
+                                        var logBookToUpdate = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == newLogBook.Id);
+                                        if (logBookToUpdate != null)
+                                        {
+                                            // nothing to update
+                                        }
+                                    }
+                                    _context.SaveChanges();
+                                    logBookId = newLogBook.Id;
+
+                                }
+                                else
+                                {
+                                    logBookId = logbook.Id;
+                                }
+
+                                var guardLoginId = _context.GuardLogins
+                              .SingleOrDefault(z => z.ClientSiteLogBookId == logBookId && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == DateTime.Today);
+                                var guardInitials = _context.Guards.Where(x => x.Id == clientSiteRadioCheck.GuardId).FirstOrDefault().Initial;
+                                if (guardLoginId != null)
+                                {
+                                    var guardLog = new GuardLog()
+                                    {
+                                        ClientSiteLogBookId = logBookId,
+                                        GuardLoginId = guardLoginId.Id,
+                                        EventDateTime = DateTime.Now,
+                                        //Notes = "Control Room tried to contact Guard[" + guardInitials + "] and they are on their way but running late.",
+                                        Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
+                                        // Notes = "Guard Off Duty (Logbook Signout)",
+                                        IrEntryType = IrEntryType.Normal,
+                                        IsSystemEntry = true
+
+                                    };
+                                    SaveGuardLog(guardLog);
+                                    var guardLoginToUpdate = _context.GuardLogins.SingleOrDefault(x => x.Id == guardLoginId.Id);
+                                    if (guardLoginToUpdate != null)
+                                    {
+                                        guardLoginToUpdate.OffDuty = DateTime.Now;
+                                        _context.SaveChanges();
+                                    }
+
+                                }
+                                else
+                                {
+                                    var latestRecord = _context.GuardLogins
+                                    .Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId)
+                                    .OrderByDescending(r => r.Id)
+                                     .FirstOrDefault();
+                                    if (latestRecord != null)
+                                    {
+                                        var guardLog = new GuardLog()
+                                        {
+                                            ClientSiteLogBookId = logBookId,
+                                             GuardLoginId = latestRecord.Id,
+                                            EventDateTime = DateTime.Now,
+                                            // Notes = "Guard Off Duty (Logbook Signout)",
+                                            // Notes = "Control Room tried to contact Guard[" + guardInitials + "] and they are on their way but running late.",
+                                            Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
+                                            // Notes = "Guard Off Duty (Logbook Signout)",
+                                            IrEntryType = IrEntryType.Normal,
+                                            IsSystemEntry = true
+
+                                        };
+                                        SaveGuardLog(guardLog);
+                                        var guardLoginToUpdate = _context.GuardLogins.SingleOrDefault(x => x.Id == latestRecord.Id);
+                                        if (guardLoginToUpdate != null)
+                                        {
+                                            guardLoginToUpdate.OffDuty = DateTime.Now;
+                                            _context.SaveChanges();
+                                        }
+
+                                    }
+
+                                }
+
+
+                                //var signOffEntry = new GuardLog()
+                                //{
+                                //    ClientSiteLogBookId = clientSiteLogBookId,
+                                //    GuardLoginId = guardLoginId,
+                                //    EventDateTime = DateTime.Now,
+                                //    Notes = "Guard Off Duty (Logbook Signout)",
+                                //    IsSystemEntry = true
+                                //};
+                                //_guardLogDataProvider.SaveGuardLog(signOffEntry);
+                                //_guardDataProvider.UpdateGuardOffDuty(guardLoginId, DateTime.Now);
+
+
+                                var ClientSiteRadioChecksActivityDetails = GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId && x.GuardLoginTime != null);
+                                foreach (var ClientSiteRadioChecksActivity in ClientSiteRadioChecksActivityDetails)
+                                {
+                                    ClientSiteRadioChecksActivity.GuardLogoutTime = DateTime.Now;
+                                    UpdateRadioChecklistLogOffEntry(ClientSiteRadioChecksActivity);
+
+                                    var newstatu = new ClientSiteRadioCheck()
+                                    {
+                                        ClientSiteId = ClientSiteRadioChecksActivity.ClientSiteId,
+                                        GuardId = ClientSiteRadioChecksActivity.GuardId,
+                                        Status = clientSiteRadioCheck.Status,
+                                        CheckedAt = DateTime.Now,
+                                        Active = clientSiteRadioCheck.Active,
+                                        RadioCheckStatusId = clientSiteRadioCheck.RadioCheckStatusId,
+                                    };
+                                    _context.ClientSiteRadioChecks.RemoveRange(clientSiteRcStatus);
+                                    _context.ClientSiteRadioChecks.Add(newstatu);
+                                    _context.SaveChanges();
+                                    /* Update Radio check status logOff*/
+
+                                }
+
+                            }
+                            else
+                            {
+                                _context.ClientSiteRadioChecks.Add(clientSiteRadioCheck);
+                                _context.SaveChanges();
+
+                                /* Remove the Notification Row */
+                                var removeList = GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1).ToList();
+                                _context.ClientSiteRadioChecksActivityStatus.RemoveRange(removeList);
+                                _context.SaveChanges();
+                            }
+
+                        }
                         else
                         {
                             _context.ClientSiteRadioChecks.Add(clientSiteRadioCheck);
@@ -2021,6 +2170,27 @@ namespace CityWatch.Data.Providers
         }
         //for active guards-end
 
+        public List<RadioCheckListGuardLoginData> GetClientSiteRadiocheckStatus(int clientSiteId, int guardId)
+        {
 
+
+
+
+
+            var param1 = new SqlParameter();
+            param1.ParameterName = "@ClientSiteId";
+            param1.SqlDbType = SqlDbType.Int;
+            param1.SqlValue = clientSiteId;
+
+            var param2 = new SqlParameter();
+            param2.ParameterName = "@GuardId";
+            param2.SqlDbType = SqlDbType.Int;
+            param2.SqlValue = guardId;
+
+
+            var allvalues = _context.RadioCheckListGuardLoginData.FromSqlRaw($"EXEC sp_GetActiveGuardRadioCheckStatusForRC @ClientSiteId,@GuardId", param1, param2).ToList();
+
+            return allvalues;
+        }
     }
 }
