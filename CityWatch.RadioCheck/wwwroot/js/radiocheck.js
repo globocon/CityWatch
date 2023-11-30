@@ -1493,7 +1493,7 @@ $('#chkClientType').change(function () {
 
 });
 /*to get the client type and site as multiselect-end*/
-=======
+
 /* Single page Grid Start  */
 
 
