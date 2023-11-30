@@ -603,12 +603,23 @@
         });
 
         const irEntryTypeIsAlarm = 2;
-        if (record.irEntryType === irEntryTypeIsAlarm) {
-            $displayEl.append($messageBtn);
+        if (record.guardLoginId === null || record.guardLogin.guardId != $('#GuardLog_GuardLogin_GuardId').val()) {
+            if (record.irEntryType === irEntryTypeIsAlarm) {
+                $displayEl.append($messageBtn);
+                return;
+            }
+            if (record.irEntryType === 1) {
+                return;
+            }
             return;
         }
-        if (record.irEntryType === 1) {
-            return;
+        else {
+            if (record.irEntryType === 1) 
+                return;
+            if (record.irEntryType === irEntryTypeIsAlarm) {
+                $displayEl.append($messageBtn);
+                return;
+            }
         }
 
 
@@ -2848,7 +2859,7 @@
 
                     /*window.location.href = '/Radio/Check';*/
                     window.location.href = 'http://rc.cws-ir.com/RadioCheckV2?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
-                   /* window.location.href = 'https://localhost:7083/RadioCheckV2?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;*/
+                    /*window.location.href = 'https://localhost:7083/RadioCheckV2?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;*/
                 }
                 else {
                     $('#txt_securityLicenseNoRC').val('');

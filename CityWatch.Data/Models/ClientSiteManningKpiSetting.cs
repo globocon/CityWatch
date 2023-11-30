@@ -56,6 +56,9 @@ namespace CityWatch.Data.Models
         
         
         }
+
+       
+        public int? IsPHO { get; set; }
     }
     public enum CustomDayOfWeek
     {

@@ -104,7 +104,7 @@ namespace CityWatch.Web.Pages.Incident
                         {
                             var serializedObject = HttpContext.Session.GetString("IRReport");
                             var IrPreviousObject = JsonSerializer.Deserialize<IncidentRequest>(serializedObject);
-                            HttpContext.Session.SetString("IsIrFromNotifyPage","yes");
+                            HttpContext.Session.SetString("IsIrFromNotifyPage", "yes");
                             Report = new IncidentRequest
                             {
                                 EventType = new EventType
@@ -181,7 +181,7 @@ namespace CityWatch.Web.Pages.Incident
                                 OfficerPosition = ViewDataService.GetOfficerPositions(OfficerPositionFilter.PatrolOnly);
                             else
                                 OfficerPosition = ViewDataService.GetOfficerPositions(OfficerPositionFilter.NonPatrolOnly);
-                           
+
                         }
                         else
                         {
@@ -265,14 +265,38 @@ namespace CityWatch.Web.Pages.Incident
 
                             Phone = item.Mobile,
                             LicenseNumber = item.SecurityNo,
-                            Email=item.Email,
+                            Email = item.Email,
 
                         },
                     };
                 }
             }
             // to get the guard details while the guard is logging into the system-end
-            return Page();
+
+            /* Remove the plate loaded((temp) ) for a user start */
+            int LogId = AuthUserHelper.LoggedInUserId.GetValueOrDefault();
+            var Count = _clientDataProvider.GetIncidentReportsPlatesCountWithOutPlateId(AuthUserHelper.LoggedInUserId.GetValueOrDefault());
+            if (Count != 0)
+            {
+                if (HttpContext.Session.GetString("GuardId") != null)
+                {
+                    int guardId = Convert.ToInt32(HttpContext.Session.GetString("GuardId"));
+                    var platesLoadedList = _clientDataProvider.GetIncidentReportsPlatesLoadedWithGuardId(AuthUserHelper.LoggedInUserId.GetValueOrDefault(), guardId);
+                    if(platesLoadedList.Count!=0)
+                    {
+                        /*delete if a row (temp) exist  with GuardId*/
+                        _clientDataProvider.RemoveIncidentReportsPlatesLoadedWithGuardId(platesLoadedList);
+                    }
+                    else
+                    {
+                        /*delete all the 0 (temp) entery for the login user */
+                        _clientDataProvider.RemoveIncidentReportsPlatesLoadedWithUserId(LogId);
+                    }
+                }
+            }
+            /* Remove the plate loaded for a user end */
+
+                        return Page();
             /* Code for Re-create the Ir from already existing one 04102023 end*/
         }
 
@@ -301,7 +325,7 @@ namespace CityWatch.Web.Pages.Incident
                         reimbursementYes = IrPreviousObject.DateLocation.ReimbursementYes;
                         isPositionPatrolCar = IrPreviousObject.IsPositionPatrolCar;
                         isSiteColorChecked = IrPreviousObject.EventType.SiteColour;
-                        isWandScannedYes3b= IrPreviousObject.WandScannedYes3b;
+                        isWandScannedYes3b = IrPreviousObject.WandScannedYes3b;
                         success = true;
                     }
                 }
@@ -520,7 +544,7 @@ namespace CityWatch.Web.Pages.Incident
                     messageHtml = messageHtml + "<p>Where PDF attachment is greater than 12 MB, it may not appear due to your organisation email limits. In this situation simply " +
                     "<a href=\" https://c4istorage1.blob.core.windows.net/irfiles/" + (new string(blobName.Take(8).ToArray()) + "/" + blobName) + "\" target=\"_blank\">" +
                     "click here</a> to download the Incident Report, which are unlimited in size.</p>";
-                    messageHtml = messageHtml + "<p>File name : "+ blobName+"</p>";
+                    messageHtml = messageHtml + "<p>File name : " + blobName + "</p>";
                 }
 
             }
@@ -531,7 +555,7 @@ namespace CityWatch.Web.Pages.Incident
             };
             /* Add attachment (IR PDF) to mail if Size <=12 MB , the link to download always add to  mail body Start*/
             FileInfo fileInfo = new FileInfo(fileName);
-            var fileSizeInMB =  (fileInfo.Length) / 1048576d;
+            var fileSizeInMB = (fileInfo.Length) / 1048576d;
             if (fileSizeInMB <= 12) // You can change this limit as needed
             {
                 builder.Attachments.Add(fileName);
@@ -735,7 +759,7 @@ namespace CityWatch.Web.Pages.Incident
                 LogId = AuthUserHelper.LoggedInUserId.GetValueOrDefault(),
                 IncidentReportEventTypes = Report.IrEventTypes.Select(z => new IncidentReportEventType() { EventType = z }).ToList(),
                 PSPFId = PSPFName.Id
-                
+
             };
             if (HttpContext.Session.GetString("GuardId") != null)
             {
@@ -759,15 +783,15 @@ namespace CityWatch.Web.Pages.Incident
                 try
                 {
                     _irDataProvider.SaveReport(report);
-                   
 
-                        var ClientSiteRadioChecksActivityDetails = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == report.GuardId && x.ClientSiteId == report.ClientSiteId && x.GuardLoginTime != null);
-                        foreach (var ClientSiteRadioChecksActivity in ClientSiteRadioChecksActivityDetails)
-                        {
+
+                    var ClientSiteRadioChecksActivityDetails = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == report.GuardId && x.ClientSiteId == report.ClientSiteId && x.GuardLoginTime != null);
+                    foreach (var ClientSiteRadioChecksActivity in ClientSiteRadioChecksActivityDetails)
+                    {
                         ClientSiteRadioChecksActivity.NotificationCreatedTime = DateTime.Now;
-                            _guardLogDataProvider.UpdateRadioChecklistEntry(ClientSiteRadioChecksActivity);
-                        }
-                    
+                        _guardLogDataProvider.UpdateRadioChecklistEntry(ClientSiteRadioChecksActivity);
+                    }
+
 
                     //for adding showing the IR information if an IR is created-start
                     //if (HttpContext.Session.GetString("GuardId") != null)
@@ -857,6 +881,12 @@ namespace CityWatch.Web.Pages.Incident
             try
             {
                 report.LogId = AuthUserHelper.LoggedInUserId.GetValueOrDefault();
+
+                if (HttpContext.Session.GetString("GuardId") != null)
+                {
+                    report.GuardId = Convert.ToInt32(HttpContext.Session.GetString("GuardId"));
+                }
+
                 _clientDataProvider.SavePlateLoaded(report);
             }
             catch (Exception ex)

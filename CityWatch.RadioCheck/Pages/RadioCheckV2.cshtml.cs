@@ -190,19 +190,20 @@ namespace CityWatch.Web.Pages.Radio
         }
 
         //SaveRadioStatus -start
-        public JsonResult OnPostSaveRadioStatus(int clientSiteId, int guardId, string checkedStatus,bool active)
+        public JsonResult OnPostSaveRadioStatus(int clientSiteId, int guardId, string checkedStatus,bool active, int statusId)
         {
             var success = true;
             var message = "success";
             try
             {
-                _guardLogDataProvider.SaveClientSiteRadioCheck(new ClientSiteRadioCheck()
+                _guardLogDataProvider.SaveClientSiteRadioCheckNew(new ClientSiteRadioCheck()
                 {
                     ClientSiteId = clientSiteId,
                     GuardId = guardId,
                     Status = checkedStatus,
                     CheckedAt = DateTime.Now,
-                    Active = active
+                    Active = active,
+                    RadioCheckStatusId=statusId,
                 }) ;
             }
             catch (Exception ex)

@@ -1,6 +1,8 @@
 ﻿@page
+@using CityWatch.Data.Models;
+@using CityWatch.Data.Providers;
 @model CityWatch.Web.Pages.Radio.RadioCheckNewModel
-
+@inject IConfigDataProvider configDataProvider
 @{
     ViewData["Title"] = "Radio Check";
     ViewData["PageName"] = "Radio Check";
@@ -332,7 +334,9 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label class="col-form-label" for="selectRadioStatus">Select Radio Check Status</label>
-                    <select id="selectRadioStatus" class="form-control">
+                    <select id="selectRadioStatus" class="form-control" asp-items="@configDataProvider.GetRadioCheckStatusForDropDown()"></select>
+
+                    @*  <select id="selectRadioStatus" class="form-control">
                         <option value="" selected>Select</option>
                         <option value="N/A">N/A</option>
                         <option value="Off Duty">Off Duty</option>
@@ -343,7 +347,7 @@
                         <option value="Outgoing Call Radio">Outgoing Call Radio</option>
                         <option value="Outgoing Call Mobile">Outgoing Call Mobile</option>
                         <option value="No Answer">No Answer</option>
-                    </select>
+                    </select>*@
                     <input type="hidden" id="clientSiteId" value="" />
                     <input type="hidden" id="guardId" value="" />
                 </div>
@@ -365,7 +369,8 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label class="col-form-label" for="selectRadioStatusActive">Select Radio Check Status</label>
-                    <select id="selectRadioStatusActive" class="form-control">
+                    <select id="selectRadioStatusActive" class="form-control" asp-items="@configDataProvider.GetRadioCheckStatusForDropDown()"></select>
+                    @*<select id="selectRadioStatusActive" class="form-control">
                         <option value="" selected>Select</option>
                         <option value="N/A">N/A</option>
                         <option value="Off Duty">Off Duty</option>
@@ -376,7 +381,7 @@
                         <option value="Outgoing Call Radio">Outgoing Call Radio</option>
                         <option value="Outgoing Call Mobile">Outgoing Call Mobile</option>
                         <option value="No Answer">No Answer</option>
-                    </select>
+                    </select>*@
                     <input type="hidden" id="clientSiteId" value="" />
                     <input type="hidden" id="guardId" value="" />
                 </div>
@@ -559,6 +564,30 @@
                 <div class="text-left">
                     <div asp-validation-summary="All" id="PushNotificationsValidationSummary"></div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!----------------- Hover Modal -------------------->
+
+<div class="modal fade" id="hoverModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="pushNoTificationsControlRoomModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Color Type</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="col-form-label" for="selectRadioStatus"> Radio Check Status Color</label>
+                    <input type="text" id="lblColorType" disabled />
+                </div>
+                
+            </div>
+            <div class="modal-footer justify-content-start">
+                <button type="button" id="btnhover" class="btn btn-primary">Ok</button>
             </div>
         </div>
     </div>

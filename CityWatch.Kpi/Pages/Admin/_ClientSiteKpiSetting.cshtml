@@ -198,7 +198,7 @@
                     {
                         @*Get All Distinct order Id *@
                         var distinctOrderIds = Model.ClientSiteManningGuardKpiSettings.Select(order => order.OrderId).Distinct();
-                        @for (int rowIndexFirst = 0; rowIndexFirst < Model.ClientSiteManningGuardKpiSettings.Count(); rowIndexFirst = rowIndexFirst + 7)
+                        @for (int rowIndexFirst = 0; rowIndexFirst < Model.ClientSiteManningGuardKpiSettings.Count(); rowIndexFirst = rowIndexFirst + 8)
                         {
 
                             var rowIndextemp = 0;
@@ -214,10 +214,21 @@
                                     {
                                         /*Monthly Hours Start*/
                                         var monthilyHours = 0.0;
-                                        var totalMin = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId).Select(x => x.SumOfHours).Sum();
-                                        var guardQty = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId).Select(x => x.NoOfPatrols ?? 0).FirstOrDefault();
-                                        if (totalMin != null && guardQty != null)
-                                            monthilyHours = Math.Round(((totalMin) * guardQty * 52.143) / 12);
+                                        @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
+                                        {
+
+                                            var totalMin = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId).Select(x => x.SumOfHours).Sum();
+                                            var guardQty = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId).Select(x => x.NoOfPatrols ?? 0).FirstOrDefault();
+                                            if (totalMin != null && guardQty != null)
+                                                monthilyHours = Math.Round(((totalMin) * guardQty * 52.143) / 12);
+
+                                        }
+                                        else
+                                        {
+                                            var guardQty = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId).Select(x => x.NoOfPatrols ?? 0).Sum();
+                                            monthilyHours = guardQty;
+                                        }
+
                                         /*Monthly Hours End*/
                                         <div class="form-row">
                                             <div class="col-md-3">
@@ -229,11 +240,11 @@
                                                         <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
                                                             @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
                                                             {
-                                                                <input type="checkbox" class="custom-control-input" id="positionfilterGuard" disabled name="positionfilterGuard">
+                                                                <input type="checkbox" class="custom-control-input" id="positionfilterGuard_@rowIndexFirst" disabled name="positionfilterGuard">
                                                             }
                                                             else
                                                             {
-                                                                <input type="checkbox" class="custom-control-input" id="positionfilterGuard" disabled checked name="positionfilterGuard">
+                                                                <input type="checkbox" class="custom-control-input" id="positionfilterGuard_@rowIndexFirst" disabled checked name="positionfilterGuard">
 
                                                             }
                                                             <label class="custom-control-label" for="positionfilterGuard">Patrol Car</label>
@@ -262,9 +273,17 @@
                                                 {
 
                                                     <div class="d-flex flex-row justify-content-between">
-                                                        <label class="form-label">Monthly Hrs :</label>
+                                                        @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
+                                                        {
+                                                            <label class="form-label" id="lbl_MonthlyHrs">Monthly Hrs :</label>
+
+                                                        }
+                                                        else
+                                                        {
+                                                            <label class="form-label" id="lbl_MonthlyHrs">Total Patrols :</label>
+                                                        }
                                                         <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
-                                                            <input type="text" class="form-control mb-2 patrols-count" asp-for="@monthilyHours" id="monthlyHrs" name="monthlyHrs" style="width:120px" readonly />
+                                                            <input type="text" class="form-control mb-2 patrols-count" asp-for="@monthilyHours" id="monthlyHrs_@rowIndexFirst" name="monthlyHrs" style="width:120px" readonly />
                                                         </div>
                                                     </div>
 
@@ -283,38 +302,57 @@
 
                                                 }
                                             </div>
-                                            @for (var colIndex = rowIndexFirst; colIndex < (7 + rowIndexFirst); colIndex++)
+                                            @for (var colIndex = rowIndexFirst; colIndex < (8 + rowIndexFirst); colIndex++)
                                             {
 
 
-
-                                                <div class="col-md-1 mx-1" id="divGuardInner_+@rowIndex+_+@colIndex">
-
-                                                    @switch (rowIndextemp)
+                                                @if (@Model.ClientSiteManningGuardKpiSettings[colIndex] != null)
+                                                {
+                                                    var headerLabel = string.Empty;
+                                                    @if (@Model.ClientSiteManningGuardKpiSettings[colIndex].IsPHO == 1)
                                                     {
-                                                        case 0:
-                                                            <label class="form-label">@Model.ClientSiteManningGuardKpiSettings[colIndex].WeekDay.ToString().Substring(0, 3)</label>
-                                                            break;
-                                                        case 1:
-
-                                                            <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursStart">
-                                                            break;
-
-                                                        case 2:
-
-                                                            <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursEnd">
-                                                            break;
-                                                        case 3:
-                                                            <input class="form-control mb-2 patrols-count" min="0" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].NoOfPatrols" data-index="@colIndex">
-                                                            break;
-
+                                                        headerLabel = "PHO";
                                                     }
-                                                    <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].WeekDay" />
-                                                    <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].Id" />
-                                                    <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].OrderId" />
-                                                    <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].Type" />
-                                                    <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].SettingsId" />
-                                                </div>
+                                                    else
+                                                    {
+                                                        headerLabel = @Model.ClientSiteManningGuardKpiSettings[colIndex].WeekDay.ToString().Substring(0, 3);
+                                                    }
+
+                                                    <div class="col-md-1" id="divGuardInner_+@rowIndex+_+@colIndex">
+
+                                                        @switch (rowIndextemp)
+                                                        {
+                                                            case 0:
+
+                                                                //<label class="form-label">@Model.ClientSiteManningGuardKpiSettings[colIndex].WeekDay.ToString().Substring(0, 3)</label>
+                                                                <label class="form-label">@headerLabel</label>
+                                                                break;
+                                                            case 1:
+
+                                                                <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursStart">
+                                                                break;
+
+                                                            case 2:
+
+                                                                <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursEnd">
+                                                                break;
+                                                            case 3:
+                                                                <input class="form-control mb-2 patrols-count" min="0" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].NoOfPatrols" data-index="@colIndex">
+                                                                break;
+
+                                                        }
+                                                        <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].WeekDay" />
+                                                        <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].Id" />
+                                                        <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].OrderId" />
+                                                        <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].Type" />
+                                                        <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].SettingsId" />
+                                                        <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].IsPHO" />
+
+                                                    </div>
+
+                                                }
+
+
                                             }
 
 
@@ -365,9 +403,9 @@
                                                 {
 
                                                     <div class="d-flex flex-row justify-content-between">
-                                                        <label class="form-label">Monthly Hrs :</label>
+                                                        <label class="form-label" id="monthlyHrsTxtAddNew">Monthly Hrs :</label>
                                                         <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
-                                                            <input type="text" class="form-control mb-2 patrols-count" id="monthlyHrs" name="monthlyHrs" style="width:120px" readonly />
+                                                            <input type="text" class="form-control mb-2 patrols-count" id="monthlyHrsAddNew" name="monthlyHrsAddNew" style="width:120px" readonly />
                                                         </div>
                                                     </div>
 
@@ -379,13 +417,23 @@
                                             <div class="col-md-1 p-0">
                                                 <label class="form-label" id="lbl_ManningPatrolCar_@rowIndex2">@rowTitleManningGuard[rowIndex2]</label>
                                             </div>
-                                            @for (var colIndex2 = 0; colIndex2 < 7; colIndex2++)
+
+                                            @for (var colIndex2 = 0; colIndex2 < 8; colIndex2++)
                                             {
-                                                <div class="col-md-1 mx-1">
+                                                var headerLabel2 = string.Empty;
+                                                @if (@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].IsPHO == 1)
+                                                {
+                                                    headerLabel2 = "PHO";
+                                                }
+                                                else
+                                                {
+                                                    headerLabel2 = @Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].WeekDay.ToString().Substring(0, 3);
+                                                }
+                                                <div class="col-md-1">
                                                     @switch (rowIndex2)
                                                     {
                                                         case 0:
-                                                            <label class="form-label">@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].WeekDay.ToString().Substring(0, 3)</label>
+                                                            <label class="form-label">@headerLabel2</label>
                                                             break;
                                                         case 1:
                                                             <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].EmpHoursStart">
@@ -403,7 +451,7 @@
                                                     <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].Id" />
                                                     <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].OrderId" />
                                                     <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].SettingsId" />
-
+                                                    <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].IsPHO" />
                                                 </div>
                                             }
                                         </div>

@@ -16,6 +16,9 @@ namespace CityWatch.Data.Models
         [Display(Name = "Crowd Controller")]
         CrowdController,
 
+        [Display(Name = "Security Guard")]
+        SecurityGuard,
+
         [Display(Name = "Bodyguard")]
         BodyGuard,
 

@@ -123,10 +123,18 @@ $('#clientSiteActivityStatus').on('click', 'button[name="btnRadioCheckStatus"]',
 
 
 /* V2 Changes start 12102023 */
+
+$(window).resize(function () {
+    console.log($(window).height());
+    $('.dataTables_scrollBody').css('height', ($(window).height() - 200));
+});
+
+
 const groupColumn = 1;
 const groupColumn2 = 2;
 var scrollPosition2;
 var rowIndex2;
+var scrollY = ($(window).height() - 300);
 let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
     ordering: true,
@@ -139,7 +147,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     searching: true,
     autoWidth: true,
     fixedHeader: true,
-    "scrollY": "300px", // Set the desired height for the scrollable area
+    "scrollY": scrollY,
     "paging": false,
     "footer": true,
     ajax: {
@@ -213,10 +221,30 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             width: '6%',
             className: "text-center",
         },
+        //{
+        //    data: 'rcStatus',
+        //    width: '5%',
+        //    className: "text-center",
+
+        //},
         {
-            data: 'rcStatus',
+            data: 'rcColorId',
             width: '5%',
             className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return '';
+                else if (value === 4)
+                    return '<i class="fa fa-check-circle text-success"></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover" >' + 1 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+                else if (value === 1)
+                     return data.status;
+                    //return '<i class="fa fa-check-circle text-danger"></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 1 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+                else if (value === 2)
+                    return data.status;
+                  //  return '<i class="fa fa-check-circle text-danger "></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 2 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+                else  
+                    return data.status;
+                    //return '<i class="fa fa-check-circle text-danger "></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 3 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+            }
         },
         {
             targets: -1,
@@ -279,6 +307,8 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             });
     },
 });
+
+
 
 $('#clientSiteActiveGuards tbody').on('click', '#btnUpArrow', function () {
     
@@ -391,7 +421,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
     autoWidth: true,
     fixedHeader: true,
     
-    "scrollY": "300px", // Set the desired height for the scrollable area
+    "scrollY": ($(window).height() - 300),
     "paging": false,
     "footer": true,
     ajax: {
@@ -1024,7 +1054,7 @@ $('#clientSiteInActiveGuards').on('click', 'button[name="btnRadioCheckStatus"]',
     var rowClientSiteId = data.clientSiteId;
     var rowGuardId = data.guardId;
     var rcSatus = data.rcStatus;
-    $("#selectRadioStatus").val(rcSatus);
+    $("#selectRadioStatus").val(data.statusId);
     $('#clientSiteId').val(rowClientSiteId);
     $('#guardId').val(rowGuardId);
     $('#selectRadioCheckStatus').modal('show');
@@ -1042,8 +1072,10 @@ $('#clientSiteActiveGuards').on('click', 'button[name="btnRadioCheckStatusActive
 });
 
 $('#btnSaveRadioStatus').on('click', function () {
-    const checkedStatus = $('#selectRadioStatus').val();
+    //const checkedStatus = $('#selectRadioStatus').val();
     var clientSiteId = $('#clientSiteId').val();
+    const checkedStatus = $('#selectRadioStatus option:selected').text();
+    var statusId = $('#selectRadioStatus').val();
     var guardId = $('#guardId').val();
     if (checkedStatus === '') {
         return;
@@ -1055,6 +1087,8 @@ $('#btnSaveRadioStatus').on('click', function () {
             clientSiteId: clientSiteId,
             guardId: guardId,
             checkedStatus: checkedStatus,
+            active: true,
+            statusId: statusId,
         },
         dataType: 'json',
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -1063,6 +1097,8 @@ $('#btnSaveRadioStatus').on('click', function () {
         $('#selectRadioStatus').val('');
         clientSiteActiveGuards.ajax.reload();
         clientSiteInActiveGuards.ajax.reload();
+        clientSiteInActiveGuardsSinglePage.ajax.reload();
+        clientSiteActiveGuardsSinglePage.ajax.reload();
     });
 });
 $('#radio_duress_btn').on('click', function () {
@@ -1081,7 +1117,8 @@ $('#radio_duress_btn').on('click', function () {
     });
 });
 $('#btnSaveRadioStatusActive').on('click', function () {
-    const checkedStatus = $('#selectRadioStatusActive').val();
+    const checkedStatus = $('#selectRadioStatusActive option:selected').text();
+    var statusId = $('#selectRadioStatusActive').val();
     var clientSiteId = $('#clientSiteId').val();
     var guardId = $('#guardId').val();
     if (checkedStatus === '') {
@@ -1094,7 +1131,8 @@ $('#btnSaveRadioStatusActive').on('click', function () {
             clientSiteId: clientSiteId,
             guardId: guardId,
             checkedStatus: checkedStatus,
-            active:true,
+            active: true,
+            statusId: statusId,
         },
         dataType: 'json',
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -1103,6 +1141,9 @@ $('#btnSaveRadioStatusActive').on('click', function () {
         $('#selectRadioStatus').val('');      
         clientSiteActiveGuards.ajax.reload();
         clientSiteInActiveGuards.ajax.reload();
+        clientSiteInActiveGuardsSinglePage.ajax.reload();
+        clientSiteActiveGuardsSinglePage.ajax.reload();
+
     });
 });
 
@@ -1452,4 +1493,622 @@ $('#chkClientType').change(function () {
 
 });
 /*to get the client type and site as multiselect-end*/
+=======
+/* Single page Grid Start  */
 
+
+let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage').DataTable({
+    dom: 'Bfrtip',
+    buttons: [
+
+        {
+            extend: 'copy',
+            text: '<i class="fa fa-copy"></i>',
+            titleAttr: 'Copy',
+            className: 'btn btn-md mr-2 btn-copy'
+        },
+        {
+            extend: 'excel',
+            text: '<i class="fa fa-file-excel-o"></i>',
+            titleAttr: 'Excel',
+            className: 'btn btn-md mr-2 btn-excel'
+        },
+        {
+            extend: 'pdf',
+            text: '<i class="fa fa-file-pdf-o"></i>',
+            titleAttr: 'PDF',
+            className: 'btn btn-md mr-2 btn-pdf'
+        },
+        {
+            extend: 'print',
+            text: '<i class="fa fa-print"></i>',
+            titleAttr: 'Print',
+            className: 'btn btn-md mr-2 btn-print'
+        },
+
+
+    ],
+    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+    ordering: true,
+    "columnDefs": [
+        {
+            "visible": false, "targets": 1
+
+        },
+        { "visible": false, "targets": 2 } // Hide the group column initially
+    ],
+    order: [[groupColumn, 'asc']],
+    info: false,
+    searching: true,
+    autoWidth: true,
+    fixedHeader: true,
+
+    "scrollY": ($(window).height() - 100),
+    "paging": false,
+    "footer": true,
+    ajax: {
+        url: '/RadioCheckV2?handler=ClientSiteInActivityStatus',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteIds = 'test,';
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'clientSiteId', visible: false },
+        {
+            data: 'siteName',
+            width: '20%',
+            class: 'dt-control',
+            render: function (value, type, data) {
+
+                return '<tr class="group group-start "><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
+            }
+        },
+        {
+            data: 'address',
+            width: '20%',
+            visible: false,
+            render: function (value, type, data) {
+
+                return '<tr class="group group-start sho"><td class="' + (groupColumn2 == '2' ? 'bg-danger' : (groupColumn2 == '0' ? 'bg-danger' : 'bg-danger')) + ' " colspan="5">' + groupColumn2 + '</td></tr>';
+            }
+        },
+
+        {
+            data: 'guardName',
+
+            width: '20%',
+            render: function (value, type, data) {
+
+                if (data.notificationType != 1) {
+                    return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                        '<a href="#" class="ml-2"><i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i></a>';
+                }
+                else {
+                    return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true" style="color:#FF0000;"></i> ' + data.guardName;
+
+                }
+
+            }
+        },
+
+        {
+            data: 'guardLoginTime',
+            width: '9%',
+            className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return '<i class="fa fa-clock-o text-success rc-client-status"></i> ' + value;
+            }
+        },
+        {
+            data: 'lastEvent',
+            width: '7%',
+            className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return '<i class="fa fa-clock-o text-success rc-client-status"></i> ' + value;
+            }
+        },
+
+        {
+            data: 'twoHrAlert',
+            width: '4%',
+            className: "text-center",
+            render: function (value, type, data) {
+                if (value === 'Green') return '<i class="fa fa-circle text-success"></i>';
+                return '<i class="fa fa-circle text-danger"></i>';
+            }
+        },
+
+        {
+            data: 'rcStatus',
+            width: '4%',
+            className: "text-center",
+        },
+        {
+            targets: -1,
+            data: null,
+            width: '5%',
+            defaultContent: '',
+            render: function (value, type, data) {
+
+                return '<button name="btnRadioCheckStatus" class="btn btn-outline-primary">Radio Check</button>';
+
+            }
+        },
+        {
+            data: 'siteName',
+            visible: false,
+            width: '20%',
+
+        },
+
+    ],
+
+    preDrawCallback: function (settings) {
+        scrollPosition = $(".dataTables_scrollBody").scrollTop();
+    },
+    drawCallback: function () {
+        /* Retain the Scroll position*/
+        $(".dataTables_scrollBody").scrollTop(scrollPosition);
+        var api = this.api();
+        var rows = api.rows({ page: 'current' }).nodes();
+        var last = null;
+        var last2 = null;
+        api.column(groupColumn, { page: 'current' })
+            .data()
+            .each(function (group, i) {
+                if (last !== group) {
+                    $(rows)
+                        .eq(i)
+                        .before('<tr class="group bg-info text-white dt-control "><td colspan="25">' + group + '</td></tr>');
+
+                    last = group;
+                }
+            });
+        api.column(groupColumn2, { page: 'current' })
+            .data()
+            .each(function (group, i) {
+                if (last2 !== group) {
+                    $(rows)
+                        .eq(i)
+                        .before('<tr class="group bg-info text-white hide" id="group2" hidden><td colspan="25">' + group + '</td></tr>');
+
+                    last2 = group;
+                }
+            });
+    },
+
+
+});
+
+$('#clientSiteInActiveGuardsSinglePage tbody').on('click', '#btnUpArrow', function () {
+
+
+
+    if ($(this).closest('tr').next('tr').is(':hidden') == true) {
+        $(this).closest('tr').next('tr').prop('hidden', false);
+        $(this).closest('tr').find('#btnUpArrow').removeClass('fa-caret-down')
+        $(this).closest('tr').find('#btnUpArrow').addClass('fa-caret-up')
+        /* $(this).closest('tr').next('tr').toggle();*/
+    }
+    else {
+        $(this).closest('tr').next('tr').prop('hidden', 'hidden');
+        $(this).closest('tr').find('#btnUpArrow').removeClass('fa-caret-up')
+        $(this).closest('tr').find('#btnUpArrow').addClass('fa-caret-down')
+
+    }
+
+
+    //}
+});
+
+
+$('#clientSiteInActiveGuardsSinglePage').on('click', 'button[name="btnRadioCheckStatus"]', function () {
+    var data = clientSiteInActiveGuardsSinglePage.row($(this).parents('tr')).data();
+    var rowClientSiteId = data.clientSiteId;
+    var rowGuardId = data.guardId;
+    var rcSatus = data.rcStatus;
+    $("#selectRadioStatus").val(data.statusId);    
+    $('#clientSiteId').val(rowClientSiteId);
+    $('#guardId').val(rowGuardId);
+    $('#selectRadioCheckStatus').modal('show');
+});
+
+
+
+
+
+let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').DataTable({
+    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+    ordering: true,
+    "columnDefs": [
+        { "visible": false, "targets": 1 },// Hide the group column initially
+        { "visible": false, "targets": 2 }
+    ],
+    order: [[groupColumn, 'asc']],
+    info: false,
+    searching: true,
+    autoWidth: true,
+    fixedHeader: true,
+    "scrollY": ($(window).height() ),
+    "paging": false,
+    "footer": true,
+    ajax: {
+        url: '/RadioCheckV2?handler=ClientSiteActivityStatus',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteIds = 'test,';
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'clientSiteId', visible: false },
+        {
+            data: 'siteName',
+            width: '20%',
+            class: 'dt-control',
+            render: function (value, type, data) {
+
+                return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
+            }
+
+        },
+        {
+            data: 'address',
+            width: '20%',
+            visible: false,
+            render: function (value, type, data) {
+
+                return '<tr class="group group-start sho"><td class="' + (groupColumn2 == '2' ? 'bg-danger' : (groupColumn2 == '0' ? 'bg-danger' : 'bg-danger')) + ' " colspan="5">' + groupColumn2 + '</td></tr>';
+            }
+
+        },
+        {
+            data: 'guardName',
+            width: '20%',
+            render: function (value, type, data) {
+                return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                    '<i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+            }
+        },
+        {
+            data: 'logBook',
+            width: '6%',
+            className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardLogBookInfoModal" id="btnLogBookDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" text="' + data.clientSiteId + '"><input type="hidden" id="GuardId" text="' + data.guardId + '"> ';
+            }
+        },
+        {
+            data: 'keyVehicle',
+            width: '6%',
+            className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardKeyVehicleInfoModal" id="btnKeyVehicleDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+            }
+        },
+        {
+            data: 'incidentReport',
+            width: '6%',
+            className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardIncidentReportsInfoModal" id="btnIncidentReportdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '"> ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+            }
+
+        },
+        {
+            data: 'smartWands',
+            width: '6%',
+            className: "text-center",
+        },
+        //{
+        //    data: 'rcStatus',
+        //    width: '5%',
+        //    className: "text-center",
+        //},
+
+        {
+            data: 'rcColorId',
+            width: '5%',
+            className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return '';
+                else if (value === 4)
+                    return '<i class="fa fa-check-circle text-success"></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover" >' + 1 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+                else if (value === 1)
+                    return data.status;
+                //return '<i class="fa fa-check-circle text-danger"></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 1 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+                else if (value === 2)
+                    return data.status;
+                //  return '<i class="fa fa-check-circle text-danger "></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 2 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+                else
+                    return data.status;
+                //return '<i class="fa fa-check-circle text-danger "></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 3 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+            }
+        },
+        {
+            targets: -1,
+            data: null,
+            width: '5%',
+            defaultContent: '',
+            render: function (value, type, data) {
+
+                return '<button name="btnRadioCheckStatusActive" class="btn btn-outline-primary">Radio Check</button>';
+
+            }
+        },
+
+
+
+
+
+
+        {
+            data: 'siteName',
+            visible: false,
+            width: '20%',
+
+        },
+
+
+
+    ],
+
+    preDrawCallback: function (settings) {
+        scrollPosition = $(".dataTables_scrollBody").scrollTop();
+    },
+    drawCallback: function () {
+        $(".dataTables_scrollBody").scrollTop(scrollPosition);
+        var api = this.api();
+        var rows = api.rows({ page: 'current' }).nodes();
+        var last = null;
+        var last2 = null;
+        api.column(groupColumn, { page: 'current' })
+            .data()
+            .each(function (group, i) {
+                if (last !== group) {
+                    $(rows)
+                        .eq(i)
+                        .before('<tr class="group bg-info text-white dt-control"><td colspan="25">' + group + '</td></tr>');
+
+                    last = group;
+                }
+            });
+        api.column(groupColumn2, { page: 'current' })
+            .data()
+            .each(function (group, i) {
+                if (last2 !== group) {
+                    $(rows)
+                        .eq(i)
+                        .before('<tr class="group bg-info text-white hide" id="group2" hidden><td colspan="25">' + group + '</td></tr>');
+
+                    last2 = group;
+                }
+            });
+    },
+});
+
+
+
+$('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnUpArrow', function () {
+
+
+    if ($(this).closest('tr').next('tr').is(':hidden') == true) {
+        $(this).closest('tr').next('tr').prop('hidden', false);
+        $(this).closest('tr').find('#btnUpArrow').removeClass('fa-caret-down')
+        $(this).closest('tr').find('#btnUpArrow').addClass('fa-caret-up')
+        /* $(this).closest('tr').next('tr').toggle();*/
+    }
+    else {
+        $(this).closest('tr').next('tr').prop('hidden', 'hidden');
+        $(this).closest('tr').find('#btnUpArrow').removeClass('fa-caret-up')
+        $(this).closest('tr').find('#btnUpArrow').addClass('fa-caret-down')
+
+    }
+
+
+    //}
+});
+
+$('#clientSiteActiveGuardsSinglePage').on('click', 'button[name="btnRadioCheckStatusActive"]', function () {
+    var data = clientSiteActiveGuardsSinglePage.row($(this).parents('tr')).data();
+    var rowClientSiteId = data.clientSiteId;
+    var rowGuardId = data.guardId;
+    var rcSatus = data.rcStatus;
+    $("#selectRadioStatusActive").val(rcSatus);
+    $('#clientSiteId').val(rowClientSiteId);
+    $('#guardId').val(rowGuardId);
+    $('#selectRadioCheckStatusActive').modal('show');
+});
+
+
+$('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnLogBookDetailsByGuard', function (value, record) {
+    $('#guardLogBookInfoModal').modal('show');
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
+    var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    // $('#lbl_GuardActivityHeader').val($(this).closest("tr").find("td").eq(2).text() + 'Log Book Details');
+    $('#lbl_GuardActivityHeader').text(GuardName + '-' + 'Log Book Details');
+    clientSiteActiveGuardsLogBookDetails.ajax.reload();
+
+});
+
+$('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnKeyVehicleDetailsByGuard', function (value, record) {
+    $('#guardKeyVehicleInfoModal').modal('show');
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
+    var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    if (GuardId.length == 0) {
+        GuardId = $(this).closest("tr").find('td').eq(2).find('#GuardId').val();
+    }
+    if (ClientSiteId.length == 0) {
+        ClientSiteId = $(this).closest("tr").find('td').eq(2).find('#ClientSiteId').val();
+    }
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    // $('#lbl_GuardActivityHeader').val($(this).closest("tr").find("td").eq(2).text() + 'Log Book Details');
+    $('#lbl_GuardActivityHeader1').text(GuardName + '-' + 'Key Vehicle Log Details');
+    clientSiteActiveGuardsKeyVehicleDetails.ajax.reload();
+
+});
+
+
+$('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnIncidentReportdetails', function (value, record) {
+    $('#guardIncidentReportsInfoModal').modal('show');
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
+    var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    if (GuardId.length == 0) {
+        GuardId = $(this).closest("tr").find('td').eq(2).find('#GuardId').val();
+    }
+    if (ClientSiteId.length == 0) {
+        ClientSiteId = $(this).closest("tr").find('td').eq(2).find('#ClientSiteId').val();
+    }
+
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    // $('#lbl_GuardActivityHeader').val($(this).closest("tr").find("td").eq(2).text() + 'Log Book Details');
+    $('#lbl_GuardActivityHeader2').text(GuardName + '-' + 'Incident Report Details');
+    clientSiteActiveGuardsIncidentReportsDetails.ajax.reload();
+
+});
+let isActive = true;
+$('#heading-example').on('click', function () {
+
+    if (isActive) {
+        console.log($(window).height());
+        var container = $('#clientSiteActiveGuards').closest('.dataTables_scrollBody');
+        container.css('height', ($(window).height() - 100));
+    }
+    else {
+        console.log($(window).height());
+        var container = $('#clientSiteActiveGuards').closest('.dataTables_scrollBody');
+        container.css('height', ($(window).height() - 300));
+
+    }
+    // Toggle the state
+    isActive = !isActive;
+});
+let isActiveTwo = true;
+$('#heading-example2').on('click', function () {
+
+    if (isActiveTwo) {
+        console.log($(window).height());
+        var container = $('#clientSiteInActiveGuards').closest('.dataTables_scrollBody');
+        container.css('height', ($(window).height() - 100));
+    }
+    else {
+        console.log($(window).height());
+        var container = $('#clientSiteInActiveGuards').closest('.dataTables_scrollBody');
+        container.css('height', ($(window).height() - 300));
+
+
+    }
+    // Toggle the state
+    isActiveTwo = !isActiveTwo;
+});
+
+
+
+/* Single page Grid end  */
+
+/*functions for settings-start*/
+let gridRadioCheckStatusTypeSettings;
+function settingsButtonRenderer(value, record) {
+    return '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#kpi-settings-modal" ' +
+        'data-cs-id="' + record.id + '" data-cs-name="' + record.clientSiteName + '"><i class="fa fa-pencil mr-2"></i>Edit</button>';
+}
+
+gridRadioCheckStatusTypeSettings = $('#radiocheck_status_type_settings').grid({
+   dataSource: '/Admin/Settings?handler=RadioCheckStatusWithOutcome',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    inlineEditing: { mode: 'command' },
+    columns: [
+        { width: 130, field: 'referenceNo', title: 'Reference No' },
+        { width: 500, field: 'name', title: 'Name', editor: true },
+        { width: 200, field: 'radioCheckStatusColorName', title: 'Outcome', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=RadioCheckStatusColorCode', valueField: 'name', textField: 'name' } },
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
+
+if (gridRadioCheckStatusTypeSettings) {
+    gridRadioCheckStatusTypeSettings.on('rowDataChanged', function (e, id, record) {
+        const data = $.extend(true, {}, record);
+        //data.radioCheckStatusColorId = !Number.isInteger(data.radioCheckStatusColorId) ? data.radioCheckStatusColorId.getValue() : data.radioCheckStatusColorId;
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            url: '/Admin/Settings?handler=RadioCheckStatus',
+            data: { record: data },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function () {
+            gridRadioCheckStatusTypeSettings.clear();
+            gridRadioCheckStatusTypeSettings.reload();
+        }).fail(function () {
+            console.log('error');
+        }).always(function () {
+            if (isRadionCheckStatusAdding)
+                isRadionCheckStatusAdding = false;
+        });
+    });
+
+    gridRadioCheckStatusTypeSettings.on('rowRemoving', function (e, id, record) {
+     
+
+        if (confirm('Are you sure want to delete this radio check status?')) {
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteRadioCheckStatus',
+                data: { id: record },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function () {
+                gridRadioCheckStatusTypeSettings.reload();
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isRadionCheckStatusAdding)
+                    isRadionCheckStatusAdding = false;
+            });
+        }
+    });
+}
+let isRadionCheckStatusAdding = false;
+$('#add_radiocheck_status').on('click', function () {
+  
+
+    if (isRadionCheckStatusAdding==true) {
+        alert('Unsaved changes in the grid. Refresh the page');
+    } else {
+        isRadionCheckStatusAdding = true;
+        gridRadioCheckStatusTypeSettings.addRow({
+            'id': -1
+        }).edit(-1);
+    }
+});
+//hover display tooltip-start
+
+$('#clientSiteActiveGuards tbody').on('click', '#btnGreen1hover', function (value, record) {
+    $('#hoverModal').modal('show');
+    var ColorName = $(this).closest("tr").find("td").eq(5).find('#RCColortype').val();
+    var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    $('#lblColorType').val(ColorName);
+
+
+});
+$('#btnhover').on('click', function () {
+    $('#hoverModal').modal('hide');
+});
+//hover display tooltip-end

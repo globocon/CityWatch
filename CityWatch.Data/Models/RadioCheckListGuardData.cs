@@ -20,7 +20,9 @@ namespace CityWatch.Data.Models
         public int IncidentReport { get; set; }
         public string SmartWands { get; set; }
         public int? RcStatus { get; set; }
-
+        public string RcColor { get; set; }
+        public string Status { get; set; }
+        public int? RcColorId { get; set; }
     }
 
 }

@@ -15,5 +15,9 @@ namespace CityWatch.Data.Models
         public string TruckNo { get; set; }
         public int? LogId { get; set; }
 
+        public int? GuardId { get; set; }
+
+        
+
     }
 }

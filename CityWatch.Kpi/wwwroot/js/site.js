@@ -1129,12 +1129,7 @@ $(function () {
 
         const isChecked = $(this).is(':checked');
         const filter = isChecked ? 1 : 2;
-        if (filter === 1) {
-            $("#lbl_ManningPatrolCar_3").text("No of Patrols"); $("#PatrolSum").css("display", "block"); $("#monthlyHrsTxt").css("display", "none");
-            $("#patrolSumlbl").css("display", "block"); $("#monthlyHrslbl").css("display", "none"); }
-        else {
-            $("#lbl_ManningPatrolCar_3").text("Workers");
-            $("#PatrolSum").css("display", "none"); $("#monthlyHrsTxt").css("display", "block"); $("#patrolSumlbl").css("display", "none"); $("#monthlyHrslbl").css("display", "block");}
+
         $("#ClientSiteManningPatrolCarKpiSettings_0__Type").val(filter);
         $("#ClientSiteManningPatrolCarKpiSettings_1__Type").val(filter);
         $("#ClientSiteManningPatrolCarKpiSettings_2__Type").val(filter);
@@ -1142,6 +1137,11 @@ $(function () {
         $("#ClientSiteManningPatrolCarKpiSettings_4__Type").val(filter);
         $("#ClientSiteManningPatrolCarKpiSettings_5__Type").val(filter);
         $("#ClientSiteManningPatrolCarKpiSettings_6__Type").val(filter);
+        $("#ClientSiteManningPatrolCarKpiSettings_7__Type").val(filter);
+       
+
+        calculateSumOfTextBoxValues();
+
         $.ajax({
             url: '/admin/settings?handler=OfficerPositions&filter=' + filter,
             type: 'GET',
@@ -1234,6 +1234,136 @@ $(function () {
             });
         }
     });
+
+    $('#div_site_settings').on('input', '#ClientSiteManningPatrolCarKpiSettings_0__NoOfPatrols,#ClientSiteManningPatrolCarKpiSettings_1__NoOfPatrols, #ClientSiteManningPatrolCarKpiSettings_2__NoOfPatrols, #ClientSiteManningPatrolCarKpiSettings_3__NoOfPatrols, #ClientSiteManningPatrolCarKpiSettings_4__NoOfPatrols, #ClientSiteManningPatrolCarKpiSettings_5__NoOfPatrols,#ClientSiteManningPatrolCarKpiSettings_6__NoOfPatrols,#ClientSiteManningPatrolCarKpiSettings_7__NoOfPatrols', function () {
+
+        calculateSumOfTextBoxValues();
+      
+    });
+
+    $('#div_site_settings').on('input', '#ClientSiteManningGuardKpiSettings_0__NoOfPatrols,#ClientSiteManningGuardKpiSettings_1__NoOfPatrols, #ClientSiteManningGuardKpiSettings_2__NoOfPatrols, #ClientSiteManningGuardKpiSettings_3__NoOfPatrols, #ClientSiteManningGuardKpiSettings_4__NoOfPatrols, #ClientSiteManningGuardKpiSettings_5__NoOfPatrols,#ClientSiteManningGuardKpiSettings_6__NoOfPatrols,#ClientSiteManningGuardKpiSettings_7__NoOfPatrols', function () {
+
+        calculateSumOfTextBoxValues2();
+
+    });
+
+    $('#div_site_settings').on('input', '#ClientSiteManningGuardKpiSettings_8__NoOfPatrols, #ClientSiteManningGuardKpiSettings_9__NoOfPatrols, #ClientSiteManningGuardKpiSettings_10__NoOfPatrols, #ClientSiteManningGuardKpiSettings_11__NoOfPatrols, #ClientSiteManningGuardKpiSettings_12__NoOfPatrols,#ClientSiteManningGuardKpiSettings_13__NoOfPatrols,#ClientSiteManningGuardKpiSettings_14__NoOfPatrols,#ClientSiteManningGuardKpiSettings_15__NoOfPatrols', function () {
+
+        calculateSumOfTextBoxValues3();
+
+    });
+
+    $('#div_site_settings').on('input', '#ClientSiteManningGuardKpiSettings_16__NoOfPatrols,#ClientSiteManningGuardKpiSettings_17__NoOfPatrols, #ClientSiteManningGuardKpiSettings_18__NoOfPatrols, #ClientSiteManningGuardKpiSettings_19__NoOfPatrols, #ClientSiteManningGuardKpiSettings_20__NoOfPatrols, #ClientSiteManningGuardKpiSettings_21__NoOfPatrols,#ClientSiteManningGuardKpiSettings_22__NoOfPatrols,#ClientSiteManningGuardKpiSettings_23__NoOfPatrols', function () {
+
+        calculateSumOfTextBoxValues4();
+
+    });
+
+   
+
+
+    function calculateSumOfTextBoxValues() {
+
+        if ($("#positionfilterPatrolCar").prop('checked') == true) {
+
+
+            // Get the values from textbox1 and convert them to numbers
+            var value1 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_0__NoOfPatrols').val()) || 0;
+            var value2 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_1__NoOfPatrols').val()) || 0;
+            var value3 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_2__NoOfPatrols').val()) || 0;
+            var value4 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_3__NoOfPatrols').val()) || 0;
+            var value5 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_4__NoOfPatrols').val()) || 0;
+            var value6 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_5__NoOfPatrols').val()) || 0;
+            var value7 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_6__NoOfPatrols').val()) || 0;
+            var value8 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_7__NoOfPatrols').val()) || 0;
+            // Calculate the sum
+            var sum = value1 + value2 + value3 + value4 + value5 + value6 + value7 + value8;
+            // Update the value in textbox2
+            if (sum !== 0) { $('#monthlyHrsAddNew').val(sum); }
+            $('#monthlyHrsTxtAddNew').text('Total Patrols :');
+            $('#lbl_ManningPatrolCar_3').text('No of Patrols');
+        }
+        else {
+            $('#monthlyHrsTxtAddNew').text('Monthly Hrs :');
+            $('#lbl_ManningPatrolCar_3').text('Workers');
+            $('#monthlyHrsAddNew').val('');
+        }
+       
+    }
+
+    function calculateSumOfTextBoxValues2() {
+
+        var check = $("#positionfilterGuard_0").prop('checked');
+        if ($("#positionfilterGuard_0").prop('checked') == true) {
+
+            // Get the values from textbox1 and convert them to numbers
+            var value1 = parseFloat($('#ClientSiteManningGuardKpiSettings_0__NoOfPatrols').val()) || 0;
+            var value2 = parseFloat($('#ClientSiteManningGuardKpiSettings_1__NoOfPatrols').val()) || 0;
+            var value3 = parseFloat($('#ClientSiteManningGuardKpiSettings_2__NoOfPatrols').val()) || 0;
+            var value4 = parseFloat($('#ClientSiteManningGuardKpiSettings_3__NoOfPatrols').val()) || 0;
+            var value5 = parseFloat($('#ClientSiteManningGuardKpiSettings_4__NoOfPatrols').val()) || 0;
+            var value6 = parseFloat($('#ClientSiteManningGuardKpiSettings_5__NoOfPatrols').val()) || 0;
+            var value7 = parseFloat($('#ClientSiteManningGuardKpiSettings_6__NoOfPatrols').val()) || 0;
+            var value8 = parseFloat($('#ClientSiteManningGuardKpiSettings_7__NoOfPatrols').val()) || 0;
+            // Calculate the sum
+            var sum = value1 + value2 + value3 + value4 + value5 + value6 + value7 + value8;
+            // Update the value in textbox2
+            $('#monthlyHrs_0').val(sum);
+           
+
+        }
+
+    }
+
+    function calculateSumOfTextBoxValues3() {
+
+        var check = $("#positionfilterGuard_8").prop('checked');
+        if ($("#positionfilterGuard_8").prop('checked') == true) {
+
+            // Get the values from textbox1 and convert them to numbers
+            var value1 = parseFloat($('#ClientSiteManningGuardKpiSettings_8__NoOfPatrols').val()) || 0;
+            var value2 = parseFloat($('#ClientSiteManningGuardKpiSettings_9__NoOfPatrols').val()) || 0;
+            var value3 = parseFloat($('#ClientSiteManningGuardKpiSettings_10__NoOfPatrols').val()) || 0;
+            var value4 = parseFloat($('#ClientSiteManningGuardKpiSettings_11__NoOfPatrols').val()) || 0;
+            var value5 = parseFloat($('#ClientSiteManningGuardKpiSettings_12__NoOfPatrols').val()) || 0;
+            var value6 = parseFloat($('#ClientSiteManningGuardKpiSettings_13__NoOfPatrols').val()) || 0;
+            var value7 = parseFloat($('#ClientSiteManningGuardKpiSettings_14__NoOfPatrols').val()) || 0;
+            var value8 = parseFloat($('#ClientSiteManningGuardKpiSettings_15__NoOfPatrols').val()) || 0;
+            // Calculate the sum
+            var sum = value1 + value2 + value3 + value4 + value5 + value6 + value7 + value8;
+            // Update the value in textbox2
+            $('#monthlyHrs_8').val(sum);
+           
+
+        }
+
+    }
+
+    function calculateSumOfTextBoxValues4() {
+
+        var check = $("#positionfilterGuard_16").prop('checked');
+        if ($("#positionfilterGuard_16").prop('checked') == true) {
+
+            // Get the values from textbox1 and convert them to numbers
+            var value1 = parseFloat($('#ClientSiteManningGuardKpiSettings_16__NoOfPatrols').val()) || 0;
+            var value2 = parseFloat($('#ClientSiteManningGuardKpiSettings_17__NoOfPatrols').val()) || 0;
+            var value3 = parseFloat($('#ClientSiteManningGuardKpiSettings_18__NoOfPatrols').val()) || 0;
+            var value4 = parseFloat($('#ClientSiteManningGuardKpiSettings_19__NoOfPatrols').val()) || 0;
+            var value5 = parseFloat($('#ClientSiteManningGuardKpiSettings_20__NoOfPatrols').val()) || 0;
+            var value6 = parseFloat($('#ClientSiteManningGuardKpiSettings_21__NoOfPatrols').val()) || 0;
+            var value7 = parseFloat($('#ClientSiteManningGuardKpiSettings_22__NoOfPatrols').val()) || 0;
+            var value8 = parseFloat($('#ClientSiteManningGuardKpiSettings_23__NoOfPatrols').val()) || 0;
+            
+            // Calculate the sum
+            var sum = value1 + value2 + value3 + value4 + value5 + value6 + value7 + value8;
+            // Update the value in textbox2
+            $('#monthlyHrs_16').val(sum);
+           
+
+        }
+
+    }
+
 
     $("textarea[id='KpiSendScheduleSummaryNote_Notes']").keyup(function () {
         $('#lblRemainingCount').html(getNoteLength($(this).val()));
