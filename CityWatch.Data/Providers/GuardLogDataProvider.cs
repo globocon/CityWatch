@@ -348,7 +348,14 @@ namespace CityWatch.Data.Providers
         {
             if (keyVehicleLog.Id == 0)
             {
-                _context.KeyVehicleLogs.Add(keyVehicleLog);
+                /* this condition added for prevent duplicate kV p7 103 issue 30112023 dileep*/
+                var checkifAlreadyExist = _context.KeyVehicleLogs.Where(x => x.ClientSiteLogBookId == keyVehicleLog.ClientSiteLogBookId
+                && x.GuardLoginId == keyVehicleLog.GuardLoginId
+                && x.VehicleRego == keyVehicleLog.VehicleRego).ToList();
+                if (!checkifAlreadyExist.Any())
+                {
+                    _context.KeyVehicleLogs.Add(keyVehicleLog);
+                }
             }
             else
             {
@@ -1268,7 +1275,7 @@ namespace CityWatch.Data.Providers
             }
         }
 
-        
+
 
 
 
@@ -1289,7 +1296,7 @@ namespace CityWatch.Data.Providers
                         ClientSiteId = ClientSiteRadioChecksActivity.ClientSiteId,
                         GuardId = ClientSiteRadioChecksActivity.GuardId,
                         Status = "Off Duty",
-                        RadioCheckStatusId=1,
+                        RadioCheckStatusId = 1,
                         CheckedAt = DateTime.Now,
                         Active = true
                     };
@@ -1373,7 +1380,7 @@ namespace CityWatch.Data.Providers
                 /* remove all the manning notification end */
 
                 /* get the manning details corresponding to the currentDay*/
-                var clientSiteManningKpiSettings = _context.ClientSiteManningKpiSettings.Include(x => x.ClientSiteKpiSetting).Where(x => x.WeekDay == currentDay && x.Type == "2" && x.IsPHO!=1).ToList();
+                var clientSiteManningKpiSettings = _context.ClientSiteManningKpiSettings.Include(x => x.ClientSiteKpiSetting).Where(x => x.WeekDay == currentDay && x.Type == "2" && x.IsPHO != 1).ToList();
                 foreach (var manning in clientSiteManningKpiSettings)
                 {
                     if (manning.EmpHoursStart != null)
