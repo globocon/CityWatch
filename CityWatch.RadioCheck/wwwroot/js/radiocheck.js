@@ -1162,22 +1162,21 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     $('#chkSiteEmail').prop('checked', true);
     $('#chkSMSPersonal').prop('checked', false);
     $('#chkSMSSmartWand').prop('checked', false); $('#txtPushNotificationMessage').val('');
-
+    $('#chkNationality').prop('checked', false);
+    $('#chkSiteState').prop('checked', false);
+    $('#chkSiteState').prop('checked', false);
+    $('#chkClientType').prop('checked', false);
+    $('#chkSMSPersonalGlobal').prop('checked', false);
+    $('#chkSMSSmartWandGlobal').prop('checked', false);
+    $('#txtGlobalNotificationMessage').val('');
+    $('#State1').prop('disabled', 'disabled');
+    $('#State1').val('ACT');
+    $('#dglClientType').multiselect("disable");
+    $('#dglClientSiteId').multiselect("disable");
+    $('#dglClientType').val('');
+    $('#dglClientSiteId').val('');
     clearGuardValidationSummary('PushNotificationsValidationSummary');
-    //$.ajax({
-    //    url: '/RadioCheckV2?handler=CompanyTextMessageData',
-    //    data: { id: id },
-    //    type: 'GET',
-    //}).done(function (result) {
-    //    if (result) {
-    //        $('#lbl_guard_name').html(result.name);
-    //        $('#lbl_guard_security_no').html(result.securityNo);
-    //        $('#lbl_guard_state').html(result.state);
-    //        $('#lbl_guard_email').html(result.email);
-    //        $('#lbl_guard_mobile').html(result.mobile);
-    //        $('#lbl_guard_provider').html(result.provider);
-    //    }
-    //});
+  
 });
 //$('#chkLB').on('change', function () {
 //    const isChecked = $(this).is(':checked');
@@ -1292,6 +1291,209 @@ $('#openActiveGuardInNewPage').on('click', function () {
     newTab.location.href = "/ActiveGuardSinglePage";
 
 });
+/*code added for Global Messsage start*/
+$('#btnSendGlabalNotificationMessage').on('click', function () {
+    const checkedState = $('#chkSiteState').is(':checked');
+    const checkedSiteEmail = $('#chkSiteEmail').is(':checked');
+    const checkedSMSPersonal = $('#chkSMSPersonalGlobal').is(':checked');
+    const checkedSMSSmartWand = $('#chkSMSSmartWandGlobal').is(':checked');
+    var clientSiteId = $('#dglClientSiteId').val();
+    var Notifications = $('#txtGlobalNotificationMessage').val();
+    var Subject = $('#txtGlobalNotificationSubject').val();
+    var State = $('#State1').val();
+    var ClientType = $('#dglClientType').val();
+    const chkClientType = $('#chkClientType').is(':checked');
+    const chkNationality = $('#chkNationality').is(':checked');
+
+    if (Notifications === '') {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
+    }
+    else if (checkedState == false && chkClientType == false && chkClientType == false && checkedSMSPersonal == false && checkedSMSSmartWand == false && chkNationality == false) {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select any one of the transfer options ');
+
+    }
+    else if (chkClientType == true && ClientType == null)
+    {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
+    }
+    else {
+        $.ajax({
+            url: '/RadioCheckV2?handler=SaveGlobalNotificationTestMessages',
+            type: 'POST',
+            data: {
+                checkedState: checkedState,
+                State: State,
+                Notifications: Notifications,
+                Subject: Subject,
+                chkClientType: chkClientType,
+                ClientType: ClientType,
+                chkNationality: chkNationality,
+                checkedSMSPersonal: checkedSMSPersonal,
+                checkedSMSSmartWand: checkedSMSSmartWand,
+                clientSiteId: clientSiteId
+
+            },
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data.success == true) {
+                $('#pushNoTificationsControlRoomModal').modal('hide');
+            }
+            else {
+                displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
+            }
+            //$('#selectRadioStatus').val('');
+            //$('#btnRefreshActivityStatus').trigger('click');
+        });
+    }
+});
+/*code added for Global Messsage stop*/
+/*code added for client site Dropdown start*/
+//$('#dglClientSiteId').select2({
+//    placeholder: 'Select',
+//    theme: 'bootstrap4'
+//});
+
+
+
+
+$('#dglClientSiteId').on('change', function () {
+    const clientTypeId = $(this).val();
+    $("#vklClientSiteId").val(clientTypeId);
+    $("#vklClientSiteId").multiselect("refresh");
+
+
+
+
+});
+$('.GlobalAlert-checkbox').on('change', function () {
+    if ($(this).prop('checked')) {
+
+        $('.GlobalAlert-checkbox').not(this).prop('checked', false);
+    }
+});
+
+/*code added for client site Dropdown stop*/
+/*to get the client type and site as multiselect-start*/
+$('#dglClientType').multiselect({
+    maxHeight: 400,
+    buttonWidth: '100%',
+    nonSelectedText: 'Select',
+    buttonTextAlignment: 'left',
+    includeSelectAllOption: true,
+});
+$('#dglClientSiteId').multiselect({
+    maxHeight: 400,
+    buttonWidth: '100%',
+    nonSelectedText: 'Select',
+    buttonTextAlignment: 'left',
+    includeSelectAllOption: true,
+});
+$('#chkNationality').on('change', function () {
+    const isChecked = $(this).is(':checked');
+    $('#IsLB').val(isChecked);
+    if (isChecked == true) {
+        $('#chkSiteState').prop('checked', false);
+        $('#chkSiteState').prop('checked', false);
+        $('#chkClientType').prop('checked', false);
+        $('#chkSMSPersonalGlobal').prop('checked', false);
+        $('#chkSMSSmartWandGlobal').prop('checked', false);
+        $('#State1').prop('disabled', 'disabled');
+        $('#State1').val('ACT');
+        $('#dglClientType').val('');
+        $('#dglClientSiteId').val('');
+        $('#dglClientType').multiselect("disable");
+        $('#dglClientSiteId').multiselect("disable");
+    }
+});
+$('#chkSiteState').change(function () {
+    const isChecked = $(this).is(':checked');
+    if (isChecked == true) {
+        $('#State1').prop('disabled', false);
+        $('#chkNationality').prop('checked', false);
+        $('#chkClientType').prop('checked', false);
+        $('#chkSMSPersonalGlobal').prop('checked', false);
+        $('#chkSMSSmartWandGlobal').prop('checked', false);
+        $('#State1').val('ACT');
+        $('#dglClientType').val('');
+        $('#dglClientSiteId').val('');
+        $('#dglClientType').multiselect("disable");
+        $('#dglClientSiteId').multiselect("disable");
+    } else {
+        $('#State1').prop('disabled', 'disabled');
+        $('#State1').val('ACT');
+    }
+});
+$('#chkClientType').change(function () {
+    const isChecked = $(this).is(':checked');
+    if (isChecked == true) {
+        $('#State1').prop('disabled', 'disabled');
+        $('#chkNationality').prop('checked', false);
+        $('#chkSiteState').prop('checked', false);
+        $('#chkSMSPersonalGlobal').prop('checked', false);
+        $('#chkSMSSmartWandGlobal').prop('checked', false);
+        //$('#dglClientType option').removeAttr('disabled');
+        $('#dglClientType').val('');
+        $('#dglClientType').multiselect("enable");
+        $('#dglClientSiteId').multiselect("enable");
+        $('#dglClientSiteId').val('');
+        $('#dglClientSiteId').html('');
+        
+    } else {
+        $('#dglClientType').val('').trigger("change");
+        
+        $('#dglClientType').multiselect("refresh");
+        $('#dglClientType').val('');
+        $('#dglClientSiteId').val('');
+        $('#dglClientType').multiselect("disable");
+        $('#dglClientSiteId').multiselect("disable");
+        
+        $('#dglClientSiteId').html('');
+       
+        
+    }
+    $('#dglClientType').on('change', function () {
+        const clientTypeId = $(this).val().join(';');
+        $('#dglClientSiteId').multiselect("refresh");
+        $('#dglClientSiteId').html('');
+        const clientSiteControl = $('#dglClientSiteId');
+        var selectedOption = $(this).find("option:selected");
+        var selectedText = selectedOption.text();
+        
+        /*$("#vklClientType").multiselect("refresh");*/
+        // gridsiteLog.clear();
+
+        //const clientSiteControlvkl = $('#vklClientSiteId');
+        //keyVehicleLogReport.clear().draw();
+        //clientSiteControlvkl.html('');
+
+        //clientSiteControl.html('');
+        $.ajax({
+            url: '/RadioCheckV2?handler=ClientSitesNew',
+            type: 'GET',
+            data: {
+                typeId: clientTypeId
+
+            },
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+
+            data.map(function (site) {
+                clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+            });
+            clientSiteControl.multiselect('rebuild');
+            //$('#selectRadioStatus').val('');
+            //$('#btnRefreshActivityStatus').trigger('click');
+        });
+
+
+    });
+    
+
+});
+/*to get the client type and site as multiselect-end*/
+
 /* Single page Grid Start  */
 
 
@@ -1807,6 +2009,7 @@ $('#heading-example2').on('click', function () {
         console.log($(window).height());
         var container = $('#clientSiteInActiveGuards').closest('.dataTables_scrollBody');
         container.css('height', ($(window).height() - 300));
+
 
     }
     // Toggle the state
