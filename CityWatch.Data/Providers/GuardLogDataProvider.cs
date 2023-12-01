@@ -1558,7 +1558,13 @@ namespace CityWatch.Data.Providers
                 if (clientSiteRcStatus != null)
                 {
                     _context.ClientSiteRadioChecks.RemoveRange(clientSiteRcStatus);
-                    var colorId = _context.RadioCheckStatus.Where(x => x.Id == clientSiteRadioCheck.RadioCheckStatusId).FirstOrDefault().RadioCheckStatusColorId;
+                    var colorId = _context.RadioCheckStatus.Where(x => x.Id == clientSiteRadioCheck.RadioCheckStatusId).FirstOrDefault().RadioCheckStatusC
+                   
+                  
+                    
+                  
+        
+              
 
                     if (colorId != null)
                     {
@@ -2167,6 +2173,98 @@ namespace CityWatch.Data.Providers
 
                         }
 
+                    }
+                    //To Deactivate Duress button
+                    else if(clientSiteRadioCheck.Status== "Duress Unlock - False Alarm or Testing")
+                    {
+                        var DuressEnabledUpdate = _context.ClientSiteDuress
+                                                .SingleOrDefault(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId);
+                        //DuressEnabledUpdate.IsEnabled = false;
+                        _context.ClientSiteDuress.RemoveRange(DuressEnabledUpdate);
+                        var logbook = _context.ClientSiteLogBooks
+   .SingleOrDefault(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId && z.Type == LogBookType.DailyGuardLog && z.Date == DateTime.Today);
+
+                        int logBookId;
+                        if (logbook == null)
+                        {
+                            var newLogBook = new ClientSiteLogBook()
+                            {
+                                ClientSiteId = clientSiteRadioCheck.ClientSiteId,
+                                Type = LogBookType.DailyGuardLog,
+                                Date = DateTime.Today
+                            };
+
+                            if (newLogBook.Id == 0)
+                            {
+                                _context.ClientSiteLogBooks.Add(newLogBook);
+                            }
+                            else
+                            {
+                                var logBookToUpdate = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == newLogBook.Id);
+                                if (logBookToUpdate != null)
+                                {
+                                    // nothing to update
+                                }
+                            }
+                            _context.SaveChanges();
+                            logBookId = newLogBook.Id;
+
+                        }
+                        else
+                        {
+                            logBookId = logbook.Id;
+                        }
+                        var guardLoginId = _context.GuardLogins
+                        .SingleOrDefault(z => z.ClientSiteLogBookId == logBookId && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == DateTime.Today);
+                        if (guardLoginId != null)
+                        {
+                            var guardLog = new GuardLog()
+                            {
+                                ClientSiteLogBookId = logBookId,
+                                GuardLoginId = guardLoginId.Id,
+                                EventDateTime = DateTime.Now,
+                                Notes = "Duress Alarm DeActivated",
+                                IsSystemEntry = true
+
+                            };
+                            SaveGuardLog(guardLog);
+                            var guardLoginToUpdate = _context.GuardLogins.SingleOrDefault(x => x.Id == guardLoginId.Id);
+                            if (guardLoginToUpdate != null)
+                            {
+                                guardLoginToUpdate.OffDuty = DateTime.Now;
+                                _context.SaveChanges();
+                            }
+
+                        }
+                        else
+                        {
+                            var latestRecord = _context.GuardLogins
+                            .Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId)
+                            .OrderByDescending(r => r.Id)
+                             .FirstOrDefault();
+                            if (latestRecord != null)
+                            {
+                                var guardLog = new GuardLog()
+                                {
+                                    ClientSiteLogBookId = logBookId,
+                                    GuardLoginId = latestRecord.Id,
+                                    EventDateTime = DateTime.Now,
+                                    Notes = "Duress Alarm DeActivated",
+                                    IsSystemEntry = true
+
+                                };
+                                SaveGuardLog(guardLog);
+                                var guardLoginToUpdate = _context.GuardLogins.SingleOrDefault(x => x.Id == latestRecord.Id);
+                                if (guardLoginToUpdate != null)
+                                {
+                                    guardLoginToUpdate.OffDuty = DateTime.Now;
+                                    _context.SaveChanges();
+                                }
+
+                            }
+
+                        }
+                        _context.SaveChanges();
                     }
                     else
                     {
