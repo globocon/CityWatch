@@ -1565,14 +1565,8 @@ namespace CityWatch.Data.Providers
                 if (clientSiteRcStatus != null)
                 {
                     _context.ClientSiteRadioChecks.RemoveRange(clientSiteRcStatus);
-                    var colorId = _context.RadioCheckStatus.Where(x => x.Id == clientSiteRadioCheck.RadioCheckStatusId).FirstOrDefault().RadioCheckStatusC
+                    var colorId = _context.RadioCheckStatus.Where(x => x.Id == clientSiteRadioCheck.RadioCheckStatusId).FirstOrDefault().RadioCheckStatusColorId;
                    
-                  
-                    
-                  
-        
-              
-
                     if (colorId != null)
                     {
                         var color = _context.RadioCheckStatusColor.Where(x => x.Id == colorId).FirstOrDefault().Name;
@@ -1844,7 +1838,7 @@ namespace CityWatch.Data.Providers
                                 foreach (var ClientSiteRadioChecksActivity in ClientSiteRadioChecksActivityDetails)
                                 {
                                     ClientSiteRadioChecksActivity.GuardLogoutTime = DateTime.Now;
-                                    UpdateRadioChecklistLogOffEntry(ClientSiteRadioChecksActivity);
+                                    //UpdateRadioChecklistLogOffEntry(ClientSiteRadioChecksActivity);
 
                                     var newstatu = new ClientSiteRadioCheck()
                                     {
@@ -1993,7 +1987,7 @@ namespace CityWatch.Data.Providers
                                 foreach (var ClientSiteRadioChecksActivity in ClientSiteRadioChecksActivityDetails)
                                 {
                                     ClientSiteRadioChecksActivity.GuardLogoutTime = DateTime.Now;
-                                    UpdateRadioChecklistLogOffEntry(ClientSiteRadioChecksActivity);
+                                    //UpdateRadioChecklistLogOffEntry(ClientSiteRadioChecksActivity);
 
                                     var newstatu = new ClientSiteRadioCheck()
                                     {
@@ -2141,7 +2135,7 @@ namespace CityWatch.Data.Providers
                                 foreach (var ClientSiteRadioChecksActivity in ClientSiteRadioChecksActivityDetails)
                                 {
                                     ClientSiteRadioChecksActivity.GuardLogoutTime = DateTime.Now;
-                                    UpdateRadioChecklistLogOffEntry(ClientSiteRadioChecksActivity);
+                                    //UpdateRadioChecklistLogOffEntry(ClientSiteRadioChecksActivity);
 
                                     var newstatu = new ClientSiteRadioCheck()
                                     {
@@ -2184,8 +2178,7 @@ namespace CityWatch.Data.Providers
                     //To Deactivate Duress button
                     else if(clientSiteRadioCheck.Status== "Duress Unlock - False Alarm or Testing")
                     {
-                        var DuressEnabledUpdate = _context.ClientSiteDuress
-                                                .SingleOrDefault(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId);
+                        var DuressEnabledUpdate = _context.ClientSiteDuress.Where(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId);
                         //DuressEnabledUpdate.IsEnabled = false;
                         _context.ClientSiteDuress.RemoveRange(DuressEnabledUpdate);
                         var logbook = _context.ClientSiteLogBooks

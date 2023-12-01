@@ -185,7 +185,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             width: '20%',
             render: function (value, type, data) {
                 return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                    '<i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+                    '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
             }
         },
         {
@@ -467,7 +467,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
                 if (data.notificationType != 1) {
                     return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                        '<a href="#" class="ml-2"><i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i></a>';
+                        '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
                 }
                 else {
                     return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true" style="color:#FF0000;"></i> ' + data.guardName;
@@ -651,7 +651,7 @@ $('#guardInfoModal').on('shown.bs.modal', function (event) {
 });
 const renderGuardInitialColumn = function (value, record, $cell, $displayEl) {
     if (record.guardId !== null) {
-        return value + '<a href="#" class="ml-2"><i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + record.guardId + '"></i></a>';
+        return value + '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + record.guardId + '"></i>';
     }
     else return value;
 }
@@ -713,7 +713,7 @@ let clientSiteNotAvailableGuards = $('#clientSiteNotAvailableGuards').DataTable(
             width: '20%',
             render: function (value, type, data) {
                 return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i><i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                    '<a href="#" class="ml-2"><i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i></a>';
+                    '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
             }
         },
 
@@ -1634,11 +1634,17 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
             data: 'guardName',
 
             width: '20%',
+            createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
+                // Define your conditions to add a class
+                if (rowData.isEnabled == 1) {
+                    cell.classList.add('bg-danger');
+                }
+            },
             render: function (value, type, data) {
 
                 if (data.notificationType != 1) {
                     return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                        '<a href="#" class="ml-2"><i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i></a>';
+                        '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
                 }
                 else {
                     return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true" style="color:#FF0000;"></i> ' + data.guardName;
@@ -1652,6 +1658,13 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
             data: 'guardLoginTime',
             width: '9%',
             className: "text-center",
+            createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
+                // Define your conditions to add a class
+                if (rowData.isEnabled == 1) {
+                    cell.classList.add('bg-danger');
+                }
+
+            },
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
                 return '<i class="fa fa-clock-o text-success rc-client-status"></i> ' + value;
@@ -1661,6 +1674,13 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
             data: 'lastEvent',
             width: '7%',
             className: "text-center",
+            createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
+                // Define your conditions to add a class
+                if (rowData.isEnabled == 1) {
+                    cell.classList.add('bg-danger');
+                }
+
+            },
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
                 return '<i class="fa fa-clock-o text-success rc-client-status"></i> ' + value;
@@ -1671,6 +1691,13 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
             data: 'twoHrAlert',
             width: '4%',
             className: "text-center",
+            createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
+                // Define your conditions to add a class
+                if (rowData.isEnabled == 1) {
+                    cell.classList.add('bg-danger');
+                }
+
+            },
             render: function (value, type, data) {
                 if (value === 'Green') return '<i class="fa fa-circle text-success"></i>';
                 return '<i class="fa fa-circle text-danger"></i>';
@@ -1681,12 +1708,26 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
             data: 'rcStatus',
             width: '4%',
             className: "text-center",
+            createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
+                // Define your conditions to add a class
+                if (rowData.isEnabled == 1) {
+                    cell.classList.add('bg-danger');
+                }
+
+            },
         },
         {
             targets: -1,
             data: null,
             width: '5%',
             defaultContent: '',
+            createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
+                // Define your conditions to add a class
+                if (rowData.isEnabled == 1) {
+                    cell.classList.add('bg-danger');
+                }
+
+            },
             render: function (value, type, data) {
 
                 return '<button name="btnRadioCheckStatus" class="btn btn-outline-primary">Radio Check</button>';
@@ -1826,7 +1867,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             width: '20%',
             render: function (value, type, data) {
                 return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                    '<i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+                    '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
             }
         },
         {
@@ -2155,28 +2196,8 @@ $('#add_radiocheck_status').on('click', function () {
 });
 //hover display tooltip-start
 
-$('#clientSiteActiveGuards tbody').on('click', '#btnGreen1hover', function (value, record) {
-    $('#hoverModal').modal('show');
-    event.preventDefault();
-    var ColorName = $(this).closest("tr").find("td").eq(5).find('#RCColortype').val();
-    var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
-    var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
-
-    $('#ClientSiteIdHover').val(ClientSiteId);
-    $('#GuardIdHover').val(GuardId);
-    //d$('#ColorIdHover').val();
-    
-    $('#lblColorType').val(ColorName);
 
 
-    var GuardName = $(this).closest("tr").find("td").eq(0).text();
-    $('#lbl_GuardActivityHeaderHover').text(GuardName + '-' + 'Log Book Details');
-    clientSiteRadiostatusDetailsHover.ajax.reload();
-
-});
-$('#btnhover').on('click', function () {
-    $('#hoverModal').modal('hide');
-});
 
 let clientSiteRadiostatusDetailsHover = $('#clientSiteRadiostatusDetailsHover').DataTable({
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
@@ -2257,6 +2278,47 @@ let clientSiteRadiostatusDetailsHover = $('#clientSiteRadiostatusDetailsHover').
                 }
             });
     },
+});
+
+
+$('#clientSiteActiveGuards tbody').on('click', '#btnGreen1hover', function (value, record) {
+    $($.fn.dataTable.tables(true)).DataTable()
+        .columns.adjust();
+    var ColorName = $(this).closest("tr").find("td").eq(5).find('#RCColortype').val();
+    var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
+
+    $('#ClientSiteIdHover').val(ClientSiteId);
+    $('#GuardIdHover').val(GuardId);
+    //d$('#ColorIdHover').val();
+
+    $('#lblColorType').val(ColorName);
+
+
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    $('#lbl_GuardActivityHeaderHover').text(GuardName + '-' + 'Log Book Details');
+    clientSiteRadiostatusDetailsHover.ajax.reload();
+    $('#hoverModal').modal('show');
+});
+
+$('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnGreen1hover', function (value, record) {
+    $($.fn.dataTable.tables(true)).DataTable()
+        .columns.adjust();
+    var ColorName = $(this).closest("tr").find("td").eq(5).find('#RCColortype').val();
+    var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
+
+    $('#ClientSiteIdHover').val(ClientSiteId);
+    $('#GuardIdHover').val(GuardId);
+    //d$('#ColorIdHover').val();
+
+    $('#lblColorType').val(ColorName);
+
+
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    $('#lbl_GuardActivityHeaderHover').text(GuardName + '-' + 'Log Book Details');
+    clientSiteRadiostatusDetailsHover.ajax.reload();
+    $('#hoverModal').modal('show');
 });
 
 //hover display tooltip-end

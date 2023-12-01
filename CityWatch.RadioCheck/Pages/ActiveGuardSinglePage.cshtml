@@ -1,8 +1,12 @@
 ﻿@page
 @using CityWatch.Data.Models;
 @using CityWatch.Data.Providers;
-@model CityWatch.Web.Pages.Radio.ActiveGuardSinglePage
+@using CityWatch.Data.Helpers;
+@using CityWatch.Data.Providers;
+@using CityWatch.Data.Services;
+@inject IGuardLogDataProvider _guardLogDataProvider
 @inject IConfigDataProvider configDataProvider
+@model CityWatch.Web.Pages.Radio.ActiveGuardSinglePage
 @{
     ViewData["Title"] = "Radio Check :: Activity in Last 2 hrs";
     ViewData["PageName"] = "Radio Check :: Activity in Last 2 hrs";
@@ -335,6 +339,9 @@
                             <li class="nav-item" role="presentation">
                                 <a class="nav-link active" id="textMessageTab" data-toggle="tab" href="#textMessage" role="tab" aria-controls="textMessage" aria-selected="true">Text Message</a>
                             </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link" id="globalalertTab" data-toggle="tab" href="#globalalert" role="tab" aria-controls="globalalert" aria-selected="true">Global Alert</a>
+                            </li>
                         </ul>
                         <div class="tab-content p-2">
                             <div class="tab-pane active" id="textMessage" role="tabpanel" aria-labelledby="textMessage">
@@ -392,6 +399,90 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="tab-pane" id="globalalert" role="tabpanel" aria-labelledby="globalalert">
+                                <input type="hidden" id="gl_client_site_id" />
+                                <div class="row m-0">
+                                    <div class="col-md-12">
+                                        <form>
+                                            <input type="hidden" id="txtNotificationsCompanyId" />
+                                            <div class="row">
+                                                <label for="gs_site_email" class="col-md-4 col-form-label">Broadcast C4i Grouping : </label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkNationality" class="GlobalAlert-checkbox">
+                                                    <label class="col-form-label">National</label>
+                                                    <input type="hidden" id="IsLB">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_land_line" class="col-md-4 col-form-label">(LB+Site Email)</label>
+                                                <div class="col-md-2">
+                                                    <input type="checkbox" id="chkSiteState" class="GlobalAlert-checkbox">
+                                                    <label class="col-form-label">State</label>
+                                                    <input type="hidden" id="IsSiteEmail">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <select class="form-control" id="State1" style="width:209px" disabled>
+                                                        @*  <option value="">Select</option> *@
+                                                        @foreach (var State in _guardLogDataProvider.GetStates())
+                                                        {
+                                                            <option value="@State.Name">@State.Name</option>
+                                                        }
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_land_line" class="col-md-4 col-form-label"></label>
+                                                <div class="col-md-4">
+                                                    <input type="checkbox" id="chkClientType" class="GlobalAlert-checkbox">
+                                                    <label class="mx-1" for="dglClientType" style="font-size:smaller">Client Type</label>
+                                                    <select class="form-control" id="dglClientType" multiple="multiple" style="width:209px" disabled>
+
+                                                        @foreach (var clientType in _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId))
+                                                        {
+                                                            <option value="@clientType.Id">@clientType.Name</option>
+                                                        }
+                                                    </select>
+
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="mx-1" for="dglClientSiteId" style="font-size:smaller">Client Site</label>
+                                                    <select class="form-control mx-1" id="dglClientSiteId" multiple="multiple" style="width:209px" disabled></select>
+
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_site_email" class="col-md-4 col-form-label">Broadcast Mode GPRS : </label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkSMSPersonalGlobal">
+                                                    <label class="col-form-label">SMS Personal</label>
+                                                    <input type="hidden" id="IsSMSPersonal">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_land_line" class="col-md-4 col-form-label"></label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkSMSSmartWandGlobal">
+                                                    <label class="col-form-label">SMS Smart Wand</label>
+                                                    <input type="hidden" id="IsSMSSmartWand">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_site_email" class="col-md-4 col-form-label">Message : </label>
+                                                <div class="col-md-6">
+                                                    <input type="text" id="txtGlobalNotificationSubject" value="Control Room Alert" style="width:450px;" class="form-control" placeholder="Subject" />
+                                                    <textarea id="txtGlobalNotificationMessage" style="width:450px;height:100px;" class="form-control"></textarea>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-row text-right">
+                                                <div class="col-md-12  text-right">
+                                                    <button type="button" id="btnSendGlabalNotificationMessage" class="btn btn-primary">Send >></button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -405,6 +496,43 @@
     </div>
 </div>
 
+
+
+<div class="modal" tabindex="-1" role="dialog" id="hoverModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><i class="fa fa-vcard-o mr-2"></i><label id="lbl_GuardActivityHeaderHover"></label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <table id="clientSiteRadiostatusDetailsHover" class="table table-bordered" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>Id</th>
+                                    <th>SiteName</th>
+                                    <th>LogBook Id</th>
+                                    <th>Notes</th>
+                                    <th>Activity Type</th>
+                                    <th>Created Time</th>
+
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
 
 @Html.AntiForgeryToken()
 @section PageHeader {
