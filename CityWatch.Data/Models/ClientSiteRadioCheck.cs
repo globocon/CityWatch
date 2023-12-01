@@ -14,6 +14,7 @@ namespace CityWatch.Data.Models
         public int GuardId { get; set; }
 
         public DateTime CheckedAt { get; set; }
+        //public string site { get; set; }
 
         public string Status { get; set; }
 

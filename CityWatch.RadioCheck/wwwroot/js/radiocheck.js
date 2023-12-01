@@ -234,7 +234,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             render: function (value, type, data) {
                 if (value === null) return '';
                 else if (value === 4)
-                    return '<i class="fa fa-check-circle text-success"></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover" >' + 1 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+                    return '<i class="fa fa-check-circle text-success"></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover" >' + 1 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '"><input type="hidden" id="ClientSiteIdHover" value="' + data.clientSiteId + '"><input type="hidden" id="GuardIdHover" value="' + data.guardId + '"><input type="hidden" id="ColorIdHover" value="' + data.rcColorId + '">';
                 else if (value === 1)
                      return data.status;
                     //return '<i class="fa fa-check-circle text-danger"></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 1 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
@@ -1820,7 +1820,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             render: function (value, type, data) {
                 if (value === null) return '';
                 else if (value === 4)
-                    return '<i class="fa fa-check-circle text-success"></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover" >' + 1 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+                    return '<i class="fa fa-check-circle text-success"></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover" >' + 1 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '"><input type="hidden" id="ClientSiteIdHover" value="' + data.clientSiteId + '"><input type="hidden" id="GuardIdHover" value="' + data.guardId + '"><input type="hidden" id="ColorIdHover" value="' + data.rcColorId + '">';
                 else if (value === 1)
                     return data.status;
                 //return '<i class="fa fa-check-circle text-danger"></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 1 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
@@ -2102,13 +2102,106 @@ $('#add_radiocheck_status').on('click', function () {
 
 $('#clientSiteActiveGuards tbody').on('click', '#btnGreen1hover', function (value, record) {
     $('#hoverModal').modal('show');
+    event.preventDefault();
     var ColorName = $(this).closest("tr").find("td").eq(5).find('#RCColortype').val();
     var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
+
+    $('#ClientSiteIdHover').val(ClientSiteId);
+    $('#GuardIdHover').val(GuardId);
+    //d$('#ColorIdHover').val();
+    
     $('#lblColorType').val(ColorName);
 
+
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    $('#lbl_GuardActivityHeaderHover').text(GuardName + '-' + 'Log Book Details');
+    clientSiteRadiostatusDetailsHover.ajax.reload();
 
 });
 $('#btnhover').on('click', function () {
     $('#hoverModal').modal('hide');
 });
+
+let clientSiteRadiostatusDetailsHover = $('#clientSiteRadiostatusDetailsHover').DataTable({
+    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+    ordering: true,
+    "columnDefs": [
+        { "visible": false, "targets": 1 } // Hide the group column initially
+    ],
+    order: [[groupColumn, 'asc']],
+    info: false,
+    searching: true,
+    autoWidth: false,
+    fixedHeader: true,
+    "scrollY": "300px", // Set the desired height for the scrollable area
+    "paging": false,
+    "footer": true,
+    ajax: {
+        url: '/RadioCheckV2?handler=ClientSiteRadiocheckStatus',
+        datatype: 'json',
+        data: function (d) {
+        d.clientSiteId = $('#ClientSiteIdHover').val();
+         d.guardId = $('#GuardIdHover').val();
+         d.ColorId=$('#ColorIdHover').val();
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'id', visible: false },
+        {
+            data: 'siteName',
+            width: '20%',
+            render: function (value, type, data) {
+
+                return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
+            }
+        },
+        {
+            data: 'logBookId',
+            width: '20%',
+            visible: false,
+
+        },
+        {
+            data: 'notes',
+            width: '9%',
+            className: "text-center",
+
+        },
+
+        {
+            data: 'activity',
+            width: '9%',
+            className: "text-center",
+
+        },
+        {
+            data: 'logBookCreatedTime',
+            width: '9%',
+            className: "text-center",
+
+        },
+
+
+    ],
+    drawCallback: function () {
+        var api = this.api();
+        var rows = api.rows({ page: 'current' }).nodes();
+        var last = null;
+
+        api.column(groupColumn, { page: 'current' })
+            .data()
+            .each(function (group, i) {
+                if (last !== group) {
+                    $(rows)
+                        .eq(i)
+                        .before('<tr class="group bg-info text-white"><td colspan="25">' + group + '</td></tr>');
+
+                    last = group;
+                }
+            });
+    },
+});
+
 //hover display tooltip-end

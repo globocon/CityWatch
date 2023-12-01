@@ -450,6 +450,16 @@ namespace CityWatch.Web.Pages.Radio
         //    return new JsonResult(_guardLogDataProvider.GetGuards(id));
         //}
 
+
+        //for getting logBookDetails of Guards-start
+        public IActionResult OnGetClientSiteRadiocheckStatus(int clientSiteId, int guardId,int ColorId)
+        {
+
+            return new JsonResult(_guardLogDataProvider.GetClientSiteRadiocheckStatus(clientSiteId, guardId));
+        }
+
+        //for getting logBookDetails of Guards-end
+
         // Save Global Text Alert Start
         public JsonResult OnPostSaveGlobalNotificationTestMessages(bool checkedState, string state, string Notifications, string Subject, bool chkClientType, int[] ClientType, bool chkNationality, bool checkedSMSPersonal, bool checkedSMSSmartWand, int[] clientSiteId)
         {
@@ -755,6 +765,7 @@ namespace CityWatch.Web.Pages.Radio
             return new JsonResult(_guardLogDataProvider.GetStates());
         }
         //code added for clientsite dropdown stop
+
 
     }
 }
