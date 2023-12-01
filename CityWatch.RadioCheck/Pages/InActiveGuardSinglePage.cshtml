@@ -1,5 +1,8 @@
 ﻿@page
+@using CityWatch.Data.Models;
+@using CityWatch.Data.Providers;
 @model CityWatch.Web.Pages.Radio.InActiveGuardSinglePage
+@inject IConfigDataProvider configDataProvider
 
 @{
     ViewData["Title"] = "Radio Check :: No Activity";
@@ -253,7 +256,8 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label class="col-form-label" for="selectRadioStatus">Select Radio Check Status</label>
-                    <select id="selectRadioStatus" class="form-control">
+                    <select id="selectRadioStatus" class="form-control" asp-items="@configDataProvider.GetRadioCheckStatusForDropDown()"></select>
+                  @*  <select id="selectRadioStatus" class="form-control">
                         <option value="" selected>Select</option>
                         <option value="N/A">N/A</option>
                         <option value="Off Duty">Off Duty</option>
@@ -264,7 +268,7 @@
                         <option value="Outgoing Call Radio">Outgoing Call Radio</option>
                         <option value="Outgoing Call Mobile">Outgoing Call Mobile</option>
                         <option value="No Answer">No Answer</option>
-                    </select>
+                    </select>*@
                     <input type="hidden" id="clientSiteId" value="" />
                     <input type="hidden" id="guardId" value="" />
                 </div>
@@ -286,7 +290,8 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label class="col-form-label" for="selectRadioStatusActive">Select Radio Check Status</label>
-                    <select id="selectRadioStatusActive" class="form-control">
+                    <select id="selectRadioStatusActive" class="form-control" asp-items="@configDataProvider.GetRadioCheckStatusForDropDown()"></select>
+                   @* <select id="selectRadioStatusActive" class="form-control">
                         <option value="" selected>Select</option>
                         <option value="N/A">N/A</option>
                         <option value="Off Duty">Off Duty</option>
@@ -297,7 +302,7 @@
                         <option value="Outgoing Call Radio">Outgoing Call Radio</option>
                         <option value="Outgoing Call Mobile">Outgoing Call Mobile</option>
                         <option value="No Answer">No Answer</option>
-                    </select>
+                    </select>*@
                     <input type="hidden" id="clientSiteId" value="" />
                     <input type="hidden" id="guardId" value="" />
                 </div>

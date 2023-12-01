@@ -120,33 +120,13 @@ $('#clientSiteActivityStatus').on('click', 'button[name="btnRadioCheckStatus"]',
     $('#selectRadioCheckStatus').modal('show');
 });
 
-$('#btnSaveRadioStatus').on('click', function () {
-    const checkedStatus = $('#selectRadioStatus').val();
-    var clientSiteId = $('#clientSiteId').val();
-    var guardId = $('#guardId').val();
-    if (checkedStatus === '') {
-        return;
-    }
-    $.ajax({
-        url: '/Radio/Check?handler=SaveRadioStatus',
-        type: 'POST',
-        data: {
-            clientSiteId: clientSiteId,
-            guardId: guardId,
-            checkedStatus: checkedStatus,
-        },
-        dataType: 'json',
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function () {
-        $('#selectRadioCheckStatus').modal('hide');
-        $('#selectRadioStatus').val('');
-        $('#btnRefreshActivityStatus').trigger('click');
-    });
-});
+
 
 /* V2 Changes start 12102023 */
 const groupColumn = 1;
 const groupColumn2 = 2;
+var scrollPosition2;
+var rowIndex2;
 let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
     ordering: true,
@@ -206,7 +186,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
-                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a  id="btnLogBookDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" text="' + data.clientSiteId + '"><input type="hidden" id="GuardId" text="' + data.guardId + '"> ';
+                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardLogBookInfoModal" id="btnLogBookDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" text="' + data.clientSiteId + '"><input type="hidden" id="GuardId" text="' + data.guardId + '"> ';
             }
         },
         {
@@ -215,7 +195,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
-                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#" id="btnKeyVehicleDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardKeyVehicleInfoModal" id="btnKeyVehicleDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
             }
         },
         {
@@ -224,7 +204,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
-                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#" id="btnIncidentReportdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '"> ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardIncidentReportsInfoModal" id="btnIncidentReportdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '"> ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
             }
 
         },
@@ -265,7 +245,12 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
 
     ],
+
+    preDrawCallback: function (settings) {
+        scrollPosition = $(".dataTables_scrollBody").scrollTop();
+    },
     drawCallback: function () {
+        $(".dataTables_scrollBody").scrollTop(scrollPosition);
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;
@@ -357,9 +342,40 @@ function format_kvl_child_row(d) {
         '</table>'
     );
 }
-
+var scrollPosition;
+var rowIndex;
 
 let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
+    dom: 'Bfrtip',
+    buttons: [
+
+        {
+            extend: 'copy',
+            text: '<i class="fa fa-copy"></i>',
+            titleAttr: 'Copy',
+            className: 'btn btn-md mr-2 btn-copy'
+        },
+        {
+            extend: 'excel',
+            text: '<i class="fa fa-file-excel-o"></i>',
+            titleAttr: 'Excel',
+            className: 'btn btn-md mr-2 btn-excel'
+        },
+        {
+            extend: 'pdf',
+            text: '<i class="fa fa-file-pdf-o"></i>',
+            titleAttr: 'PDF',
+            className: 'btn btn-md mr-2 btn-pdf'
+        },
+        {
+            extend: 'print',
+            text: '<i class="fa fa-print"></i>',
+            titleAttr: 'Print',
+            className: 'btn btn-md mr-2 btn-print'
+        },
+
+
+    ],
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
     ordering: true,
     "columnDefs": [
@@ -434,10 +450,19 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                 return '<i class="fa fa-clock-o text-success rc-client-status"></i> ' + value;
             }
         },
+        {
+            data: 'lastEvent',
+            width: '7%',
+            className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return '<i class="fa fa-clock-o text-success rc-client-status"></i> ' + value;
+            }
+        },
 
         {
             data: 'twoHrAlert',
-            width: '5%',
+            width: '4%',
             className: "text-center",
             render: function (value, type, data) {
                 if (value === 'Green') return '<i class="fa fa-circle text-success"></i>';
@@ -447,7 +472,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
         {
             data: 'rcStatus',
-            width: '5%',
+            width: '4%',
             className: "text-center",
         },
         {
@@ -469,7 +494,13 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         },
 
     ],
+
+    preDrawCallback: function (settings) {
+        scrollPosition = $(".dataTables_scrollBody").scrollTop();
+    },
     drawCallback: function () {
+        /* Retain the Scroll position*/
+        $(".dataTables_scrollBody").scrollTop(scrollPosition);
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;
@@ -557,7 +588,9 @@ const renderGuardInitialColumn = function (value, record, $cell, $displayEl) {
 
 /*to get the guards that are not available-start*/
 $('#btnNonActiveList').on('click', function () {
-    window.open("../NonActiveGuards")
+    let newTab = window.open();
+    newTab.location.href = "/NonActiveGuards";
+
 });
 let clientSiteNotAvailableGuards = $('#clientSiteNotAvailableGuards').DataTable({
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
@@ -867,6 +900,12 @@ $('#clientSiteActiveGuards tbody').on('click', '#btnKeyVehicleDetailsByGuard', f
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
     var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
     var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    if (GuardId.length == 0) {
+        GuardId = $(this).closest("tr").find('td').eq(2).find('#GuardId').val();
+    }
+    if (ClientSiteId.length == 0) {
+        ClientSiteId = $(this).closest("tr").find('td').eq(2).find('#ClientSiteId').val();
+    }
     $('#txtClientSiteId').val(ClientSiteId);
     $('#txtGuardId').val(GuardId);
     // $('#lbl_GuardActivityHeader').val($(this).closest("tr").find("td").eq(2).text() + 'Log Book Details');
@@ -962,6 +1001,13 @@ $('#clientSiteActiveGuards tbody').on('click', '#btnIncidentReportdetails', func
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
     var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
     var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    if (GuardId.length == 0) {
+        GuardId = $(this).closest("tr").find('td').eq(2).find('#GuardId').val();
+    }
+    if (ClientSiteId.length == 0) {
+        ClientSiteId = $(this).closest("tr").find('td').eq(2).find('#ClientSiteId').val();
+    }
+
     $('#txtClientSiteId').val(ClientSiteId);
     $('#txtGuardId').val(GuardId);
     // $('#lbl_GuardActivityHeader').val($(this).closest("tr").find("td").eq(2).text() + 'Log Book Details');
@@ -1015,7 +1061,8 @@ $('#btnSaveRadioStatus').on('click', function () {
     }).done(function () {
         $('#selectRadioCheckStatus').modal('hide');
         $('#selectRadioStatus').val('');
-        $('#btnRefreshActivityStatus').trigger('click');
+        clientSiteActiveGuards.ajax.reload();
+        clientSiteInActiveGuards.ajax.reload();
     });
 });
 $('#radio_duress_btn').on('click', function () {
@@ -1054,7 +1101,8 @@ $('#btnSaveRadioStatusActive').on('click', function () {
     }).done(function () {
         $('#selectRadioCheckStatusActive').modal('hide');
         $('#selectRadioStatus').val('');
-        $('#btnRefreshActivityStatus').trigger('click');
+        clientSiteActiveGuards.ajax.reload();
+        clientSiteInActiveGuards.ajax.reload();
     });
 });
 
@@ -1073,20 +1121,21 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     $('#chkSiteEmail').prop('checked', true);
     $('#chkSMSPersonal').prop('checked', false);
     $('#chkSMSSmartWand').prop('checked', false); $('#txtPushNotificationMessage').val('');
-    //$.ajax({
-    //    url: '/Radio/RadioCheckNew?handler=CompanyTextMessageData',
-    //    data: { id: id },
-    //    type: 'GET',
-    //}).done(function (result) {
-    //    if (result) {
-    //        $('#lbl_guard_name').html(result.name);
-    //        $('#lbl_guard_security_no').html(result.securityNo);
-    //        $('#lbl_guard_state').html(result.state);
-    //        $('#lbl_guard_email').html(result.email);
-    //        $('#lbl_guard_mobile').html(result.mobile);
-    //        $('#lbl_guard_provider').html(result.provider);
-    //    }
-    //});
+    $('#chkNationality').prop('checked', false);
+    $('#chkSiteState').prop('checked', false);
+    $('#chkSiteState').prop('checked', false);
+    $('#chkClientType').prop('checked', false);
+    $('#chkSMSPersonalGlobal').prop('checked', false);
+    $('#chkSMSSmartWandGlobal').prop('checked', false);
+    $('#txtGlobalNotificationMessage').val('');
+    $('#State1').prop('disabled', 'disabled');
+    $('#State1').val('ACT');
+    $('#dglClientType2').multiselect("disable");
+    $('#dglClientSiteId2').multiselect("disable");
+    $('#dglClientType2').val('');
+    $('#dglClientSiteId2').val('');
+    clearGuardValidationSummary('PushNotificationsValidationSummary');
+
 });
 //$('#chkLB').on('change', function () {
 //    const isChecked = $(this).is(':checked');
@@ -1104,7 +1153,10 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
 //    const isChecked = $(this).is(':checked');
 //    $('#IsSMSSmartWand').val(isChecked);
 //});
-
+function clearGuardValidationSummary(validationControl) {
+    $('#' + validationControl).removeClass('validation-summary-errors').addClass('validation-summary-valid');
+    $('#' + validationControl).html('');
+}
 
 
 
@@ -1135,6 +1187,7 @@ $('#btnSendPushLotificationMessage').on('click', function () {
 
     }
     else {
+        Notifications = Notifications;
         $.ajax({
             url: '/Radio/RadioCheckNew?handler=SavePushNotificationTestMessages',
             type: 'POST',
@@ -1181,3 +1234,221 @@ function displayGuardValidationSummary(validationControl, errors) {
 }
 
 /*for pushing notifications from the control room - end*/
+function clearGuardValidationSummary(validationControl) {
+    $('#' + validationControl).removeClass('validation-summary-errors').addClass('validation-summary-valid');
+    $('#' + validationControl).html('');
+}
+
+$('#openInActiveGuardInNewPage').on('click', function () {
+    let newTab = window.open();
+    newTab.location.href = "/InActiveGuardSinglePage";
+
+});
+
+$('#openActiveGuardInNewPage').on('click', function () {
+    let newTab = window.open();
+    newTab.location.href = "/ActiveGuardSinglePage";
+
+});
+/*code added for Global Messsage start*/
+$('#btnSendGlabalNotificationMessage').on('click', function () {
+    const checkedState = $('#chkSiteState').is(':checked');
+    const checkedSiteEmail = $('#chkSiteEmail').is(':checked');
+    const checkedSMSPersonal = $('#chkSMSPersonalGlobal').is(':checked');
+    const checkedSMSSmartWand = $('#chkSMSSmartWandGlobal').is(':checked');
+    var clientSiteId = $('#dglClientSiteId2').val();
+    var Notifications = $('#txtGlobalNotificationMessage').val();
+    var Subject = $('#txtGlobalNotificationSubject').val();
+    var State = $('#State1').val();
+    var ClientType = $('#dglClientType2').val();
+    const chkClientType = $('#chkClientType').is(':checked');
+    const chkNationality = $('#chkNationality').is(':checked');
+
+    if (Notifications === '') {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
+    }
+    else if (checkedState == false && chkClientType == false && chkClientType == false && checkedSMSPersonal == false && checkedSMSSmartWand == false && chkNationality == false) {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select any one of the transfer options ');
+
+    }
+    else if (chkClientType == true && ClientType == null) {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
+    }
+    else {
+        $.ajax({
+            url: '/Radio/RadioCheckNew?handler=SaveGlobalNotificationTestMessages',
+            type: 'POST',
+            data: {
+                checkedState: checkedState,
+                State: State,
+                Notifications: Notifications,
+                Subject: Subject,
+                chkClientType: chkClientType,
+                ClientType: ClientType,
+                chkNationality: chkNationality,
+                checkedSMSPersonal: checkedSMSPersonal,
+                checkedSMSSmartWand: checkedSMSSmartWand,
+                clientSiteId: clientSiteId
+
+            },
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data.success == true) {
+                $('#pushNoTificationsControlRoomModal').modal('hide');
+            }
+            else {
+                displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
+            }
+            //$('#selectRadioStatus').val('');
+            //$('#btnRefreshActivityStatus').trigger('click');
+        });
+    }
+});
+/*code added for Global Messsage stop*/
+/*code added for client site Dropdown start*/
+//$('#dglClientSiteId2').select2({
+//    placeholder: 'Select',
+//    theme: 'bootstrap4'
+//});
+
+
+
+
+$('#dglClientSiteId2').on('change', function () {
+    const clientTypeId = $(this).val();
+    $("#vklClientSiteId").val(clientTypeId);
+    $("#vklClientSiteId").multiselect("refresh");
+
+
+
+
+});
+$('.GlobalAlert-checkbox').on('change', function () {
+    if ($(this).prop('checked')) {
+
+        $('.GlobalAlert-checkbox').not(this).prop('checked', false);
+    }
+});
+
+/*code added for client site Dropdown stop*/
+/*to get the client type and site as multiselect-start*/
+$('#dglClientType2').multiselect({
+    maxHeight: 400,
+    buttonWidth: '100%',
+    nonSelectedText: 'Select',
+    buttonTextAlignment: 'left',
+    includeSelectAllOption: true,
+});
+$('#dglClientSiteId2').multiselect({
+    maxHeight: 400,
+    buttonWidth: '100%',
+    nonSelectedText: 'Select',
+    buttonTextAlignment: 'left',
+    includeSelectAllOption: true,
+});
+$('#chkNationality').on('change', function () {
+    const isChecked = $(this).is(':checked');
+    $('#IsLB').val(isChecked);
+    if (isChecked == true) {
+        $('#chkSiteState').prop('checked', false);
+        $('#chkSiteState').prop('checked', false);
+        $('#chkClientType').prop('checked', false);
+        $('#chkSMSPersonalGlobal').prop('checked', false);
+        $('#chkSMSSmartWandGlobal').prop('checked', false);
+        $('#State1').prop('disabled', 'disabled');
+        $('#State1').val('ACT');
+        $('#dglClientType2').val('');
+        $('#dglClientSiteId2').val('');
+        $('#dglClientType2').multiselect("disable");
+        $('#dglClientSiteId2').multiselect("disable");
+    }
+});
+$('#chkSiteState').change(function () {
+    const isChecked = $(this).is(':checked');
+    if (isChecked == true) {
+        $('#State1').prop('disabled', false);
+        $('#chkNationality').prop('checked', false);
+        $('#chkClientType').prop('checked', false);
+        $('#chkSMSPersonalGlobal').prop('checked', false);
+        $('#chkSMSSmartWandGlobal').prop('checked', false);
+        $('#State1').val('ACT');
+        $('#dglClientType2').val('');
+        $('#dglClientSiteId2').val('');
+        $('#dglClientType2').multiselect("disable");
+        $('#dglClientSiteId2').multiselect("disable");
+    } else {
+        $('#State1').prop('disabled', 'disabled');
+        $('#State1').val('ACT');
+    }
+});
+$('#chkClientType').change(function () {
+    const isChecked = $(this).is(':checked');
+    if (isChecked == true) {
+        $('#State1').prop('disabled', 'disabled');
+        $('#chkNationality').prop('checked', false);
+        $('#chkSiteState').prop('checked', false);
+        $('#chkSMSPersonalGlobal').prop('checked', false);
+        $('#chkSMSSmartWandGlobal').prop('checked', false);
+        //$('#dglClientType2 option').removeAttr('disabled');
+        $('#dglClientType2').val('');
+        $('#dglClientType2').multiselect("enable");
+        $('#dglClientSiteId2').multiselect("enable");
+        $('#dglClientSiteId2').val('');
+        $('#dglClientSiteId2').html('');
+
+    } else {
+        $('#dglClientType2').val('').trigger("change");
+
+        $('#dglClientType2').multiselect("refresh");
+        $('#dglClientType2').val('');
+        $('#dglClientSiteId2').val('');
+        $('#dglClientType2').multiselect("disable");
+        $('#dglClientSiteId2').multiselect("disable");
+
+        $('#dglClientSiteId2').html('');
+
+
+    }
+    $('#dglClientType2').on('change', function () {
+        const clientTypeId = $(this).val().join(';');
+        $('#dglClientSiteId2').multiselect("refresh");
+        $('#dglClientSiteId2').html('');
+        const clientSiteControl = $('#dglClientSiteId2');
+        var selectedOption = $(this).find("option:selected");
+        var selectedText = selectedOption.text();
+
+        /*$("#vklClientType").multiselect("refresh");*/
+        // gridsiteLog.clear();
+
+        //const clientSiteControlvkl = $('#vklClientSiteId');
+        //keyVehicleLogReport.clear().draw();
+        //clientSiteControlvkl.html('');
+
+        //clientSiteControl.html('');
+        $.ajax({
+            url: '/Radio/RadioCheckNew?handler=ClientSitesNew',
+            type: 'GET',
+            data: {
+                typeId: clientTypeId
+
+            },
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+
+            data.map(function (site) {
+                clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+            });
+            clientSiteControl.multiselect('rebuild');
+            //$('#selectRadioStatus').val('');
+            //$('#btnRefreshActivityStatus').trigger('click');
+        });
+
+
+    });
+
+
+});
+/*to get the client type and site as multiselect-end*/
+

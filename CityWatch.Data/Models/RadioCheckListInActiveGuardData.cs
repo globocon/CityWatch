@@ -26,6 +26,7 @@ namespace CityWatch.Data.Models
         public int? NotificationType { get; set; }
         public string LastEvent { get; set; }
         public int IsEnabled { get; set; }
+        public int? StatusId{ get; set; }
 
 
     }

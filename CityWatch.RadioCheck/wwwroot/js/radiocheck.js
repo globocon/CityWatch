@@ -234,13 +234,16 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             render: function (value, type, data) {
                 if (value === null) return '';
                 else if (value === 4)
-                    return '<i class="fa fa-check-circle text-success"></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover" >' + 1 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+                    return '<i class="fa fa-check-circle text-success"></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover" >' + 1 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '"><input type="hidden" id="ClientSiteIdHover" value="' + data.clientSiteId + '"><input type="hidden" id="GuardIdHover" value="' + data.guardId + '"><input type="hidden" id="ColorIdHover" value="' + data.rcColorId + '">';
                 else if (value === 1)
-                    return '<i class="fa fa-check-circle text-danger"></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 1 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+                     return data.status;
+                    //return '<i class="fa fa-check-circle text-danger"></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 1 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
                 else if (value === 2)
-                    return '<i class="fa fa-check-circle text-danger "></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 2 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+                    return data.status;
+                  //  return '<i class="fa fa-check-circle text-danger "></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 2 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
                 else  
-                    return '<i class="fa fa-check-circle text-danger "></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 3 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+                    return data.status;
+                    //return '<i class="fa fa-check-circle text-danger "></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 3 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
             }
         },
         {
@@ -1092,6 +1095,7 @@ $('#clientSiteInActiveGuards').on('click', 'button[name="btnRadioCheckStatus"]',
     var rowClientSiteId = data.clientSiteId;
     var rowGuardId = data.guardId;
     var rcSatus = data.rcStatus;
+
     var IsEnabled = data.isEnabled;
     
     if (IsEnabled == 0) {
@@ -1101,7 +1105,10 @@ $('#clientSiteInActiveGuards').on('click', 'button[name="btnRadioCheckStatus"]',
     else {
         $('#selectRadioStatus option:contains("Deactivate")').show();
     }
-    $("#selectRadioStatus").val(rcSatus);
+    
+
+    $("#selectRadioStatus").val(data.statusId);
+
     $('#clientSiteId').val(rowClientSiteId);
     $('#guardId').val(rowGuardId);
     $('#selectRadioCheckStatus').modal('show');
@@ -1210,22 +1217,21 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     $('#chkSiteEmail').prop('checked', true);
     $('#chkSMSPersonal').prop('checked', false);
     $('#chkSMSSmartWand').prop('checked', false); $('#txtPushNotificationMessage').val('');
-
+    $('#chkNationality').prop('checked', false);
+    $('#chkSiteState').prop('checked', false);
+    $('#chkSiteState').prop('checked', false);
+    $('#chkClientType').prop('checked', false);
+    $('#chkSMSPersonalGlobal').prop('checked', false);
+    $('#chkSMSSmartWandGlobal').prop('checked', false);
+    $('#txtGlobalNotificationMessage').val('');
+    $('#State1').prop('disabled', 'disabled');
+    $('#State1').val('ACT');
+    $('#dglClientType').multiselect("disable");
+    $('#dglClientSiteId').multiselect("disable");
+    $('#dglClientType').val('');
+    $('#dglClientSiteId').val('');
     clearGuardValidationSummary('PushNotificationsValidationSummary');
-    //$.ajax({
-    //    url: '/RadioCheckV2?handler=CompanyTextMessageData',
-    //    data: { id: id },
-    //    type: 'GET',
-    //}).done(function (result) {
-    //    if (result) {
-    //        $('#lbl_guard_name').html(result.name);
-    //        $('#lbl_guard_security_no').html(result.securityNo);
-    //        $('#lbl_guard_state').html(result.state);
-    //        $('#lbl_guard_email').html(result.email);
-    //        $('#lbl_guard_mobile').html(result.mobile);
-    //        $('#lbl_guard_provider').html(result.provider);
-    //    }
-    //});
+  
 });
 //$('#chkLB').on('change', function () {
 //    const isChecked = $(this).is(':checked');
@@ -1340,6 +1346,209 @@ $('#openActiveGuardInNewPage').on('click', function () {
     newTab.location.href = "/ActiveGuardSinglePage";
 
 });
+/*code added for Global Messsage start*/
+$('#btnSendGlabalNotificationMessage').on('click', function () {
+    const checkedState = $('#chkSiteState').is(':checked');
+    const checkedSiteEmail = $('#chkSiteEmail').is(':checked');
+    const checkedSMSPersonal = $('#chkSMSPersonalGlobal').is(':checked');
+    const checkedSMSSmartWand = $('#chkSMSSmartWandGlobal').is(':checked');
+    var clientSiteId = $('#dglClientSiteId').val();
+    var Notifications = $('#txtGlobalNotificationMessage').val();
+    var Subject = $('#txtGlobalNotificationSubject').val();
+    var State = $('#State1').val();
+    var ClientType = $('#dglClientType').val();
+    const chkClientType = $('#chkClientType').is(':checked');
+    const chkNationality = $('#chkNationality').is(':checked');
+
+    if (Notifications === '') {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
+    }
+    else if (checkedState == false && chkClientType == false && chkClientType == false && checkedSMSPersonal == false && checkedSMSSmartWand == false && chkNationality == false) {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select any one of the transfer options ');
+
+    }
+    else if (chkClientType == true && ClientType == null)
+    {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
+    }
+    else {
+        $.ajax({
+            url: '/RadioCheckV2?handler=SaveGlobalNotificationTestMessages',
+            type: 'POST',
+            data: {
+                checkedState: checkedState,
+                State: State,
+                Notifications: Notifications,
+                Subject: Subject,
+                chkClientType: chkClientType,
+                ClientType: ClientType,
+                chkNationality: chkNationality,
+                checkedSMSPersonal: checkedSMSPersonal,
+                checkedSMSSmartWand: checkedSMSSmartWand,
+                clientSiteId: clientSiteId
+
+            },
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data.success == true) {
+                $('#pushNoTificationsControlRoomModal').modal('hide');
+            }
+            else {
+                displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
+            }
+            //$('#selectRadioStatus').val('');
+            //$('#btnRefreshActivityStatus').trigger('click');
+        });
+    }
+});
+/*code added for Global Messsage stop*/
+/*code added for client site Dropdown start*/
+//$('#dglClientSiteId').select2({
+//    placeholder: 'Select',
+//    theme: 'bootstrap4'
+//});
+
+
+
+
+$('#dglClientSiteId').on('change', function () {
+    const clientTypeId = $(this).val();
+    $("#vklClientSiteId").val(clientTypeId);
+    $("#vklClientSiteId").multiselect("refresh");
+
+
+
+
+});
+$('.GlobalAlert-checkbox').on('change', function () {
+    if ($(this).prop('checked')) {
+
+        $('.GlobalAlert-checkbox').not(this).prop('checked', false);
+    }
+});
+
+/*code added for client site Dropdown stop*/
+/*to get the client type and site as multiselect-start*/
+$('#dglClientType').multiselect({
+    maxHeight: 400,
+    buttonWidth: '100%',
+    nonSelectedText: 'Select',
+    buttonTextAlignment: 'left',
+    includeSelectAllOption: true,
+});
+$('#dglClientSiteId').multiselect({
+    maxHeight: 400,
+    buttonWidth: '100%',
+    nonSelectedText: 'Select',
+    buttonTextAlignment: 'left',
+    includeSelectAllOption: true,
+});
+$('#chkNationality').on('change', function () {
+    const isChecked = $(this).is(':checked');
+    $('#IsLB').val(isChecked);
+    if (isChecked == true) {
+        $('#chkSiteState').prop('checked', false);
+        $('#chkSiteState').prop('checked', false);
+        $('#chkClientType').prop('checked', false);
+        $('#chkSMSPersonalGlobal').prop('checked', false);
+        $('#chkSMSSmartWandGlobal').prop('checked', false);
+        $('#State1').prop('disabled', 'disabled');
+        $('#State1').val('ACT');
+        $('#dglClientType').val('');
+        $('#dglClientSiteId').val('');
+        $('#dglClientType').multiselect("disable");
+        $('#dglClientSiteId').multiselect("disable");
+    }
+});
+$('#chkSiteState').change(function () {
+    const isChecked = $(this).is(':checked');
+    if (isChecked == true) {
+        $('#State1').prop('disabled', false);
+        $('#chkNationality').prop('checked', false);
+        $('#chkClientType').prop('checked', false);
+        $('#chkSMSPersonalGlobal').prop('checked', false);
+        $('#chkSMSSmartWandGlobal').prop('checked', false);
+        $('#State1').val('ACT');
+        $('#dglClientType').val('');
+        $('#dglClientSiteId').val('');
+        $('#dglClientType').multiselect("disable");
+        $('#dglClientSiteId').multiselect("disable");
+    } else {
+        $('#State1').prop('disabled', 'disabled');
+        $('#State1').val('ACT');
+    }
+});
+$('#chkClientType').change(function () {
+    const isChecked = $(this).is(':checked');
+    if (isChecked == true) {
+        $('#State1').prop('disabled', 'disabled');
+        $('#chkNationality').prop('checked', false);
+        $('#chkSiteState').prop('checked', false);
+        $('#chkSMSPersonalGlobal').prop('checked', false);
+        $('#chkSMSSmartWandGlobal').prop('checked', false);
+        //$('#dglClientType option').removeAttr('disabled');
+        $('#dglClientType').val('');
+        $('#dglClientType').multiselect("enable");
+        $('#dglClientSiteId').multiselect("enable");
+        $('#dglClientSiteId').val('');
+        $('#dglClientSiteId').html('');
+        
+    } else {
+        $('#dglClientType').val('').trigger("change");
+        
+        $('#dglClientType').multiselect("refresh");
+        $('#dglClientType').val('');
+        $('#dglClientSiteId').val('');
+        $('#dglClientType').multiselect("disable");
+        $('#dglClientSiteId').multiselect("disable");
+        
+        $('#dglClientSiteId').html('');
+       
+        
+    }
+    $('#dglClientType').on('change', function () {
+        const clientTypeId = $(this).val().join(';');
+        $('#dglClientSiteId').multiselect("refresh");
+        $('#dglClientSiteId').html('');
+        const clientSiteControl = $('#dglClientSiteId');
+        var selectedOption = $(this).find("option:selected");
+        var selectedText = selectedOption.text();
+        
+        /*$("#vklClientType").multiselect("refresh");*/
+        // gridsiteLog.clear();
+
+        //const clientSiteControlvkl = $('#vklClientSiteId');
+        //keyVehicleLogReport.clear().draw();
+        //clientSiteControlvkl.html('');
+
+        //clientSiteControl.html('');
+        $.ajax({
+            url: '/RadioCheckV2?handler=ClientSitesNew',
+            type: 'GET',
+            data: {
+                typeId: clientTypeId
+
+            },
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+
+            data.map(function (site) {
+                clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+            });
+            clientSiteControl.multiselect('rebuild');
+            //$('#selectRadioStatus').val('');
+            //$('#btnRefreshActivityStatus').trigger('click');
+        });
+
+
+    });
+    
+
+});
+/*to get the client type and site as multiselect-end*/
+
 /* Single page Grid Start  */
 
 
@@ -1557,7 +1766,7 @@ $('#clientSiteInActiveGuardsSinglePage').on('click', 'button[name="btnRadioCheck
     var rowClientSiteId = data.clientSiteId;
     var rowGuardId = data.guardId;
     var rcSatus = data.rcStatus;
-    $("#selectRadioStatus").val(rcSatus);
+    $("#selectRadioStatus").val(data.statusId);    
     $('#clientSiteId').val(rowClientSiteId);
     $('#guardId').val(rowGuardId);
     $('#selectRadioCheckStatus').modal('show');
@@ -1653,10 +1862,30 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             width: '6%',
             className: "text-center",
         },
+        //{
+        //    data: 'rcStatus',
+        //    width: '5%',
+        //    className: "text-center",
+        //},
+
         {
-            data: 'rcStatus',
+            data: 'rcColorId',
             width: '5%',
             className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return '';
+                else if (value === 4)
+                    return '<i class="fa fa-check-circle text-success"></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover" >' + 1 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '"><input type="hidden" id="ClientSiteIdHover" value="' + data.clientSiteId + '"><input type="hidden" id="GuardIdHover" value="' + data.guardId + '"><input type="hidden" id="ColorIdHover" value="' + data.rcColorId + '">';
+                else if (value === 1)
+                    return data.status;
+                //return '<i class="fa fa-check-circle text-danger"></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 1 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+                else if (value === 2)
+                    return data.status;
+                //  return '<i class="fa fa-check-circle text-danger "></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 2 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+                else
+                    return data.status;
+                //return '<i class="fa fa-check-circle text-danger "></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 3 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+            }
         },
         {
             targets: -1,
@@ -1836,6 +2065,7 @@ $('#heading-example2').on('click', function () {
         var container = $('#clientSiteInActiveGuards').closest('.dataTables_scrollBody');
         container.css('height', ($(window).height() - 300));
 
+
     }
     // Toggle the state
     isActiveTwo = !isActiveTwo;
@@ -1927,13 +2157,106 @@ $('#add_radiocheck_status').on('click', function () {
 
 $('#clientSiteActiveGuards tbody').on('click', '#btnGreen1hover', function (value, record) {
     $('#hoverModal').modal('show');
+    event.preventDefault();
     var ColorName = $(this).closest("tr").find("td").eq(5).find('#RCColortype').val();
     var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
+
+    $('#ClientSiteIdHover').val(ClientSiteId);
+    $('#GuardIdHover').val(GuardId);
+    //d$('#ColorIdHover').val();
+    
     $('#lblColorType').val(ColorName);
 
+
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    $('#lbl_GuardActivityHeaderHover').text(GuardName + '-' + 'Log Book Details');
+    clientSiteRadiostatusDetailsHover.ajax.reload();
 
 });
 $('#btnhover').on('click', function () {
     $('#hoverModal').modal('hide');
 });
+
+let clientSiteRadiostatusDetailsHover = $('#clientSiteRadiostatusDetailsHover').DataTable({
+    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+    ordering: true,
+    "columnDefs": [
+        { "visible": false, "targets": 1 } // Hide the group column initially
+    ],
+    order: [[groupColumn, 'asc']],
+    info: false,
+    searching: true,
+    autoWidth: false,
+    fixedHeader: true,
+    "scrollY": "300px", // Set the desired height for the scrollable area
+    "paging": false,
+    "footer": true,
+    ajax: {
+        url: '/RadioCheckV2?handler=ClientSiteRadiocheckStatus',
+        datatype: 'json',
+        data: function (d) {
+        d.clientSiteId = $('#ClientSiteIdHover').val();
+         d.guardId = $('#GuardIdHover').val();
+         d.ColorId=$('#ColorIdHover').val();
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'id', visible: false },
+        {
+            data: 'siteName',
+            width: '20%',
+            render: function (value, type, data) {
+
+                return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
+            }
+        },
+        {
+            data: 'logBookId',
+            width: '20%',
+            visible: false,
+
+        },
+        {
+            data: 'notes',
+            width: '9%',
+            className: "text-center",
+
+        },
+
+        {
+            data: 'activity',
+            width: '9%',
+            className: "text-center",
+
+        },
+        {
+            data: 'logBookCreatedTime',
+            width: '9%',
+            className: "text-center",
+
+        },
+
+
+    ],
+    drawCallback: function () {
+        var api = this.api();
+        var rows = api.rows({ page: 'current' }).nodes();
+        var last = null;
+
+        api.column(groupColumn, { page: 'current' })
+            .data()
+            .each(function (group, i) {
+                if (last !== group) {
+                    $(rows)
+                        .eq(i)
+                        .before('<tr class="group bg-info text-white"><td colspan="25">' + group + '</td></tr>');
+
+                    last = group;
+                }
+            });
+    },
+});
+
 //hover display tooltip-end

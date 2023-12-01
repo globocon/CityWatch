@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 
 namespace CityWatch.Data.Models
 {
     public class User
     {
+        public static ClaimsIdentity Identity { get; internal set; }
         [Key]
         public int Id { get; set; }
 
