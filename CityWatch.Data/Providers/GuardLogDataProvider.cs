@@ -349,13 +349,13 @@ namespace CityWatch.Data.Providers
             if (keyVehicleLog.Id == 0)
             {
                 /* this condition added for prevent duplicate kV p7 103 issue 30112023 dileep*/
-                var checkifAlreadyExist = _context.KeyVehicleLogs.Where(x => x.ClientSiteLogBookId == keyVehicleLog.ClientSiteLogBookId
-                && x.GuardLoginId == keyVehicleLog.GuardLoginId
-                && x.VehicleRego == keyVehicleLog.VehicleRego).ToList();
-                if (!checkifAlreadyExist.Any())
-                {
+                //var checkifAlreadyExist = _context.KeyVehicleLogs.Where(x => x.ClientSiteLogBookId == keyVehicleLog.ClientSiteLogBookId
+                //&& x.GuardLoginId == keyVehicleLog.GuardLoginId
+                //&& x.VehicleRego == keyVehicleLog.VehicleRego).ToList();
+                //if (!checkifAlreadyExist.Any())
+                //{
                     _context.KeyVehicleLogs.Add(keyVehicleLog);
-                }
+                //}
             }
             else
             {
