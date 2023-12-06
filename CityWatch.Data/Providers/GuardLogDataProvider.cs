@@ -147,8 +147,9 @@ namespace CityWatch.Data.Providers
         void SaveClientSiteRadioCheckNew(ClientSiteRadioCheck clientSiteRadioCheck);
         //for saving status for active guards-end
 
-        List<RadioCheckListGuardLoginData> GetClientSiteRadiocheckStatus(int clientSiteId, int guardId);
+        List<RadioCheckListGuardLoginData> GetClientSiteRadiocheckStatus(int clientSiteId, int guardId);      
 
+        void InsertPreviousLogBook(KeyVehicleLog keyVehicleLog);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -346,74 +347,176 @@ namespace CityWatch.Data.Providers
 
         public void SaveKeyVehicleLog(KeyVehicleLog keyVehicleLog)
         {
-            if (keyVehicleLog.Id == 0)
+            try
             {
-                /* this condition added for prevent duplicate kV p7 103 issue 30112023 dileep*/
-                //var checkifAlreadyExist = _context.KeyVehicleLogs.Where(x => x.ClientSiteLogBookId == keyVehicleLog.ClientSiteLogBookId
-                //&& x.GuardLoginId == keyVehicleLog.GuardLoginId
-                //&& x.VehicleRego == keyVehicleLog.VehicleRego).ToList();
-                //if (!checkifAlreadyExist.Any())
-                //{
-                    _context.KeyVehicleLogs.Add(keyVehicleLog);
-                //}
-            }
-            else
-            {
-                var keyVehicleLogToUpdate = _context.KeyVehicleLogs.SingleOrDefault(x => x.Id == keyVehicleLog.Id);
-
-                keyVehicleLogToUpdate.InitialCallTime = keyVehicleLog.InitialCallTime;
-                keyVehicleLogToUpdate.EntryTime = keyVehicleLog.EntryTime;
-                keyVehicleLogToUpdate.SentInTime = keyVehicleLog.SentInTime;
-                keyVehicleLogToUpdate.ExitTime = keyVehicleLog.ExitTime;
-                keyVehicleLogToUpdate.TimeSlotNo = keyVehicleLog.TimeSlotNo;
-                keyVehicleLogToUpdate.PersonType = keyVehicleLog.PersonType;
-                keyVehicleLogToUpdate.VehicleRego = keyVehicleLog.VehicleRego;
-                keyVehicleLogToUpdate.CompanyName = keyVehicleLog.CompanyName;
-                keyVehicleLogToUpdate.Trailer1Rego = keyVehicleLog.Trailer1Rego;
-                keyVehicleLogToUpdate.Trailer2Rego = keyVehicleLog.Trailer2Rego;
-                keyVehicleLogToUpdate.Trailer3Rego = keyVehicleLog.Trailer3Rego;
-                keyVehicleLogToUpdate.Trailer4Rego = keyVehicleLog.Trailer4Rego;
-                keyVehicleLogToUpdate.PlateId = keyVehicleLog.PlateId;
-                keyVehicleLogToUpdate.TruckConfig = keyVehicleLog.TruckConfig;
-                keyVehicleLogToUpdate.KeyNo = keyVehicleLog.KeyNo;
-                keyVehicleLogToUpdate.PersonName = keyVehicleLog.PersonName;
-                keyVehicleLogToUpdate.MobileNumber = keyVehicleLog.MobileNumber;
-                keyVehicleLogToUpdate.TrailerType = keyVehicleLog.TrailerType;
-                keyVehicleLogToUpdate.InWeight = keyVehicleLog.InWeight;
-                keyVehicleLogToUpdate.OutWeight = keyVehicleLog.OutWeight;
-                keyVehicleLogToUpdate.TareWeight = keyVehicleLog.TareWeight;
-                keyVehicleLogToUpdate.MaxWeight = keyVehicleLog.MaxWeight;
-                keyVehicleLogToUpdate.Notes = keyVehicleLog.Notes;
-                keyVehicleLogToUpdate.Product = keyVehicleLog.Product;
-                keyVehicleLogToUpdate.EntryReason = keyVehicleLog.EntryReason;
-                keyVehicleLogToUpdate.ClientSitePocId = keyVehicleLog.ClientSitePocId;
-                keyVehicleLogToUpdate.ClientSiteLocationId = keyVehicleLog.ClientSiteLocationId;
-                keyVehicleLogToUpdate.MoistureDeduction = keyVehicleLog.MoistureDeduction;
-                keyVehicleLogToUpdate.RubbishDeduction = keyVehicleLog.RubbishDeduction;
-                keyVehicleLogToUpdate.DeductionPercentage = keyVehicleLog.DeductionPercentage;
-                keyVehicleLogToUpdate.IsTimeSlotNo = keyVehicleLog.IsTimeSlotNo;
-                keyVehicleLogToUpdate.Reels = keyVehicleLog.Reels;
-                keyVehicleLogToUpdate.CustomerRef = keyVehicleLog.CustomerRef;
-                keyVehicleLogToUpdate.Vwi = keyVehicleLog.Vwi;
-                keyVehicleLogToUpdate.Sender = keyVehicleLog.Sender;
-                keyVehicleLogToUpdate.IsSender = keyVehicleLog.IsSender;
-                keyVehicleLogToUpdate.PersonOfInterest = keyVehicleLog.PersonOfInterest;
-                keyVehicleLogToUpdate.IsBDM = keyVehicleLog.IsBDM;
-                if (keyVehicleLog.CRMId != null)
+                if (keyVehicleLog.Id == 0)
                 {
-                    keyVehicleLogToUpdate.CRMId = keyVehicleLog.CRMId;
-                    keyVehicleLogToUpdate.IndividualTitle = keyVehicleLog.IndividualTitle;
-                    keyVehicleLogToUpdate.Gender = keyVehicleLog.Gender;
-                    keyVehicleLogToUpdate.CompanyABN = keyVehicleLog.CompanyABN;
-                    keyVehicleLogToUpdate.CompanyLandline = keyVehicleLog.CompanyLandline;
-                    keyVehicleLogToUpdate.Email = keyVehicleLog.Email;
-                    keyVehicleLogToUpdate.Website = keyVehicleLog.Website;
-                    keyVehicleLogToUpdate.BDMList = keyVehicleLog.BDMList;
+
+                    _context.KeyVehicleLogs.Add(keyVehicleLog);
+                    _context.SaveChanges();
+
+
+
 
                 }
+                else
+                {
+                    var keyVehicleLogToUpdate = _context.KeyVehicleLogs.SingleOrDefault(x => x.Id == keyVehicleLog.Id);
+
+                    keyVehicleLogToUpdate.InitialCallTime = keyVehicleLog.InitialCallTime;
+                    keyVehicleLogToUpdate.EntryTime = keyVehicleLog.EntryTime;
+                    keyVehicleLogToUpdate.SentInTime = keyVehicleLog.SentInTime;
+                    keyVehicleLogToUpdate.ExitTime = keyVehicleLog.ExitTime;
+                    keyVehicleLogToUpdate.TimeSlotNo = keyVehicleLog.TimeSlotNo;
+                    keyVehicleLogToUpdate.PersonType = keyVehicleLog.PersonType;
+                    keyVehicleLogToUpdate.VehicleRego = keyVehicleLog.VehicleRego;
+                    keyVehicleLogToUpdate.CompanyName = keyVehicleLog.CompanyName;
+                    keyVehicleLogToUpdate.Trailer1Rego = keyVehicleLog.Trailer1Rego;
+                    keyVehicleLogToUpdate.Trailer2Rego = keyVehicleLog.Trailer2Rego;
+                    keyVehicleLogToUpdate.Trailer3Rego = keyVehicleLog.Trailer3Rego;
+                    keyVehicleLogToUpdate.Trailer4Rego = keyVehicleLog.Trailer4Rego;
+                    keyVehicleLogToUpdate.PlateId = keyVehicleLog.PlateId;
+                    keyVehicleLogToUpdate.TruckConfig = keyVehicleLog.TruckConfig;
+                    keyVehicleLogToUpdate.KeyNo = keyVehicleLog.KeyNo;
+                    keyVehicleLogToUpdate.PersonName = keyVehicleLog.PersonName;
+                    keyVehicleLogToUpdate.MobileNumber = keyVehicleLog.MobileNumber;
+                    keyVehicleLogToUpdate.TrailerType = keyVehicleLog.TrailerType;
+                    keyVehicleLogToUpdate.InWeight = keyVehicleLog.InWeight;
+                    keyVehicleLogToUpdate.OutWeight = keyVehicleLog.OutWeight;
+                    keyVehicleLogToUpdate.TareWeight = keyVehicleLog.TareWeight;
+                    keyVehicleLogToUpdate.MaxWeight = keyVehicleLog.MaxWeight;
+                    keyVehicleLogToUpdate.Notes = keyVehicleLog.Notes;
+                    keyVehicleLogToUpdate.Product = keyVehicleLog.Product;
+                    keyVehicleLogToUpdate.EntryReason = keyVehicleLog.EntryReason;
+                    keyVehicleLogToUpdate.ClientSitePocId = keyVehicleLog.ClientSitePocId;
+                    keyVehicleLogToUpdate.ClientSiteLocationId = keyVehicleLog.ClientSiteLocationId;
+                    keyVehicleLogToUpdate.MoistureDeduction = keyVehicleLog.MoistureDeduction;
+                    keyVehicleLogToUpdate.RubbishDeduction = keyVehicleLog.RubbishDeduction;
+                    keyVehicleLogToUpdate.DeductionPercentage = keyVehicleLog.DeductionPercentage;
+                    keyVehicleLogToUpdate.IsTimeSlotNo = keyVehicleLog.IsTimeSlotNo;
+                    keyVehicleLogToUpdate.Reels = keyVehicleLog.Reels;
+                    keyVehicleLogToUpdate.CustomerRef = keyVehicleLog.CustomerRef;
+                    keyVehicleLogToUpdate.Vwi = keyVehicleLog.Vwi;
+                    keyVehicleLogToUpdate.Sender = keyVehicleLog.Sender;
+                    keyVehicleLogToUpdate.IsSender = keyVehicleLog.IsSender;
+                    keyVehicleLogToUpdate.PersonOfInterest = keyVehicleLog.PersonOfInterest;
+                    keyVehicleLogToUpdate.IsBDM = keyVehicleLog.IsBDM;
+                    if (keyVehicleLog.CRMId != null)
+                    {
+                        keyVehicleLogToUpdate.CRMId = keyVehicleLog.CRMId;
+                        keyVehicleLogToUpdate.IndividualTitle = keyVehicleLog.IndividualTitle;
+                        keyVehicleLogToUpdate.Gender = keyVehicleLog.Gender;
+                        keyVehicleLogToUpdate.CompanyABN = keyVehicleLog.CompanyABN;
+                        keyVehicleLogToUpdate.CompanyLandline = keyVehicleLog.CompanyLandline;
+                        keyVehicleLogToUpdate.Email = keyVehicleLog.Email;
+                        keyVehicleLogToUpdate.Website = keyVehicleLog.Website;
+                        keyVehicleLogToUpdate.BDMList = keyVehicleLog.BDMList;
+
+                    }
+                    _context.SaveChanges();
+                }
+
             }
-            _context.SaveChanges();
+            catch (Exception ex)
+            {
+
+
+            }
+
         }
+
+
+      
+        public void InsertPreviousLogBook(KeyVehicleLog keyVehicleLog)
+        {
+
+            try
+            {
+                /* this condition added for prevent duplicate kV p7 103 issue 30112023 dileep
+                  the insert with entity framework shows some key reference issue ,so query using
+                 */
+                var checkifAlreadyExist = _context.KeyVehicleLogs.Where(x => x.InitialCallTime == keyVehicleLog.InitialCallTime
+                && x.EntryTime == keyVehicleLog.EntryTime && x.SentInTime == keyVehicleLog.SentInTime && x.VehicleRego == keyVehicleLog.VehicleRego).ToList();
+                if (checkifAlreadyExist.Count == 0)
+                {
+                    _context.Database.ExecuteSqlRaw(
+                    " INSERT INTO VehicleKeyLogs (ClientSiteLogBookId, GuardLoginId, EntryTime, SentInTime, ExitTime, VehicleRego, Trailer1Rego, " +
+                    " Trailer2Rego, Trailer3Rego, Plate, KeyNo, CompanyName, PersonName, PersonType, MobileNumber, PurposeOfEntry, InWeight, OutWeight, " +
+                    " TareWeight, Notes, TimeSlotNo, TruckConfig, TrailerType, MaxWeight, Trailer4Rego, EntryReason, ClientSitePocId, ClientSiteLocationId," +
+                    " KeyDescription, InitialCallTime, ReportReference, PlateId, MoistureDeduction, RubbishDeduction, DeductionPercentage, CopiedFromId," +
+                    " IsTimeSlotNo, Reels, CustomerRef, Wvi, IsSender, Sender, DocketSerialNo, POIImage, PersonOfInterest, IsBDM, IndividualTitle, Gender, " +
+                    " CompanyABN, CompanyLandline, Email, Website, CRMId, BDMList) VALUES (@ClientSiteLogBookId, @GuardLoginId, @EntryTime, @SentInTime, @ExitTime, @VehicleRego, @Trailer1Rego, @Trailer2Rego, @Trailer3Rego, @Plate," +
+                    " @KeyNo, @CompanyName, @PersonName, @PersonType, @MobileNumber, @PurposeOfEntry, @InWeight, @OutWeight,@TareWeight, @Notes, @TimeSlotNo, @TruckConfig, @TrailerType, @MaxWeight, @Trailer4Rego, @EntryReason, @ClientSitePocId," +
+                    " @ClientSiteLocationId, @KeyDescription, @InitialCallTime, @ReportReference, @PlateId, @MoistureDeduction, @RubbishDeduction, @DeductionPercentage, @CopiedFromId, @IsTimeSlotNo, @Reels, @CustomerRef, @Wvi, @IsSender, @Sender," +
+                    " @DocketSerialNo, @POIImage, @PersonOfInterest, @IsBDM, @IndividualTitle, @Gender, @CompanyABN, @CompanyLandline, @Email, @Website, @CRMId, @BDMList)",
+                     new SqlParameter("@ClientSiteLogBookId", keyVehicleLog.ClientSiteLogBookId == null ? DBNull.Value : keyVehicleLog.ClientSiteLogBookId),
+                     new SqlParameter("@GuardLoginId", keyVehicleLog.GuardLoginId == null ? DBNull.Value : keyVehicleLog.GuardLoginId),
+                     new SqlParameter("@EntryTime", keyVehicleLog.EntryTime == null ? DBNull.Value : keyVehicleLog.EntryTime),
+                     new SqlParameter("@SentInTime", keyVehicleLog.SentInTime == null ? DBNull.Value : keyVehicleLog.SentInTime),
+                     new SqlParameter("@ExitTime", keyVehicleLog.ExitTime == null ? DBNull.Value : keyVehicleLog.ExitTime),
+                     new SqlParameter("@VehicleRego", keyVehicleLog.VehicleRego == null ? DBNull.Value : keyVehicleLog.VehicleRego),
+                     new SqlParameter("@Trailer1Rego", keyVehicleLog.Trailer1Rego == null ? DBNull.Value : keyVehicleLog.Trailer1Rego),
+                     new SqlParameter("@Trailer2Rego", keyVehicleLog.Trailer2Rego == null ? DBNull.Value : keyVehicleLog.Trailer2Rego),
+                     new SqlParameter("@Trailer3Rego", keyVehicleLog.Trailer3Rego == null ? DBNull.Value : keyVehicleLog.Trailer3Rego),
+                     new SqlParameter("@Plate", DBNull.Value),
+                     new SqlParameter("@KeyNo", keyVehicleLog.KeyNo == null ? DBNull.Value : keyVehicleLog.KeyNo),
+                     new SqlParameter("@CompanyName", keyVehicleLog.CompanyName == null ? DBNull.Value : keyVehicleLog.CompanyName),
+                     new SqlParameter("@PersonName", keyVehicleLog.PersonName == null ? DBNull.Value : keyVehicleLog.PersonName),
+                     new SqlParameter("@PersonType", keyVehicleLog.PersonType == null ? DBNull.Value : keyVehicleLog.PersonType),
+                     new SqlParameter("@MobileNumber", keyVehicleLog.MobileNumber == null ? DBNull.Value : keyVehicleLog.MobileNumber),
+                     new SqlParameter("@PurposeOfEntry", DBNull.Value),
+                     new SqlParameter("@InWeight", keyVehicleLog.InWeight == null ? DBNull.Value : keyVehicleLog.InWeight),
+                     new SqlParameter("@OutWeight", keyVehicleLog.OutWeight == null ? DBNull.Value : keyVehicleLog.OutWeight),
+                     new SqlParameter("@TareWeight", keyVehicleLog.TareWeight == null ? DBNull.Value : keyVehicleLog.TareWeight),
+                     new SqlParameter("@Notes", keyVehicleLog.Notes == null ? DBNull.Value : keyVehicleLog.Notes),
+                     new SqlParameter("@TimeSlotNo", keyVehicleLog.TimeSlotNo == null ? DBNull.Value : keyVehicleLog.TimeSlotNo),
+                     new SqlParameter("@TruckConfig", keyVehicleLog.TruckConfig == null ? DBNull.Value : keyVehicleLog.TruckConfig),
+                     new SqlParameter("@TrailerType", keyVehicleLog.TrailerType == null ? DBNull.Value : keyVehicleLog.TrailerType),
+                     new SqlParameter("@MaxWeight", keyVehicleLog.MaxWeight == null ? DBNull.Value : keyVehicleLog.MaxWeight),
+                     new SqlParameter("@Trailer4Rego", keyVehicleLog.Trailer4Rego == null ? DBNull.Value : keyVehicleLog.Trailer4Rego),
+                     new SqlParameter("@EntryReason", keyVehicleLog.EntryReason == null ? DBNull.Value : keyVehicleLog.EntryReason),
+                     new SqlParameter("@ClientSitePocId", keyVehicleLog.ClientSitePocId == null ? DBNull.Value : keyVehicleLog.ClientSitePocId),
+                     new SqlParameter("@ClientSiteLocationId", keyVehicleLog.ClientSiteLocationId == null ? DBNull.Value : keyVehicleLog.ClientSiteLocationId),
+                     new SqlParameter("@KeyDescription", DBNull.Value),
+                     new SqlParameter("@InitialCallTime", keyVehicleLog.InitialCallTime == null ? DBNull.Value : keyVehicleLog.InitialCallTime),
+                     new SqlParameter("@ReportReference", keyVehicleLog.ReportReference == null ? DBNull.Value : keyVehicleLog.ReportReference),
+                     new SqlParameter("@PlateId", keyVehicleLog.PlateId == null ? DBNull.Value : keyVehicleLog.PlateId),
+                     new SqlParameter("@MoistureDeduction", keyVehicleLog.MoistureDeduction == null ? DBNull.Value : keyVehicleLog.MoistureDeduction),
+                     new SqlParameter("@RubbishDeduction", keyVehicleLog.RubbishDeduction == null ? DBNull.Value : keyVehicleLog.RubbishDeduction),
+                     new SqlParameter("@DeductionPercentage", keyVehicleLog.DeductionPercentage == null ? DBNull.Value : keyVehicleLog.DeductionPercentage),
+                     new SqlParameter("@CopiedFromId", keyVehicleLog.CopiedFromId == null ? DBNull.Value : keyVehicleLog.CopiedFromId),
+                     new SqlParameter("@IsTimeSlotNo", keyVehicleLog.IsTimeSlotNo == null ? DBNull.Value : keyVehicleLog.IsTimeSlotNo),
+                     new SqlParameter("@Reels", keyVehicleLog.Reels == null ? DBNull.Value : keyVehicleLog.Reels),
+                     new SqlParameter("@CustomerRef", keyVehicleLog.CustomerRef == null ? DBNull.Value : keyVehicleLog.CustomerRef),
+                     new SqlParameter("@Wvi", keyVehicleLog.Vwi == null ? DBNull.Value : keyVehicleLog.Vwi),
+                     new SqlParameter("@IsSender", keyVehicleLog.IsSender == null ? DBNull.Value : keyVehicleLog.IsSender),
+                     new SqlParameter("@Sender", keyVehicleLog.Sender == null ? DBNull.Value : keyVehicleLog.Sender),
+                     new SqlParameter("@DocketSerialNo", keyVehicleLog.DocketSerialNo == null ? DBNull.Value : keyVehicleLog.DocketSerialNo),
+                     new SqlParameter("@POIImage", keyVehicleLog.POIImage == null ? DBNull.Value : keyVehicleLog.POIImage),
+                     new SqlParameter("@PersonOfInterest", keyVehicleLog.PersonOfInterest == null ? DBNull.Value : keyVehicleLog.PersonOfInterest),
+                     new SqlParameter("@IsBDM", keyVehicleLog.IsBDM == null ? DBNull.Value : keyVehicleLog.IsBDM),
+                     new SqlParameter("@IndividualTitle", keyVehicleLog.IndividualTitle == null ? DBNull.Value : keyVehicleLog.IndividualTitle),
+                     new SqlParameter("@Gender", keyVehicleLog.Gender == null ? DBNull.Value : keyVehicleLog.Gender),
+                     new SqlParameter("@CompanyABN", keyVehicleLog.CompanyABN == null ? DBNull.Value : keyVehicleLog.CompanyABN),
+                     new SqlParameter("@CompanyLandline", keyVehicleLog.CompanyLandline == null ? DBNull.Value : keyVehicleLog.CompanyLandline),
+                     new SqlParameter("@Email", keyVehicleLog.Email == null ? DBNull.Value : keyVehicleLog.Email),
+                     new SqlParameter("@Website", keyVehicleLog.Website == null ? DBNull.Value : keyVehicleLog.Website),
+                     new SqlParameter("@CRMId", keyVehicleLog.CRMId == null ? DBNull.Value : keyVehicleLog.CRMId),
+                     new SqlParameter("@BDMList", keyVehicleLog.BDMList == null ? DBNull.Value : keyVehicleLog.BDMList)
+                     );
+
+
+                }
+
+
+            }
+            catch(Exception ex)
+            {
+
+            }
+
+        }
+
 
         public void SaveDocketSerialNo(int id, string serialNo)
         {
@@ -1445,11 +1548,8 @@ namespace CityWatch.Data.Providers
 
         public void RemoveTheeRadioChecksActivityWithNotifcationtypeOne(int ClientSiteId)
         {
-            var clientSiteRadioCheckActivityStatusToDelete = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == ClientSiteId && x.NotificationType == 1);
-            if (clientSiteRadioCheckActivityStatusToDelete == null)
-                throw new InvalidOperationException();
-            else
-
+            var clientSiteRadioCheckActivityStatusToDelete = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == ClientSiteId && x.NotificationType == 1).ToList();
+            if(clientSiteRadioCheckActivityStatusToDelete.Count!=0)
             {
                 _context.RemoveRange(clientSiteRadioCheckActivityStatusToDelete);
                 _context.SaveChanges();
@@ -1508,18 +1608,18 @@ namespace CityWatch.Data.Providers
         public bool IsRadiocheckDuressEnabled(int UserID)
         {
             return _context.RadioCheckDuress
-    .Where(z => z.UserID == UserID)
-    .OrderByDescending(z => z.Id)
-    .Select(z => z.IsActive)
-    .LastOrDefault();
+        .Where(z => z.UserID == UserID)
+        .OrderByDescending(z => z.Id)
+        .Select(z => z.IsActive)
+        .LastOrDefault();
         }
         public int UserIDDuress(int UserID)
         {
             return _context.RadioCheckDuress
-    .Where(z => z.UserID == UserID)
-    .OrderByDescending(z => z.Id)
-    .Select(z => z.UserID)
-    .LastOrDefault();
+        .Where(z => z.UserID == UserID)
+        .OrderByDescending(z => z.Id)
+        .Select(z => z.UserID)
+        .LastOrDefault();
         }
 
 
@@ -1566,7 +1666,7 @@ namespace CityWatch.Data.Providers
                 {
                     _context.ClientSiteRadioChecks.RemoveRange(clientSiteRcStatus);
                     var colorId = _context.RadioCheckStatus.Where(x => x.Id == clientSiteRadioCheck.RadioCheckStatusId).FirstOrDefault().RadioCheckStatusColorId;
-                   
+
                     if (colorId != null)
                     {
                         var color = _context.RadioCheckStatusColor.Where(x => x.Id == colorId).FirstOrDefault().Name;
@@ -2096,7 +2196,7 @@ namespace CityWatch.Data.Providers
                                         var guardLog = new GuardLog()
                                         {
                                             ClientSiteLogBookId = logBookId,
-                                             GuardLoginId = latestRecord.Id,
+                                            GuardLoginId = latestRecord.Id,
                                             EventDateTime = DateTime.Now,
                                             // Notes = "Guard Off Duty (Logbook Signout)",
                                             // Notes = "Control Room tried to contact Guard[" + guardInitials + "] and they are on their way but running late.",
@@ -2176,13 +2276,13 @@ namespace CityWatch.Data.Providers
 
                     }
                     //To Deactivate Duress button
-                    else if(clientSiteRadioCheck.Status== "Duress Unlock - False Alarm or Testing")
+                    else if (clientSiteRadioCheck.Status == "Duress Unlock - False Alarm or Testing")
                     {
                         var DuressEnabledUpdate = _context.ClientSiteDuress.Where(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId);
                         //DuressEnabledUpdate.IsEnabled = false;
                         _context.ClientSiteDuress.RemoveRange(DuressEnabledUpdate);
                         var logbook = _context.ClientSiteLogBooks
-   .SingleOrDefault(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId && z.Type == LogBookType.DailyGuardLog && z.Date == DateTime.Today);
+        .SingleOrDefault(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId && z.Type == LogBookType.DailyGuardLog && z.Date == DateTime.Today);
 
                         int logBookId;
                         if (logbook == null)
@@ -2310,7 +2410,7 @@ namespace CityWatch.Data.Providers
         public int GetClientSiteLogBookIdGloablmessage(int clientsiteId, LogBookType type, DateTime date)
         {
             var logBook = _context?.ClientSiteLogBooks
-    .FirstOrDefault(z => z.ClientSiteId == clientsiteId && z.Type == type && z.Date == date);
+        .FirstOrDefault(z => z.ClientSiteId == clientsiteId && z.Type == type && z.Date == date);
             if (logBook != null && logBook.Id != null)
             {
                 return logBook.Id;
