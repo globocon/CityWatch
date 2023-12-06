@@ -1,9 +1,11 @@
 ﻿using CityWatch.Data.Enums;
 using CityWatch.Data.Models;
 using iText.Layout.Element;
+using iText.StyledXmlParser.Css.Resolve.Shorthand.Impl;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -148,7 +150,7 @@ namespace CityWatch.Data.Providers
         //for saving status for active guards-end
 
         List<RadioCheckListGuardLoginData> GetClientSiteRadiocheckStatus(int clientSiteId, int guardId);
-
+        void RemoveGuardLoginFromdifferentSites();
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -354,7 +356,7 @@ namespace CityWatch.Data.Providers
                 //&& x.VehicleRego == keyVehicleLog.VehicleRego).ToList();
                 //if (!checkifAlreadyExist.Any())
                 //{
-                    _context.KeyVehicleLogs.Add(keyVehicleLog);
+                _context.KeyVehicleLogs.Add(keyVehicleLog);
                 //}
             }
             else
@@ -1383,7 +1385,7 @@ namespace CityWatch.Data.Providers
                 var clientSiteManningKpiSettings = _context.ClientSiteManningKpiSettings.Include(x => x.ClientSiteKpiSetting).Where(x => x.WeekDay == currentDay && x.Type == "2" && x.IsPHO != 1).ToList();
                 foreach (var manning in clientSiteManningKpiSettings)
                 {
-                    if (manning.EmpHoursStart != null)
+                    if (manning.EmpHoursStart != null && manning.EmpHoursEnd!=null)
                     {
                         /* Check the number of logins */
                         var numberOfLogin = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == null).Count() == 0;
@@ -1391,28 +1393,43 @@ namespace CityWatch.Data.Providers
                         {    /* No login found */
                             /* find the emp Hours  Start time -5 (ie show notification 5 min before the guard login in the site) */
                             var dateTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None).AddMinutes(-5);
-                            if (DateTime.Now >= dateTime)
+                            var dateendTime = DateTime.ParseExact(manning.EmpHoursEnd, "H:mm", null, System.Globalization.DateTimeStyles.None).AddMinutes(1);
+                            if (DateTime.Now >= dateTime && DateTime.Now <= dateendTime)
                             {
-
-                                var radioChecklist = _context.ClientSiteRadioChecksActivityStatus.Where(z => z.GuardId == 4 && z.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && z.GuardLoginTime != null && z.NotificationType == 1)
-                                  .ToList();
-                                if (radioChecklist.Count == 0)
+                                /* Check if anylogbook entery exits in that timing */
+                                var checkSiteLogBook = _context.ClientSiteLogBooks.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.Date == DateTime.Now.Date).ToList();
+                                bool iflogbookentryexist = false;
+                                foreach (var log in checkSiteLogBook)
                                 {
-                                    /* Check if any off duty status checked for this row */
-                                    var rcOffDutyStatus = _context.ClientSiteRadioChecks.Where(z => z.GuardId == 4 && z.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && z.CheckedAt.Date == DateTime.Today.Date && z.Status == "Off Duty")
-                                  .ToList();
-                                    if (rcOffDutyStatus.Count == 0)
+                                    var checklogbookEntryInSpecificTiming = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == log.Id && (x.EventDateTime >= dateTime && x.EventDateTime <= dateendTime)).ToList();
+                                    if (checklogbookEntryInSpecificTiming.Count != 0)
                                     {
-                                        var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                                        iflogbookentryexist = true;
+                                    }
+                                }
+
+                                if (!iflogbookentryexist)
+                                {
+                                    var radioChecklist = _context.ClientSiteRadioChecksActivityStatus.Where(z => z.GuardId == 4 && z.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && z.GuardLoginTime != null && z.NotificationType == 1)
+                                      .ToList();
+                                    if (radioChecklist.Count == 0)
+                                    {
+                                        /* Check if any off duty status checked for this row */
+                                        var rcOffDutyStatus = _context.ClientSiteRadioChecks.Where(z => z.GuardId == 4 && z.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && z.CheckedAt.Date == DateTime.Today.Date && z.Status == "Off Duty")
+                                      .ToList();
+                                        if (rcOffDutyStatus.Count == 0)
                                         {
-                                            ClientSiteId = manning.ClientSiteKpiSetting.ClientSiteId,
-                                            GuardId = 4,/* temp Guard(bruno) Id because forgin key  is set*/
-                                            GuardLoginTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None),/* Expected Time for Login
+                                            var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                                            {
+                                                ClientSiteId = manning.ClientSiteKpiSetting.ClientSiteId,
+                                                GuardId = 4,/* temp Guard(bruno) Id because forgin key  is set*/
+                                                GuardLoginTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None),/* Expected Time for Login
                                     /* New Field Added for NotificationType only for manning notification*/
-                                            NotificationType = 1
-                                        };
-                                        _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
-                                        _context.SaveChanges();
+                                                NotificationType = 1
+                                            };
+                                            _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
+                                            _context.SaveChanges();
+                                        }
                                     }
                                 }
                             }
@@ -1443,6 +1460,52 @@ namespace CityWatch.Data.Providers
         }
 
 
+
+        public void RemoveGuardLoginFromdifferentSites()
+        {
+
+            /* this function is used to remove the guard login in diffrent sites
+             only latest login details needed
+             */
+            /* find the gurads login in diffrent sites */
+            var duplicates = _context.ClientSiteRadioChecksActivityStatus.
+            Where(x => x.GuardLoginTime != null && x.NotificationType == null).
+            GroupBy(p => new { p.GuardId })
+            .Where(group => group.Count() > 1)
+            .Select(g => new
+            {
+                GuardId = g.Key.GuardId,
+                Count = g.Count()
+            }).ToList();
+
+            if (duplicates.Count != 0)
+            {
+                foreach (var li in duplicates)
+                {
+                    /* find the latest login not to remove */
+                    var latestItemsNottoRemove = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.GuardLoginTime != null && x.NotificationType == null && x.GuardId == li.GuardId).OrderByDescending(x => x.GuardLoginTime).FirstOrDefault();
+                    if (latestItemsNottoRemove != null)
+                    {
+                        /* list to remove */
+                        var listtoremove = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.GuardLoginTime != null && x.NotificationType == null && x.GuardId == li.GuardId && x.ClientSiteId != latestItemsNottoRemove.ClientSiteId).ToList();
+
+                        if (listtoremove.Count > 0)
+
+                            foreach (var removeItems in listtoremove)
+                            {
+                                var activitesToRemove = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.GuardId == removeItems.GuardId && x.ClientSiteId == removeItems.ClientSiteId).FirstOrDefault();
+                                _context.ClientSiteRadioChecksActivityStatus.Remove(activitesToRemove);
+                                _context.SaveChanges();
+
+                            }
+
+                    }
+
+                }
+            }
+
+
+        }
         public void RemoveTheeRadioChecksActivityWithNotifcationtypeOne(int ClientSiteId)
         {
             var clientSiteRadioCheckActivityStatusToDelete = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == ClientSiteId && x.NotificationType == 1);
@@ -1470,7 +1533,7 @@ namespace CityWatch.Data.Providers
                 {
 
 
-                    var isActive = (DateTime.Now - item.CheckedAt).TotalHours < 2;
+                    var isActive = (DateTime.Now - item.CheckedAt).TotalHours < 6;
                     if (!isActive)
                     {
                         var clientSiteRadioCheckActivityStatusToDelete = _context.ClientSiteRadioChecks.Where(x => x.Id == item.Id);
@@ -1566,7 +1629,7 @@ namespace CityWatch.Data.Providers
                 {
                     _context.ClientSiteRadioChecks.RemoveRange(clientSiteRcStatus);
                     var colorId = _context.RadioCheckStatus.Where(x => x.Id == clientSiteRadioCheck.RadioCheckStatusId).FirstOrDefault().RadioCheckStatusColorId;
-                   
+
                     if (colorId != null)
                     {
                         var color = _context.RadioCheckStatusColor.Where(x => x.Id == colorId).FirstOrDefault().Name;
@@ -2096,7 +2159,7 @@ namespace CityWatch.Data.Providers
                                         var guardLog = new GuardLog()
                                         {
                                             ClientSiteLogBookId = logBookId,
-                                             GuardLoginId = latestRecord.Id,
+                                            GuardLoginId = latestRecord.Id,
                                             EventDateTime = DateTime.Now,
                                             // Notes = "Guard Off Duty (Logbook Signout)",
                                             // Notes = "Control Room tried to contact Guard[" + guardInitials + "] and they are on their way but running late.",
@@ -2176,7 +2239,7 @@ namespace CityWatch.Data.Providers
 
                     }
                     //To Deactivate Duress button
-                    else if(clientSiteRadioCheck.Status== "Duress Unlock - False Alarm or Testing")
+                    else if (clientSiteRadioCheck.Status == "Duress Unlock - False Alarm or Testing")
                     {
                         var DuressEnabledUpdate = _context.ClientSiteDuress.Where(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId);
                         //DuressEnabledUpdate.IsEnabled = false;
