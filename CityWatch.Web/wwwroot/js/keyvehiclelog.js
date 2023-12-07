@@ -1331,9 +1331,9 @@ $(function () {
             else {
                 $('#titlePOIWarning').attr('hidden', true);
                 $('#imagesiren').attr('hidden', true);
-                $('#VehicleRego').val('');
-                $('#kvl_list_plates').val('');
-                $('#kvl_list_plates').change();
+                //$('#VehicleRego').val('');
+                //$('#kvl_list_plates').val('');
+                //$('#kvl_list_plates').change();
             }
             /*to function when type of individual is poi intruder - end*/
         });
