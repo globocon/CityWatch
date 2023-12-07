@@ -1142,7 +1142,9 @@ namespace CityWatch.Web.Pages.Guard
                 if (personalDetails.Any(z => z.Equals(kvlPersonalDetail)))
                 {
                     kvlPersonalDetail.Id = personalDetails.Where(z => z.PersonName == kvlPersonalDetail.PersonName).Max(z => z.Id);
+                    kvlPersonalDetail.KeyVehicleLogProfile.CreatedLogId = keyVehicleLog.Id;
                 }
+                
                 profileId = _guardLogDataProvider.SaveKeyVehicleLogProfileWithPersonalDetail(kvlPersonalDetail);
                 profileId = kvlVisitorProfile.Id;
             }
@@ -1226,6 +1228,63 @@ namespace CityWatch.Web.Pages.Guard
             var imagepath = Path.Combine(_imageRootDir, "ziren.png");
             return new JsonResult(imagepath);
         }
+        //to get next POI number-start
+        public JsonResult OnGetPOINumber()
+        {
+            string poiNumber = null;
+           
+            
+                var personalDetails = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(null);
+                if (personalDetails.Count > 0)
+                {
+                    var poiid = personalDetails.Where(x => x.POIId != null);
+                    if (poiid.Count() == 0)
+                    {
+                        poiNumber = "POI00001";
+                    }
+                    else
+                    {
+                        var maxid = poiid.Max(x => x.Id);
+                        //var crmnew = crmid.Where(x => x.Id == maxid).Select(x => x.CRMId).FirstOrDefault();
+                        var countid = poiid.Count() + 1;
+                        int numberOfDigits = countid / 10 + 1;
+                        string latestcrm = null;
+                        if (numberOfDigits == 1)
+                        {
+                            latestcrm = "POI0000" + countid.ToString();
+                        }
+                        else if (numberOfDigits == 2)
+                        {
+                            latestcrm = "POI000" + countid.ToString();
+                        }
+                        else if (numberOfDigits == 3)
+                        {
+                            latestcrm = "POI00" + countid.ToString();
+                        }
+                        else if (numberOfDigits == 4)
+                        {
+                            latestcrm = "POI0" + countid.ToString();
+                        }
+                        
+                        else if (numberOfDigits == 6)
+                        {
+                            latestcrm = "POI" + countid.ToString();
+                        }
+                        else
+                        {
+                            latestcrm = null;
+                        }
+                        if (latestcrm != null)
+                        {
+                            poiNumber = latestcrm;
+                        }
+                    }
+                
+            }
+            return new JsonResult(poiNumber);
+        }
+
+        //to get next crm number-end
 
     }
 }

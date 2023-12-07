@@ -280,6 +280,7 @@ $(function () {
     let isVehicleOnsiteModal
     let isVehicleInAnotherSiteModal;
     let isKeyAllocatedModalDesc;
+    let isPOIOnsiteModal;
     if ($('#vehicle_key_daily_log').length === 1) {
         isVehicleOnsiteModal = new ConfirmationModal('vehicle-onsite', {
             message: 'This truck was already onsite today and there is no exit time recorded.<br/><br/>Are you sure you want to create a new entry when it appears they are already onsite?',
@@ -298,6 +299,10 @@ $(function () {
         isKeyAllocatedModalDesc = new ConfirmationModal('key-alloc', {
             message: 'This key was already allocated and there is no exit time recorded.<br/><br/>Are you sure you want to create a new entry when it appears they are already allocated?',
             onYes: function () { selectKey2() }
+        });
+        isPOIOnsiteModal = new ConfirmationModal('poi-onsite', {
+            message: 'You are about to add a new POI entry to database with no name.This is ok, as C4i System will assign a system generated name. Please confirm you want to continue',
+            onYes: function () { GetPOINumber(); }
         });
     }
 
@@ -973,12 +978,17 @@ $(function () {
             if (value != '') {
                 $('#titlePOIWarning').attr('hidden', false);
                 $('#imagesiren').attr('hidden', false);
-
+                $('#kvl_list_plates').val(185);
+                $('#kvl_list_plates').change();
 
             }
             else {
-                $('#titlePOIWarning').attr('hidden', true);
-                $('#imagesiren').attr('hidden', true);
+                if ($('#PersonType').find('option:selected').text() != 'POI - Intruder (Tresspass or Arrested)') {
+                    $('#titlePOIWarning').attr('hidden', true);
+                    $('#imagesiren').attr('hidden', true);
+                    $('#kvl_list_plates').val('');
+                    $('#VehicleRego').val('');
+                }
             }
             //$('#IsPOIAlert').val(isChecked);
         });
@@ -1304,7 +1314,28 @@ $(function () {
 
                 });
             }
+            /*to function when type of individual is poi intruder -start*/
+            else if ($('#PersonType').find('option:selected').text() == 'POI - Intruder (Tresspass or Arrested)') {
+                $('#titlePOIWarning').attr('hidden', false);
+                $('#imagesiren').attr('hidden', false);
+                
+                    $('#PersonOfInterest').val(176);
+                
+                
+                $('#kvl_list_plates').val(185);
+                $('#kvl_list_plates').change();
+                
 
+
+            }
+            else {
+                $('#titlePOIWarning').attr('hidden', true);
+                $('#imagesiren').attr('hidden', true);
+                //$('#VehicleRego').val('');
+                //$('#kvl_list_plates').val('');
+                //$('#kvl_list_plates').change();
+            }
+            /*to function when type of individual is poi intruder - end*/
         });
         $('#PersonName').on('change', function () {
 
@@ -1354,6 +1385,11 @@ $(function () {
                 $('#crm_list_plates').val(option.val());
                 /*to load the plate to crmtab -end*/
             }
+            if ($('#kvl_list_plates').find('option:selected').text() == 'POI-Name' ) {
+                
+                isPOIOnsiteModal.showConfirmation();
+            }
+
         });
         $('#crm_list_plates').on('change', function () {
             const option = $(this).find(":selected");
@@ -2898,4 +2934,27 @@ $(function () {
         }
     });
 
+    /*to get POI Number-start*/
+    function GetPOINumber() {
+
+         $.ajax({
+                    url: '/Guard/KeyVehiclelog?handler=POINumber',
+                    type: 'GET',
+                    
+
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (result) {
+                    
+
+                    if (result.success) {
+
+                        $('#VehicleRego').val(result);
+                        $('#kvl_list_plates').attr('disabled', false);
+                    } else {
+                        $('#VehicleRego').val(result);
+                    }
+
+                });
+    }
+    /*to get POI Number-end*/
 });

@@ -32,7 +32,7 @@ namespace CityWatch.Web.Services
         Closed = 2,
 
         Pending = 3
-    }    
+    }
 
     public interface IViewDataService
     {
@@ -52,7 +52,7 @@ namespace CityWatch.Web.Services
         List<SelectListItem> GetOfficerPositions(OfficerPositionFilter positionFilter = OfficerPositionFilter.All);
         List<SelectListItem> GetUserClientTypes(int? userId);
         List<SelectListItem> GetUserClientSites(int? userId, string type = "");
-        List<SelectListItem> GetUserClientSites(string types = "");        
+        List<SelectListItem> GetUserClientSites(string types = "");
         List<object> GetAllUsersClientSiteAccess();
         List<object> GetUserClientSiteAccess(int userId);
         List<object> GetAllCoreSettings(int companyId);
@@ -69,17 +69,17 @@ namespace CityWatch.Web.Services
         List<KeyVehicleLogViewModel> GetKeyVehicleLogs(int logBookId, KvlStatusFilter kvlStatusFilter);
         List<SelectListItem> GetKeyVehicleLogFieldsByType(KvlFieldType type, bool withoutSelect = false);
         List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRego(string truckRego);
-        List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRego(string truckRego,string poi);
-        List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRegoNew(string truckRego,string ImagePath);
+        List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRego(string truckRego, string poi);
+        List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRegoNew(string truckRego, string ImagePath);
         IEnumerable<string> GetKeyVehicleLogAttachments(string uploadsDir, string reportReference);
         IEnumerable<ClientSiteKey> GetKeyVehicleLogKeys(KeyVehicleLog keyVehicleLog);
         IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistory(string vehicleRego);
         IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistory(int profileId);
         List<ClientSite> GetUserClientSites(string type, string searchTerm);
         List<ClientSite> GetNewUserClientSites();
-        List<ClientSiteKey> GetClientSiteKeys(int clientSiteId, string searchKeyNo, string searchKeyDesc);        
+        List<ClientSiteKey> GetClientSiteKeys(int clientSiteId, string searchKeyNo, string searchKeyDesc);
         int GetNewGuardLoginId(GuardLogin currentGuardLogin, DateTime? currentGuardLoginOffDutyActual, int newLogBookId);
-        int GetNewClientSiteLogBookId(int clientSiteId, LogBookType logBookType);        
+        int GetNewClientSiteLogBookId(int clientSiteId, LogBookType logBookType);
         string GetClientSiteKeyDescription(int KeyId, int clientSiteId);
         void CopyOpenLogbookEntriesFromPreviousDay(int previousDayLogBookId, int logBookId, int guardLoginId);
         IEnumerable<string> GetCompanyAndSenderNames(string startsWith);
@@ -96,7 +96,7 @@ namespace CityWatch.Web.Services
 
     public class ViewDataService : IViewDataService
     {
-        private readonly IGuardDataProvider _guardDataProvider;        
+        private readonly IGuardDataProvider _guardDataProvider;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly IClientDataProvider _clientDataProvider;
         private readonly IConfigDataProvider _configDataProvider;
@@ -148,7 +148,7 @@ namespace CityWatch.Web.Services
                     var selectListItem = new SelectListItem(item.Name, item.Name);
                     var selectListItem1 = item.Name;
                     var Default = item.IsDefault;
-                    if (Default==true)
+                    if (Default == true)
                     {
                         selectListItem.Selected = true;
                     }
@@ -385,7 +385,7 @@ namespace CityWatch.Web.Services
             var currUserAccess = coreSettings.Where(x => x.Id == companyId);
             foreach (var company in currUserAccess)
             {
-                
+
 
                 results.Add(new
                 {
@@ -520,7 +520,7 @@ namespace CityWatch.Web.Services
             }
 
             return dt;
-        }        
+        }
 
         private string GetFormattedClientSites(IEnumerable<UserClientSiteAccess> userClientSiteAccess)
         {
@@ -585,44 +585,6 @@ namespace CityWatch.Web.Services
         {
             var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
             var profiles = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(truckRego);
-            
-            var createdLogIds = profiles.Select(z => z.KeyVehicleLogProfile.CreatedLogId).Where(z => z > 0).ToArray();
-            var kvls = _guardLogDataProvider.GetKeyVehicleLogByIds(createdLogIds);
-            foreach (var profile in profiles)
-            {
-               profile.KeyVehicleLogProfile.KeyVehicleLog = kvls.SingleOrDefault(z => z.Id == profile.KeyVehicleLogProfile.CreatedLogId);
-                
-                //for checking whether the entry is  either POI,BDM OR SUPPLIER-start
-                if(profile.PersonOfInterest!=null)
-                {
-                    profile.POIOrBDM = "POI";
-                }
-                else if (profile.IsBDM == true && profile.BDMList!=null)
-                {
-                    profile.POIOrBDM = "BDM";
-                }
-                else if(profile.IsBDM == false)
-                {
-                    profile.POIOrBDM = "Supplier";
-                }
-                else
-                {
-                    profile.POIOrBDM = null;
-                }
-                //for checking whether the entry is  either POI,BDM OR SUPPLIER-end
-
-            }
-            
-
-
-            return profiles.Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
-        }
-
-        //to check with bdm also-start
-        public List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRego(string truckRego,string poi)
-        {
-            var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
-            var profiles = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(truckRego);
 
             var createdLogIds = profiles.Select(z => z.KeyVehicleLogProfile.CreatedLogId).Where(z => z > 0).ToArray();
             var kvls = _guardLogDataProvider.GetKeyVehicleLogByIds(createdLogIds);
@@ -653,10 +615,58 @@ namespace CityWatch.Web.Services
 
 
 
-            return profiles.Where(z => string.IsNullOrEmpty(poi) || string.Equals(z.POIOrBDM, poi)).Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
+            return profiles.Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
+        }
+
+        //to check with bdm also-start
+        public List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRego(string truckRego, string poi)
+        {
+            var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
+            var profiles = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(truckRego);
+
+            var createdLogIds = profiles.Select(z => z.KeyVehicleLogProfile.CreatedLogId).Where(z => z > 0).ToArray();
+            var kvls = _guardLogDataProvider.GetKeyVehicleLogByIds(createdLogIds);
+            foreach (var profile in profiles)
+            {
+                //if LOGID=0-START
+                //if (profile.KeyVehicleLogProfile.CreatedLogId == 0)
+                //{
+                //    var list = _guardLogDataProvider.GetKeyVehicleLogs(profile.KeyVehicleLogProfile.VehicleRego);
+                //    //if (list.Count != 0)
+                //    //{
+                //    //    profile.KeyVehicleLogProfile.CreatedLogId = list.Max(x => x.Id);
+                //    //}
+                //}
+                //if LOGID=0-end
+                profile.KeyVehicleLogProfile.KeyVehicleLog = kvls.SingleOrDefault(z => z.Id == profile.KeyVehicleLogProfile.CreatedLogId);
+
+                //for checking whether the entry is  either POI,BDM OR SUPPLIER-start
+                if (profile.PersonOfInterest != null)
+                {
+                    profile.POIOrBDM = "POI";
+                }
+                else if (profile.IsBDM == true && profile.BDMList != null)
+                {
+                    profile.POIOrBDM = "BDM";
+                }
+                else if (profile.IsBDM == false)
+                {
+                    profile.POIOrBDM = "Supplier";
+                }
+                else
+                {
+                    profile.POIOrBDM = null;
+                }
+                //for checking whether the entry is  either POI,BDM OR SUPPLIER-end
+
+            }
+
+            var kvlIds = kvls.Select(z => z.Id).ToArray();
+
+            return profiles.Where(z => (string.IsNullOrEmpty(poi) || string.Equals(z.POIOrBDM, poi)) && (z.KeyVehicleLogProfile.CreatedLogId!=0 && kvlIds.Contains(z.KeyVehicleLogProfile.CreatedLogId))).Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
         }
         //to check with bdm also-end
-        public List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRegoNew(string truckRego,string Image)
+        public List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRegoNew(string truckRego, string Image)
         {
             var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
             var profiles = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(truckRego);
@@ -666,10 +676,10 @@ namespace CityWatch.Web.Services
             foreach (var profile in profiles)
             {
                 profile.KeyVehicleLogProfile.KeyVehicleLog = kvls.SingleOrDefault(z => z.Id == profile.KeyVehicleLogProfile.CreatedLogId);
-                if (profile.PersonOfInterest !=null)
+                if (profile.PersonOfInterest != null)
                 {
                     profile.POIImageDisplay = "<img  src=" + profile.POIImage + " height=35px width=35px class=ml-2 />";
-                  //  profile.POIImage = "Yes";
+                    //  profile.POIImage = "Yes";
                 }
                 else
                 {
@@ -679,7 +689,7 @@ namespace CityWatch.Web.Services
 
             return profiles.Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
         }
-        
+
 
         public List<SelectListItem> VehicleRegos
         {
@@ -811,7 +821,7 @@ namespace CityWatch.Web.Services
                 .Where(z => z.Name == "Law Enforcement" || z.Name == "Emergency Services" || z.Name == "Emergency Situation")
                 .ToDictionary(z => z.Name, z => z.Id);
 
-            var logsToCopy = _guardLogDataProvider.GetKeyVehicleLogs(previousDayLogBookId).Where(z => !z.ExitTime.HasValue && 
+            var logsToCopy = _guardLogDataProvider.GetKeyVehicleLogs(previousDayLogBookId).Where(z => !z.ExitTime.HasValue &&
                 ((kvlFieldsToLookup.TryGetValue("Law Enforcement", out int idLawEnforce) && z.PersonType == idLawEnforce) ||
                     (kvlFieldsToLookup.TryGetValue("Emergency Services", out int idEms) && z.PersonType == idEms) ||
                     (kvlFieldsToLookup.TryGetValue("Emergency Situation", out int idEmSituation) && z.EntryReason == idEmSituation) ||
@@ -821,6 +831,7 @@ namespace CityWatch.Web.Services
             {
                 foreach (var logToCopy in logsToCopy)
                 {
+                    var test = logToCopy;
                     logToCopy.Id = 0;
                     logToCopy.InitialCallTime = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day, 00, 01, 0);
                     logToCopy.EntryTime = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day, 00, 01, 0);
@@ -828,8 +839,18 @@ namespace CityWatch.Web.Services
                     logToCopy.ClientSiteLogBookId = logBookId;
                     logToCopy.GuardLoginId = guardLoginId;
                     logToCopy.CopiedFromId = logToCopy.Id;
-                    _guardLogDataProvider.SaveKeyVehicleLog(logToCopy);
+
+                    try
+                    {
+                        _guardLogDataProvider.InsertPreviousLogBook(logToCopy);
+                    }
+                    catch(Exception ex)
+                    {
+
+                    }
                 }
+
+               
             }
         }
 
@@ -895,9 +916,9 @@ namespace CityWatch.Web.Services
         public List<ClientSite> GetNewUserClientSites()
         {
 
-            
-                var clientSites = _clientDataProvider.GetNewClientSites();
-           
+
+            var clientSites = _clientDataProvider.GetNewClientSites();
+
             return clientSites;
         }
 

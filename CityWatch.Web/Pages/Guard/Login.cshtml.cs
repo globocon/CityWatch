@@ -129,7 +129,7 @@ namespace CityWatch.Web.Pages.Guard
                         var radioChecklist = _clientDataProvider.GetClientSiteRadioChecksActivityStatus(logbookcl.GuardId, logbookcl.ClientSiteId);
                         if (radioChecklist.Count == 0)
                         {
-                            /*remove NotificationType=1*/
+                            /*remove NotificationType=1 no guard on duty (NotificationType=1)*/
                             _guardLogDataProvider.RemoveTheeRadioChecksActivityWithNotifcationtypeOne(logbookcl.ClientSiteId);
 
                             var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()

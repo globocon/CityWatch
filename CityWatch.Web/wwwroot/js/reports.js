@@ -22,6 +22,18 @@
         columns: [
             { data: 'nameOfDay' },
             { data: 'date' },
+            { data: 'serialNo' },
+           // { data: 'fileNametodownload' },
+            {
+                data: 'fileNametodownload', 
+                render: function (data, type, row) {
+                    if (data) {
+                        return '<a href="https://c4istorage1.blob.core.windows.net/irfiles/' + data.substring(0, 8) + '/' + data + '"target="_blank"><img src="/images/pdfimage.jpg" style="width:115%" alt="Image"></a>';
+                    } else {
+                        return ''; 
+                    }
+                }
+            },
             { data: 'controlRoomJobNo' },
             { data: 'siteName' },
             { data: 'siteAddress' },
@@ -107,6 +119,7 @@
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (response) {
             patrolReport.clear().rows.add(response.results).draw();
+           
             drawPieChart(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site");
             drawPieChart(response.chartData.areaWardPercentage, response.recordCount, "svg#pie_chart_ir_by_areaward");
             drawPieChart(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode")

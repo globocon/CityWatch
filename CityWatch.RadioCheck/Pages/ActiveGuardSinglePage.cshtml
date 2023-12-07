@@ -386,13 +386,14 @@
                                                 <label for="gs_site_email" class="col-md-4 col-form-label">Message : </label>
                                                 <div class="col-md-6">
                                                     <input type="text" id="txtPushNotificationSubject" value="Control Room Alert" style="width:450px;" class="form-control" placeholder="Subject" />
-                                                    <textarea id="txtPushNotificationMessage" style="width:450px;height:200px;" class="form-control"></textarea>
+                                                    <textarea id="txtPushNotificationMessage" style="width:450px;height:100px;" class="form-control"></textarea>
                                                 </div>
                                             </div>
 
                                             <div class="form-row text-right">
                                                 <div class="col-md-12  text-right">
                                                     <button type="button" id="btnSendPushLotificationMessage" class="btn btn-primary">Send >></button>
+                                                    <p id="Access_permission_RC_status_new" class="mb-0 py-2" style="display:none"></p>
                                                 </div>
                                             </div>
                                         </form>
@@ -434,7 +435,7 @@
                                                 <label for="gs_land_line" class="col-md-4 col-form-label"></label>
                                                 <div class="col-md-4">
                                                     <input type="checkbox" id="chkClientType" class="GlobalAlert-checkbox">
-                                                    <label class="mx-1" for="dglClientType" style="font-size:smaller">Client Type</label>
+                                                    <label class="mx-1" for="dglClientType">Client Type</label>
                                                     <select class="form-control" id="dglClientType" multiple="multiple" style="width:209px" disabled>
 
                                                         @foreach (var clientType in _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId))
@@ -445,7 +446,7 @@
 
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <label class="mx-1" for="dglClientSiteId" style="font-size:smaller">Client Site</label>
+                                                    <label class="mx-1" for="dglClientSiteId" >Client Site</label>
                                                     <select class="form-control mx-1" id="dglClientSiteId" multiple="multiple" style="width:209px" disabled></select>
 
                                                 </div>
@@ -477,6 +478,7 @@
                                             <div class="form-row text-right">
                                                 <div class="col-md-12  text-right">
                                                     <button type="button" id="btnSendGlabalNotificationMessage" class="btn btn-primary">Send >></button>
+                                                    <p id="Access_permission_RC_status" class="mb-0 py-2" style="display:none"></p>
                                                 </div>
                                             </div>
                                         </form>
