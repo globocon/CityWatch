@@ -34,6 +34,7 @@ namespace CityWatch.Data.Providers
         List<KeyVehicleLog> GetKeyVehicleLogs(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate);
         List<KeyVehicleLog> GetKeyVehicleLogsWithPOI(int[] clientSiteIds, int[] personOfInterestIds, DateTime logFromDate, DateTime logToDate);
         KeyVehicleLog GetKeyVehicleLogById(int id);
+         KeyVehcileLogField GetIndividualType(int PersonType);
         List<KeyVehicleLog> GetKeyVehicleLogByIds(int[] ids);
         List<KeyVehicleLog> GetPOIAlert(string companyname, string individualname, int individualtype);
         void SaveDocketSerialNo(int id, string serialNo);
@@ -147,7 +148,10 @@ namespace CityWatch.Data.Providers
         void SaveClientSiteRadioCheckNew(ClientSiteRadioCheck clientSiteRadioCheck);
         //for saving status for active guards-end
 
-        List<RadioCheckListGuardLoginData> GetClientSiteRadiocheckStatus(int clientSiteId, int guardId);      
+
+        List<RadioCheckListGuardLoginData> GetClientSiteRadiocheckStatus(int clientSiteId, int guardId);
+        List<KeyVehicleLog> GetKeyVehicleLogs(string truckno);
+
 
         void InsertPreviousLogBook(KeyVehicleLog keyVehicleLog);
     }
@@ -324,7 +328,10 @@ namespace CityWatch.Data.Providers
                 .Include(z => z.ClientSiteLocation)
                 .SingleOrDefault(z => z.Id == id);
         }
-
+        public KeyVehcileLogField GetIndividualType(int PersonType)
+        {
+            return _context.KeyVehcileLogFields.SingleOrDefault(z => z.Id == PersonType);
+        }
         public List<KeyVehicleLog> GetKeyVehicleLogByIds(int[] ids)
         {
             return _context.KeyVehicleLogs.Where(z => ids.Contains(z.Id))
@@ -775,7 +782,7 @@ namespace CityWatch.Data.Providers
             kvlPersonalDetailsToDb.PersonName = keyVehicleLogVisitorPersonalDetail.PersonName;
             kvlPersonalDetailsToDb.PersonType = keyVehicleLogVisitorPersonalDetail.PersonType;
             kvlPersonalDetailsToDb.PersonOfInterest = keyVehicleLogVisitorPersonalDetail.PersonOfInterest;
-            if (keyVehicleLogVisitorPersonalDetail.PersonOfInterest != null)
+            if (keyVehicleLogVisitorPersonalDetail.PersonOfInterest != null || keyVehicleLogVisitorPersonalDetail.POIId != null)
             {
                 string imagepath = "~/images/ziren.png";
                 kvlPersonalDetailsToDb.POIImage = keyVehicleLogVisitorPersonalDetail.POIImage;
@@ -791,9 +798,10 @@ namespace CityWatch.Data.Providers
                 kvlPersonalDetailsToDb.Email = keyVehicleLogVisitorPersonalDetail.Email;
                 kvlPersonalDetailsToDb.Website = keyVehicleLogVisitorPersonalDetail.Website;
                 kvlPersonalDetailsToDb.BDMList = keyVehicleLogVisitorPersonalDetail.BDMList;
+               
 
             }
-
+            kvlPersonalDetailsToDb.POIId = keyVehicleLogVisitorPersonalDetail.POIId;
             if (kvlPersonalDetailsToDb.Id == 0)
             {
                 _context.KeyVehicleLogVisitorPersonalDetails.Add(kvlPersonalDetailsToDb);
@@ -2502,8 +2510,17 @@ namespace CityWatch.Data.Providers
                 .Select(z => new SelectListItem(z.Name, z.Id.ToString()))
                 .ToList();
         }
+       
+           
+        public List<KeyVehicleLog> GetKeyVehicleLogs(string truckno)
+        {
+            var results = _context.KeyVehicleLogs.Where(z => z.VehicleRego == truckno);
 
-        //for global push message-end
+         
+            return results.ToList();
+        }
 
     }
+
+      
 }

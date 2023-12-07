@@ -39,5 +39,6 @@ namespace CityWatch.Data.Models
         public int? GuardId { get; set; }
         [ForeignKey("GuardId")]
         public Guard Guard { get; set; }
+        
     }
 }

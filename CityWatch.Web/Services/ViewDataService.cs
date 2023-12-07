@@ -628,6 +628,16 @@ namespace CityWatch.Web.Services
             var kvls = _guardLogDataProvider.GetKeyVehicleLogByIds(createdLogIds);
             foreach (var profile in profiles)
             {
+                //if LOGID=0-START
+                //if (profile.KeyVehicleLogProfile.CreatedLogId == 0)
+                //{
+                //    var list = _guardLogDataProvider.GetKeyVehicleLogs(profile.KeyVehicleLogProfile.VehicleRego);
+                //    //if (list.Count != 0)
+                //    //{
+                //    //    profile.KeyVehicleLogProfile.CreatedLogId = list.Max(x => x.Id);
+                //    //}
+                //}
+                //if LOGID=0-end
                 profile.KeyVehicleLogProfile.KeyVehicleLog = kvls.SingleOrDefault(z => z.Id == profile.KeyVehicleLogProfile.CreatedLogId);
 
                 //for checking whether the entry is  either POI,BDM OR SUPPLIER-start
@@ -651,9 +661,9 @@ namespace CityWatch.Web.Services
 
             }
 
+            var kvlIds = kvls.Select(z => z.Id).ToArray();
 
-
-            return profiles.Where(z => string.IsNullOrEmpty(poi) || string.Equals(z.POIOrBDM, poi)).Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
+            return profiles.Where(z => (string.IsNullOrEmpty(poi) || string.Equals(z.POIOrBDM, poi)) && (z.KeyVehicleLogProfile.CreatedLogId!=0 && kvlIds.Contains(z.KeyVehicleLogProfile.CreatedLogId))).Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
         }
         //to check with bdm also-end
         public List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRegoNew(string truckRego, string Image)

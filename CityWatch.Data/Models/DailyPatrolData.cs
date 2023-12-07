@@ -194,5 +194,13 @@ namespace CityWatch.Data.Models
                 return _incidentReport.ColourCode;
             }
         }
+
+        public string fileNametodownload {
+            get
+            {
+                return _incidentReport.FileName;
+            }
+
+        }
     }
 }
