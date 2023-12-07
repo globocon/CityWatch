@@ -478,7 +478,20 @@ namespace CityWatch.Web.Pages.Guard
                     IrEntryType = IrEntryType.Normal
                 };
                 _guardLogDataProvider.SaveGuardLog(signOffEntry);
-              
+
+                /* message to Citywatch HD site id for Citywatch HQ (Report to CWS Only; Client on Bypass) 189 in db start */
+                var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdGloablmessage(189, LogBookType.DailyGuardLog, DateTime.Today);
+                var notifcationtoCitywatchHD = new GuardLog()
+                {
+                    ClientSiteLogBookId = logBookId,
+                    GuardLoginId = guardLoginId,
+                    EventDateTime = DateTime.Now,
+                    Notes = Notifications,
+                    IrEntryType = IrEntryType.Normal
+                };
+
+                _guardLogDataProvider.SaveGuardLog(notifcationtoCitywatchHD);
+                /* message to Citywatch HD site id for Citywatch HQ (Report to CWS Only; Client on Bypass) 189 in db end */
             }
             catch (Exception ex)
             {

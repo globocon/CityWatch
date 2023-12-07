@@ -1,6 +1,6 @@
 let nIntervId;
 const duration = 60 * 3;
-
+var isPaused = false;
 window.onload = function () {
     if (document.querySelector('#clockRefresh')) {
         startClock();
@@ -12,25 +12,29 @@ function startClock() {
     display = document.querySelector('#clockRefresh');
     if (!nIntervId) {
         nIntervId = setInterval(function () {
-            minutes = parseInt(timer / 60, 10);
-            seconds = parseInt(timer % 60, 10);
 
-            minutes = minutes < 10 ? "0" + minutes : minutes;
-            seconds = seconds < 10 ? "0" + seconds : seconds;
+            if (!isPaused) {
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
 
-            display.textContent = minutes + " min" + " " + seconds + " sec";
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
 
-            if (--timer < 0) {
-                location.reload();
-                //$.ajax({
-                //    url: '/Radio/Check?handler=UpdateLatestActivityStatus',
-                //    type: 'POST',
-                //    dataType: 'json',
-                //    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                //}).done(function () {
-                //    clientSiteActivityStatus.ajax.reload();
-                //    timer = duration;
-                //});
+                display.textContent = minutes + " min" + " " + seconds + " sec";
+
+                if (--timer < 0) {
+                    location.reload();
+                    //$.ajax({
+                    //    url: '/Radio/Check?handler=UpdateLatestActivityStatus',
+                    //    type: 'POST',
+                    //    dataType: 'json',
+                    //    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                    //}).done(function () {
+                    //    clientSiteActivityStatus.ajax.reload();
+                    //    timer = duration;
+                    //});
+                }
+
             }
         }, 1000);
     }
@@ -118,6 +122,7 @@ $('#clientSiteActivityStatus').on('click', 'button[name="btnRadioCheckStatus"]',
     $('#clientSiteId').val(rowClientSiteId);
     $('#guardId').val(rowGuardId);
     $('#selectRadioCheckStatus').modal('show');
+    isPaused = true;
 });
 
 
@@ -625,7 +630,7 @@ $('#clientSiteInActiveGuards tbody').on('click', '#btnUpArrow', function () {
 });
 
 $('#guardInfoModal').on('shown.bs.modal', function (event) {
-   
+    isPaused = true;
     $('#lbl_guard_name').html('');
     $('#lbl_guard_security_no').html('');
     $('#lbl_guard_state').html('');
@@ -862,7 +867,8 @@ let clientSiteActiveGuardsLogBookDetails = $('#clientSiteActiveGuardsLogBookDeta
 });
 
 $('#clientSiteActiveGuards tbody').on('click', '#btnLogBookDetailsByGuard', function (value, record) {
-    $('#guardLogBookInfoModal').modal('show');
+    $('#guardLogBookInfoModal').modal('show');   
+    isPaused = true;
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
     var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
     var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
@@ -968,6 +974,7 @@ let clientSiteActiveGuardsKeyVehicleDetails = $('#clientSiteActiveGuardsKeyVehic
 
 $('#clientSiteActiveGuards tbody').on('click', '#btnKeyVehicleDetailsByGuard', function (value, record) {
     $('#guardKeyVehicleInfoModal').modal('show');
+    isPaused = true;
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
     var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
     var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
@@ -1069,6 +1076,7 @@ let clientSiteActiveGuardsIncidentReportsDetails = $('#clientSiteActiveGuardsInc
 
 $('#clientSiteActiveGuards tbody').on('click', '#btnIncidentReportdetails', function (value, record) {
     $('#guardIncidentReportsInfoModal').modal('show');
+    isPaused = true;
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
     var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
     var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
@@ -1112,6 +1120,7 @@ $('#clientSiteInActiveGuards').on('click', 'button[name="btnRadioCheckStatus"]',
     $('#clientSiteId').val(rowClientSiteId);
     $('#guardId').val(rowGuardId);
     $('#selectRadioCheckStatus').modal('show');
+    isPaused = true;
 });
 
 $('#clientSiteActiveGuards').on('click', 'button[name="btnRadioCheckStatusActive"]', function () {
@@ -1124,6 +1133,7 @@ $('#clientSiteActiveGuards').on('click', 'button[name="btnRadioCheckStatusActive
     $('#guardId').val(rowGuardId);
     $('#selectRadioStatusActive option:contains("Deactivate")').hide();
     $('#selectRadioCheckStatusActive').modal('show');
+    isPaused = true;
 });
 
 $('#btnSaveRadioStatus').on('click', function () {
@@ -1208,7 +1218,7 @@ $('#btnSaveRadioStatusActive').on('click', function () {
 /*for pushing notifications from the control room - start*/
 $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
 
-  
+    isPaused = true;
 
     const button = $(event.relatedTarget);
     const id = button.data('id');
@@ -1230,9 +1240,15 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     $('#dglClientSiteId').multiselect("disable");
     $('#dglClientType').val('');
     $('#dglClientSiteId').val('');
+    $('#Access_permission_RC_status').hide();
+    $('#Access_permission_RC_status_new').hide()
+    $('#txtGlobalNotificationMessage').val('');
+    $('#txtPushNotificationMessage').val('');
     clearGuardValidationSummary('PushNotificationsValidationSummary');
   
 });
+
+
 //$('#chkLB').on('change', function () {
 //    const isChecked = $(this).is(':checked');
 //    $('#IsLB').val(isChecked);
@@ -1283,6 +1299,8 @@ $('#btnSendPushLotificationMessage').on('click', function () {
 
     }
     else {
+        $('#Access_permission_RC_status_new').hide();
+        $('#Access_permission_RC_status_new').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Sending Email. Please wait...').show();
         Notifications =  Notifications ;
         $.ajax({
             url: '/RadioCheckV2?handler=SavePushNotificationTestMessages',
@@ -1301,9 +1319,11 @@ $('#btnSendPushLotificationMessage').on('click', function () {
         }).done(function (data) {
             if (data.success == true) {
                 $('#pushNoTificationsControlRoomModal').modal('hide');
+                $('#Access_permission_RC_status_new').hide();
             }
             else {
                 displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
+               
             }
             //$('#selectRadioStatus').val('');
             //$('#btnRefreshActivityStatus').trigger('click');
@@ -1372,6 +1392,9 @@ $('#btnSendGlabalNotificationMessage').on('click', function () {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
     }
     else {
+
+        $('#Access_permission_RC_status').hide();
+        $('#Access_permission_RC_status').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Sending Email. Please wait...').show();
         $.ajax({
             url: '/RadioCheckV2?handler=SaveGlobalNotificationTestMessages',
             type: 'POST',
@@ -1393,6 +1416,7 @@ $('#btnSendGlabalNotificationMessage').on('click', function () {
         }).done(function (data) {
             if (data.success == true) {
                 $('#pushNoTificationsControlRoomModal').modal('hide');
+                $('#Access_permission_RC_status').hide();
             }
             else {
                 displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
@@ -1811,6 +1835,7 @@ $('#clientSiteInActiveGuardsSinglePage').on('click', 'button[name="btnRadioCheck
     $('#clientSiteId').val(rowClientSiteId);
     $('#guardId').val(rowGuardId);
     $('#selectRadioCheckStatus').modal('show');
+    isPaused = true;
 });
 
 
@@ -2021,11 +2046,13 @@ $('#clientSiteActiveGuardsSinglePage').on('click', 'button[name="btnRadioCheckSt
     $('#clientSiteId').val(rowClientSiteId);
     $('#guardId').val(rowGuardId);
     $('#selectRadioCheckStatusActive').modal('show');
+    isPaused = true;
 });
 
 
 $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnLogBookDetailsByGuard', function (value, record) {
     $('#guardLogBookInfoModal').modal('show');
+    isPaused = true;
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
     var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
     var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
@@ -2039,6 +2066,7 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnLogBookDetailsByGu
 
 $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnKeyVehicleDetailsByGuard', function (value, record) {
     $('#guardKeyVehicleInfoModal').modal('show');
+    isPaused = true;
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
     var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
     var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
@@ -2059,6 +2087,7 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnKeyVehicleDetailsB
 
 $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnIncidentReportdetails', function (value, record) {
     $('#guardIncidentReportsInfoModal').modal('show');
+    isPaused = true;
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
     var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
     var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
@@ -2299,6 +2328,7 @@ $('#clientSiteActiveGuards tbody').on('click', '#btnGreen1hover', function (valu
     $('#lbl_GuardActivityHeaderHover').text(GuardName + '-' + 'Log Book Details');
     clientSiteRadiostatusDetailsHover.ajax.reload();
     $('#hoverModal').modal('show');
+    isPaused = true;
 });
 
 $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnGreen1hover', function (value, record) {
@@ -2319,6 +2349,34 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnGreen1hover', func
     $('#lbl_GuardActivityHeaderHover').text(GuardName + '-' + 'Log Book Details');
     clientSiteRadiostatusDetailsHover.ajax.reload();
     $('#hoverModal').modal('show');
+    isPaused = true;
 });
+
+$("#guardKeyVehicleInfoModal").on("hidden.bs.modal", function () {
+    isPaused = false;
+});
+$("#guardIncidentReportsInfoModal").on("hidden.bs.modal", function () {
+    isPaused = false;
+});
+$("#guardLogBookInfoModal").on("hidden.bs.modal", function () {
+    isPaused = false;
+});
+$("#selectRadioCheckStatus").on("hidden.bs.modal", function () {
+    isPaused = false;
+});
+$("#selectRadioCheckStatusActive").on("hidden.bs.modal", function () {
+    isPaused = false;
+});
+$("#pushNoTificationsControlRoomModal").on("hidden.bs.modal", function () {
+    isPaused = false;
+});
+$("#hoverModal").on("hidden.bs.modal", function () {
+    isPaused = false;
+});
+$("#guardInfoModal").on("hidden.bs.modal", function () {
+    isPaused = false;
+});
+
+
 
 //hover display tooltip-end

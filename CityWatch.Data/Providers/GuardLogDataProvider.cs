@@ -2310,15 +2310,28 @@ namespace CityWatch.Data.Providers
         public int GetClientSiteLogBookIdGloablmessage(int clientsiteId, LogBookType type, DateTime date)
         {
             var logBook = _context?.ClientSiteLogBooks
-    .FirstOrDefault(z => z.ClientSiteId == clientsiteId && z.Type == type && z.Date == date);
+            .FirstOrDefault(z => z.ClientSiteId == clientsiteId && z.Type == type && z.Date == date);
             if (logBook != null && logBook.Id != null)
             {
                 return logBook.Id;
             }
             else
             {
+
+                var newLogBook = new ClientSiteLogBook()
+                {
+                    ClientSiteId = clientsiteId,
+                    Type = LogBookType.DailyGuardLog,
+                    Date = DateTime.Today
+                };
+
+                if (newLogBook.Id == 0)
+                {
+                    _context.ClientSiteLogBooks.Add(newLogBook);
+                }
+                _context.SaveChanges();
                 // Handle the case where no matching log book is found or logBook.Id is null
-                return 0; // Return null or another suitable default value
+                return newLogBook.Id; ; // Return null or another suitable default value
             }
         }
         //code added for client site dropdown starts
