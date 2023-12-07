@@ -196,7 +196,7 @@ namespace CityWatch.RadioCheck.Services
             /*Remove the Radio check status <2 hrs*/
             _guardLogDataProvider.RemoveClientSiteRadioChecksGreaterthanTwoHours();
             Process2();
-
+            Process3();
 
         }
 
@@ -207,6 +207,12 @@ namespace CityWatch.RadioCheck.Services
             /* Insert the message */
             /* if any gurad login remove the message */
             _guardLogDataProvider.GetGuardManningDetails(DateTime.Now.DayOfWeek);
+        }
+
+        public void Process3()
+        {
+            /* remove the repeated login for a guard in different sites keep the latest one ,i.e. show a guard only one site */
+            _guardLogDataProvider.RemoveGuardLoginFromdifferentSites();
         }
 
     }
