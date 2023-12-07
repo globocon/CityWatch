@@ -47,6 +47,8 @@ namespace CityWatch.Web.Pages.Reports
         {
             var patrolDataReport = _irChartDataService.GetDailyPatrolData(ReportRequest);
             var results = patrolDataReport.Results;
+           
+            var reportFileName = results.FirstOrDefault().fileNametodownload;
             var sitePercentage = patrolDataReport.SitePercentage.OrderByDescending(z => z.Value).ToArray();
             var areaWardPercentage = patrolDataReport.AreaWardPercentage.OrderByDescending(z => z.Value).ToArray();
             var eventTypePercentage = patrolDataReport.EventTypePercentage.OrderBy(z => z.Key).ToArray();
