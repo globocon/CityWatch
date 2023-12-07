@@ -35,14 +35,18 @@ namespace CityWatch.Web.Services
     public interface IKeyVehicleLogDocketGenerator
     {
         string GeneratePdfReport(int keyVehicleLogId, string docketReason, string blankNoteOnOrOff, string serialNo);
+        
     }
     public class KeyVehicleLogDocketGenerator : IKeyVehicleLogDocketGenerator
     {
         private readonly IClientDataProvider _clientDataProvider;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly IGuardSettingsDataProvider _guardSettingsDataProvider;
+        private readonly IWebHostEnvironment _WebHostEnvironment;
         private readonly string _reportRootDir;
         private readonly string _imageRootDir;
+        private readonly string _PersonimageRootDir;
+        private readonly string _vehicleimageRootDir;
         private readonly Settings _settings;
 
         private const float CELL_FONT_SIZE = 6f;
@@ -61,6 +65,8 @@ namespace CityWatch.Web.Services
             _guardSettingsDataProvider = guardSettingsDataProvider;
             _reportRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "Pdf");
             _imageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
+            _PersonimageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "KvlUploads","Person");
+            _vehicleimageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "KvlUploads");
             _settings = settings.Value;
         }
 
@@ -92,7 +98,7 @@ namespace CityWatch.Web.Services
             doc.Add(GetKeyAndOtherDetailsTable(keyVehicleLogViewModel));
             doc.Add(GetCustomerRefAndVwiTable(keyVehicleLogViewModel));
             doc.Add(CreateWeightandOtherDetailsTable(keyVehicleLogViewModel, docketReason));
-
+            doc.Add(CreateImageDetailsTable(keyVehicleLogViewModel, docketReason));
             doc.Close();
             pdfDoc.Close();
 
@@ -126,6 +132,7 @@ namespace CityWatch.Web.Services
                 cellSiteImage.Add(siteImage);
             }
             headerTable.AddCell(cellSiteImage).SetBorder(Border.NO_BORDER);
+            
 
             return headerTable;
         }
@@ -235,7 +242,44 @@ namespace CityWatch.Web.Services
 
             return outerTable2;
         }
-        
+        private Table CreateImageDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel, string docketReason)
+        {
+            var outerTable2 = new Table(UnitValue.CreatePercentArray(new float[] { 68, 32 })).UseAllAvailableWidth().SetMarginTop(10);
+
+            var innerTable2 = new Table(1).UseAllAvailableWidth();
+
+            var cellWeightDetailsTable = new Cell()
+                                            .SetPaddingLeft(0)
+                                            .SetPaddingTop(0)
+                                            .SetBorder(Border.NO_BORDER)
+                                            .Add(GetImageTable(keyVehicleLogViewModel));
+            innerTable2.AddCell(cellWeightDetailsTable);
+
+            //var otherDetailsTable = new Cell()
+            //                            .SetPaddingLeft(0)
+            //                            .SetPaddingTop(7)
+            //                            .SetBorder(Border.NO_BORDER)
+            //                            .Add(GetOtherDetailsTable(docketReason));
+            //innerTable2.AddCell(otherDetailsTable);
+
+            var cellInnerTable2 = new Cell()
+                                    .SetPaddingLeft(0)
+                                    .SetPaddingTop(0)
+                                    .SetBorder(Border.NO_BORDER)
+                                    .Add(innerTable2);
+            outerTable2.AddCell(cellInnerTable2);
+
+            var cellSignDetails = new Cell()
+                                   .SetPaddingRight(0)
+                                   .SetPaddingTop(0)
+                                   .SetBorder(Border.NO_BORDER)
+                                   .Add(GetVehicleImageTable(keyVehicleLogViewModel));
+            outerTable2.AddCell(cellSignDetails);
+
+            return outerTable2;
+        }
+        // Table for Image
+       
         private static Table GetClockDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
         {
             var clockDetails = new Table(UnitValue.CreatePercentArray(new float[] { 15, 15, 15, 15, 40})).UseAllAvailableWidth();
@@ -524,7 +568,47 @@ namespace CityWatch.Web.Services
 
             return signDetailsTable;
         }
+       // added to display the image
+        private  Table GetImageTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        {
 
+            var ImageTable = new Table(1).UseAllAvailableWidth();
+
+            int personType = Convert.ToInt32(keyVehicleLogViewModel.Detail.PersonType);
+            var IndividulaName = _guardLogDataProvider.GetIndividualType(personType);
+            var Image = keyVehicleLogViewModel.Detail.CompanyName + "-" + IndividulaName.Name + "-" + keyVehicleLogViewModel.Detail.PersonName + ".jpg";
+            
+            var folderPath = IO.Path.Combine(_PersonimageRootDir,Image);
+            if (IO.File.Exists(folderPath))
+            {
+                var Imagepath = new Image(ImageDataFactory.Create(IO.Path.Combine(_PersonimageRootDir, Image)))
+                              .SetHeight(160);
+                ImageTable.AddCell(new Cell().Add(Imagepath).SetBorder(Border.NO_BORDER));
+            }
+               
+          
+            
+            return ImageTable;
+        }
+        private Table GetVehicleImageTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        {
+
+            var ImageTable = new Table(1).UseAllAvailableWidth();
+
+          
+            var Image = keyVehicleLogViewModel.Detail.VehicleRego + ".jpg";
+            var folderPath= IO.Path.Combine(_vehicleimageRootDir, keyVehicleLogViewModel.Detail.VehicleRego,Image);
+            if (IO.File.Exists(folderPath))
+            {
+                var Imagepath = new Image(ImageDataFactory.Create(IO.Path.Combine(_vehicleimageRootDir, keyVehicleLogViewModel.Detail.VehicleRego, Image)))
+               .SetHeight(160);
+
+                ImageTable.AddCell(new Cell().Add(Imagepath).SetBorder(Border.NO_BORDER));
+            }
+               
+
+            return ImageTable;
+        }
         private static Cell GetSiteHeaderCell(string text)
         {
             return new Cell()

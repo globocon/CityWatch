@@ -34,6 +34,7 @@ namespace CityWatch.Data.Providers
         List<KeyVehicleLog> GetKeyVehicleLogs(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate);
         List<KeyVehicleLog> GetKeyVehicleLogsWithPOI(int[] clientSiteIds, int[] personOfInterestIds, DateTime logFromDate, DateTime logToDate);
         KeyVehicleLog GetKeyVehicleLogById(int id);
+         KeyVehcileLogField GetIndividualType(int PersonType);
         List<KeyVehicleLog> GetKeyVehicleLogByIds(int[] ids);
         List<KeyVehicleLog> GetPOIAlert(string companyname, string individualname, int individualtype);
         void SaveDocketSerialNo(int id, string serialNo);
@@ -324,7 +325,10 @@ namespace CityWatch.Data.Providers
                 .Include(z => z.ClientSiteLocation)
                 .SingleOrDefault(z => z.Id == id);
         }
-
+        public KeyVehcileLogField GetIndividualType(int PersonType)
+        {
+            return _context.KeyVehcileLogFields.SingleOrDefault(z => z.Id == PersonType);
+        }
         public List<KeyVehicleLog> GetKeyVehicleLogByIds(int[] ids)
         {
             return _context.KeyVehicleLogs.Where(z => ids.Contains(z.Id))
@@ -350,13 +354,13 @@ namespace CityWatch.Data.Providers
             if (keyVehicleLog.Id == 0)
             {
                 /* this condition added for prevent duplicate kV p7 103 issue 30112023 dileep*/
-                var checkifAlreadyExist = _context.KeyVehicleLogs.Where(x => x.ClientSiteLogBookId == keyVehicleLog.ClientSiteLogBookId
-                && x.GuardLoginId == keyVehicleLog.GuardLoginId
-                && x.VehicleRego == keyVehicleLog.VehicleRego).ToList();
-                if (!checkifAlreadyExist.Any())
-                {
+                //var checkifAlreadyExist = _context.KeyVehicleLogs.Where(x => x.ClientSiteLogBookId == keyVehicleLog.ClientSiteLogBookId
+                //&& x.GuardLoginId == keyVehicleLog.GuardLoginId
+                //&& x.VehicleRego == keyVehicleLog.VehicleRego).ToList();
+                //if (!checkifAlreadyExist.Any())
+                //{
                     _context.KeyVehicleLogs.Add(keyVehicleLog);
-                }
+                //}
             }
             else
             {
@@ -2404,8 +2408,8 @@ namespace CityWatch.Data.Providers
                 .Select(z => new SelectListItem(z.Name, z.Id.ToString()))
                 .ToList();
         }
-
-        //for global push message-end
+       
+           
         public List<KeyVehicleLog> GetKeyVehicleLogs(string truckno)
         {
             var results = _context.KeyVehicleLogs.Where(z => z.VehicleRego == truckno);
@@ -2415,4 +2419,6 @@ namespace CityWatch.Data.Providers
         }
 
     }
+
+      
 }
