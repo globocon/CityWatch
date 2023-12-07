@@ -30,6 +30,7 @@ namespace CityWatch.Data.Models
             CRMId = keyVehicleLog.CRMId;
             BDMList = keyVehicleLog.BDMList;
             IsBDM = keyVehicleLog.IsBDM;
+            POIId = keyVehicleLog.VehicleRego;
         }
 
         [Key]
@@ -57,6 +58,7 @@ namespace CityWatch.Data.Models
         public string Website { get; set; }
         public string CRMId { get; set; }
         public string BDMList { get; set; }
+        public string POIId { get; set; }
 
         [NotMapped]
         public string POIOrBDM { get; set; }
