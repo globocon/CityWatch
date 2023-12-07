@@ -148,6 +148,7 @@ namespace CityWatch.Data.Providers
         //for saving status for active guards-end
 
         List<RadioCheckListGuardLoginData> GetClientSiteRadiocheckStatus(int clientSiteId, int guardId);
+        List<KeyVehicleLog> GetKeyVehicleLogs(string truckno);
 
     }
 
@@ -672,7 +673,7 @@ namespace CityWatch.Data.Providers
             kvlPersonalDetailsToDb.PersonName = keyVehicleLogVisitorPersonalDetail.PersonName;
             kvlPersonalDetailsToDb.PersonType = keyVehicleLogVisitorPersonalDetail.PersonType;
             kvlPersonalDetailsToDb.PersonOfInterest = keyVehicleLogVisitorPersonalDetail.PersonOfInterest;
-            if (keyVehicleLogVisitorPersonalDetail.PersonOfInterest != null)
+            if (keyVehicleLogVisitorPersonalDetail.PersonOfInterest != null || keyVehicleLogVisitorPersonalDetail.POIId != null)
             {
                 string imagepath = "~/images/ziren.png";
                 kvlPersonalDetailsToDb.POIImage = keyVehicleLogVisitorPersonalDetail.POIImage;
@@ -688,9 +689,10 @@ namespace CityWatch.Data.Providers
                 kvlPersonalDetailsToDb.Email = keyVehicleLogVisitorPersonalDetail.Email;
                 kvlPersonalDetailsToDb.Website = keyVehicleLogVisitorPersonalDetail.Website;
                 kvlPersonalDetailsToDb.BDMList = keyVehicleLogVisitorPersonalDetail.BDMList;
+               
 
             }
-
+            kvlPersonalDetailsToDb.POIId = keyVehicleLogVisitorPersonalDetail.POIId;
             if (kvlPersonalDetailsToDb.Id == 0)
             {
                 _context.KeyVehicleLogVisitorPersonalDetails.Add(kvlPersonalDetailsToDb);
@@ -2404,6 +2406,13 @@ namespace CityWatch.Data.Providers
         }
 
         //for global push message-end
+        public List<KeyVehicleLog> GetKeyVehicleLogs(string truckno)
+        {
+            var results = _context.KeyVehicleLogs.Where(z => z.VehicleRego == truckno);
+
+         
+            return results.ToList();
+        }
 
     }
 }
