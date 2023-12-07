@@ -34,6 +34,7 @@ namespace CityWatch.Data.Providers
         List<KeyVehicleLog> GetKeyVehicleLogs(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate);
         List<KeyVehicleLog> GetKeyVehicleLogsWithPOI(int[] clientSiteIds, int[] personOfInterestIds, DateTime logFromDate, DateTime logToDate);
         KeyVehicleLog GetKeyVehicleLogById(int id);
+         KeyVehcileLogField GetIndividualType(int PersonType);
         List<KeyVehicleLog> GetKeyVehicleLogByIds(int[] ids);
         List<KeyVehicleLog> GetPOIAlert(string companyname, string individualname, int individualtype);
         void SaveDocketSerialNo(int id, string serialNo);
@@ -323,7 +324,10 @@ namespace CityWatch.Data.Providers
                 .Include(z => z.ClientSiteLocation)
                 .SingleOrDefault(z => z.Id == id);
         }
-
+        public KeyVehcileLogField GetIndividualType(int PersonType)
+        {
+            return _context.KeyVehcileLogFields.SingleOrDefault(z => z.Id == PersonType);
+        }
         public List<KeyVehicleLog> GetKeyVehicleLogByIds(int[] ids)
         {
             return _context.KeyVehicleLogs.Where(z => ids.Contains(z.Id))
@@ -2402,8 +2406,8 @@ namespace CityWatch.Data.Providers
                 .Select(z => new SelectListItem(z.Name, z.Id.ToString()))
                 .ToList();
         }
+       
+            //for global push message-end
 
-        //for global push message-end
-
-    }
+        }
 }
