@@ -74,4 +74,24 @@ if (gridRadioCheckStatusTypeSettings) {
             }).edit(-1);
         }
     });
+    /*  broadcast live events-start*/
+    let gridBroadCastBannerLiveEvents;
+    gridBroadCastBannerLiveEvents = $('#BroadCastBannerLiveEvents').grid({
+        dataSource: '/Admin/Settings?handler=BroadcastLiveEvents',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        inlineEditing: { mode: 'command' },
+
+        columns: [
+            { width: 130, field: 'id', title: 'Id', hidden: true },
+            { width: 500, field: 'textMessage', title: 'Name', editor: true },
+            { width: 100, field: 'expiryDate', title: 'ExpiryDate', type: 'date', format: 'expiryDate', editor: true  },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+
+    /*  broadcast live events-end*/
 }

@@ -150,8 +150,12 @@ namespace CityWatch.RadioCheck.Pages.Admin
             return new JsonResult(new { status = status, message = message });
         }
 
-    
-      
-     
+        //Broadcast Live events-start
+        public JsonResult OnGetBroadcastLiveEvents()
+        {
+            return new JsonResult(_configDataProvider.GetBroadcastLiveEvents());
+        }
+
+        //Broadcast Live events-end
     }
 }

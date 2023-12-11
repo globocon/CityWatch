@@ -42,7 +42,11 @@ namespace CityWatch.Data.Providers
         List<RadioCheckStatus> GetRadioCheckStatusWithOutcome();
         int GetRadioCheckStatusCount();
         List<SelectListItem> GetRadioCheckStatusForDropDown(bool withoutSelect = false);
+
         //to get functions for settings in radio check-end
+        //broadcast banner live events-start
+        List<BroadcastBannerLiveEvents> GetBroadcastLiveEvents();
+        //broadcast banner live events-end
 
     }
 
@@ -382,7 +386,13 @@ namespace CityWatch.Data.Providers
 
             return items;
         }
-       
+
         //to get functions for settings in radio check-end
+        //broadcast banner live events-start
+        public List<BroadcastBannerLiveEvents> GetBroadcastLiveEvents()
+        {
+            return _context.BroadcastBannerLiveEvents.ToList();
+        }
+        //broadcast banner live events-end
     }
 }

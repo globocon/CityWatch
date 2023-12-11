@@ -18,9 +18,9 @@
         <li class="nav-item">
             <a class="nav-link active" id="rcstype-tab" data-toggle="tab" href="#rcstype" role="tab" aria-controls="rcstype" aria-selected="true">Radio Check</a>
         </li>
-      @*  <li class="nav-item">
-            <a class="nav-link" id="csite-tab" data-toggle="tab" href="#csite" role="tab" aria-controls="csite" aria-selected="false">Incident Client Site</a>
-        </li>*@
+        <li class="nav-item">
+            <a class="nav-link " id="broadcastBanner-tab" data-toggle="tab" href="#broadcastBanner" role="tab" aria-controls="broadcastBanner" aria-selected="false">Broadcast Banner</a>
+        </li>
         
     </ul>
     <div class="tab-content" id="settingsTabContent">
@@ -63,7 +63,39 @@
                 </div>
             </div>
         </div>
-        
+        <div class="tab-pane fade show  py-3" id="broadcastBanner" role="tabpanel" aria-labelledby="broadcastBanner-tab">
+            <div class="row">
+                <div class="col text-right">
+                    <button class="btn btn-success mb-3" id="add_radiocheck_status"><i class="fa fa-plus mr-2"></i>Add New</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <table class="table" id="radiocheck_status_type_settings"></table>
+                </div>
+            </div>
+
+            <div class="row mt-2">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between">
+                            <b><u>Line 1 - Adhoc Live Events</u></b>
+                            
+                        </div>
+
+                        
+                            <div class="card-body row m-0">
+                                <div class="col-md-12">
+
+                                <table class="table" id="BroadCastBannerLiveEvents"></table>
+                                </div>
+
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
 
        
     </div>
