@@ -102,6 +102,11 @@ namespace CityWatch.Web.Pages.Guard
                     CreateLogbookLoggedInEntry(logBookId, guardLoginId);
 
                 }
+                if (LogBookType == LogBookType.VehicleAndKeyLog)
+                {
+                    CreateKeyVehicleLoggedInEntry(logBookId, guardLoginId);
+
+                }
 
                 if (LogBookType == LogBookType.VehicleAndKeyLog && isNewLogBook)
                 {
@@ -322,7 +327,19 @@ namespace CityWatch.Web.Pages.Guard
             return null;
         }
 
-        private void CreateLogbookLoggedInEntry(int logBookId, int guardLoginId)
+        private void CreateKeyVehicleLoggedInEntry(int logBookId, int guardLoginId)
+        {
+            var signInEntry = new GuardLog()
+            {
+                ClientSiteLogBookId = logBookId,
+                GuardLoginId = guardLoginId,
+                EventDateTime = DateTime.Now,
+                Notes = "KV Logged In",
+                IsSystemEntry = true
+            };
+            _guardLogDataProvider.SaveGuardLog(signInEntry);
+        }
+            private void CreateLogbookLoggedInEntry(int logBookId, int guardLoginId)
         {
             var signInEntry = new GuardLog()
             {
