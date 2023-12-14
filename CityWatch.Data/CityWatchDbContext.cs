@@ -74,6 +74,7 @@ namespace CityWatch.Data
         public DbSet<RadioCheckStatusColor> RadioCheckStatusColor { get; set; }
         public DbSet<RadioCheckStatus> RadioCheckStatus { get; set; }
         public DbSet<BroadcastBannerLiveEvents> BroadcastBannerLiveEvents { get; set; }
+        public DbSet<BroadcastBannerCalendarEvents> BroadcastBannerCalendarEvents { get; set; }
 
     }
 }

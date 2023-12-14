@@ -103,6 +103,14 @@ namespace CityWatch.Data.Providers
         int RemoveIncidentReportsPlatesLoadedWithGuardId(List<IncidentReportsPlatesLoaded> platesLoaded);
 
         int RemoveIncidentReportsPlatesLoadedWithUserId(int? userId);
+        //to add functions for Calendar events -start
+        void SaveCalendarEvents(BroadcastBannerCalendarEvents calendarEvents);
+        void DeleteCalendarEvents(int id);
+        //to add functions for Calendar events -end
+        //to add functions for Live events -start
+        void SaveLiveEvents(BroadcastBannerLiveEvents liveEvents);
+        void DeleteLiveEvents(int id);
+        //to add functions for Live events -end
 
     }
 
@@ -1146,6 +1154,90 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
         //to get functions for settings in radio check-end
+        //to add functions for Live events -start
+        public void SaveLiveEvents(BroadcastBannerLiveEvents liveEvents)
+        {
+            if (liveEvents == null)
+                throw new ArgumentNullException();
+
+            if (liveEvents.id == -1)
+            {
+                var calendarEventsnew = new BroadcastBannerLiveEvents()
+                {
+                    TextMessage = liveEvents.TextMessage,
+                    ExpiryDate = liveEvents.ExpiryDate,
+                };
+                _context.BroadcastBannerLiveEvents.Add(calendarEventsnew);
+            }
+            else
+            {
+                var calendarEventsUpdate = _context.BroadcastBannerLiveEvents.SingleOrDefault(x => x.id == liveEvents.id);
+                if (calendarEventsUpdate == null)
+                    throw new InvalidOperationException();
+
+                calendarEventsUpdate.TextMessage = liveEvents.TextMessage;
+                calendarEventsUpdate.ExpiryDate = liveEvents.ExpiryDate;
+            }
+            _context.SaveChanges();
+        }
+
+        public void DeleteLiveEvents(int id)
+        {
+            if (id == -1)
+                return;
+
+            var liveEventsToDelete = _context.BroadcastBannerLiveEvents.SingleOrDefault(x => x.id == id);
+            if (liveEventsToDelete == null)
+                throw new InvalidOperationException();
+
+            _context.BroadcastBannerLiveEvents.Remove(liveEventsToDelete);
+            _context.SaveChanges();
+        }
+        //to add functions for Calendar events -end
+        //to add functions for Calendar events -start
+        public void SaveCalendarEvents(BroadcastBannerCalendarEvents calendarEvents)
+        {
+            if (calendarEvents == null)
+                throw new ArgumentNullException();
+
+            if (calendarEvents.id == -1)
+            {
+                var calendarEventsnew = new BroadcastBannerCalendarEvents()
+                {
+                    TextMessage = calendarEvents.TextMessage,
+                    ExpiryDate = calendarEvents.ExpiryDate,
+                    StartDate = calendarEvents.StartDate,
+                    ReferenceNo = calendarEvents.ReferenceNo,
+                };
+                _context.BroadcastBannerCalendarEvents.Add(calendarEventsnew);
+            }
+            else
+            {
+                var calendarEventsUpdate = _context.BroadcastBannerCalendarEvents.SingleOrDefault(x => x.id == calendarEvents.id);
+                if (calendarEventsUpdate == null)
+                    throw new InvalidOperationException();
+
+                calendarEventsUpdate.TextMessage = calendarEvents.TextMessage;
+                calendarEventsUpdate.ExpiryDate = calendarEvents.ExpiryDate;
+                calendarEventsUpdate.StartDate = calendarEvents.StartDate;
+                calendarEventsUpdate.ReferenceNo = calendarEvents.ReferenceNo;
+            }
+            _context.SaveChanges();
+        }
+
+        public void DeleteCalendarEvents(int id)
+        {
+            if (id == -1)
+                return;
+
+            var calendarEventsToDelete = _context.BroadcastBannerCalendarEvents.SingleOrDefault(x => x.id == id);
+            if (calendarEventsToDelete == null)
+                throw new InvalidOperationException();
+
+            _context.BroadcastBannerCalendarEvents.Remove(calendarEventsToDelete);
+            _context.SaveChanges();
+        }
+        //to add functions for Calendar events -end
 
     }
 }

@@ -151,11 +151,112 @@ namespace CityWatch.RadioCheck.Pages.Admin
         }
 
         //Broadcast Live events-start
+        public JsonResult OnPostLiveEvents(BroadcastBannerLiveEvents record)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+
+                
+                _clientDataProvider.SaveLiveEvents(record);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+        public JsonResult OnPostDeleteLiveEvents(int id)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.DeleteLiveEvents(id);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
         public JsonResult OnGetBroadcastLiveEvents()
         {
             return new JsonResult(_configDataProvider.GetBroadcastLiveEvents());
         }
 
         //Broadcast Live events-end
+        //Broadcast Calendar events-start
+
+        public JsonResult OnPostCalendarEvents(BroadcastBannerCalendarEvents record)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                
+                if (record.id == -1)
+                {
+
+                    int LastOne = _configDataProvider.GetCalendarEventsCount();
+                    if (LastOne != null)
+                    {
+                        LastOne++;
+                        string numberAsString = LastOne.ToString();
+                        if (numberAsString.Length == 1)
+                        {
+
+                            record.ReferenceNo = "0" + LastOne;
+                        }
+                        else
+                        {
+                            record.ReferenceNo = LastOne.ToString();
+                        }
+
+
+                    }
+                    var existsevents = _configDataProvider.GetBroadcastCalendarEvents().Where(x => x.ExpiryDate == record.ExpiryDate && x.StartDate==record.StartDate);
+                    if (existsevents.Count() > 0)
+                    {
+                        
+                        return new JsonResult(new { status = false, message = "Another Event Exists" });
+                    }
+                }
+                _clientDataProvider.SaveCalendarEvents(record);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+        public JsonResult OnPostDeleteCalendarEvents(int id)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.DeleteCalendarEvents(id);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+        public JsonResult OnGetBroadcastCalendarEvents()
+        {
+            return new JsonResult(_configDataProvider.GetBroadcastCalendarEvents());
+        }
+        //Broadcast Calendar events-end
     }
 }

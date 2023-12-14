@@ -77,10 +77,15 @@
             @RenderBody()
         </main>
     </div>
+   
     <div class="container d-flex flex-column flex-md-row pb-5">
         @if (IsSectionDefined("ProductLogo"))
         {
             @RenderSection("ProductLogo")
+        }
+        @if (IsSectionDefined("CalendarLogo"))
+        {
+            @RenderSection("CalendarLogo")
         }
         <img src="~/images/ISOv3.jpg" alt="iso certification" height="80px" class="ml-md-auto"/>
     </div>
