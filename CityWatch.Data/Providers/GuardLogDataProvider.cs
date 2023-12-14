@@ -174,7 +174,7 @@ namespace CityWatch.Data.Providers
         public List<GuardLog> GetGuardLogs(int logBookId, DateTime logDate)
         {
             return _context.GuardLogs
-               .Where(z => z.ClientSiteLogBookId == logBookId && z.EventDateTime >= logDate && z.EventDateTime < logDate.AddDays(1))
+               .Where(z =>z.EventDateTime >= logDate && z.EventDateTime < logDate.AddDays(1))
                .Include(z => z.ClientSiteLogBook)
                .Include(z => z.GuardLogin.Guard)
                .OrderBy(z => z.Id)

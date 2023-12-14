@@ -859,6 +859,7 @@ namespace CityWatch.Web.Pages.Guard
 
         public async Task<JsonResult> OnPostGenerateManualDocket(int id, ManualDocketReason option, string otherReason, string stakeholderEmails, int clientSiteId, string blankNoteOnOrOff)
         {
+          
             var fileName = string.Empty;
 
             try
@@ -908,6 +909,67 @@ namespace CityWatch.Web.Pages.Guard
 
             return new JsonResult(new { fileName = @Url.Content($"~/Pdf/Output/{fileName}"), statusCode });
         }
+        //To Generate the Pdf In List start
+        public async Task<JsonResult> OnPostGenerateManualDocketList(int id1, ManualDocketReason option, string otherReason, string stakeholderEmails, int clientSiteId, string blankNoteOnOrOff, List<int> ids)
+        {
+            //id = 37200;
+             var fileName = string.Empty;
+            var statusCode = 0;
+            foreach (var id in ids)
+            {
+                try
+                {
+                    var serialNo = GetNextDocketSequenceNumber(id);
+                    fileName = _keyVehicleLogDocketGenerator.GeneratePdfReportList(id, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, serialNo, ids);
+
+
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex.StackTrace);
+                }
+
+                if (string.IsNullOrEmpty(fileName))
+                    return new JsonResult(new { fileName, message = "Failed to generate pdf", statusCode = -1 });
+
+
+                if (!string.IsNullOrEmpty(stakeholderEmails))
+                {
+                    try
+                    {
+                        var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(id);
+                        SendEmail(keyVehicleLog.VehicleRego, stakeholderEmails, fileName);
+                    }
+                    catch (Exception ex)
+                    {
+                        statusCode += -2;
+                        _logger.LogError(ex.StackTrace);
+                    }
+                }
+
+                //try
+                //{
+                //    var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(id);
+                //    var clientSiteLocation = string.Empty;
+                //    if (keyVehicleLog != null)
+                //    {
+                //        if (keyVehicleLog.ClientSiteLocation != null)
+                //            clientSiteLocation = keyVehicleLog.ClientSiteLocation.Name;
+                //    }
+                //    await UploadToDropbox(clientSiteId, fileName, clientSiteLocation);
+                //}
+                //catch (Exception ex)
+                //{
+                //    statusCode += -3;
+                //    _logger.LogError(ex.StackTrace);
+                //}
+            }
+
+           
+
+            return new JsonResult(new { fileName = @Url.Content($"~/Pdf/Output/{fileName}"), statusCode });
+        }
+        //To Generate the Pdf In List stop
 
         public JsonResult OnPostResetClientSiteLogBook(int clientSiteId, int guardLoginId)
         {

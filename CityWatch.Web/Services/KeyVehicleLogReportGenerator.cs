@@ -36,6 +36,7 @@ namespace CityWatch.Web.Services
         private readonly string _reportRootDir;
         private readonly string _imageRootDir;
         private readonly string _uploadsRootDir;
+        private readonly string _SiteimageRootDir;
         private readonly Settings _settings;
         private const float CELL_FONT_SIZE = 6f;
         private const string REPORT_DIR = "Output";
@@ -58,6 +59,7 @@ namespace CityWatch.Web.Services
             _reportRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "Pdf");
             _imageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
             _uploadsRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "KvlUploads");
+            _SiteimageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "SiteImage");
             _viewDataService = viewDataService;
             _auditLogViewDataService = auditLogViewDataService;
             _settings = settings.Value;
@@ -133,7 +135,8 @@ namespace CityWatch.Web.Services
 
             var cellSiteImage = new Cell().SetBorder(Border.NO_BORDER);
             var imagePath = GetSiteImage(clientsiteLogBook.ClientSiteId);
-            if (!string.IsNullOrEmpty(imagePath))
+            var folderPath = IO.Path.Combine(_SiteimageRootDir, imagePath);
+            if (IO.File.Exists(folderPath))
             {
                 var siteImage = new Image(ImageDataFactory.Create(imagePath))
                     .SetHeight(30)

@@ -17,6 +17,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static Dropbox.Api.TeamLog.PaperDownloadFormat;
 using IO = System.IO;
 
 namespace CityWatch.Web.Services
@@ -35,7 +36,8 @@ namespace CityWatch.Web.Services
     public interface IKeyVehicleLogDocketGenerator
     {
         string GeneratePdfReport(int keyVehicleLogId, string docketReason, string blankNoteOnOrOff, string serialNo);
-        
+        string GeneratePdfReportList(int keyVehicleLogId, string docketReason, string blankNoteOnOrOff, string serialNo, List<int> ids);
+
     }
     public class KeyVehicleLogDocketGenerator : IKeyVehicleLogDocketGenerator
     {
@@ -47,6 +49,7 @@ namespace CityWatch.Web.Services
         private readonly string _imageRootDir;
         private readonly string _PersonimageRootDir;
         private readonly string _vehicleimageRootDir;
+        private readonly string _SiteimageRootDir;
         private readonly Settings _settings;
 
         private const float CELL_FONT_SIZE = 6f;
@@ -67,9 +70,62 @@ namespace CityWatch.Web.Services
             _imageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
             _PersonimageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "KvlUploads","Person");
             _vehicleimageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "KvlUploads");
+            _SiteimageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "SiteImage");
             _settings = settings.Value;
         }
+        //To Generate the Pdf In List start
+        public string GeneratePdfReportList(int keyVehicleLogId1, string docketReason, string blankNoteOnOrOff, string serialNo, List<int> ids)
+        {
 
+            //List<int> ids = new List<int> { 37200, 37199 };
+           
+            var keyVehicleLogData = _guardLogDataProvider.GetKeyVehicleLogById(keyVehicleLogId1);
+            var reportPdfPath1 = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{keyVehicleLogData.GuardLogin.ClientSite.Name}_SN{serialNo}.pdf");
+            var pdfDocList = new PdfDocument(new PdfWriter(reportPdfPath1));
+            pdfDocList.SetDefaultPageSize(PageSize.A4);
+            var docList = new Document(pdfDocList);
+          
+            var reportPdfPath = "";
+            docList.Add(CreateReportHeaderTableList(keyVehicleLogData.ClientSiteLogBook.ClientSiteId));
+            for (int i = 0; i < ids.Count; i++)
+            {
+                var keyVehicleLogId = ids[i];
+                var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(keyVehicleLogId);
+
+                _guardLogDataProvider.SaveDocketSerialNo(keyVehicleLogId, serialNo);
+
+                if (keyVehicleLog == null)
+                    return string.Empty;
+
+                var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
+                var keyVehicleLogViewModel = new KeyVehicleLogViewModel(keyVehicleLog, kvlFields);
+                 reportPdfPath = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{keyVehicleLog.GuardLogin.ClientSite.Name}_SN{serialNo}.pdf");
+
+                if (IO.File.Exists(reportPdfPath))
+                    //IO.File.Delete(reportPdfPath);
+
+                  
+                docList.SetMargins(15f, 30f, 40f, 30f);
+
+                docList.Add(CreateSiteDetailsTable(keyVehicleLog));
+                docList.Add(CreateReportDetailsTable(keyVehicleLogViewModel, blankNoteOnOrOff));
+                docList.Add(GetKeyAndOtherDetailsTable(keyVehicleLogViewModel));
+                docList.Add(GetCustomerRefAndVwiTable(keyVehicleLogViewModel));
+                docList.Add(CreateWeightandOtherDetailsTable(keyVehicleLogViewModel, docketReason));
+                docList.Add(CreateImageDetailsTable(keyVehicleLogViewModel, docketReason));
+                if (i < ids.Count - 1)
+                {
+                    docList.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                }
+
+            }
+
+            docList.Close();
+            pdfDocList.Close();
+
+            return IO.Path.GetFileName(reportPdfPath);
+        }
+        //To Generate the Pdf In List stop
         public string GeneratePdfReport(int keyVehicleLogId, string docketReason, string blankNoteOnOrOff, string serialNo)
         {
             var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(keyVehicleLogId);
@@ -87,23 +143,58 @@ namespace CityWatch.Web.Services
                 IO.File.Delete(reportPdfPath);
 
             var pdfDoc = new PdfDocument(new PdfWriter(reportPdfPath));
-
             pdfDoc.SetDefaultPageSize(PageSize.A4);
             var doc = new Document(pdfDoc);
+           
             doc.SetMargins(15f, 30f, 40f, 30f);
-
+ 
             doc.Add(CreateReportHeaderTable(keyVehicleLog.ClientSiteLogBook.ClientSiteId));
-            doc.Add(CreateSiteDetailsTable(keyVehicleLog));
-            doc.Add(CreateReportDetailsTable(keyVehicleLogViewModel, blankNoteOnOrOff));
-            doc.Add(GetKeyAndOtherDetailsTable(keyVehicleLogViewModel));
-            doc.Add(GetCustomerRefAndVwiTable(keyVehicleLogViewModel));
-            doc.Add(CreateWeightandOtherDetailsTable(keyVehicleLogViewModel, docketReason));
-            doc.Add(CreateImageDetailsTable(keyVehicleLogViewModel, docketReason));
+                doc.Add(CreateSiteDetailsTable(keyVehicleLog));
+                doc.Add(CreateReportDetailsTable(keyVehicleLogViewModel, blankNoteOnOrOff));
+                doc.Add(GetKeyAndOtherDetailsTable(keyVehicleLogViewModel));
+                doc.Add(GetCustomerRefAndVwiTable(keyVehicleLogViewModel));
+                doc.Add(CreateWeightandOtherDetailsTable(keyVehicleLogViewModel, docketReason));
+                doc.Add(CreateImageDetailsTable(keyVehicleLogViewModel, docketReason));
+                
+           
             doc.Close();
             pdfDoc.Close();
 
             return IO.Path.GetFileName(reportPdfPath);
         }
+        private Table CreateReportHeaderTableList(int clientSiteId)
+        {
+            var headerTable = new Table(UnitValue.CreatePercentArray(new float[] { 20, 50, 30 })).UseAllAvailableWidth();
+
+            var cwLogo = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "CWSLogoPdf.png")))
+                .SetHeight(30);
+            headerTable.AddCell(new Cell().Add(cwLogo).SetBorder(Border.NO_BORDER));
+
+            var reportTitle = new Cell()
+                .Add(new Paragraph().Add(new Text("POI List")))
+                .SetFont(PdfHelper.GetPdfFont())
+                .SetFontSize(CELL_FONT_SIZE * 4f)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetBorder(Border.NO_BORDER);
+            headerTable.AddCell(reportTitle);
+
+            var cellSiteImage = new Cell().SetBorder(Border.NO_BORDER);
+            var imagePath = GetSiteImage(clientSiteId);
+            var folderPath = IO.Path.Combine(_SiteimageRootDir, imagePath);
+            if (IO.File.Exists(folderPath))
+            {
+                var siteImage = new Image(ImageDataFactory.Create(imagePath))
+                    .SetHeight(30)
+                    .SetHorizontalAlignment(HorizontalAlignment.RIGHT);
+                cellSiteImage.Add(siteImage);
+            }
+            headerTable.AddCell(cellSiteImage).SetBorder(Border.NO_BORDER);
+
+
+            return headerTable;
+        }
+
 
         private Table CreateReportHeaderTable(int clientSiteId)
         {
@@ -124,7 +215,8 @@ namespace CityWatch.Web.Services
 
             var cellSiteImage = new Cell().SetBorder(Border.NO_BORDER);
             var imagePath = GetSiteImage(clientSiteId);
-            if (!string.IsNullOrEmpty(imagePath))
+            var folderPath = IO.Path.Combine(_SiteimageRootDir, imagePath);
+            if (IO.File.Exists(folderPath))
             {
                 var siteImage = new Image(ImageDataFactory.Create(imagePath))
                     .SetHeight(30)
@@ -546,7 +638,7 @@ namespace CityWatch.Web.Services
             otherDetailsTable.AddCell(GetDataCell("Y / NA", textAlignment: TextAlignment.CENTER, cellFontSize: CELL_FONT_SIZE_BIG)
                 .SetHorizontalAlignment(HorizontalAlignment.CENTER)
                 .SetVerticalAlignment(VerticalAlignment.MIDDLE));                
-            otherDetailsTable.AddCell(GetDataCell(docketReason, textAlignment: TextAlignment.LEFT)
+            otherDetailsTable.AddCell(GetDataCell("POI LIst", textAlignment: TextAlignment.LEFT)
                 .SetVerticalAlignment(VerticalAlignment.MIDDLE)
                 .SetHeight(10));
 

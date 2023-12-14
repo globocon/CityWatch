@@ -11,9 +11,10 @@
             <b>Log Book Date: </b>@DateTime.Today.ToString("dd MMM yyyy (dddd)").ToUpper()
         </div>
     </div>
-    <div class="col-md-4 text-right">
+    <div class="col-md-4" style="padding-left:69px;">
+        <a class="btn btn-outline-primary" id="generate_log_AlldocketList"><b>POI List</b></a>
+        <a class="btn btn-outline-primary" href="SiteLogPdf?id=@Model.GuardLog.ClientSiteLogBookId&t=gl" target="_blank">Download PDF</a>
         <a class="btn btn-primary" href="#" id="guard_offduty">Off Duty</a>
-        <a class="btn btn-outline-primary" href="SiteLogPdf?id=@Model.GuardLog.ClientSiteLogBookId&t=gl" target="_blank">Download Pdf</a>
     </div>
 </div>
 <div class="row my-2">
@@ -120,6 +121,9 @@
         </div>
     </div>
 </div>
+
+<partial name="_PrintManualDocketPopup" />
+
 <div class="row mt-2">
     <div class="col-md-12">
         <table class="table" id="guard_daily_log"></table>
