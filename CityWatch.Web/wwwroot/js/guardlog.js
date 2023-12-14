@@ -538,7 +538,6 @@
     }
 
     let gridGuardLog;
-
     let gridGuardLogSettings = {
         dataSource: '/Guard/DailyLog?handler=GuardLogs',
         params: { logBookId: $('#GuardLog_ClientSiteLogBookId').val() },
