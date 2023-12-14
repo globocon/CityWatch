@@ -26,13 +26,15 @@ namespace CityWatch.Web.Pages.Radio
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly EmailOptions _EmailOptions;
         private readonly IConfiguration _configuration;
+        private readonly IConfigDataProvider _configDataProvider;
         public RadioCheckNewModel(IGuardLogDataProvider guardLogDataProvider, IOptions<EmailOptions> emailOptions,
-            IConfiguration configuration)
+            IConfiguration configuration, IConfigDataProvider configDataProvider)
         {
 
             _guardLogDataProvider = guardLogDataProvider;
             _EmailOptions = emailOptions.Value;
             _configuration = configuration;
+            _configDataProvider = configDataProvider;
         }
         public int UserId { get; set; }
         public int GuardId { get; set; }
@@ -752,6 +754,9 @@ namespace CityWatch.Web.Pages.Radio
             return new JsonResult(_guardLogDataProvider.GetStates());
         }
         //code added for clientsite dropdown stop
-
+        public JsonResult OnGetBroadcastCalendarEventsByDate()
+        {
+            return new JsonResult(_configDataProvider.GetBroadcastCalendarEventsByDate());
+        }
     }
 }

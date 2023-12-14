@@ -641,18 +641,60 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
         color: #333 !important;
     }
 
-    
-
-
-
-
-
-
-
 
 
 
 
 /* Dark Mode Change 20/09/2023 End*/
+/* for scroll events -start*/
+.marquee-style {
+    background-color: dimgrey;
+    font-size: 20px;
+    font-family: georgia;
+    font-style: italic;
+    font-weight: bold;
+    color: White;
+    text-shadow: 2px 2px 8px #FF0000;
+}
+.marquee-stylenew {
+    background-color: #737CA1;
+    font-size: 16px;
+    font-family: georgia;
+    font-style: italic;
+    font-weight: bold;
+    color: White;
+    text-shadow: 2px 2px 8px #FF0000;
+}
+.dark-mode .marquee-style {
+    background-color: white;
+    font-size: 20px;
+    font-family: georgia;
+    font-style: italic;
+    font-weight: bold;
+    color: black;
+    text-shadow: 2px 2px 8px #fff;
+}
+
+.dark-mode .marquee-stylenew {
+    background-color: white;
+    font-size: 16px;
+    font-family: georgia;
+    font-style: italic;
+    font-weight: bold;
+    color: black;
+    text-shadow: 2px 2px 8px #fff;
+}
+.dark-mode .lblclass {
+    background-color: white;
+   
+    color: black;
+   
+}
+.dark-mode #marqueeLiveEvents {
+    background-color: white;
+    color: black;
+}
+
+/* for scroll events -end*/
 
 

@@ -42,7 +42,17 @@ namespace CityWatch.Data.Providers
         List<RadioCheckStatus> GetRadioCheckStatusWithOutcome();
         int GetRadioCheckStatusCount();
         List<SelectListItem> GetRadioCheckStatusForDropDown(bool withoutSelect = false);
+
         //to get functions for settings in radio check-end
+        //broadcast banner live events-start
+        List<BroadcastBannerLiveEvents> GetBroadcastLiveEvents();
+        List<BroadcastBannerLiveEvents> GetBroadcastLiveEventsByDate();
+        //broadcast banner live events-end
+        //broadcast banner calendar events-start
+        int GetCalendarEventsCount();
+        List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEvents();
+        List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEventsByDate();
+        //broadcast banner calendar events-end
 
     }
 
@@ -382,7 +392,31 @@ namespace CityWatch.Data.Providers
 
             return items;
         }
-       
+
         //to get functions for settings in radio check-end
+        //broadcast banner live events-start
+        public List<BroadcastBannerLiveEvents> GetBroadcastLiveEvents()
+        {
+            return _context.BroadcastBannerLiveEvents.ToList();
+        }
+        public List<BroadcastBannerLiveEvents> GetBroadcastLiveEventsByDate()
+        {
+            return _context.BroadcastBannerLiveEvents.Where(x=> x.ExpiryDate==DateTime.Now.Date).ToList();
+        }
+        public List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEventsByDate()
+        {
+            return _context.BroadcastBannerCalendarEvents.Where(x =>  DateTime.Now.Date >=x.StartDate && DateTime.Now.Date <= x.ExpiryDate).ToList();
+        }
+        //broadcast banner live events-end
+        //broadcast banner calendar events-start
+        public int GetCalendarEventsCount()
+        {
+            return _context.BroadcastBannerCalendarEvents.Count();
+        }
+        public List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEvents()
+        {
+            return _context.BroadcastBannerCalendarEvents.ToList();
+        }
+        //broadcast banner calendar events-end
     }
 }

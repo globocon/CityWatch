@@ -149,7 +149,10 @@ namespace CityWatch.Web.Pages.Admin
             {
                 return new JsonResult(new { success = false, errors = new List<string>() { "Another entry with same attributes exists" } });
             }
-
+            if (keyVehicleLogVisitorPersonalDetail.Id == 0)
+            {
+                keyVehicleLogVisitorPersonalDetail.IsBDM = true;
+            }
             var status = true;
             var message = "success";
             try

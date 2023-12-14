@@ -663,7 +663,8 @@ namespace CityWatch.Web.Services
 
             var kvlIds = kvls.Select(z => z.Id).ToArray();
 
-            return profiles.Where(z => (string.IsNullOrEmpty(poi) || string.Equals(z.POIOrBDM, poi)) && (z.KeyVehicleLogProfile.CreatedLogId!=0 && kvlIds.Contains(z.KeyVehicleLogProfile.CreatedLogId))).Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
+          // return profiles.Where(z => (string.IsNullOrEmpty(poi) || string.Equals(z.POIOrBDM, poi)) || (z.KeyVehicleLogProfile.CreatedLogId == 0 || kvlIds.Contains(z.KeyVehicleLogProfile.CreatedLogId))).Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
+           return profiles.Where(z => (string.IsNullOrEmpty(poi) || string.Equals(z.POIOrBDM, poi)) ).Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
         }
         //to check with bdm also-end
         public List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRegoNew(string truckRego, string Image)

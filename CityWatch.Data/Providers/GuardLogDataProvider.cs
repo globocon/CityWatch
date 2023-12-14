@@ -1802,16 +1802,21 @@ namespace CityWatch.Data.Providers
                                         //Notes = "Guard[" + guardInitials + "] did not logoff and Control Room had to correct",
                                         Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
                                         // Notes = "Guard Off Duty (Logbook Signout)",
-                                        IrEntryType = IrEntryType.Normal,
+                                        IrEntryType = IrEntryType.Notification,
                                         IsSystemEntry = true
 
                                     };
                                     SaveGuardLog(guardLog);
-                                    var guardLoginToUpdate = _context.GuardLogins.SingleOrDefault(x => x.Id == guardLoginId.Id);
-                                    if (guardLoginToUpdate != null)
+
+                                    if (clientSiteRadioCheck.Status.Contains("Off Duty"))
                                     {
-                                        guardLoginToUpdate.OffDuty = DateTime.Now;
-                                        _context.SaveChanges();
+                                        var guardLoginToUpdate = _context.GuardLogins.SingleOrDefault(x => x.Id == guardLoginId.Id);
+                                        if (guardLoginToUpdate != null)
+                                        {
+                                            guardLoginToUpdate.OffDuty = DateTime.Now;
+                                            _context.SaveChanges();
+                                        }
+
                                     }
 
                                 }
@@ -1837,11 +1842,14 @@ namespace CityWatch.Data.Providers
 
                                         };
                                         SaveGuardLog(guardLog);
-                                        var guardLoginToUpdate = _context.GuardLogins.SingleOrDefault(x => x.Id == latestRecord.Id);
-                                        if (guardLoginToUpdate != null)
+                                        if (clientSiteRadioCheck.Status.Contains("Off Duty"))
                                         {
-                                            guardLoginToUpdate.OffDuty = DateTime.Now;
-                                            _context.SaveChanges();
+                                            var guardLoginToUpdate = _context.GuardLogins.SingleOrDefault(x => x.Id == latestRecord.Id);
+                                            if (guardLoginToUpdate != null)
+                                            {
+                                                guardLoginToUpdate.OffDuty = DateTime.Now;
+                                                _context.SaveChanges();
+                                            }
                                         }
 
                                     }
@@ -1951,16 +1959,20 @@ namespace CityWatch.Data.Providers
                                         //Notes = "Control Room tried to contact Guard[" + guardInitials + "] and no answer.",
                                         Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
                                         // Notes = "Guard Off Duty (Logbook Signout)",
-                                        IrEntryType = IrEntryType.Normal,
+                                        IrEntryType = IrEntryType.Notification,
                                         IsSystemEntry = true
 
                                     };
                                     SaveGuardLog(guardLog);
-                                    var guardLoginToUpdate = _context.GuardLogins.SingleOrDefault(x => x.Id == guardLoginId.Id);
-                                    if (guardLoginToUpdate != null)
+                                    if (clientSiteRadioCheck.Status.Contains("Off Duty"))
                                     {
-                                        guardLoginToUpdate.OffDuty = DateTime.Now;
-                                        _context.SaveChanges();
+                                        var guardLoginToUpdate = _context.GuardLogins.SingleOrDefault(x => x.Id == guardLoginId.Id);
+                                        if (guardLoginToUpdate != null)
+                                        {
+                                            guardLoginToUpdate.OffDuty = DateTime.Now;
+                                            _context.SaveChanges();
+                                        }
+
                                     }
 
                                 }
@@ -1981,16 +1993,19 @@ namespace CityWatch.Data.Providers
                                             //  Notes = "Control Room tried to contact Guard[" + guardInitials + "] and no answer.",
                                             Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
                                             // Notes = "Guard Off Duty (Logbook Signout)",
-                                            IrEntryType = IrEntryType.Normal,
+                                            IrEntryType = IrEntryType.Notification,
                                             IsSystemEntry = true
 
                                         };
                                         SaveGuardLog(guardLog);
-                                        var guardLoginToUpdate = _context.GuardLogins.SingleOrDefault(x => x.Id == latestRecord.Id);
-                                        if (guardLoginToUpdate != null)
+                                        if (clientSiteRadioCheck.Status.Contains("Off Duty"))
                                         {
-                                            guardLoginToUpdate.OffDuty = DateTime.Now;
-                                            _context.SaveChanges();
+                                            var guardLoginToUpdate = _context.GuardLogins.SingleOrDefault(x => x.Id == latestRecord.Id);
+                                            if (guardLoginToUpdate != null)
+                                            {
+                                                guardLoginToUpdate.OffDuty = DateTime.Now;
+                                                _context.SaveChanges();
+                                            }
                                         }
 
                                     }
@@ -2100,16 +2115,19 @@ namespace CityWatch.Data.Providers
                                         //Notes = "Control Room tried to contact Guard[" + guardInitials + "] and they are on their way but running late.",
                                         Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
                                         // Notes = "Guard Off Duty (Logbook Signout)",
-                                        IrEntryType = IrEntryType.Normal,
+                                        IrEntryType = IrEntryType.Notification,
                                         IsSystemEntry = true
 
                                     };
                                     SaveGuardLog(guardLog);
-                                    var guardLoginToUpdate = _context.GuardLogins.SingleOrDefault(x => x.Id == guardLoginId.Id);
-                                    if (guardLoginToUpdate != null)
+                                    if (clientSiteRadioCheck.Status.Contains("Off Duty"))
                                     {
-                                        guardLoginToUpdate.OffDuty = DateTime.Now;
-                                        _context.SaveChanges();
+                                        var guardLoginToUpdate = _context.GuardLogins.SingleOrDefault(x => x.Id == guardLoginId.Id);
+                                        if (guardLoginToUpdate != null)
+                                        {
+                                            guardLoginToUpdate.OffDuty = DateTime.Now;
+                                            _context.SaveChanges();
+                                        }
                                     }
 
                                 }
@@ -2130,16 +2148,20 @@ namespace CityWatch.Data.Providers
                                             // Notes = "Control Room tried to contact Guard[" + guardInitials + "] and they are on their way but running late.",
                                             Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
                                             // Notes = "Guard Off Duty (Logbook Signout)",
-                                            IrEntryType = IrEntryType.Normal,
+                                            IrEntryType = IrEntryType.Notification,
                                             IsSystemEntry = true
 
                                         };
                                         SaveGuardLog(guardLog);
-                                        var guardLoginToUpdate = _context.GuardLogins.SingleOrDefault(x => x.Id == latestRecord.Id);
-                                        if (guardLoginToUpdate != null)
+                                        if (clientSiteRadioCheck.Status.Contains("Off Duty"))
                                         {
-                                            guardLoginToUpdate.OffDuty = DateTime.Now;
-                                            _context.SaveChanges();
+                                            var guardLoginToUpdate = _context.GuardLogins.SingleOrDefault(x => x.Id == latestRecord.Id);
+                                            if (guardLoginToUpdate != null)
+                                            {
+                                                guardLoginToUpdate.OffDuty = DateTime.Now;
+                                                _context.SaveChanges();
+                                            }
+
                                         }
 
                                     }
@@ -2248,16 +2270,19 @@ namespace CityWatch.Data.Providers
                                         //Notes = "Control Room tried to contact Guard[" + guardInitials + "] and they are on their way but running late.",
                                         Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
                                         // Notes = "Guard Off Duty (Logbook Signout)",
-                                        IrEntryType = IrEntryType.Normal,
+                                        IrEntryType = IrEntryType.Notification,
                                         IsSystemEntry = true
 
                                     };
                                     SaveGuardLog(guardLog);
-                                    var guardLoginToUpdate = _context.GuardLogins.SingleOrDefault(x => x.Id == guardLoginId.Id);
-                                    if (guardLoginToUpdate != null)
+                                    if (clientSiteRadioCheck.Status.Contains("Off Duty"))
                                     {
-                                        guardLoginToUpdate.OffDuty = DateTime.Now;
-                                        _context.SaveChanges();
+                                        var guardLoginToUpdate = _context.GuardLogins.SingleOrDefault(x => x.Id == guardLoginId.Id);
+                                        if (guardLoginToUpdate != null)
+                                        {
+                                            guardLoginToUpdate.OffDuty = DateTime.Now;
+                                            _context.SaveChanges();
+                                        }
                                     }
 
                                 }
@@ -2278,16 +2303,19 @@ namespace CityWatch.Data.Providers
                                             // Notes = "Control Room tried to contact Guard[" + guardInitials + "] and they are on their way but running late.",
                                             Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
                                             // Notes = "Guard Off Duty (Logbook Signout)",
-                                            IrEntryType = IrEntryType.Normal,
+                                            IrEntryType = IrEntryType.Notification  ,
                                             IsSystemEntry = true
 
                                         };
                                         SaveGuardLog(guardLog);
-                                        var guardLoginToUpdate = _context.GuardLogins.SingleOrDefault(x => x.Id == latestRecord.Id);
-                                        if (guardLoginToUpdate != null)
+                                        if (clientSiteRadioCheck.Status.Contains("Off Duty"))
                                         {
-                                            guardLoginToUpdate.OffDuty = DateTime.Now;
-                                            _context.SaveChanges();
+                                            var guardLoginToUpdate = _context.GuardLogins.SingleOrDefault(x => x.Id == latestRecord.Id);
+                                            if (guardLoginToUpdate != null)
+                                            {
+                                                guardLoginToUpdate.OffDuty = DateTime.Now;
+                                                _context.SaveChanges();
+                                            }
                                         }
 
                                     }
@@ -2342,6 +2370,126 @@ namespace CityWatch.Data.Providers
                             }
 
                         }
+                        else if (colorId == 5)
+                        {
+
+                            var DuressEnabledUpdate = _context.ClientSiteDuress.Where(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId);
+                            //DuressEnabledUpdate.IsEnabled = false;
+                            _context.ClientSiteDuress.RemoveRange(DuressEnabledUpdate);
+                            var logbook = _context.ClientSiteLogBooks
+            .SingleOrDefault(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId && z.Type == LogBookType.DailyGuardLog && z.Date == DateTime.Today);
+
+                            int logBookId;
+                            if (logbook == null)
+                            {
+                                var newLogBook = new ClientSiteLogBook()
+                                {
+                                    ClientSiteId = clientSiteRadioCheck.ClientSiteId,
+                                    Type = LogBookType.DailyGuardLog,
+                                    Date = DateTime.Today
+                                };
+
+                                if (newLogBook.Id == 0)
+                                {
+                                    _context.ClientSiteLogBooks.Add(newLogBook);
+                                }
+                                else
+                                {
+                                    var logBookToUpdate = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == newLogBook.Id);
+                                    if (logBookToUpdate != null)
+                                    {
+                                        // nothing to update
+                                    }
+                                }
+                                _context.SaveChanges();
+                                logBookId = newLogBook.Id;
+
+                            }
+                            else
+                            {
+                                logBookId = logbook.Id;
+                            }
+                            var guardLoginId = _context.GuardLogins
+                            .SingleOrDefault(z => z.ClientSiteLogBookId == logBookId && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == DateTime.Today);
+                            if (guardLoginId != null)
+                            {
+                                var guardLog = new GuardLog()
+                                {
+                                    ClientSiteLogBookId = logBookId,
+                                    GuardLoginId = guardLoginId.Id,
+                                    EventDateTime = DateTime.Now,
+                                    Notes = "Duress Alarm De-Activated by Control Room",
+                                    IrEntryType = IrEntryType.Notification,
+                                    IsSystemEntry = true
+                                    
+
+                                };
+                                SaveGuardLog(guardLog);
+                                if (clientSiteRadioCheck.Status.Contains("Off Duty"))
+                                {
+                                    var guardLoginToUpdate = _context.GuardLogins.SingleOrDefault(x => x.Id == guardLoginId.Id);
+                                    if (guardLoginToUpdate != null)
+                                    {
+                                        guardLoginToUpdate.OffDuty = DateTime.Now;
+                                        _context.SaveChanges();
+                                    }
+                                }
+
+                            }
+                            else
+                            {
+                                var latestRecord = _context.GuardLogins
+                                .Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId)
+                                .OrderByDescending(r => r.Id)
+                                 .FirstOrDefault();
+                                if (latestRecord != null)
+                                {
+                                    var guardLog = new GuardLog()
+                                    {
+                                        ClientSiteLogBookId = logBookId,
+                                        GuardLoginId = latestRecord.Id,
+                                        EventDateTime = DateTime.Now,
+                                        Notes = "Duress Alarm De-Activated by Control Room",
+                                        IrEntryType = IrEntryType.Notification,
+                                        IsSystemEntry = true
+
+                                    };
+                                    SaveGuardLog(guardLog);
+                                  
+
+                                }
+
+                            }
+                           
+
+
+                            var ClientSiteRadioChecksActivityDetails = GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId && x.GuardLoginTime == null);
+                            foreach (var ClientSiteRadioChecksActivity in ClientSiteRadioChecksActivityDetails)
+                            {
+
+
+                                var newstatu = new ClientSiteRadioCheck()
+                                {
+                                    ClientSiteId = ClientSiteRadioChecksActivity.ClientSiteId,
+                                    GuardId = ClientSiteRadioChecksActivity.GuardId,
+                                    Status = clientSiteRadioCheck.Status,
+                                    CheckedAt = DateTime.Now,
+                                    Active = clientSiteRadioCheck.Active,
+                                    RadioCheckStatusId = clientSiteRadioCheck.RadioCheckStatusId,
+                                };
+                                _context.ClientSiteRadioChecks.RemoveRange(clientSiteRcStatus);
+                                _context.ClientSiteRadioChecks.Add(newstatu);
+                                _context.SaveChanges();
+                                /* Update Radio check status logOff*/
+
+                            }
+
+                        }
+                        else if (colorId == 6)
+                        {
+                            _context.ClientSiteRadioChecks.RemoveRange(clientSiteRcStatus);
+                            _context.SaveChanges();
+                        }
                         else
                         {
                             _context.ClientSiteRadioChecks.Add(clientSiteRadioCheck);
@@ -2350,97 +2498,6 @@ namespace CityWatch.Data.Providers
 
                         }
 
-                    }
-                    //To Deactivate Duress button
-                    else if (clientSiteRadioCheck.Status == "Duress Unlock - False Alarm or Testing")
-                    {
-                        var DuressEnabledUpdate = _context.ClientSiteDuress.Where(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId);
-                        //DuressEnabledUpdate.IsEnabled = false;
-                        _context.ClientSiteDuress.RemoveRange(DuressEnabledUpdate);
-                        var logbook = _context.ClientSiteLogBooks
-        .SingleOrDefault(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId && z.Type == LogBookType.DailyGuardLog && z.Date == DateTime.Today);
-
-                        int logBookId;
-                        if (logbook == null)
-                        {
-                            var newLogBook = new ClientSiteLogBook()
-                            {
-                                ClientSiteId = clientSiteRadioCheck.ClientSiteId,
-                                Type = LogBookType.DailyGuardLog,
-                                Date = DateTime.Today
-                            };
-
-                            if (newLogBook.Id == 0)
-                            {
-                                _context.ClientSiteLogBooks.Add(newLogBook);
-                            }
-                            else
-                            {
-                                var logBookToUpdate = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == newLogBook.Id);
-                                if (logBookToUpdate != null)
-                                {
-                                    // nothing to update
-                                }
-                            }
-                            _context.SaveChanges();
-                            logBookId = newLogBook.Id;
-
-                        }
-                        else
-                        {
-                            logBookId = logbook.Id;
-                        }
-                        var guardLoginId = _context.GuardLogins
-                        .SingleOrDefault(z => z.ClientSiteLogBookId == logBookId && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == DateTime.Today);
-                        if (guardLoginId != null)
-                        {
-                            var guardLog = new GuardLog()
-                            {
-                                ClientSiteLogBookId = logBookId,
-                                GuardLoginId = guardLoginId.Id,
-                                EventDateTime = DateTime.Now,
-                                Notes = "Duress Alarm DeActivated",
-                                IsSystemEntry = true
-
-                            };
-                            SaveGuardLog(guardLog);
-                            var guardLoginToUpdate = _context.GuardLogins.SingleOrDefault(x => x.Id == guardLoginId.Id);
-                            if (guardLoginToUpdate != null)
-                            {
-                                guardLoginToUpdate.OffDuty = DateTime.Now;
-                                _context.SaveChanges();
-                            }
-
-                        }
-                        else
-                        {
-                            var latestRecord = _context.GuardLogins
-                            .Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId)
-                            .OrderByDescending(r => r.Id)
-                             .FirstOrDefault();
-                            if (latestRecord != null)
-                            {
-                                var guardLog = new GuardLog()
-                                {
-                                    ClientSiteLogBookId = logBookId,
-                                    GuardLoginId = latestRecord.Id,
-                                    EventDateTime = DateTime.Now,
-                                    Notes = "Duress Alarm DeActivated",
-                                    IsSystemEntry = true
-
-                                };
-                                SaveGuardLog(guardLog);
-                                var guardLoginToUpdate = _context.GuardLogins.SingleOrDefault(x => x.Id == latestRecord.Id);
-                                if (guardLoginToUpdate != null)
-                                {
-                                    guardLoginToUpdate.OffDuty = DateTime.Now;
-                                    _context.SaveChanges();
-                                }
-
-                            }
-
-                        }
-                        _context.SaveChanges();
                     }
                     else
                     {
