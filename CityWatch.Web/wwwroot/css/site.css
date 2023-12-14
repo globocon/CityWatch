@@ -648,7 +648,7 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
 /* Dark Mode Change 20/09/2023 End*/
 /* for scroll events -start*/
 .marquee-style {
-    background-color: black;
+    background-color: dimgrey;
     font-size: 20px;
     font-family: georgia;
     font-style: italic;
@@ -657,7 +657,7 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
     text-shadow: 2px 2px 8px #FF0000;
 }
 .marquee-stylenew {
-    background-color: black;
+    background-color: #737CA1;
     font-size: 16px;
     font-family: georgia;
     font-style: italic;

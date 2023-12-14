@@ -3091,47 +3091,59 @@ $('#btn_confrim_wand_usok').on('click', function(){
 $('#btncalendarEventModal').on('click', function () {
     $('#calendarEventModal').modal('show');
 });
-
-let calendarEventsDetails = $('#calendarEventsDetails').DataTable({
-    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
-    ordering: true,
-    info: false,
-    searching: true,
-    autoWidth: false,
-    fixedHeader: false,
-    "scrollY": "300px", // Set the desired height for the scrollable area
-    "paging": false,
-    "footer": true,
-    ajax: {
-        url: '/Radio/RadioCheckNew?handler=BroadcastCalendarEventsByDate',
-        datatype: 'json',
-      
-        dataSrc: ''
-    },
+let calendarEventsDetails = $('#calendarEventsDetails').grid({
+    dataSource: '/Radio/RadioCheckNew?handler=BroadcastCalendarEventsByDate',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
     columns: [
-        { data: 'id', visible: false, title: 'id' },
-        {
-            data: 'textMessage',
-            width: '20%',
-           // title: 'Events'
-        },
-        {
-            data: 'formattedStartDate',
-            width: '20%',
-          //  title: 'Start' 
+        { width: 130, field: 'id', title: 'Id', hidden: true },
+        { width: 450, field: 'textMessage', title: 'Events'},
+        { width: 100, field: 'formattedStartDate', title: 'Start' },
+        { width: 100, field: 'formattedExpiryDate', title: 'Expiry'  },
+    ],
+  
+});
+//let calendarEventsDetails = $('#calendarEventsDetails').DataTable({
+//    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+//    ordering: true,
+//    info: false,
+//    searching: true,
+//    autoWidth: false,
+//    fixedHeader: false,
+//    "scrollY": "300px", // Set the desired height for the scrollable area
+//    "paging": false,
+//    "footer": true,
+//    ajax: {
+//        url: '/Radio/RadioCheckNew?handler=BroadcastCalendarEventsByDate',
+//        datatype: 'json',
+      
+//        dataSrc: ''
+//    },
+//    columns: [
+//        { data: 'id', visible: false, title: 'id' },
+//        {
+//            data: 'textMessage',
+//            width: '20%',
+//           // title: 'Events'
+//        },
+//        {
+//            data: 'formattedStartDate',
+//            width: '20%',
+//          //  title: 'Start' 
 
-        },
-        {
-            data: 'formattedExpiryDate',
-            width: '9%',
-           // title: 'Expiry',
+//        },
+//        {
+//            data: 'formattedExpiryDate',
+//            width: '9%',
+//           // title: 'Expiry',
 
-        },
+//        },
 
        
 
 
-    ],
+//    ],
    
-});
+//});
 

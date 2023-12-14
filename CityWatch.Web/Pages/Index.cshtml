@@ -19,12 +19,12 @@
     @if (LiveEvents.Count() > 0)
     {
         <div class="form-row">
-            <div class=" form-group col-md-2">
+            <div class=" form-group col-md-2 p-0">
                 <div class="container marquee-style" id="divLiveEvents">
                     <label class="lblclass">Live Events:</label>
                 </div>
              </div>
-            <div class=" form-group col-md-10">
+            <div class=" form-group col-md-10 p-0">
                 <div class="container marquee-stylenew mt-2">
               
                 @foreach (var fileName in LiveEvents)
@@ -108,7 +108,7 @@
             
                 <i class="fa fa-calendar" style="font-size:48px"></i>
             @foreach (var item in CalendarEvents){
-                    <label class="ml-2 mt-2">@item.TextMessage</label>
+                <label class="ml-2 mt-2"><b>Event:</b> @item.TextMessage</label>
                     break;
             }
                 @if (CalendarEvents.Count() > 1)
@@ -121,6 +121,32 @@
 }
 @*Event Description Model*@
 <div class="modal" tabindex="-1" role="dialog" id="calendarEventModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><label id="lbl_calendarEvent">Today's Events</label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <table id="calendarEventsDetails" class="table table-bordered" style="width:100%;">
+                            
+
+                        </table>
+                        <div class="m-3"></div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+@*<div class="modal" tabindex="-1" role="dialog" id="calendarEventModal">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header col-md-12">
@@ -152,4 +178,4 @@
 
         </div>
     </div>
-</div>
+</div>*@

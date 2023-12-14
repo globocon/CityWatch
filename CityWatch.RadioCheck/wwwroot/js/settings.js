@@ -105,9 +105,9 @@ $('#add_live_events').on('click', function () {
 
         columns: [
             { width: 130, field: 'id', title: 'Id', hidden: true },
-            { width: 500, field: 'textMessage', title: 'Text Message', editor: true },
+            { width: 950, field: 'textMessage', title: 'Text Message', editor: true },
             {
-                width: 100, field: 'formattedExpiryDate', title: 'Expiry',
+                width: 120, field: 'formattedExpiryDate', title: 'Expiry',
                 type: 'date',
                 format: 'dd-mmm-yyyy',
                 editor: true,
