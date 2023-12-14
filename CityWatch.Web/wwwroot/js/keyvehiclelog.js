@@ -443,25 +443,25 @@ $(function () {
         }
     }
 
-    $('#kv_duress_btn').on('click', function () {
-        $.ajax({
-            url: '/Guard/KeyVehicleLog?handler=SaveClientSiteDuress',
-            data: {
-                clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),
-                GuardId: $('#KeyVehicleLog_GuardLogin_GuardId').val(),
-                guardLoginId: $('#KeyVehicleLog_GuardLogin_Id').val(),
-                logBookId: $('#KeyVehicleLog_ClientSiteLogBookId').val()
-            },
-            type: 'POST',
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {
-            if (result.status) {
-                $('#kv_duress_btn').removeClass('normal').addClass('active');
-                $("#kv_duress_status").addClass('font-weight-bold');
-                $("#kv_duress_status").text("Active");
-            }
-        });
-    });
+    //$('#kv_duress_btn').on('click', function () {
+    //    $.ajax({
+    //        url: '/Guard/KeyVehicleLog?handler=SaveClientSiteDuress',
+    //        data: {
+    //            clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),
+    //            GuardId: $('#KeyVehicleLog_GuardLogin_GuardId').val(),
+    //            guardLoginId: $('#KeyVehicleLog_GuardLogin_Id').val(),
+    //            logBookId: $('#KeyVehicleLog_ClientSiteLogBookId').val()
+    //        },
+    //        type: 'POST',
+    //        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    //    }).done(function (result) {
+    //        if (result.status) {
+    //            $('#kv_duress_btn').removeClass('normal').addClass('active');
+    //            $("#kv_duress_status").addClass('font-weight-bold');
+    //            $("#kv_duress_status").text("Active");
+    //        }
+    //    });
+    //});
 
     //var ret = staffDocsButtonRenderer;
     let gridKeyVehicleLogProfile = $('#key_vehicle_log_profiles').DataTable({
@@ -2957,4 +2957,37 @@ $(function () {
                 });
     }
     /*to get POI Number-end*/
+
+
+    var tId = 0;
+    $("#kv_duress_btn").mousedown(function () {
+        tId = setTimeout(GFG_Fun, 2500);
+        return false;
+    });
+    $("#kv_duress_btn").mouseup(function () {
+        clearTimeout(tId);
+    });
+
+    function GFG_Fun() {
+        $.ajax({
+            url: '/Guard/KeyVehicleLog?handler=SaveClientSiteDuress',
+            data: {
+                clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),
+                GuardId: $('#KeyVehicleLog_GuardLogin_GuardId').val(),
+                guardLoginId: $('#KeyVehicleLog_GuardLogin_Id').val(),
+                logBookId: $('#KeyVehicleLog_ClientSiteLogBookId').val()
+            },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.status) {
+                $('#kv_duress_btn').removeClass('normal').addClass('active');
+                $("#kv_duress_status").addClass('font-weight-bold');
+                $("#kv_duress_status").text("Active");
+            }
+        });
+    } 
+
+
+
 });

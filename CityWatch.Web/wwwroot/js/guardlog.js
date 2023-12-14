@@ -568,7 +568,7 @@
                 { field: 'clientSiteId', hidden: true },
                 { field: 'eventDateTime', title: 'Time', width: 50, renderer: function (value, record) { return renderTime(value, record, false); } },
                 { field: 'notes', title: 'Event / Notes', width: 450, editor: logBookNotesEditor, renderer: renderLogBookNotes },
-                { field: 'guardInitials', title: 'Guard Initials', width: 50, renderer: function (value, record) { return record.guardLogin ? record.guardLogin.guard.initial : ''; } },
+                { field: 'guardInitials', title: 'Guard Initials', width: 50, renderer: function (value, record) { return record.guardLogin ? (record.irEntryType==3? '': record.guardLogin.guard.initial) : ''; } },
                 { width: 75, renderer: renderDailyLogManagement }
             ]
         };
@@ -1030,27 +1030,27 @@
         $('#auditlog-zip-modal').modal('show');
     });
 
-    $('#duress_btn').on('click', function () {
-        $.ajax({
-            url: '/Guard/DailyLog?handler=SaveClientSiteDuress',
-            data: {
-                clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
-                guardLoginId: $('#GuardLog_GuardLoginId').val(),
-                logBookId: $('#GuardLog_ClientSiteLogBookId').val(),
-                guardId: $('#GuardLog_GuardLogin_GuardId').val(),
-            },
-            type: 'POST',
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {
-            if (result.status) {
-                $('#duress_btn').removeClass('normal').addClass('active');
-                $("#duress_status").addClass('font-weight-bold');
-                $("#duress_status").text("Active");
-            }
-            gridGuardLog.clear();
-            gridGuardLog.reload();
-        });
-    });
+    //$('#duress_btn').on('click', function () {
+    //    $.ajax({
+    //        url: '/Guard/DailyLog?handler=SaveClientSiteDuress',
+    //        data: {
+    //            clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
+    //            guardLoginId: $('#GuardLog_GuardLoginId').val(),
+    //            logBookId: $('#GuardLog_ClientSiteLogBookId').val(),
+    //            guardId: $('#GuardLog_GuardLogin_GuardId').val(),
+    //        },
+    //        type: 'POST',
+    //        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    //    }).done(function (result) {
+    //        if (result.status) {
+    //            $('#duress_btn').removeClass('normal').addClass('active');
+    //            $("#duress_status").addClass('font-weight-bold');
+    //            $("#duress_status").text("Active");
+    //        }
+    //        gridGuardLog.clear();
+    //        gridGuardLog.reload();
+    //    });
+    //});
 
     //Vehicle key Log
 
@@ -3080,6 +3080,43 @@
        
         
     });
+
+  
+
+  
+
+    var tId = 0;
+    $("#duress_btn").mousedown(function () {
+        tId = setTimeout(GFG_Fun, 2500);
+        return false;
+    });
+    $("#duress_btn").mouseup(function () {
+        clearTimeout(tId);
+    });
+
+    function GFG_Fun() {
+        $.ajax({
+            url: '/Guard/DailyLog?handler=SaveClientSiteDuress',
+            data: {
+                clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
+                guardLoginId: $('#GuardLog_GuardLoginId').val(),
+                logBookId: $('#GuardLog_ClientSiteLogBookId').val(),
+                guardId: $('#GuardLog_GuardLogin_GuardId').val(),
+            },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.status) {
+                $('#duress_btn').removeClass('normal').addClass('active');
+                $("#duress_status").addClass('font-weight-bold');
+                $("#duress_status").text("Active");
+            }
+            gridGuardLog.clear();
+            gridGuardLog.reload();
+        });
+    } 
+
+
 });
 
 
