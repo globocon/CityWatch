@@ -173,8 +173,12 @@ namespace CityWatch.Data.Providers
 
         public List<GuardLog> GetGuardLogs(int logBookId, DateTime logDate)
         {
+            var KVClientSiteID = _context.GuardLogs.Where(z => z.Notes == "KV Logged In").FirstOrDefault();
+            
+            List<int> clientSiteLogBookIds = new List<int> { KVClientSiteID.ClientSiteLogBookId, logBookId };
+
             return _context.GuardLogs
-               .Where(z =>z.EventDateTime >= logDate && z.EventDateTime < logDate.AddDays(1))
+               .Where(z => clientSiteLogBookIds.Contains(z.ClientSiteLogBookId) && z.EventDateTime >= logDate && z.EventDateTime < logDate.AddDays(1))
                .Include(z => z.ClientSiteLogBook)
                .Include(z => z.GuardLogin.Guard)
                .OrderBy(z => z.Id)
