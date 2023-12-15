@@ -77,7 +77,7 @@ namespace CityWatch.Web.Pages.Guard
 
         public JsonResult OnGetGuardLogs(int logBookId, DateTime? logBookDate)
         {
-            var guardLogs = _guardLogDataProvider.GetGuardLogs(logBookId, logBookDate ?? DateTime.Today)
+            var guardLogs = _guardLogDataProvider.GetGuardLogswithKvLogData(logBookId, logBookDate ?? DateTime.Today)
                 .OrderByDescending(z => z.Id)
                 .ThenByDescending(z => z.EventDateTime);
             return new JsonResult(guardLogs);

@@ -36,7 +36,7 @@ namespace CityWatch.Data.Providers
         List<KeyVehicleLog> GetKeyVehicleLogs(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate);
         List<KeyVehicleLog> GetKeyVehicleLogsWithPOI(int[] clientSiteIds, int[] personOfInterestIds, DateTime logFromDate, DateTime logToDate);
         KeyVehicleLog GetKeyVehicleLogById(int id);
-         KeyVehcileLogField GetIndividualType(int PersonType);
+        KeyVehcileLogField GetIndividualType(int PersonType);
         List<KeyVehicleLog> GetKeyVehicleLogByIds(int[] ids);
         List<KeyVehicleLog> GetPOIAlert(string companyname, string individualname, int individualtype);
         void SaveDocketSerialNo(int id, string serialNo);
@@ -160,6 +160,8 @@ namespace CityWatch.Data.Providers
 
         void InsertPreviousLogBook(KeyVehicleLog keyVehicleLog);
 
+        List<GuardLog> GetGuardLogswithKvLogData(int logBookId, DateTime logDate);
+
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -174,12 +176,57 @@ namespace CityWatch.Data.Providers
         public List<GuardLog> GetGuardLogs(int logBookId, DateTime logDate)
         {
             return _context.GuardLogs
-               .Where(z =>z.EventDateTime >= logDate && z.EventDateTime < logDate.AddDays(1))
-               .Include(z => z.ClientSiteLogBook)
-               .Include(z => z.GuardLogin.Guard)
-               .OrderBy(z => z.Id)
-               .ThenBy(z => z.EventDateTime)
-               .ToList();
+                .Where(z => z.ClientSiteLogBookId == logBookId && z.EventDateTime >= logDate && z.EventDateTime < logDate.AddDays(1))
+                .Include(z => z.ClientSiteLogBook)
+                .Include(z => z.GuardLogin.Guard)
+                .OrderBy(z => z.Id)
+                .ThenBy(z => z.EventDateTime)
+                .ToList();
+
+
+
+        }
+
+
+        public List<GuardLog> GetGuardLogswithKvLogData(int logBookId, DateTime logDate)
+        {
+            var result = new List<GuardLog>();
+            if (logBookId != 0)
+            {
+                var clientSiteId = _context.ClientSiteLogBooks.Where(x => x.Id == logBookId).FirstOrDefault().ClientSiteId;
+                if (clientSiteId != null)
+                {
+                    var clientSiteLogBook = _context.ClientSiteLogBooks.Where(x => x.ClientSiteId == clientSiteId && x.Date == DateTime.Now.Date).Select(x => x.Id).ToList();
+                    if (clientSiteLogBook.Count != 0)
+                    {
+                        result = _context.GuardLogs
+                           .Where(z => clientSiteLogBook.Contains(z.ClientSiteLogBookId) && (z.EventDateTime >= logDate && z.EventDateTime < logDate.AddDays(1)))
+                           .Include(z => z.ClientSiteLogBook)
+                           .Include(z => z.GuardLogin.Guard)
+                           .OrderBy(z => z.Id)
+                           .ThenBy(z => z.EventDateTime)
+                           .ToList();
+
+                    }
+                }
+                else
+                {
+                    return result;
+                }
+
+            }
+            else
+            {
+                result = _context.GuardLogs
+                  .Where(z => z.ClientSiteLogBookId == logBookId && (z.EventDateTime >= logDate && z.EventDateTime < logDate.AddDays(1)))
+                  .Include(z => z.ClientSiteLogBook)
+                  .Include(z => z.GuardLogin.Guard)
+                  .OrderBy(z => z.Id)
+                  .ThenBy(z => z.EventDateTime)
+                  .ToList();
+            }
+
+            return result;
         }
 
         public List<GuardLog> GetGuardLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
@@ -440,7 +487,7 @@ namespace CityWatch.Data.Providers
         }
 
 
-      
+
         public void InsertPreviousLogBook(KeyVehicleLog keyVehicleLog)
         {
 
@@ -524,7 +571,7 @@ namespace CityWatch.Data.Providers
 
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
 
             }
@@ -805,7 +852,7 @@ namespace CityWatch.Data.Providers
                 kvlPersonalDetailsToDb.Email = keyVehicleLogVisitorPersonalDetail.Email;
                 kvlPersonalDetailsToDb.Website = keyVehicleLogVisitorPersonalDetail.Website;
                 kvlPersonalDetailsToDb.BDMList = keyVehicleLogVisitorPersonalDetail.BDMList;
-               
+
 
             }
             kvlPersonalDetailsToDb.POIId = keyVehicleLogVisitorPersonalDetail.POIId;
@@ -1501,7 +1548,7 @@ namespace CityWatch.Data.Providers
                 var clientSiteManningKpiSettings = _context.ClientSiteManningKpiSettings.Include(x => x.ClientSiteKpiSetting).Where(x => x.WeekDay == currentDay && x.Type == "2" && x.IsPHO != 1).ToList();
                 foreach (var manning in clientSiteManningKpiSettings)
                 {
-                    if (manning.EmpHoursStart != null && manning.EmpHoursEnd!=null)
+                    if (manning.EmpHoursStart != null && manning.EmpHoursEnd != null)
                     {
                         /* Check the number of logins */
                         var numberOfLogin = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == null).Count() == 0;
@@ -1625,7 +1672,7 @@ namespace CityWatch.Data.Providers
         public void RemoveTheeRadioChecksActivityWithNotifcationtypeOne(int ClientSiteId)
         {
             var clientSiteRadioCheckActivityStatusToDelete = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == ClientSiteId && x.NotificationType == 1).ToList();
-            if(clientSiteRadioCheckActivityStatusToDelete.Count!=0)
+            if (clientSiteRadioCheckActivityStatusToDelete.Count != 0)
             {
                 _context.RemoveRange(clientSiteRadioCheckActivityStatusToDelete);
                 _context.SaveChanges();
@@ -2303,7 +2350,7 @@ namespace CityWatch.Data.Providers
                                             // Notes = "Control Room tried to contact Guard[" + guardInitials + "] and they are on their way but running late.",
                                             Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
                                             // Notes = "Guard Off Duty (Logbook Signout)",
-                                            IrEntryType = IrEntryType.Notification  ,
+                                            IrEntryType = IrEntryType.Notification,
                                             IsSystemEntry = true
 
                                         };
@@ -2421,7 +2468,7 @@ namespace CityWatch.Data.Providers
                                     Notes = "Duress Alarm De-Activated by Control Room",
                                     IrEntryType = IrEntryType.Notification,
                                     IsSystemEntry = true
-                                    
+
 
                                 };
                                 SaveGuardLog(guardLog);
@@ -2455,12 +2502,12 @@ namespace CityWatch.Data.Providers
 
                                     };
                                     SaveGuardLog(guardLog);
-                                  
+
 
                                 }
 
                             }
-                           
+
 
 
                             var ClientSiteRadioChecksActivityDetails = GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId && x.GuardLoginTime == null);
@@ -2649,17 +2696,17 @@ namespace CityWatch.Data.Providers
                 .Select(z => new SelectListItem(z.Name, z.Id.ToString()))
                 .ToList();
         }
-       
-           
+
+
         public List<KeyVehicleLog> GetKeyVehicleLogs(string truckno)
         {
             var results = _context.KeyVehicleLogs.Where(z => z.VehicleRego == truckno);
 
-         
+
             return results.ToList();
         }
 
     }
 
-      
+
 }
