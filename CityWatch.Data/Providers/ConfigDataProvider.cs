@@ -401,7 +401,7 @@ namespace CityWatch.Data.Providers
         }
         public List<BroadcastBannerLiveEvents> GetBroadcastLiveEventsByDate()
         {
-            return _context.BroadcastBannerLiveEvents.Where(x=> x.ExpiryDate==DateTime.Now.Date).ToList();
+            return _context.BroadcastBannerLiveEvents.Where(x=> x.ExpiryDate>=DateTime.Now.Date).ToList();
         }
         public List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEventsByDate()
         {

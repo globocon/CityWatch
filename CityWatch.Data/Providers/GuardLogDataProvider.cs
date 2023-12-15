@@ -1837,7 +1837,7 @@ namespace CityWatch.Data.Providers
                                 }
 
                                 var guardLoginId = _context.GuardLogins
-                              .SingleOrDefault(z => z.ClientSiteLogBookId == logBookId && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == DateTime.Today);
+                              .FirstOrDefault(z => z.ClientSiteLogBookId == logBookId && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == DateTime.Today);
                                 var guardInitials = _context.Guards.Where(x => x.Id == clientSiteRadioCheck.GuardId).FirstOrDefault().Initial;
                                 if (guardLoginId != null)
                                 {
@@ -1994,7 +1994,7 @@ namespace CityWatch.Data.Providers
                                 }
 
                                 var guardLoginId = _context.GuardLogins
-                              .SingleOrDefault(z => z.ClientSiteLogBookId == logBookId && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == DateTime.Today);
+                              .FirstOrDefault(z => z.ClientSiteLogBookId == logBookId && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == DateTime.Today);
                                 var guardInitials = _context.Guards.Where(x => x.Id == clientSiteRadioCheck.GuardId).FirstOrDefault().Initial;
                                 if (guardLoginId != null)
                                 {
@@ -2150,7 +2150,7 @@ namespace CityWatch.Data.Providers
                                 }
 
                                 var guardLoginId = _context.GuardLogins
-                              .SingleOrDefault(z => z.ClientSiteLogBookId == logBookId && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == DateTime.Today);
+                              .FirstOrDefault(z => z.ClientSiteLogBookId == logBookId && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == DateTime.Today);
                                 var guardInitials = _context.Guards.Where(x => x.Id == clientSiteRadioCheck.GuardId).FirstOrDefault().Initial;
                                 if (guardLoginId != null)
                                 {
@@ -2305,7 +2305,7 @@ namespace CityWatch.Data.Providers
                                 }
 
                                 var guardLoginId = _context.GuardLogins
-                              .SingleOrDefault(z => z.ClientSiteLogBookId == logBookId && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == DateTime.Today);
+                              .FirstOrDefault(z => z.ClientSiteLogBookId == logBookId && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == DateTime.Today);
                                 var guardInitials = _context.Guards.Where(x => x.Id == clientSiteRadioCheck.GuardId).FirstOrDefault().Initial;
                                 if (guardLoginId != null)
                                 {
@@ -2457,7 +2457,7 @@ namespace CityWatch.Data.Providers
                                 logBookId = logbook.Id;
                             }
                             var guardLoginId = _context.GuardLogins
-                            .SingleOrDefault(z => z.ClientSiteLogBookId == logBookId && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == DateTime.Today);
+                            .FirstOrDefault(z => z.ClientSiteLogBookId == logBookId && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == DateTime.Today);
                             if (guardLoginId != null)
                             {
                                 var guardLog = new GuardLog()
