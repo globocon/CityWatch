@@ -1,4 +1,9 @@
 ﻿@page
+@using CityWatch.Data.Models
+@using CityWatch.Data.Providers;
+@using CityWatch.Web.Helpers
+@using CityWatch.Web.Services;
+@inject IConfigDataProvider _configDataProvider;
 @model CityWatch.Web.Pages.ControlRoomModel
 @{
     ViewData["Title"] = "CityWatch Security | Control Room";
@@ -8,7 +13,34 @@
 <div class="m-auto p-5">
     <h3 class="text-center">Citywatch Control Room</h3>
 </div>
+<partial name="_Slogan" />
+@{
+    var LiveEvents = _configDataProvider.GetBroadcastLiveEventsByDate();
+    @if (LiveEvents.Count() > 0)
+    {
+        @section LiveEvents {
+        <div class="container d-flex flex-column flex-md-row pb-1">
+            <div class=" form-group col-md-2 p-0">
+                <div class="container marquee-style" id="divLiveEvents">
+                    <label class="lblclass">Live Events:</label>
+                </div>
+            </div>
+            <div class=" form-group col-md-10 p-0">
+                <div class="container marquee-stylenew mt-2">
 
+                    @foreach (var fileName in LiveEvents)
+                    {
+                        <marquee direction="right" style="width:900px;" id="marqueeLiveEvents" text=@fileName.TextMessage>@fileName.TextMessage</marquee>
+                    }
+                </div>
+            </div>
+        </div>
+        }
+    }
+
+
+
+}
 @*Rc Guard login Conformation Popup*@
 <div id="modelGuardLoginConRc" class="modal fade" role="dialog">
     <div class="modal-dialog">
@@ -122,7 +154,52 @@
     </div>
 </div>
 
-<partial name="_Slogan" />
+@*<partial name="_Slogan" />*@
 @section PageHeader {
     <h3 class="text-center">CONTROL ROOM</h3>
 }
+@{
+    var CalendarEvents = _configDataProvider.GetBroadcastCalendarEventsByDate();
+    @if (CalendarEvents.Count() > 0)
+    {
+        @section CalendarLogo {
+
+        <i class="fa fa-calendar" style="font-size:48px"></i>
+        @foreach (var item in CalendarEvents)
+            {
+                <label class="ml-2 mt-2"><b>Event:</b> @item.TextMessage</label>
+                break;
+            }
+            @if (CalendarEvents.Count() > 1)
+            {
+                <a href="#calendarEventModal" id="btncalendarEventModal" class="text-center text-md-left ml-2 mt-2">..Expand All</a>
+            }
+
+    }
+    }
+}
+@*Event Description Model*@
+<div class="modal" tabindex="-1" role="dialog" id="calendarEventModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><label id="lbl_calendarEvent">Today's Events</label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <table id="calendarEventsDetails" class="table table-bordered" style="width:100%;">
+                        </table>
+                        <div class="m-3"></div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
