@@ -49,6 +49,7 @@ namespace CityWatch.Data.Providers
         int SaveClientSiteManningKpiSetting(ClientSiteKpiSetting setting);
         ClientSiteKpiNote GetClientSiteKpiNote(int id);
         int SaveClientSiteKpiNote(ClientSiteKpiNote note);
+        int SaveRCList(RCActionList RC);
         List<ClientSiteLogBook> GetClientSiteLogBooks();
         List<ClientSiteLogBook> GetClientSiteLogBooks(int? logBookId, LogBookType type);
         List<ClientSiteLogBook> GetClientSiteLogBooks(int clientSiteId, LogBookType type, DateTime fromDate, DateTime toDate);
@@ -358,6 +359,29 @@ namespace CityWatch.Data.Providers
             }
             _context.SaveChanges();
             return note.Id;
+        }
+        public int SaveRCList(RCActionList RC)
+        {
+            if (RC.Id == 0)
+            {
+                _context.RCActionList.Add(RC);
+            }
+            else
+            {
+                var RCToUpdate = _context.RCActionList.SingleOrDefault(z => z.Id == RC.Id);
+                if (RCToUpdate != null)
+                {
+                    RCToUpdate.SiteAlarmKeypadCode = RCToUpdate.SiteAlarmKeypadCode;
+                    RCToUpdate.Action1 = RCToUpdate.Action1;
+                    RCToUpdate.Sitephysicalkey = RCToUpdate.Sitephysicalkey;
+                    RCToUpdate.Action2 = RCToUpdate.Action2;
+                    RCToUpdate.SiteCombinationLook = RCToUpdate.SiteCombinationLook;
+                    RCToUpdate.Action3 = RCToUpdate.Action3;
+                    RCToUpdate.ControlRoomOperator = RCToUpdate.ControlRoomOperator;
+                }
+            }
+            _context.SaveChanges();
+            return RC.Id;
         }
 
         public List<ClientSiteLogBook> GetClientSiteLogBooks()

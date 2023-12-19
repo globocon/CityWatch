@@ -1022,8 +1022,16 @@ namespace CityWatch.Data.Providers
             var allvalues = _context.RadioCheckListInActiveGuardData.FromSqlRaw($"EXEC sp_GetInActiveGuardDetailsForRC").ToList();
             foreach (var item in allvalues)
             {
-
-                item.SiteName = item.SiteName + " <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x => x.PhoneNumber).ToList()) + " <i class=\"fa fa-caret-down\" aria-hidden=\"true\" id=\"btnUpArrow\"></i> ";
+                var phoneNumbers = _context.ClientSiteSmartWands
+                .Where(x => x.ClientSiteId == item.ClientSiteId)
+                .Select(x => x.PhoneNumber)
+                .ToList();
+                var phoneNumbersString = string.Join("&nbsp;&nbsp;&nbsp;&nbsp;", phoneNumbers);
+               
+                    item.SiteName = item.SiteName + "&nbsp;&nbsp;&nbsp;&nbsp <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + phoneNumbersString + " <i class=\"fa fa-caret-down\" aria-hidden=\"true\" id=\"btnUpArrow\"></i> ";
+               
+               
+               
                 item.Address = " <a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q=" + item.GPS + "\"target=\"_blank\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i> </a>" + item.Address + " <input type=\"hidden\" class=\"form-control\" value=\"" + item.GPS + "\" id=\"txtGPSActiveguards\" />";
             }
             return allvalues;

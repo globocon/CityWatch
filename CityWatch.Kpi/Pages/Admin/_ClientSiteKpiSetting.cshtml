@@ -21,6 +21,9 @@
             <a class="nav-link" id="contracted-manning-tab" data-toggle="tab" href="#contractedmanningSettings" role="tab" aria-controls="contractedmanningSettings">Contracted Manning</a>
         </li>
         <li class="nav-item" role="presentation">
+            <a class="nav-link" id="RcActionList-tab" data-toggle="tab" href="#RcActionListSettings" role="tab" aria-controls="RcActionListSettings">Rc Action List</a>
+        </li>
+        <li class="nav-item" role="presentation">
             <a class="nav-link" id="notes-tab" data-toggle="tab" href="#notes" role="tab" aria-controls="notes">Notes</a>
         </li>
     </ul>
@@ -484,6 +487,88 @@
                 </form>
 
             </div>
+        </div>
+        @*New Tab for contracted-manning end*@
+        @*New Tab for Rc List start*@
+        <div class="tab-pane" id="RcActionListSettings" role="tabpanel" aria-labelledby="contracted-manning-tab">
+           
+                <br />
+                <table class="table table-bordered tbl-settings" id="tbl_summaryImage">
+                    <thead>
+                        <tr>
+                            <th style="width:370px">File Name</th>
+                            <th style="width:370px">Date & Time Uploaded</th>
+                            <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="align-middle" id="summary_imageRC"></td>
+                            <td class="align-middle" id="summary_image_updatedRC"></td>
+                            <td class="text-center">
+                                <label class="btn btn-success mb-0">
+                                   
+                                        <i class="fa fa-upload mr-2"></i>Replace
+                                        <input type="file" id="upload_summary_imageRcList" accept=".jpg" hidden>
+                                   
+                                </label>
+                                <a href="#" target="_blank" class="btn btn-outline-primary" id="download_summary_imageRCList"><i class="fa fa-download mr-2"></i>Download</a>
+                                <button class="btn btn-outline-primary btn-outline-danger" type="button" id="delete_summary_imageRC"><i class="fa fa-trash mr-2"></i>Delete</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            <form id="frm_ActionList">
+            <div class="row col-md-12">
+            <div class="row col-md-7">
+           
+                        <div class="form-group row">
+                            <label class="col-md-4 col-form-label">Site Alarm Keypad code</label>
+                            <div class="col-md-2">
+                                <input type="text" class="form-control" id="Site_Alarm_Keypad_code"  name="RCActionList.SiteAlarmKeypadCode">
+                            </div>
+                            <label class="col-md-2 col-form-label text-left">Action 1</label>
+                            <div class="col-md-3">
+                                <input type="text" class="form-control" id="Action1" name="RCActionList.Action1">
+                            </div>
+
+
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-md-4 col-form-label">site Physical key</label>
+                            <div class="col-md-2">
+                                <input type="text" class="form-control" id="site_Physical_key" name="RCActionList.Sitephysicalkey">
+                            </div>
+                            <label class="col-md-2 col-form-label">Action 2</label>
+                            <div class="col-md-3">
+                                <input type="text" class="form-control" id="Action1" name="RCActionList.Action2">
+                            </div>
+
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-md-4 col-form-label">Site Combination Look</label>
+                            <div class="col-md-2">
+                                <input type="text" class="form-control" id="Site_Combination_Look" name="RCActionList.SiteCombinationLook">
+                            </div>
+                            <label class="col-md-2 col-form-label">Action 3</label>
+                            <div class="col-md-3">
+                                <input type="text" class="form-control" id="Action1" name="RCActionList.Action3">
+                            </div>
+
+                        </div>
+            </div>
+                    <div class="form-group  col-md-5">
+                        <label class="col-form-label">Comments for Control room operator</label>
+                        <textarea id="userInput" name="RCActionList.ControlRoomOperator" rows="4" cols="50">
+                        
+    </textarea>
+                        <input type="hidden" name="RCActionList.SettingsId" id="RCList_SettingsId" value="@Model.RCActionListKPI.SettingsId" />
+                    </div>
+                           
+                </div>
+                  </form>
+                          
+            <button type="button" class="btn btn-success" id="save_site_RC"><i class="fa fa-save mr-2"></i>Save Notes</button>
         </div>
         @*New Tab for contracted-manning end*@
         <div class="tab-pane" id="notes" role="tabpanel" aria-labelledby="notes-tab">

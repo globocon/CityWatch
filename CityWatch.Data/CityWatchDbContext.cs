@@ -33,6 +33,7 @@ namespace CityWatch.Data
         public DbSet<GuardLog> GuardLogs { get; set; }
         public DbSet<Guard> Guards { get; set; }
         public DbSet<ClientSiteKpiNote> ClientSiteKpiNotes { get; set; }
+        public DbSet<RCActionList> RCActionList { get; set; }
         public DbSet<ClientSiteSmartWand> ClientSiteSmartWands { get; set; }
         public DbSet<GuardLogin> GuardLogins { get; set; }
         public DbSet<IncidentReportPosition> IncidentReportPositions { get; set; }

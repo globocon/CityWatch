@@ -49,6 +49,22 @@ namespace CityWatch.Data.Models
 
         public List<ClientSiteKpiNote> Notes { get; set; }
 
+        public List<RCActionList> RCActionList { get; set; }
+        public RCActionList RCActionListKPI
+        {
+            get
+            {
+                //var thisMonthDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+               // var notesThisMonth = Notes?.SingleOrDefault(z => z.ForMonth == thisMonthDate);
+                return  new RCActionList()
+                {
+                    //ForMonth = thisMonthDate,
+                    SiteAlarmKeypadCode = string.Empty,
+                    SettingsId = Id
+                };
+            }
+        }
+
         public ClientSiteKpiNote NotesForThisMonth
         {
             get

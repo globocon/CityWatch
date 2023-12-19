@@ -392,7 +392,25 @@ namespace CityWatch.Kpi.Pages.Admin
 
             return new JsonResult(new { status, message });
         }
+        //code added For RcAction List start
+        public JsonResult OnPostClientSiteRCActionList(RCActionList RCActionListModel)
+        {
+            var status = true;
+            var message = "Success";
+            var id = -1;
+            try
+            {
+                //id = _clientDataProvider.SaveRCList(RCActionListModel);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
 
+            return new JsonResult(new { status, message, id });
+        }
+        //code added For RcAction List stop
         public JsonResult OnGetClientSiteKpiNote(int clientSiteId, int month, int year)
         {
             var kpiSetting = _clientDataProvider.GetClientSiteKpiSetting(clientSiteId);

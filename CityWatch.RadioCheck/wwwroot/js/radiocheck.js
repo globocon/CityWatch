@@ -444,7 +444,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             width: '20%',
             class: 'dt-control',
             render: function (value, type, data) {
-
+              
                 return '<tr class="group group-start "><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
             }
         },

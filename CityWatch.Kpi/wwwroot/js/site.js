@@ -535,6 +535,80 @@ $(function () {
         }
     });
 
+    /*Rc Action List Image Upload start*/
+    $('#upload_summary_imageRcList').on('change', function () {
+       
+        const file = $('#upload_summary_imageRcList').prop("files")[0];
+        if (file) {
+            const scheduleId = $("#scheduleId").val();
+            const formData = new FormData();
+            formData.append("SummaryImage", file);
+            formData.append("ScheduleId", scheduleId);
+
+            $.ajax({
+                type: 'POST',
+                url: '/Admin/Settings?handler=UploadSummaryImage',
+                data: formData,
+                cache: false,
+                contentType: false,
+                processData: false,
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (data) {
+                if (data.success) {
+                    setSummaryImageRCList(data);
+                }
+            }).always(function () {
+                $('#upload_summary_imageRcList').val('');
+            });
+        }
+    });
+    function setSummaryImageRCList(summaryImage) {
+        if (summaryImage) {
+            $('#summary_imageRC').html(summaryImage.fileName);
+            $('#summary_image_updatedRC').html(getFormattedDate(summaryImage.lastUpdated, true));
+            $('#download_summary_imageRCList').attr('href', '/SummaryImage/' + summaryImage.fileName);
+            $('#download_summary_imageRCList').show();
+            $('#delete_summary_image').show();
+        }
+    }
+    $('#delete_summary_imageRC').on('click', function () {
+        if (confirm('Are you sure want to delete this file?')) {
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteSummaryImage&scheduleId=' + $('#scheduleId').val(),
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (data) {
+                if (data.status) {
+                    clearSummaryImageRC();
+                }
+            }).fail(function () {
+                console.log('error')
+            });
+        }
+    });
+    function clearSummaryImageRC() {
+        $('#summary_imageRC').html('-');
+        $('#summary_image_updatedRC').html('-');
+        $('#download_summary_imageRCList').hide();
+        //$('#delete_summary_image').hide();
+    }
+    /*Rc Action List Image Upload stop*/
+
+    //RC Action List Save start
+    $('#div_site_settings').on('click', '#save_site_RC', function () {
+        $.ajax({
+            url: '/admin/settings?handler=ClientSiteRCActionList',
+            type: 'POST',
+            data: $('#frm_ActionList').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            alert('Saved successfully');
+            $('#kpi-settings-modal').modal('hide');
+            //gridClientSiteSettings.clear();
+            //gridClientSiteSettings.reload({ type: $('#cs_client_type').val() });
+        }).fail(function () { });
+    });
+     //RC Action List Save stop
     function scheduleModalOnAdd() {
         const dateToday = new Date().toISOString().split('T')[0];
         $('#startDate').val(dateToday);
