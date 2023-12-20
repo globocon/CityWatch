@@ -920,7 +920,7 @@ namespace CityWatch.Web.Pages.Guard
                 try
                 {
                     var serialNo = GetNextDocketSequenceNumber(id);
-                    fileName = _keyVehicleLogDocketGenerator.GeneratePdfReportList(id, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, serialNo, ids);
+                    fileName = _keyVehicleLogDocketGenerator.GeneratePdfReportList(id, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, serialNo, ids, clientSiteId);
 
 
                 }

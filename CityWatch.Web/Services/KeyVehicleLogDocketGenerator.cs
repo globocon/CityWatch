@@ -36,7 +36,7 @@ namespace CityWatch.Web.Services
     public interface IKeyVehicleLogDocketGenerator
     {
         string GeneratePdfReport(int keyVehicleLogId, string docketReason, string blankNoteOnOrOff, string serialNo);
-        string GeneratePdfReportList(int keyVehicleLogId, string docketReason, string blankNoteOnOrOff, string serialNo, List<int> ids);
+        string GeneratePdfReportList(int keyVehicleLogId, string docketReason, string blankNoteOnOrOff, string serialNo, List<int> ids,int clientSiteId);
 
     }
     public class KeyVehicleLogDocketGenerator : IKeyVehicleLogDocketGenerator
@@ -74,7 +74,7 @@ namespace CityWatch.Web.Services
             _settings = settings.Value;
         }
         //To Generate the Pdf In List start
-        public string GeneratePdfReportList(int keyVehicleLogId1, string docketReason, string blankNoteOnOrOff, string serialNo, List<int> ids)
+        public string GeneratePdfReportList(int keyVehicleLogId1, string docketReason, string blankNoteOnOrOff, string serialNo, List<int> ids,int clientSiteId)
         {
 
             //List<int> ids = new List<int> { 37200, 37199 };
@@ -86,7 +86,7 @@ namespace CityWatch.Web.Services
             var docList = new Document(pdfDocList);
           
             var reportPdfPath = "";
-            docList.Add(CreateReportHeaderTableList(keyVehicleLogData.ClientSiteLogBook.ClientSiteId));
+            docList.Add(CreateReportHeaderTableList(clientSiteId));
             for (int i = 0; i < ids.Count; i++)
             {
                 var keyVehicleLogId = ids[i];
