@@ -19,8 +19,12 @@ namespace CityWatch.Data.Models
         public string Action2 { get; set; }
         public string SiteCombinationLook { get; set; }
         public string Action3 { get; set; }
+        public string Action4 { get; set; }
+        public string Action5 { get; set; }
         public string ControlRoomOperator { get; set; }
         public int SettingsId { get; set; }
+        public string Imagepath { get; set; }
+        public string DateandTimeUpdated { get; set; }
 
         [ForeignKey("SettingsId")]
         [JsonIgnore]

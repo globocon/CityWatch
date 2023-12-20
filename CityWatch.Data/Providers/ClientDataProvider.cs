@@ -48,6 +48,7 @@ namespace CityWatch.Data.Providers
         void SaveClientSiteKpiSetting(ClientSiteKpiSetting setting);
         int SaveClientSiteManningKpiSetting(ClientSiteKpiSetting setting);
         ClientSiteKpiNote GetClientSiteKpiNote(int id);
+        RCActionList GetClientSiteKpiRC(int id);
         int SaveClientSiteKpiNote(ClientSiteKpiNote note);
         int SaveRCList(RCActionList RC);
         List<ClientSiteLogBook> GetClientSiteLogBooks();
@@ -292,6 +293,7 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.ClientSite.ClientType)
                 .Include(x => x.ClientSiteDayKpiSettings)
                 .Include(x => x.Notes)
+                 .Include(x => x.RCActionList)
                 .SingleOrDefault(x => x.ClientSiteId == clientSiteId);
             if (clientSiteKpiSetting != null)
             {
@@ -360,6 +362,37 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
             return note.Id;
         }
+        public int SaveClientSiteKpiRC(RCActionList RCList)
+        {
+            if (RCList.Id == 0)
+            {
+                _context.RCActionList.Add(RCList);
+            }
+            else
+            {
+                var noteToUpdate = _context.RCActionList.SingleOrDefault(z => z.Id == RCList.Id);
+                if (noteToUpdate != null)
+                {
+                    noteToUpdate.SiteAlarmKeypadCode = RCList.SiteAlarmKeypadCode;
+                    noteToUpdate.Action1 = RCList.Action1;
+                    noteToUpdate.Sitephysicalkey = RCList.Sitephysicalkey;
+                    noteToUpdate.Action2 = RCList.Action2;
+                    noteToUpdate.SiteCombinationLook = RCList.SiteCombinationLook;
+                    noteToUpdate.Action3 = RCList.Action3;
+                    noteToUpdate.ControlRoomOperator = RCList.ControlRoomOperator;
+                    noteToUpdate.Action4 = RCList.Action4;
+                    noteToUpdate.Action5 = RCList.Action5;
+                }
+            }
+            _context.SaveChanges();
+            return RCList.Id;
+        }
+        public RCActionList GetClientSiteKpiRC(int id)
+        {
+            return _context.RCActionList.SingleOrDefault(z => z.Id == id);
+        }
+
+        
         public int SaveRCList(RCActionList RC)
         {
             if (RC.Id == 0)
@@ -371,13 +404,17 @@ namespace CityWatch.Data.Providers
                 var RCToUpdate = _context.RCActionList.SingleOrDefault(z => z.Id == RC.Id);
                 if (RCToUpdate != null)
                 {
-                    RCToUpdate.SiteAlarmKeypadCode = RCToUpdate.SiteAlarmKeypadCode;
-                    RCToUpdate.Action1 = RCToUpdate.Action1;
-                    RCToUpdate.Sitephysicalkey = RCToUpdate.Sitephysicalkey;
-                    RCToUpdate.Action2 = RCToUpdate.Action2;
-                    RCToUpdate.SiteCombinationLook = RCToUpdate.SiteCombinationLook;
-                    RCToUpdate.Action3 = RCToUpdate.Action3;
-                    RCToUpdate.ControlRoomOperator = RCToUpdate.ControlRoomOperator;
+                    RCToUpdate.SiteAlarmKeypadCode = RC.SiteAlarmKeypadCode;
+                    RCToUpdate.Action1 = RC.Action1;
+                    RCToUpdate.Sitephysicalkey = RC.Sitephysicalkey;
+                    RCToUpdate.Action2 = RC.Action2;
+                    RCToUpdate.SiteCombinationLook = RC.SiteCombinationLook;
+                    RCToUpdate.Action3 = RC.Action3;
+                    RCToUpdate.ControlRoomOperator = RC.ControlRoomOperator;
+                    RCToUpdate.Action4 = RC.Action4;
+                    RCToUpdate.Action5 = RC.Action5;
+                    RCToUpdate.Imagepath = RC.Imagepath;
+                    RCToUpdate.DateandTimeUpdated = RC.DateandTimeUpdated;
                 }
             }
             _context.SaveChanges();

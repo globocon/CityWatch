@@ -315,6 +315,38 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(new { success, fileName, LastUpdated = DateTime.Now });
         }
 
+        public JsonResult OnPostUploadRCImage()
+        {
+            var success = true;
+            var files = Request.Form.Files;
+            var fileName = string.Empty;
+            try
+            {
+                if (files.Count == 1)
+                {
+                    var file = files[0];
+                    fileName = file.FileName;
+                    var scheduleId = Convert.ToInt32(Request.Form["scheduleId"]);
+
+                    var summaryImageDir = Path.Combine(_webHostEnvironment.WebRootPath, "RCImage");
+                    if (!Directory.Exists(summaryImageDir))
+                        Directory.CreateDirectory(summaryImageDir);
+
+                    using (var stream = System.IO.File.Create(Path.Combine(summaryImageDir, fileName)))
+                    {
+                        file.CopyTo(stream);
+                    }
+                    //_kpiSchedulesDataProvider.SaveKpiSendScheduleSummaryImage(scheduleId, fileName);
+                }
+            }
+            catch
+            {
+                success = false;
+            }
+
+            return new JsonResult(new { success, fileName, LastUpdated = DateTime.Now });
+        }
+
         public JsonResult OnGetKpiSendSchedules(int type, string searchTerm)
         {
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
@@ -393,14 +425,14 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(new { status, message });
         }
         //code added For RcAction List start
-        public JsonResult OnPostClientSiteRCActionList(RCActionList RCActionListModel)
+        public JsonResult OnPostClientSiteRCActionList(RCActionList rcActionList)
         {
             var status = true;
             var message = "Success";
             var id = -1;
             try
             {
-                //id = _clientDataProvider.SaveRCList(RCActionListModel);
+                id = _clientDataProvider.SaveRCList(rcActionList);
             }
             catch (Exception ex)
             {
@@ -410,6 +442,7 @@ namespace CityWatch.Kpi.Pages.Admin
 
             return new JsonResult(new { status, message, id });
         }
+        
         //code added For RcAction List stop
         public JsonResult OnGetClientSiteKpiNote(int clientSiteId, int month, int year)
         {
@@ -453,6 +486,37 @@ namespace CityWatch.Kpi.Pages.Admin
                 {
                     note.Notes = string.Empty;
                     _clientDataProvider.SaveClientSiteKpiNote(note);
+                }
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message });
+        }
+
+        //to delete RC
+        public JsonResult OnPostDeleteRC(int RCId)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                var RCList = _clientDataProvider.GetClientSiteKpiRC(RCId);
+                if (RCList != null)
+                {
+                    RCList.SiteAlarmKeypadCode = string.Empty;
+                    RCList.Action1 = string.Empty;
+                    RCList.Sitephysicalkey = string.Empty;
+                    RCList.Action2 = string.Empty;
+                    RCList.SiteCombinationLook = string.Empty;
+                    RCList.Action3 = string.Empty;
+                    RCList.ControlRoomOperator = string.Empty;
+                    RCList.Action4 = string.Empty;
+                    RCList.Action5 = string.Empty;
+                    _clientDataProvider.SaveRCList(RCList);
                 }
             }
             catch (Exception ex)
@@ -570,6 +634,30 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(new { status, message });
         }
 
+        public JsonResult OnPostDeleteRCImage(int scheduleId)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                var summaryImage = _kpiSchedulesDataProvider.GetScheduleSummaryImage(scheduleId);
+                if (summaryImage != null)
+                {
+                    var fileToDelete = Path.Combine(_webHostEnvironment.WebRootPath, "SummaryImage", summaryImage.FileName);
+                    if (System.IO.File.Exists(fileToDelete))
+                        System.IO.File.Delete(fileToDelete);
+
+                    
+                }
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message });
+        }
 
         public IActionResult OnGetDownloadPdf(int scheduleId, int reportYear, int reportMonth, bool ignoreRecipients)
         {
