@@ -6,16 +6,27 @@
 }
 <div id="loader"></div>
 <div class="row">
-    <div class="col-md-8">
+    <div class="col-md-4">
         <div>
             <b>Log Book Date: </b>@DateTime.Today.ToString("dd MMM yyyy (dddd)").ToUpper()
         </div>
     </div>
-    <div class="col-md-4" style="padding-left:69px;">
-        <a class="btn btn-outline-primary" id="generate_log_AlldocketList"><b>POI List</b></a>
-        <a class="btn btn-outline-primary" href="SiteLogPdf?id=@Model.GuardLog.ClientSiteLogBookId&t=gl" target="_blank">Download PDF</a>
-        <a class="btn btn-primary" href="#" id="guard_offduty">Off Duty</a>
+    <div class="col-md-3 p-0">
+        <div class="float-right">
+            Auto refresh in <span id="clockRefresh">03 min 00 sec</span>
+        </div>
     </div>
+    <div class="col-md-5">
+        <div class="float-right">
+            <button type="button" class="btn btn-outline-primary" id="btnRefreshActivityStatus"><i class="fa fa-refresh" aria-hidden="true"></i> Refresh Now</button>
+            <a class="btn btn-outline-primary" id="generate_log_AlldocketList"><b>POI List</b></a>
+            <a class="btn btn-outline-primary" href="SiteLogPdf?id=@Model.GuardLog.ClientSiteLogBookId&t=gl" target="_blank">Download PDF</a>
+            <a class="btn btn-primary" href="#" id="guard_offduty">Off Duty</a>
+        </div>
+    </div>
+
+
+
 </div>
 <div class="row my-2">
     <div class="col-md-12">
@@ -49,16 +60,40 @@
                         </div>
                         <div class="col-md-4 text-center">
                             @{
+
+                                var clientSiteForLogbook = Model.ClientDataProvider.GetClientSiteForRcLogBook();
                                 var isDuressActive = Convert.ToBoolean(ViewData["IsDuressEnabled"]);
-                                var btnImage = isDuressActive ? "~/images/DuressButton.jpg" : "~/images/DuressButton_Inactive.jpg";
                                 var duressStatus = isDuressActive ? "Active" : "Normal";
+                                if (clientSiteForLogbook.Count != 0)
+                                {
+                                    if (clientSiteForLogbook.FirstOrDefault().Id != Model.GuardLog.ClientSiteLogBook.ClientSiteId)
+                                    {
+
+                                        var btnImage = isDuressActive ? "~/images/DuressButton.jpg" : "~/images/DuressButton_Inactive.jpg";
+                                        <button type="button" class="btn btn-duress btn-md @duressStatus.ToLower()" id="duress_btn">DURESS</button>
+                                        <p class="mb-0 mt-2">
+                                            Status: <span id="duress_status" class="@(isDuressActive ? "font-weight-bold" : "")">@duressStatus</span>
+                                        </p>
+
+                                    }
+
+
+                                }
+                                else
+                                {
+
+                                    var btnImage = isDuressActive ? "~/images/DuressButton.jpg" : "~/images/DuressButton_Inactive.jpg";
+                                    <button type="button" class="btn btn-duress btn-md @duressStatus.ToLower()" id="duress_btn">DURESS</button>
+                                    <p class="mb-0 mt-2">
+                                        Status: <span id="duress_status" class="@(isDuressActive ? "font-weight-bold" : "")">@duressStatus</span>
+                                    </p>
+
+                                }
+
                             }
-                            <button type="button" class="btn btn-duress btn-md @duressStatus.ToLower()" id="duress_btn">DURESS</button>
-                            <p class="mb-0 mt-2">
-                                Status: <span id="duress_status" class="@(isDuressActive ? "font-weight-bold" : "")">@duressStatus</span>
-                            </p>
+
                         </div>
-                    </div>                    
+                    </div>
                     <hr />
                     <p class="mb-2">
                         <b>Guard Name: </b>@Model.GuardLog.GuardLogin.Guard.Name ;
@@ -69,7 +104,7 @@
                 </div>
             </div>
         </div>
-        <div class="row my-2">  
+        <div class="row my-2">
             <div class="col-lg-6 pr-2 mb-2">
                 <table class="table" id="custom_field_log" style="display:none"></table>
             </div>
@@ -225,7 +260,7 @@
                                                     <input type="hidden" id="IsAcknowledgeMessage">
                                                 </div>
                                             </div>
-                                            
+
                                             <div class="form-group row mb-1">
                                                 <label for="gs_site_email" class="col-md-4 col-form-label">Message Back Instead :</label>
                                                 <div class="col-md-6 mr-5 mt-2 p-0">

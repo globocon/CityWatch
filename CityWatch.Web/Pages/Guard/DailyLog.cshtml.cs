@@ -32,6 +32,7 @@ namespace CityWatch.Web.Pages.Guard
         public GuardLog GuardLog { get; set; }
 
         public IViewDataService ViewDataService { get { return _viewDataService; } }
+        public IClientDataProvider ClientDataProvider { get { return _clientDataProvider; } }
 
         public DailyLogModel(IGuardDataProvider guardDataProvider,
             IGuardLogDataProvider guardLogDataProvider,
@@ -479,19 +480,25 @@ namespace CityWatch.Web.Pages.Guard
                 };
                 _guardLogDataProvider.SaveGuardLog(signOffEntry);
 
-                /* message to Citywatch HD site id for Citywatch HQ (Report to CWS Only; Client on Bypass) 189 in db start */
-                var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdGloablmessage(189, LogBookType.DailyGuardLog, DateTime.Today);
-                var notifcationtoCitywatchHD = new GuardLog()
-                {
-                    ClientSiteLogBookId = logBookId,
-                    GuardLoginId = guardLoginId,
-                    EventDateTime = DateTime.Now,
-                    Notes = Notifications,
-                    IrEntryType = IrEntryType.Normal
-                };
+                /* message to Citywatch Conrol room logbook from (settings in RC)  Start*/
 
-                _guardLogDataProvider.SaveGuardLog(notifcationtoCitywatchHD);
-                /* message to Citywatch HD site id for Citywatch HQ (Report to CWS Only; Client on Bypass) 189 in db end */
+                var clientSiteForLogbook = _clientDataProvider.GetClientSiteForRcLogBook();
+                if (clientSiteForLogbook.Count != 0)
+                {
+                    var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdGloablmessage(clientSiteForLogbook.FirstOrDefault().Id, LogBookType.DailyGuardLog, DateTime.Today);
+                    var notifcationtoCitywatchHD = new GuardLog()
+                    {
+                        ClientSiteLogBookId = logBookId,
+                        GuardLoginId = guardLoginId,
+                        EventDateTime = DateTime.Now,
+                        Notes = Notifications,
+                        IrEntryType = IrEntryType.Normal
+                    };
+
+                    _guardLogDataProvider.SaveGuardLog(notifcationtoCitywatchHD);
+
+                }
+                /* message to Citywatch Conrol room logbook from (settings in RC)  Start */
             }
             catch (Exception ex)
             {

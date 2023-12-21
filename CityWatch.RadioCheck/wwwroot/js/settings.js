@@ -1,7 +1,7 @@
 ﻿window.onload = function () {
 
 
-    
+
 };
 let gridRadioCheckStatusTypeSettings;
 gridRadioCheckStatusTypeSettings = $('#radiocheck_status_type_settings').grid({
@@ -83,7 +83,7 @@ $('#add_live_events').on('click', function () {
     if (isBroadCastLiveeventsAdding == true) {
         alert('Unsaved changes in the grid. Refresh the page');
     } else {
-        if ($('#BroadCastBannerLiveEvents tbody tr').find('td').eq(1).text() ==='') {
+        if ($('#BroadCastBannerLiveEvents tbody tr').find('td').eq(1).text() === '') {
             isBroadCastLiveeventsAdding = true;
             gridBroadCastBannerLiveEvents.addRow({
                 'id': -1
@@ -95,30 +95,30 @@ $('#add_live_events').on('click', function () {
         }
     }
 });
-    let gridBroadCastBannerLiveEvents;
-    gridBroadCastBannerLiveEvents = $('#BroadCastBannerLiveEvents').grid({
-        dataSource: '/Admin/Settings?handler=BroadcastLiveEvents',
-        uiLibrary: 'bootstrap4',
-        iconsLibrary: 'fontawesome',
-        primaryKey: 'id',
-        inlineEditing: { mode: 'command' },
+let gridBroadCastBannerLiveEvents;
+gridBroadCastBannerLiveEvents = $('#BroadCastBannerLiveEvents').grid({
+    dataSource: '/Admin/Settings?handler=BroadcastLiveEvents',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    inlineEditing: { mode: 'command' },
 
-        columns: [
-            { width: 130, field: 'id', title: 'Id', hidden: true },
-            { width: 950, field: 'textMessage', title: 'Text Message', editor: true },
-            {
-                width: 120, field: 'formattedExpiryDate', title: 'Expiry',
-                type: 'date',
-                format: 'dd-mmm-yyyy',
-                editor: true,
-                
-               
-            },
-        ],
-        initialized: function (e) {
-            $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
-        }
-    });
+    columns: [
+        { width: 130, field: 'id', title: 'Id', hidden: true },
+        { width: 950, field: 'textMessage', title: 'Text Message', editor: true },
+        {
+            width: 120, field: 'formattedExpiryDate', title: 'Expiry',
+            type: 'date',
+            format: 'dd-mmm-yyyy',
+            editor: true,
+
+
+        },
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
 
 if (gridBroadCastBannerLiveEvents) {
     gridBroadCastBannerLiveEvents.on('rowDataChanged', function (e, id, record) {
@@ -164,13 +164,11 @@ if (gridBroadCastBannerLiveEvents) {
         }
     });
 }
-    /*  broadcast live events-end*/
+/*  broadcast live events-end*/
 
-    /*  broadcast calendar events-start*/
-    let isBroadCastCalendareventsAdding = false;
-    $('#add_calendar_events').on('click', function () {
-
-
+/*  broadcast calendar events-start*/
+let isBroadCastCalendareventsAdding = false;
+$('#add_calendar_events').on('click', function () {
         if (isBroadCastCalendareventsAdding == true) {
             alert('Unsaved changes in the grid. Refresh the page');
         } else {
@@ -199,6 +197,7 @@ if (gridBroadCastBannerLiveEvents) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
+
 if (gridBroadCastBannerCalendarEvents) {
     gridBroadCastBannerCalendarEvents.on('rowDataChanged', function (e, id, record) {
         const data = $.extend(true, {}, record);
@@ -252,4 +251,96 @@ if (gridBroadCastBannerCalendarEvents) {
 $('#btn_confrim_wand_usok').on('click', function () {
     $('#alert-wand-in-use-modal').modal('hide')
 })
-    /*  broadcast calendar events-end*/
+
+
+$('#add_logbook').on('click', function () {
+
+    $('#search_sites_settings').val('');
+    $('#cs_client_type option:first-child').attr("selected", "selected");
+    $('#cs_client_type')[0].selectedIndex = 0;
+    gridClientSiteSettings.reload({ type: $('#cs_client_type').val(), searchTerm: $('#search_sites_settings').val() });
+    $('#logbook-modal').modal('show');
+})
+
+/***** Client Site KPI Settings *****/
+let gridSiteDetailsforRcLogbook;
+gridSiteDetailsforRcLogbook = $('#gridSiteDetailsforRcLogbook').grid({
+    dataSource: '/Admin/Settings?handler=ClientSiteForRcLogBook',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    columns: [
+        { width: 130, field: 'id', title: 'Id', hidden: true },
+        { width: 150, field: 'clientTypeName', title: 'Client Type' },
+        { width: 250, field: 'clientSiteName', title: 'Client Site' },
+       
+        
+
+
+    ]
+    
+});
+
+
+
+let gridClientSiteSettings;
+
+function settingsButtonRenderer(value, record) {
+    return '<button class="btn btn-outline-success mt-2 del-schedule d-block" data-sch-id="' + record.id + '""><i class="fa fa-check mr-2" aria-hidden="true"></i>Select Site</button>';
+}
+
+$('#kpi_client_site_settings').on('click', '.del-schedule', function () {
+    const idToDelete = $(this).attr('data-sch-id');
+    if (confirm('Are you sure want to update the site for logbook assignment ?')) {
+        $.ajax({
+            url: '/Admin/Settings?handler=SaveSiteIdForRcLogBook',
+            type: 'POST',
+            data: { id: idToDelete },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function () {
+            gridSiteDetailsforRcLogbook.reload();
+            $('#logbook-modal').modal('hide');
+        });
+    }
+
+});
+
+gridClientSiteSettings = $('#kpi_client_site_settings').grid({
+    dataSource: '/Admin/Settings?handler=ClientSiteWithSettings',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    columns: [
+        { width: 150, field: 'clientTypeName', title: 'Client Type' },
+        { width: 250, field: 'clientSiteName', title: 'Client Site' },
+        { width: 100, renderer: settingsButtonRenderer },
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
+
+/*code added for search client start */
+$('#search_sites_settings').on('keyup', function (e) {
+    var SearchTextbox = $("#search_sites_settings");
+    var searchText = SearchTextbox.val();
+    if (searchText.length >= 3) {
+        gridClientSiteSettings.reload({ type: $('#cs_client_type').val(), searchTerm: $(this).val() });
+
+    }
+
+});
+$('#btnSearchSites').on('click', function () {
+    gridClientSiteSettings.reload({ type: $('#cs_client_type').val(), searchTerm: $('#search_sites_settings').val() });
+});
+
+$('#cs_client_type').on('change', function () {
+    var SearchTextbox = $("#search_sites_settings");
+    SearchTextbox.val("");
+    var searchitem = '';
+    gridClientSiteSettings.reload({ type: $(this).val(), searchTerm: searchitem });
+});
+/*code added for search client stop */
+
+
+/*  broadcast calendar events-end*/

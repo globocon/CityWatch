@@ -53,6 +53,8 @@ namespace CityWatch.RadioCheck.Pages.Admin
 
         public IClientDataProvider ClientDataProvider { get { return _clientDataProvider; } }
 
+        
+
         [BindProperty]
         public FeedbackTemplate FeedbackTemplate { get; set; }
         [BindProperty]
@@ -258,5 +260,70 @@ namespace CityWatch.RadioCheck.Pages.Admin
             return new JsonResult(_configDataProvider.GetBroadcastCalendarEvents());
         }
         //Broadcast Calendar events-end
+        /* log book site settings*/
+        public JsonResult OnGetClientSiteWithSettings(string type, string searchTerm)
+        {
+            if (!string.IsNullOrEmpty(type) || !string.IsNullOrEmpty(searchTerm))
+            {
+                var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Name == type);
+                if (clientType != null)
+                {
+                    var clientSites = _clientDataProvider.GetUserClientSites(type, searchTerm);
+
+
+                    return new JsonResult(clientSites.Select(z => new
+                    {
+                        z.Id,
+                        ClientTypeName = z.ClientType.Name,
+                        ClientSiteName = z.Name,
+                        HasSettings = true
+                    })) ;
+
+                }
+                else
+                {
+                    var clientSites = _clientDataProvider.GetUserClientSites(type, searchTerm);
+                    return new JsonResult(clientSites.Select(z => new
+                    {
+                        z.Id,
+                        ClientTypeName = z.ClientType.Name,
+                        ClientSiteName = z.Name,
+                        HasSettings = true
+                    }));
+                }
+            }
+            return new JsonResult(new { });
+        }
+
+
+        public JsonResult OnPostSaveSiteIdForRcLogBook(int id)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.SaveClientSiteForRcLogBook(id);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message });
+        }
+
+        public JsonResult OnGetClientSiteForRcLogBook()
+        {
+            var clientSite = _clientDataProvider.GetClientSiteForRcLogBook();
+            return new JsonResult(clientSite.Select(z => new
+            {
+                z.Id,
+                ClientTypeName = z.ClientType.Name,
+                ClientSiteName = z.Name,
+                HasSettings = true
+            }));
+           
+        }
     }
 }

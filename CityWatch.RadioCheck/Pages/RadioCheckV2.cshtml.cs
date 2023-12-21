@@ -196,6 +196,8 @@ namespace CityWatch.Web.Pages.Radio
             var message = "success";
             try
             {
+
+              
                 _guardLogDataProvider.SaveClientSiteRadioCheckNew(new ClientSiteRadioCheck()
                 {
                     ClientSiteId = clientSiteId,
@@ -205,6 +207,9 @@ namespace CityWatch.Web.Pages.Radio
                     Active = active,
                     RadioCheckStatusId = statusId,
                 });
+
+                var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
+                _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(loginguardid, guardId, null,checkedStatus, IrEntryType.Notification,2);
             }
             catch (Exception ex)
             {
@@ -256,6 +261,9 @@ namespace CityWatch.Web.Pages.Radio
                         };
                         _guardLogDataProvider.SaveGuardLog(guardLog);
                     }
+
+                    var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
+                    _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(loginguardid, 0, Subject, Notifications, IrEntryType.Alarm, 1);
 
                 }
                 if (checkedSiteEmail == true)
@@ -475,10 +483,16 @@ namespace CityWatch.Web.Pages.Radio
                         LogBookDetails(item.Id, Notifications, Subject);
 
                     }
+                    /* log book entry to citywtch control room */
+                    var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
+                    _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(loginguardid, 0, Subject, Notifications, IrEntryType.Alarm,1);
                     foreach (var item in clientSitesState)
                     {
                         EmailSender(item.SiteEmail, item.Id, Subject, Notifications);
                     }
+                  
+
+
                 }
                 if (chkClientType == true)
                 {
@@ -491,10 +505,14 @@ namespace CityWatch.Web.Pages.Radio
 
 
                         }
+                        /* log book entry to citywtch control room */
+                        var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
+                        _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(loginguardid, 0, Subject, Notifications, IrEntryType.Alarm,1);
                         foreach (var clientSiteTypeID in clientSitesClientType)
                         {
                             EmailSender(clientSiteTypeID.SiteEmail, clientSiteTypeID.Id, Subject, Notifications);
                         }
+                       
                     }
                     else
                     {
@@ -502,13 +520,15 @@ namespace CityWatch.Web.Pages.Radio
                         foreach (var clientSiteTypeID in clientSitesClientType)
                         {
                             LogBookDetails(clientSiteTypeID.Id, Notifications, Subject);
-
-
                         }
+                        /* log book entry to citywtch control room */
+                        var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
+                        _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(loginguardid, 0, Subject, Notifications, IrEntryType.Alarm, 1);
                         foreach (var clientSiteTypeID in clientSitesClientType)
                         {
                             EmailSender(clientSiteTypeID.SiteEmail, clientSiteTypeID.Id, Subject, Notifications);
                         }
+                       
                     }
                 }
                 if (chkNationality == true)
@@ -519,6 +539,9 @@ namespace CityWatch.Web.Pages.Radio
                         LogBookDetails(itemAll.Id, Notifications, Subject);
 
                     }
+                    /* log book entry to citywtch control room */
+                    var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
+                    _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(loginguardid, 0, Subject, Notifications, IrEntryType.Alarm, 1);
                     foreach (var itemAll in clientsiteIDNationality)
                     {
                         EmailSender(itemAll.SiteEmail, itemAll.Id, Subject, Notifications);

@@ -1,8 +1,10 @@
 ﻿using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
+using iText.Commons.Actions.Contexts;
 using iText.Layout.Element;
 using iText.StyledXmlParser.Jsoup.Safety;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Org.BouncyCastle.Utilities;
@@ -114,6 +116,12 @@ namespace CityWatch.Data.Providers
         //to get incident reports-start-jisha
         public List<IncidentReport> GetIncidentReports(DateTime date, int clientSiteId);
         //to get incident reports-end-jisha
+
+        List<SelectListItem> GetUserClientTypesHavingAccess(int? userId);
+        void SaveClientSiteForRcLogBook(int clientSiteId);
+        List<ClientSite> GetClientSiteForRcLogBook();
+
+
 
     }
 
@@ -1008,7 +1016,7 @@ namespace CityWatch.Data.Providers
             try
             {
                 var IncidentReportsPlatesLoaded = _context.IncidentReportsPlatesLoaded
-                .Where(z => z.LogId == userId && z.IncidentReportId == 0 ).ToList();
+                .Where(z => z.LogId == userId && z.IncidentReportId == 0).ToList();
                 if (IncidentReportsPlatesLoaded.Count != 0)
                 {
                     _context.IncidentReportsPlatesLoaded.RemoveRange(IncidentReportsPlatesLoaded);
@@ -1126,7 +1134,7 @@ namespace CityWatch.Data.Providers
                     Name = radioCheckStatus.Name,
                     ReferenceNo = radioCheckStatus.ReferenceNo,
                     RadioCheckStatusColorId = radioCheckStatus.RadioCheckStatusColorId,
-                    RadioCheckStatusColorName=radioCheckStatus.RadioCheckStatusColorName,
+                    RadioCheckStatusColorName = radioCheckStatus.RadioCheckStatusColorName,
                 };
                 _context.RadioCheckStatus.Add(radionew);
             }
@@ -1242,6 +1250,80 @@ namespace CityWatch.Data.Providers
         }
         //to add functions for Calendar events -end
 
+
+        public List<SelectListItem> GetUserClientTypesHavingAccess(int? userId)
+        {
+            var items = new List<SelectListItem>() { new SelectListItem("Select", "", true) };
+            var clientTypes = _context.ClientTypes.OrderBy(x => x.Name).ToList();
+            if (userId == null)
+            {
+
+
+                foreach (var item in clientTypes)
+                {
+                    items.Add(new SelectListItem(item.Name, item.Name));
+                }
+            }
+            else
+            {
+                var allUserAccess = _context.UserClientSiteAccess
+                    .Where(x => !userId.HasValue || userId.HasValue && x.UserId == userId)
+                    .Include(x => x.ClientSite)
+                    .Include(x => x.ClientSite.ClientType)
+                    .Include(x => x.User)
+                    .ToList();
+                var clientTypeIds = allUserAccess.Select(x => x.ClientSite.TypeId).Distinct().ToList();
+                var temp = clientTypes.Where(x => clientTypeIds.Contains(x.Id)).ToList();
+                foreach (var item in temp)
+                {
+                    items.Add(new SelectListItem(item.Name, item.Name));
+                }
+
+            }
+
+            return items;
+        }
+
+
+        public void SaveClientSiteForRcLogBook(int clientSiteId)
+        {
+            if (clientSiteId == null)
+                throw new ArgumentNullException();
+
+            if (clientSiteId != 0)
+            {
+                /* remove the old site id and save new */
+                var alreadyExistingSite = _context.RadioCheckLogbookSiteDetails.ToList();
+                _context.RemoveRange(alreadyExistingSite);
+                _context.SaveChanges();
+                _context.RadioCheckLogbookSiteDetails.Add(new RadioCheckLogbookSiteDetails() { ClientSiteId = clientSiteId, CrDate = DateTime.Today });
+                _context.SaveChanges();
+            }
+
+
+        }
+
+        public List<ClientSite> GetClientSiteForRcLogBook()
+        {
+            var Clisite = new  List<ClientSite>();
+            var alreadyExistingSite = _context.RadioCheckLogbookSiteDetails.ToList();
+            if (alreadyExistingSite.Count != 0)
+            {
+                Clisite = _context.ClientSites
+                .Where(x => x.Id == alreadyExistingSite.FirstOrDefault().ClientSiteId)
+                .Include(x => x.ClientType)
+                .OrderBy(x => x.ClientType.Name)
+                .ThenBy(x => x.Name)
+                .ToList();
+
+            }
+            return Clisite;
+
+
+
+        }
+
+
         //to get incident reports-start-jisha
         public List<IncidentReport> GetIncidentReports(DateTime date, int clientSiteId)
         {
@@ -1251,5 +1333,8 @@ namespace CityWatch.Data.Providers
                 .ToList();
         }
         //to get incident reports-end-jisha
+
     }
+
+
 }
