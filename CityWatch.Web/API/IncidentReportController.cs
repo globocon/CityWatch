@@ -76,6 +76,18 @@ namespace CityWatch.Web.API
                     var deltas = CalculateLogTimeDeltas(guardLogs.Select(z => z.EventDateTime).OrderBy(z => z));
                     isAcceptableLogFreq = deltas.All(z => z.TotalMinutes < 120);
                 }
+                //if keyvehicle log -start
+                else
+                {
+                    var keylogBook = _clientDataProvider.GetClientSiteLogBook(siteId, LogBookType.VehicleAndKeyLog, date);
+                    if (keylogBook != null)
+                    {
+                        var vehicleLogs = _guardLogDataProvider.GetKeyVehicleLogs(keylogBook.Id);
+                        var deltas = CalculateLogTimeDeltas(vehicleLogs.Select(z => Convert.ToDateTime(z.EntryTime)).OrderBy(z => z));
+                        isAcceptableLogFreq = deltas.All(z => z.TotalMinutes < 120);
+                    }
+                }
+                //if keyvehicle log -end
                 dailyGuardLogFrequency.Add(date, isAcceptableLogFreq);
             }
 
