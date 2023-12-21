@@ -77,7 +77,10 @@
             @RenderBody()
         </main>
     </div>
-   
+    @if (IsSectionDefined("LiveEvents"))
+    {
+        @RenderSection("LiveEvents")
+    }
     <div class="container d-flex flex-column flex-md-row pb-5">
         @if (IsSectionDefined("ProductLogo"))
         {
