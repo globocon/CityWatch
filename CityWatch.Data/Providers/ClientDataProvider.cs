@@ -113,6 +113,9 @@ namespace CityWatch.Data.Providers
         void SaveLiveEvents(BroadcastBannerLiveEvents liveEvents);
         void DeleteLiveEvents(int id);
         //to add functions for Live events -end
+        //to get incident reports-start-jisha
+        public List<IncidentReport> GetIncidentReports(DateTime date, int clientSiteId);
+        //to get incident reports-end-jisha
 
         List<SelectListItem> GetUserClientTypesHavingAccess(int? userId);
         void SaveClientSiteForRcLogBook(int clientSiteId);
@@ -1319,6 +1322,17 @@ namespace CityWatch.Data.Providers
 
 
         }
+
+
+        //to get incident reports-start-jisha
+        public List<IncidentReport> GetIncidentReports(DateTime date, int clientSiteId)
+        {
+            return _context.IncidentReports
+                .Where(x => x.ClientSiteId.GetValueOrDefault() == clientSiteId &&
+                            x.CreatedOn.Date == date.Date)
+                .ToList();
+        }
+        //to get incident reports-end-jisha
 
     }
 

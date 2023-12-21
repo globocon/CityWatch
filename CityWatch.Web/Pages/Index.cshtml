@@ -18,7 +18,7 @@
     var LiveEvents = _configDataProvider.GetBroadcastLiveEventsByDate();
     @if (LiveEvents.Count() > 0)
     {
-        <div class="form-row">
+       @section LiveEvents {<div class="container d-flex flex-column flex-md-row pb-1">
             <div class=" form-group col-md-2 p-0">
                 <div class="container marquee-style" id="divLiveEvents">
                     <label class="lblclass">Live Events:</label>
@@ -34,6 +34,7 @@
             </div>
             </div>
         </div>
+    }
     }
    
         
@@ -113,7 +114,7 @@
             }
                 @if (CalendarEvents.Count() > 1)
                 {
-                <a href="#calendarEventModal" id="btncalendarEventModal" class="text-center text-md-left ml-2 mt-2">..Expand All</a>
+                <a href="#calendarEventModal" id="btncalendarEventModal" class="text-center text-md-left ml-2 mt-2">..<i class="fa fa-caret-down" aria-hidden="true" style="font-size:25px"></i></a>
                 }
             
         }

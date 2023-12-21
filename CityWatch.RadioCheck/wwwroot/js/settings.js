@@ -11,7 +11,7 @@ gridRadioCheckStatusTypeSettings = $('#radiocheck_status_type_settings').grid({
     primaryKey: 'id',
     inlineEditing: { mode: 'command' },
     columns: [
-        { width: 130, field: 'referenceNo', title: 'Reference No' },
+        { width: 130, field: 'referenceNo', title: 'Reference No',editor: true },
         { width: 500, field: 'name', title: 'Name', editor: true },
         { width: 200, field: 'radioCheckStatusColorName', title: 'Outcome', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=RadioCheckStatusColorCode', valueField: 'name', textField: 'name' } },
     ],
@@ -123,6 +123,7 @@ gridBroadCastBannerLiveEvents = $('#BroadCastBannerLiveEvents').grid({
 if (gridBroadCastBannerLiveEvents) {
     gridBroadCastBannerLiveEvents.on('rowDataChanged', function (e, id, record) {
         const data = $.extend(true, {}, record);
+        data.textMessage = data.textMessage.replace(/\s{2,}/g, ' ').trim();
         data.expiryDate = data.formattedExpiryDate;
         //data.radioCheckStatusColorId = !Number.isInteger(data.radioCheckStatusColorId) ? data.radioCheckStatusColorId.getValue() : data.radioCheckStatusColorId;
         const token = $('input[name="__RequestVerificationToken"]').val();
@@ -168,39 +169,39 @@ if (gridBroadCastBannerLiveEvents) {
 /*  broadcast calendar events-start*/
 let isBroadCastCalendareventsAdding = false;
 $('#add_calendar_events').on('click', function () {
+        if (isBroadCastCalendareventsAdding == true) {
+            alert('Unsaved changes in the grid. Refresh the page');
+        } else {
+            isBroadCastCalendareventsAdding = true;
+            gridBroadCastBannerCalendarEvents.addRow({
+                'id': -1
+            }).edit(-1);
+        }
+    });
+    let gridBroadCastBannerCalendarEvents;
+    gridBroadCastBannerCalendarEvents = $('#BroadCastBannerCalendarEvents').grid({
+        dataSource: '/Admin/Settings?handler=BroadcastCalendarEvents',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        inlineEditing: { mode: 'command' },
 
+        columns: [
+            { width: 130, field: 'id', title: 'Id', hidden: true },
+            { width: 100, field: 'referenceNo', title: 'Reference No', editor: true },
+            { width: 700, field: 'textMessage', title: 'Text Message', editor: true },
+            { width: 120, field: 'formattedStartDate', title: 'Start', type: 'date', format: 'dd-mmm-yyyy', editor: true },
+            { width: 120, field: 'formattedExpiryDate', title: 'Expiry', type: 'date', format: 'dd-mmm-yyyy', editor: true },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
 
-    if (isBroadCastCalendareventsAdding == true) {
-        alert('Unsaved changes in the grid. Refresh the page');
-    } else {
-        isBroadCastCalendareventsAdding = true;
-        gridBroadCastBannerCalendarEvents.addRow({
-            'id': -1
-        }).edit(-1);
-    }
-});
-let gridBroadCastBannerCalendarEvents;
-gridBroadCastBannerCalendarEvents = $('#BroadCastBannerCalendarEvents').grid({
-    dataSource: '/Admin/Settings?handler=BroadcastCalendarEvents',
-    uiLibrary: 'bootstrap4',
-    iconsLibrary: 'fontawesome',
-    primaryKey: 'id',
-    inlineEditing: { mode: 'command' },
-
-    columns: [
-        { width: 130, field: 'id', title: 'Id', hidden: true },
-        { width: 100, field: 'referenceNo', title: 'Reference No' },
-        { width: 700, field: 'textMessage', title: 'Text Message', editor: true },
-        { width: 120, field: 'formattedStartDate', title: 'Start', type: 'date', format: 'dd-mmm-yyyy', editor: true },
-        { width: 120, field: 'formattedExpiryDate', title: 'Expiry', type: 'date', format: 'dd-mmm-yyyy', editor: true },
-    ],
-    initialized: function (e) {
-        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
-    }
-});
 if (gridBroadCastBannerCalendarEvents) {
     gridBroadCastBannerCalendarEvents.on('rowDataChanged', function (e, id, record) {
         const data = $.extend(true, {}, record);
+        data.textMessage = data.textMessage.replace(/\s{2,}/g, ' ').trim();
         data.startDate = data.formattedStartDate;
         data.expiryDate = data.formattedExpiryDate;
         //data.radioCheckStatusColorId = !Number.isInteger(data.radioCheckStatusColorId) ? data.radioCheckStatusColorId.getValue() : data.radioCheckStatusColorId;

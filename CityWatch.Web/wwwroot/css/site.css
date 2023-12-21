@@ -696,5 +696,16 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
 }
 
 /* for scroll events -end*/
+/*form trafiic lights-start*/
+.initial-call-colour {
+    background-color: #FCF3CF;
+}
+.entry-time-colour {
+    background-color: #A9DFBF;
+}
+.exit-time-colour {
+    background-color: #F5B7B1;
+}
+/*form trafiic lights-end*/
 
 
