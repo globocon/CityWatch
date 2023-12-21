@@ -368,7 +368,7 @@ namespace CityWatch.Data.Providers
                
             }
                 // return _context.RadioCheckStatus.ToList();
-            return radiocheckstatus;
+            return radiocheckstatus.OrderBy(x=>Convert.ToInt32(x.ReferenceNo)).ToList();
         }
         public int GetRadioCheckStatusCount()
         {
@@ -415,7 +415,7 @@ namespace CityWatch.Data.Providers
         }
         public List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEvents()
         {
-            return _context.BroadcastBannerCalendarEvents.ToList();
+            return _context.BroadcastBannerCalendarEvents.OrderBy(x=>Convert.ToInt32(x.ReferenceNo)).ToList();
         }
         //broadcast banner calendar events-end
     }
