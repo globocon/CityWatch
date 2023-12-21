@@ -64,12 +64,12 @@ $(function () {
         return (
             '<table cellpadding="7" cellspacing="0"  border="0" style="padding-left:50px;">' +
             '<tr>' +
-            '<th colspan="4"><center>Trailers Rego or ISO</center></th>' +
-            '<th colspan="3"><center>Individual</center></th>' +
-            '<th rowspan="2"><center>Site POC</center></th>' +
-            '<th rowspan="2"><center>Site Location</center></th>' +
-            '<th rowspan="2"><center>Purpose Of Entry</center></th>' +
-            '<th colspan="3"><center>Weight</center></th>' +
+            '<th colspan="4" style="background-color:#EAF0ED"><center>Trailers Rego or ISO</center></th>' +
+            '<th colspan="3" style="background-color:#EAF0ED"><center>Individual</center></th>' +
+            '<th rowspan="2" style="background-color:#EAF0ED"><center>Site POC</center></th>' +
+            '<th rowspan="2" style="background-color:#EAF0ED"><center>Site Location</center></th>' +
+            '<th rowspan="2" style="background-color:#EAF0ED"><center>Purpose Of Entry</center></th>' +
+            '<th colspan="3" style="background-color:#EAF0ED"><center>Weight</center></th>' +
             '</tr>' +
             '<tr>' +
             '<th>1</th>' +
@@ -178,17 +178,77 @@ $(function () {
                     '<button id="btnDeleteVkl" class="btn btn-outline-danger mr-2 mt-1"><i class="fa fa-trash mr-2"></i>Delete</button>',
             }],
             'createdRow': function (row, data, index) {
-                if (data.initialCallTime !== null) {
+                if (data.detail.initialCallTime !== null) {
                     $('td', row).eq(1).html(convertDateTimeString(data.detail.initialCallTime));
+                    /*to display the color yellow-start*/
+                    if (data.detail.entryTime == null && data.detail.sentInTime == null && data.detail.exitTime == null) {
+                        $('td', row).eq(1).addClass('initial-call-colour');
+                        $('td', row).eq(2).addClass('initial-call-colour');
+                        $('td', row).eq(3).addClass('initial-call-colour');
+                        $('td', row).eq(4).addClass('initial-call-colour');
+                        $('td', row).eq(5).addClass('initial-call-colour');
+                        $('td', row).eq(6).addClass('initial-call-colour');
+                        $('td', row).eq(7).addClass('initial-call-colour');
+                        $('td', row).eq(8).addClass('initial-call-colour');
+                        $('td', row).eq(9).addClass('initial-call-colour');
+                        $('td', row).eq(10).addClass('initial-call-colour');
+                        $('td', row).eq(11).addClass('initial-call-colour');
+                    }
+                    /*to display the color yellow-end*/
                 }
-                if (data.entryTime !== null) {
+                if (data.detail.entryTime !== null) {
                     $('td', row).eq(2).html(convertDateTimeString(data.detail.entryTime));
+                    /*to display the color green for entry time-start*/
+                    if (data.detail.sentInTime == null && data.detail.exitTime == null ) {
+                        $('td', row).eq(1).addClass('entry-time-colour');
+                        $('td', row).eq(2).addClass('entry-time-colour');
+                        $('td', row).eq(3).addClass('entry-time-colour');
+                        $('td', row).eq(4).addClass('entry-time-colour');
+                        $('td', row).eq(5).addClass('entry-time-colour');
+                        $('td', row).eq(6).addClass('entry-time-colour');
+                        $('td', row).eq(7).addClass('entry-time-colour');
+                        $('td', row).eq(8).addClass('entry-time-colour');
+                        $('td', row).eq(9).addClass('entry-time-colour');
+                        $('td', row).eq(10).addClass('entry-time-colour');
+                        $('td', row).eq(11).addClass('entry-time-colour');
+                    }
+                    /*to display the color green for entry time-end*/
                 }
-                if (data.sentInTime !== null) {
+                if (data.detail.sentInTime !== null) {
                     $('td', row).eq(3).html(convertDateTimeString(data.detail.sentInTime));
+                    /*to display the color green for sent in time-start*/
+                    if (data.detail.exitTime == null) {
+                        $('td', row).eq(1).addClass('entry-time-colour');
+                        $('td', row).eq(2).addClass('entry-time-colour');
+                        $('td', row).eq(3).addClass('entry-time-colour');
+                        $('td', row).eq(4).addClass('entry-time-colour');
+                        $('td', row).eq(5).addClass('entry-time-colour');
+                        $('td', row).eq(6).addClass('entry-time-colour');
+                        $('td', row).eq(7).addClass('entry-time-colour');
+                        $('td', row).eq(8).addClass('entry-time-colour');
+                        $('td', row).eq(9).addClass('entry-time-colour');
+                        $('td', row).eq(10).addClass('entry-time-colour');
+                        $('td', row).eq(11).addClass('entry-time-colour');
+                    }
+                    /*to display the color green for sent in time-end*/
                 }
-                if (data.exitTime !== null) {
+                if (data.detail.exitTime !== null) {
                     $('td', row).eq(4).html(convertDateTimeString(data.detail.exitTime));
+                    /*to display the color green for exit  time-start*/
+                    
+                    $('td', row).eq(1).addClass('exit-time-colour');
+                    $('td', row).eq(2).addClass('exit-time-colour');
+                    $('td', row).eq(3).addClass('exit-time-colour');
+                    $('td', row).eq(4).addClass('exit-time-colour');
+                    $('td', row).eq(5).addClass('exit-time-colour');
+                    $('td', row).eq(6).addClass('exit-time-colour');
+                    $('td', row).eq(7).addClass('exit-time-colour');
+                    $('td', row).eq(8).addClass('exit-time-colour');
+                    $('td', row).eq(9).addClass('exit-time-colour');
+                    $('td', row).eq(10).addClass('exit-time-colour');
+                    $('td', row).eq(11).addClass('exit-time-colour');
+                    
+                    /*to display the color green for exit  time-end*/
                 }
                 if (data.detail.exitTime == null) {
                     $('td', row).eq(4).html('<button type="button" class="btn btn-success btn-exit-quick">E</button> ');
