@@ -1,6 +1,6 @@
 let nIntervId;
 const duration = 60 * 3;
-
+var isPaused = false;
 window.onload = function () {
     if (document.querySelector('#clockRefresh')) {
         startClock();
@@ -12,25 +12,29 @@ function startClock() {
     display = document.querySelector('#clockRefresh');
     if (!nIntervId) {
         nIntervId = setInterval(function () {
-            minutes = parseInt(timer / 60, 10);
-            seconds = parseInt(timer % 60, 10);
 
-            minutes = minutes < 10 ? "0" + minutes : minutes;
-            seconds = seconds < 10 ? "0" + seconds : seconds;
+            if (!isPaused) {
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
 
-            display.textContent = minutes + " min" + " " + seconds + " sec";
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
 
-            if (--timer < 0) {
-                location.reload();
-                //$.ajax({
-                //    url: '/Radio/Check?handler=UpdateLatestActivityStatus',
-                //    type: 'POST',
-                //    dataType: 'json',
-                //    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                //}).done(function () {
-                //    clientSiteActivityStatus.ajax.reload();
-                //    timer = duration;
-                //});
+                display.textContent = minutes + " min" + " " + seconds + " sec";
+
+                if (--timer < 0) {
+                    location.reload();
+                    //$.ajax({
+                    //    url: '/Radio/Check?handler=UpdateLatestActivityStatus',
+                    //    type: 'POST',
+                    //    dataType: 'json',
+                    //    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                    //}).done(function () {
+                    //    clientSiteActivityStatus.ajax.reload();
+                    //    timer = duration;
+                    //});
+                }
+
             }
         }, 1000);
     }

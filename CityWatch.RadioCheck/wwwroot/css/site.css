@@ -507,6 +507,14 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
     transform: rotate(90deg);
 }
 
+#scrollableDiv {
+    width: 100%;
+    height: 400px;
+    overflow: auto; /* This property enables the scrollbar when content overflows */
+    border: 1px solid #ccc;
+    padding: 10px;
+}
+
 /* Dark Mode Change 20/09/2023 Start*/
 .dark-mode {
     background-color: #333;

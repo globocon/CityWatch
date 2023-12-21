@@ -76,5 +76,7 @@ namespace CityWatch.Data
         public DbSet<BroadcastBannerLiveEvents> BroadcastBannerLiveEvents { get; set; }
         public DbSet<BroadcastBannerCalendarEvents> BroadcastBannerCalendarEvents { get; set; }
 
+        public DbSet<RadioCheckLogbookSiteDetails> RadioCheckLogbookSiteDetails { get; set; }
+
     }
 }

@@ -1,4 +1,5 @@
-﻿using CityWatch.Data.Models;
+﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Models;
 using DocumentFormat.OpenXml.Office.CustomUI;
@@ -932,6 +933,7 @@ namespace CityWatch.Web.Services
         {
             if (!IsClientSiteDuressEnabled(clientSiteId))
             {
+                _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(guardId, guardId, null, "Duress Alarm Activated", IrEntryType.Alarm, 1);
                 _guardLogDataProvider.SaveClientSiteDuress(clientSiteId, guardId);
                 _guardLogDataProvider.SaveGuardLog(new GuardLog()
                 {
@@ -942,6 +944,8 @@ namespace CityWatch.Web.Services
                     ClientSiteLogBookId = logBookId,
                     GuardLoginId = guardLoginId,
                 });
+
+               
             }
         }
 

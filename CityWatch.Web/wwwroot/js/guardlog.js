@@ -568,7 +568,7 @@
                 { field: 'clientSiteId', hidden: true },
                 { field: 'eventDateTime', title: 'Time', width: 50, renderer: function (value, record) { return renderTime(value, record, false); } },
                 { field: 'notes', title: 'Event / Notes', width: 450, editor: logBookNotesEditor, renderer: renderLogBookNotes },
-                { field: 'guardInitials', title: 'Guard Initials', width: 50, renderer: function (value, record) { return record.guardLogin ? (record.irEntryType==3? '': record.guardLogin.guard.initial) : ''; } },
+                { field: 'guardInitials', title: 'Guard Initials', width: 50, renderer: function (value, record) { return record.guardLogin ?  record.guardLogin.guard.initial : ''; } },
                 { width: 75, renderer: renderDailyLogManagement }
             ]
         };
@@ -2995,7 +2995,7 @@
     /*for pushing notifications from the control room - start*/
     $('#pushNoTificationsGuardModal').on('shown.bs.modal', function (event) {
 
-
+        isPaused = true;
 
         const button = $(event.relatedTarget);
         const id = button.data('id');
@@ -3008,6 +3008,9 @@
         $('#IsAcknowledgeMessage').val($('#chkAcknowledgeMessage').is(':checked'));
         $('#IsMessageBack').val($('#chkMessageBack').is(':checked'));
      
+    });
+    $("#pushNoTificationsGuardModal").on("hidden.bs.modal", function () {
+        isPaused = false;
     });
     $('#chkAcknowledgeMessage').on('change', function () {
         const isChecked = $(this).is(':checked');

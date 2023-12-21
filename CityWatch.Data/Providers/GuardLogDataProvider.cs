@@ -162,6 +162,8 @@ namespace CityWatch.Data.Providers
 
         List<GuardLog> GetGuardLogswithKvLogData(int logBookId, DateTime logDate);
 
+        void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications, IrEntryType entryType, int type);
+
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -279,6 +281,8 @@ namespace CityWatch.Data.Providers
                 EnabledDate = DateTime.Today
             });
             _context.SaveChanges();
+
+           
         }
 
         public void SaveGuardLog(GuardLog guardLog)
@@ -2704,6 +2708,65 @@ namespace CityWatch.Data.Providers
 
 
             return results.ToList();
+        }
+
+        public void LogBookEntryForRcControlRoomMessages(int loginGuardId,int selectedGuardId, string subject,string notifications, IrEntryType entryType,int type)
+        {
+
+            var guardInitials = string.Empty;
+            if (selectedGuardId != 0)
+            {
+
+               guardInitials = _context.Guards.Where(x => x.Id == selectedGuardId).FirstOrDefault().Name+ " ["+  _context.Guards.Where(x => x.Id == selectedGuardId).FirstOrDefault().Initial + "]" ;
+
+            }
+            /* Rc Status update*/
+            if(type==2)
+            {
+                notifications = "Control Room Alert for " + guardInitials + ": "+ notifications;
+
+            }
+            var alreadyExistingSite = _context.RadioCheckLogbookSiteDetails.ToList();
+            var clientSiteForLogbook = _context.ClientSites.Where(x => x.Id == alreadyExistingSite.FirstOrDefault().ClientSiteId)
+                .Include(x => x.ClientType).OrderBy(x => x.ClientType.Name).ThenBy(x => x.Name).ToList();
+            if (clientSiteForLogbook.Count != 0)
+            {
+                var logBookId = GetClientSiteLogBookIdGloablmessage(clientSiteForLogbook.FirstOrDefault().Id, LogBookType.DailyGuardLog, DateTime.Today);
+
+                if (loginGuardId != 0)
+                {
+                    var guardLoginId = GetGuardLoginId(Convert.ToInt32(loginGuardId), DateTime.Today);
+                    var guardLog = new GuardLog()
+                    {
+                        ClientSiteLogBookId = logBookId,
+                        GuardLoginId = guardLoginId,
+                        EventDateTime = DateTime.Now,
+                        Notes = string.IsNullOrEmpty(subject) ? notifications : subject + " : " + notifications,
+                        IrEntryType = entryType,
+                        IsSystemEntry = true
+                       
+                    };
+                    SaveGuardLog(guardLog);
+                }
+                else
+                {
+                    var guardLog = new GuardLog()
+                    {
+                        ClientSiteLogBookId = logBookId,
+                        EventDateTime = DateTime.Now,
+                        Notes = string.IsNullOrEmpty(subject) ? notifications : subject+" : " + notifications,
+                        IrEntryType = entryType,
+                        IsSystemEntry = true
+                    };
+                    if (guardLog.ClientSiteLogBookId != 0)
+                    {
+                        SaveGuardLog(guardLog);
+                    }
+
+                }
+
+            }
+
         }
 
     }
