@@ -3236,7 +3236,85 @@ $(function () {
         });
     } 
 
+    /*to add do's and donts -start*/
+    let gridDosAndDontsFields;
+    let isDosandDontsFieldAdding = false;
+    gridDosAndDontsFields = $('#tbl_dosanddonts_fields').grid({
+        dataSource: '/Admin/GuardSettings?handler=DosandDontsFields',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        inlineEditing: { mode: 'command' },
+        columns: [
+            { field: 'name', title: 'Name', width: 200, editor: true },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+    $('#doanddontfields_types').on('change', function () {
+        const selKvlFieldTypeId = $('#doanddontfields_types').val();
+        gridDosAndDontsFields.clear();
+        gridDosAndDontsFields.reload({ typeId: selKvlFieldTypeId });
+    });
+    $('#add_dosanddonts_fields').on('click', function () {
+        const selFieldTypeId = $('#doanddontfields_types').val();
+        if (!selFieldTypeId) {
+            alert('Please select a field type to update');
+            return;
+        }
+        var rowCount = $('#tbl_dosanddonts_fields tr').length;
 
 
+        if (isDosandDontsFieldAdding) {
+            alert('Unsaved changes in the grid. Refresh the page');
+        } else {
+            isKvlFieldAdding = true;
+            gridDosAndDontsFields.addRow({
+                'id': -1,
+                'typeId': selFieldTypeId,
+                'name': '',
+            }).edit(-1);
+        }
+    });
+    if (gridDosAndDontsFields) {
+        gridDosAndDontsFields.on('rowDataChanged', function (e, id, record) {
+            const data = $.extend(true, {}, record);
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=SaveDosandDontsField',
+                data: { record: data },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.success) gridDosAndDontsFields.reload({ typeId: $('#doanddontfields_types').val() });
+                else alert(result.message);
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isDosandDontsFieldAdding)
+                    isDosandDontsFieldAdding = false;
+            });
+        });
+
+        gridDosAndDontsFields.on('rowRemoving', function (e, id, record) {
+            if (confirm('Are you sure want to delete this field?')) {
+                $.ajax({
+                    url: '/Admin/GuardSettings?handler=DeleteDosandDontsField',
+                    data: { id: record },
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (result) {
+                    if (result.success) gridDosAndDontsFields.reload({ typeId: $('#doanddontfields_types').val() });
+                    else alert(result.message);
+                }).fail(function () {
+                    console.log('error');
+                }).always(function () {
+                    if (isKvlFieldAdding)
+                        isKvlFieldAdding = false;
+                });
+            }
+        });
+    }
+    /*to add do's and donts -end*/
 
 });

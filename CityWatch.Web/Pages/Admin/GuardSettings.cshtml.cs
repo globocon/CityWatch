@@ -980,5 +980,45 @@ namespace CityWatch.Web.Pages.Admin
 
             return uploaded;
         }
+        //Dos and Donts-start
+        public JsonResult OnGetDosandDontsFields(int typeId)
+        {
+            return new JsonResult(_guardLogDataProvider.GetDosandDontsFields(typeId));
+        }
+
+        public JsonResult OnPostSaveDosandDontsField(DosAndDontsField record)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+           
+                    _guardLogDataProvider.SaveDosandDontsField(record);
+                
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnPostDeleteDosandDontsField(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _guardLogDataProvider.DeleteDosandDontsField(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        //Dos and Donts-end
     }
 }

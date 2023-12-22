@@ -20,6 +20,9 @@
         <li class="nav-item">
             <a class="nav-link" id="kvl-fields-tab" data-toggle="tab" href="#kvlFields" role="tab" aria-controls="kvlFields" aria-selected="false">Key & Vehicle Fields</a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link" id="dos-donts-tab" data-toggle="tab" href="#DosAndDonts" role="tab" aria-controls="DoandDont" aria-selected="false">Do's & Dont's</a>
+        </li>
     </ul>
     <div class="tab-content" id="guardSettingsTabContent">
         <div class="tab-pane fade show active py-3" id="guard" role="tabpanel" aria-labelledby="guard-tab">
@@ -101,6 +104,32 @@
                 </div>
                 <div class="col-md-12">
                     <table class="table" id="tbl_kvl_fields"></table>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade py-3" id="DosAndDonts" role="tabpanel" aria-labelledby="dos-donts-tab">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group row">
+                        <label class="col-form-label col-md-2">Select a Field Type</label>
+                        <div class="col-md-5">
+                            <select class="form-control" id="doanddontfields_types">
+                                <option value="">None</option>
+                                <option value="1">Do's</option>
+                                <option value="2">Dont's</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="text-right">
+                        <button class="btn btn-success mb-3" id="add_dosanddonts_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <table class="table" id="tbl_dosanddonts_fields"></table>
                 </div>
             </div>
         </div>

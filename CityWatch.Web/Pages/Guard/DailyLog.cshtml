@@ -1,4 +1,9 @@
 ﻿@page
+@using CityWatch.Data.Models;
+@using CityWatch.Data.Providers;
+@using CityWatch.Web.Services;
+@inject IViewDataService viewDataService
+@inject IGuardLogDataProvider guardmodel
 @model CityWatch.Web.Pages.Guard.DailyLogModel
 @{
     ViewData["Title"] = "CityWatch Security | Guard Daily Log";
@@ -182,7 +187,11 @@
                     <div class="col-md-6">
                         <h3 class="text-success">Do's</h3>
                         <ul class="list-unstyled">
-                            <li><i class="fa fa-check text-success mr-2"></i>Smart WAND checked and is online / no damage</li>
+                            @foreach (var item in @guardmodel.GetDosandDontsFields(1))
+                            {
+                                <li><i class="fa fa-check text-success mr-2"></i>@item.Name</li>
+                            }
+                            @*<li><i class="fa fa-check text-success mr-2"></i>Smart WAND checked and is online / no damage</li>
                             <li><i class="fa fa-check text-success mr-2"></i>PC / Laptop Checked; Dropbox checked / sync ok</li>
                             <li><i class="fa fa-check text-success mr-2"></i>CCTV checked and is working / active</li>
                             <li><i class="fa fa-check text-success mr-2"></i>All radios working and on charge</li>
@@ -193,20 +202,24 @@
                             <li><i class="fa fa-check text-success mr-2"></i>Fire panel + ASE + VESDA appears ok</li>
                             <li><i class="fa fa-check text-success mr-2"></i>Consumables such as Toilet paper / Fly Spray / Handwash etc all ok</li>
                             <li><i class="fa fa-check text-success mr-2"></i>Write in logbook within 2 hours of last entry</li>
-                            <li><i class="fa fa-check text-success mr-2"></i>Ensure entries are trueful</li>
+                            <li><i class="fa fa-check text-success mr-2"></i>Ensure entries are trueful</li>*@
                         </ul>
                     </div>
                     <div class="col-md-6">
                         <h3 class="text-danger">Dont's</h3>
                         <ul class="list-unstyled">
-                            <li><i class="fa fa-times text-danger mr-2"></i>I started my shift</li>
+                            @foreach (var item in @guardmodel.GetDosandDontsFields(2))
+                            {
+                                <li><i class="fa fa-times text-danger mr-2"></i>@item.Name</li>
+                            }
+                            @*<li><i class="fa fa-times text-danger mr-2"></i>I started my shift</li>
                             <li><i class="fa fa-times text-danger mr-2"></i>I ended my shift</li>
                             <li><i class="fa fa-times text-danger mr-2"></i>I went on patrol</li>
                             <li><i class="fa fa-times text-danger mr-2"></i>I completed an Incident Report</li>
                             <li><i class="fa fa-times text-danger mr-2"></i>Code 20 "Welfare" check</li>
                             <li><i class="fa fa-times text-danger mr-2"></i>Write in logbook longer than 2 hours after last entry</li>
                             <li><i class="fa fa-times text-danger mr-2"></i>Write any false or misleading entries</li>
-                            <li><i class="fa fa-times text-danger mr-2"></i>Mention you are doing a handover / next guard onsite</li>
+                            <li><i class="fa fa-times text-danger mr-2"></i>Mention you are doing a handover / next guard onsite</li>*@
                         </ul>
                     </div>
                 </div>
