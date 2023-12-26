@@ -571,14 +571,16 @@ $(function () {
             var imagePathdate = $('#summary_image_updatedRC').text().trim();
             $('#RCImageDateandTime').val(imagePathdate);
             $('#download_summary_imageRCList').attr('href', '/RCImage/' + summaryImage.fileName);
+            $("#download_summary_imageRCList").attr("target", "_blank");
             $('#download_summary_imageRCList').show();
             $('#delete_summary_image').show();
         }
     }
     $('#div_site_settings').on('click', '#delete_summary_imageRC', function () {
         if (confirm('Are you sure want to delete this file?')) {
+            var check = $('#RCImagepath').val();
             $.ajax({
-                url: '/Admin/Settings?handler=DeleteRCImage&scheduleId=' + $('#scheduleId').val(),
+                url: '/Admin/Settings?handler=DeleteRCImage&imageName=' + $('#RCImagepath').val(),
                 type: 'POST',
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function (data) {
@@ -591,10 +593,13 @@ $(function () {
         }
     });
     function clearSummaryImageRC() {
-        $('#summary_imageRC').html('-');
-        $('#summary_image_updatedRC').html('-');
-        $('#download_summary_imageRCList').hide();
-        //$('#delete_summary_image').hide();
+        $('#RCImagepath').val('');
+        $('#RCImageDateandTime').val('');
+        $('#summary_imageRC').html('');
+        $('#summary_image_updatedRC').html('');
+        $("#download_summary_imageRCList").removeAttr("href");
+        $('#download_summary_imageRCList').show();
+        $('#delete_summary_image').hide();
     }
     /*Rc Action List Image Upload stop*/
 
@@ -610,9 +615,19 @@ $(function () {
         }).done(function (result) {
             if (result.status)
                 alert('Saved successfully');
-            else
+            else {
                 alert(result.message);
-            $("#ClientSiteKpiRC_Id").val(result.id);
+                $("#ClientSiteKpiRC_Id").val(result.id);
+                $('#Site_Alarm_Keypad_code').val('');
+                $('#site_Physical_key').val('');
+                $('#Site_Combination_Look').val('');
+                $('#Action1').val('');
+                $('#Action2').val('');
+                $('#Action3').val('');
+                $('#Action4').val('');
+                $('#Action5').val('');
+                $('#userInput').val('');
+            }
            // $('#kpi-settings-modal').modal('hide');
             //gridClientSiteSettings.clear();
             //gridClientSiteSettings.reload({ type: $('#cs_client_type').val() });
@@ -1046,8 +1061,26 @@ $(function () {
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function (result) {
                 if (result.status) {
-                    $('#kpi-settings-modal').modal('hide');
-                   
+                    $('#Site_Alarm_Keypad_code').val('');
+                    $('#site_Physical_key').val('');
+                    $('#Site_Combination_Look').val('');
+                    $('#Action1').val('');
+                    $('#Action2').val('');
+                    $('#Action3').val('');
+                    $('#Action4').val('');
+                    $('#Action5').val('');
+                    $('#userInput').val('');
+                    $.ajax({
+                        url: '/Admin/Settings?handler=DeleteRCImage&scheduleId=' + $('#RCImagepath').val(),
+                        type: 'POST',
+                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                    }).done(function (data) {
+                        if (data.status) {
+                            clearSummaryImageRC();
+                        }
+                    }).fail(function () {
+                        console.log('error')
+                    });
                 }
                 else
                     alert(result.message);

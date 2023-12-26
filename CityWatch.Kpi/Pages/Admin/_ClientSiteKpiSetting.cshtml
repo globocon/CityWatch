@@ -492,10 +492,9 @@
         @*New Tab for Rc List start*@
         <div class="tab-pane" id="RcActionListSettings" role="tabpanel" aria-labelledby="contracted-manning-tab">
             <form id="frm_ActionList">
-                @{
-                    var RCList = Model.RCActionList.FirstOrDefault();
-                }
                 <br />
+
+                <h6>Site Alarm SOP's:</h6>
                 <table class="table table-bordered tbl-settings" id="tbl_summaryImage">
                     <thead>
                         <tr>
@@ -508,18 +507,18 @@
                     <tbody>
                         <tr>
                             @{
-                                if (RCList.Imagepath != null || RCList.Imagepath != "")
+                                if (Model.rclistKP.Imagepath != null || Model.rclistKP.Imagepath != "")
                                 {
-                                    <td class="align-middle" id="summary_imageRC">@RCList.Imagepath</td>
+                                    <td class="align-middle" id="summary_imageRC">@Model.rclistKP.Imagepath</td>
                                 }
                                 else
                                 {
                                     <td class="align-middle" id="summary_imageRC"></td>
                                 }
 
-                                if (RCList.DateandTimeUpdated != null || RCList.DateandTimeUpdated != "")
+                                if (Model.rclistKP.DateandTimeUpdated != null || Model.rclistKP.DateandTimeUpdated != "")
                                 {
-                                    <td class="align-middle" id="summary_image_updatedRC">@RCList.DateandTimeUpdated</td>
+                                    <td class="align-middle" id="summary_image_updatedRC">@Model.rclistKP.DateandTimeUpdated</td>
                                 }
                                 else
                                 {
@@ -528,98 +527,122 @@
                             }
                             <td class="text-center">
                                 <label class="btn btn-success mb-0">
-                                   
-                                        <i class="fa fa-upload mr-2"></i>Replace
-                                        <input type="file" id="upload_summary_imageRcList" accept=".jpg" hidden>
-                               
+
+                                    <i class="fa fa-upload mr-2"></i>Replace
+                                    <input type="file" id="upload_summary_imageRcList" accept=".jpg, .jpeg, .png, .bmp, .pdf,.docx" hidden>
+
                                 </label>
                                 @{
-                                    if (RCList.Imagepath != null || RCList.Imagepath != "")
+                                    if (Model.rclistKP.Imagepath != string.Empty)
                                     {
-                                        <a href="/RCImage/@RCList.Imagepath" target="_blank" class="btn btn-outline-primary" id="download_summary_imageRCList"><i class="fa fa-download mr-2"></i>Download</a>
+                                        <a href="/RCImage/@Model.rclistKP.Imagepath" target="_blank" class="btn btn-outline-primary" id="download_summary_imageRCList"><i class="fa fa-download mr-2"></i>Download</a>
                                     }
                                     else
                                     {
-                                        <a href="#" target="_blank" class="btn btn-outline-primary" id="download_summary_imageRCList"><i class="fa fa-download mr-2"></i>Download</a>
+                                        <a class="btn btn-outline-primary" id="download_summary_imageRCList"><i class="fa fa-download mr-2"></i>Download</a>
                                     }
                                 }
-                               
+
                                 <button class="btn btn-outline-primary btn-outline-danger" type="button" id="delete_summary_imageRC"><i class="fa fa-trash mr-2"></i>Delete</button>
                             </td>
                         </tr>
                     </tbody>
                 </table>
-          
-                
-            <div class="row col-md-12">
-            <div class="row col-md-7">
-                        <input type="hidden" id="RCImagepath" name="RCActionList.Imagepath">
-                        <input type="hidden" id="RCImageDateandTime" name="RCActionList.DateandTimeUpdated">
-                        <div class="form-group row">
-                            <label class="col-md-4 col-form-label">Site Alarm Keypad code</label>
-                            <div class="col-md-2">
-                                <input type="text" class="form-control" id="Site_Alarm_Keypad_code" name="RCActionList.SiteAlarmKeypadCode" value="@RCList.SiteAlarmKeypadCode">
-                            </div>
-                            <label class="col-md-2 col-form-label text-left">Action 1</label>
-                            <div class="col-md-3">
-                                <input type="text" class="form-control" id="Action1" name="RCActionList.Action1" value="@RCList.Action1">
-                            </div>
 
 
+
+                <div class="container">
+                    <div class="row">
+                        <div class="col ml-1 p-0">
+                            <h6>Site Access</h6>
                         </div>
-                        <div class="form-group row">
-                            <label class="col-md-4 col-form-label">site Physical key</label>
-                            <div class="col-md-2">
-                                <input type="text" class="form-control" id="site_Physical_key" name="RCActionList.Sitephysicalkey" value="@RCList.Sitephysicalkey">
-                            </div>
-                            <label class="col-md-2 col-form-label">Action 2</label>
-                            <div class="col-md-3">
-                                <input type="text" class="form-control" id="Action1" name="RCActionList.Action2">
-                            </div>
-
+                        <div class="col-6" style="padding-left: 44px;">
+                            <h6>Alarm Response</h6>
                         </div>
-                        <div class="form-group row">
-                            <label class="col-md-4 col-form-label">Site Combination Look</label>
-                            <div class="col-md-2">
-                                <input type="text" class="form-control" id="Site_Combination_Look" name="RCActionList.SiteCombinationLook" value="@RCList.SiteCombinationLook">
-                            </div>
-                            <label class="col-md-2 col-form-label">Action 3</label>
-                            <div class="col-md-3">
-                                <input type="text" class="form-control" id="Action1" name="RCActionList.Action3" value="@RCList.Action3">
-                            </div>
-
-                        </div>
-                        <div class="form-group row" style="padding-left: 317px;">
+                        <div class="col">
                          
-                            <label class="col-md-4 col-form-label">Action 4</label>
+                        </div>
+                    </div>
+                    
+                </div>
+                <br />
+                <div class="row col-md-12">
+                    <div class="row col-md-9">
+                        <input type="hidden" id="RCImagepath" name="RCActionList.Imagepath" value="@Model.rclistKP.Imagepath">
+                        <input type="hidden" id="RCImageDateandTime" name="RCActionList.DateandTimeUpdated">
+
+                        <div class="form-group row ml-2">
+                            <label class="col-md-3 form-label text-left pl-0">Site Alarm Keypad Code</label>
+                            <div class="col-md-2">
+                                <input type="text" class="form-control" id="Site_Alarm_Keypad_code" name="RCActionList.SiteAlarmKeypadCode" value="@Model.rclistKP.SiteAlarmKeypadCode">
+                            </div>
+                            <label class="col-form-label text-left">Action 1</label>
                             <div class="col-md-6">
-                                <input type="text" class="form-control" id="Action4" name="RCActionList.Action4" value="@RCList.Action4">
+                                <input type="text" class="form-control" id="Action1" name="RCActionList.Action1" value="@Model.rclistKP.Action1">
+                            </div>
+                        </div>
+                        <div class="form-group row ml-2">
+                            <label class="col-md-3 form-label text-left pl-0" style="padding-right: 56px;">Site Physical Key</label>
+                            <div class="col-md-2">
+                                <input type="text" class="form-control" id="site_Physical_key" name="RCActionList.Sitephysicalkey" value="@Model.rclistKP.Sitephysicalkey">
+                            </div>
+                            <label class="col-form-label text-left">Action 2</label>
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" id="Action2" name="RCActionList.Action2" value="@Model.rclistKP.Action2">
                             </div>
 
                         </div>
-                        <div class="form-group row" style="padding-left: 317px;">
-
-                            <label class="col-md-4 col-form-label">Action 5</label>
+                        <div class="form-group row row ml-2">
+                            <label class="col-md-3 form-label text-left pl-0">Site Combination Look</label>
+                            <div class="col-md-2">
+                                <input type="text" class="form-control" id="Site_Combination_Look" name="RCActionList.SiteCombinationLook" value="@Model.rclistKP.SiteCombinationLook">
+                            </div>
+                            <label class="col-form-label text-left">Action 3</label>
                             <div class="col-md-6">
-                                <input type="text" class="form-control" id="Action5" name="RCActionList.Action5" value="@RCList.Action5">
+                                <input type="text" class="form-control" id="Action3" name="RCActionList.Action3" value="@Model.rclistKP.Action3">
                             </div>
 
                         </div>
-            </div>
-                    <div class="form-group  col-md-5">
-                        <label class="col-form-label">Comments for Control room operator</label>
-                        <textarea id="userInput" name="RCActionList.ControlRoomOperator" rows="4" cols="50">
-                            @RCList.ControlRoomOperator
-             </textarea>
-                        <input type="hidden" name="RCActionList.Id" id="RCList_Id" value="@RCList.Id" />
+
+                        <div class="form-group row row ml-2">
+                            <label class="col-md-3 form-label text-left pl-0" style="visibility:hidden">Site Combination Look</label>
+                            <div class="col-md-2">
+                                <input type="text" class="form-control" style="visibility:hidden">
+                            </div>
+                            <label class="col-form-label text-left">Action 4</label>
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" id="Action4" name="RCActionList.Action4" value="@Model.rclistKP.Action4">
+                            </div>
+
+                        </div>
+
+                        <div class="form-group row row ml-2">
+                            <label class="col-md-3 form-label text-left pl-0" style="visibility:hidden">Site Combination Look</label>
+                            <div class="col-md-2">
+                                <input type="text" class="form-control" style="visibility:hidden">
+                            </div>
+                            <label class="col-form-label text-left">Action 5</label>
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" id="Action5" name="RCActionList.Action5" value="@Model.rclistKP.Action5">
+                            </div>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="form-group  col-md-3 p-0">
+                        <label class="col-form-label">Comments for Control Room Operator</label>
+                        <textarea id="userInput" name="RCActionList.ControlRoomOperator" rows="4" cols="35">@Model.rclistKP.ControlRoomOperator</textarea>
+                        <input type="hidden" name="RCActionList.Id" id="RCList_Id" value="@Model.rclistKP.Id" />
                         <input type="hidden" name="RCActionList.SettingsId" id="RCList_SettingsId" value="@Model.rclistKP.SettingsId" />
                         <input type="hidden" name="RCActionList.SettingsId" id="RCList_SettingsId" value="@Model.rclistKP.SiteAlarmKeypadCode" />
                     </div>
-                           
                 </div>
-                  </form>
+
+            </form>
             <button type="button" class="btn btn-outline-danger mr-2" id="delete_site_RCList"><i class="fa fa-trash mr-2"></i>Delete</button>
-            <button type="button" class="btn btn-success" id="save_site_RC"><i class="fa fa-save mr-2"></i>Save Notes</button>
+            <button type="button" class="btn btn-success" id="save_site_RC"><i class="fa fa-save mr-2"></i>Save Rc Action List</button>
         </div>
         @*New Tab for contracted-manning end*@
         <div class="tab-pane" id="notes" role="tabpanel" aria-labelledby="notes-tab">

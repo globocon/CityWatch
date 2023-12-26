@@ -106,6 +106,8 @@ namespace CityWatch.Data.Providers
 
         int RemoveIncidentReportsPlatesLoadedWithUserId(int? userId);
 
+        void RemoveRCList(int rcListId);
+
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -392,7 +394,7 @@ namespace CityWatch.Data.Providers
             return _context.RCActionList.SingleOrDefault(z => z.Id == id);
         }
 
-        
+
         public int SaveRCList(RCActionList RC)
         {
             if (RC.Id == 0)
@@ -419,6 +421,20 @@ namespace CityWatch.Data.Providers
             }
             _context.SaveChanges();
             return RC.Id;
+        }
+
+        public void RemoveRCList(int rcListId)
+        {
+
+            var RCToUpdate = _context.RCActionList.SingleOrDefault(z => z.Id == rcListId);
+            if (RCToUpdate != null)
+            {
+                _context.Remove(RCToUpdate);
+                _context.SaveChanges();
+            }
+
+
+           
         }
 
         public List<ClientSiteLogBook> GetClientSiteLogBooks()
@@ -1058,7 +1074,7 @@ namespace CityWatch.Data.Providers
             try
             {
                 var IncidentReportsPlatesLoaded = _context.IncidentReportsPlatesLoaded
-                .Where(z => z.LogId == userId && z.IncidentReportId == 0 ).ToList();
+                .Where(z => z.LogId == userId && z.IncidentReportId == 0).ToList();
                 if (IncidentReportsPlatesLoaded.Count != 0)
                 {
                     _context.IncidentReportsPlatesLoaded.RemoveRange(IncidentReportsPlatesLoaded);
@@ -1176,7 +1192,7 @@ namespace CityWatch.Data.Providers
                     Name = radioCheckStatus.Name,
                     ReferenceNo = radioCheckStatus.ReferenceNo,
                     RadioCheckStatusColorId = radioCheckStatus.RadioCheckStatusColorId,
-                    RadioCheckStatusColorName=radioCheckStatus.RadioCheckStatusColorName,
+                    RadioCheckStatusColorName = radioCheckStatus.RadioCheckStatusColorName,
                 };
                 _context.RadioCheckStatus.Add(radionew);
             }

@@ -432,7 +432,18 @@ namespace CityWatch.Kpi.Pages.Admin
             var id = -1;
             try
             {
-                id = _clientDataProvider.SaveRCList(rcActionList);
+
+                if (rcActionList.SettingsId != 0)
+                {
+                   
+                    id = _clientDataProvider.SaveRCList(rcActionList);
+
+                }
+                else
+                {
+                    status = false;
+                    message = "Please add site settings first";
+                }
             }
             catch (Exception ex)
             {
@@ -504,20 +515,22 @@ namespace CityWatch.Kpi.Pages.Admin
             var message = "Success";
             try
             {
-                var RCList = _clientDataProvider.GetClientSiteKpiRC(RCId);
-                if (RCList != null)
-                {
-                    RCList.SiteAlarmKeypadCode = string.Empty;
-                    RCList.Action1 = string.Empty;
-                    RCList.Sitephysicalkey = string.Empty;
-                    RCList.Action2 = string.Empty;
-                    RCList.SiteCombinationLook = string.Empty;
-                    RCList.Action3 = string.Empty;
-                    RCList.ControlRoomOperator = string.Empty;
-                    RCList.Action4 = string.Empty;
-                    RCList.Action5 = string.Empty;
-                    _clientDataProvider.SaveRCList(RCList);
-                }
+
+                _clientDataProvider.RemoveRCList(RCId);
+                //var RCList = _clientDataProvider.GetClientSiteKpiRC(RCId);
+                //if (RCList != null)
+                //{
+                //    RCList.SiteAlarmKeypadCode = string.Empty;
+                //    RCList.Action1 = string.Empty;
+                //    RCList.Sitephysicalkey = string.Empty;
+                //    RCList.Action2 = string.Empty;
+                //    RCList.SiteCombinationLook = string.Empty;
+                //    RCList.Action3 = string.Empty;
+                //    RCList.ControlRoomOperator = string.Empty;
+                //    RCList.Action4 = string.Empty;
+                //    RCList.Action5 = string.Empty;
+                //    _clientDataProvider.SaveRCList(RCList);
+                //}
             }
             catch (Exception ex)
             {
@@ -634,21 +647,21 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(new { status, message });
         }
 
-        public JsonResult OnPostDeleteRCImage(int scheduleId)
+        public JsonResult OnPostDeleteRCImage(string imageName)
         {
             var status = true;
             var message = "Success";
             try
             {
-                var summaryImage = _kpiSchedulesDataProvider.GetScheduleSummaryImage(scheduleId);
-                if (summaryImage != null)
+
+                if(!string.IsNullOrEmpty(imageName))
                 {
-                    var fileToDelete = Path.Combine(_webHostEnvironment.WebRootPath, "SummaryImage", summaryImage.FileName);
+                    var fileToDelete = Path.Combine(_webHostEnvironment.WebRootPath, "RCImage", imageName);
                     if (System.IO.File.Exists(fileToDelete))
                         System.IO.File.Delete(fileToDelete);
 
-                    
                 }
+              
             }
             catch (Exception ex)
             {

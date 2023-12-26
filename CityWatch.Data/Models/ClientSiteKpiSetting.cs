@@ -55,13 +55,28 @@ namespace CityWatch.Data.Models
         {
             get
             {
-               
-                return  new RCActionList()
+                if (Id != 0)
                 {
-                  
-                    SettingsId = Id,
-                    SiteAlarmKeypadCode= string.Empty
-                };
+                    var rcActionList = RCActionList.FirstOrDefault();
+                    return rcActionList ?? new RCActionList()
+                    {
+
+                        SettingsId = Id,
+                        SiteAlarmKeypadCode = string.Empty,
+                        Imagepath = string.Empty
+                    };
+                }
+                else
+                {
+                    return new RCActionList()
+                    {
+
+                        SettingsId = Id,
+                        SiteAlarmKeypadCode = string.Empty,
+                        Imagepath = string.Empty
+                    };
+
+                }
             }
         }
         public ClientSiteKpiNote NotesForThisMonth
