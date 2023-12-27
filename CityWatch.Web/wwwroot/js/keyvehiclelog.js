@@ -2517,7 +2517,7 @@ $(function () {
             '</table>'
         );
     }
-
+    
     let gridKeyVehicleLogProfiles = $('#tbl-audit-kvl-profiles').DataTable({
         paging: true,
         lengthMenu: [[75, 100, -1], [75, 100, "All"]],
@@ -2598,6 +2598,8 @@ $(function () {
         }
     });
 
+    
+
     $('#kvlProfileRegos').select2({
         theme: 'bootstrap4',
         ajax: {
@@ -2619,6 +2621,7 @@ $(function () {
         },
     }).on("select2:select", function (e) {
         gridKeyVehicleLogProfiles.ajax.reload();
+        loadKeyVehicleLogProfiles();
     });
     $('#kvlProfileIsPOIBDMSupplier').select2({
         theme: 'bootstrap4',
@@ -2641,6 +2644,7 @@ $(function () {
         },
     }).on("select2:select", function (e) {
         gridKeyVehicleLogProfiles.ajax.reload();
+        loadKeyVehicleLogProfiles();
     });
 
     $('#btn_update_kvl_profile').on('click', function () {
@@ -2882,7 +2886,9 @@ $(function () {
             }
         });
     });
-
+     //To Generate All PO of vehicle profile List start
+   
+      //To Generate All PO of vehicle profile List stop
     //To Generate All PO List start
     $('#btn_kvl_pdf_POIList').on('click', function () {
         $('#generate_kvl_docket_status').hide();
@@ -3235,6 +3241,48 @@ $(function () {
             }
         });
     } 
+
+    $('#key-vehicle-log-profile-tab').on('shown.bs.tab', function (e) {
+        
+        loadKeyVehicleLogProfiles();
+    });
+    function loadKeyVehicleLogProfiles() {
+        var ids = [];
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=KeyVehicleLogProfiles',
+            data: { truckRego: $('#kvlProfileRegos').find(':selected').val(), poi: 'POI' },
+            type: 'GET',
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            result.forEach(function (item) {
+                ids.push(item.detail.id);
+            });
+
+            $.ajax({
+                url: '/Guard/KeyVehicleLog?handler=GenerateManualDocketList',
+                data: {
+                    id: ids,
+                    option: null,
+                    otherReason: $('#otherReason').val(),
+                    stakeholderEmails: $('#stakeholderEmail').val(),
+                    clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),
+                    blankNoteOnOrOff: $('#IsBlankNoteOn').val(),
+                    ids: ids,
+                },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (response) {
+                if (response.statusCode === -1) {
+                    $('#generate_kvl_docket_status').html('<i class="fa fa-times-circle text-danger mr-2"></i> Error generating report').show();
+                } else {
+                    $('#btn_VisitorProfile_pdf_POIList').attr('href', response.fileName);
+                }
+            });
+        });
+    }
+
+    
 
 
 

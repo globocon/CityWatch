@@ -16,7 +16,7 @@
         <i class="fa fa-calendar mr-2 text-secondary" aria-hidden="true"></i><b>Log Book Date: </b>@DateTime.Today.ToString("dd MMM yyyy (dddd)").ToUpper()
     </div>
     <div class="col-md-4" style="padding-left:69px;">
-        <a class="btn btn-outline-primary" id="btn_kvl_pdf_POIList" target="_blank"><b>POI List</b></a>
+        
         <a class="btn btn-outline-primary" id="btn_kvl_pdf_download" href="SiteLogPdf?id=@Model.KeyVehicleLog.ClientSiteLogBookId&t=vl" target="_blank">Download PDF</a>
         <a class="btn btn-primary" href="#" id="keyvehicle_offduty">Off Duty</a>
     </div>
@@ -36,6 +36,7 @@
                                 <li class="d-flex flex-sm-row flex-column flex-sm-wrap">
                                     <span class="mr-1"><b>Client Site: </b>@Model.KeyVehicleLog.ClientSiteLogBook.ClientSite.Name | </span>
                                     <span><b>Client Type: </b>@Model.KeyVehicleLog.ClientSiteLogBook.ClientSite.ClientType.Name</span>
+                                    <a class="btn btn-outline-primary" id="btn_kvl_pdf_POIList" target="_blank"><b>POI List</b></a>
                                 </li>
                                 <li>
                                     <b>Address: </b>@(Model.KeyVehicleLog.ClientSiteLogBook.ClientSite.Address ?? "N/A")
