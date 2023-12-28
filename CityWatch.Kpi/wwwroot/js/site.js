@@ -509,7 +509,7 @@ $(function () {
             });
         }
     });
-    $('#div_site_settings').on('change', '#upload_summary_image', function () {
+    $('#upload_summary_image').on('change', function () {
         const file = $('#upload_summary_image').prop("files")[0];
         if (file) {
             const scheduleId = $("#scheduleId").val();
