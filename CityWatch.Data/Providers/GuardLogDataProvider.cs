@@ -164,7 +164,7 @@ namespace CityWatch.Data.Providers
 
         void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications, IrEntryType entryType, int type);
         //do's and donts-start
-         void SaveDosandDontsField(DosAndDontsField dosanddontsField);
+        void SaveDosandDontsField(DosAndDontsField dosanddontsField);
         void DeleteDosandDontsField(int id);
         List<DosAndDontsField> GetDosandDontsFields(int type);
         //do's and donts-end
@@ -287,7 +287,7 @@ namespace CityWatch.Data.Providers
             });
             _context.SaveChanges();
 
-           
+
         }
 
         public void SaveGuardLog(GuardLog guardLog)
@@ -1065,8 +1065,13 @@ namespace CityWatch.Data.Providers
             var allvalues = _context.RadioCheckListGuardData.FromSqlRaw($"EXEC sp_GetActiveGuardDetailsForRC").ToList();
             foreach (var item in allvalues)
             {
+                var phoneNumbers = _context.ClientSiteSmartWands
+               .Where(x => x.ClientSiteId == item.ClientSiteId)
+               .Select(x => x.PhoneNumber)
+               .ToList();
+                var phoneNumbersString = string.Join("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
 
-                item.SiteName = item.SiteName + " <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x => x.PhoneNumber).ToList()) + " <i class=\"fa fa-caret-down\" aria-hidden=\"true\" id=\"btnUpArrow\"></i> ";
+                item.SiteName = item.SiteName + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x => x.PhoneNumber).ToList()) + " <i class=\"fa fa-caret-down\" aria-hidden=\"true\" id=\"btnUpArrow\"></i> ";
                 item.Address = " <a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q=" + item.GPS + "\"target=\"_blank\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i> </a>" + item.Address + " <input type=\"hidden\" class=\"form-control\" value=\"" + item.GPS + "\" id=\"txtGPSActiveguards\" />";
             }
             return allvalues;
@@ -1082,12 +1087,12 @@ namespace CityWatch.Data.Providers
                 .Where(x => x.ClientSiteId == item.ClientSiteId)
                 .Select(x => x.PhoneNumber)
                 .ToList();
-                var phoneNumbersString = string.Join("&nbsp;&nbsp;&nbsp;&nbsp;", phoneNumbers);
-               
-                    item.SiteName = item.SiteName + "&nbsp;&nbsp;&nbsp;&nbsp <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + phoneNumbersString + " <i class=\"fa fa-caret-down\" aria-hidden=\"true\" id=\"btnUpArrow\"></i> ";
-               
-               
-               
+                var phoneNumbersString = string.Join("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
+
+                item.SiteName = item.SiteName + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + phoneNumbersString + " <i class=\"fa fa-caret-down\" aria-hidden=\"true\" id=\"btnUpArrow\"></i> ";
+
+
+
                 item.Address = " <a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q=" + item.GPS + "\"target=\"_blank\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i> </a>" + item.Address + " <input type=\"hidden\" class=\"form-control\" value=\"" + item.GPS + "\" id=\"txtGPSActiveguards\" />";
             }
             return allvalues;
@@ -1213,8 +1218,13 @@ namespace CityWatch.Data.Providers
             var allvalues = _context.RadioCheckListNotAvailableGuardData.FromSqlRaw($"EXEC sp_GetNotAvailableGuardDetailsForRC").ToList();
             foreach (var item in allvalues)
             {
+                var phoneNumbers = _context.ClientSiteSmartWands
+               .Where(x => x.ClientSiteId == item.ClientSiteId)
+               .Select(x => x.PhoneNumber)
+               .ToList();
+                var phoneNumbersString = string.Join("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
 
-                item.SiteName = item.SiteName + " <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x => x.PhoneNumber).ToList()) + " <i class=\"fa fa-caret-down\" aria-hidden=\"true\" id=\"btnUpArrow\"></i> ";
+                item.SiteName = item.SiteName + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x => x.PhoneNumber).ToList()) + " <i class=\"fa fa-caret-down\" aria-hidden=\"true\" id=\"btnUpArrow\"></i> ";
                 item.Address = " <a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q=" + item.GPS + "\"target=\"_blank\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i> </a>" + item.Address + " <input type=\"hidden\" class=\"form-control\" value=\"" + item.GPS + "\" id=\"txtGPSActiveguards\" />";
             }
             return allvalues;
@@ -2723,20 +2733,20 @@ namespace CityWatch.Data.Providers
             return results.ToList();
         }
 
-        public void LogBookEntryForRcControlRoomMessages(int loginGuardId,int selectedGuardId, string subject,string notifications, IrEntryType entryType,int type)
+        public void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications, IrEntryType entryType, int type)
         {
 
             var guardInitials = string.Empty;
             if (selectedGuardId != 0)
             {
 
-               guardInitials = _context.Guards.Where(x => x.Id == selectedGuardId).FirstOrDefault().Name+ " ["+  _context.Guards.Where(x => x.Id == selectedGuardId).FirstOrDefault().Initial + "]" ;
+                guardInitials = _context.Guards.Where(x => x.Id == selectedGuardId).FirstOrDefault().Name + " [" + _context.Guards.Where(x => x.Id == selectedGuardId).FirstOrDefault().Initial + "]";
 
             }
             /* Rc Status update*/
-            if(type==2)
+            if (type == 2)
             {
-                notifications = "Control Room Alert for " + guardInitials + ": "+ notifications;
+                notifications = "Control Room Alert for " + guardInitials + ": " + notifications;
 
             }
             var alreadyExistingSite = _context.RadioCheckLogbookSiteDetails.ToList();
@@ -2757,7 +2767,7 @@ namespace CityWatch.Data.Providers
                         Notes = string.IsNullOrEmpty(subject) ? notifications : subject + " : " + notifications,
                         IrEntryType = entryType,
                         IsSystemEntry = true
-                       
+
                     };
                     SaveGuardLog(guardLog);
                 }
@@ -2767,7 +2777,7 @@ namespace CityWatch.Data.Providers
                     {
                         ClientSiteLogBookId = logBookId,
                         EventDateTime = DateTime.Now,
-                        Notes = string.IsNullOrEmpty(subject) ? notifications : subject+" : " + notifications,
+                        Notes = string.IsNullOrEmpty(subject) ? notifications : subject + " : " + notifications,
                         IrEntryType = entryType,
                         IsSystemEntry = true
                     };
@@ -2812,7 +2822,7 @@ namespace CityWatch.Data.Providers
         {
             var DosAndDontsFieldToDelete = _context.DosAndDontsField.SingleOrDefault(x => x.Id == id);
             if (DosAndDontsFieldToDelete == null)
-                    throw new InvalidOperationException();
+                throw new InvalidOperationException();
 
             _context.Remove(DosAndDontsFieldToDelete);
             _context.SaveChanges();
