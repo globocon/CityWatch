@@ -2313,6 +2313,7 @@
             $cancelBtn = $('<button class="btn btn-outline-danger btn-dgl-edit mt-1" data-id="' + id + '"><i class="fa fa-times-circle"></i></button>').hide();
 
         $editBtn.on('click', function (e) {
+            isPaused = true;
             gridCustomFieldLogs.edit($(this).data('id'));
             $editBtn.hide();
             $updateBtn.show();
@@ -2320,6 +2321,7 @@
         });
 
         $updateBtn.on('click', function (e) {
+            isPaused = false;
             gridCustomFieldLogs.update($(this).data('id'));
             $editBtn.show();
             $updateBtn.hide();
@@ -2327,6 +2329,7 @@
         });
 
         $cancelBtn.on('click', function (e) {
+            isPaused = false;
             gridCustomFieldLogs.cancel($(this).data('id'));
             $editBtn.show();
             $updateBtn.hide();
