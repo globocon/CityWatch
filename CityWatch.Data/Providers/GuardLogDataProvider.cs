@@ -163,6 +163,11 @@ namespace CityWatch.Data.Providers
         List<GuardLog> GetGuardLogswithKvLogData(int logBookId, DateTime logDate);
 
         void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications, IrEntryType entryType, int type);
+        //do's and donts-start
+         void SaveDosandDontsField(DosAndDontsField dosanddontsField);
+        void DeleteDosandDontsField(int id);
+        List<DosAndDontsField> GetDosandDontsFields(int type);
+        //do's and donts-end
 
     }
 
@@ -2777,7 +2782,44 @@ namespace CityWatch.Data.Providers
 
         }
 
+        //do's and donts-start
+        public List<DosAndDontsField> GetDosandDontsFields(int type)
+        {
+            return _context.DosAndDontsField
+                .Where(x => x.TypeId == type)
+                .OrderBy(x => x.Id)
+                .ToList();
+        }
+        public void SaveDosandDontsField(DosAndDontsField dosanddontsField)
+        {
+            if (dosanddontsField.Id == -1)
+            {
+                dosanddontsField.Id = 0;
+                _context.DosAndDontsField.Add(dosanddontsField);
+            }
+            else
+            {
+                var dosanddontsFieldUpdate = _context.DosAndDontsField.SingleOrDefault(x => x.Id == dosanddontsField.Id);
+                if (dosanddontsFieldUpdate != null)
+                {
+                    dosanddontsFieldUpdate.Name = dosanddontsField.Name;
+                    dosanddontsFieldUpdate.TypeId = dosanddontsField.TypeId;
+                }
+            }
+            _context.SaveChanges();
+        }
+        public void DeleteDosandDontsField(int id)
+        {
+            var DosAndDontsFieldToDelete = _context.DosAndDontsField.SingleOrDefault(x => x.Id == id);
+            if (DosAndDontsFieldToDelete == null)
+                    throw new InvalidOperationException();
+
+            _context.Remove(DosAndDontsFieldToDelete);
+            _context.SaveChanges();
+        }
+
     }
+    //do's and donts-end
 
 
 }
