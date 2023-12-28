@@ -340,7 +340,7 @@
     function submitGuardLogin() {
         calculateDutyDateTime();
         var mobileno = $('#GuardLogin_Guard_Mobile').val();
-        if (mobileno == null || mobileno == '+61 4' || mobileno == '' ) {
+        if (mobileno == null || mobileno == '+61 4' || mobileno == '') {
             new MessageModal({ message: "<b>The Control Room requires your personal mobile number in case of emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.<p> This request occurs only once. Please do not provide false numbers to trick system. It is an OH&S requirement we can contact you in an Emergency </p> </b>" }).showWarning();
         }
         else {
@@ -568,7 +568,7 @@
                 { field: 'clientSiteId', hidden: true },
                 { field: 'eventDateTime', title: 'Time', width: 50, renderer: function (value, record) { return renderTime(value, record, false); } },
                 { field: 'notes', title: 'Event / Notes', width: 450, editor: logBookNotesEditor, renderer: renderLogBookNotes },
-                { field: 'guardInitials', title: 'Guard Initials', width: 50, renderer: function (value, record) { return record.guardLogin ?  record.guardLogin.guard.initial : ''; } },
+                { field: 'guardInitials', title: 'Guard Initials', width: 50, renderer: function (value, record) { return record.guardLogin ? record.guardLogin.guard.initial : ''; } },
                 { width: 75, renderer: renderDailyLogManagement }
             ]
         };
@@ -576,6 +576,8 @@
 
     function renderLogBookNotes(value, record, $cell) {
         $cell.on('keydown', function (e) {
+            /*timer pause while editing*/
+            isPaused = true;
             if (e.which === 13) {
                 gridGuardLog.update(record.id);
             }
@@ -614,7 +616,7 @@
             return;
         }
         else {
-            if (record.irEntryType === 1) 
+            if (record.irEntryType === 1)
                 return;
             if (record.irEntryType === irEntryTypeIsAlarm) {
                 $displayEl.append($messageBtn);
@@ -659,7 +661,7 @@
             gridGuardLog.removeRow($(this).data('id'));
         });
 
-       
+
 
         $displayEl.append($editBtn)
             .append($deleteBtn)
@@ -667,11 +669,13 @@
             .append($cancelBtn);
     }
     /*to display the popup to acknowledge the message-start*/
-    $('#guard_daily_log tbody').on('click', '#btnAcknowledgeButton', function  (value, record) {
+    $('#guard_daily_log tbody').on('click', '#btnAcknowledgeButton', function (value, record) {
+        /*timer pause while editing*/
+        isPaused = true;
         var id = $(this).data('id');
         var message = $(this).closest('tr').find('td').eq(2).val();
     });
-        /*to display the popup to acknowledge the message-end*/
+    /*to display the popup to acknowledge the message-end*/
     gridGuardLog = $('#guard_daily_log').grid(gridGuardLogSettings);
 
     if (gridGuardLog) {
@@ -691,8 +695,24 @@
                 /* add for check if dark mode is on end*/
             }
         });
+        gridGuardLog.on('rowSelect', function (e, $row, id, record) {
+            /*timer pause while editing*/
+            if (isPaused == true) {
+                isPaused = false;
+            }
+            else {
+                isPaused = true;
+            }
 
+        });
+        gridGuardLog.on('rowUnselect', function (e, $row, id, record) {
+            /*timer pause while editing*/
+            isPaused = false;
+
+        });
         gridGuardLog.on('rowDataChanged', function (e, id, record) {
+            /*timer pause while editing*/
+            isPaused = true;
             const data = $.extend(true, {}, record);
             const token = $('input[name="__RequestVerificationToken"]').val();
             $('#loader').show();
@@ -703,10 +723,14 @@
                 headers: { 'RequestVerificationToken': token },
             }).done(function (result) {
                 if (result.success) {
+                    /*timer pause while editing*/
+                    isPaused = false;
                     gridGuardLog.clear();
                     gridGuardLog.reload();
                 }
                 else {
+                    /*timer pause while editing*/
+                    isPaused = false;
                     let errorList = [];
                     result.errors.forEach(function (item) {
                         errorList.push(item.errorList[0]);
@@ -722,6 +746,8 @@
         });
 
         gridGuardLog.on('rowRemoving', function (e, id, record) {
+            /*timer pause while editing*/
+            isPaused = true;
             if (confirm('Are you sure want to delete this entry?')) {
                 const token = $('input[name="__RequestVerificationToken"]').val();
                 $.ajax({
@@ -730,6 +756,8 @@
                     type: 'POST',
                     headers: { 'RequestVerificationToken': token },
                 }).done(function () {
+                    /*timer pause while editing*/
+                    isPaused = false;
                     gridGuardLog.clear();
                     gridGuardLog.reload();
                 }).fail(function () {
@@ -765,13 +793,25 @@
         }
     });
 
+    jQuery("#GuardLog_Notes").blur(function () {
+        /*timer pause while editing*/
+        isPaused = false;
+    });
+    $('#GuardLog_Notes').click(function (e) {
+        /*timer pause while editing*/
+        isPaused = true;
+    });
     $('#GuardLog_Notes').on('keydown', function (e) {
+        /*timer pause while editing*/
+        isPaused = true;
         if (e.which === 13) {
             addGuardLog();
         }
     });
 
     $('#add_new_log').on('click', function () {
+        /*timer pause while editing*/
+        isPaused = false;
         addGuardLog();
     });
 
@@ -1064,7 +1104,7 @@
         $('#KeyVehicleLogAuditLogRequest_TruckConfig').val('');
         $('#KeyVehicleLogAuditLogRequest_TrailerType').val('');
         $('#vklSitePOC').val('');
-        
+
         $('#vklSiteLoc').val('');
         $('#KeyVehicleLogAuditLogRequest_KeyNo').val('');
         $('#listKeyVehicleLogAuditLogRequestKeyNo').val(null).trigger('change');
@@ -1197,14 +1237,14 @@
         includeSelectAllOption: true,
     });
 
-  
+
     $('#vklClientSiteId').on('change', function () {
         if ($('#vklClientSiteId').val().length === 0) {
             alert('Please select a client site');
             return;
         }
 
-       
+
 
         const clientSitePocControl = $('#vklSitePOC');
         const clientSiteLocControl = $('#vklSiteLoc');
@@ -1219,7 +1259,7 @@
             clientSitePocControl.html('');
             clientSiteLocControl.html('');
             data.sitePocs.map(function (result) {
-                
+
                 clientSitePocControl.append('<option value="' + result.value + '">' + result.text + '</option>');
             });
             data.siteLocations.map(function (result) {
@@ -1253,8 +1293,8 @@
         buttonTextAlignment: 'left',
         includeSelectAllOption: true,
     });
-      // for selecting more than one Site Poc-end
-      // for selecting more than one Site Loc-start
+    // for selecting more than one Site Poc-end
+    // for selecting more than one Site Loc-start
     $('#vklSiteLoc').multiselect({
         maxHeight: 400,
         buttonWidth: '100%',
@@ -2316,6 +2356,8 @@
             $editBtn.hide();
             $updateBtn.show();
             $cancelBtn.show();
+            /*timer pause while editing*/
+            isPaused = true;
         });
 
         $updateBtn.on('click', function (e) {
@@ -2323,6 +2365,8 @@
             $editBtn.show();
             $updateBtn.hide();
             $cancelBtn.hide();
+            /*timer pause while editing*/
+            isPaused = false;
         });
 
         $cancelBtn.on('click', function (e) {
@@ -2330,6 +2374,8 @@
             $editBtn.show();
             $updateBtn.hide();
             $cancelBtn.hide();
+            /*timer pause while editing*/
+            isPaused = false;
         });
 
         $displayEl.append($editBtn)
@@ -2411,22 +2457,22 @@
             dataSrc: ''
         },
         columns: [
-           
+
             { data: 'licenseNo', width: "10%" },
             //{ data: 'licenseTypeName', width: "5%" },
             {
-                
+
                 data: 'licenseTypeText',
                 width: '5%',
                 render: function (data, type, row) {
                     if (type === 'display') {
                         if (data === null) {
-                            return row.licenseTypeName; 
+                            return row.licenseTypeName;
                         } else {
                             return data;
                         }
                     } else {
-                        return data; 
+                        return data;
                     }
                 }
             },
@@ -2475,7 +2521,7 @@
 
         }
     }
- /*code added for Licence Type Dropdown Textbox stop*/
+    /*code added for Licence Type Dropdown Textbox stop*/
     $('#tbl_guard_licenses tbody').on('click', 'button[name=btn_edit_guard_license]', function () {
         resetGuardLicenseAddModal();
         var data = gridGuardLicenses.row($(this).parents('tr')).data();
@@ -2486,7 +2532,7 @@
         else {
             $('#GuardLicense_LicenseType').val(data.licenseTypeText);
         }
-        
+
         $('#GuardLicense_Reminder1').val(data.reminder1);
         $('#GuardLicense_Reminder2').val(data.reminder2);
         if (data.expiryDate) {
@@ -2783,8 +2829,8 @@
 
 
 
-           /* $('#txt_securityLicenseNoIR').val('');*/
-            
+            /* $('#txt_securityLicenseNoIR').val('');*/
+
 
             $.ajax({
                 url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
@@ -2797,7 +2843,7 @@
             }).done(function (result) {
 
                 if (result.accessPermission) {
-                   /* $('#txt_securityLicenseNoIR').val('');*/
+                    /* $('#txt_securityLicenseNoIR').val('');*/
                     $('#modelGuardLoginConIR').modal('hide');
 
                     clearGuardValidationSummary('GuardLoginValidationSummaryIR');
@@ -2811,24 +2857,24 @@
                     if (result.successCode === 0) {
                         if (result.successMessage == 'Mobile is null') {
                             //var msg = '<b>The Control Room requires your personal mobile number in case of Emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.<p> This request occurs only once. Please donot provide false numbers to trick system. It is an OH&S requirement we can contact you in an emergency </p> </b>';
-                          //new MessageModal({ message: "<b>The Control Room requires your personal mobile number in case of Emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.<p> This request occurs only once. Please donot provide false numbers to trick system. It is an OH&S requirement we can contact you in an emergency </p> </b>" }).showWarning();
+                            //new MessageModal({ message: "<b>The Control Room requires your personal mobile number in case of Emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.<p> This request occurs only once. Please donot provide false numbers to trick system. It is an OH&S requirement we can contact you in an emergency </p> </b>" }).showWarning();
                             //alert('<b>The Control Room requires your personal mobile number in case of Emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.<p> This request occurs only once. Please donot provide false numbers to trick system. It is an OH&S requirement we can contact you in an emergency </p> </b>')
                             /*alert(msg);*/
                             $('#alert-wand-in-use-modal').modal('show');
                         }
                         else {
 
-                        
+
                             displayGuardValidationSummary('GuardLoginValidationSummaryIR', result.successMessage);
                         }
-                        
+
                     }
                 }
             });
 
-            
-                   clearGuardValidationSummary('GuardLoginValidationSummaryIR');
-                
+
+            clearGuardValidationSummary('GuardLoginValidationSummaryIR');
+
 
 
         }
@@ -2974,7 +3020,7 @@
                 }
                 else {
 
-                   // $('#txt_securityLicenseNo').val('');
+                    // $('#txt_securityLicenseNo').val('');
                     /*$('#txt_securityLicenseNoIR').val('');*/
                     $('#modelGuardLoginConPatrol').modal('show');
                     if (result.successCode === 0) {
@@ -2994,12 +3040,12 @@
 
     /*for pushing notifications from the control room - start*/
     $('#pushNoTificationsGuardModal').on('shown.bs.modal', function (event) {
-
+        /*timer pause while editing*/
         isPaused = true;
 
         const button = $(event.relatedTarget);
         const id = button.data('id');
-       
+
         $('#chkAcknowledgeMessage').prop('checked', true);
         $('#chkMessageBack').prop('checked', false);
         $('#txtPushNotificationGuardReturnMessage').attr('disabled', 'disabled');
@@ -3007,9 +3053,10 @@
         clearGuardValidationSummary('PushNotificationsValidationSummary');
         $('#IsAcknowledgeMessage').val($('#chkAcknowledgeMessage').is(':checked'));
         $('#IsMessageBack').val($('#chkMessageBack').is(':checked'));
-     
+
     });
     $("#pushNoTificationsGuardModal").on("hidden.bs.modal", function () {
+        /*timer pause while editing*/
         isPaused = false;
     });
     $('#chkAcknowledgeMessage').on('change', function () {
@@ -3038,7 +3085,7 @@
     $('#btnSendPushLotificationFromGuardMessage').on('click', function () {
         const IsMessageBack = $('#chkMessageBack').is(':checked');
         const IsAcknowledgeMessage = $('#chkAcknowledgeMessage').is(':checked');
-        
+
         var controlRoomMessage = $('#txtNotificationsControlRoomMessage').val();
         var Notifications = $('#txtPushNotificationGuardReturnMessage').val();
 
@@ -3051,46 +3098,51 @@
             }
         }
         if (IsAcknowledgeMessage == true) {
-            
-            Notifications = controlRoomMessage +'</br>' + '     -  ' + 'ACKNOWLEDGED' ;
-            
+
+            Notifications = controlRoomMessage + '</br>' + '     -  ' + 'ACKNOWLEDGED';
+
         }
-       
-        
-            $.ajax({
-                url: '/Guard/DailyLog?handler=SavePushNotificationTestMessages',
-                type: 'POST',
-                data: {
-                    guardLoginId: $('#GuardLog_GuardLoginId').val(),
-                    clientSiteLogBookId: $('#GuardLog_ClientSiteLogBookId').val(),
-                    Notifications: Notifications
-                    
-                },
-                dataType: 'json',
-                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-            }).done(function (data) {
-                if (data.success == true) {
-                    $('#pushNoTificationsGuardModal').modal('hide');
-                    gridGuardLog.clear();
-                    gridGuardLog.reload();
-                }
-                else {
-                    displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
-                }
-                //$('#selectRadioStatus').val('');
-                //$('#btnRefreshActivityStatus').trigger('click');
-            });
-       
-        
+
+
+        $.ajax({
+            url: '/Guard/DailyLog?handler=SavePushNotificationTestMessages',
+            type: 'POST',
+            data: {
+                guardLoginId: $('#GuardLog_GuardLoginId').val(),
+                clientSiteLogBookId: $('#GuardLog_ClientSiteLogBookId').val(),
+                Notifications: Notifications
+
+            },
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data.success == true) {
+                $('#pushNoTificationsGuardModal').modal('hide');
+                gridGuardLog.clear();
+                gridGuardLog.reload();
+            }
+            else {
+                displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
+            }
+            //$('#selectRadioStatus').val('');
+            //$('#btnRefreshActivityStatus').trigger('click');
+        });
+
+
     });
 
-  
 
-  
+
+
 
     var tId = 0;
     $("#duress_btn").mousedown(function () {
-        tId = setTimeout(GFG_Fun, 2500);
+        if ($("#duress_status").text() !== "Active") {
+            /*timer pause while editing*/
+            isPaused = true;
+            tId = setTimeout(GFG_Fun, 2500);
+
+        }
         return false;
     });
     $("#duress_btn").mouseup(function () {
@@ -3098,33 +3150,39 @@
     });
 
     function GFG_Fun() {
-        $.ajax({
-            url: '/Guard/DailyLog?handler=SaveClientSiteDuress',
-            data: {
-                clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
-                guardLoginId: $('#GuardLog_GuardLoginId').val(),
-                logBookId: $('#GuardLog_ClientSiteLogBookId').val(),
-                guardId: $('#GuardLog_GuardLogin_GuardId').val(),
-            },
-            type: 'POST',
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {
-            if (result.status) {
-                $('#duress_btn').removeClass('normal').addClass('active');
-                $("#duress_status").addClass('font-weight-bold');
-                $("#duress_status").text("Active");
-            }
-            gridGuardLog.clear();
-            gridGuardLog.reload();
-        });
-    } 
+        if ($("#duress_status").text() !== "Active") {
+            var id = $("#duress_status").text();
+            $.ajax({
+                url: '/Guard/DailyLog?handler=SaveClientSiteDuress',
+                data: {
+                    clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
+                    guardLoginId: $('#GuardLog_GuardLoginId').val(),
+                    logBookId: $('#GuardLog_ClientSiteLogBookId').val(),
+                    guardId: $('#GuardLog_GuardLogin_GuardId').val(),
+                },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.status) {
+                    $('#duress_btn').removeClass('normal').addClass('active');
+                    $("#duress_status").addClass('font-weight-bold');
+                    $("#duress_status").text("Active");
+                    /*timer pause while editing*/
+                    isPaused = false;
+                }
+                gridGuardLog.clear();
+                gridGuardLog.reload();
+            });
+
+        }
+    }
 
 
 });
 
 
 /*to get the warning - start*/
-$('#btn_confrim_wand_usok').on('click', function(){
+$('#btn_confrim_wand_usok').on('click', function () {
     $('#alert-wand-in-use-modal').modal('hide')
 })
 
@@ -3140,7 +3198,7 @@ $('#generate_log_AlldocketList').on('click', function () {
     $('#otherReason').attr('disabled', true);
     $('#stakeholderEmail').val('');
 
-   
+
     $('#generate_logbook_AlldocketList').show();
     $('#generate_kvl_docket').hide();
     $('#print-manual-docket-modal').modal('show')
@@ -3166,11 +3224,11 @@ $('#generate_logbook_AlldocketList').on('click', function () {
     $('#generate_kvl_docket_status').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i> Generating Manual Docket. Please wait...').show();
     $('#download_kvl_docket').hide();
     $('#generate_log_AlldocketList').attr('disabled', true);
-    
+
     var ids = [];
     $.ajax({
         url: '/Admin/AuditSiteLog?handler=KeyVehicleLogProfiles',
-        data: { truckRego: null, poi :'POI'},
+        data: { truckRego: null, poi: 'POI' },
         type: 'GET',
         dataType: 'json',
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -3178,7 +3236,7 @@ $('#generate_logbook_AlldocketList').on('click', function () {
         var ids = [];
         result.forEach(function (item) {
             ids.push(item.detail.id);
-           
+
         });
         $.ajax({
             url: '/Guard/KeyVehicleLog?handler=GenerateManualDocketList',
@@ -3194,12 +3252,12 @@ $('#generate_logbook_AlldocketList').on('click', function () {
             type: 'POST',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (response) {
-           
+
             if (response.statusCode === -1) {
                 $('#generate_kvl_docket_status').html('<i class="fa fa-times-circle text-danger mr-2"></i> Error generating report').show();
             }
             else {
-               
+
                 $('#generate_log_AlldocketList').attr('disabled', false);
                 $('#download_kvl_docket').show();
                 $('#download_kvl_docket').attr('href', response.fileName);
@@ -3214,15 +3272,15 @@ $('#generate_logbook_AlldocketList').on('click', function () {
             }
         });
     });
-   
 
 
 
-   
+
+
 
 
 });
-    //To Generate All PO List stop
+//To Generate All PO List stop
 
 $('#btncalendarEventModal').on('click', function () {
     $('#calendarEventModal').modal('show');
@@ -3234,11 +3292,11 @@ let calendarEventsDetails = $('#calendarEventsDetails').grid({
     primaryKey: 'id',
     columns: [
         { width: 130, field: 'id', title: 'Id', hidden: true },
-        { width: 450, field: 'textMessage', title: 'Events'},
+        { width: 450, field: 'textMessage', title: 'Events' },
         { width: 100, field: 'formattedStartDate', title: 'Start' },
-        { width: 100, field: 'formattedExpiryDate', title: 'Expiry'  },
+        { width: 100, field: 'formattedExpiryDate', title: 'Expiry' },
     ],
-  
+
 });
 //let calendarEventsDetails = $('#calendarEventsDetails').DataTable({
 //    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
@@ -3253,7 +3311,7 @@ let calendarEventsDetails = $('#calendarEventsDetails').grid({
 //    ajax: {
 //        url: '/Radio/RadioCheckNew?handler=BroadcastCalendarEventsByDate',
 //        datatype: 'json',
-      
+
 //        dataSrc: ''
 //    },
 //    columns: [
@@ -3266,7 +3324,7 @@ let calendarEventsDetails = $('#calendarEventsDetails').grid({
 //        {
 //            data: 'formattedStartDate',
 //            width: '20%',
-//          //  title: 'Start' 
+//          //  title: 'Start'
 
 //        },
 //        {
@@ -3276,11 +3334,11 @@ let calendarEventsDetails = $('#calendarEventsDetails').grid({
 
 //        },
 
-       
+
 
 
 //    ],
-   
+
 //});
 
 
