@@ -486,6 +486,7 @@ $(function () {
     function setSummaryImage(summaryImage) {
         if (summaryImage) {
             $('#summary_image').html(summaryImage.fileName);
+            $('#RCImagepath').val(summaryImage.fileName);
             $('#summary_image_updated').html(getFormattedDate(summaryImage.lastUpdated, true));
             $('#download_summary_image').attr('href', '/SummaryImage/' + summaryImage.fileName);
             $('#download_summary_image').show();
@@ -508,8 +509,7 @@ $(function () {
             });
         }
     });
-
-    $('#upload_summary_image').on('change', function () {
+    $('#div_site_settings').on('change', '#upload_summary_image', function () {
         const file = $('#upload_summary_image').prop("files")[0];
         if (file) {
             const scheduleId = $("#scheduleId").val();
@@ -535,6 +535,105 @@ $(function () {
         }
     });
 
+    /*Rc Action List Image Upload start*/
+    $('#div_site_settings').on('change', '#upload_summary_imageRcList', function () {
+       
+        const file = $('#upload_summary_imageRcList').prop("files")[0];
+        if (file) {
+            const scheduleId = $("#scheduleId").val();
+            const formData = new FormData();
+            formData.append("SummaryImage", file);
+            formData.append("ScheduleId", scheduleId);
+
+            $.ajax({
+                type: 'POST',
+                url: '/Admin/Settings?handler=UploadRCImage',
+                data: formData,
+                cache: false,
+                contentType: false,
+                processData: false,
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (data) {
+                if (data.success) {
+                    setSummaryImageRCList(data);
+                }
+            }).always(function () {
+                $('#upload_summary_imageRcList').val('');
+            });
+        }
+    });
+    function setSummaryImageRCList(summaryImage) {
+        if (summaryImage) {
+            $('#summary_imageRC').html(summaryImage.fileName);
+            var imagePath = $('#summary_imageRC').text().trim();
+            $('#RCImagepath').val(imagePath);
+            $('#summary_image_updatedRC').html(getFormattedDate(summaryImage.lastUpdated, true));
+            var imagePathdate = $('#summary_image_updatedRC').text().trim();
+            $('#RCImageDateandTime').val(imagePathdate);
+            $('#download_summary_imageRCList').attr('href', '/RCImage/' + summaryImage.fileName);
+            $("#download_summary_imageRCList").attr("target", "_blank");
+            $('#download_summary_imageRCList').show();
+            $('#delete_summary_image').show();
+        }
+    }
+    $('#div_site_settings').on('click', '#delete_summary_imageRC', function () {
+        if (confirm('Are you sure want to delete this file?')) {
+            var check = $('#RCImagepath').val();
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteRCImage&imageName=' + $('#RCImagepath').val(),
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (data) {
+                if (data.status) {
+                    clearSummaryImageRC();
+                }
+            }).fail(function () {
+                console.log('error')
+            });
+        }
+    });
+    function clearSummaryImageRC() {
+        $('#RCImagepath').val('');
+        $('#RCImageDateandTime').val('');
+        $('#summary_imageRC').html('');
+        $('#summary_image_updatedRC').html('');
+        $("#download_summary_imageRCList").removeAttr("href");
+        $('#download_summary_imageRCList').show();
+        $('#delete_summary_image').hide();
+    }
+    /*Rc Action List Image Upload stop*/
+
+    //RC Action List Save start
+   
+    $('#div_site_settings').on('click', '#save_site_RC', function () {
+        var List = $('#frm_ActionList').serialize();
+        $.ajax({
+            url: '/admin/settings?handler=ClientSiteRCActionList',
+            type: 'POST',
+            data: $('#frm_ActionList').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.status)
+                alert('Saved successfully');
+            else {
+                alert(result.message);
+                $("#ClientSiteKpiRC_Id").val(result.id);
+                $('#Site_Alarm_Keypad_code').val('');
+                $('#site_Physical_key').val('');
+                $('#Site_Combination_Look').val('');
+                $('#Action1').val('');
+                $('#Action2').val('');
+                $('#Action3').val('');
+                $('#Action4').val('');
+                $('#Action5').val('');
+                $('#userInput').val('');
+            }
+           // $('#kpi-settings-modal').modal('hide');
+            //gridClientSiteSettings.clear();
+            //gridClientSiteSettings.reload({ type: $('#cs_client_type').val() });
+        }).fail(function () { });
+    });
+     //RC Action List Save stop
     function scheduleModalOnAdd() {
         const dateToday = new Date().toISOString().split('T')[0];
         $('#startDate').val(dateToday);
@@ -947,6 +1046,41 @@ $(function () {
                 if (result.status) {
                     $("textarea[id='ClientSiteKpiNote_Notes']").val('');
                     $('#lblSiteNoteRemainingCount').html(getSiteNoteLength(''));
+                }
+                else
+                    alert(result.message);
+            }).fail(function () { });
+        }
+    });
+    $('#div_site_settings').on('click', '#delete_site_RCList', function () {
+        if (confirm('Are you sure want to delete?')) {
+            $.ajax({
+                url: '/admin/settings?handler=DeleteRC',
+                type: 'POST',
+                data: { RCId: $("#RCList_Id").val() },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.status) {
+                    $('#Site_Alarm_Keypad_code').val('');
+                    $('#site_Physical_key').val('');
+                    $('#Site_Combination_Look').val('');
+                    $('#Action1').val('');
+                    $('#Action2').val('');
+                    $('#Action3').val('');
+                    $('#Action4').val('');
+                    $('#Action5').val('');
+                    $('#userInput').val('');
+                    $.ajax({
+                        url: '/Admin/Settings?handler=DeleteRCImage&scheduleId=' + $('#RCImagepath').val(),
+                        type: 'POST',
+                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                    }).done(function (data) {
+                        if (data.status) {
+                            clearSummaryImageRC();
+                        }
+                    }).fail(function () {
+                        console.log('error')
+                    });
                 }
                 else
                     alert(result.message);
@@ -1403,6 +1537,9 @@ $(function () {
             });
         }
     }
+
+   
+     
 
 
 

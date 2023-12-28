@@ -49,6 +49,36 @@ namespace CityWatch.Data.Models
 
         public List<ClientSiteKpiNote> Notes { get; set; }
 
+        public List<RCActionList> RCActionList { get; set; }
+
+        public RCActionList rclistKP
+        {
+            get
+            {
+                if (Id != 0)
+                {
+                    var rcActionList = RCActionList.FirstOrDefault();
+                    return rcActionList ?? new RCActionList()
+                    {
+
+                        SettingsId = Id,
+                        SiteAlarmKeypadCode = string.Empty,
+                        Imagepath = string.Empty
+                    };
+                }
+                else
+                {
+                    return new RCActionList()
+                    {
+
+                        SettingsId = Id,
+                        SiteAlarmKeypadCode = string.Empty,
+                        Imagepath = string.Empty
+                    };
+
+                }
+            }
+        }
         public ClientSiteKpiNote NotesForThisMonth
         {
             get
@@ -58,7 +88,7 @@ namespace CityWatch.Data.Models
                 return notesThisMonth ?? new ClientSiteKpiNote()
                 {
                     ForMonth = thisMonthDate,
-                    Notes = string.Empty,
+                   Notes = string.Empty,
                     SettingsId = Id
                 };
             }
