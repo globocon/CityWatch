@@ -586,8 +586,17 @@
     }
 
     function logBookNotesEditor($editorContainer, value) {
-        var textAreaForNotes = $('<textarea class="form-control" rows="4" maxlength="2048" onpaste="return false" >' + value + '</textarea > ');
-        $editorContainer.append(textAreaForNotes);
+
+        var yes = $('#IsAssignedLogBook').val();
+        if (yes == 0) {
+            var textAreaForNotes = $('<textarea class="form-control" rows="4" maxlength="2048" onpaste="return false" >' + value + '</textarea > ');
+            $editorContainer.append(textAreaForNotes);
+        }
+        else {
+            var textAreaForNotes = $('<textarea class="form-control" rows="4" maxlength="2048"  >' + value + '</textarea > ');
+            $editorContainer.append(textAreaForNotes);
+        }
+        
     }
 
     function renderDailyLogManagement(value, record, $cell, $displayEl, id) {
