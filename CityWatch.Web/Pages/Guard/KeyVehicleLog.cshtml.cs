@@ -910,17 +910,24 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { fileName = @Url.Content($"~/Pdf/Output/{fileName}"), statusCode });
         }
         //To Generate the Pdf In List start
-        public async Task<JsonResult> OnPostGenerateManualDocketList(int id1, ManualDocketReason option, string otherReason, string stakeholderEmails, int clientSiteId, string blankNoteOnOrOff, List<int> ids)
+        public async Task<JsonResult> OnPostGenerateManualDocketList(bool IsGlobal, ManualDocketReason option, string otherReason, string stakeholderEmails, int clientSiteId, string blankNoteOnOrOff, List<int> ids)
         {
             //id = 37200;
              var fileName = string.Empty;
             var statusCode = 0;
-            foreach (var id in ids)
-            {
+            int id = ids[0];
                 try
                 {
                     var serialNo = GetNextDocketSequenceNumber(id);
-                    fileName = _keyVehicleLogDocketGenerator.GeneratePdfReportList(id, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, serialNo, ids);
+                if (IsGlobal==true)
+                {
+                    fileName = _keyVehicleLogDocketGenerator.GeneratePdfReportListGlobal(id, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, serialNo, ids);
+                }
+                else
+                {
+                    fileName = _keyVehicleLogDocketGenerator.GeneratePdfReportList(id, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, serialNo, ids, clientSiteId);
+                }
+                    
 
 
                 }
@@ -963,7 +970,7 @@ namespace CityWatch.Web.Pages.Guard
                 //    statusCode += -3;
                 //    _logger.LogError(ex.StackTrace);
                 //}
-            }
+            
 
            
 
