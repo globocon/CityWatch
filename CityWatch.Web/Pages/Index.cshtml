@@ -29,7 +29,9 @@
               
                 @foreach (var fileName in LiveEvents)
                 {
-                    <marquee direction="right" style="width:900px;" id="marqueeLiveEvents" text=@fileName.TextMessage>@fileName.TextMessage</marquee>
+                            //<input type="text" asp-for="@fileName.TextMessage">
+                            var string1 = @fileName.TextMessage;
+                            <marquee direction="right" style="width:900px;" id="marqueeLiveEvents">@string1</marquee>
                 }
             </div>
             </div>
