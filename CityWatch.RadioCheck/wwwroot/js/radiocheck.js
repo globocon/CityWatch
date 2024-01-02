@@ -2211,7 +2211,19 @@ $('#heading-example2').on('click', function () {
     else {
         console.log($(window).height());
         var container = $('#clientSiteInActiveGuards').closest('.dataTables_scrollBody');
-        container.css('height', ($(window).height() - 300));
+        /*for modifying the size of tables   inactive guards - start*/
+        var count = $('#clientSiteInActiveGuards tbody tr').length;
+        if (count > 10) {
+            container.css('height', ($(window).height() - 300));
+
+        }
+        else {
+
+            container.css('height', '100%');
+
+
+        }
+        /*for modifying the size of tables   inactive guards - end*/
 
 
     }
