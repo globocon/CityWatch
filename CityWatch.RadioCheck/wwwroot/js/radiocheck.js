@@ -309,6 +309,21 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     },
     drawCallback: function () {
         $(".dataTables_scrollBody").scrollTop(scrollPosition);
+        /*for modifying the size of tables active  guards - start*/
+        var count = $('#clientSiteActiveGuards tbody tr').length;
+        if (count > 10) {
+            $('#clientSiteActiveGuards').closest('.dataTables_scrollBody').css('height', ($(window).height() - 300));
+
+        }
+        else {
+
+
+            $('#clientSiteActiveGuards').closest('.dataTables_scrollBody').css('height', '100%');
+
+        }
+
+        /*for modifying the size of tables active  guards - end*/
+
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;
