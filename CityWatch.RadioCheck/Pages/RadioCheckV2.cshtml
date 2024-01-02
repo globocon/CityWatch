@@ -415,6 +415,12 @@
                             <li class="nav-item" role="presentation">
                                 <a class="nav-link" id="globalalertTab" data-toggle="tab" href="#globalalert" role="tab" aria-controls="globalalert" aria-selected="true">Global Alert</a>
                             </li>
+                          @*   <li class="nav-item" role="presentation">
+                                <a class="nav-link" id="RCActionListTab" data-toggle="tab" href="#rcactionlist" role="tab" aria-controls="globalalert" aria-selected="true">Action List</a>
+                            </li> *@
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link" id="ActionListTab" data-toggle="tab" href="#actionlist" role="tab" aria-controls="globalalert" aria-selected="true">Action List</a>
+                            </li>
                         </ul>
                         <div class="tab-content p-2">
                             <div class="tab-pane active" id="textMessage" role="tabpanel" aria-labelledby="textMessage">
@@ -553,6 +559,216 @@
                                                     <p id="Access_permission_RC_status" class="mb-0 py-2" style="display:none"></p>
                                                 </div>
                                             </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tab-pane" id="rcactionlist" role="tabpanel" aria-labelledby="rcactionlist">
+                                <input type="hidden" id="gl_client_site_id" />
+                                <div class="row m-0">
+                                    <div class="col-md-12">
+                                        <form>
+                                            <input type="hidden" id="txtNotificationsCompanyId" />
+                                            <div class="row">
+                                                <label for="gs_site_email" class="col-md-4 col-form-label">Broadcast C4i Grouping : </label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkNationality" class="GlobalAlert-checkbox">
+                                                    <label class="col-form-label">National</label>
+                                                    <input type="hidden" id="IsLB">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_land_line" class="col-md-4 col-form-label">(LB+Site Email)</label>
+                                                <div class="col-md-2">
+                                                    <input type="checkbox" id="chkSiteState" class="GlobalAlert-checkbox">
+                                                    <label class="col-form-label">State</label>
+                                                    <input type="hidden" id="IsSiteEmail">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <select class="form-control" id="State1" style="width:209px" disabled>
+                                                        @*  <option value="">Select</option> *@
+                                                        @foreach (var State in _guardLogDataProvider.GetStates())
+                                                        {
+                                                            <option value="@State.Name">@State.Name</option>
+                                                        }
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_land_line" class="col-md-4 col-form-label"></label>
+                                                <div class="col-md-4">
+                                                    <input type="checkbox" id="chkClientType" class="GlobalAlert-checkbox">
+                                                    <label class="mx-1" for="dglClientType">Client Type</label>
+                                                    <select class="form-control" id="dglClientType" multiple="multiple" style="width:209px" disabled>
+
+                                                        @foreach (var clientType in _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId))
+                                                        {
+                                                            <option value="@clientType.Id">@clientType.Name</option>
+                                                        }
+                                                    </select>
+
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="mx-1" for="dglClientSiteId">Client Site</label>
+                                                    <select class="form-control mx-1" id="dglClientSiteId" multiple="multiple" style="width:209px" disabled></select>
+
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_site_email" class="col-md-4 col-form-label">Broadcast Mode GPRS : </label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkSMSPersonalGlobal">
+                                                    <label class="col-form-label">SMS Personal</label>
+                                                    <input type="hidden" id="IsSMSPersonal">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_land_line" class="col-md-4 col-form-label"></label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkSMSSmartWandGlobal">
+                                                    <label class="col-form-label">SMS Smart Wand</label>
+                                                    <input type="hidden" id="IsSMSSmartWand">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_site_email" class="col-md-4 col-form-label">Message : </label>
+                                                <div class="col-md-6">
+                                                    <input type="text" id="txtGlobalNotificationSubject" value="Control Room Alert" style="width:450px;" class="form-control" placeholder="Subject" />
+                                                    <textarea id="txtGlobalNotificationMessage" style="width:450px;height:100px;" class="form-control"></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="form-row text-right">
+                                                <div class="col-md-12  text-right">
+                                                    <button type="button" id="btnSendGlabalNotificationMessage" class="btn btn-primary">Send >></button>
+                                                    <p id="Access_permission_RC_status" class="mb-0 py-2" style="display:none"></p>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tab-pane" id="actionlist" role="tabpanel" aria-labelledby="actionlist">
+                                <input type="hidden" id="gl_client_site_id" />
+                                <div class="row m-0">
+                                    <div class="col-md-12">
+                                        <form id="frm_ActionList">
+                                            <br />
+                                           @*  <div class="form-group row">
+                                                <label for="gs_land_line" class="col-md-4 col-form-label"></label>
+                                                <div class="col-md-4">
+                                                    <input type="checkbox" id="chkClientType" class="GlobalAlert-checkbox">
+                                                    <label class="mx-1" for="dglClientType">Client Type</label>
+                                                    <select class="form-control" id="dglClientType" multiple="multiple" style="width:209px" disabled>
+
+                                                        @foreach (var clientType in _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId))
+                                                        {
+                                                            <option value="@clientType.Id">@clientType.Name</option>
+                                                        }
+                                                    </select>
+
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="mx-1" for="dglClientSiteId">Client Site</label>
+                                                    <select class="form-control mx-1" id="dglClientSiteId" multiple="multiple" style="width:209px" disabled></select>
+
+                                                </div>
+                                            </div>
+ *@
+                                            <div class="container">
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <h6>Site Access</h6>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <h6>Alarm Response</h6>
+                                                    </div>
+                                                    <div class="col">
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                            <br />
+                                            <div class="row col-md-12">
+                                                <div>
+                                                    <input type="hidden" id="RCImagepath" name="RCActionList.Imagepath">
+                                                    <input type="hidden" id="RCImageDateandTime" name="RCActionList.DateandTimeUpdated">
+
+                                                    <div class="form-group row ml-2">
+                                                        <label class="col-md-3 form-label text-left pl-0">Alarm Keypad Code</label>
+                                                        <div class="col-md-2">
+                                                            <input type="text" class="form-control" id="Site_Alarm_Keypad_code" name="RCActionList.SiteAlarmKeypadCode">
+                                                        </div>
+                                                        <label class="col-form-label text-left">Action 1</label>
+                                                        <div class="col-md-6">
+                                                            <input type="text" class="form-control" id="Action1" name="RCActionList.Action1">
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group row ml-2">
+                                                        <label class="col-md-3 form-label text-left pl-0" style="padding-right: 56px;">Physical Key</label>
+                                                        <div class="col-md-2">
+                                                            <input type="text" class="form-control" id="site_Physical_key" name="RCActionList.Sitephysicalkey">
+                                                        </div>
+                                                        <label class="col-form-label text-left">Action 2</label>
+                                                        <div class="col-md-6">
+                                                            <input type="text" class="form-control" id="Action2" name="RCActionList.Action2">
+                                                        </div>
+
+                                                    </div>
+                                                    <div class="form-group row row ml-2">
+                                                        <label class="col-md-3 form-label text-left pl-0">Combination Look</label>
+                                                        <div class="col-md-2">
+                                                            <input type="text" class="form-control" id="Site_Combination_Look" name="RCActionList.SiteCombinationLook">
+                                                        </div>
+                                                        <label class="col-form-label text-left">Action 3</label>
+                                                        <div class="col-md-6">
+                                                            <input type="text" class="form-control" id="Action3" name="RCActionList.Action3">
+                                                        </div>
+
+                                                    </div>
+
+                                                    <div class="form-group row row ml-2">
+                                                        <label class="col-md-3 form-label text-left pl-0" style="visibility:hidden">Site Combination Look</label>
+                                                        <div class="col-md-2">
+                                                            <input type="text" class="form-control" style="visibility:hidden">
+                                                        </div>
+                                                        <label class="col-form-label text-left">Action 4</label>
+                                                        <div class="col-md-6">
+                                                            <input type="text" class="form-control" id="Action4" name="RCActionList.Action4">
+                                                        </div>
+
+                                                    </div>
+
+                                                    <div class="form-group row row ml-2">
+                                                        <label class="col-md-3 form-label text-left pl-0" style="visibility:hidden">Site Combination Look</label>
+                                                        <div class="col-md-2">
+                                                            <input type="text" class="form-control" style="visibility:hidden">
+                                                        </div>
+                                                        <label class="col-form-label text-left">Action 5</label>
+                                                        <div class="col-md-6">
+                                                            <input type="text" class="form-control" id="Action5" name="RCActionList.Action5">
+                                                        </div>
+
+                                                    </div>
+
+
+
+                                                </div>
+                                               
+                                            </div>
+                                            <div class="form-group row">
+
+                                                <div class="col-md-6">
+                                                    <input type="text" id="txtGlobalNotificationSubject" value="Comments For Control Room Operator"  class="form-control" placeholder="Subject" />
+                                                    <textarea id="txtGlobalNotificationMessage" style="height:100px;" class="form-control"></textarea>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <input type="text" id="txtGlobalNotificationSubject" value="New Message:" class="form-control" placeholder="Subject" />
+                                                    <textarea id="txtGlobalNotificationMessage" style="height:100px;" class="form-control"></textarea>
+                                                </div>
+                                            </div>
+
                                         </form>
                                     </div>
                                 </div>
