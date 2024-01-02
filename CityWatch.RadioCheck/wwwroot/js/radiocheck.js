@@ -131,7 +131,32 @@ $('#clientSiteActivityStatus').on('click', 'button[name="btnRadioCheckStatus"]',
 
 $(window).resize(function () {
     console.log($(window).height());
-    $('.dataTables_scrollBody').css('height', ($(window).height() - 200));
+    //$('.dataTables_scrollBody').css('height', ($(window).height() - 200));
+    /* for modifying the size of tables active and inactive guards-start*/
+    var count = $('#clientSiteInActiveGuards tbody tr').length;
+    if (count > 10) {
+        $('#clientSiteInActiveGuards').closest('.dataTables_scrollBody').css('height', ($(window).height() - 300));
+
+    }
+    else {
+
+
+        $('#clientSiteInActiveGuards').closest('.dataTables_scrollBody').css('height', '100%');
+
+    }
+    var count2 = $('#clientSiteActiveGuards tbody tr').length;
+    if (count2 > 10) {
+        $('#clientSiteActiveGuards').closest('.dataTables_scrollBody').css('height', ($(window).height() - 200));
+
+    }
+    else {
+
+
+        $('#clientSiteActiveGuards').closest('.dataTables_scrollBody').css('height', '100%');
+
+    }
+   /* for modifying the size of tables active and inactive guards - end*/
+
 });
 
 
