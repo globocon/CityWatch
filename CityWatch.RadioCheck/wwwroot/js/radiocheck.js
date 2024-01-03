@@ -2210,6 +2210,8 @@ $('#heading-example2').on('click', function () {
     }
     else {
         console.log($(window).height());
+
+
         var container = $('#clientSiteInActiveGuards').closest('.dataTables_scrollBody');
         /*for modifying the size of tables   inactive guards - start*/
         var count = $('#clientSiteInActiveGuards tbody tr').length;
