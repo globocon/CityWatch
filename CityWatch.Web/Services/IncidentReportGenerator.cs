@@ -13,6 +13,7 @@ using iText.Kernel.Pdf;
 using iText.Layout;
 using iText.Layout.Element;
 using iText.Layout.Properties;
+using iText.Kernel.Pdf.Annot;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -26,6 +27,9 @@ using iText.Layout.Borders;
 
 using System.Collections.Generic;
 using CityWatch.Data;
+using iText.Kernel.Pdf.Filespec;
+using System.Net.Mail;
+using System.IO;
 
 namespace CityWatch.Web.Services
 {
@@ -34,6 +38,7 @@ namespace CityWatch.Web.Services
         Unknown = 0,
         Image = 1,
         Pdf = 2,
+        Multimedia = 3,  // Added by binoy 0n 03-01-2024 under task id p1#160_MultimediaAttachments03012024
     }
 
     public interface IIncidentReportGenerator
@@ -66,6 +71,9 @@ namespace CityWatch.Web.Services
         private const float SCALE_FACTOR = 0.92f;
         private const int ROTATION_ANGLE_DEG = 270;
         private const string FONT_COLOR_BLACK = "#000000";
+        private const string FONT_COLOR_BLUE = "#0000FF";
+        private const float ATTACHMENT_BOX_HEIGHT = 20; // Added by binoy 0n 03-01-2024 under task id p1#160_MultimediaAttachments03012024
+        private const float ATTACHMENT_BOX_WIDTH = 20; // Added by binoy 0n 03-01-2024 under task id p1#160_MultimediaAttachments03012024
 
         private const float CELL_FONT_SIZE = 6f;
         private const float CELL_FONT_SIZE_BIG = 10f;
@@ -205,7 +213,86 @@ namespace CityWatch.Web.Services
                             }
                             uploadDoc.Close();
                         }
+                        
                     }
+                    // p1#160_MultimediaAttachments03012024 done by Binoy - Start 
+
+                    float currentX = 20;
+                    float currentY = 750;
+                    float y = 0;
+                    float x =0;
+                    bool newPageRequired = true;
+                    foreach (var fileName in _IncidentReport.Attachments)
+                    {
+
+                        string videoPath = IO.Path.Combine(_UploadRootDir, fileName);
+                        string embeddedFileDescription = fileName;
+                        
+
+                        if (GetAttachmentType(IO.Path.GetExtension(fileName)) == AttachmentType.Multimedia)
+                        {
+                            if (newPageRequired)
+                            {
+                                pdfDocument.AddNewPage();
+                                 y = pdfDocument.GetLastPage().GetPageSize().GetHeight();
+                                 x = pdfDocument.GetLastPage().GetPageSize().GetWidth();
+                                var paraName = new Paragraph("Multimedia Attachments (can be viewed and opened only in Adobe Reader)")
+                                    .SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLUE));
+                                    //.SetBold();
+                                var pageIndex = pdfDocument.GetNumberOfPages();
+                                PdfPage Lpage = pdfDocument.GetLastPage();
+                                var pSize = Lpage.GetPageSize();
+                                var centr = (x / 2) - 10;
+                                paraName.SetFixedPosition(pageIndex, 5, pSize.GetTop() - 40 , x - 10);
+                                doc.Add(paraName);                                
+                                newPageRequired = false;
+                            }
+
+                            byte[] attachmentfileByteArray = ConvertToByteArrayChunked(videoPath);
+
+                            Rectangle rect = new Rectangle(currentX, currentY, ATTACHMENT_BOX_WIDTH, ATTACHMENT_BOX_HEIGHT);
+                            PdfFileSpec fs = PdfFileSpec.CreateEmbeddedFileSpec(pdfDocument, attachmentfileByteArray, embeddedFileDescription, fileName, null, null);
+                            try
+                            {                                
+                                PdfString title = new PdfString(fileName);
+                                PdfAnnotation attachment = new PdfFileAttachmentAnnotation(rect, fs)
+                                    .SetContents(string.Format("Double click me to open file: {0}", fileName))
+                                    .SetTitle(title)
+                                    .SetColor(WebColors.GetRGBColor(COLOR_LIGHT_BLUE));
+                                PdfPage page = pdfDocument.GetLastPage();
+                                page.AddAnnotation(attachment);
+                                attachment.Flush();
+                                fs.Flush();                             
+                                fs = null;
+                                attachment = null;
+                            }
+                            finally
+                            {                                
+                                GC.Collect();
+                                GC.WaitForPendingFinalizers();
+                            }
+                               
+                            
+                            currentX += 50;
+                            if (currentX + ATTACHMENT_BOX_WIDTH > x)
+                            {
+                                currentY -= 100;
+                                currentX = 20;
+                            }
+
+                            if (currentY - ATTACHMENT_BOX_HEIGHT < 20)
+                            {
+                                currentY = 750;
+                                currentX = 20;
+                                newPageRequired = true;
+                            }
+
+
+                        }
+                                                
+                    }
+
+                    // p1#160_MultimediaAttachments03012024 done by Binoy - End
                 }
             }
 
@@ -239,6 +326,34 @@ namespace CityWatch.Web.Services
 
             return reportFileName;
         }
+
+        // p1#160_MultimediaAttachments03012024 done by Binoy - Start
+        public static byte[] ConvertToByteArrayChunked(string filePath)
+        {
+            const int MaxChunkSizeInBytes = 2048;
+            var totalBytes = 0;
+            byte[] fileByteArray;
+            var fileByteArrayChunk = new byte[MaxChunkSizeInBytes];
+
+
+            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+            {
+                int bytesRead;
+
+                while ((bytesRead = stream.Read(fileByteArrayChunk, 0, fileByteArrayChunk.Length)) > 0)
+                {
+                    totalBytes += bytesRead;
+                }
+
+                fileByteArray = new byte[totalBytes];
+                stream.Seek(0, SeekOrigin.Begin);
+                stream.Read(fileByteArray, 0, totalBytes);
+            }
+
+            return fileByteArray;
+        }
+
+        // p1#160_MultimediaAttachments03012024 done by Binoy - End
 
         private string GetLiveGpsImageFilePath(string gpsCoordinates)
         {
@@ -361,6 +476,10 @@ namespace CityWatch.Web.Services
 
             if (".pdf".IndexOf(extn.ToLower()) >= 0)
                 return AttachmentType.Pdf;
+
+            // Added by binoy 0n 03-01-2024 under task id p1#160_MultimediaAttachments03012024
+            if (".mp4,.avi,.mp3".IndexOf(extn.ToLower()) >= 0)
+                return AttachmentType.Multimedia;
 
             return AttachmentType.Unknown;
         }
