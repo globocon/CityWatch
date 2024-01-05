@@ -565,11 +565,12 @@
             primaryKey: 'id',
             inlineEditing: { mode: 'command', managementColumn: false },
             columns: [
-                { field: 'clientSiteId', hidden: true },
+                { field: 'clientSiteId', hidden: true },               
                 { field: 'eventDateTime', title: 'Time', width: 50, renderer: function (value, record) { return renderTime(value, record, false); } },
                 { field: 'notes', title: 'Event / Notes', width: 450, editor: logBookNotesEditor, renderer: renderLogBookNotes },
                 { field: 'guardInitials', title: 'Guard Initials', width: 50, renderer: function (value, record) { return record.guardLogin ? record.guardLogin.guard.initial : ''; } },
-                { width: 75, renderer: renderDailyLogManagement }
+                { width: 75, renderer: renderDailyLogManagement },
+                { field: 'rcPushMessageId', hidden: true }
             ]
         };
     }
@@ -609,7 +610,9 @@
         $messageBtn.on('click', function (e) {
             var id = $(this).data('id');
             var message = $(this).closest('tr').find('td').eq(2).text();
+            var rcPushMessageId = $(this).closest('tr').find('td').eq(5).text();
             $('#txtNotificationsControlRoomMessage').val(message);
+            $('#rcPushMessageId').val(rcPushMessageId);
             $('#pushNoTificationsGuardModal').modal('show');
         });
 
@@ -3122,7 +3125,8 @@
             data: {
                 guardLoginId: $('#GuardLog_GuardLoginId').val(),
                 clientSiteLogBookId: $('#GuardLog_ClientSiteLogBookId').val(),
-                Notifications: Notifications
+                Notifications: Notifications,
+                rcPushMessageId: $('#rcPushMessageId').val()
 
             },
             dataType: 'json',

@@ -35,6 +35,9 @@ namespace CityWatch.Data.Models
         [ForeignKey("GuardLoginId")]
         public GuardLogin GuardLogin { get; set; }
 
+        public int? RcPushMessageId { get; set; }
+        
+
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             var errors = new List<ValidationResult>();
