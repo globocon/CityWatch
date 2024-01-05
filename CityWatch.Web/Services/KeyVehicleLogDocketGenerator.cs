@@ -36,7 +36,8 @@ namespace CityWatch.Web.Services
     public interface IKeyVehicleLogDocketGenerator
     {
         string GeneratePdfReport(int keyVehicleLogId, string docketReason, string blankNoteOnOrOff, string serialNo);
-        string GeneratePdfReportList(int keyVehicleLogId, string docketReason, string blankNoteOnOrOff, string serialNo, List<int> ids);
+        string GeneratePdfReportList(int keyVehicleLogId, string docketReason, string blankNoteOnOrOff, string serialNo, List<int> ids, int clientsiteid);
+        string GeneratePdfReportListGlobal(int keyVehicleLogId1, string docketReason, string blankNoteOnOrOff, string serialNo, List<int> ids);
 
     }
     public class KeyVehicleLogDocketGenerator : IKeyVehicleLogDocketGenerator
@@ -74,23 +75,39 @@ namespace CityWatch.Web.Services
             _settings = settings.Value;
         }
         //To Generate the Pdf In List start
-        public string GeneratePdfReportList(int keyVehicleLogId1, string docketReason, string blankNoteOnOrOff, string serialNo, List<int> ids)
+        public string GeneratePdfReportList(int keyVehicleLogId1, string docketReason, string blankNoteOnOrOff, string serialNo, List<int> ids,int clientsiteid)
         {
 
-            //List<int> ids = new List<int> { 37200, 37199 };
-           
+            List<int> Newids = new List<int>();
+            int keyVehicleLogIdArr;
+
+
             var keyVehicleLogData = _guardLogDataProvider.GetKeyVehicleLogById(keyVehicleLogId1);
+            for (int i = 0; i < ids.Count; i++)
+            {
+                var keyVehicleLogArrID = _guardLogDataProvider.GetKeyVehicleLogById(ids[i]);
+                if (keyVehicleLogArrID.ClientSiteLogBook.ClientSite.Id == clientsiteid)
+                {
+                     keyVehicleLogIdArr = ids[i];
+                  
+                    Newids.Add(keyVehicleLogIdArr);
+                }
+                }
             var reportPdfPath1 = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{keyVehicleLogData.GuardLogin.ClientSite.Name}_SN{serialNo}.pdf");
             var pdfDocList = new PdfDocument(new PdfWriter(reportPdfPath1));
             pdfDocList.SetDefaultPageSize(PageSize.A4);
             var docList = new Document(pdfDocList);
-          
-            var reportPdfPath = "";
             docList.Add(CreateReportHeaderTableList(keyVehicleLogData.ClientSiteLogBook.ClientSiteId));
-            for (int i = 0; i < ids.Count; i++)
+            var reportPdfPath = "";
+        
+            for (int i = 0; i < Newids.Count; i++)
             {
-                var keyVehicleLogId = ids[i];
+                var keyVehicleLogId = Newids[i];
                 var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(keyVehicleLogId);
+                //if (keyVehicleLog.ClientSiteLogBook.ClientSite.Id== clientsiteid)
+                //{
+
+               
 
                 _guardLogDataProvider.SaveDocketSerialNo(keyVehicleLogId, serialNo);
 
@@ -106,12 +123,70 @@ namespace CityWatch.Web.Services
 
                   
                 docList.SetMargins(15f, 30f, 40f, 30f);
+               
+                docList.Add(CreateSiteDetailsTable(keyVehicleLog));
+                docList.Add(CreateReportDetailsTable(keyVehicleLogViewModel, blankNoteOnOrOff));
+                docList.Add(GetKeyAndOtherDetailsTable(keyVehicleLogViewModel));
+                docList.Add(GetCustomerRefAndVwiTable(keyVehicleLogViewModel));
+                docList.Add(CreateWeightandOtherDetailsTablePOI(keyVehicleLogViewModel, docketReason));
+                docList.Add(CreateImageDetailsTable(keyVehicleLogViewModel, docketReason));
+                if (i < Newids.Count - 1)
+                {
+                    docList.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                }
+                
+
+            }
+
+            docList.Close();
+            pdfDocList.Close();
+
+            return IO.Path.GetFileName(reportPdfPath1);
+        }
+        //To Generate the Pdf In List stop
+
+        //To generate POI List Globally strat
+        public string GeneratePdfReportListGlobal(int keyVehicleLogId1, string docketReason, string blankNoteOnOrOff, string serialNo, List<int> ids)
+        {
+
+            var keyVehicleLogData = _guardLogDataProvider.GetKeyVehicleLogById(keyVehicleLogId1);
+
+            var reportPdfPath1 = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{keyVehicleLogData.GuardLogin.ClientSite.Name}_SN{serialNo}.pdf");
+            var pdfDocList = new PdfDocument(new PdfWriter(reportPdfPath1));
+            pdfDocList.SetDefaultPageSize(PageSize.A4);
+            var docList = new Document(pdfDocList);
+
+            var reportPdfPath = "";
+            docList.Add(CreateReportHeaderTableList(keyVehicleLogData.ClientSiteLogBook.ClientSiteId));
+            for (int i = 0; i < ids.Count; i++)
+            {
+                var keyVehicleLogId = ids[i];
+                var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(keyVehicleLogId);
+                //if (keyVehicleLog.ClientSiteLogBook.ClientSite.Id== clientsiteid)
+                //{
+
+
+
+                _guardLogDataProvider.SaveDocketSerialNo(keyVehicleLogId, serialNo);
+
+                if (keyVehicleLog == null)
+                    return string.Empty;
+
+                var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
+                var keyVehicleLogViewModel = new KeyVehicleLogViewModel(keyVehicleLog, kvlFields);
+                reportPdfPath = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{keyVehicleLog.GuardLogin.ClientSite.Name}_SN{serialNo}.pdf");
+
+                if (IO.File.Exists(reportPdfPath))
+                    //IO.File.Delete(reportPdfPath);
+
+
+                    docList.SetMargins(15f, 30f, 40f, 30f);
 
                 docList.Add(CreateSiteDetailsTable(keyVehicleLog));
                 docList.Add(CreateReportDetailsTable(keyVehicleLogViewModel, blankNoteOnOrOff));
                 docList.Add(GetKeyAndOtherDetailsTable(keyVehicleLogViewModel));
                 docList.Add(GetCustomerRefAndVwiTable(keyVehicleLogViewModel));
-                docList.Add(CreateWeightandOtherDetailsTable(keyVehicleLogViewModel, docketReason));
+                docList.Add(CreateWeightandOtherDetailsTablePOI(keyVehicleLogViewModel, docketReason));
                 docList.Add(CreateImageDetailsTable(keyVehicleLogViewModel, docketReason));
                 if (i < ids.Count - 1)
                 {
@@ -123,9 +198,9 @@ namespace CityWatch.Web.Services
             docList.Close();
             pdfDocList.Close();
 
-            return IO.Path.GetFileName(reportPdfPath);
+            return IO.Path.GetFileName(reportPdfPath1);
         }
-        //To Generate the Pdf In List stop
+        //To generate POI List Glabally stop
         public string GeneratePdfReport(int keyVehicleLogId, string docketReason, string blankNoteOnOrOff, string serialNo)
         {
             var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(keyVehicleLogId);
@@ -316,6 +391,43 @@ namespace CityWatch.Web.Services
                                         .SetPaddingTop(7)
                                         .SetBorder(Border.NO_BORDER)
                                         .Add(GetOtherDetailsTable(docketReason));
+            innerTable2.AddCell(otherDetailsTable);
+
+            var cellInnerTable2 = new Cell()
+                                    .SetPaddingLeft(0)
+                                    .SetPaddingTop(0)
+                                    .SetBorder(Border.NO_BORDER)
+                                    .Add(innerTable2);
+            outerTable2.AddCell(cellInnerTable2);
+
+            var cellSignDetails = new Cell()
+                                    .SetPaddingRight(0)
+                                    .SetPaddingTop(0)
+                                    .SetBorder(Border.NO_BORDER)
+                                    .Add(GetSignDetailsTable());
+            outerTable2.AddCell(cellSignDetails);
+
+            return outerTable2;
+        }
+        //Table For POI List
+        private Table CreateWeightandOtherDetailsTablePOI(KeyVehicleLogViewModel keyVehicleLogViewModel, string docketReason)
+        {
+            var outerTable2 = new Table(UnitValue.CreatePercentArray(new float[] { 68, 32 })).UseAllAvailableWidth().SetMarginTop(10);
+
+            var innerTable2 = new Table(1).UseAllAvailableWidth();
+
+            var cellWeightDetailsTable = new Cell()
+                                            .SetPaddingLeft(0)
+                                            .SetPaddingTop(0)
+                                            .SetBorder(Border.NO_BORDER)
+                                            .Add(GetWeightDetailsTable(keyVehicleLogViewModel));
+            innerTable2.AddCell(cellWeightDetailsTable);
+
+            var otherDetailsTable = new Cell()
+                                        .SetPaddingLeft(0)
+                                        .SetPaddingTop(7)
+                                        .SetBorder(Border.NO_BORDER)
+                                        .Add(GetOtherDetailsTablePOList(docketReason));
             innerTable2.AddCell(otherDetailsTable);
 
             var cellInnerTable2 = new Cell()
@@ -637,14 +749,30 @@ namespace CityWatch.Web.Services
 
             otherDetailsTable.AddCell(GetDataCell("Y / NA", textAlignment: TextAlignment.CENTER, cellFontSize: CELL_FONT_SIZE_BIG)
                 .SetHorizontalAlignment(HorizontalAlignment.CENTER)
-                .SetVerticalAlignment(VerticalAlignment.MIDDLE));                
-            otherDetailsTable.AddCell(GetDataCell("POI LIst", textAlignment: TextAlignment.LEFT)
-                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE));
+            otherDetailsTable.AddCell(GetDataCell(docketReason, textAlignment: TextAlignment.LEFT)
+                 .SetVerticalAlignment(VerticalAlignment.MIDDLE)
                 .SetHeight(10));
 
             return otherDetailsTable;
         }
+        //PO List 
+        private static Table GetOtherDetailsTablePOList(string docketReason)
+        {
+            var otherDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 40, 60 })).UseAllAvailableWidth().SetMarginTop(12);
 
+            otherDetailsTable.AddCell(GetHeaderCell("STMS Form \n(Outbound / pickup only)", textAlignment: TextAlignment.LEFT));
+            otherDetailsTable.AddCell(GetHeaderCell("Why was MANUAL Docket Created?", textAlignment: TextAlignment.LEFT));
+
+            otherDetailsTable.AddCell(GetDataCell("Y / NA", textAlignment: TextAlignment.CENTER, cellFontSize: CELL_FONT_SIZE_BIG)
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE));
+            otherDetailsTable.AddCell(GetDataCell("POI List", textAlignment: TextAlignment.LEFT)
+                 .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                .SetHeight(10));
+
+            return otherDetailsTable;
+        }
         private static Table GetSignDetailsTable()
         {
             var signDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 25, 75 })).UseAllAvailableWidth();

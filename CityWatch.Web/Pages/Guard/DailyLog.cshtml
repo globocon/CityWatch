@@ -8,6 +8,7 @@
 @{
     ViewData["Title"] = "CityWatch Security | Guard Daily Log";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.DailyGuardLog;
+    <input type="hidden" id="ClientSiteID" asp-for="@Model.GuardLog.ClientSiteLogBook.ClientSite.Id" />
 }
 <div id="loader"></div>
 <div class="row">

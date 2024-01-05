@@ -3257,11 +3257,11 @@ $('#generate_logbook_AlldocketList').on('click', function () {
         $.ajax({
             url: '/Guard/KeyVehicleLog?handler=GenerateManualDocketList',
             data: {
-                id: ids,
+                IsGlobal: false,
                 option: $(checkedReason).val(),
                 otherReason: $('#otherReason').val(),
                 stakeholderEmails: $('#stakeholderEmail').val(),
-                clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),
+                clientSiteId: $('#ClientSiteID').val(),
                 blankNoteOnOrOff: $('#IsBlankNoteOn').val(),
                 ids: ids,
             },
