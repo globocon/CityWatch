@@ -115,8 +115,27 @@ namespace CityWatch.Web.Pages.Guard
                     {
                         _viewDataService.CopyOpenLogbookEntriesFromPreviousDay(previousDayLogBook.Id, logBookId, guardLoginId);
                     }
+                  
                 }
                 //logBookId entry for radio checklist-start
+
+                /* Previous days push message show only for petrol cars*/
+                /*Citywatch M1 - Romeo Patrol Cars*/
+                /* get previous day push messages Start */
+                if (LogBookType == LogBookType.DailyGuardLog && isNewLogBook)
+                {
+                    /*check if id is Citywatch M1 - Romeo Patrol Cars site id=625*/
+                    if (GuardLogin.ClientSite.Id == 625)
+                    {
+                        var previousPuShMessages = _clientDataProvider.GetPushMessagesNotAcknowledged(GuardLogin.ClientSite.Id, DateTime.Today.AddDays(-1));
+                        if (previousPuShMessages != null)
+                        {
+                            _guardLogDataProvider.CopyPreviousDaysPushMessageToLogBook(previousPuShMessages, logBookId, guardLoginId);
+                        }
+                    }
+
+                }
+                /* get previous day push messages end */
 
                 var gaurdlogin = _clientDataProvider.GetGuardLogin(guardLoginId, logBookId);
                 if (gaurdlogin.Count != 0)

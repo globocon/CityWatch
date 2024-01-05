@@ -122,10 +122,8 @@ namespace CityWatch.Data.Providers
         List<SelectListItem> GetUserClientTypesHavingAccess(int? userId);
         void SaveClientSiteForRcLogBook(int clientSiteId);
         List<ClientSite> GetClientSiteForRcLogBook();
-
-
-
         void RemoveRCList(int rcListId);
+        List<RadioCheckPushMessages> GetPushMessagesNotAcknowledged(int clientSiteId, DateTime date);
 
     }
 
@@ -1411,6 +1409,13 @@ namespace CityWatch.Data.Providers
         }
         //to get incident reports-end-jisha
 
+        /* Get Previous day pushmessages Start*/
+        public List<RadioCheckPushMessages> GetPushMessagesNotAcknowledged(int clientSiteId, DateTime date)
+        {
+            return _context.RadioCheckPushMessages.Where
+                 (z => z.ClientSiteId == clientSiteId  && z.EntryType==2 && z.IsAcknowledged==0).ToList();
+        }
+        /* Get Previous day pushmessages end*/
     }
 
 

@@ -464,7 +464,7 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(new { status, message });
         }
-        public JsonResult OnPostSavePushNotificationTestMessages(int guardLoginId, int clientSiteLogBookId, string Notifications)
+        public JsonResult OnPostSavePushNotificationTestMessages(int guardLoginId, int clientSiteLogBookId, string Notifications,int rcPushMessageId)
         {
             var success = true;
             var message = "success";
@@ -479,6 +479,10 @@ namespace CityWatch.Web.Pages.Guard
                     IrEntryType = IrEntryType.Normal
                 };
                 _guardLogDataProvider.SaveGuardLog(signOffEntry);
+
+                /* update UpdateIsAcknowledged to 1 start */
+                _guardLogDataProvider.UpdateIsAcknowledged(rcPushMessageId);
+                /* update UpdateIsAcknowledged to 1 end */
 
                 /* message to Citywatch Conrol room logbook from (settings in RC)  Start*/
 
