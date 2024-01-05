@@ -49,5 +49,6 @@ namespace CityWatch.Data.Models
         public GuardLog GuardLog { get; set; }
         [ForeignKey("KVId")]
         public KeyVehicleLog KeyVehicleLog { get; set; }
+        public string ActivityDescription { get; set; }
     }
 }

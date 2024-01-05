@@ -150,7 +150,7 @@ namespace CityWatch.Data.Providers
         void SaveClientSiteRadioCheckNew(ClientSiteRadioCheck clientSiteRadioCheck);
         //for saving status for active guards-end
 
-
+        void EditRadioChecklistEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity);
         List<RadioCheckListGuardLoginData> GetClientSiteRadiocheckStatus(int clientSiteId, int guardId);
 
         void RemoveGuardLoginFromdifferentSites();
@@ -168,6 +168,7 @@ namespace CityWatch.Data.Providers
         void DeleteDosandDontsField(int id);
         List<DosAndDontsField> GetDosandDontsFields(int type);
         //do's and donts-end
+        void DeleteClientSiteRadioCheckActivityStatusForKV(int id);
 
     }
 
@@ -1002,6 +1003,44 @@ namespace CityWatch.Data.Providers
         {
             return _context.CompanyDetails.ToList();
         }
+
+        //To Update keyvehiclelog
+        public void EditRadioChecklistEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity)
+        {
+            try
+            {
+                if (clientSiteActivity.Id == 0)
+                {
+
+                    _context.ClientSiteRadioChecksActivityStatus.Add(new ClientSiteRadioChecksActivityStatus()
+                    {
+                        ClientSiteId = clientSiteActivity.ClientSiteId,
+                        GuardId = clientSiteActivity.GuardId,
+                        LastIRCreatedTime = clientSiteActivity.LastIRCreatedTime,
+                        LastKVCreatedTime = clientSiteActivity.LastKVCreatedTime,
+                        LastLBCreatedTime = clientSiteActivity.LastLBCreatedTime,
+                        GuardLoginTime = clientSiteActivity.GuardLoginTime,
+                        GuardLogoutTime = clientSiteActivity.GuardLogoutTime,
+                        IRId = clientSiteActivity.IRId,
+                        KVId = clientSiteActivity.KVId,
+                        LBId = clientSiteActivity.LBId,
+                        ActivityType = clientSiteActivity.ActivityType,
+                        OnDuty = clientSiteActivity.OnDuty,
+                        OffDuty = clientSiteActivity.OffDuty,
+                        ActivityDescription = "Edited"
+                    }) ;
+
+                }
+               
+
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+
         public void SaveRadioChecklistEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity)
         {
             try
@@ -2825,6 +2864,20 @@ namespace CityWatch.Data.Providers
                 throw new InvalidOperationException();
 
             _context.Remove(DosAndDontsFieldToDelete);
+            _context.SaveChanges();
+        }
+        //To Delete RadiocheckStatusKV
+        public void DeleteClientSiteRadioCheckActivityStatusForKV(int id)
+        {
+            var clientSiteRadioCheckActivityStatusToDelete = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.Id == id);
+            if (clientSiteRadioCheckActivityStatusToDelete == null)
+                throw new InvalidOperationException();
+            foreach (var item in clientSiteRadioCheckActivityStatusToDelete)
+            {
+                _context.Remove(item);
+            }
+
+
             _context.SaveChanges();
         }
 
