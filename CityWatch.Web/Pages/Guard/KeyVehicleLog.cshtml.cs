@@ -41,6 +41,7 @@ using iText.Layout.Element;
 using iText.Layout.Properties;
 using Serilog;
 using static Dropbox.Api.TeamLog.EventCategory;
+using static Dropbox.Api.Paper.PaperDocPermissionLevel;
 
 namespace CityWatch.Web.Pages.Guard
 {
@@ -344,7 +345,20 @@ namespace CityWatch.Web.Pages.Guard
             var message = "Success";
             try
             {
+                //for entering the audit history of the person who exit the entry-start
+                KeyVehicleLogAuditHistory keyVehicleLogAuditHistory = null;
+                var keyVehicleLogInExitTime = _guardLogDataProvider.GetKeyVehicleLogById(Id);
+                keyVehicleLogInExitTime.ActiveGuardLoginId = HttpContext.Session.GetInt32("GuardLoginId");
+                keyVehicleLogInExitTime.ExitTime = DateTime.Now;
+                keyVehicleLogAuditHistory = GetKvlAuditHistory(keyVehicleLogInExitTime);
+                keyVehicleLogAuditHistory.AuditMessage = "Exit entry";
+                var profileId = GetKvlProfileId(keyVehicleLogInExitTime);
+                keyVehicleLogAuditHistory.ProfileId = profileId;
+                keyVehicleLogAuditHistory.KeyVehicleLogId = KeyVehicleLog.Id;
+                _guardLogDataProvider.SaveKeyVehicleLogAuditHistory(keyVehicleLogAuditHistory);
+                //for entering the audit history of the person who exit the entry-end
                 _guardLogDataProvider.KeyVehicleLogQuickExit(Id);
+                 
             }
             catch (Exception ex)
             {
