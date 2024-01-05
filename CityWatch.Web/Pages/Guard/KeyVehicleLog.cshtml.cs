@@ -313,7 +313,7 @@ namespace CityWatch.Web.Pages.Guard
                 {
 
                     var guardId = _guardLogDataProvider.GetGuardLogins(Convert.ToInt32(HttpContext.Session.GetInt32("GuardLoginId"))).Select(x=>x.GuardId).FirstOrDefault();
-                    var ClientSiteRadioChecksActivityDetailsCheck = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == guardId && x.ClientSiteId == KeyVehicleLog.GuardLogin.ClientSiteId);
+                    var ClientSiteRadioChecksActivityDetailsCheck = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == guardId && x.ClientSiteId == KeyVehicleLog.GuardLogin.ClientSiteId && x.KVId==KeyVehicleLog.Id);
                     if (ClientSiteRadioChecksActivityDetailsCheck.Count()==0)
                     {
 
