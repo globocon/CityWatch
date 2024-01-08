@@ -41,7 +41,9 @@ using iText.Layout.Element;
 using iText.Layout.Properties;
 using Serilog;
 using static Dropbox.Api.TeamLog.EventCategory;
+using System.Net.Http;
 using static Dropbox.Api.Paper.PaperDocPermissionLevel;
+
 
 namespace CityWatch.Web.Pages.Guard
 {
@@ -309,8 +311,38 @@ namespace CityWatch.Web.Pages.Guard
                         _guardLogDataProvider.UpdateRadioChecklistEntry(ClientSiteRadioChecksActivity);
                     }
                 }
+                if (KeyVehicleLog.GuardLoginId!= HttpContext.Session.GetInt32("GuardLoginId"))
+                {
 
+                    var guardId = _guardLogDataProvider.GetGuardLogins(Convert.ToInt32(HttpContext.Session.GetInt32("GuardLoginId"))).Select(x=>x.GuardId).FirstOrDefault();
+                    var ClientSiteRadioChecksActivityDetailsCheck = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == guardId && x.ClientSiteId == KeyVehicleLog.GuardLogin.ClientSiteId && x.KVId==KeyVehicleLog.Id);
+                    if (ClientSiteRadioChecksActivityDetailsCheck.Count()==0)
+                    {
+
+                   
+                    var clientsiteRadioCheckEdit = new ClientSiteRadioChecksActivityStatus()
+                    {
+                        ClientSiteId = KeyVehicleLog.GuardLogin.ClientSiteId,
+                        GuardId = guardId,
+                        LastKVCreatedTime = DateTime.Now,
+                        KVId = KeyVehicleLog.Id,
+                        ActivityType = "KV"
+                    };
+                    _guardLogDataProvider.EditRadioChecklistEntry(clientsiteRadioCheckEdit);
+                    var ClientSiteRadioChecksActivityDetails = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == guardId && x.ClientSiteId != KeyVehicleLog.GuardLogin.ClientSiteId);
+                    if (ClientSiteRadioChecksActivityDetails.Count()!=0)
+                    {
+                        foreach (var item in ClientSiteRadioChecksActivityDetails)
+                        {
+                            _guardLogDataProvider.DeleteClientSiteRadioCheckActivityStatusForKV(item.Id);
+                        }
+                        
+                    }
+                    }
+                }
+                //_guardLogDataProvider.EditRadioChecklistEntry(ClientSiteRadioChecksActivity)
             }
+
             catch (Exception ex)
             {
                 success = false;
