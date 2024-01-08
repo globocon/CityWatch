@@ -168,8 +168,16 @@ namespace CityWatch.Data.Providers
         void DeleteDosandDontsField(int id);
         List<DosAndDontsField> GetDosandDontsFields(int type);
         //do's and donts-end
+
         void DeleteClientSiteRadioCheckActivityStatusForKV(int id);
 
+        /* Save push messages*/
+        int SavePushMessage(RadioCheckPushMessages radioCheckPushMessages);
+
+
+        void UpdateIsAcknowledged(int rcPushMessageId);
+
+        void CopyPreviousDaysPushMessageToLogBook(List<RadioCheckPushMessages> previousDayPushmessageList, int logBookId, int guardLoginId);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -302,7 +310,8 @@ namespace CityWatch.Data.Providers
                     Notes = guardLog.Notes,
                     GuardLoginId = guardLog.GuardLoginId,
                     IsSystemEntry = guardLog.IsSystemEntry,
-                    IrEntryType = guardLog.IrEntryType
+                    IrEntryType = guardLog.IrEntryType,
+                    RcPushMessageId= guardLog.RcPushMessageId
                 });
             }
             else
@@ -2866,6 +2875,7 @@ namespace CityWatch.Data.Providers
             _context.Remove(DosAndDontsFieldToDelete);
             _context.SaveChanges();
         }
+
         //To Delete RadiocheckStatusKV
         public void DeleteClientSiteRadioCheckActivityStatusForKV(int id)
         {
@@ -2881,8 +2891,49 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
 
+        //do's and donts-end
+
+        public int SavePushMessage(RadioCheckPushMessages radioCheckPushMessages)
+        {
+            _context.RadioCheckPushMessages.Add(radioCheckPushMessages);
+            _context.SaveChanges();
+            return radioCheckPushMessages.Id;
+        }
+
+        public void UpdateIsAcknowledged(int rcPushMessageId)
+        {
+            var radioCheckPushMessages = _context.RadioCheckPushMessages.SingleOrDefault(x => x.Id == rcPushMessageId);
+            if (radioCheckPushMessages == null)
+                throw new InvalidOperationException();
+            radioCheckPushMessages.IsAcknowledged = 1;
+            _context.SaveChanges();
+          
+        }
+        public void CopyPreviousDaysPushMessageToLogBook(List <RadioCheckPushMessages> previousDayPushmessageList,int logBookId,int guardLoginId)
+        {
+            foreach(var pushMessage in previousDayPushmessageList)
+            {
+                if(pushMessage.IsAcknowledged==0)
+                {
+                    var guardLog = new GuardLog()
+                    {
+                        ClientSiteLogBookId = logBookId,
+                        GuardLoginId = guardLoginId,
+                        EventDateTime = DateTime.Now,
+                        Notes = pushMessage.Notes,
+                        IrEntryType = IrEntryType.Alarm,
+                        RcPushMessageId = pushMessage.Id
+                    };
+                    SaveGuardLog(guardLog);
+
+                }
+
+            }
+
+        }
+
     }
-    //do's and donts-end
+
 
 
 }

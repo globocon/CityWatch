@@ -197,7 +197,7 @@ namespace CityWatch.Web.Pages.Radio
             try
             {
 
-              
+
                 _guardLogDataProvider.SaveClientSiteRadioCheckNew(new ClientSiteRadioCheck()
                 {
                     ClientSiteId = clientSiteId,
@@ -209,7 +209,7 @@ namespace CityWatch.Web.Pages.Radio
                 });
 
                 var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
-                _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(loginguardid, guardId, null,checkedStatus, IrEntryType.Notification,2);
+                _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(loginguardid, guardId, null, checkedStatus, IrEntryType.Notification, 2);
             }
             catch (Exception ex)
             {
@@ -234,32 +234,61 @@ namespace CityWatch.Web.Pages.Radio
                     var guardid = HttpContext.Session.GetInt32("GuardId");
                     if (guardid != 0)
                     {
+                        /* Save the push message for reload to logbook on next day Start*/
+                        var radioCheckPushMessages = new RadioCheckPushMessages()
+                        {
+                            ClientSiteId = clientSiteId,
+                            LogBookId = logBookId,
+                            Notes = Subject + " : " + Notifications,
+                            EntryType = (int)IrEntryType.Alarm,
+                            Date = DateTime.Today,
+                            IsAcknowledged = 0
+                        };
+                        var pushMessageId = _guardLogDataProvider.SavePushMessage(radioCheckPushMessages);
+                        /* Save the push message for reload to logbook on next day end*/
+                       
+
+
                         var guardLoginId = _guardLogDataProvider.GetGuardLoginId(Convert.ToInt32(guardid), DateTime.Today);
-                        // var guardName = _guardLogDataProvider.GetGuards(ClientSiteRadioChecksActivity.GuardId).Name;
                         var guardLog = new GuardLog()
                         {
                             ClientSiteLogBookId = logBookId,
                             GuardLoginId = guardLoginId,
                             EventDateTime = DateTime.Now,
                             Notes = Subject + " : " + Notifications,
-                            //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
-                            //IsSystemEntry = true,
-                            IrEntryType = IrEntryType.Alarm
+                            IrEntryType = IrEntryType.Alarm,
+                            RcPushMessageId = pushMessageId
                         };
                         _guardLogDataProvider.SaveGuardLog(guardLog);
                     }
                     else
                     {
+                        /* Save the push message for reload to logbook on next day Start*/
+                        var radioCheckPushMessages = new RadioCheckPushMessages()
+                        {
+                            ClientSiteId = clientSiteId,
+                            LogBookId = logBookId,
+                            Notes = Subject + " : " + Notifications,
+                            EntryType = (int)IrEntryType.Alarm,
+                            Date = DateTime.Today,
+                            IsAcknowledged = 0
+                        };
+                        var pushMessageId = _guardLogDataProvider.SavePushMessage(radioCheckPushMessages);
+                        /* Save the push message for reload to logbook on next day end*/
+
+
+
                         var guardLog = new GuardLog()
                         {
                             ClientSiteLogBookId = logBookId,
                             EventDateTime = DateTime.Now,
                             Notes = Subject + " : " + Notifications,
-                            //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
-                            //IsSystemEntry = true,
-                            IrEntryType = IrEntryType.Alarm
+                            IrEntryType = IrEntryType.Alarm,
+                            RcPushMessageId= pushMessageId
                         };
                         _guardLogDataProvider.SaveGuardLog(guardLog);
+
+                      
                     }
 
                     var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
@@ -485,12 +514,12 @@ namespace CityWatch.Web.Pages.Radio
                     }
                     /* log book entry to citywtch control room */
                     var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
-                    _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(loginguardid, 0, Subject, Notifications, IrEntryType.Alarm,1);
+                    _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(loginguardid, 0, Subject, Notifications, IrEntryType.Alarm, 1);
                     foreach (var item in clientSitesState)
                     {
                         EmailSender(item.SiteEmail, item.Id, Subject, Notifications);
                     }
-                  
+
 
 
                 }
@@ -507,12 +536,12 @@ namespace CityWatch.Web.Pages.Radio
                         }
                         /* log book entry to citywtch control room */
                         var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
-                        _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(loginguardid, 0, Subject, Notifications, IrEntryType.Alarm,1);
+                        _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(loginguardid, 0, Subject, Notifications, IrEntryType.Alarm, 1);
                         foreach (var clientSiteTypeID in clientSitesClientType)
                         {
                             EmailSender(clientSiteTypeID.SiteEmail, clientSiteTypeID.Id, Subject, Notifications);
                         }
-                       
+
                     }
                     else
                     {
@@ -528,7 +557,7 @@ namespace CityWatch.Web.Pages.Radio
                         {
                             EmailSender(clientSiteTypeID.SiteEmail, clientSiteTypeID.Id, Subject, Notifications);
                         }
-                       
+
                     }
                 }
                 if (chkNationality == true)
@@ -683,6 +712,19 @@ namespace CityWatch.Web.Pages.Radio
                     var guardid = HttpContext.Session.GetInt32("GuardId");
                     if (guardid != 0)
                     {
+
+                        /* Save the push message for reload to logbook on next day Start*/
+                        var radioCheckPushMessages = new RadioCheckPushMessages()
+                        {
+                            ClientSiteId = Id,
+                            LogBookId = logBookId,
+                            Notes = Subject + " : " + Notifications,
+                            EntryType = (int)IrEntryType.Alarm,
+                            Date = DateTime.Today,
+                            IsAcknowledged = 0
+                        };
+                        var pushMessageId = _guardLogDataProvider.SavePushMessage(radioCheckPushMessages);
+                        /* Save the push message for reload to logbook on next day end*/
                         var guardLoginId = _guardLogDataProvider.GetGuardLoginId(Convert.ToInt32(guardid), DateTime.Today);
                         // var guardName = _guardLogDataProvider.GetGuards(ClientSiteRadioChecksActivity.GuardId).Name;
                         var guardLog = new GuardLog()
@@ -693,12 +735,26 @@ namespace CityWatch.Web.Pages.Radio
                             Notes = Subject + " : " + Notifications,
                             //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                             //IsSystemEntry = true,
-                            IrEntryType = IrEntryType.Alarm
+                            IrEntryType = IrEntryType.Alarm,
+                            RcPushMessageId= pushMessageId
                         };
                         _guardLogDataProvider.SaveGuardLog(guardLog);
                     }
                     else
                     {
+                        /* Save the push message for reload to logbook on next day Start*/
+                        var radioCheckPushMessages = new RadioCheckPushMessages()
+                        {
+                            ClientSiteId = Id,
+                            LogBookId = logBookId,
+                            Notes = Subject + " : " + Notifications,
+                            EntryType = (int)IrEntryType.Alarm,
+                            Date = DateTime.Today,
+                            IsAcknowledged = 0
+                        };
+                        var pushMessageId = _guardLogDataProvider.SavePushMessage(radioCheckPushMessages);
+
+
                         var guardLog = new GuardLog()
                         {
                             ClientSiteLogBookId = logBookId,
@@ -706,7 +762,8 @@ namespace CityWatch.Web.Pages.Radio
                             Notes = Subject + " : " + Notifications,
                             //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                             //IsSystemEntry = true,
-                            IrEntryType = IrEntryType.Alarm
+                            IrEntryType = IrEntryType.Alarm,
+                            RcPushMessageId = pushMessageId
                         };
                         if (guardLog.ClientSiteLogBookId != 0)
                         {
@@ -714,6 +771,8 @@ namespace CityWatch.Web.Pages.Radio
                         }
 
                     }
+
+                  
                 }
 
             }

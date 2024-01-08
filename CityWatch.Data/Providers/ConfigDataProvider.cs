@@ -353,7 +353,25 @@ namespace CityWatch.Data.Providers
         //to get functions for settings in radio check-start
         public List<RadioCheckStatusColor> GetRadioCheckStatusColorCode(string name)
         {
-            return _context.RadioCheckStatusColor.Where(x => String.IsNullOrEmpty(name) || x.Name == name).ToList();
+            //To get the Name in order
+             var filteredRecords = _context.RadioCheckStatusColor
+                 .Where(x => string.IsNullOrEmpty(name) || x.Name == name)
+                 .OrderBy(x => x.Name)
+                 .ToList();
+
+            var redRecords = filteredRecords
+                .Where(x => x.Name.StartsWith("Red", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            var greenRecords = filteredRecords
+                .Where(x => x.Name.StartsWith("Green", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            var orderedRecords = new List<RadioCheckStatusColor>();
+            orderedRecords.AddRange(redRecords);
+            orderedRecords.AddRange(greenRecords);
+
+            return orderedRecords;
         }
         public List<RadioCheckStatus> GetRadioCheckStatusWithOutcome()
         {

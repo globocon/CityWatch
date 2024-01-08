@@ -131,7 +131,32 @@ $('#clientSiteActivityStatus').on('click', 'button[name="btnRadioCheckStatus"]',
 
 $(window).resize(function () {
     console.log($(window).height());
-    $('.dataTables_scrollBody').css('height', ($(window).height() - 200));
+    //$('.dataTables_scrollBody').css('height', ($(window).height() - 200));
+    /* for modifying the size of tables active and inactive guards-start*/
+    var count = $('#clientSiteInActiveGuards tbody tr').length;
+    if (count > 10) {
+        $('#clientSiteInActiveGuards').closest('.dataTables_scrollBody').css('height', ($(window).height() - 300));
+
+    }
+    else {
+
+
+        $('#clientSiteInActiveGuards').closest('.dataTables_scrollBody').css('height', '100%');
+
+    }
+    var count2 = $('#clientSiteActiveGuards tbody tr').length;
+    if (count2 > 10) {
+        $('#clientSiteActiveGuards').closest('.dataTables_scrollBody').css('height', ($(window).height() - 200));
+
+    }
+    else {
+
+
+        $('#clientSiteActiveGuards').closest('.dataTables_scrollBody').css('height', '100%');
+
+    }
+   /* for modifying the size of tables active and inactive guards - end*/
+
 });
 
 
@@ -284,6 +309,21 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     },
     drawCallback: function () {
         $(".dataTables_scrollBody").scrollTop(scrollPosition);
+        /*for modifying the size of tables active  guards - start*/
+        var count = $('#clientSiteActiveGuards tbody tr').length;
+        if (count > 10) {
+            $('#clientSiteActiveGuards').closest('.dataTables_scrollBody').css('height', ($(window).height() - 300));
+
+        }
+        else {
+
+
+            $('#clientSiteActiveGuards').closest('.dataTables_scrollBody').css('height', '100%');
+
+        }
+
+        /*for modifying the size of tables active  guards - end*/
+
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;
@@ -577,6 +617,20 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
     drawCallback: function () {
         /* Retain the Scroll position*/
         $(".dataTables_scrollBody").scrollTop(scrollPosition);
+        /*for modifying the size of tables   inactive guards - start*/
+        var count = $('#clientSiteInActiveGuards tbody tr').length;
+        if (count > 10) {
+            $('#clientSiteInActiveGuards').closest('.dataTables_scrollBody').css('height', ($(window).height() - 200));
+
+        }
+        else {
+
+
+            $('#clientSiteInActiveGuards').closest('.dataTables_scrollBody').css('height', '100%');
+
+        }
+
+        /* for modifying the size of tables   inactive guards - end*/
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;
@@ -2111,12 +2165,36 @@ $('#heading-example').on('click', function () {
     if (isActive) {
         console.log($(window).height());
         var container = $('#clientSiteActiveGuards').closest('.dataTables_scrollBody');
-        container.css('height', ($(window).height() - 100));
+        /* for modifying the size of tables active  guards - start*/
+        var count = $('#clientSiteActiveGuards tbody tr').length;
+        if (count > 10) {
+            container.css('height', ($(window).height() - 100));
+
+        }
+        else {
+
+            container.css('height', '100%');
+
+
+        }
+       /* for modifying the size of tables active  guards - end*/
     }
     else {
         console.log($(window).height());
         var container = $('#clientSiteActiveGuards').closest('.dataTables_scrollBody');
-        container.css('height', ($(window).height() - 300));
+        /*for modifying the size of tables active  guards - start*/
+        var count = $('#clientSiteActiveGuards tbody tr').length;
+        if (count > 10) {
+            container.css('height', ($(window).height() - 300));
+
+        }
+        else {
+
+            container.css('height', '100%');
+
+
+        }
+       /* for modifying the size of tables active  guards - end*/
 
     }
     // Toggle the state
@@ -2132,8 +2210,22 @@ $('#heading-example2').on('click', function () {
     }
     else {
         console.log($(window).height());
+
+
         var container = $('#clientSiteInActiveGuards').closest('.dataTables_scrollBody');
-        container.css('height', ($(window).height() - 300));
+        /*for modifying the size of tables   inactive guards - start*/
+        var count = $('#clientSiteInActiveGuards tbody tr').length;
+        if (count > 10) {
+            container.css('height', ($(window).height() - 300));
+
+        }
+        else {
+
+            container.css('height', '100%');
+
+
+        }
+        /*for modifying the size of tables   inactive guards - end*/
 
 
     }

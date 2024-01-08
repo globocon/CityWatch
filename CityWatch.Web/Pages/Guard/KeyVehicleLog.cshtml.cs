@@ -42,6 +42,8 @@ using iText.Layout.Properties;
 using Serilog;
 using static Dropbox.Api.TeamLog.EventCategory;
 using System.Net.Http;
+using static Dropbox.Api.Paper.PaperDocPermissionLevel;
+
 
 namespace CityWatch.Web.Pages.Guard
 {
@@ -375,7 +377,20 @@ namespace CityWatch.Web.Pages.Guard
             var message = "Success";
             try
             {
+                //for entering the audit history of the person who exit the entry-start
+                KeyVehicleLogAuditHistory keyVehicleLogAuditHistory = null;
+                var keyVehicleLogInExitTime = _guardLogDataProvider.GetKeyVehicleLogById(Id);
+                keyVehicleLogInExitTime.ActiveGuardLoginId = HttpContext.Session.GetInt32("GuardLoginId");
+                keyVehicleLogInExitTime.ExitTime = DateTime.Now;
+                keyVehicleLogAuditHistory = GetKvlAuditHistory(keyVehicleLogInExitTime);
+                keyVehicleLogAuditHistory.AuditMessage = "Exit entry";
+                var profileId = GetKvlProfileId(keyVehicleLogInExitTime);
+                keyVehicleLogAuditHistory.ProfileId = profileId;
+                keyVehicleLogAuditHistory.KeyVehicleLogId = KeyVehicleLog.Id;
+                _guardLogDataProvider.SaveKeyVehicleLogAuditHistory(keyVehicleLogAuditHistory);
+                //for entering the audit history of the person who exit the entry-end
                 _guardLogDataProvider.KeyVehicleLogQuickExit(Id);
+                 
             }
             catch (Exception ex)
             {
@@ -941,17 +956,24 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { fileName = @Url.Content($"~/Pdf/Output/{fileName}"), statusCode });
         }
         //To Generate the Pdf In List start
-        public async Task<JsonResult> OnPostGenerateManualDocketList(int id1, ManualDocketReason option, string otherReason, string stakeholderEmails, int clientSiteId, string blankNoteOnOrOff, List<int> ids)
+        public async Task<JsonResult> OnPostGenerateManualDocketList(bool IsGlobal, ManualDocketReason option, string otherReason, string stakeholderEmails, int clientSiteId, string blankNoteOnOrOff, List<int> ids)
         {
             //id = 37200;
              var fileName = string.Empty;
             var statusCode = 0;
-            foreach (var id in ids)
-            {
+            int id = ids[0];
                 try
                 {
                     var serialNo = GetNextDocketSequenceNumber(id);
-                    fileName = _keyVehicleLogDocketGenerator.GeneratePdfReportList(id, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, serialNo, ids);
+                if (IsGlobal==true)
+                {
+                    fileName = _keyVehicleLogDocketGenerator.GeneratePdfReportListGlobal(id, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, serialNo, ids);
+                }
+                else
+                {
+                    fileName = _keyVehicleLogDocketGenerator.GeneratePdfReportList(id, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, serialNo, ids, clientSiteId);
+                }
+                    
 
 
                 }
@@ -994,7 +1016,7 @@ namespace CityWatch.Web.Pages.Guard
                 //    statusCode += -3;
                 //    _logger.LogError(ex.StackTrace);
                 //}
-            }
+            
 
            
 

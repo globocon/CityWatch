@@ -6,6 +6,7 @@
     ViewData["title"] = "CityWatch Security | Vehicle And Key Log";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.VehicleAndKeyLog;
 }
+<input type="hidden" id="ClientSiteID" asp-for="@Model.KeyVehicleLog.ClientSiteLogBook.ClientSite.Id"/>
 <input type="hidden" asp-for="@Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId" />
 <input type="hidden" asp-for="@Model.KeyVehicleLog.GuardLogin.Id" />
 <input type="hidden" asp-for="@Model.KeyVehicleLog.GuardLogin.GuardId" />

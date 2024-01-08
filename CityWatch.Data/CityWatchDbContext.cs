@@ -79,6 +79,6 @@ namespace CityWatch.Data
 
         public DbSet<RadioCheckLogbookSiteDetails> RadioCheckLogbookSiteDetails { get; set; }
         public DbSet<DosAndDontsField> DosAndDontsField { get; set; }
-
+        public DbSet<RadioCheckPushMessages> RadioCheckPushMessages { get; set; }
     }
 }

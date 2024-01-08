@@ -8,6 +8,7 @@
 @{
     ViewData["Title"] = "CityWatch Security | Guard Daily Log";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.DailyGuardLog;
+    <input type="hidden" id="ClientSiteID" asp-for="@Model.GuardLog.ClientSiteLogBook.ClientSite.Id" />
 }
 <div id="loader"></div>
 <div class="row">
@@ -285,6 +286,7 @@
                                     <div class="col-md-12">
                                         <form>
                                             <input type="hidden" id="txtNotificationsControlRoomMessage" />
+                                            <input type="hidden" id="rcPushMessageId" />
                                             <div class="form-group row mb-3">
                                                 <label for="gs_site_email" class="col-md-4 col-form-label">Acknowledge Message :</label>
                                                 <div class="col-md-6 mr-5 mt-2 p-0">
