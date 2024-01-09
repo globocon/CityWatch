@@ -8,7 +8,7 @@
 @{
     ViewData["Title"] = "CityWatch Security | Guard Daily Log";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.DailyGuardLog;
-    <input type="hidden" id="ClientSiteID" asp-for="@Model.GuardLog.ClientSiteLogBook.ClientSite.Id" />
+    <input type="hidden" id="ClientSiteID" asp-for="@Model.GuardLog.ClientSiteLogBook.ClientSite.Id" />    
 }
 <div id="loader"></div>
 <div class="row">
@@ -64,9 +64,9 @@
                                 </li>
                             </ul>
                         </div>
-                        <div class="col-md-4 text-center">
+                        <div class="col-md-4 text-center">                            
                             @{
-
+                                bool isControlRoomLogBook = false;  // Project 4 , Task 48, Audio notification, Added By Binoy
                                 var clientSiteForLogbook = Model.ClientDataProvider.GetClientSiteForRcLogBook();
                                 var isDuressActive = Convert.ToBoolean(ViewData["IsDuressEnabled"]);
                                 var duressStatus = isDuressActive ? "Active" : "Normal";
@@ -82,6 +82,7 @@
                                         </p>
 
                                     }
+                                    else{ isControlRoomLogBook = true; }
 
 
                                 }
@@ -96,8 +97,8 @@
 
                                 }
 
-                            }
-
+                                <input type="hidden" id="inpHdisControlRoomLogBook" value="@isControlRoomLogBook.ToString().ToLower()" />
+                            }                            
                         </div>
                     </div>
                     <hr />

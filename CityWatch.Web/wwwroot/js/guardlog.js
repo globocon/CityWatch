@@ -537,6 +537,13 @@
         }
     }
 
+    // Project 4 , Task 48, Audio notification, Added By Binoy -- Start
+    let audiourl = '/NotificationSound/mixkit-bell-notification-933.wav'
+    const audio = new Audio(audiourl);
+    let audioplayedlist = [];
+    let isControlRoomLogBook = $('#inpHdisControlRoomLogBook').val() == 'false' ? false : true ;
+    // Project 4 , Task 48, Audio notification, Added By Binoy -- End
+
     let gridGuardLog;
 
     let gridGuardLogSettings = {
@@ -570,7 +577,8 @@
                 { field: 'notes', title: 'Event / Notes', width: 450, editor: logBookNotesEditor, renderer: renderLogBookNotes },
                 { field: 'guardInitials', title: 'Guard Initials', width: 50, renderer: function (value, record) { return record.guardLogin ? record.guardLogin.guard.initial : ''; } },
                 { width: 75, renderer: renderDailyLogManagement },
-                { field: 'rcPushMessageId', hidden: true }
+                { field: 'rcPushMessageId', hidden: true },
+                { field: 'playNotificationSound', hidden: true, renderer: playNotificationSound }
             ]
         };
     }
@@ -585,6 +593,16 @@
         });
         return record.notes;
     }
+
+    // Project 4 , Task 48, Audio notification, Added By Binoy -- Start
+    function playNotificationSound(value, record) {          
+        if ((record.rcPushMessageId != null) && (record.rcPushMessageId != '') && (record.rcPushMessageId > 0)
+            && (value == true) && (!isControlRoomLogBook)) {
+            audioplayedlist.push(record.id);                  
+        }               
+        return;
+    }
+     // Project 4 , Task 48, Audio notification, Added By Binoy -- End
 
     function logBookNotesEditor($editorContainer, value) {
 
@@ -706,6 +724,7 @@
                 }
                 /* add for check if dark mode is on end*/
             }
+
         });
         gridGuardLog.on('rowSelect', function (e, $row, id, record) {
             /*timer pause while editing*/
@@ -780,7 +799,50 @@
                 gridGuardLog.reload();
             }
         });
+
+        // Project 4 , Task 48, Audio notification, Added By Binoy -- Start
+        gridGuardLog.on('dataBound', function (e, records, totalRecords) { 
+            if (isControlRoomLogBook) {
+                // Get Is acknowledge from db
+                $.ajax({
+                    url: '/Guard/DailyLog?handler=GuardLogsAcknowledgedForControlroom',
+                    type: 'GET',
+                }).done(function (result) {
+                    if (result != null && result.length > 0) {
+                        //Can be repeated if needed using loop through id in result
+                        audio.play();
+                        audioplayedlist = [];                        
+                        result.forEach((item) => {
+                            audioplayedlist.push(item);
+                        });
+                        UpdatePlayedNotification();
+                    }
+                });
+            }
+            else if (audioplayedlist.length > 0) {
+                // Play notification sound
+                audio.play();
+                UpdatePlayedNotification();
+            }         
+        });
+        // Project 4 , Task 48, Audio notification, Added By Binoy -- End
     }
+
+    // Project 4 , Task 48, Audio notification, Added By Binoy -- Start
+    function UpdatePlayedNotification() {
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            url: '/Guard/DailyLog?handler=GuardLogsUpdateNotificationSoundStatus',
+            data: { logBookId: audioplayedlist, isControlRoomLogBook: isControlRoomLogBook },
+            dataType: 'json',
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function (result) {
+            audioplayedlist = [];
+            return;
+        });
+    }
+    // Project 4 , Task 48, Audio notification, Added By Binoy -- End
 
     let gridGuardLogPreviousDay;
 
