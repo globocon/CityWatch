@@ -219,5 +219,12 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_viewDataService.GetGuards().SingleOrDefault(z => z.Id == id));
         }
+        //to get audit log-start
+        public JsonResult OnGetAuditHistory(KeyVehicleLogAuditLogRequest keyVehicleLogAuditLogRequest)
+        {
+            return new JsonResult(_viewDataService.GetKeyVehicleLogAuditHistory(keyVehicleLogAuditLogRequest.VehicleRego).Where(x=> keyVehicleLogAuditLogRequest.ClientSiteIds.Contains(x.GuardLogin.ClientSiteId)).ToList());
+        }
+
+        //to get audit log-end
     }
 }
