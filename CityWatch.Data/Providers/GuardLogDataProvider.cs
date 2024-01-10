@@ -74,7 +74,7 @@ namespace CityWatch.Data.Providers
         void DeleteKeyVehicleLogField(int id);
         List<KeyVehicleLogAuditHistory> GetAuditHistory(int id);
         void SaveKeyVehicleLogAuditHistory(KeyVehicleLogAuditHistory keyVehicleLogAuditHistory);
-        void SaveClientSiteDuress(int clientSiteId, int guardId);
+        void SaveClientSiteDuress(int clientSiteId, int guardId, string gpsCoordinates, string enabledAddress);
         ClientSiteDuress GetClientSiteDuress(int clientSiteId);
         List<CompanyDetails> GetCompanyDetails();
         //logBookId entry for radio checklist-start
@@ -174,10 +174,12 @@ namespace CityWatch.Data.Providers
         /* Save push messages*/
         int SavePushMessage(RadioCheckPushMessages radioCheckPushMessages);
 
-
+        
         void UpdateIsAcknowledged(int rcPushMessageId);
 
         void CopyPreviousDaysPushMessageToLogBook(List<RadioCheckPushMessages> previousDayPushmessageList, int logBookId, int guardLoginId);
+
+        void CopyPreviousDaysDuressToLogBook(List<RadioCheckPushMessages> previousDayDuressList, int logBookId, int guardLoginId);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -285,14 +287,17 @@ namespace CityWatch.Data.Providers
                 .LastOrDefault();
         }
 
-        public void SaveClientSiteDuress(int clientSiteId, int guardId)
+        public void SaveClientSiteDuress(int clientSiteId, int guardId, string gpsCoordinates, string enabledAddress)
         {
             _context.ClientSiteDuress.Add(new ClientSiteDuress()
             {
                 ClientSiteId = clientSiteId,
                 IsEnabled = true,
                 EnabledBy = guardId,
-                EnabledDate = DateTime.Today
+                EnabledDate = DateTime.Today,
+                GpsCoordinates=gpsCoordinates,
+                EnabledAddress= enabledAddress
+
             });
             _context.SaveChanges();
 
@@ -311,7 +316,7 @@ namespace CityWatch.Data.Providers
                     GuardLoginId = guardLog.GuardLoginId,
                     IsSystemEntry = guardLog.IsSystemEntry,
                     IrEntryType = guardLog.IrEntryType,
-                    RcPushMessageId= guardLog.RcPushMessageId
+                    RcPushMessageId = guardLog.RcPushMessageId
                 });
             }
             else
@@ -1037,10 +1042,10 @@ namespace CityWatch.Data.Providers
                         OnDuty = clientSiteActivity.OnDuty,
                         OffDuty = clientSiteActivity.OffDuty,
                         ActivityDescription = "Edited"
-                    }) ;
+                    });
 
                 }
-               
+
 
                 _context.SaveChanges();
             }
@@ -2498,6 +2503,8 @@ namespace CityWatch.Data.Providers
                             var DuressEnabledUpdate = _context.ClientSiteDuress.Where(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId);
                             //DuressEnabledUpdate.IsEnabled = false;
                             _context.ClientSiteDuress.RemoveRange(DuressEnabledUpdate);
+                            /* remove Duressbutton Status from RadioCheckPushMessages*/
+                            UpdateDuressButtonAcknowledged(clientSiteRadioCheck.ClientSiteId);
                             var logbook = _context.ClientSiteLogBooks
             .SingleOrDefault(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId && z.Type == LogBookType.DailyGuardLog && z.Date == DateTime.Today);
 
@@ -2907,17 +2914,55 @@ namespace CityWatch.Data.Providers
                 throw new InvalidOperationException();
             radioCheckPushMessages.IsAcknowledged = 1;
             _context.SaveChanges();
-          
+
         }
-        public void CopyPreviousDaysPushMessageToLogBook(List <RadioCheckPushMessages> previousDayPushmessageList,int logBookId,int guardLoginId)
+
+        public void UpdateDuressButtonAcknowledged(int ClientSiteId)
         {
-            foreach(var pushMessage in previousDayPushmessageList)
+            var duressButtonList = _context.RadioCheckPushMessages.Where(x => x.ClientSiteId == ClientSiteId && x.IsAcknowledged == 0).ToList();
+            if (duressButtonList == null)
+                throw new InvalidOperationException();
+            foreach (var row in duressButtonList)
             {
-                if(pushMessage.IsAcknowledged==0)
+                row.IsAcknowledged = 1;
+                _context.SaveChanges();
+
+            }
+
+        }
+        public void CopyPreviousDaysPushMessageToLogBook(List<RadioCheckPushMessages> previousDayPushmessageList, int logBookId, int guardLoginId)
+        {
+            foreach (var pushMessage in previousDayPushmessageList)
+            {
+                if (pushMessage.IsAcknowledged == 0)
                 {
                     var guardLog = new GuardLog()
                     {
                         ClientSiteLogBookId = logBookId,
+                        GuardLoginId = guardLoginId,
+                        EventDateTime = DateTime.Now,
+                        Notes = pushMessage.Notes,
+                        IrEntryType = IrEntryType.Alarm,
+                        RcPushMessageId = pushMessage.Id
+                    };
+                    SaveGuardLog(guardLog);
+
+                }
+
+            }
+
+        }
+
+        public void CopyPreviousDaysDuressToLogBook(List<RadioCheckPushMessages> previousDayDuressList, int logBookId, int guardLoginId)
+        {
+            foreach (var pushMessage in previousDayDuressList)
+            {
+                if (pushMessage.IsAcknowledged == 0)
+                {
+                    var guardLog = new GuardLog()
+                    {
+                        ClientSiteLogBookId = logBookId,
+                        IsSystemEntry = true,
                         GuardLoginId = guardLoginId,
                         EventDateTime = DateTime.Now,
                         Notes = pushMessage.Notes,
