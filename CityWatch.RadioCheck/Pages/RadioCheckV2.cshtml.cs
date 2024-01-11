@@ -242,7 +242,8 @@ namespace CityWatch.Web.Pages.Radio
                             Notes = Subject + " : " + Notifications,
                             EntryType = (int)IrEntryType.Alarm,
                             Date = DateTime.Today,
-                            IsAcknowledged = 0
+                            IsAcknowledged = 0,
+                            IsDuress=0
                         };
                         var pushMessageId = _guardLogDataProvider.SavePushMessage(radioCheckPushMessages);
                         /* Save the push message for reload to logbook on next day end*/
@@ -271,7 +272,8 @@ namespace CityWatch.Web.Pages.Radio
                             Notes = Subject + " : " + Notifications,
                             EntryType = (int)IrEntryType.Alarm,
                             Date = DateTime.Today,
-                            IsAcknowledged = 0
+                            IsAcknowledged = 0,
+                            IsDuress=0
                         };
                         var pushMessageId = _guardLogDataProvider.SavePushMessage(radioCheckPushMessages);
                         /* Save the push message for reload to logbook on next day end*/
@@ -721,7 +723,8 @@ namespace CityWatch.Web.Pages.Radio
                             Notes = Subject + " : " + Notifications,
                             EntryType = (int)IrEntryType.Alarm,
                             Date = DateTime.Today,
-                            IsAcknowledged = 0
+                            IsAcknowledged = 0,
+                            IsDuress=0
                         };
                         var pushMessageId = _guardLogDataProvider.SavePushMessage(radioCheckPushMessages);
                         /* Save the push message for reload to logbook on next day end*/
@@ -750,7 +753,8 @@ namespace CityWatch.Web.Pages.Radio
                             Notes = Subject + " : " + Notifications,
                             EntryType = (int)IrEntryType.Alarm,
                             Date = DateTime.Today,
-                            IsAcknowledged = 0
+                            IsAcknowledged = 0,
+                            IsDuress=0
                         };
                         var pushMessageId = _guardLogDataProvider.SavePushMessage(radioCheckPushMessages);
 

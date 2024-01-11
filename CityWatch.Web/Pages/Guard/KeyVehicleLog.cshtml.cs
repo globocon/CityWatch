@@ -1155,7 +1155,7 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { success, message, kvlProfileId });
         }
 
-        public JsonResult OnPostSaveClientSiteDuress(int clientSiteId, int guardId, int guardLoginId, int logBookId)
+        public JsonResult OnPostSaveClientSiteDuress(int clientSiteId, int guardId, int guardLoginId, int logBookId, string gpsCoordinates, string enabledAddress)
         {
             var status = true;
             var message = "Success";
@@ -1168,7 +1168,7 @@ namespace CityWatch.Web.Pages.Guard
                     Type = LogBookType.DailyGuardLog,
                     Date = DateTime.Today
                 });
-                _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logbookId.Value, guardId);
+                _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logbookId.Value, guardId, gpsCoordinates, enabledAddress);
             }
             catch (Exception ex)
             {
