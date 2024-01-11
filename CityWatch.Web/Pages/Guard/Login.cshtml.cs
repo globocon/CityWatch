@@ -122,7 +122,7 @@ namespace CityWatch.Web.Pages.Guard
                 /* Previous days push message show only for petrol cars*/
                 /*Citywatch M1 - Romeo Patrol Cars*/
                 /* get previous day push messages Start */
-                if (LogBookType == LogBookType.DailyGuardLog && isNewLogBook)
+                if (isNewLogBook)
                 {
                     /*check if id is Citywatch M1 - Romeo Patrol Cars site id=625*/
                     if (GuardLogin.ClientSite.Id == 625)
@@ -140,9 +140,20 @@ namespace CityWatch.Web.Pages.Guard
                     {
                         _guardLogDataProvider.CopyPreviousDaysDuressToLogBook(previousDuressMessages, logBookId, guardLoginId);
                     }
+                    var clientSiteForLogbook = _clientDataProvider.GetClientSiteForRcLogBook();
+                    if (clientSiteForLogbook.Count != 0)
+                    {
+                        if (clientSiteForLogbook.FirstOrDefault().Id == GuardLogin.ClientSite.Id)
+                        {
+                            var previousDuressMessagesForControlRoom = _clientDataProvider.GetDuressMessageNotAcknowledgedForControlRoom(DateTime.Today.AddDays(-1));
+                            if (previousDuressMessagesForControlRoom != null)
+                            {
+                                _guardLogDataProvider.CopyPreviousDaysDuressToLogBook(previousDuressMessagesForControlRoom, logBookId, guardLoginId);
+                            }
 
+                        }
 
-
+                    }
                 }
                 /* get previous day push messages end */
 

@@ -126,6 +126,7 @@ namespace CityWatch.Data.Providers
         List<RadioCheckPushMessages> GetPushMessagesNotAcknowledged(int clientSiteId, DateTime date);
 
         List<RadioCheckPushMessages> GetDuressMessageNotAcknowledged(int clientSiteId, DateTime date);
+        List<RadioCheckPushMessages> GetDuressMessageNotAcknowledgedForControlRoom(DateTime date);
 
     }
 
@@ -1422,6 +1423,11 @@ namespace CityWatch.Data.Providers
         {
             return _context.RadioCheckPushMessages.Where
                  (z => z.ClientSiteId == clientSiteId && z.EntryType == 2 && z.IsAcknowledged == 0&& z.IsDuress==1).ToList();
+        }
+        public List<RadioCheckPushMessages> GetDuressMessageNotAcknowledgedForControlRoom( DateTime date)
+        {
+            return _context.RadioCheckPushMessages.Where
+                 (z =>  z.EntryType == 2 && z.IsAcknowledged == 0 && z.IsDuress == 1).ToList();
         }
         /* Get Previous day pushmessages end*/
     }
