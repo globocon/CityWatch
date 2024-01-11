@@ -410,7 +410,7 @@ namespace CityWatch.Web.Pages.Guard
                             ActivityType = "KV"
                         };
                         _guardLogDataProvider.EditRadioChecklistEntry(clientsiteRadioCheckEdit);
-                        var ClientSiteRadioChecksActivityDetails = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == guardId && x.ClientSiteId != KeyVehicleLog.GuardLogin.ClientSiteId);
+                        var ClientSiteRadioChecksActivityDetails = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == guardId && x.ClientSiteId != keyVehicleLogAuditHistory.KeyVehicleLog.GuardLogin.ClientSiteId);
                         if (ClientSiteRadioChecksActivityDetails.Count() != 0)
                         {
                             foreach (var item in ClientSiteRadioChecksActivityDetails)
