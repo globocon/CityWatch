@@ -14,5 +14,7 @@ namespace CityWatch.Data.Models
         public int EntryType { get; set; }
         public DateTime Date { get; set; }
         public int IsAcknowledged { get; set; }
+        public int IsDuress { get; set; }
+        
     }
 }

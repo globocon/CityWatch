@@ -644,7 +644,7 @@
             var textAreaForNotes = $('<textarea class="form-control" rows="4" maxlength="2048"  >' + value + '</textarea > ');
             $editorContainer.append(textAreaForNotes);
         }
-        
+
     }
 
     function renderDailyLogManagement(value, record, $cell, $displayEl, id) {
@@ -3231,37 +3231,98 @@
     $("#duress_btn").mouseup(function () {
         clearTimeout(tId);
     });
-
+   
     function GFG_Fun() {
         if ($("#duress_status").text() !== "Active") {
-            var id = $("#duress_status").text();
-            $.ajax({
-                url: '/Guard/DailyLog?handler=SaveClientSiteDuress',
-                data: {
-                    clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
-                    guardLoginId: $('#GuardLog_GuardLoginId').val(),
-                    logBookId: $('#GuardLog_ClientSiteLogBookId').val(),
-                    guardId: $('#GuardLog_GuardLogin_GuardId').val(),
-                },
-                type: 'POST',
-                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-            }).done(function (result) {
-                if (result.status) {
-                    $('#duress_btn').removeClass('normal').addClass('active');
-                    $("#duress_status").addClass('font-weight-bold');
-                    $("#duress_status").text("Active");
-                    /*timer pause while editing*/
-                    isPaused = false;
-                }
-                gridGuardLog.clear();
-                gridGuardLog.reload();
-            });
 
-        }
+                $.ajax({
+                    url: '/Guard/DailyLog?handler=SaveClientSiteDuress',
+                    data: {
+                        clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
+                        guardLoginId: $('#GuardLog_GuardLoginId').val(),
+                        logBookId: $('#GuardLog_ClientSiteLogBookId').val(),
+                        guardId: $('#GuardLog_GuardLogin_GuardId').val(),
+                        gpsCoordinates: $("#hid_duressEnabledGpsCoordinates").val(),
+                        enabledAddress: $("#hid_duressEnabledAddress").val()
+                    },
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (result) {
+                    if (result.status) {
+                        $('#duress_btn').removeClass('normal').addClass('active');
+                        $("#duress_status").addClass('font-weight-bold');
+                        $("#duress_status").text("Active");
+                        /*timer pause while editing*/
+                        isPaused = false;
+                    }
+                    gridGuardLog.clear();
+                    gridGuardLog.reload();
+                });
+
+            }
+        
     }
 
 
 });
+
+/* Get Client Site duress Gps Rading Start*/
+function initialize() {
+    var geocoder = new google.maps.Geocoder();
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (position) {
+
+            gpsCoordinatesValues = position.coords.latitude + ',' + position.coords.longitude;
+            var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+            $("#hid_duressEnabledGpsCoordinates").val(gpsCoordinatesValues);
+            reverseGeocode(position.coords.latitude, position.coords.longitude);
+            
+        });
+    }
+
+}
+
+
+
+function getDurressLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (position) {
+            $("#duressEnabledGpsCoordinates").val(position.coords.latitude); 
+            reverseGeocode(position.coords.latitude, position.coords.longitude);
+            
+        });
+    }
+}
+
+
+function reverseGeocode(latitude, longitude) {
+    var latlng = new google.maps.LatLng(latitude, longitude);
+    var geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ 'latLng': latlng }, function (results, status) {
+        if (status === google.maps.GeocoderStatus.OK) {
+            if (results[0]) {
+                var address = results[0].formatted_address;
+                $("#hid_duressEnabledAddress").val(address);  
+                console.log('Reverse Geocoding Result: ', address);
+               
+            } else {
+                console.error('No results found');
+            }
+        } else {
+            console.error('Geocoder failed due to: ' + status);
+        }
+    });
+}
+
+function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition, showError);
+    } else {
+        alert("Geolocation is not supported by this browser.");
+    }
+}
+
+/* Get Client Site duress Gps Rading end*/
 
 
 /*to get the warning - start*/

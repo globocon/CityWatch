@@ -6,7 +6,9 @@ window.onload = function () {
         startClock();
     }
 };
-
+$(document).ready(function () {
+    $('[data-toggle="tooltip"]').tooltip();
+});
 function startClock() {
     let timer = duration, minutes, seconds;
     display = document.querySelector('#clockRefresh');
@@ -214,8 +216,16 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             data: 'guardName',
             width: '20%',
             render: function (value, type, data) {
-                return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                    '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+                if (data.isEnabled === 1) {
+                    return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                        '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>'+
+                        '&nbsp;&nbsp;&nbsp; <i class="fa fa-map-marker" aria-hidden="true"></i>';
+
+                }
+                else {
+                    return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                        '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+                }
             }
         },
         {
@@ -511,8 +521,17 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             render: function (value, type, data) {
 
                 if (data.notificationType != 1) {
-                    return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                        '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+
+                    if (data.isEnabled != 1) {
+                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                            '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+                    }
+                    else {
+                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                            '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>'+
+                            '&nbsp;&nbsp;&nbsp;<a href="https://www.google.com/maps?q='+data.gpsCoordinates+'" target="_blank" data-toggle="tooltip" title="' + data.enabledAddress+'"><i class="fa fa-map-marker" aria-hidden="true"></i></a>';
+                    }
+
                 }
                 else {
                     return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true" style="color:#FF0000;"></i> ' + data.guardName;
@@ -662,6 +681,10 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
 });
 
+
+clientSiteInActiveGuards.on('draw', function () {
+    $('[data-toggle="tooltip"]').tooltip();
+});
 $('#clientSiteInActiveGuards tbody').on('click', '#btnUpArrow', function () {
 
 
@@ -1721,8 +1744,17 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
             render: function (value, type, data) {
 
                 if (data.notificationType != 1) {
-                    return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                        '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+
+                    if (data.isEnabled != 1) {
+                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                            '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+                    }
+                    else {
+                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                            '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>' +
+                            '&nbsp;&nbsp;&nbsp;<a href="https://www.google.com/maps?q=' + data.gpsCoordinates + '" target="_blank" data-toggle="tooltip" title="' + data.enabledAddress + '"><i class="fa fa-map-marker" aria-hidden="true"></i></a>';
+                    }
+                    
                 }
                 else {
                     return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true" style="color:#FF0000;"></i> ' + data.guardName;

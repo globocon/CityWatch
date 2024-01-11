@@ -449,13 +449,13 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { success = false, message = exMessage.ToString() });
         }
 
-        public JsonResult OnPostSaveClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId)
+        public JsonResult OnPostSaveClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId,string gpsCoordinates,string enabledAddress)
         {
             var status = true;
             var message = "Success";
             try
             {
-                _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logBookId, guardId);
+                _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logBookId, guardId, gpsCoordinates, enabledAddress);
             }
             catch (Exception ex)
             {

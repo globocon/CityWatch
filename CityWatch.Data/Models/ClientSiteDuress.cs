@@ -15,5 +15,8 @@ namespace CityWatch.Data.Models
         public int EnabledBy { get; set; }
 
         public DateTime EnabledDate { get; set; }
+        public string GpsCoordinates { get; set; }
+        
+        public string EnabledAddress { get; set; }
     }
 }
