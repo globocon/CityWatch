@@ -1200,7 +1200,13 @@ $(function () {
             if (data.success == 1) {
                 alert('Saved site manning details successfully');               
                 $('#div_site_settings').html('');
-                $('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + data.clientSiteId);               
+                //$('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + data.clientSiteId);  
+                $('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + data.clientSiteId, function () {
+                    // This function will be executed after the content is loaded
+                    console.log('Load operation completed!');                  
+                    // You can add your additional code or actions here
+                    $('#contracted-manning-tab').tab('show');
+                });
                 $('#kpi-settings-modal').modal('show');
                 currentDiv = 1;
               
