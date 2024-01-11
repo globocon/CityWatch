@@ -3377,6 +3377,7 @@ $('#btnGenerateVklAuditLogReport').on('click', function () {
         alert('Please select a client site');
         return;
     }
+    $('#KeyVehicleLogAuditLogRequest_ClientSiteId').val($('#vklClientSiteId').val());
     var item = $('#KeyVehicleLogAuditLogRequest_VehicleRego').val();
     $.ajax({
        // url: '/Admin/AuditSiteLog?handler=AuditHistory&vehicleRego=' + item,
