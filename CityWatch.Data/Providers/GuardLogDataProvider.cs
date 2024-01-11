@@ -365,7 +365,14 @@ namespace CityWatch.Data.Providers
                     IsSystemEntry = guardLog.IsSystemEntry,
                     IrEntryType = guardLog.IrEntryType,
                     RcPushMessageId= guardLog.RcPushMessageId,
+                    EventDateTimeLocal = guardLog.EventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
+                    EventDateTimeLocalWithOffset = guardLog.EventDateTimeLocalWithOffset,
+                    EventDateTimeZone = guardLog.EventDateTimeZone,
+                    EventDateTimeZoneShort = guardLog.EventDateTimeZoneShort,
+                    EventDateTimeUtcOffsetMinute = guardLog.EventDateTimeUtcOffsetMinute // Task p6#73_TimeZone issue -- added by Binoy - End
+
                     PlayNotificationSound = guardLog.PlayNotificationSound
+
 
                 });
             }

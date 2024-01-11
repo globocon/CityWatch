@@ -485,7 +485,7 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(new { status, message });
         }
-        public JsonResult OnPostSavePushNotificationTestMessages(int guardLoginId, int clientSiteLogBookId, string Notifications,int rcPushMessageId)
+        public JsonResult OnPostSavePushNotificationTestMessages(int guardLoginId, int clientSiteLogBookId, string Notifications,int rcPushMessageId,GuardLog tmdata)
         {
             var success = true;
             var message = "success";
@@ -497,7 +497,12 @@ namespace CityWatch.Web.Pages.Guard
                     GuardLoginId = guardLoginId,
                     EventDateTime = DateTime.Now,
                     Notes = Notifications,
-                    IrEntryType = IrEntryType.Normal
+                    IrEntryType = IrEntryType.Normal,
+                    EventDateTimeLocal = tmdata.EventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
+                    EventDateTimeLocalWithOffset = tmdata.EventDateTimeLocalWithOffset,
+                    EventDateTimeZone = tmdata.EventDateTimeZone,
+                    EventDateTimeZoneShort = tmdata.EventDateTimeZoneShort,
+                    EventDateTimeUtcOffsetMinute = tmdata.EventDateTimeUtcOffsetMinute // Task p6#73_TimeZone issue -- added by Binoy - End
                 };
                 _guardLogDataProvider.SaveGuardLog(signOffEntry);
 
@@ -517,7 +522,12 @@ namespace CityWatch.Web.Pages.Guard
                         GuardLoginId = guardLoginId,
                         EventDateTime = DateTime.Now,
                         Notes = Notifications,
-                        IrEntryType = IrEntryType.Normal
+                        IrEntryType = IrEntryType.Normal,
+                        EventDateTimeLocal = tmdata.EventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
+                        EventDateTimeLocalWithOffset = tmdata.EventDateTimeLocalWithOffset,
+                        EventDateTimeZone = tmdata.EventDateTimeZone,
+                        EventDateTimeZoneShort = tmdata.EventDateTimeZoneShort,
+                        EventDateTimeUtcOffsetMinute = tmdata.EventDateTimeUtcOffsetMinute // Task p6#73_TimeZone issue -- added by Binoy - End
                     };
 
                     _guardLogDataProvider.SaveGuardLog(notifcationtoCitywatchHD);

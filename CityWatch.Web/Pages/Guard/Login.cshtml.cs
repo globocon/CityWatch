@@ -96,10 +96,19 @@ namespace CityWatch.Web.Pages.Guard
 
                 var logBookId = GetLogBookId(out var isNewLogBook);
                 var guardLoginId = GetGuardLoginId(logBookId);
+                // Task p6#73_TimeZone issue -- added by Binoy - Start
+                var eventDateTimeLocal = GuardLogin.EventDateTimeLocal.Value;
+                var eventDateTimeLocalWithOffset = GuardLogin.EventDateTimeLocalWithOffset.Value;
+                var eventDateTimeZone = GuardLogin.EventDateTimeZone;
+                var eventDateTimeZoneShort = GuardLogin.EventDateTimeZoneShort;
+                var eventDateTimeUtcOffsetMinute = GuardLogin.EventDateTimeUtcOffsetMinute.Value;
+                // Task p6#73_TimeZone issue -- added by Binoy - End
 
                 if (LogBookType == LogBookType.DailyGuardLog)
                 {
-                    CreateLogbookLoggedInEntry(logBookId, guardLoginId);
+                    // Task p6#73_TimeZone issue -- modified by Binoy
+                    CreateLogbookLoggedInEntry(logBookId, guardLoginId, eventDateTimeLocal, 
+                        eventDateTimeLocalWithOffset, eventDateTimeZone, eventDateTimeZoneShort, eventDateTimeUtcOffsetMinute);
 
                 }
                 if (LogBookType == LogBookType.VehicleAndKeyLog)
@@ -378,7 +387,10 @@ namespace CityWatch.Web.Pages.Guard
             };
             _guardLogDataProvider.SaveGuardLog(signInEntry);
         }
-        private void CreateLogbookLoggedInEntry(int logBookId, int guardLoginId)
+
+            private void CreateLogbookLoggedInEntry(int logBookId, int guardLoginId,DateTime? eventDateTimeLocal,
+                       DateTimeOffset? eventDateTimeLocalWithOffset, string eventDateTimeZone, 
+                       string eventDateTimeZoneShort,int? eventDateTimeUtcOffsetMinute)
         {
             var signInEntry = new GuardLog()
             {
@@ -386,7 +398,12 @@ namespace CityWatch.Web.Pages.Guard
                 GuardLoginId = guardLoginId,
                 EventDateTime = DateTime.Now,
                 Notes = "Logbook Logged In",
-                IsSystemEntry = true
+                IsSystemEntry = true,
+                EventDateTimeLocal = eventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
+                EventDateTimeLocalWithOffset = eventDateTimeLocalWithOffset,
+                EventDateTimeZone = eventDateTimeZone,
+                EventDateTimeZoneShort = eventDateTimeZoneShort,
+                EventDateTimeUtcOffsetMinute = eventDateTimeUtcOffsetMinute // Task p6#73_TimeZone issue -- added by Binoy - End
             };
             _guardLogDataProvider.SaveGuardLog(signInEntry);
 

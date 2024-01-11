@@ -181,7 +181,7 @@
                         <input type="hidden" asp-for="@Model.GuardLog.ClientSiteLogBook.ClientSite.Id" />
                         <input type="hidden" name="isEditable" value="@((Model.GuardLog.GuardLogin.UserId != 0).ToString().ToLower())" />
                         <input type="hidden" id="previousLogBookId" value="@ViewData["PreviousLogBookId"]" />
-                        <input type="hidden" id="previousLogBookDateString" value="@ViewData["PreviousLogBookDateString"]" />
+                        <input type="hidden" id="previousLogBookDateString" value="@ViewData["PreviousLogBookDateString"]" />                        
                     </form>
                 </div>
                 <div class="card-footer bg-white">
