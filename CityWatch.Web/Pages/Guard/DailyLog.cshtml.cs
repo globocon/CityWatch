@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using MimeKit;
+using Org.BouncyCastle.Tls;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -83,6 +84,26 @@ namespace CityWatch.Web.Pages.Guard
                 .ThenByDescending(z => z.EventDateTime);
             return new JsonResult(guardLogs);
         }
+
+        // Project 4 , Task 48, Audio notification, Added By Binoy -- Start
+        public JsonResult OnPostGuardLogsUpdateNotificationSoundStatus(List<int> logBookId, bool isControlRoomLogBook)
+        {
+            foreach(var r in logBookId)
+            {
+                int id = Convert.ToInt32(r);
+                _guardLogDataProvider.UpdateNotificationSoundPlayedStatusForGuardLogs(id, isControlRoomLogBook);
+            }                         
+            return new JsonResult(new { status = "Ok" });
+        }
+
+        public JsonResult OnGetGuardLogsAcknowledgedForControlroom()
+        {
+            List<int> audioToPlayId = new List<int> {}; 
+            audioToPlayId = _guardLogDataProvider.GetGuardLogsNotAcknowledgedForNotificationSound();
+            return new JsonResult(audioToPlayId);
+        }
+
+        // Project 4 , Task 48, Audio notification, Added By Binoy -- End
 
         public JsonResult OnPostSaveGuardLog()
         {

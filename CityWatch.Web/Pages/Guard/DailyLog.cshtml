@@ -73,9 +73,9 @@
                                 </li>
                             </ul>
                         </div>
-                        <div class="col-md-4 text-center">
+                        <div class="col-md-4 text-center">                            
                             @{
-
+                                bool isControlRoomLogBook = false;  // Project 4 , Task 48, Audio notification, Added By Binoy
                                 var clientSiteForLogbook = Model.ClientDataProvider.GetClientSiteForRcLogBook();
                                 var isDuressActive = Convert.ToBoolean(ViewData["IsDuressEnabled"]);
                                 var duressStatus = isDuressActive ? "Active" : "Normal";
@@ -91,6 +91,7 @@
                                         </p>
 
                                     }
+                                    else{ isControlRoomLogBook = true; }
 
 
                                 }
@@ -105,8 +106,8 @@
 
                                 }
 
-                            }
-
+                                <input type="hidden" id="inpHdisControlRoomLogBook" value="@isControlRoomLogBook.ToString().ToLower()" />
+                            }                            
                         </div>
                     </div>
                     <hr />
