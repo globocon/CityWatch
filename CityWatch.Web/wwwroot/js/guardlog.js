@@ -338,8 +338,13 @@
     });
 
     function submitGuardLogin() {
-        calculateDutyDateTime();
+        calculateDutyDateTime();        
         var mobileno = $('#GuardLogin_Guard_Mobile').val();
+        // Task p6#73_TimeZone issue -- added by Binoy -- Start
+        var form = document.getElementById('frmGuardLogin');
+        var formData = new FormData(form);
+        fillRefreshLocalTimeZoneDetails(formData, "GuardLogin", true);
+        // Task p6#73_TimeZone issue -- added by Binoy -- End
         if (mobileno == null || mobileno == '+61 4' || mobileno == '') {
             new MessageModal({ message: "<b>The Control Room requires your personal mobile number in case of emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.<p> This request occurs only once. Please do not provide false numbers to trick system. It is an OH&S requirement we can contact you in an Emergency </p> </b>" }).showWarning();
         }
@@ -348,7 +353,9 @@
             $.ajax({
                 url: '/Guard/Login?handler=LoginGuard',
                 type: 'POST',
-                data: $('#frmGuardLogin').serialize(),
+                data: formData,
+                processData: false,
+                contentType: false,
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
             }).done(function (result) {
                 if (result.success) {
@@ -428,6 +435,39 @@
             offDutyDate = new Date(offDutyDate.setDate(offDutyDate.getDate() + 1));
         $('#GuardLogin_OffDuty').val(parseDateInCsharpFormat(offDutyDate, $('#GuardLogin_OffDuty_Time').val()));
     }
+
+    // Task p6#73_TimeZone issue -- added by Binoy - Start
+    function fillRefreshLocalTimeZoneDetails(formData,modelname,isform) {        
+        // for reference https://moment.github.io/luxon/#/
+        var DateTime = luxon.DateTime;
+        var dt1 = DateTime.local();
+        let tz = dt1.zoneName + ' ' + dt1.offsetNameShort;
+        let diffTZ = dt1.offset
+        //let tzshrtnm = dt1.offsetNameLong;
+
+        const dt = new Date();
+        var tzjs = getTimezoneAbbreviation;
+        let tzshrtnm = tzjs(dt);      
+
+        const eventDateTimeLocal = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS');
+        const eventDateTimeLocalWithOffset = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS Z');        
+        if (isform) {
+            formData.append(modelname + ".EventDateTimeLocal", eventDateTimeLocal);
+            formData.append(modelname + ".EventDateTimeLocalWithOffset", eventDateTimeLocalWithOffset);
+            formData.append(modelname + ".EventDateTimeZone", tz);
+            formData.append(modelname + ".EventDateTimeZoneShort", tzshrtnm);
+            formData.append(modelname + ".EventDateTimeUtcOffsetMinute", diffTZ);
+        }
+        else {
+            formData.EventDateTimeLocal= eventDateTimeLocal;
+            formData.EventDateTimeLocalWithOffset= eventDateTimeLocalWithOffset;
+            formData.EventDateTimeZone= tz;
+            formData.EventDateTimeZoneShort= tzshrtnm;
+            formData.EventDateTimeUtcOffsetMinute= diffTZ;
+        }
+    }
+
+    // Task p6#73_TimeZone issue -- added by Binoy - End
 
     function highlightDutyDay(ctrlId, selected = true) {
         if (selected) $('#' + ctrlId).removeClass('font-weight-light').addClass('font-weight-bold');
@@ -530,8 +570,15 @@
         });
     });
 
-    function renderTime(value, record) {
-        if (value !== '') {
+    function renderTime(value, record) {        
+        if (record.eventDateTimeLocal != null && record.eventDateTimeLocal != '') {            
+            const date = new Date(record.eventDateTimeLocal);
+            var DateTime = luxon.DateTime;
+            var dt1 = DateTime.fromJSDate(date);
+            var dt = dt1.toFormat('HH:mm') + ' Hrs ' + record.eventDateTimeZoneShort; 
+            return dt;
+        }
+        else if (value !== '') {
             const date = new Date(value);
             return date.toLocaleString('en-Au', { hourCycle: 'h23', timeStyle: 'short' }) + ' Hrs';
         }
@@ -566,9 +613,9 @@
             inlineEditing: { mode: 'command', managementColumn: false },
             columns: [
                 { field: 'clientSiteId', hidden: true },               
-                { field: 'eventDateTime', title: 'Time', width: 50, renderer: function (value, record) { return renderTime(value, record, false); } },
-                { field: 'notes', title: 'Event / Notes', width: 450, editor: logBookNotesEditor, renderer: renderLogBookNotes },
-                { field: 'guardInitials', title: 'Guard Initials', width: 50, renderer: function (value, record) { return record.guardLogin ? record.guardLogin.guard.initial : ''; } },
+                { field: 'eventDateTime', title: 'Time', width: 100, renderer: function (value, record) { return renderTime(value, record, false); } },
+                { field: 'notes', title: 'Event / Notes', width: 350, editor: logBookNotesEditor, renderer: renderLogBookNotes },
+                { field: 'guardInitials', title: 'Guard Initials', width: 100, renderer: function (value, record) { return record.guardLogin ? record.guardLogin.guard.initial : ''; } },
                 { width: 75, renderer: renderDailyLogManagement },
                 { field: 'rcPushMessageId', hidden: true }
             ]
@@ -726,6 +773,9 @@
             /*timer pause while editing*/
             isPaused = true;
             const data = $.extend(true, {}, record);
+            console.log(data);
+            fillRefreshLocalTimeZoneDetails(data, "", false);
+            console.log(data);
             const token = $('input[name="__RequestVerificationToken"]').val();
             $('#loader').show();
             $.ajax({
@@ -833,9 +883,16 @@
         $('#GuardLog_TimePartOnly').val($('#new_log_time').val());
         $('#loader').show();
         $('#validation-summary ul').html('');
+        // Task p6#73_TimeZone issue -- added by Binoy -- Start
+        var form = document.getElementById('form_newlog');
+        var formData = new FormData(form);
+        fillRefreshLocalTimeZoneDetails(formData, "GuardLog",true);
+        // Task p6#73_TimeZone issue -- added by Binoy -- End
         $.ajax({
             url: '/Guard/DailyLog?handler=SaveGuardLog',
-            data: $('#form_newlog').serialize(),
+            data: formData,
+            processData: false,
+            contentType: false,
             type: 'POST',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (result) {
@@ -3117,8 +3174,17 @@
             Notifications = controlRoomMessage + '</br>' + '     -  ' + 'ACKNOWLEDGED';
 
         }
+        // Task p6#73_TimeZone issue -- added by Binoy - Start
+        var tmdata = {
+            'EventDateTimeLocal' : null,
+            'EventDateTimeLocalWithOffset': null,
+            'EventDateTimeZone': null,
+            'EventDateTimeZoneShort': null,
+            'EventDateTimeUtcOffsetMinute': null,
+        };
 
-
+        fillRefreshLocalTimeZoneDetails(tmdata,"",false)
+        // Task p6#73_TimeZone issue -- added by Binoy - End
         $.ajax({
             url: '/Guard/DailyLog?handler=SavePushNotificationTestMessages',
             type: 'POST',
@@ -3126,7 +3192,8 @@
                 guardLoginId: $('#GuardLog_GuardLoginId').val(),
                 clientSiteLogBookId: $('#GuardLog_ClientSiteLogBookId').val(),
                 Notifications: Notifications,
-                rcPushMessageId: $('#rcPushMessageId').val()
+                rcPushMessageId: $('#rcPushMessageId').val(),
+                tmdata: tmdata
 
             },
             dataType: 'json',
