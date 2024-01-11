@@ -36,7 +36,10 @@ namespace CityWatch.Data.Models
         public GuardLogin GuardLogin { get; set; }
 
         public int? RcPushMessageId { get; set; }
-        
+
+        // Project 4 , Task 48, Audio notification, Added By Binoy
+        public bool? PlayNotificationSound { get; set; } = true;
+
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {

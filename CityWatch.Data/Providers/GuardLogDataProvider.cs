@@ -180,7 +180,13 @@ namespace CityWatch.Data.Providers
 
         void CopyPreviousDaysPushMessageToLogBook(List<RadioCheckPushMessages> previousDayPushmessageList, int logBookId, int guardLoginId);
 
+        // Project 4 , Task 48, Audio notification, Added By Binoy
+        void UpdateNotificationSoundPlayedStatusForGuardLogs(int logBookId,bool isControlRoomLogBook);
+
+        List<int> GetGuardLogsNotAcknowledgedForNotificationSound();
+
         void CopyPreviousDaysDuressToLogBook(List<RadioCheckPushMessages> previousDayDuressList, int logBookId, int guardLoginId);
+
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -247,6 +253,47 @@ namespace CityWatch.Data.Providers
 
             return result;
         }
+
+
+        // Project 4 , Task 48, Audio notification, By Binoy -- Start
+        public void UpdateNotificationSoundPlayedStatusForGuardLogs(int logBookId,bool isControlRoomLogBook)
+        {            
+            if (isControlRoomLogBook)
+            {
+                var ControlRoomLog = _context.RadioCheckPushMessages.Where(x => x.Id == logBookId).SingleOrDefault();
+                if (ControlRoomLog != null)
+                {
+                    ControlRoomLog.PlayNotificationSound = false;
+                    _context.SaveChanges();
+                }
+                return;
+            }
+            else
+            {
+                var GuardLogRecord = _context.GuardLogs.Where(x => x.Id == logBookId).SingleOrDefault();
+                if (GuardLogRecord != null)
+                {
+                    GuardLogRecord.PlayNotificationSound = false;
+                    _context.SaveChanges();
+
+                }
+                return;
+            }
+        }
+
+        public List<int> GetGuardLogsNotAcknowledgedForNotificationSound()
+        {
+            //List<int?> returnId = null;
+            var TonotifySoundList = _context.RadioCheckPushMessages.Where(x => x.IsAcknowledged == 1 && x.PlayNotificationSound == true).ToList();
+            var returnId = TonotifySoundList.Select(x => x.Id).ToList();
+            //foreach (var t in TonotifySoundList)
+            //{
+            //    returnId.Add(t.Id);
+            //}            
+            return returnId;
+        }
+        // Project 4 , Task 48, Audio notification, By Binoy -- End
+
 
         public List<GuardLog> GetGuardLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
         {
@@ -317,7 +364,9 @@ namespace CityWatch.Data.Providers
                     GuardLoginId = guardLog.GuardLoginId,
                     IsSystemEntry = guardLog.IsSystemEntry,
                     IrEntryType = guardLog.IrEntryType,
-                    RcPushMessageId = guardLog.RcPushMessageId
+                    RcPushMessageId= guardLog.RcPushMessageId,
+                    PlayNotificationSound = guardLog.PlayNotificationSound
+
                 });
             }
             else
@@ -2921,6 +2970,7 @@ namespace CityWatch.Data.Providers
             if (radioCheckPushMessages == null)
                 throw new InvalidOperationException();
             radioCheckPushMessages.IsAcknowledged = 1;
+            radioCheckPushMessages.PlayNotificationSound = true; // Project 4 , Task 48, Audio notification, Added By Binoy
             _context.SaveChanges();
 
         }
