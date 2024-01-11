@@ -933,8 +933,8 @@ namespace CityWatch.Web.Services
         {
             if (!IsClientSiteDuressEnabled(clientSiteId))
             {
-                _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(guardId, guardId, null, "Duress Alarm Activated", IrEntryType.Alarm, 1);
-                _guardLogDataProvider.SaveClientSiteDuress(clientSiteId, guardId, gpsCoordinates, enabledAddress);
+
+               
                 /* Save the push message for reload to logbook on next day Start*/
                 var radioCheckPushMessages = new RadioCheckPushMessages()
                 {
@@ -948,6 +948,10 @@ namespace CityWatch.Web.Services
                 };
                 var pushMessageId = _guardLogDataProvider.SavePushMessage(radioCheckPushMessages);
                 /* Save the push message for reload to logbook on next day end*/
+
+                _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(guardId, guardId, null, "Duress Alarm Activated", IrEntryType.Alarm, 1,0);
+                _guardLogDataProvider.SaveClientSiteDuress(clientSiteId, guardId, gpsCoordinates, enabledAddress);
+
                 _guardLogDataProvider.SaveGuardLog(new GuardLog()
                 {
                     Notes = "Duress Alarm Activated",

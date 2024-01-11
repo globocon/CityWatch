@@ -1,5 +1,6 @@
 ﻿using CityWatch.Data.Enums;
 using CityWatch.Data.Models;
+using Dropbox.Api.Users;
 using iText.Layout.Element;
 using iText.StyledXmlParser.Css.Resolve.Shorthand.Impl;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -162,7 +163,7 @@ namespace CityWatch.Data.Providers
 
         List<GuardLog> GetGuardLogswithKvLogData(int logBookId, DateTime logDate);
 
-        void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications, IrEntryType entryType, int type);
+        void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications, IrEntryType entryType, int type,int clientSiteId);
         //do's and donts-start
         void SaveDosandDontsField(DosAndDontsField dosanddontsField);
         void DeleteDosandDontsField(int id);
@@ -2788,10 +2789,13 @@ namespace CityWatch.Data.Providers
             return results.ToList();
         }
 
-        public void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications, IrEntryType entryType, int type)
+        public void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications, IrEntryType entryType, int type,int clientSiteId)
         {
 
             var guardInitials = string.Empty;
+            var alreadyExistingSite = _context.RadioCheckLogbookSiteDetails.ToList();
+            var clientSiteForLogbook = _context.ClientSites.Where(x => x.Id == alreadyExistingSite.FirstOrDefault().ClientSiteId)
+                .Include(x => x.ClientType).OrderBy(x => x.ClientType.Name).ThenBy(x => x.Name).ToList();
             if (selectedGuardId != 0)
             {
 
@@ -2801,12 +2805,16 @@ namespace CityWatch.Data.Providers
             /* Rc Status update*/
             if (type == 2)
             {
-                notifications = "Control Room Alert for " + guardInitials + ": " + notifications;
+                if (clientSiteForLogbook.Count() > 0)
+                {
+                   
+                    var clientsitename = GetClientSites(clientSiteId).FirstOrDefault().Name;
+                    notifications = "Control Room Alert for " + guardInitials + " - " + clientsitename + ": " + notifications;
+                }
+                
 
             }
-            var alreadyExistingSite = _context.RadioCheckLogbookSiteDetails.ToList();
-            var clientSiteForLogbook = _context.ClientSites.Where(x => x.Id == alreadyExistingSite.FirstOrDefault().ClientSiteId)
-                .Include(x => x.ClientType).OrderBy(x => x.ClientType.Name).ThenBy(x => x.Name).ToList();
+           
             if (clientSiteForLogbook.Count != 0)
             {
                 var logBookId = GetClientSiteLogBookIdGloablmessage(clientSiteForLogbook.FirstOrDefault().Id, LogBookType.DailyGuardLog, DateTime.Today);
