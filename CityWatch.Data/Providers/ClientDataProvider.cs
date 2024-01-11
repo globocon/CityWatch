@@ -9,10 +9,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Org.BouncyCastle.Utilities;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using static Dropbox.Api.FileProperties.PropertyType;
+using static Dropbox.Api.Files.ListRevisionsMode;
 //using static Dropbox.Api.Files.ListRevisionsMode;
 using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
 
@@ -422,6 +424,8 @@ namespace CityWatch.Data.Providers
             }
             else
             {
+
+                
                 var RCToUpdate = _context.RCActionList.SingleOrDefault(z => z.Id == RC.Id);
                 if (RCToUpdate != null)
                 {
@@ -436,6 +440,7 @@ namespace CityWatch.Data.Providers
                     RCToUpdate.Action5 = RC.Action5;
                     RCToUpdate.Imagepath = RC.Imagepath;
                     RCToUpdate.DateandTimeUpdated = RC.DateandTimeUpdated;
+                    RCToUpdate.ClientSiteID = RC.ClientSiteID;
                 }
             }
             _context.SaveChanges();
@@ -519,7 +524,7 @@ namespace CityWatch.Data.Providers
 
         private void CreateGpsImage(ClientSite clientSite)
         {
-            string gpsImageDir = Path.Combine(_webHostEnvironment.WebRootPath, "GpsImage");
+            string gpsImageDir = System.IO.Path.Combine(_webHostEnvironment.WebRootPath, "GpsImage");
             var mapSettings = _configuration.GetSection("GoogleMap").Get(typeof(GoogleMapSettings)) as GoogleMapSettings;
             try
             {
