@@ -2,13 +2,21 @@
 @using CityWatch.Data.Models;
 @using CityWatch.Data.Providers;
 @using CityWatch.Web.Services;
+@using CityWatch.Data.Helpers
+@using Microsoft.Extensions.Configuration
+
 @inject IViewDataService viewDataService
 @inject IGuardLogDataProvider guardmodel
+@inject IConfiguration Configuration
 @model CityWatch.Web.Pages.Guard.DailyLogModel
 @{
     ViewData["Title"] = "CityWatch Security | Guard Daily Log";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.DailyGuardLog;
-    <input type="hidden" id="ClientSiteID" asp-for="@Model.GuardLog.ClientSiteLogBook.ClientSite.Id" />    
+    var mapSettings = @Configuration.GetSection("GoogleMap").Get(typeof(GoogleMapSettings)) as GoogleMapSettings;
+    var ApiKey = mapSettings.ApiKey;
+    <input type="hidden" id="ClientSiteID" asp-for="@Model.GuardLog.ClientSiteLogBook.ClientSite.Id" />
+    <input type="hidden" id="hid_duressEnabledGpsCoordinates">
+    <input type="hidden" id="hid_duressEnabledAddress">
 }
 <div id="loader"></div>
 <div class="row">
@@ -30,6 +38,7 @@
             <a class="btn btn-primary" href="#" id="guard_offduty">Off Duty</a>
         </div>
     </div>
+
 
 
 
@@ -331,9 +340,13 @@
         </div>
     </div>
 </div>
-
 <partial name="_MessagePopup" />
 @Html.AntiForgeryToken()
 @section PageHeader {
     <h3 class="text-center">LOGBOOK PORTAL</h3>
+}
+
+@section scripts {
+    <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&callback=initialize&libraries=places"></script>
+
 }

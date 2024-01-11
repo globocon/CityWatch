@@ -115,14 +115,14 @@ namespace CityWatch.Web.Pages.Guard
                     {
                         _viewDataService.CopyOpenLogbookEntriesFromPreviousDay(previousDayLogBook.Id, logBookId, guardLoginId);
                     }
-                  
+
                 }
                 //logBookId entry for radio checklist-start
 
                 /* Previous days push message show only for petrol cars*/
                 /*Citywatch M1 - Romeo Patrol Cars*/
                 /* get previous day push messages Start */
-                if (LogBookType == LogBookType.DailyGuardLog && isNewLogBook)
+                if (isNewLogBook)
                 {
                     /*check if id is Citywatch M1 - Romeo Patrol Cars site id=625*/
                     if (GuardLogin.ClientSite.Id == 625)
@@ -134,6 +134,26 @@ namespace CityWatch.Web.Pages.Guard
                         }
                     }
 
+                    /* Copy Previous duress message not deactivated (Repete in each logbook untill deactivated )*/
+                    var previousDuressMessages = _clientDataProvider.GetDuressMessageNotAcknowledged(GuardLogin.ClientSite.Id, DateTime.Today.AddDays(-1));
+                    if (previousDuressMessages != null)
+                    {
+                        _guardLogDataProvider.CopyPreviousDaysDuressToLogBook(previousDuressMessages, logBookId, guardLoginId);
+                    }
+                    var clientSiteForLogbook = _clientDataProvider.GetClientSiteForRcLogBook();
+                    if (clientSiteForLogbook.Count != 0)
+                    {
+                        if (clientSiteForLogbook.FirstOrDefault().Id == GuardLogin.ClientSite.Id)
+                        {
+                            var previousDuressMessagesForControlRoom = _clientDataProvider.GetDuressMessageNotAcknowledgedForControlRoom(DateTime.Today.AddDays(-1));
+                            if (previousDuressMessagesForControlRoom != null)
+                            {
+                                _guardLogDataProvider.CopyPreviousDaysDuressToLogBook(previousDuressMessagesForControlRoom, logBookId, guardLoginId);
+                            }
+
+                        }
+
+                    }
                 }
                 /* get previous day push messages end */
 
@@ -175,7 +195,7 @@ namespace CityWatch.Web.Pages.Guard
                             if (select.Count != 0)
                             {
                                 /*remove NotificationType=1*/
-                                _guardLogDataProvider.RemoveTheeRadioChecksActivityWithNotifcationtypeOne( logbookcl.ClientSiteId);
+                                _guardLogDataProvider.RemoveTheeRadioChecksActivityWithNotifcationtypeOne(logbookcl.ClientSiteId);
                                 var radioChecklistNew = _clientDataProvider.GetClientSiteRadioChecksActivityStatus(logbookcl.GuardId, logbookcl.ClientSiteId);
                                 if (radioChecklistNew.Count == 0)
                                 {
@@ -231,7 +251,7 @@ namespace CityWatch.Web.Pages.Guard
             var guard = _guardDataProvider.GetGuards().SingleOrDefault(z => string.Compare(z.SecurityNo, securityNumber, StringComparison.OrdinalIgnoreCase) == 0);
             GuardLogin lastLogin = null;
             if (guard != null)
-                
+
                 if (AuthUserHelper.LoggedInUserId != null)
                 {
                     lastLogin = _guardDataProvider.GetGuardLastLogin(guard.Id, AuthUserHelper.LoggedInUserId);
@@ -358,7 +378,7 @@ namespace CityWatch.Web.Pages.Guard
             };
             _guardLogDataProvider.SaveGuardLog(signInEntry);
         }
-            private void CreateLogbookLoggedInEntry(int logBookId, int guardLoginId)
+        private void CreateLogbookLoggedInEntry(int logBookId, int guardLoginId)
         {
             var signInEntry = new GuardLog()
             {
