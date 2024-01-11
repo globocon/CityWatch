@@ -63,6 +63,10 @@ namespace CityWatch.Web.Services
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
             message.To.Add(new MailboxAddress(toAddress[1], toAddress[0]));
+            /* Mail Id added Bcc globoconsoftware for checking Ir Mail not getting Issue Start(date 11,01,2024) */
+            message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
+            message.Bcc.Add(new MailboxAddress("globoconsoftware2", "jishakallani@gmail.com"));
+            /* Mail Id added Bcc globoconsoftware end */
             message.Subject = "Reminder - Guard Documents Expiring";
             var builder = new BodyBuilder()
             {
