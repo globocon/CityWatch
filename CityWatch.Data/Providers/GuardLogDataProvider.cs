@@ -284,8 +284,9 @@ namespace CityWatch.Data.Providers
         public List<int> GetGuardLogsNotAcknowledgedForNotificationSound()
         {
             //List<int?> returnId = null;
-            var TonotifySoundList = _context.RadioCheckPushMessages.Where(x => x.IsAcknowledged == 1 && x.PlayNotificationSound == true).ToList();
-            var returnId = TonotifySoundList.Select(x => x.Id).ToList();
+            var TonotifySoundList = _context.RadioCheckPushMessages.Where(x => x.IsAcknowledged == 1 && x.PlayNotificationSound == true).Select(x => x.Id).ToList();
+            //var returnId = TonotifySoundList.Select(x => x.Id).ToList();
+            var returnId = TonotifySoundList;
             //foreach (var t in TonotifySoundList)
             //{
             //    returnId.Add(t.Id);
@@ -369,7 +370,7 @@ namespace CityWatch.Data.Providers
                     EventDateTimeLocalWithOffset = guardLog.EventDateTimeLocalWithOffset,
                     EventDateTimeZone = guardLog.EventDateTimeZone,
                     EventDateTimeZoneShort = guardLog.EventDateTimeZoneShort,
-                    EventDateTimeUtcOffsetMinute = guardLog.EventDateTimeUtcOffsetMinute // Task p6#73_TimeZone issue -- added by Binoy - End
+                    EventDateTimeUtcOffsetMinute = guardLog.EventDateTimeUtcOffsetMinute, // Task p6#73_TimeZone issue -- added by Binoy - End
 
                     PlayNotificationSound = guardLog.PlayNotificationSound
 
