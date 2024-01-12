@@ -516,12 +516,16 @@ namespace CityWatch.Web.Pages.Guard
                 if (clientSiteForLogbook.Count != 0)
                 {
                     var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdGloablmessage(clientSiteForLogbook.FirstOrDefault().Id, LogBookType.DailyGuardLog, DateTime.Today);
+                    var selectedGuardId = _guardLogDataProvider.GetGuardLogins(guardLoginId).FirstOrDefault().GuardId;
+                    var guardInitials = _guardLogDataProvider.GetGuards(selectedGuardId).Name + " [" + _guardLogDataProvider.GetGuards(selectedGuardId).Initial + "]";
+                    var clientSiteId = _guardLogDataProvider.GetGuardLogins(guardLoginId).FirstOrDefault().ClientSiteId;
+                    var clientsitename = _guardLogDataProvider.GetClientSites(clientSiteId).FirstOrDefault().Name;
                     var notifcationtoCitywatchHD = new GuardLog()
                     {
                         ClientSiteLogBookId = logBookId,
                         GuardLoginId = guardLoginId,
                         EventDateTime = DateTime.Now,
-                        Notes = Notifications,
+                        Notes = Notifications + " - " + guardInitials + " - " + clientsitename,
                         IrEntryType = IrEntryType.Normal,
                         EventDateTimeLocal = tmdata.EventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
                         EventDateTimeLocalWithOffset = tmdata.EventDateTimeLocalWithOffset,
