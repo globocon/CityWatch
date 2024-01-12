@@ -901,7 +901,7 @@ namespace CityWatch.Web.Pages.Radio
                         }
                         /* log book entry to citywtch control room */
                         var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
-                        _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(loginguardid, 0, Subject, Notifications, IrEntryType.Alarm, 1);
+                        _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(loginguardid, 0, Subject, Notifications, IrEntryType.Alarm, 1,0);
                         foreach (var clientSiteTypeID in clientSitesClientType)
                         {
                             EmailSender(clientSiteTypeID.SiteEmail, clientSiteTypeID.Id, Subject, ActionListMessage);
@@ -918,7 +918,7 @@ namespace CityWatch.Web.Pages.Radio
                         }
                         /* log book entry to citywtch control room */
                         var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
-                        _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(loginguardid, 0, Subject, ActionListMessage, IrEntryType.Alarm, 1);
+                        _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(loginguardid, 0, Subject, ActionListMessage, IrEntryType.Alarm, 1,0);
                         foreach (var clientSiteTypeID in clientSitesClientType)
                         {
                             EmailSender(clientSiteTypeID.SiteEmail, clientSiteTypeID.Id, Subject, ActionListMessage);
