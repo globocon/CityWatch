@@ -168,6 +168,10 @@ namespace CityWatch.Data.Providers
         void SaveDosandDontsField(DosAndDontsField dosanddontsField);
         void DeleteDosandDontsField(int id);
         List<DosAndDontsField> GetDosandDontsFields(int type);
+        void SaveActionList(ActionListNotification ActionList);
+        RCActionList GetActionlist(int Cliensiteid);
+        string GetUserClientSites(string searchTerm);
+        int GetUserClientSitesRCList(string searchTerm);
         //do's and donts-end
 
         void DeleteClientSiteRadioCheckActivityStatusForKV(int id);
@@ -348,6 +352,45 @@ namespace CityWatch.Data.Providers
                 EnabledAddress= enabledAddress
 
             });
+            _context.SaveChanges();
+
+
+        }
+        //To Save ActionList
+        public void SaveActionList(ActionListNotification ActionList)
+        {
+            var ActionListToUpdate = _context.ActionListNotification.SingleOrDefault(x => x.ClientSiteID == ActionList.ClientSiteID);
+            if (ActionListToUpdate==null)
+            {
+                _context.ActionListNotification.Add(new ActionListNotification()
+                {
+                    ClientSiteID = ActionList.ClientSiteID,
+                    AlarmKeypadCode = ActionList.AlarmKeypadCode,
+                    Physicalkey = ActionList.Physicalkey,
+                    CombinationLook = ActionList.CombinationLook,
+                    Action1 = ActionList.Action1,
+                    Action2 = ActionList.Action2,
+                    Action3 = ActionList.Action3,
+                    Action4 = ActionList.Action4,
+                    Action5 = ActionList.Action5,
+                    CommentsForControlRoomOperator = ActionList.CommentsForControlRoomOperator,
+                    Message = ActionList.Message
+                }) ; 
+            }
+            else
+            {
+                ActionListToUpdate.AlarmKeypadCode = ActionList.AlarmKeypadCode;
+                ActionListToUpdate.Physicalkey = ActionList.Physicalkey;
+                ActionListToUpdate.CombinationLook = ActionList.CombinationLook;
+                ActionListToUpdate.Action1 = ActionList.Action1;
+                ActionListToUpdate.Action2 = ActionList.Action2;
+                ActionListToUpdate.Action3 = ActionList.Action3;
+                ActionListToUpdate.Action4 = ActionList.Action4;
+                ActionListToUpdate.Action5 = ActionList.Action5;
+                ActionListToUpdate.CommentsForControlRoomOperator = ActionList.CommentsForControlRoomOperator;
+                ActionListToUpdate.Message = ActionList.Message;
+            }
+            
             _context.SaveChanges();
 
 
@@ -2947,6 +2990,46 @@ namespace CityWatch.Data.Providers
             _context.Remove(DosAndDontsFieldToDelete);
             _context.SaveChanges();
         }
+        //code to get ActionList start
+        public RCActionList GetActionlist(int Cliensiteid)
+        {
+            var ActionList = _context?.RCActionList
+            .FirstOrDefault(z => z.ClientSiteID == Cliensiteid);
+            return ActionList;
+        }
+        public string GetUserClientSites(string searchTerm)
+        {
+            var clientSites = _context?.ClientSites
+     .Where(z => string.IsNullOrEmpty(searchTerm) || z.Name.ToLower().Contains(searchTerm.ToLower()))
+     .FirstOrDefault();
+
+            if (clientSites != null)
+            {
+                return clientSites.Address;
+            }
+            else
+            {
+                // Handle the case when no matching record is found
+                return "No matching record found";
+            }
+        }
+        public int GetUserClientSitesRCList(string searchTerm)
+        {
+            var clientSites = _context?.ClientSites
+     .Where(z => string.IsNullOrEmpty(searchTerm) || z.Name.ToLower().Contains(searchTerm.ToLower()))
+     .FirstOrDefault();
+
+            if (clientSites != null)
+            {
+                return clientSites.Id;
+            }
+            else
+            {
+                // Handle the case when no matching record is found
+                return 0;
+            }
+        }
+        //code to get ActionList stop
 
         //To Delete RadiocheckStatusKV
         public void DeleteClientSiteRadioCheckActivityStatusForKV(int id)
