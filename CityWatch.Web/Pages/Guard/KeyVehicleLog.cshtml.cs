@@ -41,6 +41,9 @@ using iText.Layout.Element;
 using iText.Layout.Properties;
 using Serilog;
 using static Dropbox.Api.TeamLog.EventCategory;
+using System.Net.Http;
+using static Dropbox.Api.Paper.PaperDocPermissionLevel;
+
 
 namespace CityWatch.Web.Pages.Guard
 {
@@ -308,8 +311,38 @@ namespace CityWatch.Web.Pages.Guard
                         _guardLogDataProvider.UpdateRadioChecklistEntry(ClientSiteRadioChecksActivity);
                     }
                 }
+                if (KeyVehicleLog.GuardLoginId!= HttpContext.Session.GetInt32("GuardLoginId"))
+                {
 
+                    var guardId = _guardLogDataProvider.GetGuardLogins(Convert.ToInt32(HttpContext.Session.GetInt32("GuardLoginId"))).Select(x=>x.GuardId).FirstOrDefault();
+                    var ClientSiteRadioChecksActivityDetailsCheck = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == guardId && x.ClientSiteId == KeyVehicleLog.GuardLogin.ClientSiteId && x.KVId==KeyVehicleLog.Id);
+                    if (ClientSiteRadioChecksActivityDetailsCheck.Count()==0)
+                    {
+
+                   
+                    var clientsiteRadioCheckEdit = new ClientSiteRadioChecksActivityStatus()
+                    {
+                        ClientSiteId = KeyVehicleLog.GuardLogin.ClientSiteId,
+                        GuardId = guardId,
+                        LastKVCreatedTime = DateTime.Now,
+                        KVId = KeyVehicleLog.Id,
+                        ActivityType = "KV"
+                    };
+                    _guardLogDataProvider.EditRadioChecklistEntry(clientsiteRadioCheckEdit);
+                    var ClientSiteRadioChecksActivityDetails = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == guardId && x.ClientSiteId != KeyVehicleLog.GuardLogin.ClientSiteId);
+                    if (ClientSiteRadioChecksActivityDetails.Count()!=0)
+                    {
+                        foreach (var item in ClientSiteRadioChecksActivityDetails)
+                        {
+                            _guardLogDataProvider.DeleteClientSiteRadioCheckActivityStatusForKV(item.Id);
+                        }
+                        
+                    }
+                    }
+                }
+                //_guardLogDataProvider.EditRadioChecklistEntry(ClientSiteRadioChecksActivity)
             }
+
             catch (Exception ex)
             {
                 success = false;
@@ -344,7 +377,52 @@ namespace CityWatch.Web.Pages.Guard
             var message = "Success";
             try
             {
+                //for entering the audit history of the person who exit the entry-start
+                KeyVehicleLogAuditHistory keyVehicleLogAuditHistory = null;
+                var keyVehicleLogInExitTime = _guardLogDataProvider.GetKeyVehicleLogById(Id);
+                keyVehicleLogInExitTime.ActiveGuardLoginId = HttpContext.Session.GetInt32("GuardLoginId");
+                keyVehicleLogInExitTime.ExitTime = DateTime.Now;
+                keyVehicleLogAuditHistory = GetKvlAuditHistory(keyVehicleLogInExitTime);
+                keyVehicleLogAuditHistory.AuditMessage = "Exit entry";
+                var profileId = GetKvlProfileId(keyVehicleLogInExitTime);
+                keyVehicleLogAuditHistory.ProfileId = profileId;
+                keyVehicleLogAuditHistory.KeyVehicleLogId = KeyVehicleLog.Id;
+                _guardLogDataProvider.SaveKeyVehicleLogAuditHistory(keyVehicleLogAuditHistory);
+                //for entering the audit history of the person who exit the entry-end
                 _guardLogDataProvider.KeyVehicleLogQuickExit(Id);
+
+                //for rc entry-start
+                //if (KeyVehicleLog.GuardLoginId != HttpContext.Session.GetInt32("GuardLoginId"))
+                //{
+
+                    var guardId = _guardLogDataProvider.GetGuardLogins(Convert.ToInt32(HttpContext.Session.GetInt32("GuardLoginId"))).Select(x => x.GuardId).FirstOrDefault();
+                    var ClientSiteRadioChecksActivityDetailsCheck = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == guardId && x.ClientSiteId == keyVehicleLogAuditHistory.KeyVehicleLog.GuardLogin.ClientSiteId && x.KVId == keyVehicleLogAuditHistory.KeyVehicleLog.Id);
+                    if (ClientSiteRadioChecksActivityDetailsCheck.Count() == 0)
+                    {
+
+
+                        var clientsiteRadioCheckEdit = new ClientSiteRadioChecksActivityStatus()
+                        {
+                            ClientSiteId = keyVehicleLogAuditHistory.KeyVehicleLog.GuardLogin.ClientSiteId,
+                            GuardId = guardId,
+                            LastKVCreatedTime = DateTime.Now,
+                            KVId = KeyVehicleLog.Id,
+                            ActivityType = "KV"
+                        };
+                        _guardLogDataProvider.EditRadioChecklistEntry(clientsiteRadioCheckEdit);
+                        var ClientSiteRadioChecksActivityDetails = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == guardId && x.ClientSiteId != keyVehicleLogAuditHistory.KeyVehicleLog.GuardLogin.ClientSiteId);
+                        if (ClientSiteRadioChecksActivityDetails.Count() != 0)
+                        {
+                            foreach (var item in ClientSiteRadioChecksActivityDetails)
+                            {
+                                _guardLogDataProvider.DeleteClientSiteRadioCheckActivityStatusForKV(item.Id);
+                            }
+
+                        }
+                    }
+                //}
+                //for rc entry-end
+
             }
             catch (Exception ex)
             {
@@ -910,17 +988,24 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { fileName = @Url.Content($"~/Pdf/Output/{fileName}"), statusCode });
         }
         //To Generate the Pdf In List start
-        public async Task<JsonResult> OnPostGenerateManualDocketList(int id1, ManualDocketReason option, string otherReason, string stakeholderEmails, int clientSiteId, string blankNoteOnOrOff, List<int> ids)
+        public async Task<JsonResult> OnPostGenerateManualDocketList(bool IsGlobal, ManualDocketReason option, string otherReason, string stakeholderEmails, int clientSiteId, string blankNoteOnOrOff, List<int> ids)
         {
             //id = 37200;
              var fileName = string.Empty;
             var statusCode = 0;
-            foreach (var id in ids)
-            {
+            int id = ids[0];
                 try
                 {
                     var serialNo = GetNextDocketSequenceNumber(id);
-                    fileName = _keyVehicleLogDocketGenerator.GeneratePdfReportList(id, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, serialNo, ids);
+                if (IsGlobal==true)
+                {
+                    fileName = _keyVehicleLogDocketGenerator.GeneratePdfReportListGlobal(id, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, serialNo, ids);
+                }
+                else
+                {
+                    fileName = _keyVehicleLogDocketGenerator.GeneratePdfReportList(id, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, serialNo, ids, clientSiteId);
+                }
+                    
 
 
                 }
@@ -963,7 +1048,7 @@ namespace CityWatch.Web.Pages.Guard
                 //    statusCode += -3;
                 //    _logger.LogError(ex.StackTrace);
                 //}
-            }
+            
 
            
 
@@ -1070,7 +1155,7 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { success, message, kvlProfileId });
         }
 
-        public JsonResult OnPostSaveClientSiteDuress(int clientSiteId, int guardId, int guardLoginId, int logBookId)
+        public JsonResult OnPostSaveClientSiteDuress(int clientSiteId, int guardId, int guardLoginId, int logBookId, string gpsCoordinates, string enabledAddress)
         {
             var status = true;
             var message = "Success";
@@ -1083,7 +1168,7 @@ namespace CityWatch.Web.Pages.Guard
                     Type = LogBookType.DailyGuardLog,
                     Date = DateTime.Today
                 });
-                _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logbookId.Value, guardId);
+                _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logbookId.Value, guardId, gpsCoordinates, enabledAddress);
             }
             catch (Exception ex)
             {

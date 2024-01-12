@@ -2,12 +2,21 @@
 @using CityWatch.Data.Models;
 @using CityWatch.Data.Providers;
 @using CityWatch.Web.Services;
+@using CityWatch.Data.Helpers
+@using Microsoft.Extensions.Configuration
+
 @inject IViewDataService viewDataService
 @inject IGuardLogDataProvider guardmodel
+@inject IConfiguration Configuration
 @model CityWatch.Web.Pages.Guard.DailyLogModel
 @{
     ViewData["Title"] = "CityWatch Security | Guard Daily Log";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.DailyGuardLog;
+    var mapSettings = @Configuration.GetSection("GoogleMap").Get(typeof(GoogleMapSettings)) as GoogleMapSettings;
+    var ApiKey = mapSettings.ApiKey;
+    <input type="hidden" id="ClientSiteID" asp-for="@Model.GuardLog.ClientSiteLogBook.ClientSite.Id" />
+    <input type="hidden" id="hid_duressEnabledGpsCoordinates">
+    <input type="hidden" id="hid_duressEnabledAddress">
 }
 <div id="loader"></div>
 <div class="row">
@@ -29,6 +38,7 @@
             <a class="btn btn-primary" href="#" id="guard_offduty">Off Duty</a>
         </div>
     </div>
+
 
 
 
@@ -63,9 +73,9 @@
                                 </li>
                             </ul>
                         </div>
-                        <div class="col-md-4 text-center">
+                        <div class="col-md-4 text-center">                            
                             @{
-
+                                bool isControlRoomLogBook = false;  // Project 4 , Task 48, Audio notification, Added By Binoy
                                 var clientSiteForLogbook = Model.ClientDataProvider.GetClientSiteForRcLogBook();
                                 var isDuressActive = Convert.ToBoolean(ViewData["IsDuressEnabled"]);
                                 var duressStatus = isDuressActive ? "Active" : "Normal";
@@ -81,6 +91,7 @@
                                         </p>
 
                                     }
+                                    else{ isControlRoomLogBook = true; }
 
 
                                 }
@@ -95,8 +106,8 @@
 
                                 }
 
-                            }
-
+                                <input type="hidden" id="inpHdisControlRoomLogBook" value="@isControlRoomLogBook.ToString().ToLower()" />
+                            }                            
                         </div>
                     </div>
                     <hr />
@@ -136,7 +147,26 @@
                         <div class="form-group row">
                             <label for="new_event_notes" class="col-md-2 col-md-2-tight col-form-label">Event / Notes</label>
                             <div class="col-md-10">
-                                <textarea class="form-control" rows="4" asp-for="@Model.GuardLog.Notes" onPaste="return false"></textarea>
+                                @{
+
+                                    if (clientSiteForLogbook.Count != 0)
+                                    {
+                                        var value = 0;
+                                        if (clientSiteForLogbook.FirstOrDefault().Id == Model.GuardLog.ClientSiteLogBook.ClientSiteId)
+                                        {
+                                            value = 1;
+                                            <textarea class="form-control" rows="4" asp-for="@Model.GuardLog.Notes"></textarea>
+
+                                        }
+                                        else
+                                        {
+                                            value = 0;
+                                            <textarea class="form-control" rows="4" asp-for="@Model.GuardLog.Notes" onPaste="return false"></textarea>
+                                        }
+                                        <input type="hidden" id="IsAssignedLogBook" value="@value" />
+                                    }
+
+                                }
                             </div>
                         </div>
                         <div class="form-row">
@@ -151,7 +181,7 @@
                         <input type="hidden" asp-for="@Model.GuardLog.ClientSiteLogBook.ClientSite.Id" />
                         <input type="hidden" name="isEditable" value="@((Model.GuardLog.GuardLogin.UserId != 0).ToString().ToLower())" />
                         <input type="hidden" id="previousLogBookId" value="@ViewData["PreviousLogBookId"]" />
-                        <input type="hidden" id="previousLogBookDateString" value="@ViewData["PreviousLogBookDateString"]" />
+                        <input type="hidden" id="previousLogBookDateString" value="@ViewData["PreviousLogBookDateString"]" />                        
                     </form>
                 </div>
                 <div class="card-footer bg-white">
@@ -267,6 +297,7 @@
                                     <div class="col-md-12">
                                         <form>
                                             <input type="hidden" id="txtNotificationsControlRoomMessage" />
+                                            <input type="hidden" id="rcPushMessageId" />
                                             <div class="form-group row mb-3">
                                                 <label for="gs_site_email" class="col-md-4 col-form-label">Acknowledge Message :</label>
                                                 <div class="col-md-6 mr-5 mt-2 p-0">
@@ -310,9 +341,13 @@
         </div>
     </div>
 </div>
-
 <partial name="_MessagePopup" />
 @Html.AntiForgeryToken()
 @section PageHeader {
     <h3 class="text-center">LOGBOOK PORTAL</h3>
+}
+
+@section scripts {
+    <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&callback=initialize&libraries=places"></script>
+
 }

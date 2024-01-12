@@ -124,10 +124,11 @@ namespace CityWatch.Data.Providers
         List<SelectListItem> GetUserClientTypesHavingAccess(int? userId);
         void SaveClientSiteForRcLogBook(int clientSiteId);
         List<ClientSite> GetClientSiteForRcLogBook();
-
-
-
         void RemoveRCList(int rcListId);
+        List<RadioCheckPushMessages> GetPushMessagesNotAcknowledged(int clientSiteId, DateTime date);
+
+        List<RadioCheckPushMessages> GetDuressMessageNotAcknowledged(int clientSiteId, DateTime date);
+        List<RadioCheckPushMessages> GetDuressMessageNotAcknowledgedForControlRoom(DateTime date);
 
     }
 
@@ -1416,6 +1417,24 @@ namespace CityWatch.Data.Providers
         }
         //to get incident reports-end-jisha
 
+        /* Get Previous day pushmessages Start*/
+        public List<RadioCheckPushMessages> GetPushMessagesNotAcknowledged(int clientSiteId, DateTime date)
+        {
+            return _context.RadioCheckPushMessages.Where
+                 (z => z.ClientSiteId == clientSiteId  && z.EntryType==2 && z.IsAcknowledged==0 && (z.IsDuress == 0)).ToList();
+        }
+
+        public List<RadioCheckPushMessages> GetDuressMessageNotAcknowledged(int clientSiteId, DateTime date)
+        {
+            return _context.RadioCheckPushMessages.Where
+                 (z => z.ClientSiteId == clientSiteId && z.EntryType == 2 && z.IsAcknowledged == 0&& z.IsDuress==1).ToList();
+        }
+        public List<RadioCheckPushMessages> GetDuressMessageNotAcknowledgedForControlRoom( DateTime date)
+        {
+            return _context.RadioCheckPushMessages.Where
+                 (z =>  z.EntryType == 2 && z.IsAcknowledged == 0 && z.IsDuress == 1).ToList();
+        }
+        /* Get Previous day pushmessages end*/
     }
 
 

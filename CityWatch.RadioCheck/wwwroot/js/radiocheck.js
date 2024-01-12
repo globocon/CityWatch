@@ -6,7 +6,9 @@ window.onload = function () {
         startClock();
     }
 };
-
+$(document).ready(function () {
+    $('[data-toggle="tooltip"]').tooltip();
+});
 function startClock() {
     let timer = duration, minutes, seconds;
     display = document.querySelector('#clockRefresh');
@@ -131,7 +133,32 @@ $('#clientSiteActivityStatus').on('click', 'button[name="btnRadioCheckStatus"]',
 
 $(window).resize(function () {
     console.log($(window).height());
-    $('.dataTables_scrollBody').css('height', ($(window).height() - 200));
+    //$('.dataTables_scrollBody').css('height', ($(window).height() - 200));
+    /* for modifying the size of tables active and inactive guards-start*/
+    var count = $('#clientSiteInActiveGuards tbody tr').length;
+    if (count > 10) {
+        $('#clientSiteInActiveGuards').closest('.dataTables_scrollBody').css('height', ($(window).height() - 300));
+
+    }
+    else {
+
+
+        $('#clientSiteInActiveGuards').closest('.dataTables_scrollBody').css('height', '100%');
+
+    }
+    var count2 = $('#clientSiteActiveGuards tbody tr').length;
+    if (count2 > 10) {
+        $('#clientSiteActiveGuards').closest('.dataTables_scrollBody').css('height', ($(window).height() - 200));
+
+    }
+    else {
+
+
+        $('#clientSiteActiveGuards').closest('.dataTables_scrollBody').css('height', '100%');
+
+    }
+   /* for modifying the size of tables active and inactive guards - end*/
+
 });
 
 
@@ -189,8 +216,16 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             data: 'guardName',
             width: '20%',
             render: function (value, type, data) {
-                return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                    '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+                if (data.isEnabled === 1) {
+                    return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                        '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>'+
+                        '&nbsp;&nbsp;&nbsp; <i class="fa fa-map-marker" aria-hidden="true"></i>';
+
+                }
+                else {
+                    return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                        '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+                }
             }
         },
         {
@@ -284,6 +319,21 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     },
     drawCallback: function () {
         $(".dataTables_scrollBody").scrollTop(scrollPosition);
+        /*for modifying the size of tables active  guards - start*/
+        var count = $('#clientSiteActiveGuards tbody tr').length;
+        if (count > 10) {
+            $('#clientSiteActiveGuards').closest('.dataTables_scrollBody').css('height', ($(window).height() - 300));
+
+        }
+        else {
+
+
+            $('#clientSiteActiveGuards').closest('.dataTables_scrollBody').css('height', '100%');
+
+        }
+
+        /*for modifying the size of tables active  guards - end*/
+
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;
@@ -483,8 +533,17 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             render: function (value, type, data) {
 
                 if (data.notificationType != 1) {
-                    return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                        '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+
+                    if (data.isEnabled != 1) {
+                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                            '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+                    }
+                    else {
+                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                            '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>'+
+                            '&nbsp;&nbsp;&nbsp;<a href="https://www.google.com/maps?q='+data.gpsCoordinates+'" target="_blank" data-toggle="tooltip" title="' + data.enabledAddress+'"><i class="fa fa-map-marker" aria-hidden="true"></i></a>';
+                    }
+
                 }
                 else {
                     return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true" style="color:#FF0000;"></i> ' + data.guardName;
@@ -589,6 +648,20 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
     drawCallback: function () {
         /* Retain the Scroll position*/
         $(".dataTables_scrollBody").scrollTop(scrollPosition);
+        /*for modifying the size of tables   inactive guards - start*/
+        var count = $('#clientSiteInActiveGuards tbody tr').length;
+        if (count > 10) {
+            $('#clientSiteInActiveGuards').closest('.dataTables_scrollBody').css('height', ($(window).height() - 200));
+
+        }
+        else {
+
+
+            $('#clientSiteInActiveGuards').closest('.dataTables_scrollBody').css('height', '100%');
+
+        }
+
+        /* for modifying the size of tables   inactive guards - end*/
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;
@@ -620,6 +693,10 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
 });
 
+
+clientSiteInActiveGuards.on('draw', function () {
+    $('[data-toggle="tooltip"]').tooltip();
+});
 $('#clientSiteInActiveGuards tbody').on('click', '#btnUpArrow', function () {
 
 
@@ -2092,8 +2169,17 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
             render: function (value, type, data) {
 
                 if (data.notificationType != 1) {
-                    return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                        '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+
+                    if (data.isEnabled != 1) {
+                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                            '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+                    }
+                    else {
+                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                            '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>' +
+                            '&nbsp;&nbsp;&nbsp;<a href="https://www.google.com/maps?q=' + data.gpsCoordinates + '" target="_blank" data-toggle="tooltip" title="' + data.enabledAddress + '"><i class="fa fa-map-marker" aria-hidden="true"></i></a>';
+                    }
+                    
                 }
                 else {
                     return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true" style="color:#FF0000;"></i> ' + data.guardName;
@@ -2536,12 +2622,36 @@ $('#heading-example').on('click', function () {
     if (isActive) {
         console.log($(window).height());
         var container = $('#clientSiteActiveGuards').closest('.dataTables_scrollBody');
-        container.css('height', ($(window).height() - 100));
+        /* for modifying the size of tables active  guards - start*/
+        var count = $('#clientSiteActiveGuards tbody tr').length;
+        if (count > 10) {
+            container.css('height', ($(window).height() - 100));
+
+        }
+        else {
+
+            container.css('height', '100%');
+
+
+        }
+       /* for modifying the size of tables active  guards - end*/
     }
     else {
         console.log($(window).height());
         var container = $('#clientSiteActiveGuards').closest('.dataTables_scrollBody');
-        container.css('height', ($(window).height() - 300));
+        /*for modifying the size of tables active  guards - start*/
+        var count = $('#clientSiteActiveGuards tbody tr').length;
+        if (count > 10) {
+            container.css('height', ($(window).height() - 300));
+
+        }
+        else {
+
+            container.css('height', '100%');
+
+
+        }
+       /* for modifying the size of tables active  guards - end*/
 
     }
     // Toggle the state
@@ -2557,8 +2667,22 @@ $('#heading-example2').on('click', function () {
     }
     else {
         console.log($(window).height());
+
+
         var container = $('#clientSiteInActiveGuards').closest('.dataTables_scrollBody');
-        container.css('height', ($(window).height() - 300));
+        /*for modifying the size of tables   inactive guards - start*/
+        var count = $('#clientSiteInActiveGuards tbody tr').length;
+        if (count > 10) {
+            container.css('height', ($(window).height() - 300));
+
+        }
+        else {
+
+            container.css('height', '100%');
+
+
+        }
+        /*for modifying the size of tables   inactive guards - end*/
 
 
     }

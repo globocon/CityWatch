@@ -1,3 +1,4 @@
+using CityWatch.Data.Enums;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
@@ -96,10 +97,19 @@ namespace CityWatch.Web.Pages.Guard
 
                 var logBookId = GetLogBookId(out var isNewLogBook);
                 var guardLoginId = GetGuardLoginId(logBookId);
+                // Task p6#73_TimeZone issue -- added by Binoy - Start
+                var eventDateTimeLocal = GuardLogin.EventDateTimeLocal.Value;
+                var eventDateTimeLocalWithOffset = GuardLogin.EventDateTimeLocalWithOffset.Value;
+                var eventDateTimeZone = GuardLogin.EventDateTimeZone;
+                var eventDateTimeZoneShort = GuardLogin.EventDateTimeZoneShort;
+                var eventDateTimeUtcOffsetMinute = GuardLogin.EventDateTimeUtcOffsetMinute.Value;
+                // Task p6#73_TimeZone issue -- added by Binoy - End
 
                 if (LogBookType == LogBookType.DailyGuardLog)
                 {
-                    CreateLogbookLoggedInEntry(logBookId, guardLoginId);
+                    // Task p6#73_TimeZone issue -- modified by Binoy
+                    CreateLogbookLoggedInEntry(logBookId, guardLoginId, eventDateTimeLocal, 
+                        eventDateTimeLocalWithOffset, eventDateTimeZone, eventDateTimeZoneShort, eventDateTimeUtcOffsetMinute);
 
                 }
                 if (LogBookType == LogBookType.VehicleAndKeyLog)
@@ -115,8 +125,53 @@ namespace CityWatch.Web.Pages.Guard
                     {
                         _viewDataService.CopyOpenLogbookEntriesFromPreviousDay(previousDayLogBook.Id, logBookId, guardLoginId);
                     }
+
                 }
                 //logBookId entry for radio checklist-start
+
+                /* Previous days push message show only for petrol cars*/
+                /*Citywatch M1 - Romeo Patrol Cars*/
+                /* get previous day push messages Start */
+                if (isNewLogBook)
+                {
+                    /*check if id is Citywatch M1 - Romeo Patrol Cars site id=625*/
+                    if (GuardLogin.ClientSite.Id == 625)
+                    {
+                        var previousPuShMessages = _clientDataProvider.GetPushMessagesNotAcknowledged(GuardLogin.ClientSite.Id, DateTime.Today.AddDays(-1));
+                        if (previousPuShMessages != null)
+                        {
+                            _guardLogDataProvider.CopyPreviousDaysPushMessageToLogBook(previousPuShMessages, logBookId, guardLoginId);
+                        }
+                    }
+
+                    /* Copy Previous duress message not deactivated (Repete in each logbook untill deactivated )*/
+                    var previousDuressMessages = _clientDataProvider.GetDuressMessageNotAcknowledged(GuardLogin.ClientSite.Id, DateTime.Today.AddDays(-1));
+                    if (previousDuressMessages != null)
+                    {
+                        _guardLogDataProvider.CopyPreviousDaysDuressToLogBook(previousDuressMessages, logBookId, guardLoginId);
+                    }
+                    var clientSiteForLogbook = _clientDataProvider.GetClientSiteForRcLogBook();
+                    if (clientSiteForLogbook.Count != 0)
+                    {
+                        if (clientSiteForLogbook.FirstOrDefault().Id == GuardLogin.ClientSite.Id)
+                        {
+                            var previousDuressMessagesForControlRoom = _clientDataProvider.GetDuressMessageNotAcknowledgedForControlRoom(DateTime.Today.AddDays(-1));
+                            if (previousDuressMessagesForControlRoom != null)
+                            {
+
+                                foreach (var items in previousDuressMessagesForControlRoom)
+                                {
+                                    _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(GuardLogin.Guard.Id, GuardLogin.Guard.Id, null, "Duress Alarm Activated", IrEntryType.Alarm, 1, 0);
+
+                                }
+                                //_guardLogDataProvider.CopyPreviousDaysDuressToLogBook(previousDuressMessagesForControlRoom, logBookId, guardLoginId);
+                            }
+
+                        }
+
+                    }
+                }
+                /* get previous day push messages end */
 
                 var gaurdlogin = _clientDataProvider.GetGuardLogin(guardLoginId, logBookId);
                 if (gaurdlogin.Count != 0)
@@ -156,7 +211,7 @@ namespace CityWatch.Web.Pages.Guard
                             if (select.Count != 0)
                             {
                                 /*remove NotificationType=1*/
-                                _guardLogDataProvider.RemoveTheeRadioChecksActivityWithNotifcationtypeOne( logbookcl.ClientSiteId);
+                                _guardLogDataProvider.RemoveTheeRadioChecksActivityWithNotifcationtypeOne(logbookcl.ClientSiteId);
                                 var radioChecklistNew = _clientDataProvider.GetClientSiteRadioChecksActivityStatus(logbookcl.GuardId, logbookcl.ClientSiteId);
                                 if (radioChecklistNew.Count == 0)
                                 {
@@ -212,7 +267,7 @@ namespace CityWatch.Web.Pages.Guard
             var guard = _guardDataProvider.GetGuards().SingleOrDefault(z => string.Compare(z.SecurityNo, securityNumber, StringComparison.OrdinalIgnoreCase) == 0);
             GuardLogin lastLogin = null;
             if (guard != null)
-                
+
                 if (AuthUserHelper.LoggedInUserId != null)
                 {
                     lastLogin = _guardDataProvider.GetGuardLastLogin(guard.Id, AuthUserHelper.LoggedInUserId);
@@ -339,7 +394,10 @@ namespace CityWatch.Web.Pages.Guard
             };
             _guardLogDataProvider.SaveGuardLog(signInEntry);
         }
-            private void CreateLogbookLoggedInEntry(int logBookId, int guardLoginId)
+
+            private void CreateLogbookLoggedInEntry(int logBookId, int guardLoginId,DateTime? eventDateTimeLocal,
+                       DateTimeOffset? eventDateTimeLocalWithOffset, string eventDateTimeZone, 
+                       string eventDateTimeZoneShort,int? eventDateTimeUtcOffsetMinute)
         {
             var signInEntry = new GuardLog()
             {
@@ -347,7 +405,12 @@ namespace CityWatch.Web.Pages.Guard
                 GuardLoginId = guardLoginId,
                 EventDateTime = DateTime.Now,
                 Notes = "Logbook Logged In",
-                IsSystemEntry = true
+                IsSystemEntry = true,
+                EventDateTimeLocal = eventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
+                EventDateTimeLocalWithOffset = eventDateTimeLocalWithOffset,
+                EventDateTimeZone = eventDateTimeZone,
+                EventDateTimeZoneShort = eventDateTimeZoneShort,
+                EventDateTimeUtcOffsetMinute = eventDateTimeUtcOffsetMinute // Task p6#73_TimeZone issue -- added by Binoy - End
             };
             _guardLogDataProvider.SaveGuardLog(signInEntry);
 

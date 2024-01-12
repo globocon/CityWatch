@@ -1,5 +1,6 @@
 ﻿using CityWatch.Data.Enums;
 using CityWatch.Data.Models;
+using Dropbox.Api.Users;
 using iText.Layout.Element;
 using iText.StyledXmlParser.Css.Resolve.Shorthand.Impl;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -74,7 +75,7 @@ namespace CityWatch.Data.Providers
         void DeleteKeyVehicleLogField(int id);
         List<KeyVehicleLogAuditHistory> GetAuditHistory(int id);
         void SaveKeyVehicleLogAuditHistory(KeyVehicleLogAuditHistory keyVehicleLogAuditHistory);
-        void SaveClientSiteDuress(int clientSiteId, int guardId);
+        void SaveClientSiteDuress(int clientSiteId, int guardId, string gpsCoordinates, string enabledAddress);
         ClientSiteDuress GetClientSiteDuress(int clientSiteId);
         List<CompanyDetails> GetCompanyDetails();
         //logBookId entry for radio checklist-start
@@ -150,7 +151,7 @@ namespace CityWatch.Data.Providers
         void SaveClientSiteRadioCheckNew(ClientSiteRadioCheck clientSiteRadioCheck);
         //for saving status for active guards-end
 
-
+        void EditRadioChecklistEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity);
         List<RadioCheckListGuardLoginData> GetClientSiteRadiocheckStatus(int clientSiteId, int guardId);
 
         void RemoveGuardLoginFromdifferentSites();
@@ -162,7 +163,7 @@ namespace CityWatch.Data.Providers
 
         List<GuardLog> GetGuardLogswithKvLogData(int logBookId, DateTime logDate);
 
-        void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications, IrEntryType entryType, int type);
+        void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications, IrEntryType entryType, int type,int clientSiteId);
         //do's and donts-start
         void SaveDosandDontsField(DosAndDontsField dosanddontsField);
         void DeleteDosandDontsField(int id);
@@ -172,6 +173,23 @@ namespace CityWatch.Data.Providers
         string GetUserClientSites(string searchTerm);
         int GetUserClientSitesRCList(string searchTerm);
         //do's and donts-end
+
+        void DeleteClientSiteRadioCheckActivityStatusForKV(int id);
+
+        /* Save push messages*/
+        int SavePushMessage(RadioCheckPushMessages radioCheckPushMessages);
+
+        
+        void UpdateIsAcknowledged(int rcPushMessageId);
+
+        void CopyPreviousDaysPushMessageToLogBook(List<RadioCheckPushMessages> previousDayPushmessageList, int logBookId, int guardLoginId);
+
+        // Project 4 , Task 48, Audio notification, Added By Binoy
+        void UpdateNotificationSoundPlayedStatusForGuardLogs(int logBookId,bool isControlRoomLogBook);
+
+        List<int> GetGuardLogsNotAcknowledgedForNotificationSound();
+
+        void CopyPreviousDaysDuressToLogBook(List<RadioCheckPushMessages> previousDayDuressList, int logBookId, int guardLoginId);
 
     }
 
@@ -240,6 +258,48 @@ namespace CityWatch.Data.Providers
             return result;
         }
 
+
+        // Project 4 , Task 48, Audio notification, By Binoy -- Start
+        public void UpdateNotificationSoundPlayedStatusForGuardLogs(int logBookId,bool isControlRoomLogBook)
+        {            
+            if (isControlRoomLogBook)
+            {
+                var ControlRoomLog = _context.RadioCheckPushMessages.Where(x => x.Id == logBookId).SingleOrDefault();
+                if (ControlRoomLog != null)
+                {
+                    ControlRoomLog.PlayNotificationSound = false;
+                    _context.SaveChanges();
+                }
+                return;
+            }
+            else
+            {
+                var GuardLogRecord = _context.GuardLogs.Where(x => x.Id == logBookId).SingleOrDefault();
+                if (GuardLogRecord != null)
+                {
+                    GuardLogRecord.PlayNotificationSound = false;
+                    _context.SaveChanges();
+
+                }
+                return;
+            }
+        }
+
+        public List<int> GetGuardLogsNotAcknowledgedForNotificationSound()
+        {
+            //List<int?> returnId = null;
+            var TonotifySoundList = _context.RadioCheckPushMessages.Where(x => x.IsAcknowledged == 1 && x.PlayNotificationSound == true).Select(x => x.Id).ToList();
+            //var returnId = TonotifySoundList.Select(x => x.Id).ToList();
+            var returnId = TonotifySoundList;
+            //foreach (var t in TonotifySoundList)
+            //{
+            //    returnId.Add(t.Id);
+            //}            
+            return returnId;
+        }
+        // Project 4 , Task 48, Audio notification, By Binoy -- End
+
+
         public List<GuardLog> GetGuardLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
         {
             return _context.GuardLogs
@@ -280,14 +340,17 @@ namespace CityWatch.Data.Providers
                 .LastOrDefault();
         }
 
-        public void SaveClientSiteDuress(int clientSiteId, int guardId)
+        public void SaveClientSiteDuress(int clientSiteId, int guardId, string gpsCoordinates, string enabledAddress)
         {
             _context.ClientSiteDuress.Add(new ClientSiteDuress()
             {
                 ClientSiteId = clientSiteId,
                 IsEnabled = true,
                 EnabledBy = guardId,
-                EnabledDate = DateTime.Today
+                EnabledDate = DateTime.Today,
+                GpsCoordinates=gpsCoordinates,
+                EnabledAddress= enabledAddress
+
             });
             _context.SaveChanges();
 
@@ -344,7 +407,17 @@ namespace CityWatch.Data.Providers
                     Notes = guardLog.Notes,
                     GuardLoginId = guardLog.GuardLoginId,
                     IsSystemEntry = guardLog.IsSystemEntry,
-                    IrEntryType = guardLog.IrEntryType
+                    IrEntryType = guardLog.IrEntryType,
+                    RcPushMessageId= guardLog.RcPushMessageId,
+                    EventDateTimeLocal = guardLog.EventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
+                    EventDateTimeLocalWithOffset = guardLog.EventDateTimeLocalWithOffset,
+                    EventDateTimeZone = guardLog.EventDateTimeZone,
+                    EventDateTimeZoneShort = guardLog.EventDateTimeZoneShort,
+                    EventDateTimeUtcOffsetMinute = guardLog.EventDateTimeUtcOffsetMinute, // Task p6#73_TimeZone issue -- added by Binoy - End
+
+                    PlayNotificationSound = guardLog.PlayNotificationSound
+
+
                 });
             }
             else
@@ -1045,6 +1118,44 @@ namespace CityWatch.Data.Providers
         {
             return _context.CompanyDetails.ToList();
         }
+
+        //To Update keyvehiclelog
+        public void EditRadioChecklistEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity)
+        {
+            try
+            {
+                if (clientSiteActivity.Id == 0)
+                {
+
+                    _context.ClientSiteRadioChecksActivityStatus.Add(new ClientSiteRadioChecksActivityStatus()
+                    {
+                        ClientSiteId = clientSiteActivity.ClientSiteId,
+                        GuardId = clientSiteActivity.GuardId,
+                        LastIRCreatedTime = clientSiteActivity.LastIRCreatedTime,
+                        LastKVCreatedTime = clientSiteActivity.LastKVCreatedTime,
+                        LastLBCreatedTime = clientSiteActivity.LastLBCreatedTime,
+                        GuardLoginTime = clientSiteActivity.GuardLoginTime,
+                        GuardLogoutTime = clientSiteActivity.GuardLogoutTime,
+                        IRId = clientSiteActivity.IRId,
+                        KVId = clientSiteActivity.KVId,
+                        LBId = clientSiteActivity.LBId,
+                        ActivityType = clientSiteActivity.ActivityType,
+                        OnDuty = clientSiteActivity.OnDuty,
+                        OffDuty = clientSiteActivity.OffDuty,
+                        ActivityDescription = "Edited"
+                    });
+
+                }
+
+
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+
         public void SaveRadioChecklistEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity)
         {
             try
@@ -2493,6 +2604,8 @@ namespace CityWatch.Data.Providers
                             var DuressEnabledUpdate = _context.ClientSiteDuress.Where(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId);
                             //DuressEnabledUpdate.IsEnabled = false;
                             _context.ClientSiteDuress.RemoveRange(DuressEnabledUpdate);
+                            /* remove Duressbutton Status from RadioCheckPushMessages*/
+                            UpdateDuressButtonAcknowledged(clientSiteRadioCheck.ClientSiteId);
                             var logbook = _context.ClientSiteLogBooks
             .SingleOrDefault(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId && z.Type == LogBookType.DailyGuardLog && z.Date == DateTime.Today);
 
@@ -2776,10 +2889,13 @@ namespace CityWatch.Data.Providers
             return results.ToList();
         }
 
-        public void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications, IrEntryType entryType, int type)
+        public void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications, IrEntryType entryType, int type,int clientSiteId)
         {
 
             var guardInitials = string.Empty;
+            var alreadyExistingSite = _context.RadioCheckLogbookSiteDetails.ToList();
+            var clientSiteForLogbook = _context.ClientSites.Where(x => x.Id == alreadyExistingSite.FirstOrDefault().ClientSiteId)
+                .Include(x => x.ClientType).OrderBy(x => x.ClientType.Name).ThenBy(x => x.Name).ToList();
             if (selectedGuardId != 0)
             {
 
@@ -2789,12 +2905,16 @@ namespace CityWatch.Data.Providers
             /* Rc Status update*/
             if (type == 2)
             {
-                notifications = "Control Room Alert for " + guardInitials + ": " + notifications;
+                if (clientSiteForLogbook.Count() > 0)
+                {
+                   
+                    var clientsitename = GetClientSites(clientSiteId).FirstOrDefault().Name;
+                    notifications = "Control Room Alert for " + guardInitials + " - " + clientsitename + ": " + notifications;
+                }
+                
 
             }
-            var alreadyExistingSite = _context.RadioCheckLogbookSiteDetails.ToList();
-            var clientSiteForLogbook = _context.ClientSites.Where(x => x.Id == alreadyExistingSite.FirstOrDefault().ClientSiteId)
-                .Include(x => x.ClientType).OrderBy(x => x.ClientType.Name).ThenBy(x => x.Name).ToList();
+           
             if (clientSiteForLogbook.Count != 0)
             {
                 var logBookId = GetClientSiteLogBookIdGloablmessage(clientSiteForLogbook.FirstOrDefault().Id, LogBookType.DailyGuardLog, DateTime.Today);
@@ -2911,8 +3031,103 @@ namespace CityWatch.Data.Providers
         }
         //code to get ActionList stop
 
+        //To Delete RadiocheckStatusKV
+        public void DeleteClientSiteRadioCheckActivityStatusForKV(int id)
+        {
+            var clientSiteRadioCheckActivityStatusToDelete = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.Id == id);
+            if (clientSiteRadioCheckActivityStatusToDelete == null)
+                throw new InvalidOperationException();
+            foreach (var item in clientSiteRadioCheckActivityStatusToDelete)
+            {
+                _context.Remove(item);
+            }
+
+
+            _context.SaveChanges();
+        }
+
+        //do's and donts-end
+
+        public int SavePushMessage(RadioCheckPushMessages radioCheckPushMessages)
+        {
+            _context.RadioCheckPushMessages.Add(radioCheckPushMessages);
+            _context.SaveChanges();
+            return radioCheckPushMessages.Id;
+        }
+
+        public void UpdateIsAcknowledged(int rcPushMessageId)
+        {
+            var radioCheckPushMessages = _context.RadioCheckPushMessages.SingleOrDefault(x => x.Id == rcPushMessageId);
+            if (radioCheckPushMessages == null)
+                throw new InvalidOperationException();
+            radioCheckPushMessages.IsAcknowledged = 1;
+            radioCheckPushMessages.PlayNotificationSound = true; // Project 4 , Task 48, Audio notification, Added By Binoy
+            _context.SaveChanges();
+
+        }
+
+        public void UpdateDuressButtonAcknowledged(int ClientSiteId)
+        {
+            var duressButtonList = _context.RadioCheckPushMessages.Where(x => x.ClientSiteId == ClientSiteId && x.IsAcknowledged == 0).ToList();
+            if (duressButtonList == null)
+                throw new InvalidOperationException();
+            foreach (var row in duressButtonList)
+            {
+                row.IsAcknowledged = 1;
+                _context.SaveChanges();
+
+            }
+
+        }
+        public void CopyPreviousDaysPushMessageToLogBook(List<RadioCheckPushMessages> previousDayPushmessageList, int logBookId, int guardLoginId)
+        {
+            foreach (var pushMessage in previousDayPushmessageList)
+            {
+                if (pushMessage.IsAcknowledged == 0)
+                {
+                    var guardLog = new GuardLog()
+                    {
+                        ClientSiteLogBookId = logBookId,
+                        GuardLoginId = guardLoginId,
+                        EventDateTime = DateTime.Now,
+                        Notes = pushMessage.Notes,
+                        IrEntryType = IrEntryType.Alarm,
+                        RcPushMessageId = pushMessage.Id
+                    };
+                    SaveGuardLog(guardLog);
+
+                }
+
+            }
+
+        }
+
+        public void CopyPreviousDaysDuressToLogBook(List<RadioCheckPushMessages> previousDayDuressList, int logBookId, int guardLoginId)
+        {
+            foreach (var pushMessage in previousDayDuressList)
+            {
+                if (pushMessage.IsAcknowledged == 0)
+                {
+                    var guardLog = new GuardLog()
+                    {
+                        ClientSiteLogBookId = logBookId,
+                        IsSystemEntry = true,
+                        GuardLoginId = guardLoginId,
+                        EventDateTime = DateTime.Now,
+                        Notes = pushMessage.Notes,
+                        IrEntryType = IrEntryType.Alarm,
+                        RcPushMessageId = pushMessage.Id
+                    };
+                    SaveGuardLog(guardLog);
+
+                }
+
+            }
+
+        }
+
     }
-    //do's and donts-end
+
 
 
 }

@@ -2936,11 +2936,11 @@ $(function () {
             $.ajax({
                 url: '/Guard/KeyVehicleLog?handler=GenerateManualDocketList',
                 data: {
-                    id: ids,
+                    IsGlobal: false,
                     option: $(checkedReason).val(),
                     otherReason: $('#otherReason').val(),
                     stakeholderEmails: $('#stakeholderEmail').val(),
-                    clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),
+                    clientSiteId: $('#ClientSiteID').val(),
                     blankNoteOnOrOff: $('#IsBlankNoteOn').val(),
                     ids: ids,
                 },
@@ -2989,7 +2989,7 @@ $(function () {
     //    var dataTable = $('#vehicle_key_daily_log').DataTable();
     //    var ids = [];
     //    dataTable.rows().data().each(function (index, rowData) {
-          
+
     //        ids.push(index.detail.id);
     //    });
     //        $.ajax({
@@ -3021,15 +3021,74 @@ $(function () {
     //                    statusMessage = 'Docket created successfully. But sending the email or uploading to Dropbox failed.';
     //                }
     //                $('#generate_kvl_docket_status').html('<i class="fa ' + statusClass + '"></i>' + statusMessage).show();
-                    
+
     //            }
-               
+
     //        });
-       
-       
+
+
     //});
-    
+
     //To Generate All PO List stop
+
+    //To generate Global POI List start
+    $('#btn_VisitorProfile_pdf_POIList').on('click', function (e) {
+
+
+
+        $('#btn_VisitorProfile_pdf_POIList').prop('disabled', true);
+        $('#schRunStatus').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i> Generating PDF. Please wait...');
+        var ids = [];
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=KeyVehicleLogProfiles',
+            data: { truckRego: $('#kvlProfileRegos').find(':selected').val(), poi: 'POI' },
+            type: 'GET',
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            result.forEach(function (item) {
+                ids.push(item.detail.id);
+            });
+
+
+            $.ajax({
+                url: '/Guard/KeyVehicleLog?handler=GenerateManualDocketList',
+                data: {
+                    IsGlobal: true,
+                    option: null,
+                    otherReason: $('#otherReason').val(),
+                    stakeholderEmails: $('#stakeholderEmail').val(),
+                    clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),
+                    blankNoteOnOrOff: $('#IsBlankNoteOn').val(),
+                    ids: ids,
+                },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (response) {
+                if (response.statusCode === -1) {
+                    $('#generate_kvl_docket_status').html('<i class="fa fa-times-circle text-danger mr-2"></i> Error generating report').show();
+                } else {
+
+
+                    $('#btnScheduleDownload').prop('disabled', false);
+                    const messageHtml = '';
+                    $('#schRunStatus').html(messageHtml);
+
+
+                    var newTab = window.open(response.fileName, '_blank');
+                    if (!newTab) {
+                        // If the new tab was blocked, fallback to downloading the file
+                        var a = document.createElement('a');
+                        a.href = response.fileName;
+                        a.download = "POI_List";
+                        a.click();
+                    }
+                    /* $('#btn_VisitorProfile_pdf_POIList').attr('href', response.fileName);*/
+                }
+            });
+        });
+    });
+    //To generate Global POI List stop
     $('#btn_confirm_kvl_logbook_expiry').on('click', function () {
         $('#loader').show();
         $.ajax({
@@ -3216,6 +3275,66 @@ $(function () {
         clearTimeout(tId);
     });
 
+
+    /* Get Client Site duress Gps Rading Start*/
+    function initialize() {
+        var geocoder = new google.maps.Geocoder();
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+
+                gpsCoordinatesValues = position.coords.latitude + ',' + position.coords.longitude;
+                var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+                $("#hid_duressEnabledGpsCoordinates").val(gpsCoordinatesValues);
+                reverseGeocode(position.coords.latitude, position.coords.longitude);
+
+            });
+        }
+
+    }
+
+
+
+    function getDurressLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+                $("#duressEnabledGpsCoordinates").val(position.coords.latitude);
+                reverseGeocode(position.coords.latitude, position.coords.longitude);
+
+            });
+        }
+    }
+
+
+    function reverseGeocode(latitude, longitude) {
+        var latlng = new google.maps.LatLng(latitude, longitude);
+        var geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ 'latLng': latlng }, function (results, status) {
+            if (status === google.maps.GeocoderStatus.OK) {
+                if (results[0]) {
+                    var address = results[0].formatted_address;
+                    $("#hid_duressEnabledAddress").val(address);
+                    console.log('Reverse Geocoding Result: ', address);
+
+                } else {
+                    console.error('No results found');
+                }
+            } else {
+                console.error('Geocoder failed due to: ' + status);
+            }
+        });
+    }
+
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(showPosition, showError);
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+    }
+
+    /* Get Client Site duress Gps Rading end*/
+
+
     function GFG_Fun() {
         $.ajax({
             url: '/Guard/KeyVehicleLog?handler=SaveClientSiteDuress',
@@ -3223,7 +3342,9 @@ $(function () {
                 clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),
                 GuardId: $('#KeyVehicleLog_GuardLogin_GuardId').val(),
                 guardLoginId: $('#KeyVehicleLog_GuardLogin_Id').val(),
-                logBookId: $('#KeyVehicleLog_ClientSiteLogBookId').val()
+                logBookId: $('#KeyVehicleLog_ClientSiteLogBookId').val(),
+                gpsCoordinates: $("#hid_duressEnabledGpsCoordinates").val(),
+                enabledAddress: $("#hid_duressEnabledAddress").val()
             },
             type: 'POST',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },

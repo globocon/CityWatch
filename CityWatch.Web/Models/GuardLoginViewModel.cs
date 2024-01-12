@@ -24,9 +24,19 @@ namespace CityWatch.Web.Models
 
         public DateTime? OffDuty { get; set; }
 
-        public ClientSite ClientSite { get; set; }
+        public ClientSite ClientSite { get; set; }       
 
         public int? SmartWandOrPositionId { get; set; }
+
+        public DateTime? EventDateTimeLocal { get; set; }
+
+        public DateTimeOffset? EventDateTimeLocalWithOffset { get; set; }
+
+        public string EventDateTimeZone { get; set; }
+
+        public string EventDateTimeZoneShort { get; set; }
+
+        public int? EventDateTimeUtcOffsetMinute { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {

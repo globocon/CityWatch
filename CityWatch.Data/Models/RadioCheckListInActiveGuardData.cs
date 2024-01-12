@@ -27,7 +27,7 @@ namespace CityWatch.Data.Models
         public string LastEvent { get; set; }
         public int IsEnabled { get; set; }
         public int? StatusId{ get; set; }
-
-
+        public string GpsCoordinates { get; set; }
+        public string EnabledAddress { get; set; }
     }
 }

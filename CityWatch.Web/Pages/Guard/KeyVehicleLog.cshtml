@@ -1,11 +1,20 @@
 ﻿@page
 @using CityWatch.Web.Services
+@using CityWatch.Data.Helpers
+@using Microsoft.Extensions.Configuration
 @model CityWatch.Web.Pages.Guard.KeyVehicleLogModel
 @inject IViewDataService viewDataService
+@inject IConfiguration Configuration
+
 @{
     ViewData["title"] = "CityWatch Security | Vehicle And Key Log";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.VehicleAndKeyLog;
+    var mapSettings = @Configuration.GetSection("GoogleMap").Get(typeof(GoogleMapSettings)) as GoogleMapSettings;
+    var ApiKey = mapSettings.ApiKey;
+    <input type="hidden" id="hid_duressEnabledGpsCoordinates">
+    <input type="hidden" id="hid_duressEnabledAddress">
 }
+<input type="hidden" id="ClientSiteID" asp-for="@Model.KeyVehicleLog.ClientSiteLogBook.ClientSite.Id"/>
 <input type="hidden" asp-for="@Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId" />
 <input type="hidden" asp-for="@Model.KeyVehicleLog.GuardLogin.Id" />
 <input type="hidden" asp-for="@Model.KeyVehicleLog.GuardLogin.GuardId" />
@@ -343,4 +352,8 @@
         </div>
     </div>
 </div>
+@section scripts {
+    <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&callback=initialize&libraries=places"></script>
+
+}
 @*to check whether the uploaded image is of person or vehicle - end*@
