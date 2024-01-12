@@ -870,6 +870,11 @@ namespace CityWatch.Web.Pages.Radio
         }
         //code added for clientsite dropdown stop
 
+        public JsonResult OnPostUpdateDuressAlarmPlayedStatus()
+        {
+            _guardLogDataProvider.UpdateDuressAlarmPlayedStatus();
+            return new JsonResult(new { status="played"});
+        }
 
     }
 }

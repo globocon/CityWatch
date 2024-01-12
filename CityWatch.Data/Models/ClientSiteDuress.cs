@@ -18,5 +18,7 @@ namespace CityWatch.Data.Models
         public string GpsCoordinates { get; set; }
         
         public string EnabledAddress { get; set; }
+
+        public bool? PlayDuressAlarm { get; set; }
     }
 }
