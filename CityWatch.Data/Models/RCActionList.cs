@@ -25,6 +25,7 @@ namespace CityWatch.Data.Models
         public int SettingsId { get; set; }
         public string Imagepath { get; set; }
         public string DateandTimeUpdated { get; set; }
+        public int ClientSiteID { get; set; }
 
         [ForeignKey("SettingsId")]
         [JsonIgnore]
