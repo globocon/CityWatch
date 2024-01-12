@@ -170,6 +170,7 @@ namespace CityWatch.Data.Providers
         void SaveActionList(ActionListNotification ActionList);
         RCActionList GetActionlist(int Cliensiteid);
         string GetUserClientSites(string searchTerm);
+        int GetUserClientSitesRCList(string searchTerm);
         //do's and donts-end
 
     }
@@ -2890,6 +2891,22 @@ namespace CityWatch.Data.Providers
             {
                 // Handle the case when no matching record is found
                 return "No matching record found";
+            }
+        }
+        public int GetUserClientSitesRCList(string searchTerm)
+        {
+            var clientSites = _context?.ClientSites
+     .Where(z => string.IsNullOrEmpty(searchTerm) || z.Name.ToLower().Contains(searchTerm.ToLower()))
+     .FirstOrDefault();
+
+            if (clientSites != null)
+            {
+                return clientSites.Id;
+            }
+            else
+            {
+                // Handle the case when no matching record is found
+                return 0;
             }
         }
         //code to get ActionList stop

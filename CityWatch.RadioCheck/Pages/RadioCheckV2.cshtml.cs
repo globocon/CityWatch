@@ -889,6 +889,16 @@ namespace CityWatch.Web.Pages.Radio
             
                 return new JsonResult(clientSites);
         }
+        public JsonResult OnPostSearchClientsiteRCList(string searchTerm, int clientSiteId)
+        {
+            //int clientSiteId;
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                clientSiteId = _guardLogDataProvider.GetUserClientSitesRCList(searchTerm);
+            }
+
+            return new JsonResult(_guardLogDataProvider.GetActionlist(clientSiteId));
+        }
         //code added for ActionListSend stop
 
 

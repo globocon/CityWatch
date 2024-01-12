@@ -821,6 +821,200 @@
     </div>
 </div>
 <!----------------- Hover Modal -------------------->
+<!----------------- ActionList Details Modal -------------------->
+
+<div class="modal fade" id="ActionListControlRoomModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="pushNoTificationsControlRoomModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-envelope-o mr-2"></i>Push Notifications</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="form_push_notifications_for_rc">
+                    <div class="container">
+                        <ul class="nav nav-tabs" id="pushNotificationTextMessageTab" role="tablist">
+                          
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link" id="ActionListTab1" data-toggle="tab" href="#actionlist1" role="tab" aria-controls="globalalert" aria-selected="true">Action List</a>
+                            </li>
+                        </ul>
+                        <div class="tab-content p-2">
+                           
+                            <div class="tab-pane active" id="actionlist1" role="tabpanel" aria-labelledby="actionlist1">
+                                <input type="hidden" id="gl_client_site_id" />
+                                <div class="row m-0">
+                                    <div class="col-md-12">
+                                        <form id="frm_ActionList">
+                                            <br />
+                                            <div class="form-group row">
+
+                                                <div class="col-md-4">
+
+                                                    <label class="mx-1" for="dglClientTypeActionListAll">Client Type</label>
+                                                    <select class="form-control" id="dglClientTypeActionListAll" style="width:209px">
+                                                        <option value="">Select</option>
+                                                        @foreach (var clientType in _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId))
+                                                        {
+                                                            <option value="@clientType.Id">@clientType.Name</option>
+                                                        }
+                                                    </select>
+
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="mx-1" for="dglClientSiteIdActionListAll">Client Site</label>
+                                                    <select class="form-control mx-1" id="dglClientSiteIdActionListAll" style="width:209px"></select>
+
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="mt-3"></label>
+                                                    <input type="text" id="search_client_siteAll" class="form-control mb-3" placeholder="Search Client Site">
+                                                </div>
+                                            </div>
+                                            <div id="searchResultsNew">
+                                            </div><br />
+
+                                            <div class="container">
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <h6>Site Access</h6>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <h6>Alarm Response</h6>
+                                                    </div>
+                                                    <div class="col">
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                            <br />
+                                            <div class="row col-md-12">
+                                                <div>
+                                                    <input type="hidden" id="RCImagepath" name="RCActionList.Imagepath">
+                                                    <input type="hidden" id="RCImageDateandTime" name="RCActionList.DateandTimeUpdated">
+
+                                                    <div class="form-group row ml-2">
+                                                        <label class="col-md-3 form-label text-left pl-0">Alarm Keypad Code</label>
+                                                        <div class="col-md-2">
+                                                            <input type="text" class="form-control" id="Site_Alarm_Keypad_codeAll" name="RCActionList.SiteAlarmKeypadCode">
+                                                        </div>
+                                                        <label class="col-form-label text-left">Action 1</label>
+                                                        <div class="col-md-6">
+                                                            <input type="text" class="form-control" id="Action1All" name="RCActionList.Action1">
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group row ml-2">
+                                                        <label class="col-md-3 form-label text-left pl-0" style="padding-right: 56px;">Physical Key</label>
+                                                        <div class="col-md-2">
+                                                            <input type="text" class="form-control" id="site_Physical_keyAll" name="RCActionList.Sitephysicalkey">
+                                                        </div>
+                                                        <label class="col-form-label text-left">Action 2</label>
+                                                        <div class="col-md-6">
+                                                            <input type="text" class="form-control" id="Action2All" name="RCActionList.Action2">
+                                                        </div>
+
+                                                    </div>
+                                                    <div class="form-group row row ml-2">
+                                                        <label class="col-md-3 form-label text-left pl-0">Combination Look</label>
+                                                        <div class="col-md-2">
+                                                            <input type="text" class="form-control" id="Site_Combination_LookAll" name="RCActionList.SiteCombinationLook">
+                                                        </div>
+                                                        <label class="col-form-label text-left">Action 3</label>
+                                                        <div class="col-md-6">
+                                                            <input type="text" class="form-control" id="Action3All" name="RCActionList.Action3">
+                                                        </div>
+
+                                                    </div>
+
+                                                    <div class="form-group row row ml-2">
+                                                        <label class="col-md-3 form-label text-left pl-0">Site Alarm SOP'S</label>
+                                                        <div class="col-md-2">
+                                                            <a class="btn btn-outline-primary" id="download_imageRCListAll" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>
+                                                        </div>
+                                                        <label class="col-form-label text-left">Action 4</label>
+                                                        <div class="col-md-6">
+                                                            <input type="text" class="form-control" id="Action4All" name="RCActionList.Action4">
+                                                        </div>
+
+                                                    </div>
+
+                                                    <div class="form-group row row ml-2">
+                                                        <label class="col-md-3 form-label text-left pl-0" style="visibility:hidden">Site Combination Look</label>
+                                                        <div class="col-md-2">
+                                                            <input type="text" class="form-control" style="visibility:hidden">
+                                                        </div>
+                                                        <label class="col-form-label text-left">Action 5</label>
+                                                        <div class="col-md-6">
+                                                            <input type="text" class="form-control" id="Action5All" name="RCActionList.Action5">
+                                                        </div>
+
+                                                    </div>
+
+
+
+                                                </div>
+
+                                            </div>
+                                            <div class="form-group row">
+
+                                                <div class="col-md-6">
+                                                    <input type="text" id="txtGlobalNotificationSubject" value="Comments For Control Room Operator" class="form-control" placeholder="Subject" />
+                                                    <textarea id="txtCommentsAll" style="height:100px;" class="form-control"></textarea>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <input type="text" id="txtMessageActionList1" value="New Message:" class="form-control" placeholder="Subject" />
+                                                    <textarea id="txtMessageActionListAll" style="height:100px;" class="form-control"></textarea>
+                                                </div>
+                                            </div>
+                                           @*  <div class="form-group row">
+
+                                                <div class="col-md-4">
+
+                                                    <label class="mx-1" for="dglClientTypeActionList2">Client Type</label>
+                                                    <select class="form-control" id="dglClientTypeActionList2" style="width:209px">
+                                                        <option value="">Select</option>
+                                                        @foreach (var clientType in _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId))
+                                                        {
+                                                            <option value="@clientType.Id">@clientType.Name</option>
+                                                        }
+                                                    </select>
+
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="mx-1" for="dglClientSiteIdActionList2">Client Site</label>
+                                                    <select class="form-control mx-1" id="dglClientSiteIdActionList2" style="width:209px"></select>
+
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="mt-3"></label>
+                                                    <input type="text" id="search_client_site2" class="form-control mb-3" placeholder="Search">
+                                                </div>
+                                                <div class="col-md-2  text-right">
+                                                    <label class="mt-5" for="dglClientSiteIdActionList2"></label>
+                                                    <button type="button" id="btnSendActionList" class="btn btn-primary">Send >></button>
+                                                    <p id="Access_permission_RC_status" class="mb-0 py-2" style="display:none"></p>
+                                                </div>
+                                            </div> *@
+
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left">
+                    <div asp-validation-summary="All" id="PushNotificationsValidationSummary"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!----------------- Hover Modal -------------------->
 
 @*<div class="modal fade" id="hoverModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="pushNoTificationsControlRoomModal" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">

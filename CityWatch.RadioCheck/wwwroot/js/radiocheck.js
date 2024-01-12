@@ -409,7 +409,17 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             className: 'btn btn-md mr-2 btn-print'
         },
         
-        
+        {
+            text: '<img src="/images/man-climbing-stairs.png" alt="Image" height="16" width="16">',
+            titleAttr: 'Custom',
+            className: 'btn btn-md mr-2 btn-custom',
+            action: function () {
+               
+                $('#ActionListControlRoomModal').modal('show');
+                $('#dglClientTypeActionListAll').val('');
+                $('#dglClientSiteIdActionListAll').val('');
+            }
+        }
 
 
     ],
@@ -1583,6 +1593,39 @@ $('#dglClientSiteIdActionList').on('change', function () {
         });
     
 });
+$('#dglClientSiteIdActionListAll').on('change', function () {
+    $('#Site_Alarm_Keypad_codeAll').val('');
+    $('#Action1All').val('');
+    $('#site_Physical_keyAll').val('');
+    $('#Action2All').val('');
+    $('#Action3All').val('');
+    $('#Action4All').val('');
+    $('#Action5All').val('');
+    $('#Site_Combination_LookAll').val('');
+    $('#txtCommentsAll').html('');
+    var clientSiteId = $('#dglClientSiteIdActionListAll').val();
+
+    $.ajax({
+        url: '/RadioCheckV2?handler=ActionList',
+        type: 'POST',
+        data: {
+            clientSiteId: clientSiteId
+        },
+        dataType: 'json',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (data) {
+        $('#Site_Alarm_Keypad_codeAll').val(data.siteAlarmKeypadCode);
+        $('#Action1All').val(data.action1);
+        $('#site_Physical_keyAll').val(data.sitephysicalkey);
+        $('#Action2All').val(data.action2);
+        $('#Action3All').val(data.action3);
+        $('#Action4All').val(data.action4);
+        $('#Action5All').val(data.action5);
+        $('#Site_Combination_LookAll').val(data.siteCombinationLook);
+        $('#txtCommentsAll').html(data.controlRoomOperator);
+    });
+
+});
 $('#search_client_site').keypress(function (e) {
     var searchInput = $('#search_client_site');
     var minSearchLength = 4;
@@ -1616,6 +1659,59 @@ function performSearch() {
     });
 
    
+}
+$('#search_client_siteAll').keypress(function (e) {
+    var searchInput = $('#search_client_siteAll');
+    var minSearchLength = 1;
+
+    searchInput.keypress(function (e) {
+        if (searchInput.val().length >= minSearchLength && e.which === 13) {
+            performSearchClientSite();
+        }
+    });
+});
+function performSearchClientSite() {
+    $('#Site_Alarm_Keypad_codeAll').val('');
+    $('#Action1All').val('');
+    $('#site_Physical_keyAll').val('');
+    $('#Action2All').val('');
+    $('#Action3All').val('');
+    $('#Action4All').val('');
+    $('#Action5All').val('');
+    $('#Site_Combination_LookAll').val('');
+    $('#txtCommentsAll').html('');
+    $('#searchResultsNew').html('');
+    var searchTerm = $('#search_client_siteAll').val();
+    $.ajax({
+        url: '/RadioCheckV2?handler=SearchClientsiteRCList',
+        type: 'POST',
+        data: {
+            searchTerm: searchTerm
+        },
+        dataType: 'json',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (data) {
+        var html = '';
+        if (data == null) {
+            html = '<p style="color:brown">No Matching Records</p>';
+            $('#searchResultsNew').html(html);
+        }
+        else {
+            $('#Site_Alarm_Keypad_codeAll').val(data.siteAlarmKeypadCode);
+            $('#Action1All').val(data.action1);
+            $('#site_Physical_keyAll').val(data.sitephysicalkey);
+            $('#Action2All').val(data.action2);
+            $('#Action3All').val(data.action3);
+            $('#Action4All').val(data.action4);
+            $('#Action5All').val(data.action5);
+            $('#Site_Combination_LookAll').val(data.siteCombinationLook);
+            $('#txtCommentsAll').html(data.controlRoomOperator);
+        }
+        
+       
+    });
+
+
 }
 /*code added for RCActionList stop*/
 
@@ -1792,6 +1888,33 @@ $('#dglClientTypeActionList2').on('change', function () {
     });
 
 
+});
+$('#dglClientTypeActionListAll').on('change', function () {
+    const clientTypeId = $(this).val();
+    const clientSiteControl = $('#dglClientSiteIdActionListAll');
+    clientSiteControl.html('');
+    $.ajax({
+        url: '/RadioCheckV2?handler=ClientSitesNew',
+        type: 'GET',
+        data: {
+            typeId: clientTypeId
+
+        },
+        dataType: 'json',
+        success: function (data) {
+            $('#dglClientSiteIdActionListAll').append(new Option('Select', '', true, true));
+            data.map(function (site) {
+                $('#dglClientSiteIdActionListAll').append(new Option(site.name, site.id, false, false));
+            });
+
+        }
+    });
+
+
+});
+$('#dglClientSiteIdActionListAll').select2({
+    placeholder: 'Select',
+    theme: 'bootstrap4'
 });
 $('#dglClientSiteIdActionList2').select2({
     placeholder: 'Select',
