@@ -1,6 +1,13 @@
 let nIntervId;
 const duration = 60 * 3;
 var isPaused = false;
+//p4#48 AudioNotification - Binoy - 12-01-2024 -- Start
+let playAlarm = 0; 
+let audiourl = '/NotificationSound/duressAlarm01.mp3'
+const audio = new Audio(audiourl);
+audio.loop = true;
+//p4#48 AudioNotification - Binoy - 12-01-2024 -- End
+
 window.onload = function () {
     if (document.querySelector('#clockRefresh')) {
         startClock();
@@ -528,7 +535,13 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                 // Define your conditions to add a class
                 if (rowData.isEnabled == 1) {
                     cell.classList.add('bg-danger');
+                    //p4#48 AudioNotification - Binoy - 12-01-2024 -- Start
+                    if (rowData.playDuressAlarm == 1) {
+                        playAlarm = true;
+                    }
+                    //p4#48 AudioNotification - Binoy - 12-01-2024 -- End
                 }
+                
             },
             render: function (value, type, data) {
 
@@ -688,11 +701,42 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                     last2 = group;
                 }
             });
+
+        PlayDuressAlarm();
     },
     
 
 });
 
+
+//p4#48 AudioNotification - Binoy - 12-01-2024 -- Start
+function PlayDuressAlarm() {
+    if (playAlarm == 1) { 
+        //audio.muted = false; // New browser rule doesn't lets audio play automatically        
+        audio.play();
+        //setting timer to play for 10 sec
+        setTimeout(() => {
+            audio.pause();
+            audio.currentTime = 0; // Works as audio stop
+        }, 10000);
+        UpdateDuressAlarmPlayed();
+    }    
+}
+
+function UpdateDuressAlarmPlayed() {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/RadioCheckV2?handler=UpdateDuressAlarmPlayedStatus',
+        data: {},
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        playAlarm = 0;
+        return;
+    });
+}
+
+//p4#48 AudioNotification - Binoy - 12-01-2024 -- End
 
 clientSiteInActiveGuards.on('draw', function () {
     $('[data-toggle="tooltip"]').tooltip();

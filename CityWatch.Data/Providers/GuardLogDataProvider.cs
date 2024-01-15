@@ -128,6 +128,8 @@ namespace CityWatch.Data.Providers
         /* new Change by dileep for p4 task 17 end*/
 
 
+        //p4#48 AudioNotification - Binoy - 12-01-2024
+        public void UpdateDuressAlarmPlayedStatus();
 
 
         //listing clientsites for radio check
@@ -3123,6 +3125,18 @@ namespace CityWatch.Data.Providers
                 }
 
             }
+
+        }
+
+        public void UpdateDuressAlarmPlayedStatus()
+        {
+            var alarmplayed = _context.ClientSiteDuress.Where(x => x.IsEnabled == true && x.PlayDuressAlarm == true);
+
+            foreach (var a in alarmplayed)
+            {
+                a.PlayDuressAlarm = false;
+            }
+            _context.SaveChanges();
 
         }
 
