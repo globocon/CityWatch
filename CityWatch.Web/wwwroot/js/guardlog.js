@@ -338,7 +338,7 @@
     });
 
     function submitGuardLogin() {
-        calculateDutyDateTime();        
+        calculateDutyDateTime();
         var mobileno = $('#GuardLogin_Guard_Mobile').val();
         // Task p6#73_TimeZone issue -- added by Binoy -- Start
         var form = document.getElementById('frmGuardLogin');
@@ -437,7 +437,7 @@
     }
 
     // Task p6#73_TimeZone issue -- added by Binoy - Start
-    function fillRefreshLocalTimeZoneDetails(formData,modelname,isform) {        
+    function fillRefreshLocalTimeZoneDetails(formData, modelname, isform) {
         // for reference https://moment.github.io/luxon/#/
         var DateTime = luxon.DateTime;
         var dt1 = DateTime.local();
@@ -447,10 +447,10 @@
 
         const dt = new Date();
         var tzjs = getTimezoneAbbreviation;
-        let tzshrtnm = tzjs(dt);      
+        let tzshrtnm = tzjs(dt);
 
         const eventDateTimeLocal = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS');
-        const eventDateTimeLocalWithOffset = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS Z');        
+        const eventDateTimeLocalWithOffset = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS Z');
         if (isform) {
             formData.append(modelname + ".EventDateTimeLocal", eventDateTimeLocal);
             formData.append(modelname + ".EventDateTimeLocalWithOffset", eventDateTimeLocalWithOffset);
@@ -459,11 +459,11 @@
             formData.append(modelname + ".EventDateTimeUtcOffsetMinute", diffTZ);
         }
         else {
-            formData.EventDateTimeLocal= eventDateTimeLocal;
-            formData.EventDateTimeLocalWithOffset= eventDateTimeLocalWithOffset;
-            formData.EventDateTimeZone= tz;
-            formData.EventDateTimeZoneShort= tzshrtnm;
-            formData.EventDateTimeUtcOffsetMinute= diffTZ;
+            formData.EventDateTimeLocal = eventDateTimeLocal;
+            formData.EventDateTimeLocalWithOffset = eventDateTimeLocalWithOffset;
+            formData.EventDateTimeZone = tz;
+            formData.EventDateTimeZoneShort = tzshrtnm;
+            formData.EventDateTimeUtcOffsetMinute = diffTZ;
         }
     }
 
@@ -570,12 +570,12 @@
         });
     });
 
-    function renderTime(value, record) {        
-        if (record.eventDateTimeLocal != null && record.eventDateTimeLocal != '') {            
+    function renderTime(value, record) {
+        if (record.eventDateTimeLocal != null && record.eventDateTimeLocal != '') {
             const date = new Date(record.eventDateTimeLocal);
             var DateTime = luxon.DateTime;
             var dt1 = DateTime.fromJSDate(date);
-            var dt = dt1.toFormat('HH:mm') + ' Hrs ' + record.eventDateTimeZoneShort; 
+            var dt = dt1.toFormat('HH:mm') + ' Hrs ' + record.eventDateTimeZoneShort;
             return dt;
         }
         else if (value !== '') {
@@ -588,7 +588,7 @@
     let audiourl = '/NotificationSound/mixkit-bell-notification-933.wav'
     const audio = new Audio(audiourl);
     let audioplayedlist = [];
-    let isControlRoomLogBook = $('#inpHdisControlRoomLogBook').val() == 'false' ? false : true ;
+    let isControlRoomLogBook = $('#inpHdisControlRoomLogBook').val() == 'false' ? false : true;
     // Project 4 , Task 48, Audio notification, Added By Binoy -- End
 
     let gridGuardLog;
@@ -619,7 +619,7 @@
             primaryKey: 'id',
             inlineEditing: { mode: 'command', managementColumn: false },
             columns: [
-                { field: 'clientSiteId', hidden: true },               
+                { field: 'clientSiteId', hidden: true },
                 { field: 'eventDateTime', title: 'Time', width: 100, renderer: function (value, record) { return renderTime(value, record, false); } },
                 { field: 'notes', title: 'Event / Notes', width: 350, editor: logBookNotesEditor, renderer: renderLogBookNotes },
                 { field: 'guardInitials', title: 'Guard Initials', width: 100, renderer: function (value, record) { return record.guardLogin ? record.guardLogin.guard.initial : ''; } },
@@ -642,14 +642,14 @@
     }
 
     // Project 4 , Task 48, Audio notification, Added By Binoy -- Start
-    function playNotificationSound(value, record) {          
+    function playNotificationSound(value, record) {
         if ((record.rcPushMessageId != null) && (record.rcPushMessageId != '') && (record.rcPushMessageId > 0)
             && (value == true) && (!isControlRoomLogBook)) {
-            audioplayedlist.push(record.id);                  
-        }               
+            audioplayedlist.push(record.id);
+        }
         return;
     }
-     // Project 4 , Task 48, Audio notification, Added By Binoy -- End
+    // Project 4 , Task 48, Audio notification, Added By Binoy -- End
 
     function logBookNotesEditor($editorContainer, value) {
 
@@ -851,7 +851,7 @@
         });
 
         // Project 4 , Task 48, Audio notification, Added By Binoy -- Start
-        gridGuardLog.on('dataBound', function (e, records, totalRecords) { 
+        gridGuardLog.on('dataBound', function (e, records, totalRecords) {
             if (isControlRoomLogBook) {
                 // Get Is acknowledge from db
                 $.ajax({
@@ -861,7 +861,7 @@
                     if (result != null && result.length > 0) {
                         //Can be repeated if needed using loop through id in result
                         audio.play();
-                        audioplayedlist = [];                        
+                        audioplayedlist = [];
                         result.forEach((item) => {
                             audioplayedlist.push(item);
                         });
@@ -873,7 +873,7 @@
                 // Play notification sound
                 audio.play();
                 UpdatePlayedNotification();
-            }         
+            }
         });
         // Project 4 , Task 48, Audio notification, Added By Binoy -- End
     }
@@ -948,7 +948,7 @@
         // Task p6#73_TimeZone issue -- added by Binoy -- Start
         var form = document.getElementById('form_newlog');
         var formData = new FormData(form);
-        fillRefreshLocalTimeZoneDetails(formData, "GuardLog",true);
+        fillRefreshLocalTimeZoneDetails(formData, "GuardLog", true);
         // Task p6#73_TimeZone issue -- added by Binoy -- End
         $.ajax({
             url: '/Guard/DailyLog?handler=SaveGuardLog',
@@ -3238,14 +3238,14 @@
         }
         // Task p6#73_TimeZone issue -- added by Binoy - Start
         var tmdata = {
-            'EventDateTimeLocal' : null,
+            'EventDateTimeLocal': null,
             'EventDateTimeLocalWithOffset': null,
             'EventDateTimeZone': null,
             'EventDateTimeZoneShort': null,
             'EventDateTimeUtcOffsetMinute': null,
         };
 
-        fillRefreshLocalTimeZoneDetails(tmdata,"",false)
+        fillRefreshLocalTimeZoneDetails(tmdata, "", false)
         // Task p6#73_TimeZone issue -- added by Binoy - End
         $.ajax({
             url: '/Guard/DailyLog?handler=SavePushNotificationTestMessages',
@@ -3293,42 +3293,86 @@
     $("#duress_btn").mouseup(function () {
         clearTimeout(tId);
     });
-   
-    function GFG_Fun() {
+
+
+
+
+    /*for touch devices Start */
+    var touchTimer=0;
+    $('#duress_btn').on('touchstart', function (e) {
+        // Prevent the default behavior
+        e.preventDefault();
+
         if ($("#duress_status").text() !== "Active") {
+            console.log('click');
+            /*timer pause while editing*/
+            isPaused = true;
+            touchTimer = setTimeout(GFG_Fun, 2500);
+            console.log(isPaused);
+            console.log(touchTimer);
+            gridGuardLog.clear();
+            gridGuardLog.reload();
+        }
+        return false;
+    });
 
-                $.ajax({
-                    url: '/Guard/DailyLog?handler=SaveClientSiteDuress',
-                    data: {
-                        clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
-                        guardLoginId: $('#GuardLog_GuardLoginId').val(),
-                        logBookId: $('#GuardLog_ClientSiteLogBookId').val(),
-                        guardId: $('#GuardLog_GuardLogin_GuardId').val(),
-                        gpsCoordinates: $("#hid_duressEnabledGpsCoordinates").val(),
-                        enabledAddress: $("#hid_duressEnabledAddress").val()
-                    },
-                    type: 'POST',
-                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                }).done(function (result) {
-                    if (result.status) {
-                        $('#duress_btn').removeClass('normal').addClass('active');
-                        $("#duress_status").addClass('font-weight-bold');
-                        $("#duress_status").text("Active");
-                        /*timer pause while editing*/
-                        isPaused = false;
-                    }
-                    gridGuardLog.clear();
-                    gridGuardLog.reload();
-                });
+    //$('#duress_btn').on('touchend', function () {
+        console.log('stoped');
+        // If there is any movement or the touch ends, clear the timer
+        //clearTimeout(touchTimer);
+        //isPaused = false;
+    //});
 
-            }
-        
-    }
+    $('#duress_btn').on('pointerup', function (event) {
+        // Your logic
+        console.log('stoped2');
+        clearTimeout(touchTimer);
+        isPaused = false;
+    });
+
+    /*for touch devices end */
+
+    /* Get Client Site duress Gps Rading Start*/
 
 
 });
 
-/* Get Client Site duress Gps Rading Start*/
+
+
+function GFG_Fun() {
+    if ($("#duress_status").text() !== "Active") {
+        console.log('function');
+       
+        $.ajax({
+            url: '/Guard/DailyLog?handler=SaveClientSiteDuress',
+            data: {
+                clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
+                guardLoginId: $('#GuardLog_GuardLoginId').val(),
+                logBookId: $('#GuardLog_ClientSiteLogBookId').val(),
+                guardId: $('#GuardLog_GuardLogin_GuardId').val(),
+                gpsCoordinates: $("#hid_duressEnabledGpsCoordinates").val(),
+                enabledAddress: $("#hid_duressEnabledAddress").val()
+            },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.status) {
+                $('#duress_btn').removeClass('normal').addClass('active');
+                $("#duress_status").addClass('font-weight-bold');
+                $("#duress_status").text("Active");
+                /*timer pause while editing*/
+                isPaused = false;
+            }
+            console.log(result.message);
+        });
+
+    }
+
+}
+
+
+
+
 function initialize() {
     var geocoder = new google.maps.Geocoder();
     if (navigator.geolocation) {
@@ -3338,7 +3382,7 @@ function initialize() {
             var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
             $("#hid_duressEnabledGpsCoordinates").val(gpsCoordinatesValues);
             reverseGeocode(position.coords.latitude, position.coords.longitude);
-            
+
         });
     }
 
@@ -3349,9 +3393,9 @@ function initialize() {
 function getDurressLocation() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function (position) {
-            $("#duressEnabledGpsCoordinates").val(position.coords.latitude); 
+            $("#duressEnabledGpsCoordinates").val(position.coords.latitude);
             reverseGeocode(position.coords.latitude, position.coords.longitude);
-            
+
         });
     }
 }
@@ -3364,9 +3408,9 @@ function reverseGeocode(latitude, longitude) {
         if (status === google.maps.GeocoderStatus.OK) {
             if (results[0]) {
                 var address = results[0].formatted_address;
-                $("#hid_duressEnabledAddress").val(address);  
+                $("#hid_duressEnabledAddress").val(address);
                 console.log('Reverse Geocoding Result: ', address);
-               
+
             } else {
                 console.error('No results found');
             }
