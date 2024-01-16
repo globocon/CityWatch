@@ -220,11 +220,21 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(_viewDataService.GetGuards().SingleOrDefault(z => z.Id == id));
         }
         //to get audit log-start
+        //public JsonResult OnGetAuditHistory(KeyVehicleLogAuditLogRequest keyVehicleLogAuditLogRequest)
+        //{
+        //    return new JsonResult(_viewDataService.GetKeyVehicleLogAuditHistory(keyVehicleLogAuditLogRequest.VehicleRego).Where(x=> keyVehicleLogAuditLogRequest.ClientSiteIds.Contains(x.GuardLogin.ClientSiteId)).ToList());
+        //}
         public JsonResult OnGetAuditHistory(KeyVehicleLogAuditLogRequest keyVehicleLogAuditLogRequest)
         {
-            return new JsonResult(_viewDataService.GetKeyVehicleLogAuditHistory(keyVehicleLogAuditLogRequest.VehicleRego).Where(x=> keyVehicleLogAuditLogRequest.ClientSiteIds.Contains(x.GuardLogin.ClientSiteId)).ToList());
-        }
+            //(string.IsNullOrEmpty(kvlRequest.VehicleRego) || string.Equals(z.VehicleRego, kvlRequest.VehicleRego, StringComparison.OrdinalIgnoreCase)) &&
 
+
+            return new JsonResult(_viewDataService.GetKeyVehicleLogAuditHistory().Where(x => keyVehicleLogAuditLogRequest.ClientSiteIds.Contains(x.GuardLogin.ClientSiteId)
+            && ((string.IsNullOrEmpty(keyVehicleLogAuditLogRequest.VehicleRego) || string.Equals(x.KeyVehicleLog.VehicleRego, keyVehicleLogAuditLogRequest.VehicleRego,StringComparison.OrdinalIgnoreCase))
+            &&(string.IsNullOrEmpty(keyVehicleLogAuditLogRequest.KeyNo) || string.Equals(x.KeyVehicleLog.KeyNo, keyVehicleLogAuditLogRequest.KeyNo, StringComparison.OrdinalIgnoreCase))
+             && (string.IsNullOrEmpty(keyVehicleLogAuditLogRequest.PersonName) || string.Equals(x.KeyVehicleLog.PersonName, keyVehicleLogAuditLogRequest.PersonName, StringComparison.OrdinalIgnoreCase)))
+            ).ToList());
+        }
         //to get audit log-end
     }
 }
