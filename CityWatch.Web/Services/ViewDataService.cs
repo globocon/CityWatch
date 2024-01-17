@@ -86,7 +86,7 @@ namespace CityWatch.Web.Services
         IEnumerable<string> GetCompanyAndSenderNames(string startsWith);
         IEnumerable<string> GetCompanyNames(string startsWith);
         bool IsClientSiteDuressEnabled(int clientSiteId);
-        void EnableClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId, string gpsCoordinates, string enabledAddress);
+        void EnableClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId, string gpsCoordinates, string enabledAddress, GuardLog tmzdata);
 
         //For Access Type
         List<SelectListItem> GetAccessTypes(bool withoutSelect = false);
@@ -929,7 +929,9 @@ namespace CityWatch.Web.Services
             return _guardLogDataProvider.GetClientSiteDuress(clientSiteId)?.IsEnabled ?? false;
         }
 
-        public void EnableClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId,string gpsCoordinates, string enabledAddress)
+        public void EnableClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId,
+                                            string gpsCoordinates, string enabledAddress, GuardLog tmzdata)
+        // GuardLog tmzdata parameter added by binoy for Task p6#73_TimeZone issue
         {
             if (!IsClientSiteDuressEnabled(clientSiteId))
             {
@@ -949,8 +951,8 @@ namespace CityWatch.Web.Services
                 var pushMessageId = _guardLogDataProvider.SavePushMessage(radioCheckPushMessages);
                 /* Save the push message for reload to logbook on next day end*/
 
-                _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(guardId, guardId, null, "Duress Alarm Activated", IrEntryType.Alarm, 1,0);
-                _guardLogDataProvider.SaveClientSiteDuress(clientSiteId, guardId, gpsCoordinates, enabledAddress);
+                _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(guardId, guardId, null, "Duress Alarm Activated", IrEntryType.Alarm, 1,0, tmzdata); // GuardLog tmzdata parameter added by binoy for Task p6#73_TimeZone issue
+                _guardLogDataProvider.SaveClientSiteDuress(clientSiteId, guardId, gpsCoordinates, enabledAddress, tmzdata);
 
                 _guardLogDataProvider.SaveGuardLog(new GuardLog()
                 {
@@ -960,7 +962,13 @@ namespace CityWatch.Web.Services
                     EventDateTime = DateTime.Now,
                     ClientSiteLogBookId = logBookId,
                     GuardLoginId = guardLoginId,
-                    RcPushMessageId= pushMessageId
+                    RcPushMessageId= pushMessageId,
+                    EventDateTimeLocal = tmzdata.EventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
+                    EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                    EventDateTimeZone = tmzdata.EventDateTimeZone,
+                    EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                    EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute, // Task p6#73_TimeZone issue -- added by Binoy - End
+                    PlayNotificationSound = true 
                 });
 
              

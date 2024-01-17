@@ -8,6 +8,15 @@ const audio = new Audio(audiourl);
 audio.loop = true;
 //p4#48 AudioNotification - Binoy - 12-01-2024 -- End
 
+// Task p6#73_TimeZone issue -- added by Binoy - Start
+var tmzdata = {
+    'EventDateTimeLocal': null,
+    'EventDateTimeLocalWithOffset': null,
+    'EventDateTimeZone': null,
+    'EventDateTimeZoneShort': null,
+    'EventDateTimeUtcOffsetMinute': null,
+};
+// Task p6#73_TimeZone issue -- added by Binoy - End
 window.onload = function () {
     if (document.querySelector('#clockRefresh')) {
         startClock();
@@ -584,7 +593,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         },
         {
             data: 'lastEvent',
-            width: '7%',
+            width: '8%',
             className: "text-center",
             createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
                 // Define your conditions to add a class
@@ -598,10 +607,25 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                 return '<i class="fa fa-clock-o text-success rc-client-status"></i> ' + value;
             }
         },
+        {
+            data: 'loginTimeZone',
+            width: '1%',
+            className: "text-center",
+            createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
+                // Define your conditions to add a class
+                if (rowData.isEnabled == 1) {
+                    cell.classList.add('bg-danger');
+                }
 
+            },
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return value;
+            }
+        },
         {
             data: 'twoHrAlert',
-            width: '4%',
+            width: '1%',
             className: "text-center",
             createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
                 // Define your conditions to add a class
@@ -631,7 +655,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         {
             targets: -1,
             data: null,
-            width: '5%',
+            width: '1%',
             defaultContent: '',
             createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
                 // Define your conditions to add a class
@@ -642,7 +666,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             },
             render: function (value, type, data) {
 
-                return '<button name="btnRadioCheckStatus" class="btn btn-outline-primary">Radio Check</button>';
+                return '<button name="btnRadioCheckStatus" class="btn btn-outline-primary">RC</button>';
 
             }
         },
@@ -1278,6 +1302,9 @@ $('#btnSaveRadioStatus').on('click', function () {
     if (checkedStatus === '') {
         return;
     }
+    // Task p6#73_TimeZone issue -- added by Binoy - Start   
+    fillRefreshLocalTimeZoneDetails(tmzdata, "", false);
+    // Task p6#73_TimeZone issue -- added by Binoy - End
     $.ajax({
         url: '/RadioCheckV2?handler=SaveRadioStatus',
         type: 'POST',
@@ -1287,6 +1314,7 @@ $('#btnSaveRadioStatus').on('click', function () {
             checkedStatus: checkedStatus,
             active: true,
             statusId: statusId,
+            tmzdata: tmzdata
         },
         dataType: 'json',
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -1322,6 +1350,9 @@ $('#btnSaveRadioStatusActive').on('click', function () {
     if (checkedStatus === '') {
         return;
     }
+    // Task p6#73_TimeZone issue -- added by Binoy - Start   
+    fillRefreshLocalTimeZoneDetails(tmzdata, "", false);
+    // Task p6#73_TimeZone issue -- added by Binoy - End
     $.ajax({
         url: '/RadioCheckV2?handler=SaveRadioStatus',
         type: 'POST',
@@ -1331,6 +1362,7 @@ $('#btnSaveRadioStatusActive').on('click', function () {
             checkedStatus: checkedStatus,
             active: true,
             statusId: statusId,
+            tmzdata: tmzdata
         },
         dataType: 'json',
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -1480,7 +1512,10 @@ $('#btnSendPushLotificationMessage').on('click', function () {
     else {
         $('#Access_permission_RC_status_new').hide();
         $('#Access_permission_RC_status_new').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Sending Email. Please wait...').show();
-        Notifications =  Notifications ;
+        Notifications = Notifications;
+        // Task p6#73_TimeZone issue -- added by Binoy - Start   
+        fillRefreshLocalTimeZoneDetails(tmzdata, "", false);
+        // Task p6#73_TimeZone issue -- added by Binoy - End
         $.ajax({
             url: '/RadioCheckV2?handler=SavePushNotificationTestMessages',
             type: 'POST',
@@ -1492,6 +1527,7 @@ $('#btnSendPushLotificationMessage').on('click', function () {
                 checkedSMSSmartWand: checkedSMSSmartWand,
                 Notifications: Notifications,
                 Subject: Subject,
+                tmzdata: tmzdata
             },
             dataType: 'json',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -1574,6 +1610,9 @@ $('#btnSendGlabalNotificationMessage').on('click', function () {
 
         $('#Access_permission_RC_status').hide();
         $('#Access_permission_RC_status').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Sending Email. Please wait...').show();
+        // Task p6#73_TimeZone issue -- added by Binoy - Start   
+        fillRefreshLocalTimeZoneDetails(tmzdata, "", false);
+        // Task p6#73_TimeZone issue -- added by Binoy - End
         $.ajax({
             url: '/RadioCheckV2?handler=SaveGlobalNotificationTestMessages',
             type: 'POST',
@@ -1587,8 +1626,8 @@ $('#btnSendGlabalNotificationMessage').on('click', function () {
                 chkNationality: chkNationality,
                 checkedSMSPersonal: checkedSMSPersonal,
                 checkedSMSSmartWand: checkedSMSSmartWand,
-                clientSiteId: clientSiteId
-
+                clientSiteId: clientSiteId,
+                tmzdata: tmzdata
             },
             dataType: 'json',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -1648,6 +1687,9 @@ $('#btnSendActionList').on('click', function () {
 
         $('#Access_permission_RC_status').hide();
         $('#Access_permission_RC_status').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Sending Email. Please wait...').show();
+        // Task p6#73_TimeZone issue -- added by Binoy - Start   
+        fillRefreshLocalTimeZoneDetails(tmzdata, "", false);
+        // Task p6#73_TimeZone issue -- added by Binoy - End
         $.ajax({
             url: '/RadioCheckV2?handler=SaveActionList',
             type: 'POST',
@@ -1664,8 +1706,8 @@ $('#btnSendActionList').on('click', function () {
                 Action3: Action3,
                 Action4: Action4,
                 Action5: Action5,
-                CommentsForControlRoomOperator: CommentsForControlRoomOperator
-
+                CommentsForControlRoomOperator: CommentsForControlRoomOperator,
+                tmzdata: tmzdata
             },
             dataType: 'json',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -2251,7 +2293,7 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
         },
         {
             data: 'lastEvent',
-            width: '7%',
+            width: '8%',
             className: "text-center",
             createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
                 // Define your conditions to add a class
@@ -2265,10 +2307,25 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
                 return '<i class="fa fa-clock-o text-success rc-client-status"></i> ' + value;
             }
         },
+        {
+            data: 'loginTimeZone',
+            width: '1%',
+            className: "text-center",
+            createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
+                // Define your conditions to add a class
+                if (rowData.isEnabled == 1) {
+                    cell.classList.add('bg-danger');
+                }
 
+            },
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return value;
+            }
+        },
         {
             data: 'twoHrAlert',
-            width: '4%',
+            width: '1%',
             className: "text-center",
             createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
                 // Define your conditions to add a class
@@ -2298,7 +2355,7 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
         {
             targets: -1,
             data: null,
-            width: '5%',
+            width: '1%',
             defaultContent: '',
             createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
                 // Define your conditions to add a class
@@ -2309,7 +2366,7 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
             },
             render: function (value, type, data) {
 
-                return '<button name="btnRadioCheckStatus" class="btn btn-outline-primary">Radio Check</button>';
+                return '<button name="btnRadioCheckStatus" class="btn btn-outline-primary">RC</button>';
 
             }
         },
@@ -2973,3 +3030,39 @@ $("#guardInfoModal").on("hidden.bs.modal", function () {
 
 
 //hover display tooltip-end
+
+// Task p6#73_TimeZone issue -- added by Binoy - Start
+function fillRefreshLocalTimeZoneDetails(formData, modelname, isform) {
+    // for reference https://moment.github.io/luxon/#/
+    var DateTime = luxon.DateTime;
+    var dt1 = DateTime.local();
+    let tz = dt1.zoneName + ' ' + dt1.offsetNameShort;
+    let diffTZ = dt1.offset
+    //let tzshrtnm = dt1.offsetNameLong;
+
+    //const dt = new Date();
+    //var tzjs = getTimezoneAbbreviation;
+    //let tzshrtnm = tzjs(dt);
+
+    let tzshrtnm = dt1.offsetNameShort;
+
+    const eventDateTimeLocal = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS');
+    const eventDateTimeLocalWithOffset = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS Z');
+    if (isform) {
+        formData.append(modelname + ".EventDateTimeLocal", eventDateTimeLocal);
+        formData.append(modelname + ".EventDateTimeLocalWithOffset", eventDateTimeLocalWithOffset);
+        formData.append(modelname + ".EventDateTimeZone", tz);
+        formData.append(modelname + ".EventDateTimeZoneShort", tzshrtnm);
+        formData.append(modelname + ".EventDateTimeUtcOffsetMinute", diffTZ);
+    }
+    else {
+        formData.EventDateTimeLocal = eventDateTimeLocal;
+        formData.EventDateTimeLocalWithOffset = eventDateTimeLocalWithOffset;
+        formData.EventDateTimeZone = tz;
+        formData.EventDateTimeZoneShort = tzshrtnm;
+        formData.EventDateTimeUtcOffsetMinute = diffTZ;
+    }
+}
+
+    // Task p6#73_TimeZone issue -- added by Binoy - End
+

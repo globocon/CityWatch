@@ -20,5 +20,11 @@ namespace CityWatch.Data.Models
         public string EnabledAddress { get; set; }
 
         public bool? PlayDuressAlarm { get; set; }
+
+        public DateTime? EnabledDateTimeLocal { get; set; }
+        public DateTimeOffset? EnabledDateTimeLocalWithOffset { get; set; }
+        public string EnabledDateTimeZone { get; set; }
+        public string EnabledDateTimeZoneShort { get; set; }
+        public int? EnabledDateTimeUtcOffsetMinute { get; set; }
     }
 }

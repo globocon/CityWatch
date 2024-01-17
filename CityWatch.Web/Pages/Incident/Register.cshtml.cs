@@ -689,7 +689,12 @@ namespace CityWatch.Web.Pages.Incident
                 EventDateTime = DateTime.Now,
                 Notes = Path.GetFileNameWithoutExtension(report.FileName),
                 IsSystemEntry = true,
-                IrEntryType = report.IsEventFireOrAlarm ? IrEntryType.Alarm : IrEntryType.Normal
+                IrEntryType = report.IsEventFireOrAlarm ? IrEntryType.Alarm : IrEntryType.Normal,
+                EventDateTimeLocal = report.CreatedOnDateTimeLocal,
+                EventDateTimeLocalWithOffset = report.CreatedOnDateTimeLocalWithOffset,
+                EventDateTimeZone = report.CreatedOnDateTimeZone,
+                EventDateTimeZoneShort = report.CreatedOnDateTimeZoneShort,
+                EventDateTimeUtcOffsetMinute = report.CreatedOnDateTimeUtcOffsetMinute
             };
             _guardLogDataProvider.SaveGuardLog(guardLog);
         }
@@ -758,7 +763,12 @@ namespace CityWatch.Web.Pages.Incident
                 VehicleRego = null,
                 LogId = AuthUserHelper.LoggedInUserId.GetValueOrDefault(),
                 IncidentReportEventTypes = Report.IrEventTypes.Select(z => new IncidentReportEventType() { EventType = z }).ToList(),
-                PSPFId = PSPFName.Id
+                PSPFId = PSPFName.Id,
+                CreatedOnDateTimeLocal = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy -- Start
+                CreatedOnDateTimeLocalWithOffset = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeLocalWithOffset,
+                CreatedOnDateTimeZone = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeZone,
+                CreatedOnDateTimeZoneShort = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeZoneShort,
+                CreatedOnDateTimeUtcOffsetMinute = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeUtcOffsetMinute // Task p6#73_TimeZone issue -- added by Binoy -- End
 
             };
             if (HttpContext.Session.GetString("GuardId") != null)

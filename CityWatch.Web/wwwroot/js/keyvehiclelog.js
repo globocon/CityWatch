@@ -429,10 +429,18 @@ $(function () {
         if ($('#new_log_exit_time').val() !== '')
             $('#ExitTime').val(parseDateInKvlEntryFormat(today, $('#new_log_exit_time').val()));
 
+
+        // Task p6#73_TimeZone issue -- added by Binoy -- Start
+        var form = document.getElementById('form_new_vehicle_and_key_log');
+        var jsformData = new FormData(form);
+        fillRefreshLocalTimeZoneDetails(jsformData, "", true);
+        // Task p6#73_TimeZone issue -- added by Binoy -- End
         $.ajax({
             url: '/Guard/KeyVehicleLog?handler=SaveKeyVehicleLog',
             type: 'POST',
-            data: $('#form_new_vehicle_and_key_log').serialize(),
+            data: jsformData,
+            processData: false,
+            contentType: false,
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             beforeSend: function () {
                 $('#loader').show();
@@ -3336,6 +3344,17 @@ $(function () {
 
 
     function GFG_Fun() {
+        // Task p6#73_TimeZone issue -- added by Binoy - Start
+        var tmdata = {
+            'EventDateTimeLocal': null,
+            'EventDateTimeLocalWithOffset': null,
+            'EventDateTimeZone': null,
+            'EventDateTimeZoneShort': null,
+            'EventDateTimeUtcOffsetMinute': null,
+        };
+        fillRefreshLocalTimeZoneDetails(tmdata, "", false)
+        // Task p6#73_TimeZone issue -- added by Binoy - End
+
         $.ajax({
             url: '/Guard/KeyVehicleLog?handler=SaveClientSiteDuress',
             data: {
@@ -3344,8 +3363,10 @@ $(function () {
                 guardLoginId: $('#KeyVehicleLog_GuardLogin_Id').val(),
                 logBookId: $('#KeyVehicleLog_ClientSiteLogBookId').val(),
                 gpsCoordinates: $("#hid_duressEnabledGpsCoordinates").val(),
-                enabledAddress: $("#hid_duressEnabledAddress").val()
+                enabledAddress: $("#hid_duressEnabledAddress").val(),
+                tmdata: tmdata
             },
+            dataType: 'json',
             type: 'POST',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (result) {
@@ -3356,6 +3377,49 @@ $(function () {
             }
         });
     } 
+
+    // Task p6#73_TimeZone issue -- added by Binoy - Start
+    function fillRefreshLocalTimeZoneDetails(formData, modelname, isform) {
+        // for reference https://moment.github.io/luxon/#/
+        var DateTime = luxon.DateTime;
+        var dt1 = DateTime.local();
+        let tz = dt1.zoneName + ' ' + dt1.offsetNameShort;
+        let diffTZ = dt1.offset
+        //let tzshrtnm = dt1.offsetNameLong;
+
+        //const dt = new Date();
+        //var tzjs = getTimezoneAbbreviation;
+        //let tzshrtnm = tzjs(dt);
+
+        let tzshrtnm = dt1.offsetNameShort;
+
+        const eventDateTimeLocal = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS');
+        const eventDateTimeLocalWithOffset = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS Z');
+        if (isform) {
+            if (modelname != '') {
+                formData.append(modelname + ".EntryCreatedDateTimeLocal", eventDateTimeLocal);
+                formData.append(modelname + ".EntryCreatedDateTimeLocalWithOffset", eventDateTimeLocalWithOffset);
+                formData.append(modelname + ".EntryCreatedDateTimeZone", tz);
+                formData.append(modelname + ".EntryCreatedDateTimeZoneShort", tzshrtnm);
+                formData.append(modelname + ".EntryCreatedDateTimeUtcOffsetMinute", diffTZ);
+            } else {
+                formData.append("EntryCreatedDateTimeLocal", eventDateTimeLocal);
+                formData.append("EntryCreatedDateTimeLocalWithOffset", eventDateTimeLocalWithOffset);
+                formData.append("EntryCreatedDateTimeZone", tz);
+                formData.append("EntryCreatedDateTimeZoneShort", tzshrtnm);
+                formData.append("EntryCreatedDateTimeUtcOffsetMinute", diffTZ);
+            }            
+        }
+        else {
+            formData.EventDateTimeLocal = eventDateTimeLocal;
+            formData.EventDateTimeLocalWithOffset = eventDateTimeLocalWithOffset;
+            formData.EventDateTimeZone = tz;
+            formData.EventDateTimeZoneShort = tzshrtnm;
+            formData.EventDateTimeUtcOffsetMinute = diffTZ;
+        }
+    }
+
+    // Task p6#73_TimeZone issue -- added by Binoy - End
 
     /*to add do's and donts -start*/
     let gridDosAndDontsFields;

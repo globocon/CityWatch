@@ -39,6 +39,11 @@ namespace CityWatch.Data.Models
         public int? GuardId { get; set; }
         [ForeignKey("GuardId")]
         public Guard Guard { get; set; }
-        
+        public DateTime? CreatedOnDateTimeLocal { get; set; }
+        public DateTimeOffset? CreatedOnDateTimeLocalWithOffset { get; set; }
+        public string CreatedOnDateTimeZone { get; set; }
+        public string CreatedOnDateTimeZoneShort { get; set; }
+        public int? CreatedOnDateTimeUtcOffsetMinute { get; set; }
+
     }
 }

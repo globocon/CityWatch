@@ -30,5 +30,6 @@ namespace CityWatch.Data.Models
         public string GpsCoordinates { get; set; }
         public string EnabledAddress { get; set; }
         public int? PlayDuressAlarm { get; set; }
+        public string LoginTimeZone { get; set; }
     }
 }

@@ -131,6 +131,8 @@ namespace CityWatch.Web.Models
         public int? FeedbackType { get; set; }
         public int? FeedbackTemplates { get; set; }
 
+        public ReportCreatedLocalTimeZone ReportCreatedLocalTimeZone { get; set; }
+
     }
 
     public class EventType
@@ -261,5 +263,14 @@ namespace CityWatch.Web.Models
         }
 
         public bool ShowIncidentLocationAddress { get; set; }
+    }
+
+    public class ReportCreatedLocalTimeZone
+    {
+        public DateTime? CreatedOnDateTimeLocal { get; set; }
+        public DateTimeOffset? CreatedOnDateTimeLocalWithOffset { get; set; }
+        public string CreatedOnDateTimeZone { get; set; }
+        public string CreatedOnDateTimeZoneShort { get; set; }
+        public int? CreatedOnDateTimeUtcOffsetMinute { get; set; }
     }
 }
