@@ -110,6 +110,15 @@
             alert('From date and to date is required');
             return false;
         }
+         //calculate month difference-start
+        var date1 = new Date($('#ReportRequest_FromDate').val());
+        var date2 = new Date($('#ReportRequest_ToDate').val());
+        var monthdiff = monthDiff(date1, date2); 
+        if (monthdiff > 6) {
+            alert('Date Range is  greater than 6 months');
+            return false;
+        }
+        //calculate month difference-end
         $('#loader-p').show();
         $.ajax({
             url: '/Reports/PatrolData?handler=GenerateReport',
@@ -323,3 +332,13 @@
             });
     }
 });
+ //calculate month difference-start
+
+function monthDiff(d1, d2) {
+    var months;
+    months = (d2.getFullYear() - d1.getFullYear()) * 12;
+    months -= d1.getMonth();
+    months += d2.getMonth();
+    return months <= 0 ? 0 : months;
+}
+ //calculate month difference-end
