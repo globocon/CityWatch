@@ -87,7 +87,7 @@ namespace CityWatch.Web.Services
         IEnumerable<string> GetCompanyAndSenderNames(string startsWith);
         IEnumerable<string> GetCompanyNames(string startsWith);
         bool IsClientSiteDuressEnabled(int clientSiteId);
-        void EnableClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId);
+        void EnableClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId, string gpsCoordinates, string enabledAddress);
 
         //For Access Type
         List<SelectListItem> GetAccessTypes(bool withoutSelect = false);
@@ -932,12 +932,29 @@ namespace CityWatch.Web.Services
             return _guardLogDataProvider.GetClientSiteDuress(clientSiteId)?.IsEnabled ?? false;
         }
 
-        public void EnableClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId)
+        public void EnableClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId,string gpsCoordinates, string enabledAddress)
         {
             if (!IsClientSiteDuressEnabled(clientSiteId))
             {
-                _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(guardId, guardId, null, "Duress Alarm Activated", IrEntryType.Alarm, 1);
-                _guardLogDataProvider.SaveClientSiteDuress(clientSiteId, guardId);
+
+               
+                /* Save the push message for reload to logbook on next day Start*/
+                var radioCheckPushMessages = new RadioCheckPushMessages()
+                {
+                    ClientSiteId = clientSiteId,
+                    LogBookId = logBookId,
+                    Notes = "Duress Alarm Activated",
+                    EntryType = (int)IrEntryType.Alarm,
+                    Date = DateTime.Today,
+                    IsAcknowledged = 0,
+                    IsDuress=1
+                };
+                var pushMessageId = _guardLogDataProvider.SavePushMessage(radioCheckPushMessages);
+                /* Save the push message for reload to logbook on next day end*/
+
+                _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(guardId, guardId, null, "Duress Alarm Activated", IrEntryType.Alarm, 1,0);
+                _guardLogDataProvider.SaveClientSiteDuress(clientSiteId, guardId, gpsCoordinates, enabledAddress);
+
                 _guardLogDataProvider.SaveGuardLog(new GuardLog()
                 {
                     Notes = "Duress Alarm Activated",
@@ -946,9 +963,11 @@ namespace CityWatch.Web.Services
                     EventDateTime = DateTime.Now,
                     ClientSiteLogBookId = logBookId,
                     GuardLoginId = guardLoginId,
+                    RcPushMessageId= pushMessageId
                 });
 
-               
+             
+
             }
         }
 

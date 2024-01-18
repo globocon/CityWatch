@@ -67,7 +67,7 @@ namespace CityWatch.Web.Helpers
                 menuHtml.AppendLine("</div>");
             }
 
-            if (pageName == PageNameHelper.Index || pageName == PageNameHelper.Tools)
+            if (pageName == PageNameHelper.Index || pageName == PageNameHelper.Tools || pageName==PageNameHelper.Notify)
             {
                 menuHtml.AppendLine("<div>");
                 menuHtml.AppendLine(@"<a href=""/Incident/ToolSelecter"" class=""nav-link py-0""><i class=""fa fa-wrench mr-2""></i>Tools</a>");

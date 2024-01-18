@@ -390,7 +390,39 @@ namespace CityWatch.Web.Pages.Guard
                 _guardLogDataProvider.SaveKeyVehicleLogAuditHistory(keyVehicleLogAuditHistory);
                 //for entering the audit history of the person who exit the entry-end
                 _guardLogDataProvider.KeyVehicleLogQuickExit(Id);
-                 
+
+                //for rc entry-start
+                //if (KeyVehicleLog.GuardLoginId != HttpContext.Session.GetInt32("GuardLoginId"))
+                //{
+
+                    var guardId = _guardLogDataProvider.GetGuardLogins(Convert.ToInt32(HttpContext.Session.GetInt32("GuardLoginId"))).Select(x => x.GuardId).FirstOrDefault();
+                    var ClientSiteRadioChecksActivityDetailsCheck = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == guardId && x.ClientSiteId == keyVehicleLogAuditHistory.KeyVehicleLog.GuardLogin.ClientSiteId && x.KVId == keyVehicleLogAuditHistory.KeyVehicleLog.Id);
+                    if (ClientSiteRadioChecksActivityDetailsCheck.Count() == 0)
+                    {
+
+
+                        var clientsiteRadioCheckEdit = new ClientSiteRadioChecksActivityStatus()
+                        {
+                            ClientSiteId = keyVehicleLogAuditHistory.KeyVehicleLog.GuardLogin.ClientSiteId,
+                            GuardId = guardId,
+                            LastKVCreatedTime = DateTime.Now,
+                            KVId = KeyVehicleLog.Id,
+                            ActivityType = "KV"
+                        };
+                        _guardLogDataProvider.EditRadioChecklistEntry(clientsiteRadioCheckEdit);
+                        var ClientSiteRadioChecksActivityDetails = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == guardId && x.ClientSiteId != keyVehicleLogAuditHistory.KeyVehicleLog.GuardLogin.ClientSiteId);
+                        if (ClientSiteRadioChecksActivityDetails.Count() != 0)
+                        {
+                            foreach (var item in ClientSiteRadioChecksActivityDetails)
+                            {
+                                _guardLogDataProvider.DeleteClientSiteRadioCheckActivityStatusForKV(item.Id);
+                            }
+
+                        }
+                    }
+                //}
+                //for rc entry-end
+
             }
             catch (Exception ex)
             {
@@ -1123,7 +1155,7 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { success, message, kvlProfileId });
         }
 
-        public JsonResult OnPostSaveClientSiteDuress(int clientSiteId, int guardId, int guardLoginId, int logBookId)
+        public JsonResult OnPostSaveClientSiteDuress(int clientSiteId, int guardId, int guardLoginId, int logBookId, string gpsCoordinates, string enabledAddress)
         {
             var status = true;
             var message = "Success";
@@ -1136,7 +1168,7 @@ namespace CityWatch.Web.Pages.Guard
                     Type = LogBookType.DailyGuardLog,
                     Date = DateTime.Today
                 });
-                _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logbookId.Value, guardId);
+                _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logbookId.Value, guardId, gpsCoordinates, enabledAddress);
             }
             catch (Exception ex)
             {

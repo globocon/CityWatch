@@ -1,12 +1,21 @@
 let nIntervId;
 const duration = 60 * 3;
 var isPaused = false;
+//p4#48 AudioNotification - Binoy - 12-01-2024 -- Start
+let playAlarm = 0; 
+let audiourl = '/NotificationSound/duressAlarm01.mp3'
+const audio = new Audio(audiourl);
+audio.loop = true;
+//p4#48 AudioNotification - Binoy - 12-01-2024 -- End
+
 window.onload = function () {
     if (document.querySelector('#clockRefresh')) {
         startClock();
     }
 };
-
+$(document).ready(function () {
+    $('[data-toggle="tooltip"]').tooltip();
+});
 function startClock() {
     let timer = duration, minutes, seconds;
     display = document.querySelector('#clockRefresh');
@@ -214,8 +223,16 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             data: 'guardName',
             width: '20%',
             render: function (value, type, data) {
-                return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                    '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+                if (data.isEnabled === 1) {
+                    return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                        '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>'+
+                        '&nbsp;&nbsp;&nbsp; <i class="fa fa-map-marker" aria-hidden="true"></i>';
+
+                }
+                else {
+                    return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                        '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+                }
             }
         },
         {
@@ -448,6 +465,18 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             titleAttr: 'Print',
             className: 'btn btn-md mr-2 btn-print'
         },
+        
+        {
+            text: '<img src="/images/man-climbing-stairs.png" alt="Image" height="16" width="16">',
+            titleAttr: 'Custom',
+            className: 'btn btn-md mr-2 btn-custom',
+            action: function () {
+               
+                $('#ActionListControlRoomModal').modal('show');
+                $('#dglClientTypeActionListAll').val('');
+                $('#dglClientSiteIdActionListAll').val('');
+            }
+        }
 
 
     ],
@@ -506,13 +535,28 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                 // Define your conditions to add a class
                 if (rowData.isEnabled == 1) {
                     cell.classList.add('bg-danger');
+                    //p4#48 AudioNotification - Binoy - 12-01-2024 -- Start
+                    if (rowData.playDuressAlarm == 1) {
+                        playAlarm = true;
+                    }
+                    //p4#48 AudioNotification - Binoy - 12-01-2024 -- End
                 }
+                
             },
             render: function (value, type, data) {
 
                 if (data.notificationType != 1) {
-                    return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                        '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+
+                    if (data.isEnabled != 1) {
+                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                            '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+                    }
+                    else {
+                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                            '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>'+
+                            '&nbsp;&nbsp;&nbsp;<a href="https://www.google.com/maps?q='+data.gpsCoordinates+'" target="_blank" data-toggle="tooltip" title="' + data.enabledAddress+'"><i class="fa fa-map-marker" aria-hidden="true"></i></a>';
+                    }
+
                 }
                 else {
                     return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true" style="color:#FF0000;"></i> ' + data.guardName;
@@ -657,11 +701,46 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                     last2 = group;
                 }
             });
+
+        PlayDuressAlarm();
     },
     
 
 });
 
+
+//p4#48 AudioNotification - Binoy - 12-01-2024 -- Start
+function PlayDuressAlarm() {
+    if (playAlarm == 1) { 
+        //audio.muted = false; // New browser rule doesn't lets audio play automatically        
+        audio.play();
+        //setting timer to play for 10 sec
+        setTimeout(() => {
+            audio.pause();
+            audio.currentTime = 0; // Works as audio stop
+        }, 10000);
+        UpdateDuressAlarmPlayed();
+    }    
+}
+
+function UpdateDuressAlarmPlayed() {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/RadioCheckV2?handler=UpdateDuressAlarmPlayedStatus',
+        data: {},
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (result) {
+        playAlarm = 0;
+        return;
+    });
+}
+
+//p4#48 AudioNotification - Binoy - 12-01-2024 -- End
+
+clientSiteInActiveGuards.on('draw', function () {
+    $('[data-toggle="tooltip"]').tooltip();
+});
 $('#clientSiteInActiveGuards tbody').on('click', '#btnUpArrow', function () {
 
 
@@ -1273,7 +1352,7 @@ $('#btnSaveRadioStatusActive').on('click', function () {
 $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
 
     isPaused = true;
-
+    
     const button = $(event.relatedTarget);
     const id = button.data('id');
     $('#txtNotificationsCompanyId').val(id);
@@ -1299,6 +1378,52 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     $('#txtGlobalNotificationMessage').val('');
     $('#txtPushNotificationMessage').val('');
     clearGuardValidationSummary('PushNotificationsValidationSummary');
+    var clientSiteId = $('#txtNotificationsCompanyId').val();
+    $('#Site_Alarm_Keypad_code').val('');
+    $('#Action1').val('');
+    $('#site_Physical_key').val('');
+    $('#Action2').val('');
+    $('#Action3').val('');
+    $('#Action4').val('');
+    $('#Action5').val('');
+    $('#Site_Combination_Look').val('');
+    $('#txtComments').html('');
+
+    $('#search_client_site').val('');
+    $('#searchResults').html('');
+    $('#dglClientTypeActionList').val('');
+    $('#dglClientTypeActionList2').val('');
+    $('#dglClientSiteIdActionList').val('');
+    $('#dglClientSiteIdActionList2').val('');
+    
+    
+   
+    //var clientSiteId = $('#dglClientSiteIdActionList').val();
+
+    $.ajax({
+        url: '/RadioCheckV2?handler=ActionList',
+        type: 'POST',
+        data: {
+            clientSiteId: clientSiteId
+        },
+        dataType: 'json',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (data) {
+        if (data != null) {
+            $('#Site_Alarm_Keypad_code').val(data.siteAlarmKeypadCode);
+            $('#Action1').val(data.action1);
+            $('#site_Physical_key').val(data.sitephysicalkey);
+            $('#Action2').val(data.action2);
+            $('#Action3').val(data.action3);
+            $('#Action4').val(data.action4);
+            $('#Action5').val(data.action5);
+            $('#Site_Combination_Look').val(data.siteCombinationLook);
+            $('#txtComments').html(data.controlRoomOperator);
+            $('#download_imageRCList').attr('href', '/RCImage/' + data.imagepath + '');
+        }
+        
+    });
+
   
 });
 
@@ -1487,6 +1612,233 @@ $('#btnSendGlabalNotificationMessage').on('click', function () {
 //    theme: 'bootstrap4'
 //});
 
+/*code added for RCActionList start*/
+$('#btnSendActionList').on('click', function () {
+   
+    var clientSiteId = $('#dglClientSiteIdActionList2').val();
+    var Notifications = $('#txtMessageActionList').val();
+    var Subject = $('#txtGlobalNotificationSubject').val();
+  
+    var ClientType = $('#dglClientTypeActionList2').val();
+    var ClientSite = $('#dglClientSiteIdActionList2').val();
+    var AlarmKeypadCode = $('#Site_Alarm_Keypad_code').val();
+    var Action1 = $('#Action1').val();
+    var Physicalkey = $('#site_Physical_key').val();
+    var Action2 = $('#Action2').val();
+    var SiteCombinationLook = $('#Site_Combination_Look').val();
+    var Action3 = $('#Action3').val();
+    var Action4 = $('#Action4').val();
+    var Action5 = $('#Action5').val();
+    var CommentsForControlRoomOperator = $('#txtComments').val();
+
+    if (Notifications === '') {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
+    }
+    
+    else if (chkClientType == true && ClientType == null) {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
+    }
+    else if (ClientType=='') {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
+    }
+    else if (ClientSite == '') {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client site ');
+    }
+    else {
+
+        $('#Access_permission_RC_status').hide();
+        $('#Access_permission_RC_status').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Sending Email. Please wait...').show();
+        $.ajax({
+            url: '/RadioCheckV2?handler=SaveActionList',
+            type: 'POST',
+            data: {
+                Notifications: Notifications,
+                Subject: Subject,
+                ClientType: ClientType,
+                clientSiteId: clientSiteId,
+                AlarmKeypadCode: AlarmKeypadCode,
+                Action1: Action1,
+                Physicalkey: Physicalkey,
+                Action2: Action2,
+                SiteCombinationLook: SiteCombinationLook,
+                Action3: Action3,
+                Action4: Action4,
+                Action5: Action5,
+                CommentsForControlRoomOperator: CommentsForControlRoomOperator
+
+            },
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data.success == true) {
+                $('#pushNoTificationsControlRoomModal').modal('hide');
+                $('#Access_permission_RC_status').hide();
+            }
+            else {
+                displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
+            }
+            //$('#selectRadioStatus').val('');
+            //$('#btnRefreshActivityStatus').trigger('click');
+        });
+    }
+});
+
+
+$('#dglClientSiteIdActionList').on('change', function () {
+    $('#Site_Alarm_Keypad_code').val('');
+    $('#Action1').val('');
+    $('#site_Physical_key').val('');
+    $('#Action2').val('');
+    $('#Action3').val('');
+    $('#Action4').val('');
+    $('#Action5').val('');
+    $('#Site_Combination_Look').val('');
+    $('#txtComments').html('');
+    var clientSiteId = $('#dglClientSiteIdActionList').val();
+   
+        $.ajax({
+            url: '/RadioCheckV2?handler=ActionList',
+            type: 'POST',
+            data: {  
+                clientSiteId: clientSiteId
+         },
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            $('#Site_Alarm_Keypad_code').val(data.siteAlarmKeypadCode);
+            $('#Action1').val(data.action1);
+            $('#site_Physical_key').val(data.sitephysicalkey);
+            $('#Action2').val(data.action2);
+            $('#Action3').val(data.action3);
+            $('#Action4').val(data.action4);
+            $('#Action5').val(data.action5);
+            $('#Site_Combination_Look').val(data.siteCombinationLook);
+            $('#txtComments').html(data.controlRoomOperator);
+        });
+    
+});
+$('#dglClientSiteIdActionListAll').on('change', function () {
+    $('#Site_Alarm_Keypad_codeAll').val('');
+    $('#Action1All').val('');
+    $('#site_Physical_keyAll').val('');
+    $('#Action2All').val('');
+    $('#Action3All').val('');
+    $('#Action4All').val('');
+    $('#Action5All').val('');
+    $('#Site_Combination_LookAll').val('');
+    $('#txtCommentsAll').html('');
+    var clientSiteId = $('#dglClientSiteIdActionListAll').val();
+
+    $.ajax({
+        url: '/RadioCheckV2?handler=ActionList',
+        type: 'POST',
+        data: {
+            clientSiteId: clientSiteId
+        },
+        dataType: 'json',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (data) {
+        $('#Site_Alarm_Keypad_codeAll').val(data.siteAlarmKeypadCode);
+        $('#Action1All').val(data.action1);
+        $('#site_Physical_keyAll').val(data.sitephysicalkey);
+        $('#Action2All').val(data.action2);
+        $('#Action3All').val(data.action3);
+        $('#Action4All').val(data.action4);
+        $('#Action5All').val(data.action5);
+        $('#Site_Combination_LookAll').val(data.siteCombinationLook);
+        $('#txtCommentsAll').html(data.controlRoomOperator);
+    });
+
+});
+$('#search_client_site').keypress(function (e) {
+    var searchInput = $('#search_client_site');
+    var minSearchLength = 4;
+
+    searchInput.keypress(function (e) {
+        if (searchInput.val().length >= minSearchLength && e.which === 13) {
+            performSearch();
+        }
+    });
+});
+function performSearch() {
+    var searchTerm = $('#search_client_site').val();
+    $.ajax({
+        url: '/RadioCheckV2?handler=SearchClientsite',
+        type: 'POST',
+        data: {
+            searchTerm: searchTerm
+        },
+        dataType: 'json',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (data) {
+        var html = '';
+        if (data =='No matching record found') {
+             html = '<p style="color:brown">' + data + '</p>';
+        }
+        else {
+            html = '<p style="color:brown"><i class="fa fa-map-marker" aria-hidden="true"></i>' + data + '</p>';
+        }
+         
+        $('#searchResults').html(html);
+    });
+
+   
+}
+$('#search_client_siteAll').keypress(function (e) {
+    var searchInput = $('#search_client_siteAll');
+    var minSearchLength = 1;
+
+    searchInput.keypress(function (e) {
+        if (searchInput.val().length >= minSearchLength && e.which === 13) {
+            performSearchClientSite();
+        }
+    });
+});
+function performSearchClientSite() {
+    $('#Site_Alarm_Keypad_codeAll').val('');
+    $('#Action1All').val('');
+    $('#site_Physical_keyAll').val('');
+    $('#Action2All').val('');
+    $('#Action3All').val('');
+    $('#Action4All').val('');
+    $('#Action5All').val('');
+    $('#Site_Combination_LookAll').val('');
+    $('#txtCommentsAll').html('');
+    $('#searchResultsNew').html('');
+    var searchTerm = $('#search_client_siteAll').val();
+    $.ajax({
+        url: '/RadioCheckV2?handler=SearchClientsiteRCList',
+        type: 'POST',
+        data: {
+            searchTerm: searchTerm
+        },
+        dataType: 'json',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (data) {
+        var html = '';
+        if (data == null) {
+            html = '<p style="color:brown">No Matching Records</p>';
+            $('#searchResultsNew').html(html);
+        }
+        else {
+            $('#Site_Alarm_Keypad_codeAll').val(data.siteAlarmKeypadCode);
+            $('#Action1All').val(data.action1);
+            $('#site_Physical_keyAll').val(data.sitephysicalkey);
+            $('#Action2All').val(data.action2);
+            $('#Action3All').val(data.action3);
+            $('#Action4All').val(data.action4);
+            $('#Action5All').val(data.action5);
+            $('#Site_Combination_LookAll').val(data.siteCombinationLook);
+            $('#txtCommentsAll').html(data.controlRoomOperator);
+        }
+        
+       
+    });
+
+
+}
+/*code added for RCActionList stop*/
+
 
 
 
@@ -1522,6 +1874,34 @@ $('#dglClientSiteId').multiselect({
     buttonTextAlignment: 'left',
     includeSelectAllOption: true,
 });
+//$('#dglClientTypeActionList').multiselect({
+//    maxHeight: 400,
+//    buttonWidth: '100%',
+//    nonSelectedText: 'Select',
+//    buttonTextAlignment: 'left',
+//    includeSelectAllOption: true,
+//});
+//$('#dglClientSiteIdActionList').multiselect({
+//    maxHeight: 400,
+//    buttonWidth: '100%',
+//    nonSelectedText: 'Select',
+//    buttonTextAlignment: 'left',
+//    includeSelectAllOption: true,
+//});
+//$('#dglClientTypeActionList2').multiselect({
+//    maxHeight: 400,
+//    buttonWidth: '100%',
+//    nonSelectedText: 'Select',
+//    buttonTextAlignment: 'left',
+//    includeSelectAllOption: true,
+//});
+//$('#dglClientSiteIdActionList2').multiselect({
+//    maxHeight: 400,
+//    buttonWidth: '100%',
+//    nonSelectedText: 'Select',
+//    buttonTextAlignment: 'left',
+//    includeSelectAllOption: true,
+//});
 $('#chkNationality').on('change', function () {
     const isChecked = $(this).is(':checked');
     $('#IsLB').val(isChecked);
@@ -1556,6 +1936,117 @@ $('#chkSiteState').change(function () {
         $('#State1').prop('disabled', 'disabled');
         $('#State1').val('ACT');
     }
+});
+
+//$('#dglClientTypeActionList').on('change', function () {
+//    const clientTypeId = $(this).val().join(';');
+//    $('#dglClientSiteIdActionList').multiselect("refresh");
+//    $('#dglClientSiteIdActionList').html('');
+//    const clientSiteControl = $('#dglClientSiteIdActionList');
+//    var selectedOption = $(this).find("option:selected");
+//    var selectedText = selectedOption.text();
+
+//    $.ajax({
+//        url: '/RadioCheckV2?handler=ClientSitesNew',
+//        type: 'GET',
+//        data: {
+//            typeId: clientTypeId
+
+//        },
+//        dataType: 'json',
+//        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+//    }).done(function (data) {
+
+//        data.map(function (site) {
+//            clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+//        });
+//        clientSiteControl.multiselect('rebuild');
+
+//    });
+
+
+//});
+
+$('#dglClientTypeActionList').on('change', function () {
+    const clientTypeId = $(this).val();
+    const clientSiteControl = $('#dglClientSiteIdActionList');
+    clientSiteControl.html('');
+    $.ajax({
+        url: '/RadioCheckV2?handler=ClientSitesNew',
+        type: 'GET',
+        data: {
+            typeId: clientTypeId
+
+        },
+        dataType: 'json',
+        success: function (data) {
+            $('#dglClientSiteIdActionList').append(new Option('Select', '', true, true));
+            data.map(function (site) {
+                $('#dglClientSiteIdActionList').append(new Option(site.name, site.id, false, false));
+            });
+            
+        }
+    });
+
+
+});
+$('#dglClientTypeActionList2').on('change', function () {
+    const clientTypeId = $(this).val();
+    const clientSiteControl = $('#dglClientSiteIdActionList2');
+    clientSiteControl.html('');
+    $.ajax({
+        url: '/RadioCheckV2?handler=ClientSitesNew',
+        type: 'GET',
+        data: {
+            typeId: clientTypeId
+
+        },
+        dataType: 'json',
+        success: function (data) {
+            $('#dglClientSiteIdActionList2').append(new Option('Select', '', true, true));
+            data.map(function (site) {
+                $('#dglClientSiteIdActionList2').append(new Option(site.name, site.id, false, false));
+            });
+
+        }
+    });
+
+
+});
+$('#dglClientTypeActionListAll').on('change', function () {
+    const clientTypeId = $(this).val();
+    const clientSiteControl = $('#dglClientSiteIdActionListAll');
+    clientSiteControl.html('');
+    $.ajax({
+        url: '/RadioCheckV2?handler=ClientSitesNew',
+        type: 'GET',
+        data: {
+            typeId: clientTypeId
+
+        },
+        dataType: 'json',
+        success: function (data) {
+            $('#dglClientSiteIdActionListAll').append(new Option('Select', '', true, true));
+            data.map(function (site) {
+                $('#dglClientSiteIdActionListAll').append(new Option(site.name, site.id, false, false));
+            });
+
+        }
+    });
+
+
+});
+$('#dglClientSiteIdActionListAll').select({
+    placeholder: 'Select',
+    theme: 'bootstrap4'
+});
+$('#dglClientSiteIdActionList2').select({
+    placeholder: 'Select',
+    theme: 'bootstrap4'
+});
+$('#dglClientSiteIdActionList').select({
+    placeholder: 'Select',
+    theme: 'bootstrap4'
 });
 $('#chkClientType').change(function () {
     const isChecked = $(this).is(':checked');
@@ -1658,6 +2149,7 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
             titleAttr: 'Print',
             className: 'btn btn-md mr-2 btn-print'
         },
+        
 
 
     ],
@@ -1721,8 +2213,17 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
             render: function (value, type, data) {
 
                 if (data.notificationType != 1) {
-                    return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                        '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+
+                    if (data.isEnabled != 1) {
+                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                            '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
+                    }
+                    else {
+                        return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
+                            '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>' +
+                            '&nbsp;&nbsp;&nbsp;<a href="https://www.google.com/maps?q=' + data.gpsCoordinates + '" target="_blank" data-toggle="tooltip" title="' + data.enabledAddress + '"><i class="fa fa-map-marker" aria-hidden="true"></i></a>';
+                    }
+                    
                 }
                 else {
                     return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true" style="color:#FF0000;"></i> ' + data.guardName;

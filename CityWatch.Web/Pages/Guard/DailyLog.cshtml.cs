@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using MimeKit;
+using Org.BouncyCastle.Tls;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -83,6 +84,26 @@ namespace CityWatch.Web.Pages.Guard
                 .ThenByDescending(z => z.EventDateTime);
             return new JsonResult(guardLogs);
         }
+
+        // Project 4 , Task 48, Audio notification, Added By Binoy -- Start
+        public JsonResult OnPostGuardLogsUpdateNotificationSoundStatus(List<int> logBookId, bool isControlRoomLogBook)
+        {
+            foreach(var r in logBookId)
+            {
+                int id = Convert.ToInt32(r);
+                _guardLogDataProvider.UpdateNotificationSoundPlayedStatusForGuardLogs(id, isControlRoomLogBook);
+            }                         
+            return new JsonResult(new { status = "Ok" });
+        }
+
+        public JsonResult OnGetGuardLogsAcknowledgedForControlroom()
+        {
+            List<int> audioToPlayId = new List<int> {}; 
+            audioToPlayId = _guardLogDataProvider.GetGuardLogsNotAcknowledgedForNotificationSound();
+            return new JsonResult(audioToPlayId);
+        }
+
+        // Project 4 , Task 48, Audio notification, Added By Binoy -- End
 
         public JsonResult OnPostSaveGuardLog()
         {
@@ -449,13 +470,13 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { success = false, message = exMessage.ToString() });
         }
 
-        public JsonResult OnPostSaveClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId)
+        public JsonResult OnPostSaveClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId,string gpsCoordinates,string enabledAddress)
         {
             var status = true;
             var message = "Success";
             try
             {
-                _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logBookId, guardId);
+                _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logBookId, guardId, gpsCoordinates, enabledAddress);
             }
             catch (Exception ex)
             {
@@ -464,7 +485,7 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(new { status, message });
         }
-        public JsonResult OnPostSavePushNotificationTestMessages(int guardLoginId, int clientSiteLogBookId, string Notifications,int rcPushMessageId)
+        public JsonResult OnPostSavePushNotificationTestMessages(int guardLoginId, int clientSiteLogBookId, string Notifications,int rcPushMessageId,GuardLog tmdata)
         {
             var success = true;
             var message = "success";
@@ -476,7 +497,12 @@ namespace CityWatch.Web.Pages.Guard
                     GuardLoginId = guardLoginId,
                     EventDateTime = DateTime.Now,
                     Notes = Notifications,
-                    IrEntryType = IrEntryType.Normal
+                    IrEntryType = IrEntryType.Normal,
+                    EventDateTimeLocal = tmdata.EventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
+                    EventDateTimeLocalWithOffset = tmdata.EventDateTimeLocalWithOffset,
+                    EventDateTimeZone = tmdata.EventDateTimeZone,
+                    EventDateTimeZoneShort = tmdata.EventDateTimeZoneShort,
+                    EventDateTimeUtcOffsetMinute = tmdata.EventDateTimeUtcOffsetMinute // Task p6#73_TimeZone issue -- added by Binoy - End
                 };
                 _guardLogDataProvider.SaveGuardLog(signOffEntry);
 
@@ -490,13 +516,22 @@ namespace CityWatch.Web.Pages.Guard
                 if (clientSiteForLogbook.Count != 0)
                 {
                     var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdGloablmessage(clientSiteForLogbook.FirstOrDefault().Id, LogBookType.DailyGuardLog, DateTime.Today);
+                    var selectedGuardId = _guardLogDataProvider.GetGuardLogins(guardLoginId).FirstOrDefault().GuardId;
+                    var guardInitials = _guardLogDataProvider.GetGuards(selectedGuardId).Name + " [" + _guardLogDataProvider.GetGuards(selectedGuardId).Initial + "]";
+                    var clientSiteId = _guardLogDataProvider.GetGuardLogins(guardLoginId).FirstOrDefault().ClientSiteId;
+                    var clientsitename = _guardLogDataProvider.GetClientSites(clientSiteId).FirstOrDefault().Name;
                     var notifcationtoCitywatchHD = new GuardLog()
                     {
                         ClientSiteLogBookId = logBookId,
                         GuardLoginId = guardLoginId,
                         EventDateTime = DateTime.Now,
-                        Notes = Notifications,
-                        IrEntryType = IrEntryType.Normal
+                        Notes = Notifications + " - " + guardInitials + " - " + clientsitename,
+                        IrEntryType = IrEntryType.Normal,
+                        EventDateTimeLocal = tmdata.EventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
+                        EventDateTimeLocalWithOffset = tmdata.EventDateTimeLocalWithOffset,
+                        EventDateTimeZone = tmdata.EventDateTimeZone,
+                        EventDateTimeZoneShort = tmdata.EventDateTimeZoneShort,
+                        EventDateTimeUtcOffsetMinute = tmdata.EventDateTimeUtcOffsetMinute // Task p6#73_TimeZone issue -- added by Binoy - End
                     };
 
                     _guardLogDataProvider.SaveGuardLog(notifcationtoCitywatchHD);

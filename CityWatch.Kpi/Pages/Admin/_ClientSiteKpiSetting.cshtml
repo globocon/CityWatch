@@ -21,7 +21,7 @@
             <a class="nav-link" id="contracted-manning-tab" data-toggle="tab" href="#contractedmanningSettings" role="tab" aria-controls="contractedmanningSettings">Contracted Manning</a>
         </li>
         <li class="nav-item" role="presentation">
-            <a class="nav-link" id="RcActionList-tab" data-toggle="tab" href="#RcActionListSettings" role="tab" aria-controls="RcActionListSettings">Rc Action List</a>
+            <a class="nav-link" id="RcActionList-tab" data-toggle="tab" href="#RcActionListSettings" role="tab" aria-controls="RcActionListSettings">RC Action List</a>
         </li>
         <li class="nav-item" role="presentation">
             <a class="nav-link" id="notes-tab" data-toggle="tab" href="#notes" role="tab" aria-controls="notes">Notes</a>
@@ -221,7 +221,7 @@
                                         {
 
                                             var totalMin = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId).Select(x => x.SumOfHours).Sum();
-                                            var guardQty = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId).Select(x => x.NoOfPatrols ?? 0).FirstOrDefault();
+                                            var guardQty = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId && x.NoOfPatrols!=null).Select(x => x.NoOfPatrols ?? 0).FirstOrDefault();
                                             if (totalMin != null && guardQty != null)
                                                 monthilyHours = Math.Round(((totalMin) * guardQty * 52.143) / 12);
 
@@ -493,7 +493,7 @@
         <div class="tab-pane" id="RcActionListSettings" role="tabpanel" aria-labelledby="contracted-manning-tab">
             <form id="frm_ActionList">
                 <br />
-
+                <input type="hidden" name="RCActionList.ClientSiteID" asp-for="@Model.ClientSiteId" />
                 <h6>Site Alarm SOP's:</h6>
                 <table class="table table-bordered tbl-settings" id="tbl_summaryImage">
                     <thead>
@@ -593,7 +593,7 @@
 
                         </div>
                         <div class="form-group row row ml-2">
-                            <label class="col-md-3 form-label text-left pl-0">Site Combination Look</label>
+                            <label class="col-md-3 form-label text-left pl-0">Site Combination Lock</label>
                             <div class="col-md-2">
                                 <input type="text" class="form-control" id="Site_Combination_Look" name="RCActionList.SiteCombinationLook" value="@Model.rclistKP.SiteCombinationLook">
                             </div>

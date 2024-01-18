@@ -3275,6 +3275,66 @@ $(function () {
         clearTimeout(tId);
     });
 
+
+    /* Get Client Site duress Gps Rading Start*/
+    function initialize() {
+        var geocoder = new google.maps.Geocoder();
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+
+                gpsCoordinatesValues = position.coords.latitude + ',' + position.coords.longitude;
+                var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+                $("#hid_duressEnabledGpsCoordinates").val(gpsCoordinatesValues);
+                reverseGeocode(position.coords.latitude, position.coords.longitude);
+
+            });
+        }
+
+    }
+
+
+
+    function getDurressLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+                $("#duressEnabledGpsCoordinates").val(position.coords.latitude);
+                reverseGeocode(position.coords.latitude, position.coords.longitude);
+
+            });
+        }
+    }
+
+
+    function reverseGeocode(latitude, longitude) {
+        var latlng = new google.maps.LatLng(latitude, longitude);
+        var geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ 'latLng': latlng }, function (results, status) {
+            if (status === google.maps.GeocoderStatus.OK) {
+                if (results[0]) {
+                    var address = results[0].formatted_address;
+                    $("#hid_duressEnabledAddress").val(address);
+                    console.log('Reverse Geocoding Result: ', address);
+
+                } else {
+                    console.error('No results found');
+                }
+            } else {
+                console.error('Geocoder failed due to: ' + status);
+            }
+        });
+    }
+
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(showPosition, showError);
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+    }
+
+    /* Get Client Site duress Gps Rading end*/
+
+
     function GFG_Fun() {
         $.ajax({
             url: '/Guard/KeyVehicleLog?handler=SaveClientSiteDuress',
@@ -3282,7 +3342,9 @@ $(function () {
                 clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),
                 GuardId: $('#KeyVehicleLog_GuardLogin_GuardId').val(),
                 guardLoginId: $('#KeyVehicleLog_GuardLogin_Id').val(),
-                logBookId: $('#KeyVehicleLog_ClientSiteLogBookId').val()
+                logBookId: $('#KeyVehicleLog_ClientSiteLogBookId').val(),
+                gpsCoordinates: $("#hid_duressEnabledGpsCoordinates").val(),
+                enabledAddress: $("#hid_duressEnabledAddress").val()
             },
             type: 'POST',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },

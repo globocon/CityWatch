@@ -338,8 +338,13 @@
     });
 
     function submitGuardLogin() {
-        calculateDutyDateTime();
+        calculateDutyDateTime();        
         var mobileno = $('#GuardLogin_Guard_Mobile').val();
+        // Task p6#73_TimeZone issue -- added by Binoy -- Start
+        var form = document.getElementById('frmGuardLogin');
+        var formData = new FormData(form);
+        fillRefreshLocalTimeZoneDetails(formData, "GuardLogin", true);
+        // Task p6#73_TimeZone issue -- added by Binoy -- End
         if (mobileno == null || mobileno == '+61 4' || mobileno == '') {
             new MessageModal({ message: "<b>The Control Room requires your personal mobile number in case of emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.<p> This request occurs only once. Please do not provide false numbers to trick system. It is an OH&S requirement we can contact you in an Emergency </p> </b>" }).showWarning();
         }
@@ -348,7 +353,9 @@
             $.ajax({
                 url: '/Guard/Login?handler=LoginGuard',
                 type: 'POST',
-                data: $('#frmGuardLogin').serialize(),
+                data: formData,
+                processData: false,
+                contentType: false,
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
             }).done(function (result) {
                 if (result.success) {
@@ -428,6 +435,39 @@
             offDutyDate = new Date(offDutyDate.setDate(offDutyDate.getDate() + 1));
         $('#GuardLogin_OffDuty').val(parseDateInCsharpFormat(offDutyDate, $('#GuardLogin_OffDuty_Time').val()));
     }
+
+    // Task p6#73_TimeZone issue -- added by Binoy - Start
+    function fillRefreshLocalTimeZoneDetails(formData,modelname,isform) {        
+        // for reference https://moment.github.io/luxon/#/
+        var DateTime = luxon.DateTime;
+        var dt1 = DateTime.local();
+        let tz = dt1.zoneName + ' ' + dt1.offsetNameShort;
+        let diffTZ = dt1.offset
+        //let tzshrtnm = dt1.offsetNameLong;
+
+        const dt = new Date();
+        var tzjs = getTimezoneAbbreviation;
+        let tzshrtnm = tzjs(dt);      
+
+        const eventDateTimeLocal = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS');
+        const eventDateTimeLocalWithOffset = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS Z');        
+        if (isform) {
+            formData.append(modelname + ".EventDateTimeLocal", eventDateTimeLocal);
+            formData.append(modelname + ".EventDateTimeLocalWithOffset", eventDateTimeLocalWithOffset);
+            formData.append(modelname + ".EventDateTimeZone", tz);
+            formData.append(modelname + ".EventDateTimeZoneShort", tzshrtnm);
+            formData.append(modelname + ".EventDateTimeUtcOffsetMinute", diffTZ);
+        }
+        else {
+            formData.EventDateTimeLocal= eventDateTimeLocal;
+            formData.EventDateTimeLocalWithOffset= eventDateTimeLocalWithOffset;
+            formData.EventDateTimeZone= tz;
+            formData.EventDateTimeZoneShort= tzshrtnm;
+            formData.EventDateTimeUtcOffsetMinute= diffTZ;
+        }
+    }
+
+    // Task p6#73_TimeZone issue -- added by Binoy - End
 
     function highlightDutyDay(ctrlId, selected = true) {
         if (selected) $('#' + ctrlId).removeClass('font-weight-light').addClass('font-weight-bold');
@@ -530,12 +570,26 @@
         });
     });
 
-    function renderTime(value, record) {
-        if (value !== '') {
+    function renderTime(value, record) {        
+        if (record.eventDateTimeLocal != null && record.eventDateTimeLocal != '') {            
+            const date = new Date(record.eventDateTimeLocal);
+            var DateTime = luxon.DateTime;
+            var dt1 = DateTime.fromJSDate(date);
+            var dt = dt1.toFormat('HH:mm') + ' Hrs ' + record.eventDateTimeZoneShort; 
+            return dt;
+        }
+        else if (value !== '') {
             const date = new Date(value);
             return date.toLocaleString('en-Au', { hourCycle: 'h23', timeStyle: 'short' }) + ' Hrs';
         }
     }
+
+    // Project 4 , Task 48, Audio notification, Added By Binoy -- Start
+    let audiourl = '/NotificationSound/mixkit-bell-notification-933.wav'
+    const audio = new Audio(audiourl);
+    let audioplayedlist = [];
+    let isControlRoomLogBook = $('#inpHdisControlRoomLogBook').val() == 'false' ? false : true ;
+    // Project 4 , Task 48, Audio notification, Added By Binoy -- End
 
     let gridGuardLog;
 
@@ -566,11 +620,12 @@
             inlineEditing: { mode: 'command', managementColumn: false },
             columns: [
                 { field: 'clientSiteId', hidden: true },               
-                { field: 'eventDateTime', title: 'Time', width: 50, renderer: function (value, record) { return renderTime(value, record, false); } },
-                { field: 'notes', title: 'Event / Notes', width: 450, editor: logBookNotesEditor, renderer: renderLogBookNotes },
-                { field: 'guardInitials', title: 'Guard Initials', width: 50, renderer: function (value, record) { return record.guardLogin ? record.guardLogin.guard.initial : ''; } },
+                { field: 'eventDateTime', title: 'Time', width: 100, renderer: function (value, record) { return renderTime(value, record, false); } },
+                { field: 'notes', title: 'Event / Notes', width: 350, editor: logBookNotesEditor, renderer: renderLogBookNotes },
+                { field: 'guardInitials', title: 'Guard Initials', width: 100, renderer: function (value, record) { return record.guardLogin ? record.guardLogin.guard.initial : ''; } },
                 { width: 75, renderer: renderDailyLogManagement },
-                { field: 'rcPushMessageId', hidden: true }
+                { field: 'rcPushMessageId', hidden: true },
+                { field: 'playNotificationSound', hidden: true, renderer: playNotificationSound }
             ]
         };
     }
@@ -586,6 +641,16 @@
         return record.notes;
     }
 
+    // Project 4 , Task 48, Audio notification, Added By Binoy -- Start
+    function playNotificationSound(value, record) {          
+        if ((record.rcPushMessageId != null) && (record.rcPushMessageId != '') && (record.rcPushMessageId > 0)
+            && (value == true) && (!isControlRoomLogBook)) {
+            audioplayedlist.push(record.id);                  
+        }               
+        return;
+    }
+     // Project 4 , Task 48, Audio notification, Added By Binoy -- End
+
     function logBookNotesEditor($editorContainer, value) {
 
         var yes = $('#IsAssignedLogBook').val();
@@ -597,7 +662,7 @@
             var textAreaForNotes = $('<textarea class="form-control" rows="4" maxlength="2048"  >' + value + '</textarea > ');
             $editorContainer.append(textAreaForNotes);
         }
-        
+
     }
 
     function renderDailyLogManagement(value, record, $cell, $displayEl, id) {
@@ -706,6 +771,7 @@
                 }
                 /* add for check if dark mode is on end*/
             }
+
         });
         gridGuardLog.on('rowSelect', function (e, $row, id, record) {
             /*timer pause while editing*/
@@ -726,6 +792,9 @@
             /*timer pause while editing*/
             isPaused = true;
             const data = $.extend(true, {}, record);
+            console.log(data);
+            fillRefreshLocalTimeZoneDetails(data, "", false);
+            console.log(data);
             const token = $('input[name="__RequestVerificationToken"]').val();
             $('#loader').show();
             $.ajax({
@@ -780,7 +849,50 @@
                 gridGuardLog.reload();
             }
         });
+
+        // Project 4 , Task 48, Audio notification, Added By Binoy -- Start
+        gridGuardLog.on('dataBound', function (e, records, totalRecords) { 
+            if (isControlRoomLogBook) {
+                // Get Is acknowledge from db
+                $.ajax({
+                    url: '/Guard/DailyLog?handler=GuardLogsAcknowledgedForControlroom',
+                    type: 'GET',
+                }).done(function (result) {
+                    if (result != null && result.length > 0) {
+                        //Can be repeated if needed using loop through id in result
+                        audio.play();
+                        audioplayedlist = [];                        
+                        result.forEach((item) => {
+                            audioplayedlist.push(item);
+                        });
+                        UpdatePlayedNotification();
+                    }
+                });
+            }
+            else if (audioplayedlist.length > 0) {
+                // Play notification sound
+                audio.play();
+                UpdatePlayedNotification();
+            }         
+        });
+        // Project 4 , Task 48, Audio notification, Added By Binoy -- End
     }
+
+    // Project 4 , Task 48, Audio notification, Added By Binoy -- Start
+    function UpdatePlayedNotification() {
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            url: '/Guard/DailyLog?handler=GuardLogsUpdateNotificationSoundStatus',
+            data: { logBookId: audioplayedlist, isControlRoomLogBook: isControlRoomLogBook },
+            dataType: 'json',
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function (result) {
+            audioplayedlist = [];
+            return;
+        });
+    }
+    // Project 4 , Task 48, Audio notification, Added By Binoy -- End
 
     let gridGuardLogPreviousDay;
 
@@ -833,9 +945,16 @@
         $('#GuardLog_TimePartOnly').val($('#new_log_time').val());
         $('#loader').show();
         $('#validation-summary ul').html('');
+        // Task p6#73_TimeZone issue -- added by Binoy -- Start
+        var form = document.getElementById('form_newlog');
+        var formData = new FormData(form);
+        fillRefreshLocalTimeZoneDetails(formData, "GuardLog",true);
+        // Task p6#73_TimeZone issue -- added by Binoy -- End
         $.ajax({
             url: '/Guard/DailyLog?handler=SaveGuardLog',
-            data: $('#form_newlog').serialize(),
+            data: formData,
+            processData: false,
+            contentType: false,
             type: 'POST',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (result) {
@@ -2699,7 +2818,16 @@
             { data: 'expiryDate', width: "8%" },
             { data: 'reminder1', width: "3%" },
             { data: 'reminder2', width: "3%" },
-            { data: 'fileName', width: "10%" },
+            {
+                data: 'fileName',
+                render: function (data, type, row, meta) {
+                    if (data)
+                        return '<a href="/uploads/guards/4/' + data + '" target="_blank">' + data + '</a>';
+                    return '-';
+                },
+                width: "10%"
+            },
+
             {
                 targets: -1,
                 data: null,
@@ -3117,8 +3245,17 @@
             Notifications = controlRoomMessage + '</br>' + '     -  ' + 'ACKNOWLEDGED';
 
         }
+        // Task p6#73_TimeZone issue -- added by Binoy - Start
+        var tmdata = {
+            'EventDateTimeLocal' : null,
+            'EventDateTimeLocalWithOffset': null,
+            'EventDateTimeZone': null,
+            'EventDateTimeZoneShort': null,
+            'EventDateTimeUtcOffsetMinute': null,
+        };
 
-
+        fillRefreshLocalTimeZoneDetails(tmdata,"",false)
+        // Task p6#73_TimeZone issue -- added by Binoy - End
         $.ajax({
             url: '/Guard/DailyLog?handler=SavePushNotificationTestMessages',
             type: 'POST',
@@ -3126,7 +3263,8 @@
                 guardLoginId: $('#GuardLog_GuardLoginId').val(),
                 clientSiteLogBookId: $('#GuardLog_ClientSiteLogBookId').val(),
                 Notifications: Notifications,
-                rcPushMessageId: $('#rcPushMessageId').val()
+                rcPushMessageId: $('#rcPushMessageId').val(),
+                tmdata: tmdata
 
             },
             dataType: 'json',
@@ -3164,37 +3302,98 @@
     $("#duress_btn").mouseup(function () {
         clearTimeout(tId);
     });
-
+   
     function GFG_Fun() {
         if ($("#duress_status").text() !== "Active") {
-            var id = $("#duress_status").text();
-            $.ajax({
-                url: '/Guard/DailyLog?handler=SaveClientSiteDuress',
-                data: {
-                    clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
-                    guardLoginId: $('#GuardLog_GuardLoginId').val(),
-                    logBookId: $('#GuardLog_ClientSiteLogBookId').val(),
-                    guardId: $('#GuardLog_GuardLogin_GuardId').val(),
-                },
-                type: 'POST',
-                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-            }).done(function (result) {
-                if (result.status) {
-                    $('#duress_btn').removeClass('normal').addClass('active');
-                    $("#duress_status").addClass('font-weight-bold');
-                    $("#duress_status").text("Active");
-                    /*timer pause while editing*/
-                    isPaused = false;
-                }
-                gridGuardLog.clear();
-                gridGuardLog.reload();
-            });
 
-        }
+                $.ajax({
+                    url: '/Guard/DailyLog?handler=SaveClientSiteDuress',
+                    data: {
+                        clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
+                        guardLoginId: $('#GuardLog_GuardLoginId').val(),
+                        logBookId: $('#GuardLog_ClientSiteLogBookId').val(),
+                        guardId: $('#GuardLog_GuardLogin_GuardId').val(),
+                        gpsCoordinates: $("#hid_duressEnabledGpsCoordinates").val(),
+                        enabledAddress: $("#hid_duressEnabledAddress").val()
+                    },
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (result) {
+                    if (result.status) {
+                        $('#duress_btn').removeClass('normal').addClass('active');
+                        $("#duress_status").addClass('font-weight-bold');
+                        $("#duress_status").text("Active");
+                        /*timer pause while editing*/
+                        isPaused = false;
+                    }
+                    gridGuardLog.clear();
+                    gridGuardLog.reload();
+                });
+
+            }
+        
     }
 
 
 });
+
+/* Get Client Site duress Gps Rading Start*/
+function initialize() {
+    var geocoder = new google.maps.Geocoder();
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (position) {
+
+            gpsCoordinatesValues = position.coords.latitude + ',' + position.coords.longitude;
+            var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+            $("#hid_duressEnabledGpsCoordinates").val(gpsCoordinatesValues);
+            reverseGeocode(position.coords.latitude, position.coords.longitude);
+            
+        });
+    }
+
+}
+
+
+
+function getDurressLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (position) {
+            $("#duressEnabledGpsCoordinates").val(position.coords.latitude); 
+            reverseGeocode(position.coords.latitude, position.coords.longitude);
+            
+        });
+    }
+}
+
+
+function reverseGeocode(latitude, longitude) {
+    var latlng = new google.maps.LatLng(latitude, longitude);
+    var geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ 'latLng': latlng }, function (results, status) {
+        if (status === google.maps.GeocoderStatus.OK) {
+            if (results[0]) {
+                var address = results[0].formatted_address;
+                $("#hid_duressEnabledAddress").val(address);  
+                console.log('Reverse Geocoding Result: ', address);
+               
+            } else {
+                console.error('No results found');
+            }
+        } else {
+            console.error('Geocoder failed due to: ' + status);
+        }
+    });
+}
+
+function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition, showError);
+    } else {
+        alert("Geolocation is not supported by this browser.");
+    }
+}
+
+/* Get Client Site duress Gps Rading end*/
 
 
 /*to get the warning - start*/

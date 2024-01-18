@@ -36,7 +36,20 @@ namespace CityWatch.Data.Models
         public GuardLogin GuardLogin { get; set; }
 
         public int? RcPushMessageId { get; set; }
-        
+
+        public DateTime? EventDateTimeLocal { get; set; }
+
+        public DateTimeOffset? EventDateTimeLocalWithOffset { get; set; }
+
+        public string EventDateTimeZone { get; set; }
+
+        public string EventDateTimeZoneShort { get; set; }
+
+        public int? EventDateTimeUtcOffsetMinute { get; set; }
+
+        // Project 4 , Task 48, Audio notification, Added By Binoy
+        public bool? PlayNotificationSound { get; set; } = true;
+
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
