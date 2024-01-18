@@ -128,6 +128,8 @@ namespace CityWatch.Data.Providers
         /* new Change by dileep for p4 task 17 end*/
 
 
+        //p4#48 AudioNotification - Binoy - 12-01-2024
+        public void UpdateDuressAlarmPlayedStatus();
 
 
         //listing clientsites for radio check
@@ -184,12 +186,17 @@ namespace CityWatch.Data.Providers
 
         void CopyPreviousDaysPushMessageToLogBook(List<RadioCheckPushMessages> previousDayPushmessageList, int logBookId, int guardLoginId);
 
+        List<KeyVehicleLogProfile> GetKeyVehicleLogVisitorProfile();
+        List<KeyVehicleLog> GetKeyVehicleLogsByID(int Id);
+
+
         // Project 4 , Task 48, Audio notification, Added By Binoy
         void UpdateNotificationSoundPlayedStatusForGuardLogs(int logBookId,bool isControlRoomLogBook);
 
         List<int> GetGuardLogsNotAcknowledgedForNotificationSound();
 
         void CopyPreviousDaysDuressToLogBook(List<RadioCheckPushMessages> previousDayDuressList, int logBookId, int guardLoginId);
+
 
     }
 
@@ -3123,6 +3130,29 @@ namespace CityWatch.Data.Providers
                 }
 
             }
+
+        }
+        public List<KeyVehicleLogProfile> GetKeyVehicleLogVisitorProfile()
+        {
+            return _context.KeyVehicleLogVisitorProfiles.ToList();
+        }
+        public List<KeyVehicleLog> GetKeyVehicleLogsByID(int Id)
+        {
+            var results = _context.KeyVehicleLogs.Where(z => z.Id == Id);
+
+
+            return results.ToList();
+        }
+
+        public void UpdateDuressAlarmPlayedStatus()
+        {
+            var alarmplayed = _context.ClientSiteDuress.Where(x => x.IsEnabled == true && x.PlayDuressAlarm == true);
+
+            foreach (var a in alarmplayed)
+            {
+                a.PlayDuressAlarm = false;
+            }
+            _context.SaveChanges();
 
         }
 

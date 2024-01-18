@@ -870,6 +870,14 @@ namespace CityWatch.Web.Pages.Radio
         }
         //code added for clientsite dropdown stop
 
+        //p4#48 AudioNotification - Binoy - 12-01-2024 -- Start
+        public JsonResult OnPostUpdateDuressAlarmPlayedStatus()
+        {
+            _guardLogDataProvider.UpdateDuressAlarmPlayedStatus();
+            return new JsonResult(new { status="played"});
+        }
+        //p4#48 AudioNotification - Binoy - 12-01-2024 -- End
+
         //code added for ActionList Send start
         public JsonResult OnPostSaveActionList(string Notifications, string Subject, int[] ClientType, int[] clientSiteId,string AlarmKeypadCode,string Action1,string Physicalkey,string Action2,string SiteCombinationLook,string Action3,string Action4,string Action5,string CommentsForControlRoomOperator)
         {
@@ -963,10 +971,5 @@ namespace CityWatch.Web.Pages.Radio
             return new JsonResult(_guardLogDataProvider.GetActionlist(clientSiteId));
         }
         //code added for ActionListSend stop
-
-
-
-
-
     }
 }
