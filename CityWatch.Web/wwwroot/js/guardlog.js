@@ -1468,6 +1468,15 @@
             alert('Please select a client site');
             return;
         }
+        //calculate month difference-start
+        var date1 = new Date($('#vklAudtitFromDate').val());
+        var date2 = new Date($('#vklAudtitToDate').val());
+        var monthdiff = monthDiff(date1, date2);
+        if (monthdiff > 6) {
+            alert('Date Range is  greater than 6 months');
+            return false;
+        }
+        //calculate month difference-end
         $('#KeyVehicleLogAuditLogRequest_ClientSiteId').val($('#vklClientSiteId').val());
         $('#KeyVehicleLogAuditLogRequest_LogFromDate').val($('#vklAudtitFromDate').val());
         $('#KeyVehicleLogAuditLogRequest_LogToDate').val($('#vklAudtitToDate').val());
@@ -3599,6 +3608,18 @@ let calendarEventsDetails = $('#calendarEventsDetails').grid({
 //    ],
 
 //});
+
+//calculate month difference-start
+
+function monthDiff(d1, d2) {
+    var months;
+    months = (d2.getFullYear() - d1.getFullYear()) * 12;
+    months -= d1.getMonth();
+    months += d2.getMonth();
+    return months <= 0 ? 0 : months;
+}
+ //calculate month difference-end
+
 /*to view thw audit log report-start*/
 $('#vehicle_key_log_audit_history').DataTable({
     autoWidth: false,
@@ -3635,5 +3656,6 @@ $('#btnGenerateVklAuditLogReport').on('click', function () {
     });
 });
 /*to view thw audit log report-end*/
+
 
 

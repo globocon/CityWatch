@@ -110,6 +110,15 @@
             alert('From date and to date is required');
             return false;
         }
+         //calculate month difference-start
+        var date1 = new Date($('#ReportRequest_FromDate').val());
+        var date2 = new Date($('#ReportRequest_ToDate').val());
+        var monthdiff = monthDiff(date1, date2); 
+        if (monthdiff > 6) {
+            alert('Date Range is  greater than 6 months');
+            return false;
+        }
+        //calculate month difference-end
         $('#loader-p').show();
         $.ajax({
             url: '/Reports/PatrolData?handler=GenerateReport',
@@ -130,6 +139,15 @@
             $('#count_by_area_ward').html(response.chartData.areaWardPercentage.length);
             $('#count_color_code').html(response.chartData.colorCodePercentage.length);            
             $('#count_by_ir').html(response.chartData.eventTypeCount.map(x => x.value).reduce((f, s) => f + s, 0));
+
+            /* expanding grapph - start*/
+            drawPieChart(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site1");
+            drawPieChart(response.chartData.areaWardPercentage, response.recordCount, "svg#pie_chart_ir_by_areaward1");
+            drawPieChart(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode1")
+            $('#count_by_site1').html(response.chartData.sitePercentage.length);
+            $('#count_by_area_ward1').html(response.chartData.areaWardPercentage.length);
+            $('#count_color_code1').html(response.chartData.colorCodePercentage.length);   
+            /* expanding grapph - start*/
         }).fail(function () {
         }).always(function () {
             $('#loader-p').hide();
@@ -323,3 +341,22 @@
             });
     }
 });
+ //calculate month difference-start
+
+function monthDiff(d1, d2) {
+    var months;
+    months = (d2.getFullYear() - d1.getFullYear()) * 12;
+    months -= d1.getMonth();
+    months += d2.getMonth();
+    return months <= 0 ? 0 : months;
+}
+$('#btncount_by_site').on('click', function () {
+    $('#modelIRRecordsbySiteGraph').modal('show');
+});
+$('#btncount_by_area_ward').on('click', function () {
+    $('#modelIRRecordsbyAreaWardGraph').modal('show');
+});
+$('#btncount_color_code').on('click', function () {
+    $('#modelIRRecordsbyColorCodeGraph').modal('show');
+});
+ //calculate month difference-end
