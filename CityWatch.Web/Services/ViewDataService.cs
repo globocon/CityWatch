@@ -5,6 +5,7 @@ using CityWatch.Web.Models;
 using DocumentFormat.OpenXml.Office.CustomUI;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Azure;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -93,6 +94,8 @@ namespace CityWatch.Web.Services
         string GetClientSiteKeyNo(int keyId, int clientSiteId);
 
         List<ClientSiteKey> GetClientSiteKeysbySearchDesc(int clientSiteId, string searchKeyDesc);
+        List<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistoryNew(int profileId);
+        IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistory();
     }
 
     public class ViewDataService : IViewDataService
@@ -1000,6 +1003,28 @@ namespace CityWatch.Web.Services
         }
         //}
         //code added for Guard Access Dropdown stop
+        public IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistory()
+        {
+            var kvlVisitorProfile = _guardLogDataProvider.GetKeyVehicleLogVisitorProfile();
+            var history = new List<KeyVehicleLogAuditHistory>();
+            foreach (var item in kvlVisitorProfile)
+            {
+                var hist = GetKeyVehicleLogAuditHistoryNew(item.Id);
+                foreach(var item2 in hist)
+                {
+                    item2.KeyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogsByID(item2.KeyVehicleLogId).FirstOrDefault();
+                    
+                }
+                history.AddRange(hist); 
+            }
 
+            return history;
+        }
+        public List<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistoryNew(int profileId)
+        {
+            return _guardLogDataProvider.GetAuditHistory(profileId)
+                .OrderByDescending(z => z.Id)
+                .ThenByDescending(z => z.AuditTime).ToList();
+        }
     }
 }

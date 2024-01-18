@@ -3284,6 +3284,43 @@ $(function () {
     });
 
 
+    /*for touch devices Start */
+    var touchTimer = 0;
+    $('#kv_duress_btn').on('touchstart', function (e) {
+        // Prevent the default behavior
+        e.preventDefault();
+
+        if ($("#duress_status").text() !== "Active") {
+            console.log('click');
+            /*timer pause while editing*/
+            isPaused = true;
+            touchTimer = setTimeout(GFG_Fun, 2500);
+            console.log(isPaused);
+            console.log(touchTimer);
+            gridGuardLog.clear();
+            gridGuardLog.reload();
+        }
+        return false;
+    });
+
+    //$('#duress_btn').on('touchend', function () {
+    console.log('stoped');
+    // If there is any movement or the touch ends, clear the timer
+    //clearTimeout(touchTimer);
+    //isPaused = false;
+    //});
+
+    $('#kv_duress_btn').on('pointerup', function (event) {
+        // Your logic
+        console.log('stoped2');
+        clearTimeout(touchTimer);
+        isPaused = false;
+    });
+
+    /*for touch devices end */
+
+
+
     /* Get Client Site duress Gps Rading Start*/
     function initialize() {
         var geocoder = new google.maps.Geocoder();

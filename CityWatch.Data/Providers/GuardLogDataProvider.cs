@@ -187,12 +187,17 @@ namespace CityWatch.Data.Providers
 
         void CopyPreviousDaysPushMessageToLogBook(List<RadioCheckPushMessages> previousDayPushmessageList, int logBookId, int guardLoginId, GuardLog tmzdata);
 
+        List<KeyVehicleLogProfile> GetKeyVehicleLogVisitorProfile();
+        List<KeyVehicleLog> GetKeyVehicleLogsByID(int Id);
+
+
         // Project 4 , Task 48, Audio notification, Added By Binoy
         void UpdateNotificationSoundPlayedStatusForGuardLogs(int logBookId,bool isControlRoomLogBook);
 
         List<int> GetGuardLogsNotAcknowledgedForNotificationSound();
 
         void CopyPreviousDaysDuressToLogBook(List<RadioCheckPushMessages> previousDayDuressList, int logBookId, int guardLoginId, GuardLog tmzdata);
+
 
     }
 
@@ -3223,6 +3228,17 @@ namespace CityWatch.Data.Providers
 
             }
 
+        }
+        public List<KeyVehicleLogProfile> GetKeyVehicleLogVisitorProfile()
+        {
+            return _context.KeyVehicleLogVisitorProfiles.ToList();
+        }
+        public List<KeyVehicleLog> GetKeyVehicleLogsByID(int Id)
+        {
+            var results = _context.KeyVehicleLogs.Where(z => z.Id == Id);
+
+
+            return results.ToList();
         }
 
         public void UpdateDuressAlarmPlayedStatus()

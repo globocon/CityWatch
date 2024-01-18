@@ -1725,6 +1725,76 @@ $('#btnSendActionList').on('click', function () {
     }
 });
 
+$('#btnSendActionListGlobal').on('click', function () {
+
+    var clientSiteId = $('#dglClientSiteIdActionList2All').val();
+    var Notifications = $('#txtMessageActionList1All').val();
+    var Subject = $('#txtGlobalNotificationSubjectAll').val();
+
+    var ClientType = $('#dglClientTypeActionList2All').val();
+    var ClientSite = $('#dglClientSiteIdActionList2All').val();
+    var AlarmKeypadCode = $('#Site_Alarm_Keypad_codeAll').val();
+    var Action1 = $('#Action1All').val();
+    var Physicalkey = $('#site_Physical_keyAll').val();
+    var Action2 = $('#Action2All').val();
+    var SiteCombinationLook = $('#Site_Combination_LookAll').val();
+    var Action3 = $('#Action3All').val();
+    var Action4 = $('#Action4All').val();
+    var Action5 = $('#Action5All').val();
+    var CommentsForControlRoomOperator = $('#txtCommentsAll').val();
+
+    if (Notifications === '') {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
+    }
+
+    else if (chkClientType == true && ClientType == null) {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
+    }
+    else if (ClientType == '') {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
+    }
+    else if (ClientSite == '') {
+        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client site ');
+    }
+    else {
+
+        $('#Access_permission_RC_statusAll').hide();
+        $('#Access_permission_RC_statusAll').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Sending Email. Please wait...').show();
+        $.ajax({
+            url: '/RadioCheckV2?handler=SaveActionListGlobal',
+            type: 'POST',
+            data: {
+                Notifications: Notifications,
+                Subject: Subject,
+                ClientType: ClientType,
+                clientSiteId: clientSiteId,
+                AlarmKeypadCode: AlarmKeypadCode,
+                Action1: Action1,
+                Physicalkey: Physicalkey,
+                Action2: Action2,
+                SiteCombinationLook: SiteCombinationLook,
+                Action3: Action3,
+                Action4: Action4,
+                Action5: Action5,
+                CommentsForControlRoomOperator: CommentsForControlRoomOperator
+
+            },
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data.success == true) {
+                $('#ActionListControlRoomModal').modal('hide');
+                $('#Access_permission_RC_statusAll').hide();
+            }
+            else {
+                displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
+            }
+            //$('#selectRadioStatus').val('');
+            //$('#btnRefreshActivityStatus').trigger('click');
+        });
+    }
+});
+
 
 $('#dglClientSiteIdActionList').on('change', function () {
     $('#Site_Alarm_Keypad_code').val('');
@@ -2077,6 +2147,33 @@ $('#dglClientTypeActionListAll').on('change', function () {
     });
 
 
+});
+$('#dglClientTypeActionList2All').on('change', function () {
+    const clientTypeId = $(this).val();
+    const clientSiteControl = $('#dglClientSiteIdActionList2All');
+    clientSiteControl.html('');
+    $.ajax({
+        url: '/RadioCheckV2?handler=ClientSitesNew',
+        type: 'GET',
+        data: {
+            typeId: clientTypeId
+
+        },
+        dataType: 'json',
+        success: function (data) {
+            $('#dglClientSiteIdActionList2All').append(new Option('Select', '', true, true));
+            data.map(function (site) {
+                $('#dglClientSiteIdActionList2All').append(new Option(site.name, site.id, false, false));
+            });
+
+        }
+    });
+
+
+});
+$('#dglClientSiteIdActionList2All').select({
+    placeholder: 'Select',
+    theme: 'bootstrap4'
 });
 $('#dglClientSiteIdActionListAll').select({
     placeholder: 'Select',

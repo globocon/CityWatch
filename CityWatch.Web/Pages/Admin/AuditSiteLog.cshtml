@@ -112,3 +112,31 @@
 </div>
 <partial name="_MessagePopup" />
 @Html.AntiForgeryToken()
+<div class="modal" tabindex="-1" role="dialog" id="vkl-auditlog-modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-gear mr-2" aria-hidden="true"></i>Audit Log History : <span id="vkl-profile-title-rego"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                
+                <div class="row m-0">
+                    <div class="col-md-12">
+                        <table class="table table-bordered table-sm" width="100%" id="vehicle_key_log_audit_history">
+                            <thead>
+                                <tr>
+                                    <th width="35%">Audit Date</th>
+                                    <th width="15%">Guard Initial</th>
+                                    <th width="50%">Audit Message</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
