@@ -966,7 +966,7 @@ namespace CityWatch.Web.Pages.Radio
             return new JsonResult(new { success, message });
         }
 
-        public JsonResult OnPostSaveActionListGlobal(string Notifications, string Subject, int[] ClientType, int[] clientSiteId, string AlarmKeypadCode, string Action1, string Physicalkey, string Action2, string SiteCombinationLook, string Action3, string Action4, string Action5, string CommentsForControlRoomOperator)
+        public JsonResult OnPostSaveActionListGlobal(string Notifications, string Subject, int[] ClientType, int[] clientSiteId, string AlarmKeypadCode, string Action1, string Physicalkey, string Action2, string SiteCombinationLook, string Action3, string Action4, string Action5, string CommentsForControlRoomOperator, GuardLog tmzdata)
         {
             var success = true;
             var message = "success";
@@ -996,7 +996,7 @@ namespace CityWatch.Web.Pages.Radio
                     }
                     /* log book entry to citywtch control room */
                     var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
-                    _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(loginguardid, 0, Subject, Notifications, IrEntryType.Alarm, 1, 0);
+                    _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(loginguardid, 0, Subject, Notifications, IrEntryType.Alarm, 1, 0,tmzdata);
                     foreach (var clientSiteTypeID in clientSitesClientType)
                     {
                         EmailSender(clientSiteTypeID.SiteEmail, clientSiteTypeID.Id, Subject, ActionListMessage);
@@ -1013,7 +1013,7 @@ namespace CityWatch.Web.Pages.Radio
                     }
                     /* log book entry to citywtch control room */
                     var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
-                    _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(loginguardid, 0, Subject, ActionListMessage, IrEntryType.Alarm, 1, 0);
+                    _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(loginguardid, 0, Subject, ActionListMessage, IrEntryType.Alarm, 1, 0, tmzdata);
                     foreach (var clientSiteTypeID in clientSitesClientType)
                     {
                         EmailSender(clientSiteTypeID.SiteEmail, clientSiteTypeID.Id, Subject, ActionListMessage);

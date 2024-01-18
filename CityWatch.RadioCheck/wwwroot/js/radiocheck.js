@@ -1742,7 +1742,9 @@ $('#btnSendActionListGlobal').on('click', function () {
     var Action4 = $('#Action4All').val();
     var Action5 = $('#Action5All').val();
     var CommentsForControlRoomOperator = $('#txtCommentsAll').val();
-
+    // Task p6#73_TimeZone issue -- added by Binoy - Start   
+    fillRefreshLocalTimeZoneDetails(tmzdata, "", false);
+    // Task p6#73_TimeZone issue -- added by Binoy - End
     if (Notifications === '') {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
     }
@@ -1776,7 +1778,8 @@ $('#btnSendActionListGlobal').on('click', function () {
                 Action3: Action3,
                 Action4: Action4,
                 Action5: Action5,
-                CommentsForControlRoomOperator: CommentsForControlRoomOperator
+                CommentsForControlRoomOperator: CommentsForControlRoomOperator,
+                tmzdata: tmzdata
 
             },
             dataType: 'json',
