@@ -946,6 +946,74 @@ namespace CityWatch.Web.Pages.Radio
             }
             return new JsonResult(new { success, message });
         }
+
+        public JsonResult OnPostSaveActionListGlobal(string Notifications, string Subject, int[] ClientType, int[] clientSiteId, string AlarmKeypadCode, string Action1, string Physicalkey, string Action2, string SiteCombinationLook, string Action3, string Action4, string Action5, string CommentsForControlRoomOperator)
+        {
+            var success = true;
+            var message = "success";
+            var ActionListMessage = "AlarmKeypadCode: " + AlarmKeypadCode + "\n" +
+                      "PhysicalKey: " + Physicalkey + "\n" +
+                      "CombinationLook: " + SiteCombinationLook + "\n" +
+                      "Action1: " + Action1 + "\n" +
+                      "Action2: " + Action2 + "\n" +
+                      "Action3: " + Action3 + "\n" +
+                      "Action4: " + Action4 + "\n" +
+                      "Action5: " + Action5 + "\n" +
+                      "CommentsForControlRoomOperator: " + CommentsForControlRoomOperator + "\n" +
+                      "Message: " + Notifications;
+            try
+            {
+
+
+                if (clientSiteId.Length == 0)
+                {
+                    var clientSitesClientType = _guardLogDataProvider.GetAllClientSites().Where(x => ClientType.Contains(x.TypeId));
+                    foreach (var clientSiteTypeID in clientSitesClientType)
+                    {
+
+                        LogBookDetails(clientSiteTypeID.Id, ActionListMessage, Subject);
+
+
+                    }
+                    /* log book entry to citywtch control room */
+                    var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
+                    _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(loginguardid, 0, Subject, Notifications, IrEntryType.Alarm, 1, 0);
+                    foreach (var clientSiteTypeID in clientSitesClientType)
+                    {
+                        EmailSender(clientSiteTypeID.SiteEmail, clientSiteTypeID.Id, Subject, ActionListMessage);
+                    }
+
+                }
+                else
+                {
+                    var clientSitesClientType = _guardLogDataProvider.GetAllClientSites().Where(x => clientSiteId.Contains(x.Id));
+                    foreach (var clientSiteTypeID in clientSitesClientType)
+                    {
+
+                        LogBookDetails(clientSiteTypeID.Id, Notifications, Subject);
+                    }
+                    /* log book entry to citywtch control room */
+                    var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
+                    _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(loginguardid, 0, Subject, ActionListMessage, IrEntryType.Alarm, 1, 0);
+                    foreach (var clientSiteTypeID in clientSitesClientType)
+                    {
+                        EmailSender(clientSiteTypeID.SiteEmail, clientSiteTypeID.Id, Subject, ActionListMessage);
+                    }
+
+                }
+
+
+
+
+
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
         public JsonResult OnPostActionList(int clientSiteId)
         {
             return new JsonResult(_guardLogDataProvider.GetActionlist(clientSiteId));
