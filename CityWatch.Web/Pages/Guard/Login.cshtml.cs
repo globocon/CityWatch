@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
@@ -84,6 +85,18 @@ namespace CityWatch.Web.Pages.Guard
                 var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Name == GuardLogin.ClientTypeName);
                 GuardLogin.ClientSite = _clientDataProvider.GetClientSites(clientType.Id).SingleOrDefault(z => z.Name == GuardLogin.ClientSiteName);
 
+                // Task p6#73_TimeZone issue -- added by Binoy - Start
+                var guardLog = new GuardLog()
+                {
+                    EventDateTimeLocal = GuardLogin.EventDateTimeLocal,
+                    EventDateTimeLocalWithOffset = GuardLogin.EventDateTimeLocalWithOffset,
+                    EventDateTimeZone = GuardLogin.EventDateTimeZone,
+                    EventDateTimeZoneShort = GuardLogin.EventDateTimeZoneShort,
+                    EventDateTimeUtcOffsetMinute = GuardLogin.EventDateTimeUtcOffsetMinute,
+                    PlayNotificationSound = false
+                };
+                // Task p6#73_TimeZone issue -- added by Binoy - End
+
                 //GuardLogin.ClientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(z => z.Name == GuardLogin.ClientSiteName);
                 if (GuardLogin.IsNewGuard)
                 {
@@ -140,7 +153,7 @@ namespace CityWatch.Web.Pages.Guard
                         var previousPuShMessages = _clientDataProvider.GetPushMessagesNotAcknowledged(GuardLogin.ClientSite.Id, DateTime.Today.AddDays(-1));
                         if (previousPuShMessages != null)
                         {
-                            _guardLogDataProvider.CopyPreviousDaysPushMessageToLogBook(previousPuShMessages, logBookId, guardLoginId);
+                            _guardLogDataProvider.CopyPreviousDaysPushMessageToLogBook(previousPuShMessages, logBookId, guardLoginId, guardLog);
                         }
                     }
 
@@ -148,7 +161,7 @@ namespace CityWatch.Web.Pages.Guard
                     var previousDuressMessages = _clientDataProvider.GetDuressMessageNotAcknowledged(GuardLogin.ClientSite.Id, DateTime.Today.AddDays(-1));
                     if (previousDuressMessages != null)
                     {
-                        _guardLogDataProvider.CopyPreviousDaysDuressToLogBook(previousDuressMessages, logBookId, guardLoginId);
+                        _guardLogDataProvider.CopyPreviousDaysDuressToLogBook(previousDuressMessages, logBookId, guardLoginId, guardLog);
                     }
                     var clientSiteForLogbook = _clientDataProvider.GetClientSiteForRcLogBook();
                     if (clientSiteForLogbook.Count != 0)
@@ -158,11 +171,9 @@ namespace CityWatch.Web.Pages.Guard
                             var previousDuressMessagesForControlRoom = _clientDataProvider.GetDuressMessageNotAcknowledgedForControlRoom(DateTime.Today.AddDays(-1));
                             if (previousDuressMessagesForControlRoom != null)
                             {
-
                                 foreach (var items in previousDuressMessagesForControlRoom)
-                                {
-                                    _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(GuardLogin.Guard.Id, GuardLogin.Guard.Id, null, "Duress Alarm Activated", IrEntryType.Alarm, 1, 0);
-
+                                {  
+                                    _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(GuardLogin.Guard.Id, GuardLogin.Guard.Id, null, "Duress Alarm Activated", IrEntryType.Alarm, 1, 0, guardLog);
                                 }
                                 //_guardLogDataProvider.CopyPreviousDaysDuressToLogBook(previousDuressMessagesForControlRoom, logBookId, guardLoginId);
                             }
@@ -199,8 +210,12 @@ namespace CityWatch.Web.Pages.Guard
                                 GuardLoginTime = DateTime.Now,
                                 /* New Field Added for Logoff the Gurad after OffDuty in Rc*/
                                 OnDuty = GuardLogin.OnDuty,
-                                OffDuty = GuardLogin.OffDuty
-
+                                OffDuty = GuardLogin.OffDuty,
+                                GuardLoginTimeLocal = guardLog.EventDateTimeLocal,
+                                GuardLoginTimeLocalWithOffset = guardLog.EventDateTimeLocalWithOffset,
+                                GuardLoginTimeZone = guardLog.EventDateTimeZone,
+                                GuardLoginTimeZoneShort = guardLog.EventDateTimeZoneShort,
+                                GuardLoginTimeUtcOffsetMinute = guardLog.EventDateTimeUtcOffsetMinute
                             };
                             _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
                         }
@@ -222,7 +237,12 @@ namespace CityWatch.Web.Pages.Guard
                                         GuardLoginTime = DateTime.Now,
                                         /* New Field Added for Logoff the Gurad after OffDuty in Rc*/
                                         OnDuty = GuardLogin.OnDuty,
-                                        OffDuty = GuardLogin.OffDuty
+                                        OffDuty = GuardLogin.OffDuty,
+                                        GuardLoginTimeLocal = guardLog.EventDateTimeLocal,
+                                        GuardLoginTimeLocalWithOffset = guardLog.EventDateTimeLocalWithOffset,
+                                        GuardLoginTimeZone = guardLog.EventDateTimeZone,
+                                        GuardLoginTimeZoneShort = guardLog.EventDateTimeZoneShort,
+                                        GuardLoginTimeUtcOffsetMinute = guardLog.EventDateTimeUtcOffsetMinute
 
                                     };
                                     _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);

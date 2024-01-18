@@ -445,9 +445,10 @@
         let diffTZ = dt1.offset
         //let tzshrtnm = dt1.offsetNameLong;
 
-        const dt = new Date();
-        var tzjs = getTimezoneAbbreviation;
-        let tzshrtnm = tzjs(dt);
+
+
+        let tzshrtnm = dt1.offsetNameShort;     
+
 
         const eventDateTimeLocal = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS');
         const eventDateTimeLocalWithOffset = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS Z');
@@ -792,9 +793,7 @@
             /*timer pause while editing*/
             isPaused = true;
             const data = $.extend(true, {}, record);
-            console.log(data);
             fillRefreshLocalTimeZoneDetails(data, "", false);
-            console.log(data);
             const token = $('input[name="__RequestVerificationToken"]').val();
             $('#loader').show();
             $.ajax({
@@ -3357,9 +3356,21 @@
 
 
 
+
 function GFG_Fun() {
     if ($("#duress_status").text() !== "Active") {
+        // Task p6#73_TimeZone issue -- added by Binoy - Start
         console.log('function');
+          var tmdata = {
+                'EventDateTimeLocal': null,
+                'EventDateTimeLocalWithOffset': null,
+                'EventDateTimeZone': null,
+                'EventDateTimeZoneShort': null,
+                'EventDateTimeUtcOffsetMinute': null,
+            };
+
+            fillRefreshLocalTimeZoneDetails(tmdata, "", false)
+        // Task p6#73_TimeZone issue -- added by Binoy - End
        
         $.ajax({
             url: '/Guard/DailyLog?handler=SaveClientSiteDuress',
@@ -3369,8 +3380,10 @@ function GFG_Fun() {
                 logBookId: $('#GuardLog_ClientSiteLogBookId').val(),
                 guardId: $('#GuardLog_GuardLogin_GuardId').val(),
                 gpsCoordinates: $("#hid_duressEnabledGpsCoordinates").val(),
-                enabledAddress: $("#hid_duressEnabledAddress").val()
+                enabledAddress: $("#hid_duressEnabledAddress").val(),
+                tmdata: tmdata
             },
+            dataType: 'json',
             type: 'POST',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (result) {
@@ -3381,6 +3394,8 @@ function GFG_Fun() {
                 /*timer pause while editing*/
                 isPaused = false;
             }
+            gridGuardLog.clear();
+            gridGuardLog.reload()
             console.log(result.message);
         });
 

@@ -10,24 +10,24 @@ namespace CityWatch.Data.Models
         [Key]
         public int Id { get; set; }
         public int ClientSiteId { get; set; }
-       
+
 
         public int GuardId { get; set; }
 
-        
-        public Nullable <DateTime> LastIRCreatedTime { get; set; }
 
-        
-        public Nullable <DateTime> LastKVCreatedTime { get; set; }
+        public Nullable<DateTime> LastIRCreatedTime { get; set; }
 
-        
-        public Nullable <DateTime> LastLBCreatedTime { get; set; }
 
-        
-        public Nullable <DateTime> GuardLoginTime { get; set; }
+        public Nullable<DateTime> LastKVCreatedTime { get; set; }
 
-        
-        public Nullable <DateTime> GuardLogoutTime { get; set; }
+
+        public Nullable<DateTime> LastLBCreatedTime { get; set; }
+
+
+        public Nullable<DateTime> GuardLoginTime { get; set; }
+
+
+        public Nullable<DateTime> GuardLogoutTime { get; set; }
         public Nullable<DateTime> NotificationCreatedTime { get; set; }
         public Nullable<DateTime> OnDuty { get; set; }
         public Nullable<DateTime> OffDuty { get; set; }
@@ -35,7 +35,7 @@ namespace CityWatch.Data.Models
         public int? IRId { get; set; }
         public int? KVId { get; set; }
         public int? LBId { get; set; }
-        
+
         public string ActivityType { get; set; }
         [ForeignKey("GuardId")]
         public Guard Guard { get; set; }
@@ -50,5 +50,11 @@ namespace CityWatch.Data.Models
         [ForeignKey("KVId")]
         public KeyVehicleLog KeyVehicleLog { get; set; }
         public string ActivityDescription { get; set; }
+        public DateTime? GuardLoginTimeLocal { get; set; }
+        public DateTimeOffset? GuardLoginTimeLocalWithOffset { get; set; }
+        public string GuardLoginTimeZone { get; set; }
+        public string GuardLoginTimeZoneShort { get; set; }
+        public int? GuardLoginTimeUtcOffsetMinute { get; set; }
+
     }
 }

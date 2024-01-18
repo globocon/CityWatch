@@ -158,6 +158,12 @@ namespace CityWatch.Data.Models
         [NotMapped]
         public bool IsPreviousDayEntry { get { return CopiedFromId.HasValue; } }
 
+        public DateTime? EntryCreatedDateTimeLocal { get; set; }
+        public DateTimeOffset? EntryCreatedDateTimeLocalWithOffset { get; set; }
+        public string EntryCreatedDateTimeZone { get; set; }
+        public string EntryCreatedDateTimeZoneShort { get; set; }
+        public int? EntryCreatedDateTimeUtcOffsetMinute { get; set; }
+
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             var errors = new List<ValidationResult>();

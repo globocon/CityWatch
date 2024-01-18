@@ -75,7 +75,7 @@ namespace CityWatch.Data.Providers
         void DeleteKeyVehicleLogField(int id);
         List<KeyVehicleLogAuditHistory> GetAuditHistory(int id);
         void SaveKeyVehicleLogAuditHistory(KeyVehicleLogAuditHistory keyVehicleLogAuditHistory);
-        void SaveClientSiteDuress(int clientSiteId, int guardId, string gpsCoordinates, string enabledAddress);
+        void SaveClientSiteDuress(int clientSiteId, int guardId, string gpsCoordinates, string enabledAddress,GuardLog tmzdata);
         ClientSiteDuress GetClientSiteDuress(int clientSiteId);
         List<CompanyDetails> GetCompanyDetails();
         //logBookId entry for radio checklist-start
@@ -150,7 +150,7 @@ namespace CityWatch.Data.Providers
 
 
         //for saving status for active guards-start
-        void SaveClientSiteRadioCheckNew(ClientSiteRadioCheck clientSiteRadioCheck);
+        void SaveClientSiteRadioCheckNew(ClientSiteRadioCheck clientSiteRadioCheck, GuardLog tmzdata);
         //for saving status for active guards-end
 
         void EditRadioChecklistEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity);
@@ -165,7 +165,8 @@ namespace CityWatch.Data.Providers
 
         List<GuardLog> GetGuardLogswithKvLogData(int logBookId, DateTime logDate);
 
-        void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications, IrEntryType entryType, int type,int clientSiteId);
+        void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications, 
+                                                    IrEntryType entryType, int type,int clientSiteId, GuardLog tmzdata);
         //do's and donts-start
         void SaveDosandDontsField(DosAndDontsField dosanddontsField);
         void DeleteDosandDontsField(int id);
@@ -184,7 +185,7 @@ namespace CityWatch.Data.Providers
         
         void UpdateIsAcknowledged(int rcPushMessageId);
 
-        void CopyPreviousDaysPushMessageToLogBook(List<RadioCheckPushMessages> previousDayPushmessageList, int logBookId, int guardLoginId);
+        void CopyPreviousDaysPushMessageToLogBook(List<RadioCheckPushMessages> previousDayPushmessageList, int logBookId, int guardLoginId, GuardLog tmzdata);
 
         List<KeyVehicleLogProfile> GetKeyVehicleLogVisitorProfile();
         List<KeyVehicleLog> GetKeyVehicleLogsByID(int Id);
@@ -195,7 +196,7 @@ namespace CityWatch.Data.Providers
 
         List<int> GetGuardLogsNotAcknowledgedForNotificationSound();
 
-        void CopyPreviousDaysDuressToLogBook(List<RadioCheckPushMessages> previousDayDuressList, int logBookId, int guardLoginId);
+        void CopyPreviousDaysDuressToLogBook(List<RadioCheckPushMessages> previousDayDuressList, int logBookId, int guardLoginId, GuardLog tmzdata);
 
 
     }
@@ -347,7 +348,7 @@ namespace CityWatch.Data.Providers
                 .LastOrDefault();
         }
 
-        public void SaveClientSiteDuress(int clientSiteId, int guardId, string gpsCoordinates, string enabledAddress)
+        public void SaveClientSiteDuress(int clientSiteId, int guardId, string gpsCoordinates, string enabledAddress, GuardLog tmzdata)
         {
             _context.ClientSiteDuress.Add(new ClientSiteDuress()
             {
@@ -356,7 +357,13 @@ namespace CityWatch.Data.Providers
                 EnabledBy = guardId,
                 EnabledDate = DateTime.Today,
                 GpsCoordinates=gpsCoordinates,
-                EnabledAddress= enabledAddress
+                EnabledAddress= enabledAddress,
+                PlayDuressAlarm = true,
+                EnabledDateTimeLocal = tmzdata.EventDateTimeLocal,
+                EnabledDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                EnabledDateTimeZone = tmzdata.EventDateTimeZone,
+                EnabledDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                EnabledDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute
 
             });
             _context.SaveChanges();
@@ -1184,7 +1191,12 @@ namespace CityWatch.Data.Providers
                         LBId = clientSiteActivity.LBId,
                         ActivityType = clientSiteActivity.ActivityType,
                         OnDuty = clientSiteActivity.OnDuty,
-                        OffDuty = clientSiteActivity.OffDuty
+                        OffDuty = clientSiteActivity.OffDuty,
+                        GuardLoginTimeLocal = clientSiteActivity.GuardLoginTimeLocal,
+                        GuardLoginTimeLocalWithOffset = clientSiteActivity.GuardLoginTimeLocalWithOffset,
+                        GuardLoginTimeZone = clientSiteActivity.GuardLoginTimeZone,
+                        GuardLoginTimeZoneShort = clientSiteActivity.GuardLoginTimeZoneShort,
+                        GuardLoginTimeUtcOffsetMinute = clientSiteActivity.GuardLoginTimeUtcOffsetMinute
                     });
 
                 }
@@ -1965,7 +1977,7 @@ namespace CityWatch.Data.Providers
         }
         //for active guards-start
 
-        public void SaveClientSiteRadioCheckNew(ClientSiteRadioCheck clientSiteRadioCheck)
+        public void SaveClientSiteRadioCheckNew(ClientSiteRadioCheck clientSiteRadioCheck, GuardLog tmzdata)
         {
 
             try
@@ -2038,7 +2050,13 @@ namespace CityWatch.Data.Providers
                                         Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
                                         // Notes = "Guard Off Duty (Logbook Signout)",
                                         IrEntryType = IrEntryType.Notification,
-                                        IsSystemEntry = true
+                                        IsSystemEntry = true,
+                                        EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                                        EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                                        EventDateTimeZone = tmzdata.EventDateTimeZone,
+                                        EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                                        EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                                        PlayNotificationSound = true
 
                                     };
                                     SaveGuardLog(guardLog);
@@ -2073,7 +2091,13 @@ namespace CityWatch.Data.Providers
                                             Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
                                             // Notes = "Guard Off Duty (Logbook Signout)",
                                             IrEntryType = IrEntryType.Normal,
-                                            IsSystemEntry = true
+                                            IsSystemEntry = true,
+                                            EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                                            EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                                            EventDateTimeZone = tmzdata.EventDateTimeZone,
+                                            EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                                            EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                                            PlayNotificationSound = true
 
                                         };
                                         SaveGuardLog(guardLog);
@@ -2195,7 +2219,13 @@ namespace CityWatch.Data.Providers
                                         Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
                                         // Notes = "Guard Off Duty (Logbook Signout)",
                                         IrEntryType = IrEntryType.Notification,
-                                        IsSystemEntry = true
+                                        IsSystemEntry = true,
+                                        EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                                        EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                                        EventDateTimeZone = tmzdata.EventDateTimeZone,
+                                        EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                                        EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                                        PlayNotificationSound = true
 
                                     };
                                     SaveGuardLog(guardLog);
@@ -2229,7 +2259,13 @@ namespace CityWatch.Data.Providers
                                             Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
                                             // Notes = "Guard Off Duty (Logbook Signout)",
                                             IrEntryType = IrEntryType.Notification,
-                                            IsSystemEntry = true
+                                            IsSystemEntry = true,
+                                            EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                                            EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                                            EventDateTimeZone = tmzdata.EventDateTimeZone,
+                                            EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                                            EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                                            PlayNotificationSound = true
 
                                         };
                                         SaveGuardLog(guardLog);
@@ -2351,7 +2387,13 @@ namespace CityWatch.Data.Providers
                                         Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
                                         // Notes = "Guard Off Duty (Logbook Signout)",
                                         IrEntryType = IrEntryType.Notification,
-                                        IsSystemEntry = true
+                                        IsSystemEntry = true,
+                                        EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                                        EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                                        EventDateTimeZone = tmzdata.EventDateTimeZone,
+                                        EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                                        EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                                        PlayNotificationSound = true
 
                                     };
                                     SaveGuardLog(guardLog);
@@ -2384,7 +2426,13 @@ namespace CityWatch.Data.Providers
                                             Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
                                             // Notes = "Guard Off Duty (Logbook Signout)",
                                             IrEntryType = IrEntryType.Notification,
-                                            IsSystemEntry = true
+                                            IsSystemEntry = true,
+                                            EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                                            EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                                            EventDateTimeZone = tmzdata.EventDateTimeZone,
+                                            EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                                            EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                                            PlayNotificationSound = true
 
                                         };
                                         SaveGuardLog(guardLog);
@@ -2506,7 +2554,13 @@ namespace CityWatch.Data.Providers
                                         Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
                                         // Notes = "Guard Off Duty (Logbook Signout)",
                                         IrEntryType = IrEntryType.Notification,
-                                        IsSystemEntry = true
+                                        IsSystemEntry = true,
+                                        EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                                        EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                                        EventDateTimeZone = tmzdata.EventDateTimeZone,
+                                        EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                                        EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                                        PlayNotificationSound = true
 
                                     };
                                     SaveGuardLog(guardLog);
@@ -2539,7 +2593,13 @@ namespace CityWatch.Data.Providers
                                             Notes = "Control Room Alert:" + clientSiteRadioCheck.Status,
                                             // Notes = "Guard Off Duty (Logbook Signout)",
                                             IrEntryType = IrEntryType.Notification,
-                                            IsSystemEntry = true
+                                            IsSystemEntry = true,
+                                            EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                                            EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                                            EventDateTimeZone = tmzdata.EventDateTimeZone,
+                                            EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                                            EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                                            PlayNotificationSound = true
 
                                         };
                                         SaveGuardLog(guardLog);
@@ -2657,7 +2717,13 @@ namespace CityWatch.Data.Providers
                                     EventDateTime = DateTime.Now,
                                     Notes = "Duress Alarm De-Activated by Control Room",
                                     IrEntryType = IrEntryType.Notification,
-                                    IsSystemEntry = true
+                                    IsSystemEntry = true,
+                                    EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                                    EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                                    EventDateTimeZone = tmzdata.EventDateTimeZone,
+                                    EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                                    EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                                    PlayNotificationSound = true
 
 
                                 };
@@ -2688,7 +2754,13 @@ namespace CityWatch.Data.Providers
                                         EventDateTime = DateTime.Now,
                                         Notes = "Duress Alarm De-Activated by Control Room",
                                         IrEntryType = IrEntryType.Notification,
-                                        IsSystemEntry = true
+                                        IsSystemEntry = true,
+                                        EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                                        EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                                        EventDateTimeZone = tmzdata.EventDateTimeZone,
+                                        EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                                        EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                                        PlayNotificationSound = true
 
                                     };
                                     SaveGuardLog(guardLog);
@@ -2896,7 +2968,8 @@ namespace CityWatch.Data.Providers
             return results.ToList();
         }
 
-        public void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications, IrEntryType entryType, int type,int clientSiteId)
+        public void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications, 
+                                                         IrEntryType entryType, int type,int clientSiteId, GuardLog tmzdata)
         {
 
             var guardInitials = string.Empty;
@@ -2936,7 +3009,13 @@ namespace CityWatch.Data.Providers
                         EventDateTime = DateTime.Now,
                         Notes = string.IsNullOrEmpty(subject) ? notifications : subject + " : " + notifications,
                         IrEntryType = entryType,
-                        IsSystemEntry = true
+                        IsSystemEntry = true,
+                        EventDateTimeLocal = tmzdata.EventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
+                        EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                        EventDateTimeZone = tmzdata.EventDateTimeZone,
+                        EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                        EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                        PlayNotificationSound = true // Task p6#73_TimeZone issue -- added by Binoy - End
 
                     };
                     SaveGuardLog(guardLog);
@@ -2949,7 +3028,13 @@ namespace CityWatch.Data.Providers
                         EventDateTime = DateTime.Now,
                         Notes = string.IsNullOrEmpty(subject) ? notifications : subject + " : " + notifications,
                         IrEntryType = entryType,
-                        IsSystemEntry = true
+                        IsSystemEntry = true,
+                        EventDateTimeLocal = tmzdata.EventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
+                        EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                        EventDateTimeZone = tmzdata.EventDateTimeZone,
+                        EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                        EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                        PlayNotificationSound = true // Task p6#73_TimeZone issue -- added by Binoy - End
                     };
                     if (guardLog.ClientSiteLogBookId != 0)
                     {
@@ -3086,7 +3171,7 @@ namespace CityWatch.Data.Providers
             }
 
         }
-        public void CopyPreviousDaysPushMessageToLogBook(List<RadioCheckPushMessages> previousDayPushmessageList, int logBookId, int guardLoginId)
+        public void CopyPreviousDaysPushMessageToLogBook(List<RadioCheckPushMessages> previousDayPushmessageList, int logBookId, int guardLoginId,GuardLog tmzdata)
         {
             foreach (var pushMessage in previousDayPushmessageList)
             {
@@ -3099,7 +3184,13 @@ namespace CityWatch.Data.Providers
                         EventDateTime = DateTime.Now,
                         Notes = pushMessage.Notes,
                         IrEntryType = IrEntryType.Alarm,
-                        RcPushMessageId = pushMessage.Id
+                        RcPushMessageId = pushMessage.Id,
+                        EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                        EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                        EventDateTimeZone = tmzdata.EventDateTimeZone,
+                        EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                        EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                        PlayNotificationSound = false
                     };
                     SaveGuardLog(guardLog);
 
@@ -3109,7 +3200,7 @@ namespace CityWatch.Data.Providers
 
         }
 
-        public void CopyPreviousDaysDuressToLogBook(List<RadioCheckPushMessages> previousDayDuressList, int logBookId, int guardLoginId)
+        public void CopyPreviousDaysDuressToLogBook(List<RadioCheckPushMessages> previousDayDuressList, int logBookId, int guardLoginId, GuardLog tmzdata)
         {
             foreach (var pushMessage in previousDayDuressList)
             {
@@ -3123,7 +3214,13 @@ namespace CityWatch.Data.Providers
                         EventDateTime = DateTime.Now,
                         Notes = pushMessage.Notes,
                         IrEntryType = IrEntryType.Alarm,
-                        RcPushMessageId = pushMessage.Id
+                        RcPushMessageId = pushMessage.Id,
+                        EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                        EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                        EventDateTimeZone = tmzdata.EventDateTimeZone,
+                        EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                        EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                        PlayNotificationSound = false
                     };
                     SaveGuardLog(guardLog);
 
