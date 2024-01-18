@@ -2818,7 +2818,16 @@
             { data: 'expiryDate', width: "8%" },
             { data: 'reminder1', width: "3%" },
             { data: 'reminder2', width: "3%" },
-            { data: 'fileName', width: "10%" },
+            {
+                data: 'fileName',
+                render: function (data, type, row, meta) {
+                    if (data)
+                        return '<a href="/uploads/guards/4/' + data + '" target="_blank">' + data + '</a>';
+                    return '-';
+                },
+                width: "10%"
+            },
+
             {
                 targets: -1,
                 data: null,
