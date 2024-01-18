@@ -992,7 +992,7 @@
 
         // Task p6#73_TimeZone issue -- added by Binoy -- Start
         var formData = new FormData(mainForm);
-        fillRefreshLocalTimeZoneDetails(formData, "Report.ReportCreatedLocalTimeZone", true);
+        fillRefreshLocalTimeZoneDetailsIR(formData, "Report.ReportCreatedLocalTimeZone", true);
         // Task p6#73_TimeZone issue -- added by Binoy -- End
 
         fetch('/Incident/Register?handler=submit', {
@@ -1038,7 +1038,7 @@
     }
 
     // Task p6#73_TimeZone issue -- added by Binoy - Start
-    function fillRefreshLocalTimeZoneDetails(formData, modelname, isform) {
+    function fillRefreshLocalTimeZoneDetailsIR(formData, modelname, isform) {
         // for reference https://moment.github.io/luxon/#/
         var DateTime = luxon.DateTime;
         var dt1 = DateTime.local();

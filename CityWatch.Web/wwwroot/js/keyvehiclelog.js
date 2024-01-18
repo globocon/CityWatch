@@ -3253,9 +3253,20 @@ $(function () {
         e.preventDefault();
         if (confirm('Are you sure you want to end your shift?')) {
             $('#loader').show();
+            // Task p6#73_TimeZone issue -- added by Binoy - Start
+            var tmdata = {
+                'EventDateTimeLocal': null,
+                'EventDateTimeLocalWithOffset': null,
+                'EventDateTimeZone': null,
+                'EventDateTimeZoneShort': null,
+                'EventDateTimeUtcOffsetMinute': null,
+            };
+
+            fillRefreshLocalTimeZoneDetails(tmdata, "", false)
+            // Task p6#73_TimeZone issue -- added by Binoy - End
             $.ajax({
                 url: '/Guard/DailyLog?handler=UpdateOffDuty',
-                data: { guardLoginId: $('#KeyVehicleLog_GuardLogin_Id').val(), clientSiteLogBookId: $('#KeyVehicleLog_ClientSiteLogBookId').val() },
+                data: { guardLoginId: $('#KeyVehicleLog_GuardLogin_Id').val(), clientSiteLogBookId: $('#KeyVehicleLog_ClientSiteLogBookId').val(), tmdata: tmdata },
                 type: 'POST',
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function (result) {
