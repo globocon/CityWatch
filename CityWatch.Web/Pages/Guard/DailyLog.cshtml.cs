@@ -225,7 +225,7 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { status, message });
         }
 
-        public JsonResult OnPostUpdateOffDuty(int guardLoginId, int clientSiteLogBookId)
+        public JsonResult OnPostUpdateOffDuty(int guardLoginId, int clientSiteLogBookId,GuardLog tmdata)
         {
             var status = true;
             var message = "Success";
@@ -237,7 +237,12 @@ namespace CityWatch.Web.Pages.Guard
                     GuardLoginId = guardLoginId,
                     EventDateTime = DateTime.Now,
                     Notes = "Guard Off Duty (Logbook Signout)",
-                    IsSystemEntry = true
+                    IsSystemEntry = true,
+                    EventDateTimeLocal = tmdata.EventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
+                    EventDateTimeLocalWithOffset = tmdata.EventDateTimeLocalWithOffset,
+                    EventDateTimeZone = tmdata.EventDateTimeZone,
+                    EventDateTimeZoneShort = tmdata.EventDateTimeZoneShort,
+                    EventDateTimeUtcOffsetMinute = tmdata.EventDateTimeUtcOffsetMinute // Task p6#73_TimeZone issue -- added by Binoy - End
                 };
                 _guardLogDataProvider.SaveGuardLog(signOffEntry);
                 _guardDataProvider.UpdateGuardOffDuty(guardLoginId, DateTime.Now);

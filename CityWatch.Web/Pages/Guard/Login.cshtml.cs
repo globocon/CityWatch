@@ -127,7 +127,8 @@ namespace CityWatch.Web.Pages.Guard
                 }
                 if (LogBookType == LogBookType.VehicleAndKeyLog)
                 {
-                    CreateKeyVehicleLoggedInEntry(logBookId, guardLoginId);
+                    CreateKeyVehicleLoggedInEntry(logBookId, guardLoginId, eventDateTimeLocal,
+                        eventDateTimeLocalWithOffset, eventDateTimeZone, eventDateTimeZoneShort, eventDateTimeUtcOffsetMinute);
 
                 }
 
@@ -402,7 +403,9 @@ namespace CityWatch.Web.Pages.Guard
             return null;
         }
 
-        private void CreateKeyVehicleLoggedInEntry(int logBookId, int guardLoginId)
+        private void CreateKeyVehicleLoggedInEntry(int logBookId, int guardLoginId, DateTime? eventDateTimeLocal,
+                       DateTimeOffset? eventDateTimeLocalWithOffset, string eventDateTimeZone,
+                       string eventDateTimeZoneShort, int? eventDateTimeUtcOffsetMinute)
         {
             var signInEntry = new GuardLog()
             {
@@ -410,7 +413,12 @@ namespace CityWatch.Web.Pages.Guard
                 GuardLoginId = guardLoginId,
                 EventDateTime = DateTime.Now,
                 Notes = "KV Logged In",
-                IsSystemEntry = true
+                IsSystemEntry = true,
+                EventDateTimeLocal = eventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
+                EventDateTimeLocalWithOffset = eventDateTimeLocalWithOffset,
+                EventDateTimeZone = eventDateTimeZone,
+                EventDateTimeZoneShort = eventDateTimeZoneShort,
+                EventDateTimeUtcOffsetMinute = eventDateTimeUtcOffsetMinute // Task p6#73_TimeZone issue -- added by Binoy - End
             };
             _guardLogDataProvider.SaveGuardLog(signInEntry);
         }

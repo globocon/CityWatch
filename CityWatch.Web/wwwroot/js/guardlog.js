@@ -436,40 +436,7 @@
         $('#GuardLogin_OffDuty').val(parseDateInCsharpFormat(offDutyDate, $('#GuardLogin_OffDuty_Time').val()));
     }
 
-    // Task p6#73_TimeZone issue -- added by Binoy - Start
-    function fillRefreshLocalTimeZoneDetails(formData, modelname, isform) {
-        // for reference https://moment.github.io/luxon/#/
-        var DateTime = luxon.DateTime;
-        var dt1 = DateTime.local();
-        let tz = dt1.zoneName + ' ' + dt1.offsetNameShort;
-        let diffTZ = dt1.offset
-        //let tzshrtnm = dt1.offsetNameLong;
-
-
-
-        let tzshrtnm = dt1.offsetNameShort;     
-
-
-        const eventDateTimeLocal = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS');
-        const eventDateTimeLocalWithOffset = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS Z');
-        if (isform) {
-            formData.append(modelname + ".EventDateTimeLocal", eventDateTimeLocal);
-            formData.append(modelname + ".EventDateTimeLocalWithOffset", eventDateTimeLocalWithOffset);
-            formData.append(modelname + ".EventDateTimeZone", tz);
-            formData.append(modelname + ".EventDateTimeZoneShort", tzshrtnm);
-            formData.append(modelname + ".EventDateTimeUtcOffsetMinute", diffTZ);
-        }
-        else {
-            formData.EventDateTimeLocal = eventDateTimeLocal;
-            formData.EventDateTimeLocalWithOffset = eventDateTimeLocalWithOffset;
-            formData.EventDateTimeZone = tz;
-            formData.EventDateTimeZoneShort = tzshrtnm;
-            formData.EventDateTimeUtcOffsetMinute = diffTZ;
-        }
-    }
-
-    // Task p6#73_TimeZone issue -- added by Binoy - End
-
+   
     function highlightDutyDay(ctrlId, selected = true) {
         if (selected) $('#' + ctrlId).removeClass('font-weight-light').addClass('font-weight-bold');
         else $('#' + ctrlId).removeClass('font-weight-bold').addClass('font-weight-light');
@@ -976,9 +943,20 @@
         e.preventDefault();
         if (confirm('Are you sure you want to end your shift?')) {
             $('#loader').show();
+            // Task p6#73_TimeZone issue -- added by Binoy - Start
+            var tmdata = {
+                'EventDateTimeLocal': null,
+                'EventDateTimeLocalWithOffset': null,
+                'EventDateTimeZone': null,
+                'EventDateTimeZoneShort': null,
+                'EventDateTimeUtcOffsetMinute': null,
+            };
+
+            fillRefreshLocalTimeZoneDetails(tmdata, "", false)
+            // Task p6#73_TimeZone issue -- added by Binoy - End
             $.ajax({
                 url: '/Guard/DailyLog?handler=UpdateOffDuty',
-                data: { guardLoginId: $('#GuardLog_GuardLoginId').val(), clientSiteLogBookId: $('#GuardLog_ClientSiteLogBookId').val() },
+                data: { guardLoginId: $('#GuardLog_GuardLoginId').val(), clientSiteLogBookId: $('#GuardLog_ClientSiteLogBookId').val(), tmdata: tmdata },
                 type: 'POST',
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function (result) {
@@ -3352,16 +3330,11 @@
     /* Get Client Site duress Gps Rading Start*/
 
 
-});
-
-
-
-
-function GFG_Fun() {
-    if ($("#duress_status").text() !== "Active") {
-        // Task p6#73_TimeZone issue -- added by Binoy - Start
-        console.log('function');
-          var tmdata = {
+    function GFG_Fun() {
+        if ($("#duress_status").text() !== "Active") {
+            // Task p6#73_TimeZone issue -- added by Binoy - Start
+            console.log('function');
+            var tmdata = {
                 'EventDateTimeLocal': null,
                 'EventDateTimeLocalWithOffset': null,
                 'EventDateTimeZone': null,
@@ -3370,40 +3343,78 @@ function GFG_Fun() {
             };
 
             fillRefreshLocalTimeZoneDetails(tmdata, "", false)
-        // Task p6#73_TimeZone issue -- added by Binoy - End
-       
-        $.ajax({
-            url: '/Guard/DailyLog?handler=SaveClientSiteDuress',
-            data: {
-                clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
-                guardLoginId: $('#GuardLog_GuardLoginId').val(),
-                logBookId: $('#GuardLog_ClientSiteLogBookId').val(),
-                guardId: $('#GuardLog_GuardLogin_GuardId').val(),
-                gpsCoordinates: $("#hid_duressEnabledGpsCoordinates").val(),
-                enabledAddress: $("#hid_duressEnabledAddress").val(),
-                tmdata: tmdata
-            },
-            dataType: 'json',
-            type: 'POST',
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {
-            if (result.status) {
-                $('#duress_btn').removeClass('normal').addClass('active');
-                $("#duress_status").addClass('font-weight-bold');
-                $("#duress_status").text("Active");
-                /*timer pause while editing*/
-                isPaused = false;
-            }
-            gridGuardLog.clear();
-            gridGuardLog.reload()
-            console.log(result.message);
-        });
+            // Task p6#73_TimeZone issue -- added by Binoy - End
+
+            $.ajax({
+                url: '/Guard/DailyLog?handler=SaveClientSiteDuress',
+                data: {
+                    clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
+                    guardLoginId: $('#GuardLog_GuardLoginId').val(),
+                    logBookId: $('#GuardLog_ClientSiteLogBookId').val(),
+                    guardId: $('#GuardLog_GuardLogin_GuardId').val(),
+                    gpsCoordinates: $("#hid_duressEnabledGpsCoordinates").val(),
+                    enabledAddress: $("#hid_duressEnabledAddress").val(),
+                    tmdata: tmdata
+                },
+                dataType: 'json',
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.status) {
+                    $('#duress_btn').removeClass('normal').addClass('active');
+                    $("#duress_status").addClass('font-weight-bold');
+                    $("#duress_status").text("Active");
+                    /*timer pause while editing*/
+                    isPaused = false;
+                }
+                gridGuardLog.clear();
+                gridGuardLog.reload();
+                console.log(result.message);
+            });
+
+        }
 
     }
 
+});
+
+
+
+
+
+// Task p6#73_TimeZone issue -- added by Binoy - Start
+function fillRefreshLocalTimeZoneDetails(formData, modelname, isform) {
+    // for reference https://moment.github.io/luxon/#/
+    var DateTime = luxon.DateTime;
+    var dt1 = DateTime.local();
+    let tz = dt1.zoneName + ' ' + dt1.offsetNameShort;
+    let diffTZ = dt1.offset
+    //let tzshrtnm = dt1.offsetNameLong;
+
+
+
+    let tzshrtnm = dt1.offsetNameShort;
+
+
+    const eventDateTimeLocal = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS');
+    const eventDateTimeLocalWithOffset = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS Z');
+    if (isform) {
+        formData.append(modelname + ".EventDateTimeLocal", eventDateTimeLocal);
+        formData.append(modelname + ".EventDateTimeLocalWithOffset", eventDateTimeLocalWithOffset);
+        formData.append(modelname + ".EventDateTimeZone", tz);
+        formData.append(modelname + ".EventDateTimeZoneShort", tzshrtnm);
+        formData.append(modelname + ".EventDateTimeUtcOffsetMinute", diffTZ);
+    }
+    else {
+        formData.EventDateTimeLocal = eventDateTimeLocal;
+        formData.EventDateTimeLocalWithOffset = eventDateTimeLocalWithOffset;
+        formData.EventDateTimeZone = tz;
+        formData.EventDateTimeZoneShort = tzshrtnm;
+        formData.EventDateTimeUtcOffsetMinute = diffTZ;
+    }
 }
 
-
+    // Task p6#73_TimeZone issue -- added by Binoy - End
 
 
 function initialize() {
