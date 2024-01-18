@@ -3555,5 +3555,41 @@ let calendarEventsDetails = $('#calendarEventsDetails').grid({
 //    ],
 
 //});
+/*to view thw audit log report-start*/
+$('#vehicle_key_log_audit_history').DataTable({
+    autoWidth: false,
+    paging: true,
+    ordering: false,
+    info: false,
+    searching: false,
+    pageLength: 10,
+    data: [],
+    columns: [
+      
+        { data: 'auditTimeString', width: '32%' },
+        { data: 'guardLogin.guard.initial', width: '15%' },
+        { data: 'auditMessage' },
+    ],
+});
+$('#btnGenerateVklAuditLogReport').on('click', function () {
+    if ($('#vklClientSiteId').val().length === 0) {
+        alert('Please select a client site');
+        return;
+    }
+    $('#KeyVehicleLogAuditLogRequest_ClientSiteId').val($('#vklClientSiteId').val());
+    var item = $('#KeyVehicleLogAuditLogRequest_VehicleRego').val();
+    $.ajax({
+       // url: '/Admin/AuditSiteLog?handler=AuditHistory&vehicleRego=' + item,
+        url: '/Admin/AuditSiteLog?handler=AuditHistory',
+        type: 'GET',
+        dataType: 'json',
+        data: $('#form_kvl_auditlog_request').serialize(),
+    }).done(function (response) {
+        $('#vkl-auditlog-modal').find('#vkl-profile-title-rego').html(item);
+        $('#vkl-auditlog-modal').modal('show');
+        $('#vehicle_key_log_audit_history').DataTable().clear().rows.add(response).draw();
+    });
+});
+/*to view thw audit log report-end*/
 
 
