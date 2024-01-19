@@ -2351,6 +2351,11 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
                 if (rowData.isEnabled == 1) {
                     cell.classList.add('bg-danger');
                 }
+                //p4#48 AudioNotification - Binoy - 12-01-2024 -- Start
+                if (rowData.playDuressAlarm == 1) {
+                    playAlarm = true;
+                }
+                    //p4#48 AudioNotification - Binoy - 12-01-2024 -- End
             },
             render: function (value, type, data) {
 
@@ -2511,6 +2516,8 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
                     last2 = group;
                 }
             });
+
+        PlayDuressAlarm();
     },
 
 

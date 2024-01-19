@@ -949,7 +949,8 @@ namespace CityWatch.Web.Services
                     EntryType = (int)IrEntryType.Alarm,
                     Date = DateTime.Today,
                     IsAcknowledged = 0,
-                    IsDuress=1
+                    IsDuress = 1,
+                    PlayNotificationSound = true
                 };
                 var pushMessageId = _guardLogDataProvider.SavePushMessage(radioCheckPushMessages);
                 /* Save the push message for reload to logbook on next day end*/
