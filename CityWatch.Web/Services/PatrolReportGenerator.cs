@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace CityWatch.Web.Services
 {
@@ -64,7 +65,7 @@ namespace CityWatch.Web.Services
                     {
                         var cell = new Cell();
                         cell.DataType = CellValues.String;
-                        cell.CellValue = new CellValue(dsrow[col].ToString());
+                        cell.CellValue = new CellValue(CleanInvalidXmlChars(dsrow[col].ToString()));
                         cell.StyleIndex = Convert.ToUInt32(0);
                         newRow.AppendChild(cell);
                     }
@@ -72,6 +73,14 @@ namespace CityWatch.Web.Services
                     sheetData.AppendChild(newRow);
                 }
             }
+        }
+        public static string CleanInvalidXmlChars(string text)
+        {
+            // From xml spec valid chars: 
+            // #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]     
+            // any Unicode character, excluding the surrogate blocks, FFFE, and FFFF. 
+            string re = @"[^\x09\x0A\x0D\x20-\xD7FF\xE000-\xFFFD\x10000-x10FFFF]";
+            return Regex.Replace(text, re, "");
         }
 
         private static Stylesheet CreateStylesheet()
