@@ -1462,12 +1462,14 @@
         $('#KeyVehicleLogAuditLogRequest_PersonOfInterest').val($('#vklPersonOfInterest').val());
         $('#KeyVehicleLogAuditLogRequest_ClientSitePocIdNew').val($('#vklSitePOC').val());
         $('#KeyVehicleLogAuditLogRequest_ClientSiteLocationIdNew').val($('#vklSiteLoc').val());
+        $('#loader').show();
         $.ajax({
             url: '/Admin/AuditSiteLog?handler=KeyVehicleSiteLogs',
             type: 'POST',
             dataType: 'json',
             data: $('#form_kvl_auditlog_request').serialize(),
         }).done(function (response) {
+            $('#loader').hide();
             keyVehicleLogReport.clear().rows.add(response).draw();
         });
     });

@@ -115,7 +115,7 @@
         var date2 = new Date($('#ReportRequest_ToDate').val());
         var monthdiff = monthDiff(date1, date2); 
         if (monthdiff > 12) {
-            alert('Date Range is  greater than 6 months');
+            alert('Date Range is  greater than 12 months');
             return false;
         }
         //calculate month difference-end
