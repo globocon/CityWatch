@@ -123,7 +123,7 @@ gridBroadCastBannerLiveEvents = $('#BroadCastBannerLiveEvents').grid({
 if (gridBroadCastBannerLiveEvents) {
     gridBroadCastBannerLiveEvents.on('rowDataChanged', function (e, id, record) {
         const data = $.extend(true, {}, record);
-        data.textMessage = data.textMessage.replace(/\s{2,}/g, ' ').trim();
+      //  data.textMessage = data.textMessage.replace(/\s{2,}/g, ' ').trim();
         data.expiryDate = data.formattedExpiryDate;
         //data.radioCheckStatusColorId = !Number.isInteger(data.radioCheckStatusColorId) ? data.radioCheckStatusColorId.getValue() : data.radioCheckStatusColorId;
         const token = $('input[name="__RequestVerificationToken"]').val();
@@ -201,7 +201,7 @@ $('#add_calendar_events').on('click', function () {
 if (gridBroadCastBannerCalendarEvents) {
     gridBroadCastBannerCalendarEvents.on('rowDataChanged', function (e, id, record) {
         const data = $.extend(true, {}, record);
-        data.textMessage = data.textMessage.replace(/\s{2,}/g, ' ').trim();
+        //data.textMessage = data.textMessage.replace(/\s{2,}/g, ' ').trim();
         data.startDate = data.formattedStartDate;
         data.expiryDate = data.formattedExpiryDate;
         //data.radioCheckStatusColorId = !Number.isInteger(data.radioCheckStatusColorId) ? data.radioCheckStatusColorId.getValue() : data.radioCheckStatusColorId;
