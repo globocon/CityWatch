@@ -3677,16 +3677,16 @@ $('#btnGenerateVklAuditLogReport').on('click', function () {
         new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
     }
     else if ((item != '') && (item2 != '') && (item3 != '')) {
-        new MessageModal({ message: "<b>Please select any one of the 3 options<p>Vehicle Reg</p><p>Individual Name</p><p>Key No</p>  </b>" }).showWarning();
+        new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
     }
     else if ((item != '') && (item2 != '') ) {
-        new MessageModal({ message: "<b>Please select any one of the 3 options<p>Vehicle Reg</p><p>Individual Name</p><p>Key No</p>  </b>" }).showWarning();
+        new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
     }
     else if ((item != '') &&  (item3 != '')) {
-        new MessageModal({ message: "<b>Please select any one of the 3 options<p>Vehicle Reg</p><p>Individual Name</p><p>Key No</p>  </b>" }).showWarning();
+        new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
     }
     else if ((item2 != '') && (item3 != '')) {
-        new MessageModal({ message: "<b>Please select any one of the 3 options<p>Vehicle Reg</p><p>Individual Name</p><p>Key No</p>  </b>" }).showWarning();
+        new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
     }
     else {
         $('#loader').show();
