@@ -1302,7 +1302,65 @@
                 });
         },
     });
+    //for downloading keyvehicle logs-start
+    let keyVehicleLogReportnew = $('#vkl_site_lognew').DataTable({
+        lengthMenu: [[75, 100, -1], [75, 100, "All"]],
+        pageLength: 100,
+        hidden: true,
+        paging: false,
+        ordering: false,
+        order: [[groupColumn, 'asc']],
+        info: false,
+        searching: false,
+        scrollX: true,
+        data: [],
+        columns: [
+            { data: 'groupText', visible: false },
+            { data: 'detail.clientSiteLogBook.clientSite.name' },
+            { data: 'detail.entryTime', 'render': function (value) { return convertDateTimeString(value); } },
+            { data: 'detail.entryTime', 'render': function (value) { return convertDateTimeString(value); } },
+            { data: 'detail.exitTime', 'render': function (value) { return convertDateTimeString(value); } },
+            { data: 'detail.timeSlotNo' },
+            { data: 'detail.vehicleRego' },
+            { data: 'plate' },
+            { data: 'truckConfigText' },
+            { data: 'trailerTypeText' },
+            { data: 'detail.trailer1Rego' },
+            { data: 'detail.trailer2Rego' },
+            { data: 'detail.trailer3Rego' },
+            { data: 'detail.trailer4Rego' },
+            { data: 'detail.keyNo' },
+            { data: 'detail.companyName' },
+            { data: 'detail.personName' },
+            { data: 'detail.mobileNumber' },
+            { data: 'personTypeText' },
+            { data: 'clientSitePocName' },
+            { data: 'clientSiteLocationName' },
+            { data: 'purposeOfEntry' },
+            { data: 'detail.inWeight' },
+            { data: 'detail.outWeight' },
+            { data: 'detail.tareWeight' },
+            { data: 'detail.notes' },
+        ],
+        drawCallback: function () {
+            var api = this.api();
+            var rows = api.rows({ page: 'current' }).nodes();
+            var last = null;
 
+            api.column(groupColumn, { page: 'current' })
+                .data()
+                .each(function (group, i) {
+                    if (last !== group) {
+                        $(rows)
+                            .eq(i)
+                            .before('<tr class="group bg-light text-dark"><td colspan="25">' + group + '</td></tr>');
+
+                        last = group;
+                    }
+                });
+        },
+    });
+    //for downloading keyvehicle logs-end
     $('#listKeyVehicleLogAuditLogRequestKeyNo').select2({
         placeholder: "Select",
         theme: 'bootstrap4',
@@ -1473,8 +1531,7 @@
             keyVehicleLogReport.clear().rows.add(response).draw();
         });
     });
-    //code addded  to download Excel start for auditsite key vehicle
-
+    //code addded  to download Excel start for auditsite key vehicle-start
     $("#btnDownloadVklAuditExcel").click(function () {
         if ($('#vklClientSiteId').val().length === 0) {
             alert('Please select a client site');
@@ -1505,18 +1562,14 @@
             data: $('#form_kvl_auditlog_request').serialize(),
         }).done(function (response) {
             $('#loader').hide();
-            keyVehicleLogReport.clear().rows.add(response).draw();
+            keyVehicleLogReportnew.clear().rows.add(response).draw();
             var Key = 'Key & Vehicle Logs - ' + $('#vklAudtitFromDate').val() + ' to ' + $('#vklAudtitToDate').val();
 
             var type = 'xlsx';
             var name = Key + '.';
-            $('#vkl_site_log').dataTable({
-                "paging": false
-            });
-            var data = document.getElementById('vkl_site_log');
-            $('#vkl_site_log').dataTable({
-                "paging": true
-            });
+
+            var data = document.getElementById('vkl_site_lognew');
+
 
             // Check if all columns are empty
             var isEmptyTable = true;
@@ -1558,15 +1611,15 @@
 
 
 
-            var excelFile = XLSX.utils.table_to_book(tableClone, { sheet: "Keys" });
+            var excelFile = XLSX.utils.table_to_book(tableClone, { sheet: "KeyVehicleLogs" });
 
             // Use XLSX.writeFile to generate and download the Excel file
             XLSX.writeFile(excelFile, name + type);
         });
 
     });
-    //code addded  to download Excel end
-    //*************** Guard Log Settings  *************** //
+    //code addded  to download Excel start for auditsite key vehicle-end
+   
 
     $('#btnDisableDataCollection').on('click', function () {
         $.ajax({
