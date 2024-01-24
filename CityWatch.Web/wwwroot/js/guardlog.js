@@ -1473,7 +1473,99 @@
             keyVehicleLogReport.clear().rows.add(response).draw();
         });
     });
+    //code addded  to download Excel start for auditsite key vehicle
 
+    $("#btnDownloadVklAuditExcel").click(function () {
+        if ($('#vklClientSiteId').val().length === 0) {
+            alert('Please select a client site');
+            return;
+        }
+        //calculate month difference-start
+        var date1 = new Date($('#vklAudtitFromDate').val());
+        var date2 = new Date($('#vklAudtitToDate').val());
+        var monthdiff = monthDiff(date1, date2);
+        if (monthdiff > 6) {
+            alert('Date Range is  greater than 6 months');
+            return false;
+        }
+        //calculate month difference-end
+        $('#KeyVehicleLogAuditLogRequest_ClientSiteId').val($('#vklClientSiteId').val());
+        $('#KeyVehicleLogAuditLogRequest_LogFromDate').val($('#vklAudtitFromDate').val());
+        $('#KeyVehicleLogAuditLogRequest_LogToDate').val($('#vklAudtitToDate').val());
+        $('#KeyVehicleLogAuditLogRequest_LogBookType').val(2);
+
+        $('#KeyVehicleLogAuditLogRequest_PersonOfInterest').val($('#vklPersonOfInterest').val());
+        $('#KeyVehicleLogAuditLogRequest_ClientSitePocIdNew').val($('#vklSitePOC').val());
+        $('#KeyVehicleLogAuditLogRequest_ClientSiteLocationIdNew').val($('#vklSiteLoc').val());
+        $('#loader').show();
+        $.ajax({
+            url: '/Admin/AuditSiteLog?handler=KeyVehicleSiteLogs',
+            type: 'POST',
+            dataType: 'json',
+            data: $('#form_kvl_auditlog_request').serialize(),
+        }).done(function (response) {
+            $('#loader').hide();
+            keyVehicleLogReport.clear().rows.add(response).draw();
+            var Key = 'Key & Vehicle Logs - ' + $('#vklAudtitFromDate').val() + ' to ' + $('#vklAudtitToDate').val();
+
+            var type = 'xlsx';
+            var name = Key + '.';
+            $('#vkl_site_log').dataTable({
+                "paging": false
+            });
+            var data = document.getElementById('vkl_site_log');
+            $('#vkl_site_log').dataTable({
+                "paging": true
+            });
+
+            // Check if all columns are empty
+            var isEmptyTable = true;
+            var rows = data.getElementsByTagName('tr');
+            for (var i = 0; i < rows.length; i++) {
+                var cells = rows[i].getElementsByTagName('td');
+                for (var j = 1; j < cells.length; j++) {
+                    if (cells[j].textContent.trim() !== '') {
+                        isEmptyTable = false;
+                        break;
+                    }
+                }
+            }
+
+            if (isEmptyTable) {
+                // Create a message row with the desired text
+                var messageRow = document.createElement('tr');
+                var messageCell = document.createElement('td');
+                messageCell.innerText = 'No data available in table';
+                messageRow.appendChild(messageCell);
+
+                // Create a new table with the message
+                var tableClone = document.createElement('table');
+                var tbody = document.createElement('tbody');
+                tbody.appendChild(messageRow);
+                tableClone.appendChild(tbody);
+            } else {
+                // Clone the table and remove the last column
+                var tableClone = data.cloneNode(true);
+                //var rows = tableClone.getElementsByTagName('tr');
+                //for (var i = 0; i < rows.length; i++) {
+                //    var lastCell = rows[i].lastElementChild;
+                //    if (lastCell) {
+                //        rows[i].removeChild(lastCell);
+                //    }
+                //}
+            }
+
+
+
+
+            var excelFile = XLSX.utils.table_to_book(tableClone, { sheet: "Keys" });
+
+            // Use XLSX.writeFile to generate and download the Excel file
+            XLSX.writeFile(excelFile, name + type);
+        });
+
+    });
+    //code addded  to download Excel end
     //*************** Guard Log Settings  *************** //
 
     $('#btnDisableDataCollection').on('click', function () {
