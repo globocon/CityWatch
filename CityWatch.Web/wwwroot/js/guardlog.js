@@ -2830,7 +2830,8 @@
                 data: 'fileName',
                 render: function (data, type, row, meta) {
                     if (data)
-                        return '<a href="/uploads/guards/4/' + data + '" target="_blank">' + data + '</a>';
+                        var guardid = row.guardId;
+                    return '<a href="/uploads/guards/' + guardid +'/' + data + '" target="_blank">' + data + '</a>';
                     return '-';
                 },
                 width: "10%"
