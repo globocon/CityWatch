@@ -6,6 +6,7 @@ using CityWatch.Data.Enums;
 
 namespace CityWatch.Kpi.Models
 {
+
     public class DailyKpiGuard
     {
         private readonly DateTime _date;
@@ -15,6 +16,7 @@ namespace CityWatch.Kpi.Models
         private readonly Dictionary<int, Guard> _shift1Guards = new();
         private readonly Dictionary<int, Guard> _shift2Guards = new();
         private readonly Dictionary<int, Guard> _shift3Guards = new();
+
 
         public DailyKpiGuard(DailyClientSiteKpi dailyClientSiteKpi, IEnumerable<GuardLogin> dayGuardLogins, IEnumerable<GuardCompliance> guardCompliances)
         {
@@ -53,7 +55,31 @@ namespace CityWatch.Kpi.Models
                 }
             }
         }
+        //Added For 3rd Page of Report start
+        public IEnumerable<GuardCompliance> GuardCompliance
+        {
+            get { return _guardCompliance; }
+        }
+        public IEnumerable<Guard> Guards
+        {
+            get
+            {
+                List<Guard> allGuards = new List<Guard>();
 
+                foreach (var guardCompliance in _guardCompliance)
+                {
+                    
+                    if (guardCompliance.Guard != null)
+                    {
+                        
+                        allGuards.AddRange(Enumerable.Repeat(guardCompliance.Guard, 1));
+                    }
+                }
+
+                return allGuards;
+            }
+        }
+        //Added For 3rd Page of Report stop
         public DateTime Date { get { return _date; } }
 
         public decimal? EmployeeHours { get { return _dailyClientSiteKpi.EmployeeHours; } }
