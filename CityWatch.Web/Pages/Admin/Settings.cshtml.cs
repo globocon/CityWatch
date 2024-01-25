@@ -357,6 +357,7 @@ namespace CityWatch.Web.Pages.Admin
                             FileName = file.FileName,
                             LastUpdated = DateTime.Now,
                             DocumentType = type
+                            
                         });
 
                         success = true;

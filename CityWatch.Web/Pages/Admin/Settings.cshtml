@@ -153,8 +153,9 @@
                     <table class="table table-bordered tbl-settings">
                         <thead>
                             <tr>
-                                <th style="width:370px">Current Location</th>
-                                <th style="width:370px">Date & Time Last Uploaded</th>
+                                <th style="width:270px">Current Location</th>
+                                <th style="width:270px">Date & Time Last Uploaded</th>
+                                <th style="width:270px">Default Email for IR sending/HR Warning</th>
                                 <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
                             </tr>
                         </thead>
@@ -162,6 +163,7 @@
                             <tr>
                                 <td class="align-middle">@Model.ReportTemplate.Path</td>
                                 <td id="ir_template_updatedOn" class="align-middle">@Model.ReportTemplate.LastUpdated.ToString("dd MMM yyyy @ HH:mm")</td>
+                                <td class="align-middle">@Model.ReportTemplate.DefaultEmail</td>
                                 <td class="text-center">
                                     <label class="btn btn-success mb-0">
                                         <form id="form_ir_template" method="post">

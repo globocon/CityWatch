@@ -1661,6 +1661,7 @@
     }
 
     function uploadStafDocUsingType(uploadCtrl, edit = false, type) {
+        var Email = $('#file_downloads').val();
         const file = uploadCtrl.get(0).files.item(0);
         const fileExtn = file.name.split('.').pop();
         if (!fileExtn || '.pdf,.docx,.xlsx'.indexOf(fileExtn.toLowerCase()) < 0) {
