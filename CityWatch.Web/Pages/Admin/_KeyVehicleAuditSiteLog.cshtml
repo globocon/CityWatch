@@ -30,9 +30,10 @@
         <div class="form-group col-md-4">
             <label class="mx-1">&nbsp;</label>
             <div>
-                <button type="button" class="btn btn-primary mx-1" id="btnGenerateVklAuditReport">View Report</button>
-                <button type="button" class="btn btn-primary mx-1" id="btnGenerateVklAuditLogReport">View Audit Log</button>
-                <button type="button" class="btn btn-primary" id="btnDownloadVklAuditZip">Download Zip</button>
+                <button type="button" class="btn btn-primary" id="btnGenerateVklAuditReport">View Report</button>
+                <button type="button" class="btn btn-primary" id="btnGenerateVklAuditLogReport">View Audit Log</button>
+                <a href="#"  class="btn btn-primary" id="btnDownloadVklAuditExcel">Download Exl</a>
+                <button type="button" class="btn btn-primary" id="btnDownloadVklAuditZip" title="Download Logs As Zip">Download Zip</button>
             </div>
         </div>
     </div>
@@ -128,6 +129,47 @@
 <div class="row mt-3">
     <div class="col-md-12">
         <table class="table table-bordered table-sm" width="100%" id="vkl_site_log">
+            <thead>
+                <tr>
+                    <th style="display:none"></th>
+                    <th></th>
+                    <th colspan="4"><center>Clocks</center></th>
+                    <th rowspan="2"><center>ID No / Vehicle Rego</center></th>
+                    <th rowspan="2"><center>ID / Plate</center></th>
+                    <th colspan="2"><center>Vehicle Description</center></th>
+                    <th colspan="4"><center>Trailers Rego or ISO</center></th>
+                    <th rowspan="2"><center>Key / Card Scan</center></th>
+                    <th rowspan="2"><center>Company Name</center></th>
+                    <th colspan="3"><center>Individual</center></th>
+                    <th rowspan="2"><center>Site POC</center></th>
+                    <th rowspan="2"><center>Site Location</center></th>
+                    <th rowspan="2"><center>Purpose Of Entry</center></th>
+                    <th colspan="3"><center>Weight</center></th>
+                    <th style="min-width: 250px" rowspan="2"><center>Notes</center></th>
+                </tr>
+                <tr>
+                    <th style="display:none"></th>
+                    <th>Client Site</th>
+                    <th>Initial Call</th>
+                    <th>Entry Time</th>
+                    <th>Exit Time</th>
+                    <th>Time Slot No</th>
+                    <th>Truck Config</th>
+                    <th>Trailer Type</th>
+                    <th>1</th>
+                    <th>2</th>
+                    <th>3</th>
+                    <th>4</th>
+                    <th>Name</th>
+                    <th>Mobile No:</th>
+                    <th>Type</th>
+                    <th>In Gross (t)</th>
+                    <th>Out Net (t)</th>
+                    <th>Tare (t)</th>
+                </tr>
+            </thead>
+        </table>
+        <table class="table table-bordered table-sm" width="100%" id="vkl_site_lognew" hidden="hidden">
             <thead>
                 <tr>
                     <th style="display:none"></th>
