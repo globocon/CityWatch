@@ -32,7 +32,9 @@ namespace CityWatch.Data.Providers
         void SaveGuardCompliance(GuardCompliance guardCompliance);
         void DeleteGuardCompliance(int id);
         Guard GetGuardDetailsbySecurityLicenseNo(string securityLicenseNo);
-        
+        List<GuardCompliance> GetGuardCompliancesList(int[] guardIds);
+
+
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -429,6 +431,13 @@ namespace CityWatch.Data.Providers
                 .OrderBy(x => x.ReferenceNo).ToList();
         }
 
+        public List<GuardCompliance> GetGuardCompliancesList(int[] guardIds)
+        {
+            return _context.GuardCompliances
+        .Include(z => z.Guard)
+        .Where(x => guardIds.Contains(x.GuardId))
+        .OrderBy(x => x.ReferenceNo).ToList();
+        }
         public GuardCompliance GetGuardCompliance(int id)
         {
             return _context.GuardCompliances

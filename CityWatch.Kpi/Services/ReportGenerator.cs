@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using static Dropbox.Api.TeamLog.SpaceCapsType;
 using IO = System.IO;
 
 namespace CityWatch.Kpi.Services
@@ -92,6 +93,10 @@ namespace CityWatch.Kpi.Services
 
             var headerTable = CreateReportHeader(_clientSiteKpiSetting);
             doc.Add(headerTable);
+            //to get the data in 3rd page of report
+            var monthlyDataGuard = _viewDataService.GetKpiGuardDetailsData(_clientSiteKpiSetting.ClientSiteId, fromDate, toDate);
+            var GuradIds = monthlyDataGuard.Select(z => z.GuardId).ToArray();
+            var monthlyDataGuardCompliance = _viewDataService.GetKpiGuardDetailsComplianceData(GuradIds);
 
             var monthlyData = _viewDataService.GetKpiReportData(_clientSiteKpiSetting.ClientSiteId, fromDate, toDate);
             var tableData = CreateReportData(_clientSiteKpiSetting, fromDate, monthlyData.DailyKpiResults, isHrTimerPaused);
@@ -111,6 +116,16 @@ namespace CityWatch.Kpi.Services
                 var monthlyGuardData = _viewDataService.GetMonthlyKpiGuardData(clientSiteId, fromDate, toDate);
                 var tableGuardData = CreateGuardReportData(monthlyGuardData, fromDate);
                 doc.Add(tableGuardData);
+                if (monthlyDataGuard.Count>0)
+                {
+                    // To add 3rd Page 
+                    doc.Add(new AreaBreak());
+
+                    doc.Add(headerTable);
+                    var tableGuardDetailsData = CreateGuardDetailsData(monthlyDataGuard, monthlyDataGuardCompliance);
+                    doc.Add(tableGuardDetailsData);
+                }
+               
             }
 
             doc.Close();
@@ -566,6 +581,61 @@ namespace CityWatch.Kpi.Services
             return kpiGuardTable;
         }
 
+        private Table CreateGuardDetailsData(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance)
+        {
+           
+            var guards = monthlyDataGuard.Select(guardLogin => guardLogin.Guard);
+
+            int numColumns = monthlyDataGuardCompliance.Count+1;
+            float[] columnPercentages = new float[numColumns];
+            for (int i = 0; i < numColumns; i++)
+            {
+                columnPercentages[i] = 100.0f / numColumns;
+            }
+            var kpiGuardTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
+            CreateGuardDetailsHeader(kpiGuardTable, monthlyDataGuard);
+
+            int maxComplianceCount = guards.Select(g => _viewDataService.GetKpiGuardDetailsCompliance(g.Id).Count).Max();
+
+            foreach (var guard in guards)
+            {
+                var monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsCompliance(guard.Id);
+                kpiGuardTable.AddCell(CreateDataCell(guard.Name));
+                kpiGuardTable.AddCell(CreateDataCell(guard.SecurityNo));
+
+                for (int i = 0; i < maxComplianceCount; i++)
+                {
+                    var cellColor = "";
+                    DateTime? alertDate = null;
+                    var compliance = i < monthlyDataGuardComplianceData.Count ? monthlyDataGuardComplianceData[i] : null;
+                    if (compliance != null && compliance.ExpiryDate!=null && compliance.ExpiryDate.ToString()!="")
+                    {
+                        alertDate = Convert.ToDateTime(compliance.ExpiryDate).AddDays(-45);
+                    }
+
+                    if (alertDate <= DateTime.Today)
+                    {
+                        cellColor = CELL_BG_YELLOW;
+                    }
+                     if (compliance?.ExpiryDate < DateTime.Today)
+                    {
+                        cellColor = CELL_BG_RED;
+                    }
+                    else
+                    {
+                        cellColor = "white";
+                    }
+                    //var cellColor = compliance?.ExpiryDate > DateTime.Today ? CELL_BG_RED : "white";
+                    kpiGuardTable.AddCell(CreateDataCell(compliance?.ExpiryDate?.ToString() ?? "", true, cellColor));
+                }
+
+            }
+            
+           
+
+            return kpiGuardTable;
+        }
+       
         private static string GetHrTextColor(string hrValue)
         {
             if (hrValue == "Y")
@@ -617,6 +687,48 @@ namespace CityWatch.Kpi.Services
             table.AddCell(CreateHeaderCell("HR 1"));
             table.AddCell(CreateHeaderCell("HR 2"));
             table.AddCell(CreateHeaderCell("HR 3"));
+        }
+        private void CreateGuardDetailsHeader(Table table, List<GuardLogin> monthlyDataGuard)
+        {
+            List<int> complianceDataCounts = new List<int>();
+            var guards = monthlyDataGuard.Select(guardLogin => guardLogin.Guard);
+            foreach (var guard in guards)
+            {
+                var monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsCompliance(guard.Id);
+                complianceDataCounts.Add(monthlyDataGuardComplianceData.Count);
+            }
+            int[] countsArray = complianceDataCounts.ToArray();
+            int largestNumber;
+            if (countsArray.Length > 0)
+            {
+                 largestNumber= countsArray.Max();
+
+            }
+            else
+            {
+                largestNumber = 0;
+            }
+            table.AddCell(new Cell(1, 2)
+                .SetFontSize(CELL_FONT_SIZE)
+                .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
+                .Add(new Paragraph().Add(new Text($"\n"))));
+            for(int i = 0; i < largestNumber; i++) {
+                string sequentialNumber = (i + 1).ToString("D2");
+                table.AddCell(new Cell(1, 1)
+                .SetFontSize(CELL_FONT_SIZE)
+                .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
+                .Add(new Paragraph().Add(new Text(sequentialNumber))));
+                
+            }
+            table.AddCell(CreateHeaderCell($"Name\n"));
+            table.AddCell(CreateHeaderCell("C4i+License"));
+            for (int i = 0; i < largestNumber; i++)
+            {
+                
+                table.AddCell(CreateHeaderCell(""));
+                
+            }
+           
         }
     }
 }
