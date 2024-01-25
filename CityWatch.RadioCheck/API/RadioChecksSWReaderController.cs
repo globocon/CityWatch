@@ -140,7 +140,7 @@ namespace CityWatch.RadioCheck.API
                             foreach (var swScanItem in results.results)
                             {
                                 /* Check if the template name is '02  ******  ON PATROL  ******'*/
-                                if (swScanItem.TemplateId == 11)
+                                if (swScanItem.TemplateIdentificationNumber == "11")
                                 {
                                     if (swScanItem.EmployeePhone != null)
                                     {
