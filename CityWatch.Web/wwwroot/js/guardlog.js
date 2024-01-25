@@ -466,12 +466,23 @@
 
     $('#btn_confirm_logbook_expiry').on('click', function () {
         $('#loader').show();
+        // Task p6#73_TimeZone issue -- added by Binoy - Start
+        var tmdata = {
+            'EventDateTimeLocal': null,
+            'EventDateTimeLocalWithOffset': null,
+            'EventDateTimeZone': null,
+            'EventDateTimeZoneShort': null,
+            'EventDateTimeUtcOffsetMinute': null,
+        };
+
+        fillRefreshLocalTimeZoneDetails(tmdata, "", false)
         $.ajax({
             url: '/Guard/DailyLog?handler=ResetClientSiteLogBook',
             type: 'POST',
             data: {
                 clientSiteId: $('#GuardLog_ClientSiteLogBook_ClientSite_Id').val(),
-                guardLoginId: $('#GuardLog_GuardLoginId').val()
+                guardLoginId: $('#GuardLog_GuardLoginId').val(),
+                tmdata: tmdata
             },
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (result) {
@@ -871,9 +882,9 @@
         inlineEditing: { mode: 'command', managementColumn: false },
         columns: [
             { field: 'clientSiteId', hidden: true },
-            { field: 'eventDateTime', title: 'Time', width: 50, renderer: function (value, record) { return renderTime(value, record, false); } },
-            { field: 'notes', title: 'Event / Notes', width: 450, editor: logBookNotesEditor, renderer: renderLogBookNotes },
-            { field: 'guardInitials', title: 'Guard Initials', width: 50, renderer: function (value, record) { return record.guardLogin.guard.initial; } }
+            { field: 'eventDateTime', title: 'Time', width: 100, renderer: function (value, record) { return renderTime(value, record, false); } },
+            { field: 'notes', title: 'Event / Notes', width: 400, editor: logBookNotesEditor, renderer: renderLogBookNotes },
+            { field: 'guardInitials', title: 'Guard Initials', width: 50, renderer: function (value, record) { return record.guardLogin ? record.guardLogin.guard.initial : ''; } }
         ],
         initialized: function (e) {
             $('#wrapper_previous_day_log').hide();
@@ -3388,14 +3399,10 @@ function fillRefreshLocalTimeZoneDetails(formData, modelname, isform) {
     var DateTime = luxon.DateTime;
     var dt1 = DateTime.local();
     let tz = dt1.zoneName + ' ' + dt1.offsetNameShort;
-    let diffTZ = dt1.offset
-    //let tzshrtnm = dt1.offsetNameLong;
-
-
-
-    let tzshrtnm = dt1.offsetNameShort;
-
-
+    let diffTZ = dt1.offset   
+    //let tzshrtnm = dt1.offsetNameShort;
+    let tzshrtnm = 'GMT' + dt1.toFormat('ZZ'); // Modified by binoy on 19-01-2024
+   
     const eventDateTimeLocal = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS');
     const eventDateTimeLocalWithOffset = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS Z');
     if (isform) {

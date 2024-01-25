@@ -32,6 +32,7 @@ namespace CityWatch.Data.Providers
         void SaveGuardCompliance(GuardCompliance guardCompliance);
         void DeleteGuardCompliance(int id);
         Guard GetGuardDetailsbySecurityLicenseNo(string securityLicenseNo);
+        DateTime? GetLogbookDateFromLogbook(int logbookId);
         
     }
 
@@ -444,6 +445,12 @@ namespace CityWatch.Data.Providers
 
             _context.Remove(guardComplianceToDelete);
             _context.SaveChanges();
+        }
+
+        public DateTime? GetLogbookDateFromLogbook(int logbookId)
+        {
+            var lbdt = _context.ClientSiteLogBooks.Where(x => x.Id == logbookId).FirstOrDefault().Date;
+            return lbdt;
         }
     }
 }

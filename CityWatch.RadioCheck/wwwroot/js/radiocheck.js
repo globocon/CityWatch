@@ -3138,13 +3138,8 @@ function fillRefreshLocalTimeZoneDetails(formData, modelname, isform) {
     var dt1 = DateTime.local();
     let tz = dt1.zoneName + ' ' + dt1.offsetNameShort;
     let diffTZ = dt1.offset
-    //let tzshrtnm = dt1.offsetNameLong;
-
-    //const dt = new Date();
-    //var tzjs = getTimezoneAbbreviation;
-    //let tzshrtnm = tzjs(dt);
-
-    let tzshrtnm = dt1.offsetNameShort;
+    //let tzshrtnm = dt1.offsetNameShort;
+    let tzshrtnm = 'GMT' + dt1.toFormat('ZZ'); // Modified by binoy on 19-01-2024
 
     const eventDateTimeLocal = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS');
     const eventDateTimeLocalWithOffset = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS Z');

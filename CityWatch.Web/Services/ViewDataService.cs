@@ -1,4 +1,5 @@
 ﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Models;
@@ -939,15 +940,18 @@ namespace CityWatch.Web.Services
             if (!IsClientSiteDuressEnabled(clientSiteId))
             {
 
-               
+
                 /* Save the push message for reload to logbook on next day Start*/
+                DateTime? logBook_Date = null;
+                logBook_Date = _guardDataProvider.GetLogbookDateFromLogbook(logBookId); // p6#73 timezone bug - Added by binoy 24-01-2024
+                var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)tmzdata.EventDateTimeUtcOffsetMinute);
                 var radioCheckPushMessages = new RadioCheckPushMessages()
                 {
                     ClientSiteId = clientSiteId,
                     LogBookId = logBookId,
                     Notes = "Duress Alarm Activated",
                     EntryType = (int)IrEntryType.Alarm,
-                    Date = DateTime.Today,
+                    Date = logBook_Date.Value,
                     IsAcknowledged = 0,
                     IsDuress=1
                 };
@@ -962,7 +966,7 @@ namespace CityWatch.Web.Services
                     Notes = "Duress Alarm Activated",
                     IsSystemEntry = true,
                     IrEntryType = Data.Enums.IrEntryType.Alarm,
-                    EventDateTime = DateTime.Now,
+                    EventDateTime = localDateTime,  //DateTime.Now,
                     ClientSiteLogBookId = logBookId,
                     GuardLoginId = guardLoginId,
                     RcPushMessageId= pushMessageId,
