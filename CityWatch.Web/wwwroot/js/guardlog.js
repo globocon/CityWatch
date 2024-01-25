@@ -3671,17 +3671,46 @@ $('#btnGenerateVklAuditLogReport').on('click', function () {
     }
     $('#KeyVehicleLogAuditLogRequest_ClientSiteId').val($('#vklClientSiteId').val());
     var item = $('#KeyVehicleLogAuditLogRequest_VehicleRego').val();
-    $.ajax({
-       // url: '/Admin/AuditSiteLog?handler=AuditHistory&vehicleRego=' + item,
-        url: '/Admin/AuditSiteLog?handler=AuditHistory',
-        type: 'GET',
-        dataType: 'json',
-        data: $('#form_kvl_auditlog_request').serialize(),
-    }).done(function (response) {
-        $('#vkl-auditlog-modal').find('#vkl-profile-title-rego').html(item);
-        $('#vkl-auditlog-modal').modal('show');
-        $('#vehicle_key_log_audit_history').DataTable().clear().rows.add(response).draw();
-    });
+    var item2 = $('#KeyVehicleLogAuditLogRequest_PersonName').val();
+    var item3 = $('#KeyVehicleLogAuditLogRequest_KeyNo').val();
+    if (((item == null || item == '') && (item2 == null || item2 == '') && (item3 == null || item3 == ''))) {
+        new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
+    }
+    else if ((item != '') && (item2 != '') && (item3 != '')) {
+        new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
+    }
+    else if ((item != '') && (item2 != '') ) {
+        new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
+    }
+    else if ((item != '') &&  (item3 != '')) {
+        new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
+    }
+    else if ((item2 != '') && (item3 != '')) {
+        new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
+    }
+    else {
+        $('#loader').show();
+        $.ajax({
+            // url: '/Admin/AuditSiteLog?handler=AuditHistory&vehicleRego=' + item,
+            url: '/Admin/AuditSiteLog?handler=AuditHistory',
+            type: 'GET',
+            dataType: 'json',
+            data: $('#form_kvl_auditlog_request').serialize(),
+        }).done(function (response) {
+            if (item != '') {
+                $('#vkl-auditlog-modal').find('#vkl-profile-title-rego').html('Truck Rego: ' + item);
+            }
+            if (item2 != '') {
+                $('#vkl-auditlog-modal').find('#vkl-profile-title-rego').html('Individual Name: ' + item2);
+            }
+            if (item3 != '') {
+                $('#vkl-auditlog-modal').find('#vkl-profile-title-rego').html('Key No: ' + item3);
+            }
+            $('#vkl-auditlog-modal').modal('show');
+            $('#vehicle_key_log_audit_history').DataTable().clear().rows.add(response).draw();
+            $('#loader').hide();
+        });
+    }
 });
 /*to view thw audit log report-end*/
 

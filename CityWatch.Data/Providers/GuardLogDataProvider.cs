@@ -197,7 +197,9 @@ namespace CityWatch.Data.Providers
         List<int> GetGuardLogsNotAcknowledgedForNotificationSound();
 
         void CopyPreviousDaysDuressToLogBook(List<RadioCheckPushMessages> previousDayDuressList, int logBookId, int guardLoginId, GuardLog tmzdata);
-
+        List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetailsWithPersonName(string personName);
+        List<KeyVehicleLog> GetKeyVehicleLogsWithKeyNo(string KeyNo);
+        List<KeyVehicleLogAuditHistory> GetAuditHistoryWithKeyVehicleLogId(int id);
 
     }
 
@@ -3252,6 +3254,34 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
 
         }
+        public List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetailsWithPersonName(string personName)
+        {
+            return _context.KeyVehicleLogVisitorPersonalDetails
+                .Include(z => z.KeyVehicleLogProfile)
+                .Where(z => string.IsNullOrEmpty(personName) || string.Equals(z.PersonName, personName))
+                .ToList();
+        }
+        public List<KeyVehicleLog> GetKeyVehicleLogsWithKeyNo(string KeyNo)
+        {
+            var results = _context.KeyVehicleLogs.Where(z => z.KeyNo.Contains(KeyNo));
+
+            //results.Include(x => x.ClientSiteLogBook)
+            //    .Include(x => x.GuardLogin)
+            //    .Include(x => x.ClientSiteLocation)
+            //    .Include(x => x.ClientSitePoc)
+            //    .Load();
+
+            return results.OrderByDescending(z => z.Id).ToList();
+        }
+        public List<KeyVehicleLogAuditHistory> GetAuditHistoryWithKeyVehicleLogId(int id)
+        {
+            return _context.KeyVehicleLogAuditHistory
+                .Where(z => z.KeyVehicleLogId == id)
+                .Include(z => z.GuardLogin)
+                .ThenInclude(z => z.Guard)
+                .ToList();
+        }
+
 
     }
 
