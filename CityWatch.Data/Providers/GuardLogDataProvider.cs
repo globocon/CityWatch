@@ -1,4 +1,5 @@
 ﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using Dropbox.Api.Users;
 using iText.Layout.Element;
@@ -167,6 +168,8 @@ namespace CityWatch.Data.Providers
 
         void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications, 
                                                     IrEntryType entryType, int type,int clientSiteId, GuardLog tmzdata);
+        void LogBookEntryFromRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications,
+                                                    IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata);
         //do's and donts-start
         void SaveDosandDontsField(DosAndDontsField dosanddontsField);
         void DeleteDosandDontsField(int id);
@@ -198,10 +201,15 @@ namespace CityWatch.Data.Providers
 
         void CopyPreviousDaysDuressToLogBook(List<RadioCheckPushMessages> previousDayDuressList, int logBookId, int guardLoginId, GuardLog tmzdata);
 
+
+        // p6#73 timezone bug - Added by binoy 24-01-2024
+        int GetClientSiteLogBookIdByLogBookMaxID(int clientsiteId, LogBookType type, out DateTime logbookDate);
+
         List<RadioCheckListSWReadData> GetActiveGuardSWDetails(int clientSiteId, int guardId);
         List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetailsWithPersonName(string personName);
         List<KeyVehicleLog> GetKeyVehicleLogsWithKeyNo(string KeyNo);
         List<KeyVehicleLogAuditHistory> GetAuditHistoryWithKeyVehicleLogId(int id);
+
 
 
     }
@@ -238,7 +246,8 @@ namespace CityWatch.Data.Providers
                 var clientSiteId = _context.ClientSiteLogBooks.Where(x => x.Id == logBookId).FirstOrDefault().ClientSiteId;
                 if (clientSiteId != null)
                 {
-                    var clientSiteLogBook = _context.ClientSiteLogBooks.Where(x => x.ClientSiteId == clientSiteId && x.Date == DateTime.Now.Date).Select(x => x.Id).ToList();
+                    //var clientSiteLogBook = _context.ClientSiteLogBooks.Where(x => x.ClientSiteId == clientSiteId && x.Date == DateTime.Now.Date).Select(x => x.Id).ToList();
+                    var clientSiteLogBook = _context.ClientSiteLogBooks.Where(x => x.ClientSiteId == clientSiteId && x.Date == logDate.Date).Select(x => x.Id).ToList();
                     if (clientSiteLogBook.Count != 0)
                     {
                         result = _context.GuardLogs
@@ -355,12 +364,13 @@ namespace CityWatch.Data.Providers
 
         public void SaveClientSiteDuress(int clientSiteId, int guardId, string gpsCoordinates, string enabledAddress, GuardLog tmzdata)
         {
+            var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)tmzdata.EventDateTimeUtcOffsetMinute);  // p6#73 timezone bug - Added by binoy 24-01-2024
             _context.ClientSiteDuress.Add(new ClientSiteDuress()
             {
                 ClientSiteId = clientSiteId,
                 IsEnabled = true,
                 EnabledBy = guardId,
-                EnabledDate = DateTime.Today,
+                EnabledDate = localDateTime, //DateTime.Today,
                 GpsCoordinates=gpsCoordinates,
                 EnabledAddress= enabledAddress,
                 PlayDuressAlarm = true,
@@ -1495,6 +1505,14 @@ namespace CityWatch.Data.Providers
         {
             return _context.ClientSiteLogBooks
                  .SingleOrDefault(z => z.ClientSiteId == clientsiteId && z.Type == type && z.Date == date).Id;
+        }
+
+        // p6#73 timezone bug - Added by binoy 24-01-2024
+        public int GetClientSiteLogBookIdByLogBookMaxID(int clientsiteId, LogBookType type, out DateTime logbookDate)
+        {
+            int lbid = _context.ClientSiteLogBooks.Where(z => z.ClientSiteId == clientsiteId && z.Type == type).Select(x => x.Id).Max();
+            logbookDate = _context.ClientSiteLogBooks.Where(z => z.Id == lbid && z.Type == type).Select(x => x.Date).FirstOrDefault();
+            return lbid;
         }
 
         public void SaveClientSiteRadioCheck(ClientSiteRadioCheck clientSiteRadioCheck)
@@ -2889,12 +2907,12 @@ namespace CityWatch.Data.Providers
             }
             else
             {
-
+                // p6#73 timezone bug - Modified by binoy on 24-01-2024 Date = DateTime.Today changed to Date = date
                 var newLogBook = new ClientSiteLogBook()
                 {
                     ClientSiteId = clientsiteId,
                     Type = LogBookType.DailyGuardLog,
-                    Date = DateTime.Today
+                    Date = date
                 };
 
                 if (newLogBook.Id == 0)
@@ -3026,16 +3044,18 @@ namespace CityWatch.Data.Providers
            
             if (clientSiteForLogbook.Count != 0)
             {
-                var logBookId = GetClientSiteLogBookIdGloablmessage(clientSiteForLogbook.FirstOrDefault().Id, LogBookType.DailyGuardLog, DateTime.Today);
+                // p6#73 timezone bug - Modified by binoy 24-01-2024 changed DateTime.Today to localDateTime.Date
+                var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int) tmzdata.EventDateTimeUtcOffsetMinute);
+                var logBookId = GetClientSiteLogBookIdGloablmessage(clientSiteForLogbook.FirstOrDefault().Id, LogBookType.DailyGuardLog, localDateTime.Date);
 
                 if (loginGuardId != 0)
                 {
-                    var guardLoginId = GetGuardLoginId(Convert.ToInt32(loginGuardId), DateTime.Today);
+                    var guardLoginId = GetGuardLoginId(Convert.ToInt32(loginGuardId), localDateTime.Date); // DateTime.Today
                     var guardLog = new GuardLog()
                     {
                         ClientSiteLogBookId = logBookId,
                         GuardLoginId = guardLoginId,
-                        EventDateTime = DateTime.Now,
+                        EventDateTime = localDateTime, //DateTime.Now,
                         Notes = string.IsNullOrEmpty(subject) ? notifications : subject + " : " + notifications,
                         IrEntryType = entryType,
                         IsSystemEntry = true,
@@ -3054,7 +3074,92 @@ namespace CityWatch.Data.Providers
                     var guardLog = new GuardLog()
                     {
                         ClientSiteLogBookId = logBookId,
-                        EventDateTime = DateTime.Now,
+                        EventDateTime = localDateTime, //DateTime.Now,
+                        Notes = string.IsNullOrEmpty(subject) ? notifications : subject + " : " + notifications,
+                        IrEntryType = entryType,
+                        IsSystemEntry = true,
+                        EventDateTimeLocal = tmzdata.EventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
+                        EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                        EventDateTimeZone = tmzdata.EventDateTimeZone,
+                        EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                        EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                        PlayNotificationSound = true // Task p6#73_TimeZone issue -- added by Binoy - End
+                    };
+                    if (guardLog.ClientSiteLogBookId != 0)
+                    {
+                        SaveGuardLog(guardLog);
+                    }
+
+                }
+
+            }
+
+        }
+
+        public void LogBookEntryFromRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications,
+                                                         IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata)
+        {
+
+            var guardInitials = string.Empty;
+            var alreadyExistingSite = _context.RadioCheckLogbookSiteDetails.ToList();
+            var clientSiteForLogbook = _context.ClientSites.Where(x => x.Id == alreadyExistingSite.FirstOrDefault().ClientSiteId)
+                .Include(x => x.ClientType).OrderBy(x => x.ClientType.Name).ThenBy(x => x.Name).ToList();
+            if (selectedGuardId != 0)
+            {
+
+                guardInitials = _context.Guards.Where(x => x.Id == selectedGuardId).FirstOrDefault().Name + " [" + _context.Guards.Where(x => x.Id == selectedGuardId).FirstOrDefault().Initial + "]";
+
+            }
+            /* Rc Status update*/
+            if (type == 2)
+            {
+                if (clientSiteForLogbook.Count() > 0)
+                {
+
+                    var clientsitename = GetClientSites(clientSiteId).FirstOrDefault().Name;
+                    notifications = "Control Room Alert for " + guardInitials + " - " + clientsitename + ": " + notifications;
+                }
+
+
+            }
+
+            if (clientSiteForLogbook.Count != 0)
+            {
+                // p6#73 timezone bug - Modified by binoy 24-01-2024 changed DateTime.Today to localDateTime.Date
+                var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)tmzdata.EventDateTimeUtcOffsetMinute);
+               // var logBookId = GetClientSiteLogBookIdGloablmessage(clientSiteForLogbook.FirstOrDefault().Id, LogBookType.DailyGuardLog, localDateTime.Date);                
+                var logbookdate = DateTime.Today;
+                var logbooktype = LogBookType.DailyGuardLog;      
+                var logBookId = GetClientSiteLogBookIdByLogBookMaxID(clientSiteForLogbook.FirstOrDefault().Id, logbooktype, out logbookdate); // Get Last Logbookid and logbook Date by latest logbookid  of the client site
+                var entryTime = DateTimeHelper.GetLogbookEndTimeFromDate(logbookdate);
+
+                if (loginGuardId != 0)
+                {
+                    var guardLoginId = GetGuardLoginId(Convert.ToInt32(loginGuardId), localDateTime.Date); // DateTime.Today
+                    var guardLog = new GuardLog()
+                    {
+                        ClientSiteLogBookId = logBookId,
+                        GuardLoginId = guardLoginId,
+                        EventDateTime = entryTime, //DateTime.Now,
+                        Notes = string.IsNullOrEmpty(subject) ? notifications : subject + " : " + notifications,
+                        IrEntryType = entryType,
+                        IsSystemEntry = true,
+                        EventDateTimeLocal = tmzdata.EventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
+                        EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                        EventDateTimeZone = tmzdata.EventDateTimeZone,
+                        EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                        EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                        PlayNotificationSound = true // Task p6#73_TimeZone issue -- added by Binoy - End
+
+                    };
+                    SaveGuardLog(guardLog);
+                }
+                else
+                {
+                    var guardLog = new GuardLog()
+                    {
+                        ClientSiteLogBookId = logBookId,
+                        EventDateTime = entryTime, //DateTime.Now,
                         Notes = string.IsNullOrEmpty(subject) ? notifications : subject + " : " + notifications,
                         IrEntryType = entryType,
                         IsSystemEntry = true,

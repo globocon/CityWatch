@@ -22,7 +22,7 @@
 <div class="row">
     <div class="col-md-4">
         <div>
-            <b>Log Book Date: </b>@DateTime.Today.ToString("dd MMM yyyy (dddd)").ToUpper()
+            <b>Log Book Date: </b>@Model.GuardLog.ClientSiteLogBook.Date.ToString("dd MMM yyyy (dddd)").ToUpper()   @*  @DateTime.Today.ToString("dd MMM yyyy (dddd)").ToUpper() *@
         </div>
     </div>
     <div class="col-md-3 p-0">
@@ -265,7 +265,7 @@
                 <h5 class="modal-title"><i class="fa fa-exclamation-circle text-warning mr-2"></i>Warning: Logbook Expired</h5>
             </div>
             <div class="modal-body">
-                <p>A new day started and this logbook (LB) expired. Click Ok to create a new book for @DateTime.Today.AddDays(1).ToString("dd MMM yyyy")</p>
+                <p>A new day started and this logbook (LB) expired. Click Ok to create a new book for @Model.GuardLog.ClientSiteLogBook.Date.AddDays(1).ToString("dd MMM yyyy")</p> @* @DateTime.Today.AddDays(1).ToString("dd MMM yyyy") *@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="btn_confirm_logbook_expiry">Ok</button>

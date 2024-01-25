@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
 
 namespace CityWatch.Web
@@ -70,7 +71,8 @@ namespace CityWatch.Web
                 options.Conventions.AuthorizeFolder("/Develop");
                 options.Conventions.AuthorizeFolder("/Radio");
             });
-            services.AddDbContext<CityWatchDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddDbContext<CityWatchDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
+            .LogTo(Console.WriteLine,LogLevel.Information));
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
             services.AddSession(options =>
             {

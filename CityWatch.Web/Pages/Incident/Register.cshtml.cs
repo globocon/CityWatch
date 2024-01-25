@@ -659,17 +659,19 @@ namespace CityWatch.Web.Pages.Incident
             return value;
         }
 
-        private int GetLogBookId(int clientSiteId)
+        private int GetLogBookId(int clientSiteId, int EventDateTimeUtcOffsetMinute)
         {
             int logBookId;
-            var logBook = _clientDataProvider.GetClientSiteLogBook(clientSiteId, LogBookType.DailyGuardLog, DateTime.Today);
+
+            var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute(EventDateTimeUtcOffsetMinute);      
+            var logBook = _clientDataProvider.GetClientSiteLogBook(clientSiteId, LogBookType.DailyGuardLog, localDateTime.Date);
             if (logBook == null)
             {
                 logBookId = _clientDataProvider.SaveClientSiteLogBook(new ClientSiteLogBook()
                 {
                     ClientSiteId = clientSiteId,
                     Type = LogBookType.DailyGuardLog,
-                    Date = DateTime.Today,
+                    Date = localDateTime.Date,
                 });
             }
             else
@@ -682,11 +684,13 @@ namespace CityWatch.Web.Pages.Incident
 
         private void CreateGuardLogEntry(IncidentReport report)
         {
-            var logBookId = GetLogBookId(report.ClientSiteId.Value);
+            // p6#73 timezone bug - Added by binoy 24-01-2024
+            var logBookId = GetLogBookId(report.ClientSiteId.Value,(int)report.CreatedOnDateTimeUtcOffsetMinute);
+            var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)report.CreatedOnDateTimeUtcOffsetMinute);
             var guardLog = new GuardLog()
             {
                 ClientSiteLogBookId = logBookId,
-                EventDateTime = DateTime.Now,
+                EventDateTime = localDateTime, //DateTime.Now,
                 Notes = Path.GetFileNameWithoutExtension(report.FileName),
                 IsSystemEntry = true,
                 IrEntryType = report.IsEventFireOrAlarm ? IrEntryType.Alarm : IrEntryType.Normal,
