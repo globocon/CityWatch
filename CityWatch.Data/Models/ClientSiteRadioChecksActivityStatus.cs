@@ -23,6 +23,9 @@ namespace CityWatch.Data.Models
 
         public Nullable<DateTime> LastLBCreatedTime { get; set; }
 
+        public Nullable<DateTime> LastSWCreatedTime { get; set; }
+        
+
 
         public Nullable<DateTime> GuardLoginTime { get; set; }
 
@@ -35,6 +38,7 @@ namespace CityWatch.Data.Models
         public int? IRId { get; set; }
         public int? KVId { get; set; }
         public int? LBId { get; set; }
+        public int? SWId { get; set; }
 
         public string ActivityType { get; set; }
         [ForeignKey("GuardId")]

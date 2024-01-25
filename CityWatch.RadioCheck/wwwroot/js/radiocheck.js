@@ -276,6 +276,10 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             data: 'smartWands',
             width: '6%',
             className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardSWInfoModal" id="btnSWdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '"> ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+            }
         },
         //{
         //    data: 'rcStatus',
@@ -1231,6 +1235,78 @@ let clientSiteActiveGuardsIncidentReportsDetails = $('#clientSiteActiveGuardsInc
     },
 });
 
+
+
+/* for SW details of the guard-start*/
+
+let clientSiteActiveGuardsSWDetails = $('#clientSiteActiveGuardsSWDetails').DataTable({
+    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+    ordering: true,
+    info: false,
+    searching: false,
+    autoWidth: true,
+    fixedHeader: true,
+    "scrollY": "300px", // Set the desired height for the scrollable area
+    "paging": false,
+    "footer": true,
+    ajax: {
+        url: '/RadioCheckV2?handler=ClientSiteSWDetails',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteId = $('#txtClientSiteId').val();
+            d.guardId = $('#txtGuardId').val();
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'id', visible: false },
+        {
+            data: 'templateName',
+            width: '50%',
+           
+        },
+        {
+            data: 'smartWand',
+            width: '10%'
+
+        },
+        {
+            data: 'employeePhone',
+            width: '20%',
+           
+
+        },
+       
+
+       
+
+
+    ],
+   
+});
+
+$('#clientSiteActiveGuards tbody').on('click', '#btnSWdetails', function (value, record) {
+    $('#guardSWInfoModal').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
+    var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    if (GuardId.length == 0) {
+        GuardId = $(this).closest("tr").find('td').eq(2).find('#GuardId').val();
+    }
+    if (ClientSiteId.length == 0) {
+        ClientSiteId = $(this).closest("tr").find('td').eq(2).find('#ClientSiteId').val();
+    }
+
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    // $('#lbl_GuardActivityHeader').val($(this).closest("tr").find("td").eq(2).text() + 'Log Book Details');
+    $('#lbl_GuardActivityHeader4').text(GuardName + '-' + 'Smart Wand Scan Details');
+    clientSiteActiveGuardsSWDetails.ajax.reload();
+
+});
+
+/* for SW details of the guard-end*/
 $('#clientSiteActiveGuards tbody').on('click', '#btnIncidentReportdetails', function (value, record) {
     $('#guardIncidentReportsInfoModal').modal('show');
     isPaused = true;
@@ -2639,6 +2715,10 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             data: 'smartWands',
             width: '6%',
             className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardSWInfoModal" id="btnSWdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '"> ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+            }
         },
         //{
         //    data: 'rcStatus',
@@ -2817,6 +2897,28 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnIncidentReportdeta
     clientSiteActiveGuardsIncidentReportsDetails.ajax.reload();
 
 });
+
+$('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnSWdetails', function (value, record) {
+    $('#guardSWInfoModal').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
+    var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    if (GuardId.length == 0) {
+        GuardId = $(this).closest("tr").find('td').eq(2).find('#GuardId').val();
+    }
+    if (ClientSiteId.length == 0) {
+        ClientSiteId = $(this).closest("tr").find('td').eq(2).find('#ClientSiteId').val();
+    }
+
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    // $('#lbl_GuardActivityHeader').val($(this).closest("tr").find("td").eq(2).text() + 'Log Book Details');
+    $('#lbl_GuardActivityHeader4').text(GuardName + '-' + 'Smart Wand Scan Details');
+    clientSiteActiveGuardsSWDetails.ajax.reload();
+
+});
+
 let isActive = true;
 $('#heading-example').on('click', function () {
 

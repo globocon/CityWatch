@@ -177,6 +177,16 @@ namespace CityWatch.Web.Pages.Radio
 
         //for getting guards not available -start
 
+
+        //for getting SW Details of Guards-start
+        public IActionResult OnGetClientSiteSWDetails(int clientSiteId, int guardId)
+        {
+
+            return new JsonResult(_guardLogDataProvider.GetActiveGuardSWDetails(clientSiteId, guardId));
+        }
+
+        //for getting SW details of Guards-end
+
         public IActionResult OnGetClientSiteNotAvailableStatus(string clientSiteIds)
         {
 

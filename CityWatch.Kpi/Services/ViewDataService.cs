@@ -44,6 +44,9 @@ namespace CityWatch.Kpi.Services
         List<SelectListItem> GetOfficerPositions(OfficerPositionFilterManning positionFilter = OfficerPositionFilterManning.SecurityOnly);
         List<SelectListItem> ClientTypesUsingLoginUserId(int guardId);
         List<SelectListItem> GetClientSitesUsingLoginUserId(int userId, string type = "");
+        List<GuardLogin> GetKpiGuardDetailsData(int clientSiteId, DateTime fromDate, DateTime toDate);
+        List<GuardCompliance> GetKpiGuardDetailsCompliance(int guardId);
+        List<GuardCompliance> GetKpiGuardDetailsComplianceData(int[] guardIds);
     }
 
     public class ViewDataService : IViewDataService
@@ -220,7 +223,7 @@ namespace CityWatch.Kpi.Services
 
                 return new MonthlyKpiResult(clientSiteKpiSetting, dailyKpis);
             }
-
+        
             public List<DailyKpiGuard> GetMonthlyKpiGuardData(int clientSiteId, DateTime fromDate, DateTime toDate)
             {
                 var dailyClientSiteKpis = _kpiDataProvider.GetDailyClientSiteKpis(clientSiteId, fromDate, toDate).ToList();
@@ -242,8 +245,30 @@ namespace CityWatch.Kpi.Services
             }
             return dailyClientSiteKpis.Select(z => new DailyKpiGuard(z, guardLogins.Where(y => y.LoginDate.ToString("yyyyMMdd") == z.Date.ToString("yyyyMMdd")), guardCompliances)).ToList();
         }
+        //To  get the details of Gurad in 3rd page of report start
+        public List<GuardLogin> GetKpiGuardDetailsData(int clientSiteId, DateTime fromDate, DateTime toDate)
+        {
+           
+            var guardLogins = _guardDataProvider.GetGuardLogins(clientSiteId, fromDate, toDate).ToList();
+            
+            return guardLogins.ToList();
+        }
+        public List<GuardCompliance> GetKpiGuardDetailsComplianceData(int[] guardIds)
+        {
+            
+                var guardCompliance = _guardDataProvider.GetGuardCompliancesList(guardIds).ToList();
+                
+            return guardCompliance.ToList();
+        }
+        public List<GuardCompliance> GetKpiGuardDetailsCompliance(int guardIds)
+        {
 
-            public Dictionary<int, MonthlyKpiResult> GetMonthlyKpiReportData(int[] clientSiteIds, DateTime fromDate, DateTime toDate)
+            var guardCompliance = _guardDataProvider.GetGuardCompliances(guardIds).ToList();
+
+            return guardCompliance.ToList();
+        }
+        //To  get the details of Gurad in 3rd page of report stop
+        public Dictionary<int, MonthlyKpiResult> GetMonthlyKpiReportData(int[] clientSiteIds, DateTime fromDate, DateTime toDate)
             {
                 var dailyClientSiteKpis = _kpiDataProvider.GetDailyClientSiteKpis(clientSiteIds, fromDate, toDate);
                 var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientSiteIds);

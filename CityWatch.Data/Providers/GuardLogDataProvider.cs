@@ -201,8 +201,16 @@ namespace CityWatch.Data.Providers
 
         void CopyPreviousDaysDuressToLogBook(List<RadioCheckPushMessages> previousDayDuressList, int logBookId, int guardLoginId, GuardLog tmzdata);
 
+
         // p6#73 timezone bug - Added by binoy 24-01-2024
         int GetClientSiteLogBookIdByLogBookMaxID(int clientsiteId, LogBookType type, out DateTime logbookDate);
+
+        List<RadioCheckListSWReadData> GetActiveGuardSWDetails(int clientSiteId, int guardId);
+        List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetailsWithPersonName(string personName);
+        List<KeyVehicleLog> GetKeyVehicleLogsWithKeyNo(string KeyNo);
+        List<KeyVehicleLogAuditHistory> GetAuditHistoryWithKeyVehicleLogId(int id);
+
+
 
     }
 
@@ -1450,6 +1458,27 @@ namespace CityWatch.Data.Providers
             return allvalues;
         }
         //for getting  incident report details of the  guard-end
+
+        //for getting SW details of the  guard-start
+
+        public List<RadioCheckListSWReadData> GetActiveGuardSWDetails(int clientSiteId, int guardId)
+        {
+            var param1 = new SqlParameter();
+            param1.ParameterName = "@ClientSiteId";
+            param1.SqlDbType = SqlDbType.Int;
+            param1.SqlValue = clientSiteId;
+
+            var param2 = new SqlParameter();
+            param2.ParameterName = "@GuardId";
+            param2.SqlDbType = SqlDbType.Int;
+            param2.SqlValue = guardId;
+
+
+            var allvalues = _context.RadioCheckListSWReadData.FromSqlRaw($"EXEC sp_GetActiveGuardSWDetailsForRC @ClientSiteId,@GuardId", param1, param2).ToList();
+
+            return allvalues;
+        }
+        //for getting  SW details of the  guard-end
         public Guard GetGuards(int guardId)
         {
 
@@ -2165,6 +2194,9 @@ namespace CityWatch.Data.Providers
 
                                 }
 
+                               
+
+
                             }
                             else
                             {
@@ -2314,7 +2346,7 @@ namespace CityWatch.Data.Providers
                                 var ClientSiteRadioChecksActivityDetails = GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId && x.GuardLoginTime != null);
                                 foreach (var ClientSiteRadioChecksActivity in ClientSiteRadioChecksActivityDetails)
                                 {
-                                    ClientSiteRadioChecksActivity.GuardLogoutTime = DateTime.Now;
+                                    //ClientSiteRadioChecksActivity.GuardLogoutTime = DateTime.Now;
                                     //UpdateRadioChecklistLogOffEntry(ClientSiteRadioChecksActivity);
 
                                     var newstatu = new ClientSiteRadioCheck()
@@ -2482,7 +2514,7 @@ namespace CityWatch.Data.Providers
                                 var ClientSiteRadioChecksActivityDetails = GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId && x.GuardLoginTime != null);
                                 foreach (var ClientSiteRadioChecksActivity in ClientSiteRadioChecksActivityDetails)
                                 {
-                                    ClientSiteRadioChecksActivity.GuardLogoutTime = DateTime.Now;
+                                    //ClientSiteRadioChecksActivity.GuardLogoutTime = DateTime.Now;
                                     //UpdateRadioChecklistLogOffEntry(ClientSiteRadioChecksActivity);
 
                                     var newstatu = new ClientSiteRadioCheck()
@@ -2648,7 +2680,7 @@ namespace CityWatch.Data.Providers
                                 var ClientSiteRadioChecksActivityDetails = GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId && x.GuardLoginTime != null);
                                 foreach (var ClientSiteRadioChecksActivity in ClientSiteRadioChecksActivityDetails)
                                 {
-                                    ClientSiteRadioChecksActivity.GuardLogoutTime = DateTime.Now;
+                                    //ClientSiteRadioChecksActivity.GuardLogoutTime = DateTime.Now;
                                     //UpdateRadioChecklistLogOffEntry(ClientSiteRadioChecksActivity);
 
                                     var newstatu = new ClientSiteRadioCheck()
@@ -3354,6 +3386,34 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
 
         }
+        public List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetailsWithPersonName(string personName)
+        {
+            return _context.KeyVehicleLogVisitorPersonalDetails
+                .Include(z => z.KeyVehicleLogProfile)
+                .Where(z => string.IsNullOrEmpty(personName) || string.Equals(z.PersonName, personName))
+                .ToList();
+        }
+        public List<KeyVehicleLog> GetKeyVehicleLogsWithKeyNo(string KeyNo)
+        {
+            var results = _context.KeyVehicleLogs.Where(z => z.KeyNo.Contains(KeyNo));
+
+            //results.Include(x => x.ClientSiteLogBook)
+            //    .Include(x => x.GuardLogin)
+            //    .Include(x => x.ClientSiteLocation)
+            //    .Include(x => x.ClientSitePoc)
+            //    .Load();
+
+            return results.OrderByDescending(z => z.Id).ToList();
+        }
+        public List<KeyVehicleLogAuditHistory> GetAuditHistoryWithKeyVehicleLogId(int id)
+        {
+            return _context.KeyVehicleLogAuditHistory
+                .Where(z => z.KeyVehicleLogId == id)
+                .Include(z => z.GuardLogin)
+                .ThenInclude(z => z.Guard)
+                .ToList();
+        }
+
 
     }
 
