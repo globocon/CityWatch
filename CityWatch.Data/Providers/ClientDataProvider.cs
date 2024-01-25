@@ -1435,6 +1435,12 @@ namespace CityWatch.Data.Providers
                  (z =>  z.EntryType == 2 && z.IsAcknowledged == 0 && z.IsDuress == 1).ToList();
         }
         /* Get Previous day pushmessages end*/
+        //To Get the Default Email Address start
+        public string GetDefaultEmailAddress()
+        {
+            return _context.ReportTemplates.Select(x => x.DefaultEmail).FirstOrDefault();
+        }
+        //To Get the Default Email Address stop
     }
 
 
