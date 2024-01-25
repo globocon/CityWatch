@@ -3,6 +3,7 @@ using CityWatch.Data;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
+using CityWatch.RadioCheck.Helpers;
 using CityWatch.RadioCheck.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
@@ -31,7 +32,7 @@ namespace CityWatch.RadioCheck
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            
+            services.Configure<Settings>(Configuration.GetSection(Settings.Name));
             services.Configure<EmailOptions>(Configuration.GetSection(EmailOptions.Email));
             services.AddScoped<IClientDataProvider, ClientDataProvider>();           
             services.AddScoped<IKpiDataProvider, KpiDataProvider>();

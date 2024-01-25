@@ -85,5 +85,9 @@ namespace CityWatch.Data
 
         public DbSet<RadioCheckPushMessages> RadioCheckPushMessages { get; set; }
 
+        public DbSet<RadioChecksSmartWandScanResults> RadioChecksSmartWandScanResults { get; set; }
+
+        public DbSet<RadioCheckListSWReadData> RadioCheckListSWReadData { get; set; }
+
     }
 }

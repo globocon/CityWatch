@@ -197,7 +197,7 @@ namespace CityWatch.Data.Providers
         List<int> GetGuardLogsNotAcknowledgedForNotificationSound();
 
         void CopyPreviousDaysDuressToLogBook(List<RadioCheckPushMessages> previousDayDuressList, int logBookId, int guardLoginId, GuardLog tmzdata);
-
+        List<RadioCheckListSWReadData> GetActiveGuardSWDetails(int clientSiteId, int guardId);
 
     }
 
@@ -1443,6 +1443,27 @@ namespace CityWatch.Data.Providers
             return allvalues;
         }
         //for getting  incident report details of the  guard-end
+
+        //for getting SW details of the  guard-start
+
+        public List<RadioCheckListSWReadData> GetActiveGuardSWDetails(int clientSiteId, int guardId)
+        {
+            var param1 = new SqlParameter();
+            param1.ParameterName = "@ClientSiteId";
+            param1.SqlDbType = SqlDbType.Int;
+            param1.SqlValue = clientSiteId;
+
+            var param2 = new SqlParameter();
+            param2.ParameterName = "@GuardId";
+            param2.SqlDbType = SqlDbType.Int;
+            param2.SqlValue = guardId;
+
+
+            var allvalues = _context.RadioCheckListSWReadData.FromSqlRaw($"EXEC sp_GetActiveGuardSWDetailsForRC @ClientSiteId,@GuardId", param1, param2).ToList();
+
+            return allvalues;
+        }
+        //for getting  SW details of the  guard-end
         public Guard GetGuards(int guardId)
         {
 
@@ -2150,6 +2171,9 @@ namespace CityWatch.Data.Providers
 
                                 }
 
+                               
+
+
                             }
                             else
                             {
@@ -2299,7 +2323,7 @@ namespace CityWatch.Data.Providers
                                 var ClientSiteRadioChecksActivityDetails = GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId && x.GuardLoginTime != null);
                                 foreach (var ClientSiteRadioChecksActivity in ClientSiteRadioChecksActivityDetails)
                                 {
-                                    ClientSiteRadioChecksActivity.GuardLogoutTime = DateTime.Now;
+                                    //ClientSiteRadioChecksActivity.GuardLogoutTime = DateTime.Now;
                                     //UpdateRadioChecklistLogOffEntry(ClientSiteRadioChecksActivity);
 
                                     var newstatu = new ClientSiteRadioCheck()
@@ -2467,7 +2491,7 @@ namespace CityWatch.Data.Providers
                                 var ClientSiteRadioChecksActivityDetails = GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId && x.GuardLoginTime != null);
                                 foreach (var ClientSiteRadioChecksActivity in ClientSiteRadioChecksActivityDetails)
                                 {
-                                    ClientSiteRadioChecksActivity.GuardLogoutTime = DateTime.Now;
+                                    //ClientSiteRadioChecksActivity.GuardLogoutTime = DateTime.Now;
                                     //UpdateRadioChecklistLogOffEntry(ClientSiteRadioChecksActivity);
 
                                     var newstatu = new ClientSiteRadioCheck()
@@ -2633,7 +2657,7 @@ namespace CityWatch.Data.Providers
                                 var ClientSiteRadioChecksActivityDetails = GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId && x.GuardLoginTime != null);
                                 foreach (var ClientSiteRadioChecksActivity in ClientSiteRadioChecksActivityDetails)
                                 {
-                                    ClientSiteRadioChecksActivity.GuardLogoutTime = DateTime.Now;
+                                    //ClientSiteRadioChecksActivity.GuardLogoutTime = DateTime.Now;
                                     //UpdateRadioChecklistLogOffEntry(ClientSiteRadioChecksActivity);
 
                                     var newstatu = new ClientSiteRadioCheck()
