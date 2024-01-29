@@ -583,15 +583,35 @@ namespace CityWatch.Kpi.Services
 
         private Table CreateGuardDetailsData(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance)
         {
-           
-            var guards = monthlyDataGuard.Select(guardLogin => guardLogin.Guard);
 
-            int numColumns = monthlyDataGuardCompliance.Count+1;
-            float[] columnPercentages = new float[numColumns];
-            for (int i = 0; i < numColumns; i++)
+            var guards = monthlyDataGuard
+    .Select(guardLogin => guardLogin.Guard)
+    .Distinct()
+    .ToArray();
+            List<int> complianceDataCounts = new List<int>();
+            foreach (var guard in guards)
             {
-                columnPercentages[i] = 100.0f / numColumns;
+                var monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsCompliance(guard.Id);
+                complianceDataCounts.Add(monthlyDataGuardComplianceData.Count);
             }
+            int[] countsArray = complianceDataCounts.ToArray();
+            int largestNumber;
+            if (countsArray.Length > 0)
+            {
+                largestNumber = countsArray.Max();
+
+            }
+            else
+            {
+                largestNumber = 0;
+            }
+
+            int numColumns = monthlyDataGuardCompliance.Count;
+            float[] columnPercentages = new float[largestNumber+2];
+            //for (int i = 0; i < numColumns; i++)
+            //{
+            //    columnPercentages[i] = 100.0f / numColumns;
+            //}
             var kpiGuardTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
             CreateGuardDetailsHeader(kpiGuardTable, monthlyDataGuard);
 
@@ -608,7 +628,7 @@ namespace CityWatch.Kpi.Services
                     var cellColor = "";
                     DateTime? alertDate = null;
                     var compliance = i < monthlyDataGuardComplianceData.Count ? monthlyDataGuardComplianceData[i] : null;
-                    if (compliance != null && compliance.ExpiryDate!=null && compliance.ExpiryDate.ToString()!="")
+                    if (compliance != null && compliance.ExpiryDate != null && compliance.ExpiryDate.ToString() != "")
                     {
                         alertDate = Convert.ToDateTime(compliance.ExpiryDate).AddDays(-45);
                     }
@@ -617,7 +637,7 @@ namespace CityWatch.Kpi.Services
                     {
                         cellColor = CELL_BG_YELLOW;
                     }
-                     if (compliance?.ExpiryDate < DateTime.Today)
+                    if (compliance?.ExpiryDate < DateTime.Today)
                     {
                         cellColor = CELL_BG_RED;
                     }
@@ -630,8 +650,8 @@ namespace CityWatch.Kpi.Services
                 }
 
             }
-            
-           
+
+
 
             return kpiGuardTable;
         }
@@ -691,7 +711,10 @@ namespace CityWatch.Kpi.Services
         private void CreateGuardDetailsHeader(Table table, List<GuardLogin> monthlyDataGuard)
         {
             List<int> complianceDataCounts = new List<int>();
-            var guards = monthlyDataGuard.Select(guardLogin => guardLogin.Guard);
+            var guards = monthlyDataGuard
+    .Select(guardLogin => guardLogin.Guard)
+    .Distinct()
+    .ToArray();
             foreach (var guard in guards)
             {
                 var monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsCompliance(guard.Id);
