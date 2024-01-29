@@ -140,8 +140,8 @@ namespace CityWatch.RadioCheck.API
                             foreach (var swScanItem in results.results)
                             {
                                 /* Check if the template name is '02  ******  ON PATROL  ******'*/
-                                if (swScanItem.TemplateIdentificationNumber == "11")
-                                {
+                                //if (swScanItem.TemplateIdentificationNumber == "11")
+                                //{
                                     if (swScanItem.EmployeePhone != null)
                                     {
                                         /* Compare the phone number from swScanItem with ClientSiteSmartWands phone number remove all space and take right 9 char */
@@ -164,16 +164,16 @@ namespace CityWatch.RadioCheck.API
                                                     /* remove the old data check if the same ClientSiteId , GuardId and SmartWandId 
                                                      then the table contain latest scan details for a site
                                                      */
-                                                    var oldSameData = _context.RadioChecksSmartWandScanResults.Where(x => x.ClientSiteId == smartWandDetails.ClientSiteId && x.GuardId == latestRecord.GuardId && x.SmartWandId == smartWandDetails.SmartWandId).ToList();
-                                                    if (oldSameData != null)
-                                                    {
-                                                        if (oldSameData.Count != 0)
-                                                        {
-                                                            _context.RadioChecksSmartWandScanResults.RemoveRange(oldSameData);
-                                                            _context.SaveChanges();
-                                                        }
+                                                    //var oldSameData = _context.RadioChecksSmartWandScanResults.Where(x => x.ClientSiteId == smartWandDetails.ClientSiteId && x.GuardId == latestRecord.GuardId && x.SmartWandId == smartWandDetails.SmartWandId).ToList();
+                                                    //if (oldSameData != null)
+                                                    //{
+                                                    //    if (oldSameData.Count != 0)
+                                                    //    {
+                                                    //        _context.RadioChecksSmartWandScanResults.RemoveRange(oldSameData);
+                                                    //        _context.SaveChanges();
+                                                    //    }
 
-                                                    }
+                                                    //}
 
 
                                                     /* Save the details to RadioChecksSmartWandScanResults*/
@@ -203,16 +203,16 @@ namespace CityWatch.RadioCheck.API
 
                                                     
                                                     /* Remove Old data >2*/
-                                                    var oldSameDataInRc = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == smartWandDetails.ClientSiteId && x.GuardId == latestRecord.GuardId && x.ActivityType == "SW").ToList();
-                                                    if (oldSameDataInRc != null)
-                                                    {
-                                                        if (oldSameDataInRc.Count != 0)
-                                                        {
-                                                            _context.ClientSiteRadioChecksActivityStatus.RemoveRange(oldSameDataInRc);
-                                                            _context.SaveChanges();
-                                                        }
+                                                    //var oldSameDataInRc = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == smartWandDetails.ClientSiteId && x.GuardId == latestRecord.GuardId && x.ActivityType == "SW").ToList();
+                                                    //if (oldSameDataInRc != null)
+                                                    //{
+                                                    //    if (oldSameDataInRc.Count != 0)
+                                                    //    {
+                                                    //        _context.ClientSiteRadioChecksActivityStatus.RemoveRange(oldSameDataInRc);
+                                                    //        _context.SaveChanges();
+                                                    //    }
 
-                                                    }
+                                                    //}
                                                     /* Save the details to ClientSiteRadioChecksActivityStatus*/
                                                     var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
                                                     {
@@ -236,7 +236,7 @@ namespace CityWatch.RadioCheck.API
 
                                     }
 
-                                }
+                                //}
 
 
                             }
