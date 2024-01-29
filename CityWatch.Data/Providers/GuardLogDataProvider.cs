@@ -324,16 +324,32 @@ namespace CityWatch.Data.Providers
 
         public List<GuardLog> GetGuardLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
         {
-            return _context.GuardLogs
-                .Where(z => z.ClientSiteLogBook.ClientSiteId == clientSiteId && z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog
-                        && z.ClientSiteLogBook.Date >= logFromDate && z.ClientSiteLogBook.Date <= logToDate &&
-                        (!excludeSystemLogs || (excludeSystemLogs && (!z.IsSystemEntry || z.IrEntryType.HasValue))))
-                .Include(z => z.GuardLogin.Guard)
-                .OrderBy(z => z.EventDateTime)
+
+
+
+            //return _context.GuardLogs
+            //    .Where(z => z.ClientSiteLogBook.ClientSiteId == clientSiteId && z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog
+            //            && z.ClientSiteLogBook.Date >= logFromDate && z.ClientSiteLogBook.Date <= logToDate &&
+            //            (!excludeSystemLogs || (excludeSystemLogs && (!z.IsSystemEntry || z.IrEntryType.HasValue))))
+            //    .Include(z => z.GuardLogin.Guard)
+            //    .OrderBy(z => z.EventDateTimeLocal.HasValue? z.EventDateTimeLocal : z.EventDateTime) // p6#73 timezone bug - Modified by binoy 29-01-2024
+            //    .ThenBy(z => z.Id)
+            //    //.OrderBy(z => z.Id)
+            //    //.ThenBy(z => z.EventDateTime)
+            //    .ToList();
+
+            var data = _context.GuardLogs
+               .Where(z => z.ClientSiteLogBook.ClientSiteId == clientSiteId && z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog
+                       && z.ClientSiteLogBook.Date >= logFromDate && z.ClientSiteLogBook.Date <= logToDate &&
+                       (!excludeSystemLogs || (excludeSystemLogs && (!z.IsSystemEntry || z.IrEntryType.HasValue))))
+               .Include(z => z.GuardLogin.Guard)
+               .ToList();
+
+            var returnData = data.OrderBy(z => z.EventDateTimeLocal.HasValue ? z.EventDateTimeLocal : z.EventDateTime)
                 .ThenBy(z => z.Id)
-                //.OrderBy(z => z.Id)
-                //.ThenBy(z => z.EventDateTime)
                 .ToList();
+
+            return returnData;
         }
 
         public GuardLog GetLatestGuardLog(int clientSiteId, int guardId)
@@ -3125,13 +3141,15 @@ namespace CityWatch.Data.Providers
 
             if (clientSiteForLogbook.Count != 0)
             {
-                // p6#73 timezone bug - Modified by binoy 24-01-2024 changed DateTime.Today to localDateTime.Date
-                var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)tmzdata.EventDateTimeUtcOffsetMinute);
-               // var logBookId = GetClientSiteLogBookIdGloablmessage(clientSiteForLogbook.FirstOrDefault().Id, LogBookType.DailyGuardLog, localDateTime.Date);                
-                var logbookdate = DateTime.Today;
-                var logbooktype = LogBookType.DailyGuardLog;      
-                var logBookId = GetClientSiteLogBookIdByLogBookMaxID(clientSiteForLogbook.FirstOrDefault().Id, logbooktype, out logbookdate); // Get Last Logbookid and logbook Date by latest logbookid  of the client site
-                var entryTime = DateTimeHelper.GetLogbookEndTimeFromDate(logbookdate);
+                var localDateTime = DateTime.Today;
+                var entryTime = DateTime.Now;
+                // p6#73 timezone bug - Modified by binoy 29-01-2024 changed DateTime.Today to localDateTime.Date
+                // var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)tmzdata.EventDateTimeUtcOffsetMinute);
+                var logBookId = GetClientSiteLogBookIdGloablmessage(clientSiteForLogbook.FirstOrDefault().Id, LogBookType.DailyGuardLog, localDateTime.Date);
+                //var logbookdate = DateTime.Today;
+                //var logbooktype = LogBookType.DailyGuardLog;      
+                //var logBookId = GetClientSiteLogBookIdByLogBookMaxID(clientSiteForLogbook.FirstOrDefault().Id, logbooktype, out logbookdate); // Get Last Logbookid and logbook Date by latest logbookid  of the client site
+                //var entryTime = DateTimeHelper.GetLogbookEndTimeFromDate(logbookdate);
 
                 if (loginGuardId != 0)
                 {
