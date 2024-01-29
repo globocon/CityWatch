@@ -18,6 +18,8 @@ namespace CityWatch.Web.Models
             GuardInitials = guardLog.GuardLogin?.Guard.Initial;
             IrEntryType = guardLog.IrEntryType;
             GuardId = guardLog.GuardLogin?.Guard.Id;
+            EventDateTimeLocal = guardLog.EventDateTimeLocal;
+            EventDateTimeZoneShort = guardLog.EventDateTimeZoneShort;
         }
 
         public GuardLogViewModel(IEnumerable<PatrolCarLog> patrolCarLogs)
@@ -66,12 +68,25 @@ namespace CityWatch.Web.Models
         public string Notes { get; set; }
 
         [JsonPropertyName("Date")]
-        public string Date { get { return EventDateTime.ToString("dd MMM yyyy"); } }
+        public string Date { get {
+                if (EventDateTimeLocal.HasValue)
+                    return EventDateTimeLocal.Value.ToString("dd MMM yyyy");
+                return EventDateTime.ToString("dd MMM yyyy");             
+            }
+        } // p6#73 timezone bug - Modified by binoy 29-01-2024
 
         public string GuardInitials { get; set; }
 
         public IrEntryType? IrEntryType { get; set; }
 
         public int? GuardId { get; set; }
+
+        public DateTime? EventDateTimeLocal { get; set; }
+
+        public string EventDateTimeZone { get; set; }
+
+        public string EventDateTimeZoneShort { get; set; }
+
+        public int? EventDateTimeUtcOffsetMinute { get; set; }
     }
 }

@@ -245,7 +245,7 @@ namespace CityWatch.Web.Pages.Radio
                     //var logBookId = _guardLogDataProvider.GetClientSiteLogBookId(clientSiteId, logbooktype, DateTime.Today);
                     // Get Last Logbookid and logbook Date by latest logbookid // p6#73 timezone bug - Added by binoy 24-01-2024
                     var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdByLogBookMaxID(clientSiteId, logbooktype, out logbookdate);
-                    var entryTime = DateTimeHelper.GetLogbookEndTimeFromDate(logbookdate);
+                    var entryTime = GetLocalEntryTime(logbookdate);
                     var guardid = HttpContext.Session.GetInt32("GuardId");
                     if (guardid != 0)
                     {
@@ -543,7 +543,7 @@ namespace CityWatch.Web.Pages.Radio
                     var clientSitesState = _guardLogDataProvider.GetClientSitesForState(state);
                     foreach (var item in clientSitesState)
                     {
-                        LogBookDetails(item.Id, Notifications, Subject);
+                        LogBookDetails(item.Id, Notifications, Subject, tmzdata);
 
                     }
                     /* log book entry to citywtch control room */
@@ -564,7 +564,7 @@ namespace CityWatch.Web.Pages.Radio
                         var clientSitesClientType = _guardLogDataProvider.GetAllClientSites().Where(x => ClientType.Contains(x.TypeId));
                         foreach (var clientSiteTypeID in clientSitesClientType)
                         {
-                            LogBookDetails(clientSiteTypeID.Id, Notifications, Subject);
+                            LogBookDetails(clientSiteTypeID.Id, Notifications, Subject, tmzdata);
 
 
                         }
@@ -582,7 +582,7 @@ namespace CityWatch.Web.Pages.Radio
                         var clientSitesClientType = _guardLogDataProvider.GetAllClientSites().Where(x => clientSiteId.Contains(x.Id));
                         foreach (var clientSiteTypeID in clientSitesClientType)
                         {
-                            LogBookDetails(clientSiteTypeID.Id, Notifications, Subject);
+                            LogBookDetails(clientSiteTypeID.Id, Notifications, Subject, tmzdata);
                         }
                         /* log book entry to citywtch control room */
                         var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
@@ -599,7 +599,7 @@ namespace CityWatch.Web.Pages.Radio
                     var clientsiteIDNationality = _guardLogDataProvider.GetAllClientSites();
                     foreach (var itemAll in clientsiteIDNationality)
                     {
-                        LogBookDetails(itemAll.Id, Notifications, Subject);
+                        LogBookDetails(itemAll.Id, Notifications, Subject, tmzdata);
 
                     }
                     /* log book entry to citywtch control room */
@@ -733,14 +733,20 @@ namespace CityWatch.Web.Pages.Radio
             return new JsonResult(new { success, message });
         }
 
-        public void LogBookDetails(int Id, string Notifications, string Subject)
+        public void LogBookDetails(int Id, string Notifications, string Subject,GuardLog tmzdata)
         {
             #region Logbook
             if (Id != null)
             {
 
                 var logbooktype = LogBookType.DailyGuardLog;
-                var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdGloablmessage(Id, logbooktype, DateTime.Today);
+                //var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdGloablmessage(Id, logbooktype, DateTime.Today);
+
+                var logbookdate = DateTime.Today;               
+                // Get Last Logbookid and logbook Date by latest logbookid // p6#73 timezone bug - Modified by binoy 29-01-2024
+                var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdByLogBookMaxID(Id, logbooktype, out logbookdate);
+                var entryTime = GetLocalEntryTime(logbookdate);
+
                 if (logBookId != 0)
                 {
                     var guardid = HttpContext.Session.GetInt32("GuardId");
@@ -756,7 +762,8 @@ namespace CityWatch.Web.Pages.Radio
                             EntryType = (int)IrEntryType.Alarm,
                             Date = DateTime.Today,
                             IsAcknowledged = 0,
-                            IsDuress = 0
+                            IsDuress = 0,
+                            PlayNotificationSound = false
                         };
                         var pushMessageId = _guardLogDataProvider.SavePushMessage(radioCheckPushMessages);
                         /* Save the push message for reload to logbook on next day end*/
@@ -766,12 +773,18 @@ namespace CityWatch.Web.Pages.Radio
                         {
                             ClientSiteLogBookId = logBookId,
                             GuardLoginId = guardLoginId,
-                            EventDateTime = DateTime.Now,
+                            EventDateTime = entryTime, //DateTime.Now,
                             Notes = Subject + " : " + Notifications,
                             //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                             //IsSystemEntry = true,
                             IrEntryType = IrEntryType.Alarm,
-                            RcPushMessageId = pushMessageId
+                            RcPushMessageId = pushMessageId,
+                            EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                            EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                            EventDateTimeZone = tmzdata.EventDateTimeZone,
+                            EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                            EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                            PlayNotificationSound = true
                         };
                         _guardLogDataProvider.SaveGuardLog(guardLog);
                     }
@@ -786,7 +799,8 @@ namespace CityWatch.Web.Pages.Radio
                             EntryType = (int)IrEntryType.Alarm,
                             Date = DateTime.Today,
                             IsAcknowledged = 0,
-                            IsDuress = 0
+                            IsDuress = 0,
+                            PlayNotificationSound = false
                         };
                         var pushMessageId = _guardLogDataProvider.SavePushMessage(radioCheckPushMessages);
 
@@ -794,12 +808,18 @@ namespace CityWatch.Web.Pages.Radio
                         var guardLog = new GuardLog()
                         {
                             ClientSiteLogBookId = logBookId,
-                            EventDateTime = DateTime.Now,
+                            EventDateTime = entryTime, //DateTime.Now,
                             Notes = Subject + " : " + Notifications,
                             //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                             //IsSystemEntry = true,
                             IrEntryType = IrEntryType.Alarm,
-                            RcPushMessageId = pushMessageId
+                            RcPushMessageId = pushMessageId,
+                            EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                            EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                            EventDateTimeZone = tmzdata.EventDateTimeZone,
+                            EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                            EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                            PlayNotificationSound = true
                         };
                         if (guardLog.ClientSiteLogBookId != 0)
                         {
@@ -818,6 +838,7 @@ namespace CityWatch.Web.Pages.Radio
         {
             var success = true;
             var message = "success";
+
             #region Email
             if (SiteEmail != null)
             {
@@ -867,6 +888,7 @@ namespace CityWatch.Web.Pages.Radio
                 }
             }
             #endregion
+
             return new JsonResult(new { success, message });
         }
         // Save Global Text Alert Stop
@@ -937,7 +959,7 @@ namespace CityWatch.Web.Pages.Radio
                     foreach (var clientSiteTypeID in clientSitesClientType)
                     {
 
-                        LogBookDetails(clientSiteTypeID.Id, ActionListMessage, Subject);
+                        LogBookDetails(clientSiteTypeID.Id, ActionListMessage, Subject, tmzdata);
 
 
                     }
@@ -956,7 +978,7 @@ namespace CityWatch.Web.Pages.Radio
                     foreach (var clientSiteTypeID in clientSitesClientType)
                     {
 
-                        LogBookDetails(clientSiteTypeID.Id, Notifications, Subject);
+                        LogBookDetails(clientSiteTypeID.Id, Notifications, Subject, tmzdata);
                     }
                     /* log book entry to citywtch control room */
                     var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
@@ -1005,7 +1027,7 @@ namespace CityWatch.Web.Pages.Radio
                     foreach (var clientSiteTypeID in clientSitesClientType)
                     {
 
-                        LogBookDetails(clientSiteTypeID.Id, ActionListMessage, Subject);
+                        LogBookDetails(clientSiteTypeID.Id, ActionListMessage, Subject, tmzdata);
 
 
                     }
@@ -1024,7 +1046,7 @@ namespace CityWatch.Web.Pages.Radio
                     foreach (var clientSiteTypeID in clientSitesClientType)
                     {
 
-                        LogBookDetails(clientSiteTypeID.Id, Notifications, Subject);
+                        LogBookDetails(clientSiteTypeID.Id, Notifications, Subject, tmzdata);
                     }
                     /* log book entry to citywtch control room */
                     var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
@@ -1073,5 +1095,15 @@ namespace CityWatch.Web.Pages.Radio
             return new JsonResult(_guardLogDataProvider.GetActionlist(clientSiteId));
         }
         //code added for ActionListSend stop
+
+
+        public DateTime GetLocalEntryTime(DateTime logbookDate)
+        {
+            DateTime entryTime = DateTime.Now;
+            if(logbookDate.Date == entryTime.Date)   
+                return entryTime;
+
+            return DateTimeHelper.GetLogbookEndTimeFromDate(logbookDate);
+        }
     }
 }
