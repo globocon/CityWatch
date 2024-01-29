@@ -32,7 +32,7 @@ namespace CityWatch.Data.Providers
         void SaveGuardCompliance(GuardCompliance guardCompliance);
         void DeleteGuardCompliance(int id);
         Guard GetGuardDetailsbySecurityLicenseNo(string securityLicenseNo);
-        
+        public string GetDefaultEmailAddress();
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -445,5 +445,11 @@ namespace CityWatch.Data.Providers
             _context.Remove(guardComplianceToDelete);
             _context.SaveChanges();
         }
+        //To Get the Default Email Address start
+        public string GetDefaultEmailAddress()
+        {
+            return _context.ReportTemplates.Select(x => x.DefaultEmail).FirstOrDefault();
+        }
+        //To Get the Default Email Address stop
     }
 }

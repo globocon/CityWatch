@@ -242,6 +242,14 @@ namespace CityWatch.Kpi.Services
         {
             var fromAddress = _emailOptions.FromAddress.Split('|');
             var toAddress = _emailOptions.ToAddress.Split('|');
+            //To get the Default Email start
+            if (toAddress == null)
+            {
+                string toAddressData = _clientDataProvider.GetDefaultEmailAddress();
+                toAddress = new string[] { toAddressData };
+            }
+            //To get the Default Email stop
+           
             var subject = _emailOptions.Subject;
             var messageHtml = _emailOptions.Message;
             var message = new MimeMessage();

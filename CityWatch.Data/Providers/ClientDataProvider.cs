@@ -129,7 +129,7 @@ namespace CityWatch.Data.Providers
 
         List<RadioCheckPushMessages> GetDuressMessageNotAcknowledged(int clientSiteId, DateTime date);
         List<RadioCheckPushMessages> GetDuressMessageNotAcknowledgedForControlRoom(DateTime date);
-
+        public string GetDefaultEmailAddress();
     }
 
     public class ClientDataProvider : IClientDataProvider

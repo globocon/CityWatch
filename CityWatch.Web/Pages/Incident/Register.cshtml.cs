@@ -439,6 +439,13 @@ namespace CityWatch.Web.Pages.Incident
         {
             var fromAddress = _EmailOptions.FromAddress.Split('|');
             var toAddress = _EmailOptions.ToAddress.Split('|');
+            //To get the Default Email start
+            if (toAddress == null)
+            {
+                string toAddressData = _clientDataProvider.GetDefaultEmailAddress();
+                toAddress = new string[] { toAddressData };
+            }
+            //To get the Default Email stop
             var ccAddress = _EmailOptions.CcAddress.Split('|');
             var subject = _EmailOptions.Subject;
             var messageHtml = _EmailOptions.Message;

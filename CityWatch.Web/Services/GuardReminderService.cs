@@ -59,6 +59,13 @@ namespace CityWatch.Web.Services
         {
             var fromAddress = _emailOptions.FromAddress.Split('|');
             var toAddress = _emailOptions.ToAddress.Split('|');
+            //To get the Default Email start
+            if (toAddress == null)
+            {
+                string toAddressData = _guardDataProvider.GetDefaultEmailAddress();
+                toAddress = new string[] { toAddressData };
+            }
+            //To get the Default Email stop
 
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
