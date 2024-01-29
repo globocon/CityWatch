@@ -427,7 +427,7 @@ namespace CityWatch.Data.Providers
         {
             return _context.GuardCompliances
                 .Include(z => z.Guard)
-                .Where(x => x.GuardId == guardId)
+                .Where(x => x.GuardId == guardId && x.ExpiryDate!=null)
                 .OrderBy(x => x.ReferenceNo).ToList();
         }
 
