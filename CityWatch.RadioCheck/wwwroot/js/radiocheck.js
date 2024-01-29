@@ -1242,9 +1242,10 @@ let clientSiteActiveGuardsIncidentReportsDetails = $('#clientSiteActiveGuardsInc
 let clientSiteActiveGuardsSWDetails = $('#clientSiteActiveGuardsSWDetails').DataTable({
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
     ordering: true,
+    order: [[1, 'desc']],
     info: false,
     searching: false,
-    autoWidth: true,
+    autoWidth: false,
     fixedHeader: true,
     "scrollY": "300px", // Set the desired height for the scrollable area
     "paging": false,
@@ -1262,21 +1263,26 @@ let clientSiteActiveGuardsSWDetails = $('#clientSiteActiveGuardsSWDetails').Data
         { data: 'id', visible: false },
         {
             data: 'templateName',
-            width: '50%',
+            width: '25%',
            
         },
         {
             data: 'smartWand',
-            width: '10%'
+            width: '20%'
 
         },
         {
             data: 'employeePhone',
-            width: '20%',
+            width: '25%',
            
 
         },
-       
+        {
+            data: 'inspectionStartDatetimeLocal',
+            width: '30%',
+
+
+        },
 
        
 
