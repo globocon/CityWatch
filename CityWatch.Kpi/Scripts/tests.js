@@ -10,8 +10,8 @@
 
 const irChart = require("./ir-chart.js");
 
-//create_ir_bar_chart();
-//create_ir_pie_chart();
+create_ir_bar_chart();
+create_ir_pie_chart();
 
 /****** Test functions ******/
 function create_ir_bar_chart() {

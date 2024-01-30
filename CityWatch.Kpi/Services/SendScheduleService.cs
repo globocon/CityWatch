@@ -310,7 +310,7 @@ namespace CityWatch.Kpi.Services
                 coverSheetType = CoverSheetType.Monthly;
 
             ISummaryReportGenerator summaryReportGenerator = coverSheetType == CoverSheetType.Weekly ?
-                new WeeklySummaryReportGenerator(_webHostEnvironment, _viewDataService) :
+                new WeeklySummaryReportGenerator(_webHostEnvironment, _viewDataService, _patrolDataReportService) :
                 new MonthlySummaryReportGenerator(_webHostEnvironment, _viewDataService, _patrolDataReportService);
             var summaryReportFromDate = coverSheetType == CoverSheetType.Weekly ? DateTime.Today.AddDays(-6) : reportStartDate;
             var summaryReportToDate = coverSheetType == CoverSheetType.Weekly ? DateTime.Today : reportEndDate;
