@@ -663,8 +663,9 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
     font-style: italic;
     font-weight: bold;
     color: White;
-    text-shadow: 2px 2px 8px #FF0000;
+    /*text-shadow: 2px 2px 8px #FF0000;*/
 }
+
 .dark-mode .marquee-style {
     background-color: white;
     font-size: 20px;
@@ -682,19 +683,40 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
     font-style: italic;
     font-weight: bold;
     color: black;
-    text-shadow: 2px 2px 8px #fff;
+    /*text-shadow: 2px 2px 8px #fff;*/
 }
 .dark-mode .lblclass {
-    background-color: white;
-   
-    color: black;
-   
+    background-color: white;   
+    color: black;   
 }
-.dark-mode #marqueeLiveEvents {
+
+pre {
+    font-size: 16px;
+    font-family: georgia;
+    font-style: italic;
+    font-weight: bold;
+    color: White;
+    /*text-shadow: 2px 2px 8px #FF0000;*/
+}
+
+.dark-mode #divmarqueeLiveEvents {
     background-color: white;
     color: black;
 }
 
+pre.dark-mode {
+    background-color: white;
+    color: black;
+}
+
+.js-marquee .dark-mode {
+    background-color: white;
+    vertical-align: text-bottom;
+}
+div.js-marquee.dark-mode {
+    background-color: white;
+    vertical-align: text-bottom;
+}
 /* for scroll events -end*/
 /*form trafiic lights-start*/
 .initial-call-colour {
