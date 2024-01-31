@@ -82,15 +82,18 @@ namespace CityWatch.Kpi.Services
 
             if (patrolDataReport.ResultsCount > 0)
             {
+                doc.Add(new AreaBreak());
+                doc.Add(tableReportHeader);
                 var graphsTable = CreateGraphsTables(patrolDataReport);
                 doc.Add(graphsTable);
             }
             //NEWLY ADDED-END
+            
             var tableLegend = CreateLegend();
             doc.Add(tableLegend);
 
-            var tableNotes = CreateNotes(schedule.SummaryNote1, schedule.SummaryNote2);
-            doc.Add(tableNotes);
+            //var tableNotes = CreateNotes(schedule.SummaryNote1, schedule.SummaryNote2);
+            //doc.Add(tableNotes);
 
             doc.Close();
             pdfDoc.Close();
@@ -445,7 +448,7 @@ namespace CityWatch.Kpi.Services
                 if (success && !IO.File.Exists(graphFileName))
                     throw new ApplicationException($"Graph image not found. File Name: {graphFileName}");
 
-                var graphImage = new Image(ImageDataFactory.Create(graphFileName)).SetHeight(101);
+                var graphImage = new Image(ImageDataFactory.Create(graphFileName)).SetHeight(90);
 
                 IO.File.Delete(graphFileName);
 
