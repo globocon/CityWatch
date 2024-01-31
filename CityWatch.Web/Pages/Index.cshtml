@@ -7,7 +7,7 @@
 @model IndexModel
 @{
     ViewData["Title"] = "CityWatch Security | Login";
-    ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.Index;    
+    ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.Index;
 }
 
 <div class="m-auto p-5">
@@ -26,14 +26,21 @@
                     <label class="lblclass">Live Events:</label>
                 </div>
             </div>
-            <div class="form-group col-md-10 p-0 container marquee-stylenew">
-                @foreach (var fileName in LiveEvents)
-                    {                        
-                         LiveEventstxtmsg = LiveEventstxtmsg + fileName.TextMessage.Replace("\n","\t") + '\t' + '\t';
-                        // LiveEventstxtmsg = LiveEventstxtmsg + fileName.TextMessage + '\n';
-                    }
-                    <div id="divmarqueeLiveEvents" class="marquee" style="display:grid; height:20px; width:900px;overflow: hidden;"><pre style="height:inherit; width:auto;">@LiveEventstxtmsg</pre></div>
-                </div>
+            @* <div class="form-group col-md-10 p-0 container marquee-stylenew">
+    //     @foreach (var fileName in LiveEvents)
+    //         {
+    //              LiveEventstxtmsg = LiveEventstxtmsg + fileName.TextMessage.Replace("\n","\t") + '\t' + '\t';
+    //             // LiveEventstxtmsg = LiveEventstxtmsg + fileName.TextMessage + '\n';
+    //         }
+    //         <div id="divmarqueeLiveEvents" class="marquee" style="display:grid; height:20px; width:900px;overflow: hidden;"><pre style="height:inherit; width:auto;">@LiveEventstxtmsg</pre></div>
+    //     </div>*@
+
+            @foreach (var fileName in LiveEvents)
+                {
+                    LiveEventstxtmsg = LiveEventstxtmsg + fileName.TextMessage.Replace("\n", "\t") + '\t' + '\t';
+                    // LiveEventstxtmsg = LiveEventstxtmsg + fileName.TextMessage + '\n';
+                }
+                <div id="divmarqueeLiveEvents" class="form-group col-md-10 p-0 container marquee-stylenew marquee"><pre>@LiveEventstxtmsg</pre></div>
             </div>
     }
     }
@@ -43,7 +50,7 @@
 }
 @section PageHeader {
     <h3 class="text-center">CLOUD PORTAL</h3>
-}
+    }
 @*IR Guard login Conformation Popup*@
 <div id="modelGuardLoginConIR" class="modal fade" role="dialog">
     <div class="modal-dialog">
@@ -191,40 +198,40 @@
                 startVisible: false
 
             });
-        });        
+        });
     </script>
-}
+    }
 
 @*<div class="modal" tabindex="-1" role="dialog" id="calendarEventModal">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header col-md-12">
+    <div class="modal-content">
+    <div class="modal-header col-md-12">
 
-                <h5 class="modal-title col-md-8"><label id="lbl_calendarEvent"></label></h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body pb-0">
-                <div class="form-row">
-                    <div class="col-md-12">
-                        <table id="calendarEventsDetails" class="table table-bordered" style="width:100%;">
-                            <thead>
-                                <tr>
-                                    <th>Id</th>
-                                    <th>Event</th>
-                                    <th>Expiry </th>
-                                    <th>Start</th>
-
-                                </tr>
-                            </thead>
-
-                        </table>
-                    </div>
-                </div>
-
-            </div>
-
-        </div>
+    <h5 class="modal-title col-md-8"><label id="lbl_calendarEvent"></label></h5>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+    </button>
     </div>
-</div>*@
+    <div class="modal-body pb-0">
+    <div class="form-row">
+    <div class="col-md-12">
+    <table id="calendarEventsDetails" class="table table-bordered" style="width:100%;">
+    <thead>
+    <tr>
+    <th>Id</th>
+    <th>Event</th>
+    <th>Expiry </th>
+    <th>Start</th>
+
+    </tr>
+    </thead>
+
+    </table>
+    </div>
+    </div>
+
+    </div>
+
+    </div>
+    </div>
+    </div>*@
