@@ -33,6 +33,7 @@ using System.IO;
 using CityWatch.Data.Enums;
 using CityWatch.Data.Services;
 using Jering.Javascript.NodeJS;
+using System.Reflection;
 
 namespace CityWatch.Web.Services
 {
@@ -1036,8 +1037,8 @@ namespace CityWatch.Web.Services
             var doc = new Document(pdfDoc);
             doc.SetMargins(PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN);
 
-            //var headerTable = CreateReportHeader(_clientSiteKpiSetting);
-            //doc.Add(headerTable);
+            var headerTable = CreateReportHeader(patrolRequest);
+            doc.Add(headerTable);
 
             //NEWLY ADDED-START
             var patrolDataReport = _irChartDataService.GetDailyPatrolData(patrolRequest);
@@ -1045,7 +1046,7 @@ namespace CityWatch.Web.Services
             
             if (patrolDataReport.ResultsCount > 0)
             {
-                doc.Add(new AreaBreak());
+                //doc.Add(new AreaBreak());
                 //doc.Add(tableReportHeader);
                 var graphsTable = CreateGraphsTables(patrolDataReport);
                 doc.Add(graphsTable);
@@ -1177,6 +1178,38 @@ namespace CityWatch.Web.Services
                 // no ops
             }
             return null;
+        }
+        private Table CreateReportHeader(PatrolRequest patrolRequest)
+        {
+            var headerTable = new Table(UnitValue.CreatePercentArray(new float[] { 20, 60, 20 })).UseAllAvailableWidth();
+
+            var cellSiteImage = new Cell().SetBorder(Border.NO_BORDER);
+            headerTable.AddCell(cellSiteImage);
+
+            var cellReportTitle = new Cell()
+                .SetBorder(Border.NO_BORDER)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .Add(new Paragraph("Patrol Data Report\n").SetFont(PdfHelper.GetPdfFont()).SetFontSize(CELL_FONT_SIZE * 1.2f))
+          
+             
+                .Add(new Paragraph(patrolRequest.FromDate.ToString("dd-MMM-yyyy") + "to" + patrolRequest.ToDate.ToString("dd-MMM-yyyy"))).SetFontSize(CELL_FONT_SIZE);
+            //if(patrolRequest.ClientSites!=null)
+            //{
+            //    //.Add(new Paragraph(projectName)).SetFontSize(CELL_FONT_SIZE)
+            //}
+            headerTable.AddCell(cellReportTitle);
+
+            var image = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "CWSLogoPdf.png")))
+                .SetHeight(50)
+                .SetHorizontalAlignment(HorizontalAlignment.RIGHT);
+            var cellLogoImage = new Cell()
+                .Add(image)
+                .SetBorder(Border.NO_BORDER)
+                .SetHorizontalAlignment(HorizontalAlignment.RIGHT);
+            headerTable.AddCell(cellLogoImage);
+
+            headerTable.AddCell(new Cell(1, 3).SetPadding(3).SetBorder(Border.NO_BORDER));
+            return headerTable;
         }
     }
 }
