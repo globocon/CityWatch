@@ -496,7 +496,7 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
 }
 
 .grouped-column {
-    background-color: #EFEFEF; 
+    background-color: #EFEFEF;
 }
 
 /* Dark Mode Change 20/09/2023 Start*/
@@ -637,6 +637,7 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
     .dark-mode .list-group-item {
         color: white !important;
     }
+
     .dark-mode #kvl-attachment-list li {
         color: #333 !important;
     }
@@ -656,6 +657,7 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
     color: White;
     text-shadow: 2px 2px 8px #FF0000;
 }
+
 .marquee-stylenew {
     background-color: #737CA1;
     font-size: 16px;
@@ -663,8 +665,9 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
     font-style: italic;
     font-weight: bold;
     color: White;
-    text-shadow: 2px 2px 8px #FF0000;
+    /*text-shadow: 2px 2px 8px #FF0000;*/
 }
+
 .dark-mode .marquee-style {
     background-color: white;
     font-size: 20px;
@@ -682,27 +685,60 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
     font-style: italic;
     font-weight: bold;
     color: black;
-    text-shadow: 2px 2px 8px #fff;
+    /*text-shadow: 2px 2px 8px #fff;*/
 }
+
 .dark-mode .lblclass {
     background-color: white;
-   
     color: black;
-   
 }
-.dark-mode #marqueeLiveEvents {
+
+pre {
+    font-size: 16px;
+    font-family: georgia;
+    font-style: italic;
+    font-weight: bold;
+    color: White;
+    overflow: hidden;
+    margin-bottom: 0px;
+    margin-top: 5px;
+    height: auto;
+    width: auto;
+    /*text-shadow: 2px 2px 8px #FF0000;*/
+}
+
+#divmarqueeLiveEvents {
+    width: 900px;
+    overflow: hidden;
+    display: grid;
+}
+
+    #divmarqueeLiveEvents .dark-mode {
+        background-color: white;
+        color: black;
+    }
+
+pre.dark-mode {
     background-color: white;
     color: black;
+    overflow: hidden;
+    margin-top: 5px;
+    margin-bottom: 0px;
+    height: auto;
+    width: auto;
 }
+
 
 /* for scroll events -end*/
 /*form trafiic lights-start*/
 .initial-call-colour {
     background-color: #FCF3CF;
 }
+
 .entry-time-colour {
     background-color: #A9DFBF;
 }
+
 .exit-time-colour {
     background-color: #F5B7B1;
 }
