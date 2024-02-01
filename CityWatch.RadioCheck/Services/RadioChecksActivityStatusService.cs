@@ -64,6 +64,14 @@ namespace CityWatch.RadioCheck.Services
                     if (!isActive)
                         _guardLogDataProvider.DeleteClientSiteRadioChecksActivity(ClientSiteRadioChecksActivity);
                 }
+                /* Check Last SW Created Time Exist */
+                /* Smartwand API implemented this delete functionality
+                //if (ClientSiteRadioChecksActivity.LastSWCreatedTime != null)
+                //{
+                //    var isActive = (DateTime.Now - ClientSiteRadioChecksActivity.LastSWCreatedTime).Value.TotalHours < 2;
+                //    if (!isActive)
+                //        _guardLogDataProvider.DeleteClientSiteRadioChecksActivity(ClientSiteRadioChecksActivity);
+                //}
                 /* Check if guard off duty time expired  New Change In Api by Dileep for task p4 task17 Start */
                 if (ClientSiteRadioChecksActivity.GuardLoginTime != null)
                 {

@@ -216,24 +216,44 @@ namespace CityWatch.Web.Pages.Admin
         }
 
         public JsonResult OnGetGuardData(int id)
+
         {
             return new JsonResult(_viewDataService.GetGuards().SingleOrDefault(z => z.Id == id));
         }
         //to get audit log-start
         //public JsonResult OnGetAuditHistory(KeyVehicleLogAuditLogRequest keyVehicleLogAuditLogRequest)
         //{
-        //    return new JsonResult(_viewDataService.GetKeyVehicleLogAuditHistory(keyVehicleLogAuditLogRequest.VehicleRego).Where(x=> keyVehicleLogAuditLogRequest.ClientSiteIds.Contains(x.GuardLogin.ClientSiteId)).ToList());
+        //    return new JsonResult(_viewDataService.GetKeyVehicleLogAuditHistory(keyVehicleLogAuditLogRequest.VehicleRego).Where(x => keyVehicleLogAuditLogRequest.ClientSiteIds.Contains(x.GuardLogin.ClientSiteId)).ToList());
         //}
         public JsonResult OnGetAuditHistory(KeyVehicleLogAuditLogRequest keyVehicleLogAuditLogRequest)
         {
             //(string.IsNullOrEmpty(kvlRequest.VehicleRego) || string.Equals(z.VehicleRego, kvlRequest.VehicleRego, StringComparison.OrdinalIgnoreCase)) &&
 
 
-            return new JsonResult(_viewDataService.GetKeyVehicleLogAuditHistory().Where(x => keyVehicleLogAuditLogRequest.ClientSiteIds.Contains(x.GuardLogin.ClientSiteId)
-            && ((string.IsNullOrEmpty(keyVehicleLogAuditLogRequest.VehicleRego) || string.Equals(x.KeyVehicleLog.VehicleRego, keyVehicleLogAuditLogRequest.VehicleRego,StringComparison.OrdinalIgnoreCase))
-            &&(string.IsNullOrEmpty(keyVehicleLogAuditLogRequest.KeyNo) || string.Equals(x.KeyVehicleLog.KeyNo, keyVehicleLogAuditLogRequest.KeyNo, StringComparison.OrdinalIgnoreCase))
-             && (string.IsNullOrEmpty(keyVehicleLogAuditLogRequest.PersonName) || string.Equals(x.KeyVehicleLog.PersonName, keyVehicleLogAuditLogRequest.PersonName, StringComparison.OrdinalIgnoreCase)))
-            ).ToList());
+            //return new JsonResult(_viewDataService.GetKeyVehicleLogAuditHistory().Where(x => keyVehicleLogAuditLogRequest.ClientSiteIds.Contains(x.GuardLogin.ClientSiteId)
+            //&& ((string.IsNullOrEmpty(keyVehicleLogAuditLogRequest.VehicleRego) || string.Equals(x.KeyVehicleLog.VehicleRego, keyVehicleLogAuditLogRequest.VehicleRego, StringComparison.OrdinalIgnoreCase))
+            //&& (string.IsNullOrEmpty(keyVehicleLogAuditLogRequest.KeyNo) || string.Equals(x.KeyVehicleLog.KeyNo, keyVehicleLogAuditLogRequest.KeyNo, StringComparison.OrdinalIgnoreCase))
+            // && (string.IsNullOrEmpty(keyVehicleLogAuditLogRequest.PersonName) || string.Equals(x.KeyVehicleLog.PersonName, keyVehicleLogAuditLogRequest.PersonName, StringComparison.OrdinalIgnoreCase)))
+            //).ToList());
+            if (keyVehicleLogAuditLogRequest.VehicleRego != null)
+            {
+
+
+                return new JsonResult(_viewDataService.GetKeyVehicleLogAuditHistory(keyVehicleLogAuditLogRequest.VehicleRego).Where(x => keyVehicleLogAuditLogRequest.ClientSiteIds.Contains(x.GuardLogin.ClientSiteId)).ToList());
+            }
+            if (keyVehicleLogAuditLogRequest.PersonName != null)
+            {
+
+
+                return new JsonResult(_viewDataService.GetKeyVehicleLogAuditHistoryWithPersonName(keyVehicleLogAuditLogRequest.PersonName).Where(x => keyVehicleLogAuditLogRequest.ClientSiteIds.Contains(x.GuardLogin.ClientSiteId)).ToList());
+            }
+            if (keyVehicleLogAuditLogRequest.KeyNo != null)
+            {
+
+
+                return new JsonResult(_viewDataService.GetKeyVehicleLogAuditHistoryWithKeyNo(keyVehicleLogAuditLogRequest.KeyNo).Where(x => keyVehicleLogAuditLogRequest.ClientSiteIds.Contains(x.GuardLogin.ClientSiteId)).ToList());
+            }
+            return new JsonResult(_viewDataService.GetKeyVehicleLogAuditHistory(keyVehicleLogAuditLogRequest.VehicleRego).Where(x => keyVehicleLogAuditLogRequest.ClientSiteIds.Contains(x.GuardLogin.ClientSiteId)).ToList());
         }
         //to get audit log-end
     }

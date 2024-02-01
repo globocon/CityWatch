@@ -33,13 +33,13 @@
             <div class="col-md-11 mr-5">
                 <h3>Activity in Last 2 hrs (@Model.ActiveGuardCount)</h3>
             </div>
-           @* <div class="float-right">
-                <a data-toggle="collapse" href="#collapse-example2" aria-expanded="true" aria-controls="collapse-example2" id="heading-example2" class="btn p-0 m-1" style="outline:0;box-shadow: none;">
-                    <i class="fa fa-chevron-down pull-right"></i>
-                </a>
-                <button class="btn p-0 m-1" style="outline:0;box-shadow: none;">
-                    <i class="fa fa-window-restore"></i>
-                </button>
+            @* <div class="float-right">
+            <a data-toggle="collapse" href="#collapse-example2" aria-expanded="true" aria-controls="collapse-example2" id="heading-example2" class="btn p-0 m-1" style="outline:0;box-shadow: none;">
+            <i class="fa fa-chevron-down pull-right"></i>
+            </a>
+            <button class="btn p-0 m-1" style="outline:0;box-shadow: none;">
+            <i class="fa fa-window-restore"></i>
+            </button>
             </div>*@
         </div>
     </div>
@@ -53,7 +53,7 @@
                                 <th>ClientSiteId</th>
                                 <th>Site Name</th>
                                 <th>Address</th>
-                                <th>Site Name/Guard</th>
+                                <th style="cursor:pointer;">Site Name/Guard</th> @*Task p4#41_A~Z and Z~A sorting issue -- modified by Binoy - 31-01-2024*@
                                 <th>LB</th>
                                 <th>KV</th>
                                 <th>IR</th>
@@ -61,6 +61,7 @@
                                 <th>Radio Check</th>
                                 <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
                                 <th>Name</th>
+                                <th>OnlySiteName</th> @*Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024*@
                             </tr>
                         </thead>
                         <tfoot>
@@ -76,6 +77,7 @@
                                 <th>Radio Check</th>
                                 <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
                                 <th>Name</th>
+                                <th>OnlySiteName</th> @*Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024*@
                             </tr>
                             <!-- Footer content here (will be styled to look like the header) -->
                         </tfoot>
@@ -251,6 +253,44 @@
 </div>
 
 
+<!----------------- SW  Details Modal -------------------->
+
+<div class="modal" tabindex="-1" role="dialog" id="guardSWInfoModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><i class="fa fa-vcard-o mr-2"></i><label id="lbl_GuardActivityHeader4"></label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <table id="clientSiteActiveGuardsSWDetails" class="table table-bordered" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>Id</th>
+                                    <th>Template Name       </th>
+                                    <th>Smart Wand</th>
+                                    <th>Smart Wand Number</th>
+                                    <th>Inspection Start  </th>
+                                    @*<th>Insp End     </th>*@
+
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
 <!----------------- Radio Check Status pop up -------------------->
 <div class="modal fade" id="selectRadioCheckStatus" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="selectRadioCheckStatusLabel" aria-hidden="true">
     <div class="modal-dialog modal-sm">
@@ -263,17 +303,17 @@
                 <div class="form-group">
                     <label class="col-form-label" for="selectRadioStatus">Select Radio Check Status</label>
                     <select id="selectRadioStatus" class="form-control" asp-items="@configDataProvider.GetRadioCheckStatusForDropDown()"></select>
-                  @*  <select id="selectRadioStatus" class="form-control">
-                        <option value="" selected>Select</option>
-                        <option value="N/A">N/A</option>
-                        <option value="Off Duty">Off Duty</option>
-                        <option value="N/A Only W/E">N/A Only W/E</option>
-                        <option value="N/A Only Summer">N/A Only Summer</option>
-                        <option value="On Standby">On Standby</option>
-                        <option value="Incoming Call">Incoming Call</option>
-                        <option value="Outgoing Call Radio">Outgoing Call Radio</option>
-                        <option value="Outgoing Call Mobile">Outgoing Call Mobile</option>
-                        <option value="No Answer">No Answer</option>
+                    @*  <select id="selectRadioStatus" class="form-control">
+                    <option value="" selected>Select</option>
+                    <option value="N/A">N/A</option>
+                    <option value="Off Duty">Off Duty</option>
+                    <option value="N/A Only W/E">N/A Only W/E</option>
+                    <option value="N/A Only Summer">N/A Only Summer</option>
+                    <option value="On Standby">On Standby</option>
+                    <option value="Incoming Call">Incoming Call</option>
+                    <option value="Outgoing Call Radio">Outgoing Call Radio</option>
+                    <option value="Outgoing Call Mobile">Outgoing Call Mobile</option>
+                    <option value="No Answer">No Answer</option>
                     </select>*@
                     <input type="hidden" id="clientSiteId" value="" />
                     <input type="hidden" id="guardId" value="" />
@@ -297,17 +337,17 @@
                 <div class="form-group">
                     <label class="col-form-label" for="selectRadioStatusActive">Select Radio Check Status</label>
                     <select id="selectRadioStatusActive" class="form-control" asp-items="@configDataProvider.GetRadioCheckStatusForDropDown()"></select>
-                   @* <select id="selectRadioStatusActive" class="form-control">
-                        <option value="" selected>Select</option>
-                        <option value="N/A">N/A</option>
-                        <option value="Off Duty">Off Duty</option>
-                        <option value="N/A Only W/E">N/A Only W/E</option>
-                        <option value="N/A Only Summer">N/A Only Summer</option>
-                        <option value="On Standby">On Standby</option>
-                        <option value="Incoming Call">Incoming Call</option>
-                        <option value="Outgoing Call Radio">Outgoing Call Radio</option>
-                        <option value="Outgoing Call Mobile">Outgoing Call Mobile</option>
-                        <option value="No Answer">No Answer</option>
+                    @* <select id="selectRadioStatusActive" class="form-control">
+                    <option value="" selected>Select</option>
+                    <option value="N/A">N/A</option>
+                    <option value="Off Duty">Off Duty</option>
+                    <option value="N/A Only W/E">N/A Only W/E</option>
+                    <option value="N/A Only Summer">N/A Only Summer</option>
+                    <option value="On Standby">On Standby</option>
+                    <option value="Incoming Call">Incoming Call</option>
+                    <option value="Outgoing Call Radio">Outgoing Call Radio</option>
+                    <option value="Outgoing Call Mobile">Outgoing Call Mobile</option>
+                    <option value="No Answer">No Answer</option>
                     </select>*@
                     <input type="hidden" id="clientSiteId" value="" />
                     <input type="hidden" id="guardId" value="" />
@@ -446,7 +486,7 @@
 
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <label class="mx-1" for="dglClientSiteId" >Client Site</label>
+                                                    <label class="mx-1" for="dglClientSiteId">Client Site</label>
                                                     <select class="form-control mx-1" id="dglClientSiteId" multiple="multiple" style="width:209px" disabled></select>
 
                                                 </div>

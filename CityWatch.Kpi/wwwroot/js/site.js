@@ -1088,6 +1088,40 @@ $(function () {
         }
     });
 
+
+    /* Delete worker 30012024 Start*/
+    $('#div_site_settings').on('click', '#delete_worker', function () {
+        if (confirm('Are you sure want to delete worker ?')) {
+            var buttonValue = $(this).val();
+            $.ajax({
+                url: '/admin/settings?handler=DeleteWorker',
+                type: 'POST',
+                data: { settingsId: buttonValue },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.status) {
+                    if (result.clientSiteId !== 0) {
+                       
+                        $('#div_site_settings').html('');
+                        //$('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + data.clientSiteId);  
+                        $('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + result.clientSiteId, function () {
+                            // This function will be executed after the content is loaded
+                            console.log('Load operation completed!');
+                            // You can add your additional code or actions here
+                            $('#contracted-manning-tab').tab('show');
+                            //alert('Removed the worker successfully');
+                        });
+                        $('#kpi-settings-modal').modal('show');
+                        currentDiv = 1;
+                    }
+                   
+                }
+                else
+                    alert(result.message);
+            }).fail(function () { });
+        }
+    });
+    /* Delete worker 30012024 end*/
     $('#div_site_settings').on('click', '#save_site_notes', function () {
         const remainingChars = getNoteRemainingCount($('#ClientSiteKpiNote_Notes').val(), 'site_note');
         if (remainingChars < 0) {

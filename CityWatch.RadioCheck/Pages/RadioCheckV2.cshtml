@@ -113,7 +113,7 @@
                                 <th>ClientSiteId</th>
                                 <th>Site Name</th>
                                 <th>Address</th>
-                                <th>Site Name/Guard</th>
+                                <th style="cursor:pointer;">Site Name/Guard</th> @*Task p4#41_A~Z and Z~A sorting issue -- modified by Binoy - 31-01-2024*@
                                 <th>LB</th>
                                 <th>KV</th>
                                 <th>IR</th>
@@ -121,6 +121,7 @@
                                 <th>Radio Check</th>
                                 <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
                                 <th>Name</th>
+                                <th>OnlySiteName</th> @*Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024*@
                             </tr>
                         </thead>
                         <tfoot>
@@ -136,6 +137,7 @@
                                 <th>Radio Check</th>
                                 <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
                                 <th>Name</th>
+                                <th>OnlySiteName</th> @*Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024*@
                             </tr>
                             <!-- Footer content here (will be styled to look like the header) -->
                         </tfoot>
@@ -325,6 +327,45 @@
 </div>
 
 
+<!----------------- SW  Details Modal -------------------->
+
+<div class="modal" tabindex="-1" role="dialog" id="guardSWInfoModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><i class="fa fa-vcard-o mr-2"></i><label id="lbl_GuardActivityHeader4"></label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <table id="clientSiteActiveGuardsSWDetails" class="table table-bordered" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>Id</th>
+                                    <th>Template Name       </th>
+                                    <th>Smart Wand</th>
+                                    <th>Smart Wand Number</th>
+                                    <th>Inspection Start</th>
+                                    @*<th>Insp End     </th>*@
+
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
 <!----------------- Radio Check Status pop up -------------------->
 <div class="modal fade" id="selectRadioCheckStatus" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="selectRadioCheckStatusLabel" aria-hidden="true">
     <div class="modal-dialog modal-sm">
@@ -339,16 +380,16 @@
                     <select id="selectRadioStatus" class="form-control" asp-items="@configDataProvider.GetRadioCheckStatusForDropDown()"></select>
 
                     @*  <select id="selectRadioStatus" class="form-control">
-                        <option value="" selected>Select</option>
-                        <option value="N/A">N/A</option>
-                        <option value="Off Duty">Off Duty</option>
-                        <option value="N/A Only W/E">N/A Only W/E</option>
-                        <option value="N/A Only Summer">N/A Only Summer</option>
-                        <option value="On Standby">On Standby</option>
-                        <option value="Incoming Call">Incoming Call</option>
-                        <option value="Outgoing Call Radio">Outgoing Call Radio</option>
-                        <option value="Outgoing Call Mobile">Outgoing Call Mobile</option>
-                        <option value="No Answer">No Answer</option>
+                    <option value="" selected>Select</option>
+                    <option value="N/A">N/A</option>
+                    <option value="Off Duty">Off Duty</option>
+                    <option value="N/A Only W/E">N/A Only W/E</option>
+                    <option value="N/A Only Summer">N/A Only Summer</option>
+                    <option value="On Standby">On Standby</option>
+                    <option value="Incoming Call">Incoming Call</option>
+                    <option value="Outgoing Call Radio">Outgoing Call Radio</option>
+                    <option value="Outgoing Call Mobile">Outgoing Call Mobile</option>
+                    <option value="No Answer">No Answer</option>
                     </select>*@
                     <input type="hidden" id="clientSiteId" value="" />
                     <input type="hidden" id="guardId" value="" />
@@ -373,16 +414,16 @@
                     <label class="col-form-label" for="selectRadioStatusActive">Select Radio Check Status</label>
                     <select id="selectRadioStatusActive" class="form-control" asp-items="@configDataProvider.GetRadioCheckStatusForDropDown()"></select>
                     @*<select id="selectRadioStatusActive" class="form-control">
-                        <option value="" selected>Select</option>
-                        <option value="N/A">N/A</option>
-                        <option value="Off Duty">Off Duty</option>
-                        <option value="N/A Only W/E">N/A Only W/E</option>
-                        <option value="N/A Only Summer">N/A Only Summer</option>
-                        <option value="On Standby">On Standby</option>
-                        <option value="Incoming Call">Incoming Call</option>
-                        <option value="Outgoing Call Radio">Outgoing Call Radio</option>
-                        <option value="Outgoing Call Mobile">Outgoing Call Mobile</option>
-                        <option value="No Answer">No Answer</option>
+                    <option value="" selected>Select</option>
+                    <option value="N/A">N/A</option>
+                    <option value="Off Duty">Off Duty</option>
+                    <option value="N/A Only W/E">N/A Only W/E</option>
+                    <option value="N/A Only Summer">N/A Only Summer</option>
+                    <option value="On Standby">On Standby</option>
+                    <option value="Incoming Call">Incoming Call</option>
+                    <option value="Outgoing Call Radio">Outgoing Call Radio</option>
+                    <option value="Outgoing Call Mobile">Outgoing Call Mobile</option>
+                    <option value="No Answer">No Answer</option>
                     </select>*@
                     <input type="hidden" id="clientSiteId" value="" />
                     <input type="hidden" id="guardId" value="" />
@@ -417,8 +458,8 @@
                             <li class="nav-item" role="presentation">
                                 <a class="nav-link" id="globalalertTab" data-toggle="tab" href="#globalalert" role="tab" aria-controls="globalalert" aria-selected="true">Global Alert</a>
                             </li>
-                          @*   <li class="nav-item" role="presentation">
-                                <a class="nav-link" id="RCActionListTab" data-toggle="tab" href="#rcactionlist" role="tab" aria-controls="globalalert" aria-selected="true">Action List</a>
+                            @*   <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="RCActionListTab" data-toggle="tab" href="#rcactionlist" role="tab" aria-controls="globalalert" aria-selected="true">Action List</a>
                             </li> *@
                             <li class="nav-item" role="presentation">
                                 <a class="nav-link" id="ActionListTab" data-toggle="tab" href="#actionlist" role="tab" aria-controls="globalalert" aria-selected="true">Action List</a>
@@ -516,9 +557,9 @@
                                                 <label for="gs_land_line" class="col-md-4 col-form-label"></label>
                                                 <div class="col-md-4">
                                                     <input type="checkbox" id="chkClientType" class="GlobalAlert-checkbox">
-                                                    <label class="mx-1" for="dglClientType" >Client Type</label>
+                                                    <label class="mx-1" for="dglClientType">Client Type</label>
                                                     <select class="form-control" id="dglClientType" multiple="multiple" style="width:209px" disabled>
-                                                        
+
                                                         @foreach (var clientType in _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId))
                                                         {
                                                             <option value="@clientType.Id">@clientType.Name</option>
@@ -527,7 +568,7 @@
 
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <label class="mx-1" for="dglClientSiteId" >Client Site</label>
+                                                    <label class="mx-1" for="dglClientSiteId">Client Site</label>
                                                     <select class="form-control mx-1" id="dglClientSiteId" multiple="multiple" style="width:209px" disabled></select>
 
                                                 </div>
@@ -556,7 +597,7 @@
                                                 </div>
                                             </div>
                                             <div class="form-row text-right">
-                                                <div class="col-md-12  text-right">                                                   
+                                                <div class="col-md-12  text-right">
                                                     <button type="button" id="btnSendGlabalNotificationMessage" class="btn btn-primary">Send >></button>
                                                     <p id="Access_permission_RC_status" class="mb-0 py-2" style="display:none"></p>
                                                 </div>
@@ -597,25 +638,25 @@
                                                     </select>
                                                 </div>
                                             </div>
-                                           @*  <div class="form-group row">
-                                                <label for="gs_land_line" class="col-md-4 col-form-label"></label>
-                                                <div class="col-md-4">
-                                                    <input type="checkbox" id="chkClientType" class="GlobalAlert-checkbox">
-                                                    <label class="mx-1" for="dglClientType">Client Type</label>
-                                                    <select class="form-control" id="dglClientType" multiple="multiple" style="width:209px" disabled>
+                                            @*  <div class="form-group row">
+                                            <label for="gs_land_line" class="col-md-4 col-form-label"></label>
+                                            <div class="col-md-4">
+                                            <input type="checkbox" id="chkClientType" class="GlobalAlert-checkbox">
+                                            <label class="mx-1" for="dglClientType">Client Type</label>
+                                            <select class="form-control" id="dglClientType" multiple="multiple" style="width:209px" disabled>
 
-                                                        @foreach (var clientType in _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId))
-                                                        {
-                                                            <option value="@clientType.Id">@clientType.Name</option>
-                                                        }
-                                                    </select>
+                                            @foreach (var clientType in _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId))
+                                            {
+                                            <option value="@clientType.Id">@clientType.Name</option>
+                                            }
+                                            </select>
 
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="mx-1" for="dglClientSiteId">Client Site</label>
-                                                    <select class="form-control mx-1" id="dglClientSiteId" multiple="multiple" style="width:209px" disabled></select>
+                                            </div>
+                                            <div class="col-md-4">
+                                            <label class="mx-1" for="dglClientSiteId">Client Site</label>
+                                            <select class="form-control mx-1" id="dglClientSiteId" multiple="multiple" style="width:209px" disabled></select>
 
-                                                </div>
+                                            </div>
                                             </div> *@
                                             <div class="form-group row">
                                                 <label for="gs_site_email" class="col-md-4 col-form-label">Broadcast Mode GPRS : </label>
@@ -658,9 +699,9 @@
                                         <form id="frm_ActionList">
                                             <br />
                                             <div class="form-group row">
-                                               
+
                                                 <div class="col-md-4">
-                                                   
+
                                                     <label class="mx-1" for="dglClientTypeActionList">Client Type</label>
                                                     <select class="form-control" id="dglClientTypeActionList" style="width:209px">
                                                         <option value="">Select</option>
@@ -673,13 +714,13 @@
                                                 </div>
                                                 <div class="col-md-4">
                                                     <label class="mx-1" for="dglClientSiteIdActionList">Client Site</label>
-                                                    <select class="form-control mx-1" id="dglClientSiteIdActionList"  style="width:209px"></select>
+                                                    <select class="form-control mx-1" id="dglClientSiteIdActionList" style="width:209px"></select>
 
                                                 </div>
                                                 <div class="col-md-4">
                                                     <label class="mt-3"></label>
                                                     <input type="text" id="search_client_site" class="form-control mb-3" placeholder="Search Client Site">
-                                                    </div>
+                                                </div>
                                             </div>
                                             <div id="searchResults">
                                             </div><br />
@@ -763,12 +804,12 @@
 
 
                                                 </div>
-                                               
+
                                             </div>
                                             <div class="form-group row">
 
                                                 <div class="col-md-6">
-                                                    <input type="text" id="txtGlobalNotificationSubject" value="Comments For Control Room Operator"  class="form-control" placeholder="Subject" />
+                                                    <input type="text" id="txtGlobalNotificationSubject" value="Comments For Control Room Operator" class="form-control" placeholder="Subject" />
                                                     <textarea id="txtComments" style="height:100px;" class="form-control"></textarea>
                                                 </div>
                                                 <div class="col-md-6">
@@ -792,7 +833,7 @@
                                                 </div>
                                                 <div class="col-md-4">
                                                     <label class="mx-1" for="dglClientSiteIdActionList2">Client Site</label>
-                                                    <select class="form-control mx-1" id="dglClientSiteIdActionList2"  style="width:209px"></select>
+                                                    <select class="form-control mx-1" id="dglClientSiteIdActionList2" style="width:209px"></select>
 
                                                 </div>
                                                 <div class="col-md-2">
@@ -838,13 +879,13 @@
                 <form id="form_push_notifications_for_rc">
                     <div class="container">
                         <ul class="nav nav-tabs" id="pushNotificationTextMessageTab" role="tablist">
-                          
+
                             <li class="nav-item" role="presentation">
                                 <a class="nav-link" id="ActionListTab1" data-toggle="tab" href="#actionlist1" role="tab" aria-controls="globalalert" aria-selected="true">Action List</a>
                             </li>
                         </ul>
                         <div class="tab-content p-2">
-                           
+
                             <div class="tab-pane active" id="actionlist1" role="tabpanel" aria-labelledby="actionlist1">
                                 <input type="hidden" id="gl_client_site_id" />
                                 <div class="row m-0">
@@ -1017,7 +1058,6 @@
     </div>
 </div>
 <!----------------- Hover Modal -------------------->
-
 @*<div class="modal fade" id="hoverModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="pushNoTificationsControlRoomModal" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">

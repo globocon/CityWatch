@@ -168,7 +168,10 @@ $(function () {
             { data: 'trailerTypeText' },
             { data: 'detail.keyNo', width: '10%' },
             { data: 'detail.mobileNumber', visible: false },
-            { data: 'detail.personName', visible: false },
+                { data: 'detail.personName', visible: false },
+           /* for searching site location-start*/
+            { data: 'clientSiteLocationName', visible: false },
+                /* for searching site location-end*/
             {
                 targets: -1,
                 data: null,
@@ -3433,13 +3436,8 @@ $(function () {
         var dt1 = DateTime.local();
         let tz = dt1.zoneName + ' ' + dt1.offsetNameShort;
         let diffTZ = dt1.offset
-        //let tzshrtnm = dt1.offsetNameLong;
-
-        //const dt = new Date();
-        //var tzjs = getTimezoneAbbreviation;
-        //let tzshrtnm = tzjs(dt);
-
-        let tzshrtnm = dt1.offsetNameShort;
+        //let tzshrtnm = dt1.offsetNameShort;
+        let tzshrtnm = 'GMT' + dt1.toFormat('ZZ'); // Modified by binoy on 19-01-2024
 
         const eventDateTimeLocal = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS');
         const eventDateTimeLocalWithOffset = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS Z');

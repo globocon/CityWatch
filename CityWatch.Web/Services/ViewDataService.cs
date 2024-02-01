@@ -1,4 +1,5 @@
 ﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Models;
@@ -95,7 +96,8 @@ namespace CityWatch.Web.Services
 
         List<ClientSiteKey> GetClientSiteKeysbySearchDesc(int clientSiteId, string searchKeyDesc);
         List<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistoryNew(int profileId);
-        IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistory();
+        IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistoryWithPersonName(string PersonName);
+        IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistoryWithKeyNo(string KeyNo);
     }
 
     public class ViewDataService : IViewDataService
@@ -939,15 +941,18 @@ namespace CityWatch.Web.Services
             if (!IsClientSiteDuressEnabled(clientSiteId))
             {
 
-               
+
                 /* Save the push message for reload to logbook on next day Start*/
+                DateTime? logBook_Date = null;
+                logBook_Date = _guardDataProvider.GetLogbookDateFromLogbook(logBookId); // p6#73 timezone bug - Added by binoy 24-01-2024
+                var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)tmzdata.EventDateTimeUtcOffsetMinute);
                 var radioCheckPushMessages = new RadioCheckPushMessages()
                 {
                     ClientSiteId = clientSiteId,
                     LogBookId = logBookId,
                     Notes = "Duress Alarm Activated",
                     EntryType = (int)IrEntryType.Alarm,
-                    Date = DateTime.Today,
+                    Date = logBook_Date.Value,
                     IsAcknowledged = 0,
                     IsDuress=1
                 };
@@ -962,7 +967,7 @@ namespace CityWatch.Web.Services
                     Notes = "Duress Alarm Activated",
                     IsSystemEntry = true,
                     IrEntryType = Data.Enums.IrEntryType.Alarm,
-                    EventDateTime = DateTime.Now,
+                    EventDateTime = localDateTime,  //DateTime.Now,
                     ClientSiteLogBookId = logBookId,
                     GuardLoginId = guardLoginId,
                     RcPushMessageId= pushMessageId,
@@ -1003,19 +1008,43 @@ namespace CityWatch.Web.Services
         }
         //}
         //code added for Guard Access Dropdown stop
-        public IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistory()
+        //public IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistory()
+        //{
+        //    var kvlVisitorProfile = _guardLogDataProvider.GetKeyVehicleLogVisitorProfile();
+        //    var history = new List<KeyVehicleLogAuditHistory>();
+        //    foreach (var item in kvlVisitorProfile)
+        //    {
+        //        var hist = GetKeyVehicleLogAuditHistoryNew(item.Id);
+        //        foreach(var item2 in hist)
+        //        {
+        //            item2.KeyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogsByID(item2.KeyVehicleLogId).FirstOrDefault();
+
+        //        }
+        //        history.AddRange(hist); 
+        //    }
+
+        //    return history;
+        //}
+        //public List<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistoryNew(int profileId)
+        //{
+        //    return _guardLogDataProvider.GetAuditHistory(profileId)
+        //        .OrderByDescending(z => z.Id)
+        //        .ThenByDescending(z => z.AuditTime).ToList();
+        //}
+        public IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistoryWithPersonName(string PersonName)
         {
-            var kvlVisitorProfile = _guardLogDataProvider.GetKeyVehicleLogVisitorProfile();
+            var kvlVisitorProfile = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetailsWithPersonName(PersonName);
             var history = new List<KeyVehicleLogAuditHistory>();
             foreach (var item in kvlVisitorProfile)
             {
-                var hist = GetKeyVehicleLogAuditHistoryNew(item.Id);
-                foreach(var item2 in hist)
+                var hist = GetKeyVehicleLogAuditHistoryNew(item.ProfileId);
+                foreach (var item2 in hist)
                 {
                     item2.KeyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogsByID(item2.KeyVehicleLogId).FirstOrDefault();
-                    
+
                 }
-                history.AddRange(hist); 
+                var newhist = hist.Where(x => x.KeyVehicleLog.PersonName == PersonName);
+                history.AddRange(newhist);
             }
 
             return history;
@@ -1023,6 +1052,37 @@ namespace CityWatch.Web.Services
         public List<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistoryNew(int profileId)
         {
             return _guardLogDataProvider.GetAuditHistory(profileId)
+                .OrderByDescending(z => z.Id)
+                .ThenByDescending(z => z.AuditTime).ToList();
+        }
+        public IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistoryWithKeyNo(string KeyNo)
+        {
+            var kvlVisitorProfile = _guardLogDataProvider.GetKeyVehicleLogsWithKeyNo(KeyNo);
+            var history = new List<KeyVehicleLogAuditHistory>();
+            foreach (var item in kvlVisitorProfile)
+            {
+                var hist = GetKeyVehicleLogAuditHistoryWithKeyVehicleLogId(item.Id);
+
+               foreach(var item2 in hist)
+                {
+                    if(item2.AuditMessage=="Initial entry")
+                    {
+                        item2.AuditMessage = "Key received";
+                    }
+                    if (item2.AuditMessage == "Exit entry")
+                    {
+                        item2.AuditMessage = "Key returned";
+                    }
+                }
+                var newhist = hist;
+                history.AddRange(newhist);
+            }
+
+            return history;
+        }
+        public List<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistoryWithKeyVehicleLogId(int keyVehicleId)
+        {
+            return _guardLogDataProvider.GetAuditHistoryWithKeyVehicleLogId(keyVehicleId)
                 .OrderByDescending(z => z.Id)
                 .ThenByDescending(z => z.AuditTime).ToList();
         }

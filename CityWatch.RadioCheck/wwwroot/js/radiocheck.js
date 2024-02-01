@@ -180,6 +180,7 @@ $(window).resize(function () {
 
 const groupColumn = 1;
 const groupColumn2 = 2;
+const groupColumnSortAlias = 11; // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024
 var scrollPosition2;
 var rowIndex2;
 var scrollY = ($(window).height() - 300);
@@ -189,8 +190,8 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     "columnDefs": [
         { "visible": false, "targets": 1 } ,// Hide the group column initially
         { "visible": false, "targets": 2 } 
-    ],
-    order: [[groupColumn, 'asc']],
+    ],    
+    order: [[11, 'asc'], [3, 'asc']], // Task p4#41_A~Z and Z~A sorting issue -- modified by Binoy - 31-01-2024
     info: false,
     searching: true,
     autoWidth: true,
@@ -211,7 +212,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         {
             data: 'siteName',
             width: '20%',
-            class:'dt-control',
+            class: 'dt-control',
             render: function (value, type, data) {
 
                 return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
@@ -231,6 +232,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         {
             data: 'guardName',
             width: '20%',
+            orderable: false, // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024
             render: function (value, type, data) {
                 if (data.isEnabled === 1) {
                     return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
@@ -276,6 +278,10 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             data: 'smartWands',
             width: '6%',
             className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardSWInfoModal" id="btnSWdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '"> ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+            }
         },
         //{
         //    data: 'rcStatus',
@@ -313,11 +319,6 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
             }
         },
-
-
-       
-       
-
            
         {
             data: 'siteName',
@@ -325,9 +326,14 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             width: '20%',
 
         },
+        // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- Start - 31-01-2024
+        {
+            data: 'onlySiteName',
+            visible: false,
+            width: '20%',
 
-       
-
+        },       
+        // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- End - 31-01-2024
     ],
 
     preDrawCallback: function (settings) {
@@ -380,6 +386,23 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 });
 
 
+// Order by the grouping
+// Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- Start - 31-01-2024
+$(clientSiteActiveGuards.table().header()).on('click', 'th', function () {
+    // Checkout issue on https://datatables.net/reference/api/table().header()  , https://datatables.net/forums/discussion/43165/click-event-in-column-header-never-fired    
+     var index = clientSiteActiveGuards.column(this).index();     
+    var currentOrder = clientSiteActiveGuards.order()[0];
+    if (index === 3) {
+        if (currentOrder[1] === 'asc') {
+            clientSiteActiveGuards.order([groupColumnSortAlias, 'desc']).draw();
+        }
+
+        else {
+            clientSiteActiveGuards.order([groupColumnSortAlias, 'asc']).draw();
+        }
+    }
+});
+// Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- End - 31-01-2024
 
 $('#clientSiteActiveGuards tbody').on('click', '#btnUpArrow', function () {
     
@@ -1231,6 +1254,84 @@ let clientSiteActiveGuardsIncidentReportsDetails = $('#clientSiteActiveGuardsInc
     },
 });
 
+
+
+/* for SW details of the guard-start*/
+
+let clientSiteActiveGuardsSWDetails = $('#clientSiteActiveGuardsSWDetails').DataTable({
+    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+    ordering: true,
+    order: [[1, 'desc']],
+    info: false,
+    searching: false,
+    autoWidth: false,
+    fixedHeader: true,
+    "scrollY": "300px", // Set the desired height for the scrollable area
+    "paging": false,
+    "footer": true,
+    ajax: {
+        url: '/RadioCheckV2?handler=ClientSiteSWDetails',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteId = $('#txtClientSiteId').val();
+            d.guardId = $('#txtGuardId').val();
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'id', visible: false },
+        {
+            data: 'templateName',
+            width: '25%',
+           
+        },
+        {
+            data: 'smartWand',
+            width: '20%'
+
+        },
+        {
+            data: 'employeePhone',
+            width: '25%',
+           
+
+        },
+        {
+            data: 'inspectionStartDatetimeLocal',
+            width: '30%',
+
+
+        },
+
+       
+
+
+    ],
+   
+});
+
+$('#clientSiteActiveGuards tbody').on('click', '#btnSWdetails', function (value, record) {
+    $('#guardSWInfoModal').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
+    var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    if (GuardId.length == 0) {
+        GuardId = $(this).closest("tr").find('td').eq(2).find('#GuardId').val();
+    }
+    if (ClientSiteId.length == 0) {
+        ClientSiteId = $(this).closest("tr").find('td').eq(2).find('#ClientSiteId').val();
+    }
+
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    // $('#lbl_GuardActivityHeader').val($(this).closest("tr").find("td").eq(2).text() + 'Log Book Details');
+    $('#lbl_GuardActivityHeader4').text(GuardName + '-' + 'Smart Wand Scan Details');
+    clientSiteActiveGuardsSWDetails.ajax.reload();
+
+});
+
+/* for SW details of the guard-end*/
 $('#clientSiteActiveGuards tbody').on('click', '#btnIncidentReportdetails', function (value, record) {
     $('#guardIncidentReportsInfoModal').modal('show');
     isPaused = true;
@@ -1369,10 +1470,10 @@ $('#btnSaveRadioStatusActive').on('click', function () {
     }).done(function () {
         $('#selectRadioCheckStatusActive').modal('hide');
         $('#selectRadioStatus').val('');      
-        clientSiteActiveGuards.ajax.reload();
+        clientSiteActiveGuards.ajax.reload(null, false);
         clientSiteInActiveGuards.ajax.reload();
         clientSiteInActiveGuardsSinglePage.ajax.reload();
-        clientSiteActiveGuardsSinglePage.ajax.reload();
+        clientSiteActiveGuardsSinglePage.ajax.reload(null, false);
 
     });
 });
@@ -2561,7 +2662,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
         { "visible": false, "targets": 1 },// Hide the group column initially
         { "visible": false, "targets": 2 }
     ],
-    order: [[groupColumn, 'asc']],
+    order: [[11, 'asc'], [3, 'asc']], // Task p4#41_A~Z and Z~A sorting issue -- modified by Binoy - 31-01-2024
     info: false,
     searching: true,
     autoWidth: true,
@@ -2602,6 +2703,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
         {
             data: 'guardName',
             width: '20%',
+            orderable: false, // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024
             render: function (value, type, data) {
                 return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
                     '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
@@ -2639,6 +2741,10 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             data: 'smartWands',
             width: '6%',
             className: "text-center",
+            render: function (value, type, data) {
+                if (value === null) return 'N/A';
+                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardSWInfoModal" id="btnSWdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '"> ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+            }
         },
         //{
         //    data: 'rcStatus',
@@ -2677,11 +2783,6 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             }
         },
 
-
-
-
-
-
         {
             data: 'siteName',
             visible: false,
@@ -2689,6 +2790,14 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
 
         },
 
+        // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- Start - 31-01-2024
+        {
+            data: 'onlySiteName',
+            visible: false,
+            width: '20%',
+
+        },
+        // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- End - 31-01-2024
 
 
     ],
@@ -2727,6 +2836,24 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
     },
 });
 
+
+// Order by the grouping
+// Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- Start - 31-01-2024
+$(clientSiteActiveGuardsSinglePage.table().header()).on('click', 'th', function () {
+    // Checkout issue on https://datatables.net/reference/api/table().header()  , https://datatables.net/forums/discussion/43165/click-event-in-column-header-never-fired    
+    var index = clientSiteActiveGuardsSinglePage.column(this).index();
+    var currentOrder = clientSiteActiveGuardsSinglePage.order()[0];
+    if (index === 3) {
+        if (currentOrder[1] === 'asc') {
+            clientSiteActiveGuardsSinglePage.order([groupColumnSortAlias, 'desc']).draw();
+        }
+
+        else {
+            clientSiteActiveGuardsSinglePage.order([groupColumnSortAlias, 'asc']).draw();
+        }
+    }
+});
+// Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- End - 31-01-2024
 
 
 $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnUpArrow', function () {
@@ -2817,6 +2944,28 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnIncidentReportdeta
     clientSiteActiveGuardsIncidentReportsDetails.ajax.reload();
 
 });
+
+$('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnSWdetails', function (value, record) {
+    $('#guardSWInfoModal').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
+    var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    if (GuardId.length == 0) {
+        GuardId = $(this).closest("tr").find('td').eq(2).find('#GuardId').val();
+    }
+    if (ClientSiteId.length == 0) {
+        ClientSiteId = $(this).closest("tr").find('td').eq(2).find('#ClientSiteId').val();
+    }
+
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    // $('#lbl_GuardActivityHeader').val($(this).closest("tr").find("td").eq(2).text() + 'Log Book Details');
+    $('#lbl_GuardActivityHeader4').text(GuardName + '-' + 'Smart Wand Scan Details');
+    clientSiteActiveGuardsSWDetails.ajax.reload();
+
+});
+
 let isActive = true;
 $('#heading-example').on('click', function () {
 
@@ -3138,13 +3287,8 @@ function fillRefreshLocalTimeZoneDetails(formData, modelname, isform) {
     var dt1 = DateTime.local();
     let tz = dt1.zoneName + ' ' + dt1.offsetNameShort;
     let diffTZ = dt1.offset
-    //let tzshrtnm = dt1.offsetNameLong;
-
-    //const dt = new Date();
-    //var tzjs = getTimezoneAbbreviation;
-    //let tzshrtnm = tzjs(dt);
-
-    let tzshrtnm = dt1.offsetNameShort;
+    //let tzshrtnm = dt1.offsetNameShort;
+    let tzshrtnm = 'GMT' + dt1.toFormat('ZZ'); // Modified by binoy on 19-01-2024
 
     const eventDateTimeLocal = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS');
     const eventDateTimeLocalWithOffset = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS Z');

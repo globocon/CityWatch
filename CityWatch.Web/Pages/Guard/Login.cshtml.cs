@@ -1,4 +1,5 @@
 using CityWatch.Data.Enums;
+using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
@@ -108,7 +109,8 @@ namespace CityWatch.Web.Pages.Guard
                     _guardDataProvider.UpdateGuard(GuardLogin.Guard, GuardLogin.ClientSite.State, out initalsUsed);
                 }
 
-                var logBookId = GetLogBookId(out var isNewLogBook);
+                var clientDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)GuardLogin.EventDateTimeUtcOffsetMinute); // p6#73 timezone bug - Added by binoy 24-01-2024
+                var logBookId = GetLogBookId(out var isNewLogBook, clientDateTime); // p6#73 timezone bug - Modified by binoy 24-01-2024
                 var guardLoginId = GetGuardLoginId(logBookId);
                 // Task p6#73_TimeZone issue -- added by Binoy - Start
                 var eventDateTimeLocal = GuardLogin.EventDateTimeLocal.Value;
@@ -346,19 +348,20 @@ namespace CityWatch.Web.Pages.Guard
             return guardLoginId;
         }
 
-        private int GetLogBookId(out bool isNewLogBook)
+        private int GetLogBookId(out bool isNewLogBook, DateTime clientDateTime)
         {
             isNewLogBook = false;
             int logBookId;
-            var logBook = _clientDataProvider.GetClientSiteLogBook(GuardLogin.ClientSite.Id, LogBookType, DateTime.Today);
+            //var logBook = _clientDataProvider.GetClientSiteLogBook(GuardLogin.ClientSite.Id, LogBookType, DateTime.Today);
+            var logBook = _clientDataProvider.GetClientSiteLogBook(GuardLogin.ClientSite.Id, LogBookType, clientDateTime.Date); // p6#73 timezone bug - Added by binoy 24-01-2024
             if (logBook == null)
             {
                 logBookId = _clientDataProvider.SaveClientSiteLogBook(new ClientSiteLogBook()
                 {
                     ClientSiteId = GuardLogin.ClientSite.Id,
                     Type = LogBookType,
-                    Date = DateTime.Today,
-                });
+                    Date = clientDateTime.Date, 
+                });  // changed DateTime.Today to clientDateTime.Date p6#73 timezone bug modified by binoy 24-01-2024
 
                 isNewLogBook = true;
             }

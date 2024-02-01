@@ -129,7 +129,12 @@ namespace CityWatch.Data.Providers
 
         List<RadioCheckPushMessages> GetDuressMessageNotAcknowledged(int clientSiteId, DateTime date);
         List<RadioCheckPushMessages> GetDuressMessageNotAcknowledgedForControlRoom(DateTime date);
+
         public string GetDefaultEmailAddress();
+
+
+        void RemoveWorker(int settingsId, int OrderId);
+
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -426,7 +431,7 @@ namespace CityWatch.Data.Providers
             else
             {
 
-                
+
                 var RCToUpdate = _context.RCActionList.SingleOrDefault(z => z.Id == RC.Id);
                 if (RCToUpdate != null)
                 {
@@ -459,7 +464,27 @@ namespace CityWatch.Data.Providers
             }
 
 
-           
+
+        }
+
+
+        public void RemoveWorker(int settingsId, int OrderId)
+        {
+
+            var ManningWorker = _context.ClientSiteManningKpiSettings.Where(z => z.SettingsId == settingsId && z.OrderId == OrderId).ToList();
+            if (ManningWorker != null)
+            {
+               
+                if (ManningWorker.Count > 0)
+                {
+                    _context.RemoveRange(ManningWorker);
+                    _context.SaveChanges();
+
+                }
+            }
+
+
+
         }
 
         public List<ClientSiteLogBook> GetClientSiteLogBooks()
@@ -1388,7 +1413,7 @@ namespace CityWatch.Data.Providers
 
         public List<ClientSite> GetClientSiteForRcLogBook()
         {
-            var Clisite = new  List<ClientSite>();
+            var Clisite = new List<ClientSite>();
             var alreadyExistingSite = _context.RadioCheckLogbookSiteDetails.ToList();
             if (alreadyExistingSite.Count != 0)
             {
@@ -1421,18 +1446,18 @@ namespace CityWatch.Data.Providers
         public List<RadioCheckPushMessages> GetPushMessagesNotAcknowledged(int clientSiteId, DateTime date)
         {
             return _context.RadioCheckPushMessages.Where
-                 (z => z.ClientSiteId == clientSiteId  && z.EntryType==2 && z.IsAcknowledged==0 && (z.IsDuress == 0)).ToList();
+                 (z => z.ClientSiteId == clientSiteId && z.EntryType == 2 && z.IsAcknowledged == 0 && (z.IsDuress == 0)).ToList();
         }
 
         public List<RadioCheckPushMessages> GetDuressMessageNotAcknowledged(int clientSiteId, DateTime date)
         {
             return _context.RadioCheckPushMessages.Where
-                 (z => z.ClientSiteId == clientSiteId && z.EntryType == 2 && z.IsAcknowledged == 0&& z.IsDuress==1).ToList();
+                 (z => z.ClientSiteId == clientSiteId && z.EntryType == 2 && z.IsAcknowledged == 0 && z.IsDuress == 1).ToList();
         }
-        public List<RadioCheckPushMessages> GetDuressMessageNotAcknowledgedForControlRoom( DateTime date)
+        public List<RadioCheckPushMessages> GetDuressMessageNotAcknowledgedForControlRoom(DateTime date)
         {
             return _context.RadioCheckPushMessages.Where
-                 (z =>  z.EntryType == 2 && z.IsAcknowledged == 0 && z.IsDuress == 1).ToList();
+                 (z => z.EntryType == 2 && z.IsAcknowledged == 0 && z.IsDuress == 1).ToList();
         }
         /* Get Previous day pushmessages end*/
         //To Get the Default Email Address start

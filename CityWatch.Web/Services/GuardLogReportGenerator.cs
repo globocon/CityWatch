@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -360,8 +361,12 @@ namespace CityWatch.Web.Services
 
             foreach (var entry in guardLog)
             {
-                reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).Add(new Paragraph($"{entry.EventDateTime:HH:mm} hrs").SetFontSize(CELL_FONT_SIZE)));
-                
+                //Commented the following line and for fixing the time issue 29/01/2024 dileep//
+                //reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).Add(new Paragraph($"{entry.EventDateTime:HH:mm} hrs").SetFontSize(CELL_FONT_SIZE)));
+
+
+                reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).Add(new Paragraph(getEventDateTimeUTCformat(entry)).SetFontSize(CELL_FONT_SIZE)));
+                //Commented the following line and for fixing the time issue 29/01/2024 dileep end//
                 var notes = entry.IrEntryType.HasValue ?
                                     entry.Notes :
                                     (string.IsNullOrEmpty(entry.GuardLogin.Guard.Initial) ? $"{entry.Notes} ;" : $"{entry.Notes} ;{entry.GuardLogin.Guard.Initial}");
@@ -373,6 +378,27 @@ namespace CityWatch.Web.Services
             }
 
             return reportDataTable;
+        }
+
+        /* new Function for add New Dateformat*/
+        public string getEventDateTimeUTCformat(GuardLog entry)
+        {
+            if (entry.EventDateTimeLocal != null )
+            {
+                DateTime localTime =(DateTime)entry.EventDateTimeLocal;
+                var dt = localTime.ToString("HH:mm")+ " Hrs " + entry.EventDateTimeZoneShort;
+                return dt;
+            }
+            else 
+            {
+                CultureInfo cultureInfo = new CultureInfo("en-AU");
+                DateTime eventDateTime = (DateTime)entry.EventDateTime;
+                string formattedDateTime = eventDateTime.ToString("HH:mm", cultureInfo);
+
+                return formattedDateTime + " Hrs";
+            }
+
+
         }
 
         private Table CreateNotes(int clientSiteId)

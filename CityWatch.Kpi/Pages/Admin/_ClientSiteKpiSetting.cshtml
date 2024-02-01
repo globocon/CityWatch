@@ -205,13 +205,14 @@
                         {
 
                             var rowIndextemp = 0;
-
+                            var idForDelete = @Model.ClientSiteManningGuardKpiSettings[rowIndexFirst].SettingsId + "_" + @Model.ClientSiteManningGuardKpiSettings[rowIndexFirst].OrderId + "_" + @Model.ClientSiteId;
 
                             <hr />
                             <div class="row">
                                 <div class="col-md-12">
 
 
+                                    <button type="button" class="btn btn-danger" value="@idForDelete" id="delete_worker"><i class="fa fa-trash" aria-hidden="true"></i>&nbsp;Delete Worker</button>
 
                                     @for (int rowIndex = rowIndexFirst; rowIndex < (4 + rowIndexFirst); rowIndex++)
                                     {

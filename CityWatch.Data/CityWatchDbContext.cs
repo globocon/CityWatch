@@ -1,5 +1,6 @@
 ﻿using CityWatch.Data.Models;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace CityWatch.Data
 {
@@ -7,8 +8,9 @@ namespace CityWatch.Data
     {
         public CityWatchDbContext(DbContextOptions<CityWatchDbContext> options) : base(options)
         {
-
+            Database.SetCommandTimeout(TimeSpan.FromMinutes(5));
         }
+             
 
         public DbSet<User> Users { get; set; }
         public DbSet<ClientType> ClientTypes { get; set; }
@@ -84,6 +86,10 @@ namespace CityWatch.Data
 
 
         public DbSet<RadioCheckPushMessages> RadioCheckPushMessages { get; set; }
+
+        public DbSet<RadioChecksSmartWandScanResults> RadioChecksSmartWandScanResults { get; set; }
+
+        public DbSet<RadioCheckListSWReadData> RadioCheckListSWReadData { get; set; }
 
     }
 }

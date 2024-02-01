@@ -72,5 +72,23 @@ namespace CityWatch.Data.Helpers
             }
             return name;
         }
-    }    
+    }
+
+    // Task p6#73_TimeZone issue -- added by Binoy - Start
+    public static class DateTimeHelper
+    {
+        public static DateTime GetCurrentLocalTimeFromUtcMinute(int utcmin)
+        {
+            var CurrLocalTime = DateTime.UtcNow.AddMinutes(utcmin);
+            return CurrLocalTime;
+        }
+
+       
+        public static DateTime GetLogbookEndTimeFromDate(DateTime ldtm)
+        {            
+            return new DateTime(ldtm.Year, ldtm.Month, ldtm.Day, 23, 59, 00);
+        }
+    }
+
+    // Task p6#73_TimeZone issue -- added by Binoy - End
 }
