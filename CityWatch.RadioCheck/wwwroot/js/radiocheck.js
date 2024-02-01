@@ -507,6 +507,21 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                 $('#ActionListControlRoomModal').modal('show');
                 $('#dglClientTypeActionListAll').val('');
                 $('#dglClientSiteIdActionListAll').val('');
+                $('#Site_Alarm_Keypad_codeAll').val('');
+                $('#Action1All').val('');
+                $('#Action2All').val('');
+                $('#Action3All').val('');
+                $('#Action4All').val('');
+                $('#Action5All').val('');
+                $('#Action5All').val('');
+                $('#Site_Combination_LookAll').val('');
+                $('#site_Physical_keyAll').val('');
+                $('#txtCommentsAll').val('');
+                $('#txtMessageActionListAll').val('');
+                $('#dglClientTypeActionList2All').val('');
+                $('#dglClientSiteIdActionList2All').val('');
+                
+                
             }
         }
 
@@ -1829,7 +1844,7 @@ $('#btnSendActionList').on('click', function () {
 $('#btnSendActionListGlobal').on('click', function () {
 
     var clientSiteId = $('#dglClientSiteIdActionList2All').val();
-    var Notifications = $('#txtMessageActionList1All').val();
+    var Notifications = $('#txtMessageActionListAll').val();
     var Subject = $('#txtGlobalNotificationSubjectAll').val();
 
     var ClientType = $('#dglClientTypeActionList2All').val();
