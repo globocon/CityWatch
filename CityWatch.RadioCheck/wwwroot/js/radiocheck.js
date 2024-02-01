@@ -2662,7 +2662,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
         { "visible": false, "targets": 1 },// Hide the group column initially
         { "visible": false, "targets": 2 }
     ],
-    order: [[11, 'asc'], [3, 'asc']], // Task p4#41_A~Z and Z~A sorting issue -- modified by Binoy - 31-01-2024
+    order: [[11, 'asc']], // Task p4#41_A~Z and Z~A sorting issue -- modified by Binoy - 31-01-2024
     info: false,
     searching: true,
     autoWidth: true,
