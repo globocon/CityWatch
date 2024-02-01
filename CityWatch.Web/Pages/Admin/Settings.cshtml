@@ -153,18 +153,23 @@
                     <table class="table table-bordered tbl-settings">
                         <thead>
                             <tr>
-                                <th style="width:270px">Current Location</th>
-                                <th style="width:270px">Date & Time Last Uploaded</th>
-                                <th style="width:270px">Default Email for IR sending/HR Warning</th>
-                                <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                                <th style="width:241px">Current Location</th>
+                                <th style="width:240px">Date & Time Last Uploaded</th>
+                                <th style="width:340px">Default Email for IR sending/HR Warning</th>
+                                <th style="width:400px" class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td class="align-middle">@Model.ReportTemplate.Path</td>
                                 <td id="ir_template_updatedOn" class="align-middle">@Model.ReportTemplate.LastUpdated.ToString("dd MMM yyyy @ HH:mm")</td>
-                                <td class="align-middle">@Model.ReportTemplate.DefaultEmail</td>
+                                  
+                                <td class="align-middle" id="DefaultMail">@Model.ReportTemplate.DefaultEmail</td>
+                                <td class="align-middle" style="display: none;" id="DefaultMailTextbox"><input type="text" id="DefaultMailTextboxval" style="width:100%" name="DefaultEmail" value="@Model.ReportTemplate.DefaultEmail" /></td>
+                               
                                 <td class="text-center">
+                                    <button role="edit" id="btn_DefaultEmailEdit" class="btn btn-outline-primary" key="33"><i class="gj-icon pencil" style="font-size:15px"> EDIT</i></button>
+                                    <button role="update" id="btn_DefaultEmailUpdate" class="btn btn-outline-primary" key="1" style="display:none"><i class="gj-icon check-circle" style="font-size:15px"> UPDATE</i></button>
                                     <label class="btn btn-success mb-0">
                                         <form id="form_ir_template" method="post">
                                             <i class="fa fa-upload mr-2"></i>Replace
@@ -172,6 +177,7 @@
                                         </form>
                                     </label>
                                     <a href="@Url.Content("~/Pdf/Template/IR_Form_Template.pdf")" target="_blank" class="btn btn-outline-primary"><i class="fa fa-download mr-2"></i>Download</a>
+                                   
                                 </td>
                             </tr>
                         </tbody>

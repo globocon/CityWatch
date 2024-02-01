@@ -241,15 +241,18 @@ namespace CityWatch.Kpi.Services
         private void SendEmail(string fileName, KpiSendSchedule schedule, DateTime reportDate, bool ignoreRecipients)
         {
             var fromAddress = _emailOptions.FromAddress.Split('|');
-            var toAddress = _emailOptions.ToAddress.Split('|');
             //To get the Default Email start
-            if (toAddress == null)
+            var ToAddreddAppset = _emailOptions.ToAddress.Split('|');
+            var toAddressData = _clientDataProvider.GetDefaultEmailAddress() + '|'+ ToAddreddAppset[1];
+            var toAddress = toAddressData.Split('|');
+            var ToAddressFirststr = _clientDataProvider.GetDefaultEmailAddress();
+            if (ToAddressFirststr==null)
             {
-                string toAddressData = _clientDataProvider.GetDefaultEmailAddress();
-                toAddress = new string[] { toAddressData };
+                toAddress = _emailOptions.ToAddress.Split('|');
             }
+
             //To get the Default Email stop
-           
+
             var subject = _emailOptions.Subject;
             var messageHtml = _emailOptions.Message;
             var message = new MimeMessage();

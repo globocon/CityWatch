@@ -58,13 +58,17 @@ namespace CityWatch.Web.Services
         private void SendEmail(string mailBodyHtml)
         {
             var fromAddress = _emailOptions.FromAddress.Split('|');
-            var toAddress = _emailOptions.ToAddress.Split('|');
+    
             //To get the Default Email start
-            if (toAddress == null)
+            var ToAddreddAppset = _emailOptions.ToAddress.Split('|');
+            var toAddressData = _guardDataProvider.GetDefaultEmailAddress() + '|' + ToAddreddAppset[1];
+            var toAddress = toAddressData.Split('|');
+            var ToAddressFirststr = _guardDataProvider.GetDefaultEmailAddress();
+            if (ToAddressFirststr == null)
             {
-                string toAddressData = _guardDataProvider.GetDefaultEmailAddress();
-                toAddress = new string[] { toAddressData };
+                toAddress = _emailOptions.ToAddress.Split('|');
             }
+
             //To get the Default Email stop
 
             var message = new MimeMessage();
