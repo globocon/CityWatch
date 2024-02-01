@@ -438,7 +438,19 @@ namespace CityWatch.Web.Pages.Incident
         private bool SendEmail(string fileName)
         {
             var fromAddress = _EmailOptions.FromAddress.Split('|');
-            var toAddress = _EmailOptions.ToAddress.Split('|');
+           
+            //To get the Default Email start
+            var ToAddreddAppset = _EmailOptions.ToAddress.Split('|');
+            var toAddressData = _clientDataProvider.GetDefaultEmailAddress() + '|' + ToAddreddAppset[1];
+            var toAddress = toAddressData.Split('|');
+            var ToAddressFirststr = _clientDataProvider.GetDefaultEmailAddress();
+            if (ToAddressFirststr == null)
+            {
+                toAddress = _EmailOptions.ToAddress.Split('|');
+            }
+
+            //To get the Default Email stop
+
             var ccAddress = _EmailOptions.CcAddress.Split('|');
             var subject = _EmailOptions.Subject;
             var messageHtml = _EmailOptions.Message;
