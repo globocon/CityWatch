@@ -124,7 +124,7 @@ namespace CityWatch.RadioCheck.API
                 {
 
 
-                    var url = $"https://api.koios.pl/kms-api/v2/inspections/scan/?start_datetime={DateTime.Now.AddMinutes(-5).ToString("yyyy-MM-dd HH:mm:ss")}";
+                    var url = $"https://api.koios.pl/kms-api/v2/inspections/scan/?start_datetime={DateTime.Now.AddMinutes(-5).ToString("yyyy-MM-dd HH:mm:ss")}&include_templates=11";
                     HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, url);
                     request.Headers.Add("Authorization", "814efaaa61e5a5fdddcf8e5c7bee32df4c7bc8657fadce203330081f9d262e1f");
                     request.Headers.Add("Agency", "citywatch");
