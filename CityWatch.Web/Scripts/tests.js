@@ -2,7 +2,7 @@
  * 
  * Steps to run a test:
  * ====================
- * 1. In terminal window, navigate to this folder - for e.g. "C:\citywatch\src\CityWatch.Kpi\Scripts\"
+ * 1. In terminal window, navigate to this folder - for e.g. "C:\citywatch\src\CityWatch.Web\Scripts\"
  * 2. Uncomment test function to execute - for e.g. create_ir_bar_chart()
  * 3. Run command "node .\tests.js" from terminal
  * 
@@ -10,8 +10,8 @@
 
 const irChart = require("./ir-chart.js");
 
-//create_ir_bar_chart();
-//create_ir_pie_chart();
+create_ir_bar_chart();
+create_ir_pie_chart();
 
 /****** Test functions ******/
 function create_ir_bar_chart() {
