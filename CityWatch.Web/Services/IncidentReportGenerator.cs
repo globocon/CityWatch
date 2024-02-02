@@ -125,7 +125,7 @@ namespace CityWatch.Web.Services
 
             _ReportRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "Pdf");
             _GpsMapRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "GpsImage");
-            
+            _imageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
             // report output directory webroot\Pdf\Output
             if (!IO.Directory.Exists(IO.Path.Combine(_ReportRootDir, REPORT_DIR)))
                 IO.Directory.CreateDirectory(IO.Path.Combine(_ReportRootDir, REPORT_DIR));
@@ -1185,19 +1185,34 @@ namespace CityWatch.Web.Services
 
             var cellSiteImage = new Cell().SetBorder(Border.NO_BORDER);
             headerTable.AddCell(cellSiteImage);
-
-            var cellReportTitle = new Cell()
+            if (patrolRequest.ClientSites != null)
+            {
+                var cellReportTitle = new Cell()
                 .SetBorder(Border.NO_BORDER)
                 .SetTextAlignment(TextAlignment.CENTER)
                 .Add(new Paragraph("Patrol Data Report\n").SetFont(PdfHelper.GetPdfFont()).SetFontSize(CELL_FONT_SIZE * 1.2f))
           
              
-                .Add(new Paragraph(patrolRequest.FromDate.ToString("dd-MMM-yyyy") + "to" + patrolRequest.ToDate.ToString("dd-MMM-yyyy"))).SetFontSize(CELL_FONT_SIZE);
-            //if(patrolRequest.ClientSites!=null)
-            //{
-            //    //.Add(new Paragraph(projectName)).SetFontSize(CELL_FONT_SIZE)
-            //}
+                .Add(new Paragraph(patrolRequest.FromDate.ToString("dd-MMM-yyyy") + "  to  " + patrolRequest.ToDate.ToString("dd-MMM-yyyy"))).SetFontSize(CELL_FONT_SIZE)
+            
+                .Add(new Paragraph(patrolRequest.ClientSites[0])).SetFontSize(CELL_FONT_SIZE);
+            
             headerTable.AddCell(cellReportTitle);
+            }
+            else
+            {
+                var cellReportTitle = new Cell()
+                .SetBorder(Border.NO_BORDER)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .Add(new Paragraph("Patrol Data Report\n").SetFont(PdfHelper.GetPdfFont()).SetFontSize(CELL_FONT_SIZE * 1.2f))
+
+
+                .Add(new Paragraph(patrolRequest.FromDate.ToString("dd-MMM-yyyy") + "to" + patrolRequest.ToDate.ToString("dd-MMM-yyyy"))).SetFontSize(CELL_FONT_SIZE);
+
+                
+
+                headerTable.AddCell(cellReportTitle);
+            }
 
             var image = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "CWSLogoPdf.png")))
                 .SetHeight(50)
