@@ -99,6 +99,14 @@ namespace CityWatch.Web.Models
                 return _keyVehicleLogProfile.KeyVehicleLog?.ClientSiteLogBook.ClientSite.Name;
             }
         }
+
+        public int? ClientSiteId
+        {
+            get
+            {
+                return _keyVehicleLogProfile.KeyVehicleLog?.ClientSiteLogBook.ClientSite.Id;
+            }
+        }
     }
 
     public class KeyVehicleLogProfileViewModelComparer : IComparer<KeyVehicleLogProfileViewModel>

@@ -3683,18 +3683,18 @@ $('#generate_logbook_AlldocketList').on('click', function () {
     $('#generate_log_AlldocketList').attr('disabled', true);
 
     var ids = [];
-    $.ajax({
-        url: '/Admin/AuditSiteLog?handler=KeyVehicleLogProfiles',
-        data: { truckRego: null, poi: 'POI' },
-        type: 'GET',
-        dataType: 'json',
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (result) {
-        var ids = [];
-        result.forEach(function (item) {
-            ids.push(item.detail.id);
+    //$.ajax({
+    //    url: '/Admin/AuditSiteLog?handler=KeyVehicleLogProfiles',
+    //    data: { truckRego: null, poi: 'POI' },
+    //    type: 'GET',
+    //    dataType: 'json',
+    //    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    //}).done(function (result) { 
+    //    var ids = [];
+    //    result.forEach(function (item) {
+    //        ids.push(item.detail.id);
 
-        });
+    //    });
         $.ajax({
             url: '/Guard/KeyVehicleLog?handler=GenerateManualDocketList',
             data: {
@@ -3736,7 +3736,7 @@ $('#generate_logbook_AlldocketList').on('click', function () {
 
 
 
-});
+/*});*/
 //To Generate All PO List stop
 
 $('#btncalendarEventModal').on('click', function () {

@@ -993,7 +993,7 @@ namespace CityWatch.Web.Pages.Guard
             //id = 37200;
              var fileName = string.Empty;
             var statusCode = 0;
-            int id = ids[0];
+            int id = 1;
                 try
                 {
                     var serialNo = GetNextDocketSequenceNumber(id);

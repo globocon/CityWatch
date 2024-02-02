@@ -211,7 +211,7 @@ namespace CityWatch.Data.Providers
         List<KeyVehicleLogAuditHistory> GetAuditHistoryWithKeyVehicleLogId(int id);
 
 
-
+        List<KeyVehicleLogVisitorPersonalDetail> GetPOIListFromVisitorPersonalDetails();
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -978,6 +978,13 @@ namespace CityWatch.Data.Providers
             return _context.KeyVehicleLogVisitorPersonalDetails
                 .Where(z => string.Equals(z.KeyVehicleLogProfile.VehicleRego, truckRego) && string.Equals(z.PersonName, personName))
                 .ToList();
+        }
+
+        public List<KeyVehicleLogVisitorPersonalDetail> GetPOIListFromVisitorPersonalDetails()
+        {
+            return _context.KeyVehicleLogVisitorPersonalDetails
+                 .Include(z => z.KeyVehicleLogProfile)
+                .Where(z =>z.PersonOfInterest!=null).ToList();
         }
 
         public List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetailsWithIndividualType(int individualtype)
