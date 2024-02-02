@@ -52,6 +52,7 @@ namespace CityWatch.Data.Providers
         int GetCalendarEventsCount();
         List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEvents();
         List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEventsByDate();
+         void SaveDefaultEmail(string DefaultEmail);
         //broadcast banner calendar events-end
 
     }
@@ -130,6 +131,13 @@ namespace CityWatch.Data.Providers
         {
             var templateToUpdate = _context.ReportTemplates.Single();
             templateToUpdate.LastUpdated = dateTimeUpdated;
+            _context.SaveChanges();
+        }
+        //To save the DefaultEmail
+        public void SaveDefaultEmail(string DefaultEmail)
+        {
+            var templateToUpdate = _context.ReportTemplates.Single();
+            templateToUpdate.DefaultEmail = DefaultEmail;
             _context.SaveChanges();
         }
 

@@ -504,7 +504,15 @@
     });
 
     function renderDateTime(value, record) {
-        if (value !== '') {
+        // p6#73 timezone bug - Modified by binoy 29-01-2024
+        if (record.eventDateTimeLocal != null && record.eventDateTimeLocal != '') {
+            const date = new Date(record.eventDateTimeLocal);
+            var DateTime = luxon.DateTime;
+            var dt1 = DateTime.fromJSDate(date);
+            var dt = dt1.toFormat('dd LLL yyyy @ HH:mm') + ' Hrs ' + record.eventDateTimeZoneShort;
+            return dt;
+        }
+        else if (value !== '') {
             const date = new Date(value);
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             let day = date.getDate();

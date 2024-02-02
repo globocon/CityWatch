@@ -113,7 +113,7 @@
                                 <th>ClientSiteId</th>
                                 <th>Site Name</th>
                                 <th>Address</th>
-                                <th>Site Name/Guard</th>
+                                <th style="cursor:pointer;">Site Name/Guard</th> @*Task p4#41_A~Z and Z~A sorting issue -- modified by Binoy - 31-01-2024*@
                                 <th>LB</th>
                                 <th>KV</th>
                                 <th>IR</th>
@@ -121,6 +121,7 @@
                                 <th>Radio Check</th>
                                 <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
                                 <th>Name</th>
+                                <th>OnlySiteName</th> @*Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024*@
                             </tr>
                         </thead>
                         <tfoot>
@@ -136,6 +137,7 @@
                                 <th>Radio Check</th>
                                 <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
                                 <th>Name</th>
+                                <th>OnlySiteName</th> @*Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024*@
                             </tr>
                             <!-- Footer content here (will be styled to look like the header) -->
                         </tfoot>
@@ -347,8 +349,8 @@
                                     <th>Template Name       </th>
                                     <th>Smart Wand</th>
                                     <th>Smart Wand Number</th>
-                                    @*   <th>Insp Start   </th>
-                                    <th>Insp End     </th>*@
+                                    <th>Inspection Start</th>
+                                    @*<th>Insp End     </th>*@
 
                                 </tr>
                             </thead>
@@ -1035,8 +1037,9 @@
                                                 <div class="col-md-2  text-right">
                                                     <label class="mt-5" for="dglClientSiteIdActionList2All"></label>
                                                     <button type="button" id="btnSendActionListGlobal" class="btn btn-primary">Send >></button>
-                                                    <p id="Access_permission_RC_statusAll" class="mb-0 py-2" style="display:none"></p>
+                                                   
                                                 </div>
+                                                <p id="Access_permission_RC_statusAll" class="mb-0 py-2" style="display:none"></p>
                                             </div>
 
                                         </form>

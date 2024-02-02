@@ -33,8 +33,8 @@ namespace CityWatch.Data.Providers
         void DeleteGuardCompliance(int id);
         Guard GetGuardDetailsbySecurityLicenseNo(string securityLicenseNo);
 
-        DateTime? GetLogbookDateFromLogbook(int logbookId);
-        
+        public string GetDefaultEmailAddress();
+        DateTime? GetLogbookDateFromLogbook(int logbookId);      
 
         List<GuardCompliance> GetGuardCompliancesList(int[] guardIds);
 
@@ -432,7 +432,7 @@ namespace CityWatch.Data.Providers
         {
             return _context.GuardCompliances
                 .Include(z => z.Guard)
-                .Where(x => x.GuardId == guardId)
+                .Where(x => x.GuardId == guardId && x.ExpiryDate!=null)
                 .OrderBy(x => x.ReferenceNo).ToList();
         }
 
@@ -460,10 +460,19 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
 
+        //To Get the Default Email Address start
+        public string GetDefaultEmailAddress()
+        {
+            return _context.ReportTemplates.Select(x => x.DefaultEmail).FirstOrDefault();
+        }
+        //To Get the Default Email Address stop
+
+
         public DateTime? GetLogbookDateFromLogbook(int logbookId)
         {
             var lbdt = _context.ClientSiteLogBooks.Where(x => x.Id == logbookId).FirstOrDefault().Date;
             return lbdt;
         }
+
     }
 }

@@ -180,6 +180,7 @@ $(window).resize(function () {
 
 const groupColumn = 1;
 const groupColumn2 = 2;
+const groupColumnSortAlias = 11; // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024
 var scrollPosition2;
 var rowIndex2;
 var scrollY = ($(window).height() - 300);
@@ -189,8 +190,8 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     "columnDefs": [
         { "visible": false, "targets": 1 } ,// Hide the group column initially
         { "visible": false, "targets": 2 } 
-    ],
-    order: [[groupColumn, 'asc']],
+    ],    
+    order: [[11, 'asc']], // Task p4#41_A~Z and Z~A sorting issue -- modified by Binoy - 31-01-2024
     info: false,
     searching: true,
     autoWidth: true,
@@ -211,7 +212,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         {
             data: 'siteName',
             width: '20%',
-            class:'dt-control',
+            class: 'dt-control',
             render: function (value, type, data) {
 
                 return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
@@ -231,6 +232,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         {
             data: 'guardName',
             width: '20%',
+            orderable: false, // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024
             render: function (value, type, data) {
                 if (data.isEnabled === 1) {
                     return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
@@ -317,11 +319,6 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
             }
         },
-
-
-       
-       
-
            
         {
             data: 'siteName',
@@ -329,9 +326,14 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             width: '20%',
 
         },
+        // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- Start - 31-01-2024
+        {
+            data: 'onlySiteName',
+            visible: false,
+            width: '20%',
 
-       
-
+        },       
+        // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- End - 31-01-2024
     ],
 
     preDrawCallback: function (settings) {
@@ -384,6 +386,23 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 });
 
 
+// Order by the grouping
+// Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- Start - 31-01-2024
+$(clientSiteActiveGuards.table().header()).on('click', 'th', function () {
+    // Checkout issue on https://datatables.net/reference/api/table().header()  , https://datatables.net/forums/discussion/43165/click-event-in-column-header-never-fired    
+     var index = clientSiteActiveGuards.column(this).index();     
+    var currentOrder = clientSiteActiveGuards.order()[0];
+    if (index === 3) {
+        if (currentOrder[1] === 'asc') {
+            clientSiteActiveGuards.order([groupColumnSortAlias, 'desc']).draw();
+        }
+
+        else {
+            clientSiteActiveGuards.order([groupColumnSortAlias, 'asc']).draw();
+        }
+    }
+});
+// Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- End - 31-01-2024
 
 $('#clientSiteActiveGuards tbody').on('click', '#btnUpArrow', function () {
     
@@ -488,6 +507,21 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                 $('#ActionListControlRoomModal').modal('show');
                 $('#dglClientTypeActionListAll').val('');
                 $('#dglClientSiteIdActionListAll').val('');
+                $('#Site_Alarm_Keypad_codeAll').val('');
+                $('#Action1All').val('');
+                $('#Action2All').val('');
+                $('#Action3All').val('');
+                $('#Action4All').val('');
+                $('#Action5All').val('');
+                $('#Action5All').val('');
+                $('#Site_Combination_LookAll').val('');
+                $('#site_Physical_keyAll').val('');
+                $('#txtCommentsAll').val('');
+                $('#txtMessageActionListAll').val('');
+                $('#dglClientTypeActionList2All').val('');
+                $('#dglClientSiteIdActionList2All').val('');
+                
+                
             }
         }
 
@@ -1242,9 +1276,10 @@ let clientSiteActiveGuardsIncidentReportsDetails = $('#clientSiteActiveGuardsInc
 let clientSiteActiveGuardsSWDetails = $('#clientSiteActiveGuardsSWDetails').DataTable({
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
     ordering: true,
+    order: [[1, 'desc']],
     info: false,
     searching: false,
-    autoWidth: true,
+    autoWidth: false,
     fixedHeader: true,
     "scrollY": "300px", // Set the desired height for the scrollable area
     "paging": false,
@@ -1262,21 +1297,26 @@ let clientSiteActiveGuardsSWDetails = $('#clientSiteActiveGuardsSWDetails').Data
         { data: 'id', visible: false },
         {
             data: 'templateName',
-            width: '50%',
+            width: '25%',
            
         },
         {
             data: 'smartWand',
-            width: '10%'
+            width: '20%'
 
         },
         {
             data: 'employeePhone',
-            width: '20%',
+            width: '25%',
            
 
         },
-       
+        {
+            data: 'inspectionStartDatetimeLocal',
+            width: '30%',
+
+
+        },
 
        
 
@@ -1445,10 +1485,10 @@ $('#btnSaveRadioStatusActive').on('click', function () {
     }).done(function () {
         $('#selectRadioCheckStatusActive').modal('hide');
         $('#selectRadioStatus').val('');      
-        clientSiteActiveGuards.ajax.reload();
+        clientSiteActiveGuards.ajax.reload(null, false);
         clientSiteInActiveGuards.ajax.reload();
         clientSiteInActiveGuardsSinglePage.ajax.reload();
-        clientSiteActiveGuardsSinglePage.ajax.reload();
+        clientSiteActiveGuardsSinglePage.ajax.reload(null, false);
 
     });
 });
@@ -1804,7 +1844,7 @@ $('#btnSendActionList').on('click', function () {
 $('#btnSendActionListGlobal').on('click', function () {
 
     var clientSiteId = $('#dglClientSiteIdActionList2All').val();
-    var Notifications = $('#txtMessageActionList1All').val();
+    var Notifications = $('#txtMessageActionListAll').val();
     var Subject = $('#txtGlobalNotificationSubjectAll').val();
 
     var ClientType = $('#dglClientTypeActionList2All').val();
@@ -2637,7 +2677,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
         { "visible": false, "targets": 1 },// Hide the group column initially
         { "visible": false, "targets": 2 }
     ],
-    order: [[groupColumn, 'asc']],
+    order: [[11, 'asc']], // Task p4#41_A~Z and Z~A sorting issue -- modified by Binoy - 31-01-2024
     info: false,
     searching: true,
     autoWidth: true,
@@ -2678,6 +2718,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
         {
             data: 'guardName',
             width: '20%',
+            orderable: false, // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024
             render: function (value, type, data) {
                 return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
                     '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>';
@@ -2757,11 +2798,6 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             }
         },
 
-
-
-
-
-
         {
             data: 'siteName',
             visible: false,
@@ -2769,6 +2805,14 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
 
         },
 
+        // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- Start - 31-01-2024
+        {
+            data: 'onlySiteName',
+            visible: false,
+            width: '20%',
+
+        },
+        // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- End - 31-01-2024
 
 
     ],
@@ -2807,6 +2851,24 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
     },
 });
 
+
+// Order by the grouping
+// Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- Start - 31-01-2024
+$(clientSiteActiveGuardsSinglePage.table().header()).on('click', 'th', function () {
+    // Checkout issue on https://datatables.net/reference/api/table().header()  , https://datatables.net/forums/discussion/43165/click-event-in-column-header-never-fired    
+    var index = clientSiteActiveGuardsSinglePage.column(this).index();
+    var currentOrder = clientSiteActiveGuardsSinglePage.order()[0];
+    if (index === 3) {
+        if (currentOrder[1] === 'asc') {
+            clientSiteActiveGuardsSinglePage.order([groupColumnSortAlias, 'desc']).draw();
+        }
+
+        else {
+            clientSiteActiveGuardsSinglePage.order([groupColumnSortAlias, 'asc']).draw();
+        }
+    }
+});
+// Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- End - 31-01-2024
 
 
 $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnUpArrow', function () {
