@@ -967,7 +967,7 @@ namespace CityWatch.Web.Services
                     Notes = "Duress Alarm Activated",
                     IsSystemEntry = true,
                     IrEntryType = Data.Enums.IrEntryType.Alarm,
-                    EventDateTime = localDateTime,  //DateTime.Now,
+                    EventDateTime = DateTime.Now,
                     ClientSiteLogBookId = logBookId,
                     GuardLoginId = guardLoginId,
                     RcPushMessageId= pushMessageId,

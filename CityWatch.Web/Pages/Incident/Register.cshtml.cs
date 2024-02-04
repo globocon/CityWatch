@@ -686,11 +686,11 @@ namespace CityWatch.Web.Pages.Incident
         {
             // p6#73 timezone bug - Added by binoy 24-01-2024
             var logBookId = GetLogBookId(report.ClientSiteId.Value,(int)report.CreatedOnDateTimeUtcOffsetMinute);
-            var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)report.CreatedOnDateTimeUtcOffsetMinute);
+            //var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)report.CreatedOnDateTimeUtcOffsetMinute);
             var guardLog = new GuardLog()
             {
                 ClientSiteLogBookId = logBookId,
-                EventDateTime = localDateTime, //DateTime.Now,
+                EventDateTime = DateTime.Now,
                 Notes = Path.GetFileNameWithoutExtension(report.FileName),
                 IsSystemEntry = true,
                 IrEntryType = report.IsEventFireOrAlarm ? IrEntryType.Alarm : IrEntryType.Normal,

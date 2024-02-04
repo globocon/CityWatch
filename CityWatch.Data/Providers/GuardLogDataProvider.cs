@@ -15,6 +15,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using System.Xml.Linq;
 using static Dropbox.Api.TeamLog.EventCategory;
 using static Dropbox.Api.TeamLog.TimeUnit;
 
@@ -250,13 +251,22 @@ namespace CityWatch.Data.Providers
                     var clientSiteLogBook = _context.ClientSiteLogBooks.Where(x => x.ClientSiteId == clientSiteId && x.Date == logDate.Date).Select(x => x.Id).ToList();
                     if (clientSiteLogBook.Count != 0)
                     {
+                        //result = _context.GuardLogs
+                        //   .Where(z => clientSiteLogBook.Contains(z.ClientSiteLogBookId) && (z.EventDateTime >= logDate && z.EventDateTime < logDate.AddDays(1)))
+                        //   .Include(z => z.ClientSiteLogBook)
+                        //   .Include(z => z.GuardLogin.Guard)
+                        //   .OrderBy(z => z.Id)
+                        //   .ThenBy(z => z.EventDateTime)
+                        //   .ToList();
+
+                        // Task p6#73_TimeZone_Midnight_Perth_CreateEntryAfterMidnight issue -- modified by Binoy - 02-02-2024
                         result = _context.GuardLogs
-                           .Where(z => clientSiteLogBook.Contains(z.ClientSiteLogBookId) && (z.EventDateTime >= logDate && z.EventDateTime < logDate.AddDays(1)))
-                           .Include(z => z.ClientSiteLogBook)
-                           .Include(z => z.GuardLogin.Guard)
-                           .OrderBy(z => z.Id)
-                           .ThenBy(z => z.EventDateTime)
-                           .ToList();
+                          .Where(z => clientSiteLogBook.Contains(z.ClientSiteLogBookId))
+                          .Include(z => z.ClientSiteLogBook)
+                          .Include(z => z.GuardLogin.Guard)
+                          .OrderBy(z => z.Id)
+                          .ThenBy(z => z.EventDateTime)
+                          .ToList();
 
                     }
                 }
@@ -268,13 +278,13 @@ namespace CityWatch.Data.Providers
             }
             else
             {
-                result = _context.GuardLogs
-                  .Where(z => z.ClientSiteLogBookId == logBookId && (z.EventDateTime >= logDate && z.EventDateTime < logDate.AddDays(1)))
-                  .Include(z => z.ClientSiteLogBook)
-                  .Include(z => z.GuardLogin.Guard)
-                  .OrderBy(z => z.Id)
-                  .ThenBy(z => z.EventDateTime)
-                  .ToList();
+                //result = _context.GuardLogs
+                //  .Where(z => z.ClientSiteLogBookId == logBookId && (z.EventDateTime >= logDate && z.EventDateTime < logDate.AddDays(1)))
+                //  .Include(z => z.ClientSiteLogBook)
+                //  .Include(z => z.GuardLogin.Guard)
+                //  .OrderBy(z => z.Id)
+                //  .ThenBy(z => z.EventDateTime)
+                //  .ToList();
             }
 
             return result;
@@ -1551,42 +1561,67 @@ namespace CityWatch.Data.Providers
 
                         if (checkIfTypeOneManning.Count == 0)
                         {
-                            var logbook = _context.ClientSiteLogBooks
-                         .SingleOrDefault(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId && z.Type == LogBookType.DailyGuardLog && z.Date == DateTime.Today);
 
-                            int logBookId;
-                            if (logbook == null)
-                            {
-                                var newLogBook = new ClientSiteLogBook()
-                                {
-                                    ClientSiteId = clientSiteRadioCheck.ClientSiteId,
-                                    Type = LogBookType.DailyGuardLog,
-                                    Date = DateTime.Today
-                                };
+                            // Task p6#73_TimeZone_Midnight_Perth_CreateEntryAfterMidnight issue -- Start -- added by Binoy - 02-02-2024
+                            // To Log the entry to the last logbook id of the client.
+                            var logbookdate = DateTime.Today;
+                            var logbooktype = LogBookType.DailyGuardLog;
+                            var logBookId = GetClientSiteLogBookIdByLogBookMaxID(clientSiteRadioCheck.ClientSiteId, logbooktype, out logbookdate); // Get Last Logbookid and logbook Date by latest logbookid  of the client site
+                            var logbook = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == logBookId);
 
-                                if (newLogBook.Id == 0)
-                                {
-                                    _context.ClientSiteLogBooks.Add(newLogBook);
-                                }
-                                else
-                                {
-                                    var logBookToUpdate = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == newLogBook.Id);
-                                    if (logBookToUpdate != null)
-                                    {
-                                        // nothing to update
-                                    }
-                                }
-                                _context.SaveChanges();
-                                logBookId = newLogBook.Id;
+                            var tznm = TimeZoneHelper.GetCurrentTimeZoneShortName();
+                            var tzshrtnm = TimeZoneHelper.GetCurrentTimeZoneShortName();
+                            var tzoffmin = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute();
+                            var tztm = TimeZoneHelper.GetCurrentTimeZoneCurrentTime();
+                            var tztmwithoffset = TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset();
 
-                            }
-                            else
-                            {
-                                logBookId = logbook.Id;
-                            }
+                            // Task p6#73_TimeZone_Midnight_Perth_CreateEntryAfterMidnight issue -- End -- added by Binoy - 02-02-2024
+
+
+                            //   var logbook = _context.ClientSiteLogBooks
+                            //.SingleOrDefault(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId && z.Type == LogBookType.DailyGuardLog && z.Date == DateTime.Today);
+
+                            //   int logBookId;
+                            //   if (logbook == null)
+                            //   {
+                            //       var newLogBook = new ClientSiteLogBook()
+                            //       {
+                            //           ClientSiteId = clientSiteRadioCheck.ClientSiteId,
+                            //           Type = LogBookType.DailyGuardLog,
+                            //           Date = DateTime.Today
+                            //       };
+
+                            //       if (newLogBook.Id == 0)
+                            //       {
+                            //           _context.ClientSiteLogBooks.Add(newLogBook);
+                            //       }
+                            //       else
+                            //       {
+                            //           var logBookToUpdate = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == newLogBook.Id);
+                            //           if (logBookToUpdate != null)
+                            //           {
+                            //               // nothing to update
+                            //           }
+                            //       }
+                            //       _context.SaveChanges();
+                            //       logBookId = newLogBook.Id;
+
+                            //   }
+                            //   else
+                            //   {
+                            //       logBookId = logbook.Id;
+                            //   } 
+
+
+
+                            // Task p6#73_TimeZone_Midnight_Perth_CreateEntryAfterMidnight issue -- added by Binoy - 04-02-2024
+                            // z.OnDuty.Date == DateTime.Today changed to z.OnDuty.Date == logbookdate.Date
+
+                            //  var guardLoginId = _context.GuardLogins
+                            // .SingleOrDefault(z => z.ClientSiteLogBookId == logBookId && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == DateTime.Today);
 
                             var guardLoginId = _context.GuardLogins
-                          .SingleOrDefault(z => z.ClientSiteLogBookId == logBookId && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == DateTime.Today);
+                            .SingleOrDefault(z => z.ClientSiteLogBookId == logBookId && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == logbookdate.Date);
                             if (guardLoginId != null)
                             {
                                 var guardLog = new GuardLog()
@@ -1595,7 +1630,12 @@ namespace CityWatch.Data.Providers
                                     GuardLoginId = guardLoginId.Id,
                                     EventDateTime = DateTime.Now,
                                     Notes = "Off Duty (RC automatic logoff)",
-                                    IsSystemEntry = true
+                                    IsSystemEntry = true,
+                                    EventDateTimeLocal = tztm, // Task p6#73_TimeZone issue -- added by Binoy - Start
+                                    EventDateTimeLocalWithOffset = tztmwithoffset,
+                                    EventDateTimeZone = tznm,
+                                    EventDateTimeZoneShort = tzshrtnm,
+                                    EventDateTimeUtcOffsetMinute = tzoffmin // Task p6#73_TimeZone issue -- added by Binoy - End
 
                                 };
                                 SaveGuardLog(guardLog);
@@ -1621,7 +1661,12 @@ namespace CityWatch.Data.Providers
                                         GuardLoginId = latestRecord.Id,
                                         EventDateTime = DateTime.Now,
                                         Notes = "Off Duty (RC automatic logoff)",
-                                        IsSystemEntry = true
+                                        IsSystemEntry = true,
+                                        EventDateTimeLocal = tztm, // Task p6#73_TimeZone issue -- added by Binoy - Start
+                                        EventDateTimeLocalWithOffset = tztmwithoffset,
+                                        EventDateTimeZone = tznm,
+                                        EventDateTimeZoneShort = tzshrtnm,
+                                        EventDateTimeUtcOffsetMinute = tzoffmin // Task p6#73_TimeZone issue -- added by Binoy - End
 
                                     };
                                     SaveGuardLog(guardLog);
@@ -2050,6 +2095,14 @@ namespace CityWatch.Data.Providers
                     _context.ClientSiteRadioChecks.RemoveRange(clientSiteRcStatus);
                     var colorId = _context.RadioCheckStatus.Where(x => x.Id == clientSiteRadioCheck.RadioCheckStatusId).FirstOrDefault().RadioCheckStatusColorId;
 
+                    // Task p6#73_TimeZone_Midnight_Perth_CreateEntryAfterMidnight issue -- Start -- added by Binoy - 02-02-2024
+                    // To Log the entry to the last logbook id of the client.
+                    var logbookdate = DateTime.Today;
+                    var logbooktype = LogBookType.DailyGuardLog;      
+                    var logBookId = GetClientSiteLogBookIdByLogBookMaxID(clientSiteRadioCheck.ClientSiteId, logbooktype, out logbookdate); // Get Last Logbookid and logbook Date by latest logbookid  of the client site
+                    var logbook = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == logBookId);
+                    // Task p6#73_TimeZone_Midnight_Perth_CreateEntryAfterMidnight issue -- End -- added by Binoy - 02-02-2024
+
                     if (colorId != null)
                     {
                         var color = _context.RadioCheckStatusColor.Where(x => x.Id == colorId).FirstOrDefault().Name;
@@ -2062,39 +2115,42 @@ namespace CityWatch.Data.Providers
 
                             if (checkIfTypeOneManning.Count == 0)
                             {
-                                var logbook = _context.ClientSiteLogBooks
-                             .SingleOrDefault(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId && z.Type == LogBookType.DailyGuardLog && z.Date == DateTime.Today);
+                                /* Task p6#73_TimeZone_Midnight_Perth_CreateEntryAfterMidnight issue -- disabled by Binoy - 02-02-2024 
+                                    Disabled new logbook creation to avoid logs going into new logbook after Midnight.
+                                 */
+                                //   var logbook = _context.ClientSiteLogBooks
+                                //.SingleOrDefault(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId && z.Type == LogBookType.DailyGuardLog && z.Date == DateTime.Today);
 
-                                int logBookId;
-                                if (logbook == null)
-                                {
-                                    var newLogBook = new ClientSiteLogBook()
-                                    {
-                                        ClientSiteId = clientSiteRadioCheck.ClientSiteId,
-                                        Type = LogBookType.DailyGuardLog,
-                                        Date = DateTime.Today
-                                    };
+                                //   int logBookId;
+                                //   if (logbook == null)
+                                //   {
+                                //       var newLogBook = new ClientSiteLogBook()
+                                //       {
+                                //           ClientSiteId = clientSiteRadioCheck.ClientSiteId,
+                                //           Type = LogBookType.DailyGuardLog,
+                                //           Date = DateTime.Today
+                                //       };
 
-                                    if (newLogBook.Id == 0)
-                                    {
-                                        _context.ClientSiteLogBooks.Add(newLogBook);
-                                    }
-                                    else
-                                    {
-                                        var logBookToUpdate = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == newLogBook.Id);
-                                        if (logBookToUpdate != null)
-                                        {
-                                            // nothing to update
-                                        }
-                                    }
-                                    _context.SaveChanges();
-                                    logBookId = newLogBook.Id;
+                                //       if (newLogBook.Id == 0)
+                                //       {
+                                //           _context.ClientSiteLogBooks.Add(newLogBook);
+                                //       }
+                                //       else
+                                //       {
+                                //           var logBookToUpdate = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == newLogBook.Id);
+                                //           if (logBookToUpdate != null)
+                                //           {
+                                //               // nothing to update
+                                //           }
+                                //       }
+                                //       _context.SaveChanges();
+                                //       logBookId = newLogBook.Id;
 
-                                }
-                                else
-                                {
-                                    logBookId = logbook.Id;
-                                }
+                                //   }
+                                //   else
+                                //   {
+                                //       logBookId = logbook.Id;
+                                //   }
 
                                 var guardLoginId = _context.GuardLogins
                               .FirstOrDefault(z => z.ClientSiteLogBookId == logBookId && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == DateTime.Today);
@@ -2234,39 +2290,42 @@ namespace CityWatch.Data.Providers
 
                             if (checkIfTypeOneManning.Count == 0)
                             {
-                                var logbook = _context.ClientSiteLogBooks
-                             .SingleOrDefault(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId && z.Type == LogBookType.DailyGuardLog && z.Date == DateTime.Today);
+                                /* Task p6#73_TimeZone_Midnight_Perth_CreateEntryAfterMidnight issue -- disabled by Binoy - 02-02-2024 
+                                    Disabled new logbook creation to avoid logs going into new logbook after Midnight.
+                                 */
+                                //   var logbook = _context.ClientSiteLogBooks
+                                //.SingleOrDefault(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId && z.Type == LogBookType.DailyGuardLog && z.Date == DateTime.Today);
 
-                                int logBookId;
-                                if (logbook == null)
-                                {
-                                    var newLogBook = new ClientSiteLogBook()
-                                    {
-                                        ClientSiteId = clientSiteRadioCheck.ClientSiteId,
-                                        Type = LogBookType.DailyGuardLog,
-                                        Date = DateTime.Today
-                                    };
+                                //   int logBookId;
+                                //   if (logbook == null)
+                                //   {
+                                //       var newLogBook = new ClientSiteLogBook()
+                                //       {
+                                //           ClientSiteId = clientSiteRadioCheck.ClientSiteId,
+                                //           Type = LogBookType.DailyGuardLog,
+                                //           Date = DateTime.Today
+                                //       };
 
-                                    if (newLogBook.Id == 0)
-                                    {
-                                        _context.ClientSiteLogBooks.Add(newLogBook);
-                                    }
-                                    else
-                                    {
-                                        var logBookToUpdate = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == newLogBook.Id);
-                                        if (logBookToUpdate != null)
-                                        {
-                                            // nothing to update
-                                        }
-                                    }
-                                    _context.SaveChanges();
-                                    logBookId = newLogBook.Id;
+                                //       if (newLogBook.Id == 0)
+                                //       {
+                                //           _context.ClientSiteLogBooks.Add(newLogBook);
+                                //       }
+                                //       else
+                                //       {
+                                //           var logBookToUpdate = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == newLogBook.Id);
+                                //           if (logBookToUpdate != null)
+                                //           {
+                                //               // nothing to update
+                                //           }
+                                //       }
+                                //       _context.SaveChanges();
+                                //       logBookId = newLogBook.Id;
 
-                                }
-                                else
-                                {
-                                    logBookId = logbook.Id;
-                                }
+                                //   }
+                                //   else
+                                //   {
+                                //       logBookId = logbook.Id;
+                                //   }
 
                                 var guardLoginId = _context.GuardLogins
                               .FirstOrDefault(z => z.ClientSiteLogBookId == logBookId && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == DateTime.Today);
@@ -2402,39 +2461,42 @@ namespace CityWatch.Data.Providers
 
                             if (checkIfTypeOneManning.Count == 0)
                             {
-                                var logbook = _context.ClientSiteLogBooks
-                             .SingleOrDefault(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId && z.Type == LogBookType.DailyGuardLog && z.Date == DateTime.Today);
+                                /* Task p6#73_TimeZone_Midnight_Perth_CreateEntryAfterMidnight issue -- disabled by Binoy - 02-02-2024 
+                                    Disabled new logbook creation to avoid logs going into new logbook after Midnight.
+                                 */
+                                //   var logbook = _context.ClientSiteLogBooks
+                                //.SingleOrDefault(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId && z.Type == LogBookType.DailyGuardLog && z.Date == DateTime.Today);
 
-                                int logBookId;
-                                if (logbook == null)
-                                {
-                                    var newLogBook = new ClientSiteLogBook()
-                                    {
-                                        ClientSiteId = clientSiteRadioCheck.ClientSiteId,
-                                        Type = LogBookType.DailyGuardLog,
-                                        Date = DateTime.Today
-                                    };
+                                //   int logBookId;
+                                //   if (logbook == null)
+                                //   {
+                                //       var newLogBook = new ClientSiteLogBook()
+                                //       {
+                                //           ClientSiteId = clientSiteRadioCheck.ClientSiteId,
+                                //           Type = LogBookType.DailyGuardLog,
+                                //           Date = DateTime.Today
+                                //       };
 
-                                    if (newLogBook.Id == 0)
-                                    {
-                                        _context.ClientSiteLogBooks.Add(newLogBook);
-                                    }
-                                    else
-                                    {
-                                        var logBookToUpdate = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == newLogBook.Id);
-                                        if (logBookToUpdate != null)
-                                        {
-                                            // nothing to update
-                                        }
-                                    }
-                                    _context.SaveChanges();
-                                    logBookId = newLogBook.Id;
+                                //       if (newLogBook.Id == 0)
+                                //       {
+                                //           _context.ClientSiteLogBooks.Add(newLogBook);
+                                //       }
+                                //       else
+                                //       {
+                                //           var logBookToUpdate = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == newLogBook.Id);
+                                //           if (logBookToUpdate != null)
+                                //           {
+                                //               // nothing to update
+                                //           }
+                                //       }
+                                //       _context.SaveChanges();
+                                //       logBookId = newLogBook.Id;
 
-                                }
-                                else
-                                {
-                                    logBookId = logbook.Id;
-                                }
+                                //   }
+                                //   else
+                                //   {
+                                //       logBookId = logbook.Id;
+                                //   }
 
                                 var guardLoginId = _context.GuardLogins
                               .FirstOrDefault(z => z.ClientSiteLogBookId == logBookId && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == DateTime.Today);
@@ -2569,39 +2631,42 @@ namespace CityWatch.Data.Providers
 
                             if (checkIfTypeOneManning.Count == 0)
                             {
-                                var logbook = _context.ClientSiteLogBooks
-                             .SingleOrDefault(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId && z.Type == LogBookType.DailyGuardLog && z.Date == DateTime.Today);
+                                /* Task p6#73_TimeZone_Midnight_Perth_CreateEntryAfterMidnight issue -- disabled by Binoy - 02-02-2024 
+                                    Disabled new logbook creation to avoid logs going into new logbook after Midnight.
+                                 */
+                                //   var logbook = _context.ClientSiteLogBooks
+                                //.SingleOrDefault(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId && z.Type == LogBookType.DailyGuardLog && z.Date == DateTime.Today);
 
-                                int logBookId;
-                                if (logbook == null)
-                                {
-                                    var newLogBook = new ClientSiteLogBook()
-                                    {
-                                        ClientSiteId = clientSiteRadioCheck.ClientSiteId,
-                                        Type = LogBookType.DailyGuardLog,
-                                        Date = DateTime.Today
-                                    };
+                                //   int logBookId;
+                                //   if (logbook == null)
+                                //   {
+                                //       var newLogBook = new ClientSiteLogBook()
+                                //       {
+                                //           ClientSiteId = clientSiteRadioCheck.ClientSiteId,
+                                //           Type = LogBookType.DailyGuardLog,
+                                //           Date = DateTime.Today
+                                //       };
 
-                                    if (newLogBook.Id == 0)
-                                    {
-                                        _context.ClientSiteLogBooks.Add(newLogBook);
-                                    }
-                                    else
-                                    {
-                                        var logBookToUpdate = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == newLogBook.Id);
-                                        if (logBookToUpdate != null)
-                                        {
-                                            // nothing to update
-                                        }
-                                    }
-                                    _context.SaveChanges();
-                                    logBookId = newLogBook.Id;
+                                //       if (newLogBook.Id == 0)
+                                //       {
+                                //           _context.ClientSiteLogBooks.Add(newLogBook);
+                                //       }
+                                //       else
+                                //       {
+                                //           var logBookToUpdate = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == newLogBook.Id);
+                                //           if (logBookToUpdate != null)
+                                //           {
+                                //               // nothing to update
+                                //           }
+                                //       }
+                                //       _context.SaveChanges();
+                                //       logBookId = newLogBook.Id;
 
-                                }
-                                else
-                                {
-                                    logBookId = logbook.Id;
-                                }
+                                //   }
+                                //   else
+                                //   {
+                                //       logBookId = logbook.Id;
+                                //   }
 
                                 var guardLoginId = _context.GuardLogins
                               .FirstOrDefault(z => z.ClientSiteLogBookId == logBookId && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == DateTime.Today);
@@ -2736,39 +2801,43 @@ namespace CityWatch.Data.Providers
                             _context.ClientSiteDuress.RemoveRange(DuressEnabledUpdate);
                             /* remove Duressbutton Status from RadioCheckPushMessages*/
                             UpdateDuressButtonAcknowledged(clientSiteRadioCheck.ClientSiteId);
-                            var logbook = _context.ClientSiteLogBooks
-            .SingleOrDefault(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId && z.Type == LogBookType.DailyGuardLog && z.Date == DateTime.Today);
 
-                            int logBookId;
-                            if (logbook == null)
-                            {
-                                var newLogBook = new ClientSiteLogBook()
-                                {
-                                    ClientSiteId = clientSiteRadioCheck.ClientSiteId,
-                                    Type = LogBookType.DailyGuardLog,
-                                    Date = DateTime.Today
-                                };
+                            /* Task p6#73_TimeZone_Midnight_Perth_CreateEntryAfterMidnight issue -- disabled by Binoy - 02-02-2024 
+                                    Disabled new logbook creation to avoid logs going into new logbook after Midnight.
+                                 */
+                            //var logbook = _context.ClientSiteLogBooks
+                            //.SingleOrDefault(z => z.ClientSiteId == clientSiteRadioCheck.ClientSiteId && z.Type == LogBookType.DailyGuardLog && z.Date == DateTime.Today);
 
-                                if (newLogBook.Id == 0)
-                                {
-                                    _context.ClientSiteLogBooks.Add(newLogBook);
-                                }
-                                else
-                                {
-                                    var logBookToUpdate = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == newLogBook.Id);
-                                    if (logBookToUpdate != null)
-                                    {
-                                        // nothing to update
-                                    }
-                                }
-                                _context.SaveChanges();
-                                logBookId = newLogBook.Id;
+                            //int logBookId;
+                            //if (logbook == null)
+                            //{
+                            //    var newLogBook = new ClientSiteLogBook()
+                            //    {
+                            //        ClientSiteId = clientSiteRadioCheck.ClientSiteId,
+                            //        Type = LogBookType.DailyGuardLog,
+                            //        Date = DateTime.Today
+                            //    };
 
-                            }
-                            else
-                            {
-                                logBookId = logbook.Id;
-                            }
+                            //    if (newLogBook.Id == 0)
+                            //    {
+                            //        _context.ClientSiteLogBooks.Add(newLogBook);
+                            //    }
+                            //    else
+                            //    {
+                            //        var logBookToUpdate = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == newLogBook.Id);
+                            //        if (logBookToUpdate != null)
+                            //        {
+                            //            // nothing to update
+                            //        }
+                            //    }
+                            //    _context.SaveChanges();
+                            //    logBookId = newLogBook.Id;
+
+                            //}
+                            //else
+                            //{
+                            //    logBookId = logbook.Id;
+                            //}
                             var guardLoginId = _context.GuardLogins
                             .FirstOrDefault(z => z.ClientSiteLogBookId == logBookId && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == DateTime.Today);
                             if (guardLoginId != null)
@@ -3071,7 +3140,7 @@ namespace CityWatch.Data.Providers
                     {
                         ClientSiteLogBookId = logBookId,
                         GuardLoginId = guardLoginId,
-                        EventDateTime = localDateTime, //DateTime.Now,
+                        EventDateTime = DateTime.Now,
                         Notes = string.IsNullOrEmpty(subject) ? notifications : subject + " : " + notifications,
                         IrEntryType = entryType,
                         IsSystemEntry = true,
@@ -3090,7 +3159,7 @@ namespace CityWatch.Data.Providers
                     var guardLog = new GuardLog()
                     {
                         ClientSiteLogBookId = logBookId,
-                        EventDateTime = localDateTime, //DateTime.Now,
+                        EventDateTime = DateTime.Now,
                         Notes = string.IsNullOrEmpty(subject) ? notifications : subject + " : " + notifications,
                         IrEntryType = entryType,
                         IsSystemEntry = true,
@@ -3158,7 +3227,7 @@ namespace CityWatch.Data.Providers
                     {
                         ClientSiteLogBookId = logBookId,
                         GuardLoginId = guardLoginId,
-                        EventDateTime = entryTime, //DateTime.Now,
+                        EventDateTime = DateTime.Now,
                         Notes = string.IsNullOrEmpty(subject) ? notifications : subject + " : " + notifications,
                         IrEntryType = entryType,
                         IsSystemEntry = true,
@@ -3177,7 +3246,7 @@ namespace CityWatch.Data.Providers
                     var guardLog = new GuardLog()
                     {
                         ClientSiteLogBookId = logBookId,
-                        EventDateTime = entryTime, //DateTime.Now,
+                        EventDateTime = DateTime.Now,
                         Notes = string.IsNullOrEmpty(subject) ? notifications : subject + " : " + notifications,
                         IrEntryType = entryType,
                         IsSystemEntry = true,

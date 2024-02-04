@@ -244,8 +244,7 @@ namespace CityWatch.Web.Pages.Radio
                     var logbooktype = LogBookType.DailyGuardLog;
                     //var logBookId = _guardLogDataProvider.GetClientSiteLogBookId(clientSiteId, logbooktype, DateTime.Today);
                     // Get Last Logbookid and logbook Date by latest logbookid // p6#73 timezone bug - Added by binoy 24-01-2024
-                    var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdByLogBookMaxID(clientSiteId, logbooktype, out logbookdate);
-                    var entryTime = GetLocalEntryTime(logbookdate);
+                    var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdByLogBookMaxID(clientSiteId, logbooktype, out logbookdate);                    
                     var guardid = HttpContext.Session.GetInt32("GuardId");
                     if (guardid != 0)
                     {
@@ -272,7 +271,7 @@ namespace CityWatch.Web.Pages.Radio
                         {
                             ClientSiteLogBookId = logBookId,
                             GuardLoginId = guardLoginId,
-                            EventDateTime = entryTime,
+                            EventDateTime = DateTime.Now,
                             Notes = Subject + " : " + Notifications,
                             IrEntryType = IrEntryType.Alarm,
                             RcPushMessageId = pushMessageId,
@@ -307,7 +306,7 @@ namespace CityWatch.Web.Pages.Radio
                         var guardLog = new GuardLog()
                         {
                             ClientSiteLogBookId = logBookId,
-                            EventDateTime = entryTime,
+                            EventDateTime = DateTime.Now,
                             Notes = Subject + " : " + Notifications,
                             IrEntryType = IrEntryType.Alarm,
                             RcPushMessageId = pushMessageId,
@@ -745,8 +744,7 @@ namespace CityWatch.Web.Pages.Radio
                 var logbookdate = DateTime.Today;               
                 // Get Last Logbookid and logbook Date by latest logbookid // p6#73 timezone bug - Modified by binoy 29-01-2024
                 var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdByLogBookMaxID(Id, logbooktype, out logbookdate);
-                var entryTime = GetLocalEntryTime(logbookdate);
-
+                
                 if (logBookId != 0)
                 {
                     var guardid = HttpContext.Session.GetInt32("GuardId");
@@ -773,7 +771,7 @@ namespace CityWatch.Web.Pages.Radio
                         {
                             ClientSiteLogBookId = logBookId,
                             GuardLoginId = guardLoginId,
-                            EventDateTime = entryTime, //DateTime.Now,
+                            EventDateTime = DateTime.Now,
                             Notes = Subject + " : " + Notifications,
                             //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                             //IsSystemEntry = true,
@@ -808,7 +806,7 @@ namespace CityWatch.Web.Pages.Radio
                         var guardLog = new GuardLog()
                         {
                             ClientSiteLogBookId = logBookId,
-                            EventDateTime = entryTime, //DateTime.Now,
+                            EventDateTime = DateTime.Now,
                             Notes = Subject + " : " + Notifications,
                             //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                             //IsSystemEntry = true,
@@ -1097,13 +1095,5 @@ namespace CityWatch.Web.Pages.Radio
         //code added for ActionListSend stop
 
 
-        public DateTime GetLocalEntryTime(DateTime logbookDate)
-        {
-            DateTime entryTime = DateTime.Now;
-            if(logbookDate.Date == entryTime.Date)   
-                return entryTime;
-
-            return DateTimeHelper.GetLogbookEndTimeFromDate(logbookDate);
-        }
     }
 }
