@@ -88,7 +88,8 @@ namespace CityWatch.Web.Helpers
                 new FormField("GPS", "DateLocation.ClientSiteLiveGpsInDegrees", typeof(string)),
                 new FormField("IR-YES-KV", "PlateLoadedYes", typeof(bool)),
                 new FormField("IR-NO-KV", "PlateLoadedNo", typeof(bool)),
-                new FormField("PSPF", "PSPFName", typeof(string))
+                new FormField("PSPF", "PSPFName", typeof(string)),
+                 new FormField("HASH", "HASH", typeof(string))
             };
         }
     }
