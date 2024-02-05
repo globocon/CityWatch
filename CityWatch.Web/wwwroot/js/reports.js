@@ -146,7 +146,8 @@
             drawPieChart(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode1")
             $('#count_by_site1').html(response.chartData.sitePercentage.length);
             $('#count_by_area_ward1').html(response.chartData.areaWardPercentage.length);
-            $('#count_color_code1').html(response.chartData.colorCodePercentage.length);   
+            $('#count_color_code1').html(response.chartData.colorCodePercentage.length);
+            $('#txtDownloadfilename').val(response.fileName2)
             /* expanding grapph - start*/
         }).fail(function () {
         }).always(function () {
@@ -360,3 +361,35 @@ $('#btncount_color_code').on('click', function () {
     $('#modelIRRecordsbyColorCodeGraph').modal('show');
 });
  //calculate month difference-end
+$('#btnExportPatrolPdf').on('click', function () {
+    $('#btnExportExcel').attr('href', '#');
+    const fromDate = $('#date_from').val();
+    const toDate = $('#date_to').val();
+    if (fromDate === '' || toDate === '') {
+        alert('From date and to date is required');
+        return false;
+    }
+    //calculate month difference-start
+    var date1 = new Date($('#ReportRequest_FromDate').val());
+    var date2 = new Date($('#ReportRequest_ToDate').val());
+    var monthdiff = monthDiff(date1, date2);
+    if (monthdiff > 12) {
+        alert('Date Range is  greater than 12 months');
+        return false;
+    }
+    //calculate month difference-end
+    $('#loader-p').show();
+    $.ajax({
+        url: '/Reports/PatrolData?handler=GeneratePdfReport',
+        type: 'POST',
+        dataType: 'json',
+        data: $('#frm_patrol_report_request').serialize(),
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (response) {
+        const pdfName = response.fileName !== '' ? 'https://localhost:44356/Pdf/Output/' + response.fileName : '#';
+        window.open(pdfName, '_target/')
+    }).fail(function () {
+    }).always(function () {
+        $('#loader-p').hide();
+    });
+});

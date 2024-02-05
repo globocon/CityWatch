@@ -30,6 +30,10 @@ using CityWatch.Data;
 using iText.Kernel.Pdf.Filespec;
 using System.Net.Mail;
 using System.IO;
+using CityWatch.Data.Enums;
+using CityWatch.Data.Services;
+using Jering.Javascript.NodeJS;
+using System.Reflection;
 
 namespace CityWatch.Web.Services
 {
@@ -40,10 +44,17 @@ namespace CityWatch.Web.Services
         Pdf = 2,
         Multimedia = 3,  // Added by binoy 0n 03-01-2024 under task id p1#160_MultimediaAttachments03012024
     }
+    public enum ChartType
+    {
+        Pie = 1,
+
+        Bar
+    }
 
     public interface IIncidentReportGenerator
     {
         string GeneratePdf(IncidentRequest incidentReport, ClientSite clientSite);
+        string GeneratePdfReport(PatrolRequest patrolRequest);
 
     }
 
@@ -79,12 +90,31 @@ namespace CityWatch.Web.Services
         private const float CELL_FONT_SIZE_BIG = 10f;
         private const string COLOR_LIGHT_BLUE = "#d9e2f3";
         private readonly CityWatchDbContext _context;
+       
+        private const float PDF_DOC_MARGIN = 15f;
+
+        private const string CELL_BG_GREEN = "#96e3ac";
+        private const string CELL_BG_RED = "#ffcccc";
+        private const string CELL_BG_YELLOW = "#fcf8d1";
+        private const string CELL_BG_BLUE_HEADER = "#bdd7ee";
+        private const string CELL_BG_YELLOW_IR_COUNT = "#feff9a";
+        private const string CELL_BG_ORANGE_IR_ALARM = "#ffdab3";
+        private const string CELL_FONT_GREEN = "#008000";
+        private const string CELL_FONT_RED = "#FF0000";
+
+        private readonly string _imageRootDir;
+        private readonly string _siteImageRootDir;
+        private readonly string _graphImageRootDir;
+        private readonly IPatrolDataReportService _irChartDataService;
+        private const string COLOR_WHITE = "#ffffff";
+        private const string COLOR_GREY = "#666362";
         public IncidentReportGenerator(IWebHostEnvironment webHostEnvironment,
             IConfigDataProvider configDataProvider,
             IClientDataProvider clientDataProvider,
             IOptions<Settings> settings,
             IConfiguration configuration,
-            ILogger<IncidentReportGenerator> logger)
+            ILogger<IncidentReportGenerator> logger,
+            IPatrolDataReportService irChartDataService)
         {
             _configDataProvider = configDataProvider;
             _clientDataProvider = clientDataProvider;
@@ -95,7 +125,7 @@ namespace CityWatch.Web.Services
 
             _ReportRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "Pdf");
             _GpsMapRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "GpsImage");
-            
+            _imageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
             // report output directory webroot\Pdf\Output
             if (!IO.Directory.Exists(IO.Path.Combine(_ReportRootDir, REPORT_DIR)))
                 IO.Directory.CreateDirectory(IO.Path.Combine(_ReportRootDir, REPORT_DIR));
@@ -104,6 +134,8 @@ namespace CityWatch.Web.Services
             _TemplatePdf = IO.Path.Combine(_ReportRootDir, TEMPLATE_DIR, TEMPLATE_FILE_NAME);
             if (!IO.File.Exists(_TemplatePdf))
                 throw new IO.FileNotFoundException("Template file not found");
+            _irChartDataService = irChartDataService;
+            _graphImageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "GraphImage");
         }
 
         public string GeneratePdf(IncidentRequest incidentReport, ClientSite clientSite)
@@ -994,6 +1026,205 @@ namespace CityWatch.Web.Services
             return vehicleDetailsTable;
         }
 
+        public string GeneratePdfReport(PatrolRequest patrolRequest)
+        {
+           
+            var reportFileName = $"{DateTime.Now.ToString("yyyyMMdd")} -  - Patrol Data Graph - {patrolRequest.FromDate.ToString("MMM")} {patrolRequest.FromDate.Year}_{new Random().Next()}.pdf";
+            var reportPdf = IO.Path.Combine(_ReportRootDir, REPORT_DIR, reportFileName);
 
+            var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
+            pdfDoc.SetDefaultPageSize(PageSize.A4.Rotate());
+            var doc = new Document(pdfDoc);
+            doc.SetMargins(PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN);
+
+            var headerTable = CreateReportHeader(patrolRequest);
+            doc.Add(headerTable);
+
+            //NEWLY ADDED-START
+            var patrolDataReport = _irChartDataService.GetDailyPatrolData(patrolRequest);
+
+            
+            if (patrolDataReport.ResultsCount > 0)
+            {
+                //doc.Add(new AreaBreak());
+                //doc.Add(tableReportHeader);
+                var graphsTable = CreateGraphsTables(patrolDataReport);
+                doc.Add(graphsTable);
+            }
+
+            doc.Close();
+            pdfDoc.Close();
+
+            return IO.Path.GetFileName(reportFileName);
+        }
+        private Table CreateGraphsTables(PatrolDataReport patrolDataReport)
+        {
+            var graphTable = new Table(UnitValue.CreatePercentArray(1)).UseAllAvailableWidth()
+                .SetMarginTop(5)
+                .SetKeepTogether(true);
+            graphTable.AddCell(new Cell()
+                .SetPadding(0)
+                .SetBorder(Border.NO_BORDER)
+                .Add(CreateGraphsTable1(patrolDataReport)));
+            graphTable.AddCell(new Cell()
+                .SetPadding(0)
+                .SetBorder(Border.NO_BORDER)
+                .Add(CreateGraphsTable2(patrolDataReport)));
+            return graphTable;
+        }
+
+        private Table CreateGraphsTable1(PatrolDataReport patrolDataReport)
+        {
+            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 33, 1, 32, 1, 33 })).UseAllAvailableWidth().SetMarginBottom(5);
+
+            chartDataTable.AddCell(GetChartHeaderCell("IR RECORDS PERCENTAGE BY SITE", "\nTotal Site Count: " + patrolDataReport.SitePercentage.Count));
+
+            // row 1 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            chartDataTable.AddCell(GetChartHeaderCell("IR RECORDS PERCENTAGE BY AREA/WARD", "\nTotal Area/Ward Count: " + patrolDataReport.AreaWardPercentage.Count));
+
+            // row 1 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            chartDataTable.AddCell(GetChartHeaderCell("IR RECORDS PERCENTAGE BY COLOUR CODE", "\nTotal Color Code Count: " + patrolDataReport.ColorCodePercentage.Count));
+
+            var sitesPieChartImage = GetChartImage(patrolDataReport.SitePercentage.OrderByDescending(z => z.Value).ToArray());
+            chartDataTable.AddCell(GetChartImageCell(sitesPieChartImage));
+
+            // row 2 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            var areaPieChartImage = GetChartImage(patrolDataReport.AreaWardPercentage.OrderByDescending(z => z.Value).ToArray());
+            chartDataTable.AddCell(GetChartImageCell(areaPieChartImage));
+
+            // row 2 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            var colorCodeChartImage = GetChartImage(patrolDataReport.ColorCodePercentage.OrderByDescending(z => z.Value).ToArray());
+            chartDataTable.AddCell(GetChartImageCell(colorCodeChartImage));
+
+            return chartDataTable;
+        }
+
+        private Table CreateGraphsTable2(PatrolDataReport patrolDataReport)
+        {
+            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 70, 30 })).UseAllAvailableWidth().SetMarginTop(5);
+
+            var eventTypeCount = patrolDataReport.EventTypeQuantity.Sum(z => z.Value);
+            chartDataTable.AddCell(GetChartHeaderCell("IR EVENT TYPE QUANTITY", "Total IR Count: " + eventTypeCount, 2));
+
+            var eventTypePieChartImage = GetChartImage(patrolDataReport.EventTypePercentage.OrderBy(z => z.Key).ToArray(), chartWidth: 615);
+            chartDataTable.AddCell(GetChartImageCell(eventTypePieChartImage).SetBorderRight(Border.NO_BORDER));
+
+            var eventTypeBarChartImage = GetChartImage(patrolDataReport.EventTypeQuantity.OrderBy(z => z.Key).ToArray(), ChartType.Bar);
+            chartDataTable.AddCell(GetChartImageCell(eventTypeBarChartImage).SetBorderLeft(Border.NO_BORDER));
+
+            return chartDataTable;
+        }
+        private Cell GetChartHeaderCell(string leftText, string rightText, int colspan = 1)
+        {
+            var cell = new Cell(1, colspan)
+               .SetFont(PdfHelper.GetPdfFont())
+               .SetFontSize(CELL_FONT_SIZE)
+               .SetFontColor(WebColors.GetRGBColor(COLOR_WHITE))
+               .SetBackgroundColor(WebColors.GetRGBColor(COLOR_GREY))
+               .SetVerticalAlignment(VerticalAlignment.MIDDLE);
+
+            var p = new Paragraph(leftText);
+            p.Add(new Tab());
+            p.AddTabStops(new TabStop(1000, TabAlignment.RIGHT));
+            p.Add(new Text(rightText).SetFontSize(4.5f));
+            cell.Add(p);
+
+            return cell;
+        }
+
+        private Cell GetChartImageCell(Image chartImage)
+        {
+            var imageCell = new Cell();
+            if (chartImage != null)
+                imageCell.Add(chartImage).SetVerticalAlignment(VerticalAlignment.MIDDLE);
+
+            return imageCell;
+        }
+        private Image GetChartImage(KeyValuePair<string, double>[] data, ChartType chartType = ChartType.Pie, int? chartWidth = null)
+        {
+            if (data.All(z => z.Value == 0))
+                return null;
+
+            try
+            {
+                var graphFileName = IO.Path.Combine(_graphImageRootDir, $"{DateTime.Now: ddMMyyyy_HHmmss}.png");
+                var options = new { type = chartType, fileName = graphFileName, width = chartWidth };
+
+                var task = StaticNodeJSService.InvokeFromFileAsync<string>("Scripts/ir-chart.js", "drawChart", args: new object[] { options, data });
+                var success = task.Result == "OK";
+
+                if (!success)
+                    throw new ApplicationException("Create graph failed");
+
+                if (success && !IO.File.Exists(graphFileName))
+                    throw new ApplicationException($"Graph image not found. File Name: {graphFileName}");
+
+                var graphImage = new Image(ImageDataFactory.Create(graphFileName)).SetHeight(90);
+
+                IO.File.Delete(graphFileName);
+
+                return graphImage;
+            }
+            catch
+            {
+                // no ops
+            }
+            return null;
+        }
+        private Table CreateReportHeader(PatrolRequest patrolRequest)
+        {
+            var headerTable = new Table(UnitValue.CreatePercentArray(new float[] { 20, 60, 20 })).UseAllAvailableWidth();
+
+            var cellSiteImage = new Cell().SetBorder(Border.NO_BORDER);
+            headerTable.AddCell(cellSiteImage);
+            if (patrolRequest.ClientSites != null)
+            {
+                var cellReportTitle = new Cell()
+                .SetBorder(Border.NO_BORDER)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .Add(new Paragraph("Patrol Data Report\n").SetFont(PdfHelper.GetPdfFont()).SetFontSize(CELL_FONT_SIZE * 1.2f))
+          
+             
+                .Add(new Paragraph(patrolRequest.FromDate.ToString("dd-MMM-yyyy") + "  to  " + patrolRequest.ToDate.ToString("dd-MMM-yyyy"))).SetFontSize(CELL_FONT_SIZE)
+            
+                .Add(new Paragraph(patrolRequest.ClientSites[0])).SetFontSize(CELL_FONT_SIZE);
+            
+            headerTable.AddCell(cellReportTitle);
+            }
+            else
+            {
+                var cellReportTitle = new Cell()
+                .SetBorder(Border.NO_BORDER)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .Add(new Paragraph("Patrol Data Report\n").SetFont(PdfHelper.GetPdfFont()).SetFontSize(CELL_FONT_SIZE * 1.2f))
+
+
+                .Add(new Paragraph(patrolRequest.FromDate.ToString("dd-MMM-yyyy") + "to" + patrolRequest.ToDate.ToString("dd-MMM-yyyy"))).SetFontSize(CELL_FONT_SIZE);
+
+                
+
+                headerTable.AddCell(cellReportTitle);
+            }
+
+            var image = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "CWSLogoPdf.png")))
+                .SetHeight(50)
+                .SetHorizontalAlignment(HorizontalAlignment.RIGHT);
+            var cellLogoImage = new Cell()
+                .Add(image)
+                .SetBorder(Border.NO_BORDER)
+                .SetHorizontalAlignment(HorizontalAlignment.RIGHT);
+            headerTable.AddCell(cellLogoImage);
+
+            headerTable.AddCell(new Cell(1, 3).SetPadding(3).SetBorder(Border.NO_BORDER));
+            return headerTable;
+        }
     }
 }

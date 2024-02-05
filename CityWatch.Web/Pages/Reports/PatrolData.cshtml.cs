@@ -20,14 +20,16 @@ namespace CityWatch.Web.Pages.Reports
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IViewDataService _viewDataService;
         private readonly IPatrolDataReportService _irChartDataService;
+        private readonly IIncidentReportGenerator _incidentReportGenerator;
 
         public PatrolDataModel(IViewDataService viewDataService, 
             IWebHostEnvironment webHostEnvironment,
-            IPatrolDataReportService irChartDataService)
+            IPatrolDataReportService irChartDataService, IIncidentReportGenerator incidentReportGenerator)
         {
             _viewDataService = viewDataService;
             _webHostEnvironment = webHostEnvironment;
             _irChartDataService = irChartDataService;
+            _incidentReportGenerator = incidentReportGenerator;
         }
 
         [BindProperty]
@@ -79,5 +81,13 @@ namespace CityWatch.Web.Pages.Reports
         {
             return new JsonResult(_viewDataService.GetUserClientSites(types).OrderBy(z => z.Text));
         }
+        public IActionResult OnPostGeneratePdfReport()
+        {
+            //var patrolDataReport = _irChartDataService.GetDailyPatrolData(ReportRequest);
+            var fileName = _incidentReportGenerator.GeneratePdfReport(ReportRequest);
+
+            return new JsonResult(new {  fileName});
+        }
+
     }
 }
