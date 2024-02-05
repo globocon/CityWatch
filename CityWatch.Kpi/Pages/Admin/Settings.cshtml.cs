@@ -42,7 +42,7 @@ namespace CityWatch.Kpi.Pages.Admin
             IImportJobDataProvider importJobDataProvider,
             IClientDataProvider clientDataProvider,
             IKpiSchedulesDataProvider kpiSchedulesDataProvider,
-            ISendScheduleService sendScheduleService, 
+            ISendScheduleService sendScheduleService,
             ILogger<SettingsModel> logger)
         {
             _webHostEnvironment = webHostEnvironment;
@@ -130,7 +130,7 @@ namespace CityWatch.Kpi.Pages.Admin
                         ClientSiteName = z.Name,
                         HasSettings = clientSiteWithSettings.Any(x => x == z.Id)
                     }));
-                       
+
                 }
                 else
                 {
@@ -148,7 +148,7 @@ namespace CityWatch.Kpi.Pages.Admin
                         HasSettings = clientSiteWithSettings.Any(x => x == z.Id)
                     }));
                 }
-            }   
+            }
             return new JsonResult(new { });
         }
 
@@ -156,7 +156,7 @@ namespace CityWatch.Kpi.Pages.Admin
         public PartialViewResult OnGetClientSiteKpiSettings(int siteId)
         {
             var clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
-            clientSiteKpiSetting ??= new ClientSiteKpiSetting() { ClientSiteId = siteId };            
+            clientSiteKpiSetting ??= new ClientSiteKpiSetting() { ClientSiteId = siteId };
             return Partial("_ClientSiteKpiSetting", clientSiteKpiSetting);
         }
 
@@ -196,7 +196,7 @@ namespace CityWatch.Kpi.Pages.Admin
                         var positionIdGuard = clientSiteKpiSetting.ClientSiteManningGuardKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
                         var positionIdPatrolCar = clientSiteKpiSetting.ClientSiteManningPatrolCarKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
 
-                       var InvalidTimes=_clientDataProvider.ValidDateTime(clientSiteKpiSetting);
+                        var InvalidTimes = _clientDataProvider.ValidDateTime(clientSiteKpiSetting);
 
                         if (InvalidTimes.Trim() == string.Empty)
                         {
@@ -229,7 +229,7 @@ namespace CityWatch.Kpi.Pages.Admin
                     success = 4;
 
                 }
-              
+
             }
             catch
             {
@@ -279,7 +279,7 @@ namespace CityWatch.Kpi.Pages.Admin
         }
 
         public JsonResult OnGetKpiSendScheduleSummaryImage(int scheduleId)
-        {            
+        {
             return new JsonResult(_kpiSchedulesDataProvider.GetScheduleSummaryImage(scheduleId));
         }
 
@@ -292,7 +292,7 @@ namespace CityWatch.Kpi.Pages.Admin
             {
                 if (files.Count == 1)
                 {
-                    var file = files[0];                    
+                    var file = files[0];
                     fileName = file.FileName;
                     var scheduleId = Convert.ToInt32(Request.Form["scheduleId"]);
 
@@ -435,7 +435,7 @@ namespace CityWatch.Kpi.Pages.Admin
 
                 if (rcActionList.SettingsId != 0)
                 {
-                   
+
                     id = _clientDataProvider.SaveRCList(rcActionList);
 
                 }
@@ -453,7 +453,7 @@ namespace CityWatch.Kpi.Pages.Admin
 
             return new JsonResult(new { status, message, id });
         }
-        
+
         //code added For RcAction List stop
         public JsonResult OnGetClientSiteKpiNote(int clientSiteId, int month, int year)
         {
@@ -541,6 +541,40 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(new { status, message });
         }
 
+
+
+        public JsonResult OnPostDeleteWorker(string settingsId)
+        {
+            var status = true;
+            var message = "Success";
+            var clientSiteId = 0;
+            try
+            {
+                if (settingsId != string.Empty)
+                {
+                    var split = settingsId.Split('_');
+
+                    if (split.Length > 0)
+                    {
+                        var settId = int.Parse(split[0]);
+                        var orderId = int.Parse(split[1]);
+                        clientSiteId = int.Parse(split[2]);
+                        _clientDataProvider.RemoveWorker(settId, orderId);
+
+                    }
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message, clientSiteId });
+        }
+
         public JsonResult OnPostRunSchedule(int scheduleId, int reportYear, int reportMonth, bool ignoreRecipients)
         {
             var success = false;
@@ -552,7 +586,7 @@ namespace CityWatch.Kpi.Pages.Admin
                     throw new ArgumentException("Schedule not found");
 
                 var task = _sendScheduleService.ProcessSchedule(schedule, new DateTime(reportYear, reportMonth, 1), ignoreRecipients, false);
-                
+
                 message = task.Result;
                 success = !(message.Contains("Error") || message.Contains("Exception"));
             }
@@ -621,7 +655,7 @@ namespace CityWatch.Kpi.Pages.Admin
 
             return new JsonResult(new { status, message });
         }
-        
+
         public JsonResult OnPostDeleteSummaryImage(int scheduleId)
         {
             var status = true;
@@ -654,14 +688,14 @@ namespace CityWatch.Kpi.Pages.Admin
             try
             {
 
-                if(!string.IsNullOrEmpty(imageName))
+                if (!string.IsNullOrEmpty(imageName))
                 {
                     var fileToDelete = Path.Combine(_webHostEnvironment.WebRootPath, "RCImage", imageName);
                     if (System.IO.File.Exists(fileToDelete))
                         System.IO.File.Delete(fileToDelete);
 
                 }
-              
+
             }
             catch (Exception ex)
             {

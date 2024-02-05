@@ -1463,6 +1463,42 @@
     });
 
     /****** Download Page Settings *******/
+
+    $("#btn_DefaultEmailEdit").on("click", function () {
+        var defaultMailEdit = $('#DefaultMailTextbox').text();
+        $('#DefaultMailTextbox').toggle();
+        $('#DefaultMail').hide();
+        $('#btn_DefaultEmailUpdate').show();
+        $('#btn_DefaultEmailEdit').hide();
+       
+       
+    });
+    $("#btn_DefaultEmailUpdate").on("click", function () {
+        var defaultMailEdit = $('#DefaultMailTextboxval').val();
+        var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(defaultMailEdit)) {
+           
+            showStatusNotification(false, 'Please enter a valid email address.');
+            return;
+        }
+
+        $.ajax({
+            url: '/Admin/Settings?handler=DefaultEmailUpdate', 
+            type: 'POST',
+            data: { defaultMailEdit: defaultMailEdit }, // Send data as key-value pair
+            headers: {
+                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+            }
+        }).done(function (data) {
+            if (data.success) {
+                showStatusNotification(data.success, data.message);
+            } else {
+                showStatusNotification(false, 'Something went wrong');
+            }
+        }).fail(function () {
+            showStatusNotification(false, 'Something went wrong');
+        });
+    });
     let gridStaffDocs;
     let gridStaffDocsTypeCompanySop;
     let gridStaffDocsTypeTraining;
@@ -1661,6 +1697,7 @@
     }
 
     function uploadStafDocUsingType(uploadCtrl, edit = false, type) {
+        var Email = $('#file_downloads').val();
         const file = uploadCtrl.get(0).files.item(0);
         const fileExtn = file.name.split('.').pop();
         if (!fileExtn || '.pdf,.docx,.xlsx'.indexOf(fileExtn.toLowerCase()) < 0) {

@@ -23,6 +23,7 @@ namespace CityWatch.Data.Models
         public string RcColor { get; set; }
         public string Status { get; set; }
         public int? RcColorId { get; set; }
+        public string OnlySiteName { get; set; } // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024
     }
 
 }

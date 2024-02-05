@@ -168,7 +168,10 @@ $(function () {
             { data: 'trailerTypeText' },
             { data: 'detail.keyNo', width: '10%' },
             { data: 'detail.mobileNumber', visible: false },
-            { data: 'detail.personName', visible: false },
+                { data: 'detail.personName', visible: false },
+           /* for searching site location-start*/
+            { data: 'clientSiteLocationName', visible: false },
+                /* for searching site location-end*/
             {
                 targets: -1,
                 data: null,

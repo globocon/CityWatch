@@ -241,7 +241,18 @@ namespace CityWatch.Kpi.Services
         private void SendEmail(string fileName, KpiSendSchedule schedule, DateTime reportDate, bool ignoreRecipients)
         {
             var fromAddress = _emailOptions.FromAddress.Split('|');
-            var toAddress = _emailOptions.ToAddress.Split('|');
+            //To get the Default Email start
+            var ToAddreddAppset = _emailOptions.ToAddress.Split('|');
+            var toAddressData = _clientDataProvider.GetDefaultEmailAddress() + '|'+ ToAddreddAppset[1];
+            var toAddress = toAddressData.Split('|');
+            var ToAddressFirststr = _clientDataProvider.GetDefaultEmailAddress();
+            if (ToAddressFirststr==null)
+            {
+                toAddress = _emailOptions.ToAddress.Split('|');
+            }
+
+            //To get the Default Email stop
+
             var subject = _emailOptions.Subject;
             var messageHtml = _emailOptions.Message;
             var message = new MimeMessage();
@@ -310,7 +321,7 @@ namespace CityWatch.Kpi.Services
                 coverSheetType = CoverSheetType.Monthly;
 
             ISummaryReportGenerator summaryReportGenerator = coverSheetType == CoverSheetType.Weekly ?
-                new WeeklySummaryReportGenerator(_webHostEnvironment, _viewDataService) :
+                new WeeklySummaryReportGenerator(_webHostEnvironment, _viewDataService, _patrolDataReportService) :
                 new MonthlySummaryReportGenerator(_webHostEnvironment, _viewDataService, _patrolDataReportService);
             var summaryReportFromDate = coverSheetType == CoverSheetType.Weekly ? DateTime.Today.AddDays(-6) : reportStartDate;
             var summaryReportToDate = coverSheetType == CoverSheetType.Weekly ? DateTime.Today : reportEndDate;

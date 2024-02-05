@@ -272,7 +272,28 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { success, message, dateTimeUpdated = dateTimeUpdated.ToString("dd MMM yyyy @ HH:mm") });
         }
+    //To get the default Email Path start
+        public JsonResult OnPostDefaultEmailUpdate(string defaultMailEdit)
+        {
+            
+            var success = false;
+            var message = "Updated successfully";
+           
+                    try
+                    {
+                        _configDataProvider.SaveDefaultEmail(defaultMailEdit);
+                        success = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        message = ex.Message;
+                    }
+               
+           
 
+            return new JsonResult(new { success, message });
+        }
+        //To get the default Email Path stop
         public JsonResult OnGetStaffDocs()
         {
             return new JsonResult(_configDataProvider.GetStaffDocuments());
@@ -357,6 +378,7 @@ namespace CityWatch.Web.Pages.Admin
                             FileName = file.FileName,
                             LastUpdated = DateTime.Now,
                             DocumentType = type
+                            
                         });
 
                         success = true;

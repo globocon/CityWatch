@@ -244,8 +244,7 @@ namespace CityWatch.Web.Pages.Radio
                     var logbooktype = LogBookType.DailyGuardLog;
                     //var logBookId = _guardLogDataProvider.GetClientSiteLogBookId(clientSiteId, logbooktype, DateTime.Today);
                     // Get Last Logbookid and logbook Date by latest logbookid // p6#73 timezone bug - Added by binoy 24-01-2024
-                    var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdByLogBookMaxID(clientSiteId, logbooktype, out logbookdate);
-                    var entryTime = GetLocalEntryTime(logbookdate);
+                    var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdByLogBookMaxID(clientSiteId, logbooktype, out logbookdate);                    
                     var guardid = HttpContext.Session.GetInt32("GuardId");
                     if (guardid != 0)
                     {
@@ -272,7 +271,7 @@ namespace CityWatch.Web.Pages.Radio
                         {
                             ClientSiteLogBookId = logBookId,
                             GuardLoginId = guardLoginId,
-                            EventDateTime = entryTime,
+                            EventDateTime = DateTime.Now,
                             Notes = Subject + " : " + Notifications,
                             IrEntryType = IrEntryType.Alarm,
                             RcPushMessageId = pushMessageId,
@@ -307,7 +306,7 @@ namespace CityWatch.Web.Pages.Radio
                         var guardLog = new GuardLog()
                         {
                             ClientSiteLogBookId = logBookId,
-                            EventDateTime = entryTime,
+                            EventDateTime = DateTime.Now,
                             Notes = Subject + " : " + Notifications,
                             IrEntryType = IrEntryType.Alarm,
                             RcPushMessageId = pushMessageId,
@@ -745,8 +744,7 @@ namespace CityWatch.Web.Pages.Radio
                 var logbookdate = DateTime.Today;               
                 // Get Last Logbookid and logbook Date by latest logbookid // p6#73 timezone bug - Modified by binoy 29-01-2024
                 var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdByLogBookMaxID(Id, logbooktype, out logbookdate);
-                var entryTime = GetLocalEntryTime(logbookdate);
-
+                
                 if (logBookId != 0)
                 {
                     var guardid = HttpContext.Session.GetInt32("GuardId");
@@ -773,7 +771,7 @@ namespace CityWatch.Web.Pages.Radio
                         {
                             ClientSiteLogBookId = logBookId,
                             GuardLoginId = guardLoginId,
-                            EventDateTime = entryTime, //DateTime.Now,
+                            EventDateTime = DateTime.Now,
                             Notes = Subject + " : " + Notifications,
                             //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                             //IsSystemEntry = true,
@@ -808,7 +806,7 @@ namespace CityWatch.Web.Pages.Radio
                         var guardLog = new GuardLog()
                         {
                             ClientSiteLogBookId = logBookId,
-                            EventDateTime = entryTime, //DateTime.Now,
+                            EventDateTime = DateTime.Now,
                             Notes = Subject + " : " + Notifications,
                             //Notes = "Caution Alarm: There has been '0' activity in KV & LB for 2 hours from guard[" + guardName + "]",
                             //IsSystemEntry = true,
@@ -939,16 +937,16 @@ namespace CityWatch.Web.Pages.Radio
         {
             var success = true;
             var message = "success";
-            var ActionListMessage = "AlarmKeypadCode: " + AlarmKeypadCode + "\n" +
-                      "PhysicalKey: " + Physicalkey + "\n" +
-                      "CombinationLook: " + SiteCombinationLook + "\n" +
-                      "Action1: " + Action1 + "\n" +
-                      "Action2: " + Action2 + "\n" +
-                      "Action3: " + Action3 + "\n" +
-                      "Action4: " + Action4 + "\n" +
-                      "Action5: " + Action5 + "\n" +
-                      "CommentsForControlRoomOperator: " + CommentsForControlRoomOperator + "\n" +
-                      "Message: " + Notifications;
+            var ActionListMessage = (string.IsNullOrEmpty(AlarmKeypadCode) ? string.Empty : "AlarmKeypadCode: " + AlarmKeypadCode + "\n") +
+                   (string.IsNullOrEmpty(Physicalkey) ? string.Empty : "PhysicalKey: " + Physicalkey + "\n") +
+                   (string.IsNullOrEmpty(AlarmKeypadCode) ? string.Empty : "AlarmKeypadCode: " + AlarmKeypadCode + "\n") +
+                   (string.IsNullOrEmpty(SiteCombinationLook) ? string.Empty : "CombinationLook: " + SiteCombinationLook + "\n") +
+                   (string.IsNullOrEmpty(Action1) ? string.Empty : "Action1: " + Action1 + "\n") +
+                  (string.IsNullOrEmpty(Action2) ? string.Empty : "Action2: " + Action2 + "\n") +
+                   (string.IsNullOrEmpty(Action3) ? string.Empty : "Action3: " + Action3 + "\n") +
+                   (string.IsNullOrEmpty(Action4) ? string.Empty : "Action4: " + Action4 + "\n") +
+                   (string.IsNullOrEmpty(CommentsForControlRoomOperator) ? string.Empty : "CommentsForControlRoomOperator: " + CommentsForControlRoomOperator + "\n") +
+                   (string.IsNullOrEmpty(Notifications) ? string.Empty : "Message: " + Notifications + "\n");
             try
             {
 
@@ -978,7 +976,7 @@ namespace CityWatch.Web.Pages.Radio
                     foreach (var clientSiteTypeID in clientSitesClientType)
                     {
 
-                        LogBookDetails(clientSiteTypeID.Id, Notifications, Subject, tmzdata);
+                        LogBookDetails(clientSiteTypeID.Id, ActionListMessage, Subject, tmzdata);
                     }
                     /* log book entry to citywtch control room */
                     var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
@@ -1007,16 +1005,18 @@ namespace CityWatch.Web.Pages.Radio
         {
             var success = true;
             var message = "success";
-            var ActionListMessage = "AlarmKeypadCode: " + AlarmKeypadCode + "\n" +
-                      "PhysicalKey: " + Physicalkey + "\n" +
-                      "CombinationLook: " + SiteCombinationLook + "\n" +
-                      "Action1: " + Action1 + "\n" +
-                      "Action2: " + Action2 + "\n" +
-                      "Action3: " + Action3 + "\n" +
-                      "Action4: " + Action4 + "\n" +
-                      "Action5: " + Action5 + "\n" +
-                      "CommentsForControlRoomOperator: " + CommentsForControlRoomOperator + "\n" +
-                      "Message: " + Notifications;
+            
+            var ActionListMessage = (string.IsNullOrEmpty(AlarmKeypadCode) ? string.Empty : "AlarmKeypadCode: " + AlarmKeypadCode + "\n") +
+                    (string.IsNullOrEmpty(Physicalkey) ? string.Empty : "PhysicalKey: " + Physicalkey + "\n") +
+                    (string.IsNullOrEmpty(AlarmKeypadCode) ? string.Empty : "AlarmKeypadCode: " + AlarmKeypadCode + "\n") +
+                    (string.IsNullOrEmpty(SiteCombinationLook) ? string.Empty : "CombinationLook: " + SiteCombinationLook + "\n") +
+                    (string.IsNullOrEmpty(Action1) ? string.Empty : "Action1: " + Action1 + "\n") +
+                   (string.IsNullOrEmpty(Action2) ? string.Empty : "Action2: " + Action2 + "\n") +
+                    (string.IsNullOrEmpty(Action3) ? string.Empty : "Action3: " + Action3 + "\n") +
+                    (string.IsNullOrEmpty(Action4) ? string.Empty : "Action4: " + Action4 + "\n") +
+                    (string.IsNullOrEmpty(CommentsForControlRoomOperator) ? string.Empty : "CommentsForControlRoomOperator: " + CommentsForControlRoomOperator + "\n")+
+                    (string.IsNullOrEmpty(Notifications) ? string.Empty : "Message: " + Notifications + "\n");
+                    
             try
             {
 
@@ -1046,7 +1046,7 @@ namespace CityWatch.Web.Pages.Radio
                     foreach (var clientSiteTypeID in clientSitesClientType)
                     {
 
-                        LogBookDetails(clientSiteTypeID.Id, Notifications, Subject, tmzdata);
+                        LogBookDetails(clientSiteTypeID.Id, ActionListMessage, Subject, tmzdata);
                     }
                     /* log book entry to citywtch control room */
                     var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
@@ -1097,13 +1097,5 @@ namespace CityWatch.Web.Pages.Radio
         //code added for ActionListSend stop
 
 
-        public DateTime GetLocalEntryTime(DateTime logbookDate)
-        {
-            DateTime entryTime = DateTime.Now;
-            if(logbookDate.Date == entryTime.Date)   
-                return entryTime;
-
-            return DateTimeHelper.GetLogbookEndTimeFromDate(logbookDate);
-        }
     }
 }

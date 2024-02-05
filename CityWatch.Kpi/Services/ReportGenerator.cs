@@ -1,7 +1,9 @@
 ﻿using CityWatch.Common.Helpers;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
+using CityWatch.Data.Services;
 using CityWatch.Kpi.Helpers;
 using CityWatch.Kpi.Models;
 using iText.IO.Image;
@@ -9,8 +11,10 @@ using iText.Kernel.Colors;
 using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
 using iText.Layout;
+using iText.Layout.Borders;
 using iText.Layout.Element;
 using iText.Layout.Properties;
+using iText.Svg.Renderers.Impl;
 using Jering.Javascript.NodeJS;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
@@ -43,6 +47,8 @@ namespace CityWatch.Kpi.Services
         private const string CELL_BG_ORANGE_IR_ALARM = "#ffdab3";
         private const string CELL_FONT_GREEN = "#008000";
         private const string CELL_FONT_RED = "#FF0000";
+        private const string COLOR_WHITE = "#ffffff";
+        private const string COLOR_GREY = "#666362";
 
         private readonly string _reportRootDir;
         private readonly string _imageRootDir;
@@ -53,12 +59,13 @@ namespace CityWatch.Kpi.Services
         private readonly IClientDataProvider _clientDataProvider;
         private readonly ILogger<ReportGenerator> _logger;
         private readonly Settings _settings;
+        private readonly IPatrolDataReportService _patrolDataReportService;
 
         public ReportGenerator(IOptions<Settings> settings,
             IWebHostEnvironment webHostEnvironment,
             IViewDataService viewDataService,
             IClientDataProvider clientDataProvider,
-            ILogger<ReportGenerator> logger)
+            ILogger<ReportGenerator> logger, IPatrolDataReportService patrolDataReportService)
         {
             _viewDataService = viewDataService;
             _clientDataProvider = clientDataProvider;
@@ -69,6 +76,10 @@ namespace CityWatch.Kpi.Services
             _imageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
             _siteImageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "SiteImage");
             _graphImageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "GraphImage");
+            //nEWLY ADDAED-START
+            
+            _patrolDataReportService = patrolDataReportService;
+            //nEWLY ADDAED-END
 
             if (!IO.Directory.Exists(IO.Path.Combine(_reportRootDir, REPORT_DIR)))
                 IO.Directory.CreateDirectory(IO.Path.Combine(_reportRootDir, REPORT_DIR));
@@ -93,6 +104,7 @@ namespace CityWatch.Kpi.Services
 
             var headerTable = CreateReportHeader(_clientSiteKpiSetting);
             doc.Add(headerTable);
+            
             //to get the data in 3rd page of report
             var monthlyDataGuard = _viewDataService.GetKpiGuardDetailsData(_clientSiteKpiSetting.ClientSiteId, fromDate, toDate);
             var GuradIds = monthlyDataGuard.Select(z => z.GuardId).ToArray();
@@ -127,7 +139,28 @@ namespace CityWatch.Kpi.Services
                 }
                
             }
+            //NEWLY ADDED-START
+            doc.Add(new AreaBreak());
 
+            doc.Add(headerTable);
+            List<string> list = new List<string>();
+            list.Add(_clientSiteKpiSetting.ClientSite.Name);
+            string[] clientsitename = list.ToArray();
+
+            var patrolDataReport = _patrolDataReportService.GetDailyPatrolData(new PatrolRequest()
+            {
+                FromDate = fromDate,
+                ToDate = toDate,
+                DataFilter = PatrolDataFilter.Custom,
+                ClientSites = clientsitename,
+            });
+
+            if (patrolDataReport.ResultsCount > 0)
+            {
+                var graphsTable = CreateGraphsTables(patrolDataReport);
+                doc.Add(graphsTable);
+            }
+            //NEWLY ADDED-END
             doc.Close();
             pdfDoc.Close();
 
@@ -585,9 +618,9 @@ namespace CityWatch.Kpi.Services
         {
 
             var guards = monthlyDataGuard
-    .Select(guardLogin => guardLogin.Guard)
-    .Distinct()
-    .ToArray();
+                .Select(guardLogin => guardLogin.Guard)
+                .Distinct()
+                .ToArray();
             List<int> complianceDataCounts = new List<int>();
             foreach (var guard in guards)
             {
@@ -608,10 +641,7 @@ namespace CityWatch.Kpi.Services
 
             int numColumns = monthlyDataGuardCompliance.Count;
             float[] columnPercentages = new float[largestNumber+2];
-            //for (int i = 0; i < numColumns; i++)
-            //{
-            //    columnPercentages[i] = 100.0f / numColumns;
-            //}
+            
             var kpiGuardTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
             CreateGuardDetailsHeader(kpiGuardTable, monthlyDataGuard);
 
@@ -633,17 +663,17 @@ namespace CityWatch.Kpi.Services
                         alertDate = Convert.ToDateTime(compliance.ExpiryDate).AddDays(-45);
                     }
 
-                    if (alertDate <= DateTime.Today)
+                    if (alertDate <= DateTime.Today && compliance.ExpiryDate> DateTime.Today)
                     {
                         cellColor = CELL_BG_YELLOW;
                     }
-                    if (compliance?.ExpiryDate < DateTime.Today)
+                    else if (compliance?.ExpiryDate < DateTime.Today)
                     {
                         cellColor = CELL_BG_RED;
                     }
                     else
                     {
-                        cellColor = "white";
+                        cellColor = "#96e3ac";
                     }
                     //var cellColor = compliance?.ExpiryDate > DateTime.Today ? CELL_BG_RED : "white";
                     kpiGuardTable.AddCell(CreateDataCell(compliance?.ExpiryDate?.ToString() ?? "", true, cellColor));
@@ -710,48 +740,207 @@ namespace CityWatch.Kpi.Services
         }
         private void CreateGuardDetailsHeader(Table table, List<GuardLogin> monthlyDataGuard)
         {
-            List<int> complianceDataCounts = new List<int>();
-            var guards = monthlyDataGuard
-    .Select(guardLogin => guardLogin.Guard)
-    .Distinct()
-    .ToArray();
-            foreach (var guard in guards)
+            try
             {
-                var monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsCompliance(guard.Id);
-                complianceDataCounts.Add(monthlyDataGuardComplianceData.Count);
-            }
-            int[] countsArray = complianceDataCounts.ToArray();
-            int largestNumber;
-            if (countsArray.Length > 0)
-            {
-                 largestNumber= countsArray.Max();
+                List<int> complianceDataCounts = new List<int>();
+                var guards = monthlyDataGuard
+                    .Select(guardLogin => guardLogin.Guard)
+                    .Distinct()
+                    .ToArray();
 
+                foreach (var guard in guards)
+                {
+                    var monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsCompliance(guard.Id);
+                    complianceDataCounts.Add(monthlyDataGuardComplianceData.Count);
+                }
+
+                int[] countsArray = complianceDataCounts.ToArray();
+                int largestNumber;
+
+                if (countsArray.Length > 0)
+                {
+                    largestNumber = countsArray.Max();
+                }
+                else
+                {
+                    largestNumber = 0;
+                }
+
+                table.AddCell(new Cell(1, 2)
+                    .SetFontSize(CELL_FONT_SIZE)
+                    .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
+                    .Add(new Paragraph().Add(new Text($"\n"))));
+
+                for (int i = 0; i < largestNumber; i++)
+                {
+                    string sequentialNumber = (i + 1).ToString("D2");
+                    table.AddCell(new Cell(1, 1)
+                        .SetFontSize(CELL_FONT_SIZE)
+                        .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
+                        .Add(new Paragraph().Add(new Text(sequentialNumber))));
+                }
+
+                table.AddCell(CreateHeaderCell($"Name\n"));
+                table.AddCell(CreateHeaderCell("C4i+License"));
+
+                var firstGuardId = monthlyDataGuard.Select(guardLogin => guardLogin.GuardId).Distinct().FirstOrDefault();
+                var monthlyDataGuardComplianceData1 = _viewDataService.GetKpiGuardDetailsCompliance(firstGuardId);
+
+                for (int i = 0; i < largestNumber; i++)
+                {
+                    if (i < monthlyDataGuardComplianceData1.Count) 
+                    {
+                        var Description = monthlyDataGuardComplianceData1[i].Description;
+
+                        if (!string.IsNullOrEmpty(Description))
+                        {
+                            table.AddCell(CreateHeaderCell(Description));
+                        }
+                        else
+                        {
+                            table.AddCell(CreateHeaderCell(""));
+                        }
+                    }
+                    else
+                    {
+                        
+                        table.AddCell(CreateHeaderCell("")); 
+                    }
+                }
             }
-            else
+            catch (Exception ex)
             {
-                largestNumber = 0;
+                // Handle the exception here, for example, log it or show an error message.
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                // You can rethrow the exception if needed.
+                throw;
             }
-            table.AddCell(new Cell(1, 2)
-                .SetFontSize(CELL_FONT_SIZE)
-                .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
-                .Add(new Paragraph().Add(new Text($"\n"))));
-            for(int i = 0; i < largestNumber; i++) {
-                string sequentialNumber = (i + 1).ToString("D2");
-                table.AddCell(new Cell(1, 1)
-                .SetFontSize(CELL_FONT_SIZE)
-                .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
-                .Add(new Paragraph().Add(new Text(sequentialNumber))));
-                
-            }
-            table.AddCell(CreateHeaderCell($"Name\n"));
-            table.AddCell(CreateHeaderCell("C4i+License"));
-            for (int i = 0; i < largestNumber; i++)
-            {
-                
-                table.AddCell(CreateHeaderCell(""));
-                
-            }
-           
         }
+
+        //NEWLY ADDED-START
+        private Table CreateGraphsTables(PatrolDataReport patrolDataReport)
+        {
+            var graphTable = new Table(UnitValue.CreatePercentArray(1)).UseAllAvailableWidth()
+                .SetMarginTop(5)
+                .SetKeepTogether(true);
+            graphTable.AddCell(new Cell()
+                .SetPadding(0)
+                .SetBorder(Border.NO_BORDER)
+                .Add(CreateGraphsTable1(patrolDataReport)));
+            graphTable.AddCell(new Cell()
+                .SetPadding(0)
+                .SetBorder(Border.NO_BORDER)
+                .Add(CreateGraphsTable2(patrolDataReport)));
+            return graphTable;
+        }
+
+        private Table CreateGraphsTable1(PatrolDataReport patrolDataReport)
+        {
+            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 33, 1, 32, 1, 33 })).UseAllAvailableWidth().SetMarginBottom(5);
+
+            chartDataTable.AddCell(GetChartHeaderCell("IR RECORDS PERCENTAGE BY SITE", "\nTotal Site Count: " + patrolDataReport.SitePercentage.Count));
+
+            // row 1 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            chartDataTable.AddCell(GetChartHeaderCell("IR RECORDS PERCENTAGE BY AREA/WARD", "\nTotal Area/Ward Count: " + patrolDataReport.AreaWardPercentage.Count));
+
+            // row 1 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            chartDataTable.AddCell(GetChartHeaderCell("IR RECORDS PERCENTAGE BY COLOUR CODE", "\nTotal Color Code Count: " + patrolDataReport.ColorCodePercentage.Count));
+
+            var sitesPieChartImage = GetChartImage(patrolDataReport.SitePercentage.OrderByDescending(z => z.Value).ToArray());
+            chartDataTable.AddCell(GetChartImageCell(sitesPieChartImage));
+
+            // row 2 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            var areaPieChartImage = GetChartImage(patrolDataReport.AreaWardPercentage.OrderByDescending(z => z.Value).ToArray());
+            chartDataTable.AddCell(GetChartImageCell(areaPieChartImage));
+
+            // row 2 blank cell
+            chartDataTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+
+            var colorCodeChartImage = GetChartImage(patrolDataReport.ColorCodePercentage.OrderByDescending(z => z.Value).ToArray());
+            chartDataTable.AddCell(GetChartImageCell(colorCodeChartImage));
+
+            return chartDataTable;
+        }
+
+        private Table CreateGraphsTable2(PatrolDataReport patrolDataReport)
+        {
+            var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 70, 30 })).UseAllAvailableWidth().SetMarginTop(5);
+
+            var eventTypeCount = patrolDataReport.EventTypeQuantity.Sum(z => z.Value);
+            chartDataTable.AddCell(GetChartHeaderCell("IR EVENT TYPE QUANTITY", "Total IR Count: " + eventTypeCount, 2));
+
+            var eventTypePieChartImage = GetChartImage(patrolDataReport.EventTypePercentage.OrderBy(z => z.Key).ToArray(), chartWidth: 615);
+            chartDataTable.AddCell(GetChartImageCell(eventTypePieChartImage).SetBorderRight(Border.NO_BORDER));
+
+            var eventTypeBarChartImage = GetChartImage(patrolDataReport.EventTypeQuantity.OrderBy(z => z.Key).ToArray(), ChartType.Bar);
+            chartDataTable.AddCell(GetChartImageCell(eventTypeBarChartImage).SetBorderLeft(Border.NO_BORDER));
+
+            return chartDataTable;
+        }
+        private Cell GetChartHeaderCell(string leftText, string rightText, int colspan = 1)
+        {
+            var cell = new Cell(1, colspan)
+               .SetFont(PdfHelper.GetPdfFont())
+               .SetFontSize(CELL_FONT_SIZE)
+               .SetFontColor(WebColors.GetRGBColor(COLOR_WHITE))
+               .SetBackgroundColor(WebColors.GetRGBColor(COLOR_GREY))
+               .SetVerticalAlignment(VerticalAlignment.MIDDLE);
+
+            var p = new Paragraph(leftText);
+            p.Add(new Tab());
+            p.AddTabStops(new TabStop(1000, TabAlignment.RIGHT));
+            p.Add(new Text(rightText).SetFontSize(4.5f));
+            cell.Add(p);
+
+            return cell;
+        }
+
+        private Cell GetChartImageCell(Image chartImage)
+        {
+            var imageCell = new Cell();
+            if (chartImage != null)
+                imageCell.Add(chartImage).SetVerticalAlignment(VerticalAlignment.MIDDLE);
+
+            return imageCell;
+        }
+        private Image GetChartImage(KeyValuePair<string, double>[] data, ChartType chartType = ChartType.Pie, int? chartWidth = null)
+        {
+            if (data.All(z => z.Value == 0))
+                return null;
+
+            try
+            {
+                var graphFileName = IO.Path.Combine(_graphImageRootDir, $"{DateTime.Now: ddMMyyyy_HHmmss}.png");
+                var options = new { type = chartType, fileName = graphFileName, width = chartWidth };
+
+                var task = StaticNodeJSService.InvokeFromFileAsync<string>("Scripts/ir-chart.js", "drawChart", args: new object[] { options, data });
+                var success = task.Result == "OK";
+
+                if (!success)
+                    throw new ApplicationException("Create graph failed");
+
+                if (success && !IO.File.Exists(graphFileName))
+                    throw new ApplicationException($"Graph image not found. File Name: {graphFileName}");
+
+                var graphImage = new Image(ImageDataFactory.Create(graphFileName)).SetHeight(101);
+
+                IO.File.Delete(graphFileName);
+
+                return graphImage;
+            }
+            catch
+            {
+                // no ops
+            }
+            return null;
+        }
+        //NEWLY ADDED END
+
     }
 }
