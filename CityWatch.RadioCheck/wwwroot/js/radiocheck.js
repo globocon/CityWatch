@@ -181,9 +181,10 @@ $(window).resize(function () {
 const groupColumn = 1;
 const groupColumn2 = 2;
 const groupColumnSortAlias = 11; // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024
+//var clickedrow=0;
 var scrollPosition2;
 var rowIndex2;
-var scrollY = ($(window).height() - 300);
+//var scrollY = ($(window).height() - 300);
 let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
     ordering: true,
@@ -196,9 +197,11 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     searching: true,
     autoWidth: true,
     fixedHeader: true,
-    "scrollY": scrollY,
+    "scrollY": ($(window).height() - 300),
     "paging": false,
     "footer": true,
+    "scroller": true, // Task p4#19 Screen Jumping day -- added by Binoy -- Start - 01-02-2024
+    "stateSave": true,// Task p4#19 Screen Jumping day -- added by Binoy -- End - 01-02-2024
     ajax: {
         url: '/RadioCheckV2?handler=ClientSiteActivityStatus',
         datatype: 'json',
@@ -337,10 +340,11 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     ],
 
     preDrawCallback: function (settings) {
-        scrollPosition = $(".dataTables_scrollBody").scrollTop();
+        clientSiteActiveGuardsscrollPosition = $('#clientSiteActiveGuards').closest('div.dataTables_scrollBody').scrollTop();                 
     },
     drawCallback: function () {
-        $(".dataTables_scrollBody").scrollTop(scrollPosition);
+       $('#clientSiteActiveGuards').closest('div.dataTables_scrollBody').scrollTop(clientSiteActiveGuardsscrollPosition);                
+
         /*for modifying the size of tables active  guards - start*/
         var count = $('#clientSiteActiveGuards tbody tr').length;
         if (count > 10) {
@@ -355,7 +359,6 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         }
 
         /*for modifying the size of tables active  guards - end*/
-
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;
@@ -384,7 +387,6 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             });
     },
 });
-
 
 // Order by the grouping
 // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- Start - 31-01-2024
@@ -467,6 +469,7 @@ function format_kvl_child_row(d) {
     );
 }
 var scrollPosition;
+var clientSiteActiveGuardsscrollPosition;
 var rowIndex;
 
 let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
@@ -540,11 +543,12 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
     info: false,
     searching: true,
     autoWidth: true,
-    fixedHeader: true,
-    
+    fixedHeader: true,    
     "scrollY": ($(window).height() - 300),
     "paging": false,
     "footer": true,
+    "scroller": true, // Task p4#19 Screen Jumping day -- added by Binoy -- End - 01-02-2024
+    "stateSave": true, // Task p4#19 Screen Jumping day -- added by Binoy -- End - 01-02-2024
     ajax: {
         url: '/RadioCheckV2?handler=ClientSiteInActivityStatus',
         datatype: 'json',
@@ -803,6 +807,19 @@ function UpdateDuressAlarmPlayed() {
 clientSiteInActiveGuards.on('draw', function () {
     $('[data-toggle="tooltip"]').tooltip();
 });
+
+// To fix the Datatable column header issue when hidden inside tab
+$('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+    $($.fn.dataTable.tables(true)).DataTable()
+        .columns.adjust();
+});
+
+// To fix the Datatable column header issue when hidden inside accordion
+$('.collapse').on('shown.bs.collapse', function (e) {
+    $($.fn.dataTable.tables(true)).DataTable()
+        .columns.adjust();
+});
+
 $('#clientSiteInActiveGuards tbody').on('click', '#btnUpArrow', function () {
 
 
@@ -1407,6 +1424,8 @@ $('#clientSiteActiveGuards').on('click', 'button[name="btnRadioCheckStatusActive
     $('#selectRadioStatusActive option:contains("Deactivate")').hide();
     $('#selectRadioCheckStatusActive').modal('show');
     isPaused = true;
+    //clickedrow = clientSiteActiveGuards.row($(this).parents('tr')).index();
+    //alert('clickedrow:' + clickedrow);
 });
 
 $('#btnSaveRadioStatus').on('click', function () {
@@ -1437,10 +1456,10 @@ $('#btnSaveRadioStatus').on('click', function () {
     }).done(function () {
         $('#selectRadioCheckStatus').modal('hide');
         $('#selectRadioStatus').val('');
-        clientSiteActiveGuards.ajax.reload();
-        clientSiteInActiveGuards.ajax.reload();
-        clientSiteInActiveGuardsSinglePage.ajax.reload();
-        clientSiteActiveGuardsSinglePage.ajax.reload();
+        clientSiteActiveGuards.ajax.reload(null, false); // Task p4#19 Screen Jumping day -- modified by Binoy - 01-02-2024
+        clientSiteInActiveGuards.ajax.reload(null, false); // Task p4#19 Screen Jumping day -- modified by Binoy - 01-02-2024
+        clientSiteInActiveGuardsSinglePage.ajax.reload(null, false); // Task p4#19 Screen Jumping day -- modified by Binoy - 01-02-2024
+        clientSiteActiveGuardsSinglePage.ajax.reload(null, false); // Task p4#19 Screen Jumping day -- modified by Binoy - 01-02-2024
     });
 });
 $('#radio_duress_btn').on('click', function () {
@@ -1485,11 +1504,11 @@ $('#btnSaveRadioStatusActive').on('click', function () {
     }).done(function () {
         $('#selectRadioCheckStatusActive').modal('hide');
         $('#selectRadioStatus').val('');      
-        clientSiteActiveGuards.ajax.reload(null, false);
-        clientSiteInActiveGuards.ajax.reload();
-        clientSiteInActiveGuardsSinglePage.ajax.reload();
-        clientSiteActiveGuardsSinglePage.ajax.reload(null, false);
-
+        clientSiteActiveGuards.ajax.reload(null, false); // Task p4#19 Screen Jumping day -- modified by Binoy -- End - 01-02-2024
+        clientSiteInActiveGuards.ajax.reload(null, false); // Task p4#19 Screen Jumping day -- modified by Binoy -- End - 01-02-2024
+        clientSiteInActiveGuardsSinglePage.ajax.reload(null, false); // Task p4#19 Screen Jumping day -- modified by Binoy -- End - 01-02-2024
+        clientSiteActiveGuardsSinglePage.ajax.reload(null, false); // Task p4#19 Screen Jumping day -- modified by Binoy -- End - 01-02-2024
+        
     });
 });
 
@@ -2425,10 +2444,11 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
     searching: true,
     autoWidth: true,
     fixedHeader: true,
-
     "scrollY": ($(window).height() - 100),
     "paging": false,
     "footer": true,
+    "scroller": true, // Task p4#19 Screen Jumping day -- added by Binoy -- End - 01-02-2024
+    "stateSave": true, // Task p4#19 Screen Jumping day -- added by Binoy -- End - 01-02-2024
     ajax: {
         url: '/RadioCheckV2?handler=ClientSiteInActivityStatus',
         datatype: 'json',
@@ -2685,6 +2705,8 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
     "scrollY": ($(window).height() ),
     "paging": false,
     "footer": true,
+    "scroller": true, // Task p4#19 Screen Jumping day -- added by Binoy -- Start - 01-02-2024
+    "stateSave": true,// Task p4#19 Screen Jumping day -- added by Binoy -- End - 01-02-2024
     ajax: {
         url: '/RadioCheckV2?handler=ClientSiteActivityStatus',
         datatype: 'json',
