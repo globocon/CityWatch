@@ -91,4 +91,48 @@ namespace CityWatch.Data.Helpers
     }
 
     // Task p6#73_TimeZone issue -- added by Binoy - End
+
+
+    public static class TimeZoneHelper
+    {
+
+        public static string GetCurrentTimeZone()
+        {            
+            TimeZoneInfo localZone = TimeZoneInfo.Local;
+            var mint = (int)localZone.BaseUtcOffset.TotalMinutes;
+            string[] arr = Convert.ToString(localZone.BaseUtcOffset).Split(":");
+            var CurrLocalTime = localZone.StandardName + " " + string.Format("GMT{0}:{1}", mint > 0 ? '+' + arr[0] : arr[0], arr[1]); 
+            return CurrLocalTime;
+        }
+        public static string GetCurrentTimeZoneShortName()
+        {
+            TimeZoneInfo localZone = TimeZoneInfo.Local;
+            var mint = (int)localZone.BaseUtcOffset.TotalMinutes;
+            string[] arr = Convert.ToString(localZone.BaseUtcOffset).Split(":");
+            var CurrLocalTime = string.Format("GMT{0}:{1}", mint > 0 ? '+' + arr[0] : arr[0], arr[1]);
+            return CurrLocalTime;
+        }
+
+        public static int GetCurrentTimeZoneOffsetMinute()
+        {
+            TimeZoneInfo localZone = TimeZoneInfo.Local;
+            var CurrLocalTime = localZone.BaseUtcOffset ;
+            return (int) CurrLocalTime.TotalMinutes;
+        }
+
+        public static DateTime GetCurrentTimeZoneCurrentTime()
+        {            
+            var CurrLocalTime = DateTime.Now;
+            return CurrLocalTime;
+        }
+
+        public static DateTimeOffset GetCurrentTimeZoneCurrentTimeWithOffset()
+        {
+            var CurrLocalTime = DateTimeOffset.Now;
+            return CurrLocalTime;
+        }
+
+       
+
+    }
 }

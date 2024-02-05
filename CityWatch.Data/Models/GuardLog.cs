@@ -55,10 +55,10 @@ namespace CityWatch.Data.Models
         {
             var errors = new List<ValidationResult>();
 
-            if (ClientSiteLogBook.Date != DateTime.Today)
-            {
-                errors.Add(new ValidationResult("A new day started and this logbook expired. Please logout and login again."));
-            }
+            //if (ClientSiteLogBook.Date != DateTime.Today)
+            //{
+            //    errors.Add(new ValidationResult("A new day started and this logbook expired. Please logout and login again."));
+            //}
 
             return errors;
         }

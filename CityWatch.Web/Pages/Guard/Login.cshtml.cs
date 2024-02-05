@@ -414,7 +414,7 @@ namespace CityWatch.Web.Pages.Guard
             {
                 ClientSiteLogBookId = logBookId,
                 GuardLoginId = guardLoginId,
-                EventDateTime = DateTime.Now,
+                EventDateTime = DateTime.Now, 
                 Notes = "KV Logged In",
                 IsSystemEntry = true,
                 EventDateTimeLocal = eventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
