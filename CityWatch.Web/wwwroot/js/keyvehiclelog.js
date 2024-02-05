@@ -2910,14 +2910,14 @@ $(function () {
         $('#generate_kvl_docket').hide();
         $('#print-manual-docket-modal').modal('show')
         //$('#printDocketForKvlId').val(data.detail.id);
-        if (data.detail.personOfInterest != null) {
-            $('#titlePOIWarningPrint').attr('hidden', false);
-            $('#imagesirenprint').attr('hidden', false);
-        }
-        else {
-            $('#titlePOIWarningPrint').attr('hidden', true);
-            $('#imagesirenprint').attr('hidden', true);
-        }
+        //if (data.detail.personOfInterest != null) {
+        //    $('#titlePOIWarningPrint').attr('hidden', false);
+        //    $('#imagesirenprint').attr('hidden', false);
+        //}
+        //else {
+        //    $('#titlePOIWarningPrint').attr('hidden', true);
+        //    $('#imagesirenprint').attr('hidden', true);
+        //}
     });
     $('#generate_kvl_AlldocketList').on('click', function () {
         $('#generate_kvl_docket_status').hide();
@@ -2931,19 +2931,19 @@ $(function () {
         $('#download_kvl_docket').hide();
         $('#generate_kvl_AlldocketList').attr('disabled', true);
 
-        var ids = [];
-        $.ajax({
-            url: '/Admin/AuditSiteLog?handler=KeyVehicleLogProfiles',
-            data: { truckRego: null, poi: 'POI' },
-            type: 'GET',
-            dataType: 'json',
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {
-            var ids = [];
-            result.forEach(function (item) {
-                ids.push(item.detail.id);
+        //var ids = [];
+        //$.ajax({
+        //    url: '/Admin/AuditSiteLog?handler=KeyVehicleLogProfiles',
+        //    data: { truckRego: null, poi: 'POI' },
+        //    type: 'GET',
+        //    dataType: 'json',
+        //    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        //}).done(function (result) {
+        //    var ids = [];
+        //    result.forEach(function (item) {
+        //        ids.push(item.detail.id);
 
-            });
+        //    });
             $.ajax({
                 url: '/Guard/KeyVehicleLog?handler=GenerateManualDocketList',
                 data: {
@@ -2985,7 +2985,7 @@ $(function () {
 
 
 
-    });
+   /* });*/
     //$('#generate_kvl_AlldocketList').on('click', function () {
     //    $('#generate_kvl_docket_status').hide();
 
@@ -3050,16 +3050,16 @@ $(function () {
         $('#btn_VisitorProfile_pdf_POIList').prop('disabled', true);
         $('#schRunStatus').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i> Generating PDF. Please wait...');
         var ids = [];
-        $.ajax({
-            url: '/Admin/AuditSiteLog?handler=KeyVehicleLogProfiles',
-            data: { truckRego: $('#kvlProfileRegos').find(':selected').val(), poi: 'POI' },
-            type: 'GET',
-            dataType: 'json',
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {
-            result.forEach(function (item) {
-                ids.push(item.detail.id);
-            });
+        //$.ajax({
+        //    url: '/Admin/AuditSiteLog?handler=KeyVehicleLogProfiles',
+        //    data: { truckRego: $('#kvlProfileRegos').find(':selected').val(), poi: 'POI' },
+        //    type: 'GET',
+        //    dataType: 'json',
+        //    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        //}).done(function (result) {
+        //    result.forEach(function (item) {
+        //        ids.push(item.detail.id);
+        //    });
 
 
             $.ajax({
@@ -3098,7 +3098,7 @@ $(function () {
                 }
             });
         });
-    });
+/*    });*/
     //To generate Global POI List stop
     $('#btn_confirm_kvl_logbook_expiry').on('click', function () {
         $('#loader').show();
