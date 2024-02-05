@@ -3711,7 +3711,7 @@ $('#generate_logbook_AlldocketList').on('click', function () {
         }).done(function (response) {
 
             if (response.statusCode === -1) {
-                $('#generate_kvl_docket_status').html('<i class="fa fa-times-circle text-danger mr-2"></i> Error generating report').show();
+                $('#generate_kvl_docket_status').html('<i class="fa fa-times-circle text-danger mr-2"></i> Any POI not found for the login site').show();
             }
             else {
 
