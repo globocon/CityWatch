@@ -32,6 +32,7 @@ namespace CityWatch.Data.Models
         public int? ColourCode { get; set; }
         public bool IsPlateLoaded { get; set; }
         public int? PlateId { get; set; }
+        public string HASH { get; set; }
         public string VehicleRego { get; set; }
         public int? LogId { get; set; }
         public ICollection<IncidentReportEventType> IncidentReportEventTypes { get; set; }

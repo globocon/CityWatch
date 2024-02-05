@@ -27,6 +27,8 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Dropbox.Api.Users;
 using static Dropbox.Api.Paper.ListPaperDocsSortBy;
+using System.Text;
+using System.Security.Cryptography;
 
 namespace CityWatch.Web.Pages.Incident
 {
@@ -88,6 +90,10 @@ namespace CityWatch.Web.Pages.Incident
             HttpContext.Session.Remove("IsIrFromNotifyPage");
             string reuse = Request.Query["reuse"];
             /* Check the Query String */
+
+            //To get the Hash code 
+            string input = GenerateFormattedString();
+            string hashCode = GenerateHashCode(input);
             if (!string.IsNullOrEmpty(reuse))
             {
                 var httpContext = HttpContext;
@@ -172,7 +178,8 @@ namespace CityWatch.Web.Pages.Incident
                                 ReportedBy = IrPreviousObject.ReportedBy,
                                 FeedbackType = IrPreviousObject.FeedbackType,
                                 FeedbackTemplates = IrPreviousObject.FeedbackTemplates,
-
+                                
+                                
                             };
 
                             ClientSites = _ViewDataService.GetUserClientSites(AuthUserHelper.LoggedInUserId, IrPreviousObject.DateLocation.ClientType);
@@ -187,6 +194,7 @@ namespace CityWatch.Web.Pages.Incident
                         {
                             Report = new IncidentRequest
                             {
+                                HASH = hashCode,
                                 Officer = new Officer
                                 {
 
@@ -204,6 +212,7 @@ namespace CityWatch.Web.Pages.Incident
                         HttpContext.Session.Remove("IRReport");
                         Report = new IncidentRequest
                         {
+                            HASH = hashCode,
                             Officer = new Officer
                             {
 
@@ -223,6 +232,7 @@ namespace CityWatch.Web.Pages.Incident
                     HttpContext.Session.Remove("IRReport");
                     Report = new IncidentRequest
                     {
+                        HASH = hashCode,
                         Officer = new Officer
                         {
 
@@ -239,12 +249,17 @@ namespace CityWatch.Web.Pages.Incident
             {
                 /*If it's Comming from any other page its clear session*/
                 HttpContext.Session.Remove("IRReport");
+                
                 Report = new IncidentRequest
                 {
+                    HASH = hashCode,
+
                     Officer = new Officer
                     {
 
                         Phone = "+61 4",
+                       
+                        
 
                     },
                 };
@@ -714,12 +729,66 @@ namespace CityWatch.Web.Pages.Incident
             };
             _guardLogDataProvider.SaveGuardLog(guardLog);
         }
+        //To Generate Hash Code start
+        private string GenerateHashCode(string input)
+        {
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(input));
+                StringBuilder builder = new StringBuilder();
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    builder.Append(bytes[i].ToString("x2"));
+                }
+                return builder.ToString();
+            }
+        }
+        private string GenerateFormattedString()
+        {
+            string[] segments = new string[5];
+            Random random = new Random();
 
+            for (int i = 0; i < segments.Length; i++)
+            {
+                switch (i)
+                {
+                    case 0:
+                        segments[i] = GenerateRandomAlphanumeric(5, random);
+                        break;
+                    case 1:
+                        segments[i] = GenerateRandomAlphanumeric(8, random);
+                        break;
+                    case 2:
+                        segments[i] = GenerateRandomAlphanumeric(7, random);
+                        break;
+                    case 3:
+                        segments[i] = "fjfjfjjfl9999";
+                        break;
+                    case 4:
+                        segments[i] = "3456";
+                        break;
+                }
+            }
+
+            return string.Join("-", segments);
+        }
+
+        private string GenerateRandomAlphanumeric(int length, Random random)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
+        //To Generate Hash Code stop
         private void ProcessIrSubmit()
         {
             var fileName = string.Empty;
             var processResult = new SortedDictionary<int, IrProcessFailure>();
             var reportGenerated = false;
+
+            string input = GenerateFormattedString();
+            string hashCode = GenerateHashCode(input);
 
             // TODO: Remove session dependency on attachments
             Report.ReportReference = HttpContext.Session.GetString("ReportReference");
@@ -756,6 +825,7 @@ namespace CityWatch.Web.Pages.Incident
 
             var report = new IncidentReport()
             {
+               
                 FileName = fileName,
                 CreatedOn = DateTime.UtcNow,
                 ClientSiteId = clientSite?.Id,
@@ -784,7 +854,8 @@ namespace CityWatch.Web.Pages.Incident
                 CreatedOnDateTimeLocalWithOffset = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeLocalWithOffset,
                 CreatedOnDateTimeZone = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeZone,
                 CreatedOnDateTimeZoneShort = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeZoneShort,
-                CreatedOnDateTimeUtcOffsetMinute = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeUtcOffsetMinute // Task p6#73_TimeZone issue -- added by Binoy -- End
+                CreatedOnDateTimeUtcOffsetMinute = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeUtcOffsetMinute, // Task p6#73_TimeZone issue -- added by Binoy -- End
+                HASH=hashCode
 
             };
             if (HttpContext.Session.GetString("GuardId") != null)
