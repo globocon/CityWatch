@@ -110,6 +110,7 @@ namespace CityWatch.Web.Pages.Guard
                 }
 
                 var clientDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)GuardLogin.EventDateTimeUtcOffsetMinute); // p6#73 timezone bug - Added by binoy 24-01-2024
+                var IsLoginInKeyVehOrLogBook = CheckIfAlreadyLoginInKeyVehicleLogBook(clientDateTime);
                 var logBookId = GetLogBookId(out var isNewLogBook, clientDateTime); // p6#73 timezone bug - Modified by binoy 24-01-2024
                 var guardLoginId = GetGuardLoginId(logBookId);
                 // Task p6#73_TimeZone issue -- added by Binoy - Start
@@ -150,37 +151,47 @@ namespace CityWatch.Web.Pages.Guard
                 /* get previous day push messages Start */
                 if (isNewLogBook)
                 {
-                    /*check if id is Citywatch M1 - Romeo Patrol Cars site id=625*/
-                    if (GuardLogin.ClientSite.Id == 625)
-                    {
-                        var previousPuShMessages = _clientDataProvider.GetPushMessagesNotAcknowledged(GuardLogin.ClientSite.Id, DateTime.Today.AddDays(-1));
-                        if (previousPuShMessages != null)
-                        {
-                            _guardLogDataProvider.CopyPreviousDaysPushMessageToLogBook(previousPuShMessages, logBookId, guardLoginId, guardLog);
-                        }
-                    }
 
-                    /* Copy Previous duress message not deactivated (Repete in each logbook untill deactivated )*/
-                    var previousDuressMessages = _clientDataProvider.GetDuressMessageNotAcknowledged(GuardLogin.ClientSite.Id, DateTime.Today.AddDays(-1));
-                    if (previousDuressMessages != null)
+                   
+                    if (IsLoginInKeyVehOrLogBook)
                     {
-                        _guardLogDataProvider.CopyPreviousDaysDuressToLogBook(previousDuressMessages, logBookId, guardLoginId, guardLog);
-                    }
-                    var clientSiteForLogbook = _clientDataProvider.GetClientSiteForRcLogBook();
-                    if (clientSiteForLogbook.Count != 0)
-                    {
-                        if (clientSiteForLogbook.FirstOrDefault().Id == GuardLogin.ClientSite.Id)
+                        /*check if id is Citywatch M1 - Romeo Patrol Cars site id=625*/
+                        if (GuardLogin.ClientSite.Id == 625)
                         {
-                            var previousDuressMessagesForControlRoom = _clientDataProvider.GetDuressMessageNotAcknowledgedForControlRoom(DateTime.Today.AddDays(-1));
-                            if (previousDuressMessagesForControlRoom != null)
+                            var previousPuShMessages = _clientDataProvider.GetPushMessagesNotAcknowledged(GuardLogin.ClientSite.Id, DateTime.Today.AddDays(-1));
+                            if (previousPuShMessages != null)
                             {
-                                foreach (var items in previousDuressMessagesForControlRoom)
-                                {  
-                                    _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(GuardLogin.Guard.Id, GuardLogin.Guard.Id, null, "Duress Alarm Activated", IrEntryType.Alarm, 1, 0, guardLog);
-                                }
-                                //_guardLogDataProvider.CopyPreviousDaysDuressToLogBook(previousDuressMessagesForControlRoom, logBookId, guardLoginId);
+                                _guardLogDataProvider.CopyPreviousDaysPushMessageToLogBook(previousPuShMessages, logBookId, guardLoginId, guardLog);
                             }
+                        }
+                        /* Check is duress enabled for this site*/
+                        var isDurssEnabled= _viewDataService.IsClientSiteDuressEnabled(GuardLogin.ClientSite.Id);
+                        if (isDurssEnabled)
+                        {
+                            /* Copy Previous duress message not deactivated (Repete in each logbook untill deactivated )*/
+                            var previousDuressMessages = _clientDataProvider.GetDuressMessageNotAcknowledged(GuardLogin.ClientSite.Id, DateTime.Today.AddDays(-1));
+                            if (previousDuressMessages != null)
+                            {
+                                _guardLogDataProvider.CopyPreviousDaysDuressToLogBook(previousDuressMessages, logBookId, guardLoginId, guardLog);
+                            }
+                            var clientSiteForLogbook = _clientDataProvider.GetClientSiteForRcLogBook();
+                            if (clientSiteForLogbook.Count != 0)
+                            {
+                                if (clientSiteForLogbook.FirstOrDefault().Id == GuardLogin.ClientSite.Id)
+                                {
+                                    var previousDuressMessagesForControlRoom = _clientDataProvider.GetDuressMessageNotAcknowledgedForControlRoom(DateTime.Today.AddDays(-1));
+                                    if (previousDuressMessagesForControlRoom != null)
+                                    {
+                                        foreach (var items in previousDuressMessagesForControlRoom)
+                                        {
+                                            _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(GuardLogin.Guard.Id, GuardLogin.Guard.Id, null, "Duress Alarm Activated", IrEntryType.Alarm, 1, 0, guardLog);
+                                        }
+                                        //_guardLogDataProvider.CopyPreviousDaysDuressToLogBook(previousDuressMessagesForControlRoom, logBookId, guardLoginId);
+                                    }
 
+                                }
+
+                            }
                         }
 
                     }
@@ -371,6 +382,25 @@ namespace CityWatch.Web.Pages.Guard
             }
 
             return logBookId;
+        }
+
+        private bool CheckIfAlreadyLoginInKeyVehicleLogBook(DateTime clientDateTime)
+        {
+            /* It will check if there is any entry in logbook or keyvehicle not considering the LogBookType
+             * otherwise it will enter multiple duress 
+             */
+            var isNewLogBook = false;
+            var logBook = _clientDataProvider.GetClientSiteLogBookWithOutType(GuardLogin.ClientSite.Id, clientDateTime.Date); // p6#73 timezone bug - Added by binoy 24-01-2024
+            if (logBook.Count==0)
+            {
+               
+
+                isNewLogBook = true;
+            }
+
+            return isNewLogBook;
+
+
         }
 
         private GuardLogin GetNewGuardLogin()

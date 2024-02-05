@@ -465,7 +465,7 @@ namespace CityWatch.Web.Pages.Guard
                 var newGuardLoginId = _viewDataService.GetNewGuardLoginId(currentGuardLogin, currentGuardLoginOffDutyActual, newLogBookId);
                 if (newGuardLoginId <= 0)
                     throw new InvalidOperationException("Failed to login");
-
+                var logBook = _clientDataProvider.GetClientSiteLogBookWithOutType(clientSiteId, DateTime.Now.Date);
                 // var localDateTimeNow = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)tmdata.EventDateTimeUtcOffsetMinute);
                 var signInEntry = new GuardLog()
                 {
@@ -490,37 +490,54 @@ namespace CityWatch.Web.Pages.Guard
                 // p6#73 timezone bug - Added by binoy 24-01-2024 - Start
                 /* get previous day push messages Start */
                 /*check if id is Citywatch M1 - Romeo Patrol Cars site id=625*/
-                if (clientSiteId == 625)
-                {
-                    var previousPuShMessages = _clientDataProvider.GetPushMessagesNotAcknowledged(clientSiteId, DateTime.Today.AddDays(-1));
-                    if (previousPuShMessages != null)
-                    {
-                        _guardLogDataProvider.CopyPreviousDaysPushMessageToLogBook(previousPuShMessages, newLogBookId, guardLoginId, signInEntry);
-                    }
-                }
 
-                /* Copy Previous duress message not deactivated (Repete in each logbook untill deactivated )*/
-                var previousDuressMessages = _clientDataProvider.GetDuressMessageNotAcknowledged(clientSiteId, DateTime.Today.AddDays(-1));
-                if (previousDuressMessages != null)
+                // p6#73 timezone bug - Added by binoy 24-01-2024
+                if (logBook.Count==0)
                 {
-                    _guardLogDataProvider.CopyPreviousDaysDuressToLogBook(previousDuressMessages, newLogBookId, guardLoginId, signInEntry);
-                }
-                var clientSiteForLogbook = _clientDataProvider.GetClientSiteForRcLogBook();
-                if (clientSiteForLogbook.Count != 0)
-                {
-                    if (clientSiteForLogbook.FirstOrDefault().Id == clientSiteId)
-                    {
-                        var previousDuressMessagesForControlRoom = _clientDataProvider.GetDuressMessageNotAcknowledgedForControlRoom(DateTime.Today.AddDays(-1));
-                        if (previousDuressMessagesForControlRoom != null)
+
+
+
+                  
+                        if (clientSiteId == 625)
                         {
-                            foreach (var items in previousDuressMessagesForControlRoom)
-                            {                               
-                                _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(currentGuardLogin.GuardId, currentGuardLogin.GuardId, null, "Duress Alarm Activated", IrEntryType.Alarm, 1, 0, signInEntry);
+                            var previousPuShMessages = _clientDataProvider.GetPushMessagesNotAcknowledged(clientSiteId, DateTime.Today.AddDays(-1));
+                            if (previousPuShMessages != null)
+                            {
+                                _guardLogDataProvider.CopyPreviousDaysPushMessageToLogBook(previousPuShMessages, newLogBookId, guardLoginId, signInEntry);
                             }
-                            //_guardLogDataProvider.CopyPreviousDaysDuressToLogBook(previousDuressMessagesForControlRoom, logBookId, guardLoginId);
+                        }
+
+                    /* Copy Previous duress message not deactivated (Repete in each logbook untill deactivated )*/
+                    var isDurssEnabled = _viewDataService.IsClientSiteDuressEnabled(clientSiteId);
+                    if (isDurssEnabled)
+                    {
+                        var previousDuressMessages = _clientDataProvider.GetDuressMessageNotAcknowledged(clientSiteId, DateTime.Today.AddDays(-1));
+                        if (previousDuressMessages != null)
+                        {
+                            _guardLogDataProvider.CopyPreviousDaysDuressToLogBook(previousDuressMessages, newLogBookId, guardLoginId, signInEntry);
+                        }
+                        var clientSiteForLogbook = _clientDataProvider.GetClientSiteForRcLogBook();
+                        if (clientSiteForLogbook.Count != 0)
+                        {
+                            if (clientSiteForLogbook.FirstOrDefault().Id == clientSiteId)
+                            {
+                                var previousDuressMessagesForControlRoom = _clientDataProvider.GetDuressMessageNotAcknowledgedForControlRoom(DateTime.Today.AddDays(-1));
+                                if (previousDuressMessagesForControlRoom != null)
+                                {
+                                    foreach (var items in previousDuressMessagesForControlRoom)
+                                    {
+                                        _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(currentGuardLogin.GuardId, currentGuardLogin.GuardId, null, "Duress Alarm Activated", IrEntryType.Alarm, 1, 0, signInEntry);
+                                    }
+                                    //_guardLogDataProvider.CopyPreviousDaysDuressToLogBook(previousDuressMessagesForControlRoom, logBookId, guardLoginId);
+                                }
+
+                            }
+
                         }
 
                     }
+
+                    
 
                 }
                 /* get previous day push messages end */
@@ -633,5 +650,10 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { success, message });
         }
 
+
+      
+
     }
+
+   
 }

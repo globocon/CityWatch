@@ -135,6 +135,7 @@ namespace CityWatch.Data.Providers
 
         void RemoveWorker(int settingsId, int OrderId);
 
+        List<ClientSiteLogBook> GetClientSiteLogBookWithOutType(int clientSiteId, DateTime date);
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -508,6 +509,11 @@ namespace CityWatch.Data.Providers
                  .SingleOrDefault(z => z.ClientSiteId == clientSiteId && z.Type == type && z.Date == date);
         }
 
+        public List<ClientSiteLogBook> GetClientSiteLogBookWithOutType(int clientSiteId, DateTime date)
+        {
+            return _context.ClientSiteLogBooks
+                 .Where(z => z.ClientSiteId == clientSiteId  && z.Date == date).ToList();
+        }
         public int SaveClientSiteLogBook(ClientSiteLogBook logBook)
         {
             if (logBook.Id == 0)
@@ -1446,7 +1452,7 @@ namespace CityWatch.Data.Providers
         public List<RadioCheckPushMessages> GetPushMessagesNotAcknowledged(int clientSiteId, DateTime date)
         {
             return _context.RadioCheckPushMessages.Where
-                 (z => z.ClientSiteId == clientSiteId && z.EntryType == 2 && z.IsAcknowledged == 0 && (z.IsDuress == 0)).ToList();
+                 (z => z.ClientSiteId == clientSiteId && z.EntryType == 2 && z.IsAcknowledged == 0 && z.IsDuress == 0).ToList();
         }
 
         public List<RadioCheckPushMessages> GetDuressMessageNotAcknowledged(int clientSiteId, DateTime date)
