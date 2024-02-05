@@ -91,9 +91,9 @@ namespace CityWatch.Web.Pages.Incident
             string reuse = Request.Query["reuse"];
             /* Check the Query String */
 
-            //To get the Hash code 
-            string input = GenerateFormattedString();
-            string hashCode = GenerateHashCode(input);
+            ////To get the Hash code 
+            //string input = GenerateFormattedString();
+            //string hashCode = GenerateHashCode(input);
             if (!string.IsNullOrEmpty(reuse))
             {
                 var httpContext = HttpContext;
@@ -194,7 +194,7 @@ namespace CityWatch.Web.Pages.Incident
                         {
                             Report = new IncidentRequest
                             {
-                                HASH = hashCode,
+                                //HASH = hashCode,
                                 Officer = new Officer
                                 {
 
@@ -212,7 +212,7 @@ namespace CityWatch.Web.Pages.Incident
                         HttpContext.Session.Remove("IRReport");
                         Report = new IncidentRequest
                         {
-                            HASH = hashCode,
+                            //HASH = hashCode,
                             Officer = new Officer
                             {
 
@@ -232,7 +232,7 @@ namespace CityWatch.Web.Pages.Incident
                     HttpContext.Session.Remove("IRReport");
                     Report = new IncidentRequest
                     {
-                        HASH = hashCode,
+                        //HASH = hashCode,
                         Officer = new Officer
                         {
 
@@ -252,7 +252,7 @@ namespace CityWatch.Web.Pages.Incident
                 
                 Report = new IncidentRequest
                 {
-                    HASH = hashCode,
+                    //HASH = hashCode,
 
                     Officer = new Officer
                     {
@@ -275,6 +275,7 @@ namespace CityWatch.Web.Pages.Incident
                 {
                     Report = new IncidentRequest
                     {
+                        //HASH = hashCode,
                         Officer = new Officer
                         {
 
@@ -797,6 +798,7 @@ namespace CityWatch.Web.Pages.Incident
 
             try
             {
+                Report.HASH = hashCode;
                 Report.SerialNumber = GetIrSerialNumber(Report);
             }
             catch (Exception ex)
