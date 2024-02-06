@@ -136,7 +136,17 @@ namespace CityWatch.Web.Pages.Admin
             var message = "Success";
             try
             {
-                _clientDataProvider.DeleteClientSite(id);
+                var useraccess = _clientDataProvider.GetUserAccessWithClientSiteId(id);
+                if (useraccess.Count == 0)
+                {
+                    _clientDataProvider.DeleteClientSite(id);
+                }
+                else
+                {
+                    status = false;
+
+                    message = "Error " + "Please unallocate the users who have access to the  site";
+                }
             }
             catch (Exception ex)
             {

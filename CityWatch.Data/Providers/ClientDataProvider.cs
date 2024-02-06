@@ -136,6 +136,9 @@ namespace CityWatch.Data.Providers
         void RemoveWorker(int settingsId, int OrderId);
 
         List<ClientSiteLogBook> GetClientSiteLogBookWithOutType(int clientSiteId, DateTime date);
+        //for checking whther user has any access to the client site ie to be deleted-start
+        List<UserClientSiteAccess> GetUserAccessWithClientSiteId(int Id);
+        //for checking whther user has any access to the client site ie to be deleted-end
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -1472,6 +1475,13 @@ namespace CityWatch.Data.Providers
             return _context.ReportTemplates.Select(x => x.DefaultEmail).FirstOrDefault();
         }
         //To Get the Default Email Address stop
+
+        //for checking whther user has any access to the client site ie to be deleted-start
+        public List<UserClientSiteAccess> GetUserAccessWithClientSiteId(int Id)
+        {
+            return _context.UserClientSiteAccess.Where(x => x.ClientSiteId == Id).ToList();
+        }
+        //for checking whther user has any access to the client site ie to be deleted-end
     }
 
 
