@@ -41,6 +41,9 @@ namespace CityWatch.RadioCheck.Models
         [JsonPropertyName("location_name")]
         public string LocationName { get; set; }
 
+        [JsonPropertyName("location_scan")]
+        public string LocationScan { get; set; }
+
         [JsonPropertyName("inspection_start_datetime_local")]
         public string InspectionStartDatetimeLocal { get; set; }
 

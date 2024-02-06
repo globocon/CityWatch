@@ -204,6 +204,7 @@ namespace CityWatch.RadioCheck.API
                                                     SiteName = swScanItem.SiteName,
                                                     LocationId = swScanItem.LocationId,
                                                     LocationName = swScanItem.LocationName,
+                                                    LocationScan= swScanItem.LocationScan,
                                                     InspectionStartDatetimeLocal = Convert.ToDateTime(swScanItem.InspectionStartDatetimeLocal),
                                                     InspectionEndDatetimeLocal = Convert.ToDateTime(swScanItem.InspectionEndDatetimeLocal),
                                                     ClientSiteId = smartWandDetails.ClientSiteId,
