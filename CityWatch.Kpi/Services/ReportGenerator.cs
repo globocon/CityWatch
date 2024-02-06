@@ -671,12 +671,18 @@ namespace CityWatch.Kpi.Services
                     {
                         cellColor = CELL_BG_RED;
                     }
+                    else if (compliance?.ExpiryDate==null)
+                    {
+                        cellColor = "white";
+                    }
                     else
                     {
                         cellColor = "#96e3ac";
                     }
-                    //var cellColor = compliance?.ExpiryDate > DateTime.Today ? CELL_BG_RED : "white";
-                    kpiGuardTable.AddCell(CreateDataCell(compliance?.ExpiryDate?.ToString() ?? "", true, cellColor));
+
+                    DateTime? expiryDate = compliance?.ExpiryDate?.Date;
+                    string expiryDateString = expiryDate.HasValue ? expiryDate.Value.ToString("dd/MM/yyyy") : "";
+                    kpiGuardTable.AddCell(CreateDataCell(expiryDateString, true, cellColor));
                 }
 
             }
