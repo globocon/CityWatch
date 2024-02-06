@@ -22,6 +22,7 @@ namespace CityWatch.Data.Models
         public string SiteName { get; set; }
         public string LocationId { get; set; }
         public string LocationName { get; set; }
+        public string LocationScan { get; set; }
         public DateTime InspectionStartDatetimeLocal { get; set; }
         public DateTime InspectionEndDatetimeLocal { get; set; }
         public int ClientSiteId { get; set; }
