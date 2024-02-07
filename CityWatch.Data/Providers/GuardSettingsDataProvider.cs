@@ -131,7 +131,7 @@ namespace CityWatch.Data.Providers
         public List<ClientSiteKey> GetClientSiteKeys(int clientSiteId)
         {
             return _context.ClientSiteKeys
-                .Where(z => z.ClientSiteId == clientSiteId)
+                .Where(z => z.ClientSiteId == clientSiteId && z.ClientSite.IsActive == true)
                 .Include(x => x.ClientSite)
                 .OrderBy(z => z.KeyNo)
                 .ToList();
@@ -140,7 +140,7 @@ namespace CityWatch.Data.Providers
         public List<ClientSiteKey> GetClientSiteKeys(int[] clientSiteIds)
         {
             return _context.ClientSiteKeys
-                .Where(z => clientSiteIds.Contains(z.ClientSiteId))
+                .Where(z => clientSiteIds.Contains(z.ClientSiteId) && z.ClientSite.IsActive == true)
                 .Include(x => x.ClientSite)
                 .OrderBy(z => z.KeyNo)
                 .ToList();

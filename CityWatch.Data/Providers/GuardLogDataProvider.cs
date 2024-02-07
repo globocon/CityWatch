@@ -567,7 +567,7 @@ namespace CityWatch.Data.Providers
         }
         public List<KeyVehicleLog> GetKeyVehicleLogByIds(int[] ids)
         {
-            return _context.KeyVehicleLogs.Where(z => ids.Contains(z.Id))
+            return _context.KeyVehicleLogs.Where(z => ids.Contains(z.Id) && z.ClientSiteLogBook.ClientSite.IsActive==true)
                 .Include(z => z.ClientSiteLogBook)
                 .ThenInclude(z => z.ClientSite)
                 .ToList();
@@ -838,6 +838,7 @@ namespace CityWatch.Data.Providers
         public List<ClientSiteCustomField> GetClientSiteCustomFields()
         {
             return _context.ClientSiteCustomFields
+                .Where(x => x.ClientSite.IsActive == true)
                 .Include(x => x.ClientSite)
                 .ToList();
         }
@@ -2068,7 +2069,7 @@ namespace CityWatch.Data.Providers
         public List<ClientSiteSmartWand> GetClientSiteSmartWands(int? clientSiteId)
         {
             return _context.ClientSiteSmartWands
-                .Where(x => !clientSiteId.HasValue || (clientSiteId.HasValue && x.ClientSiteId == clientSiteId.Value))
+                .Where(x => (!clientSiteId.HasValue || (clientSiteId.HasValue && x.ClientSiteId == clientSiteId.Value)) && x.ClientSite.IsActive == true)
                 .Include(x => x.ClientSite)
                 .ToList();
         }
@@ -3034,7 +3035,7 @@ namespace CityWatch.Data.Providers
         public List<UserClientSiteAccess> GetUserClientSiteAccess(int? userId)
         {
             return _context.UserClientSiteAccess
-                .Where(x => !userId.HasValue || userId.HasValue && x.UserId == userId)
+                .Where(x => (!userId.HasValue || userId.HasValue && x.UserId == userId) && x.ClientSite.IsActive == true)
                 .Include(x => x.ClientSite)
                 .Include(x => x.ClientSite.ClientType)
                 .Include(x => x.User)

@@ -136,17 +136,17 @@ namespace CityWatch.Web.Pages.Admin
             var message = "Success";
             try
             {
-                var useraccess = _clientDataProvider.GetUserAccessWithClientSiteId(id);
-                if (useraccess.Count == 0)
-                {
+                //var useraccess = _clientDataProvider.GetUserAccessWithClientSiteId(id);
+                //if (useraccess.Count == 0)
+                //{
                     _clientDataProvider.DeleteClientSite(id);
-                }
-                else
-                {
-                    status = false;
+                //}
+                //else
+                //{
+                //    status = false;
 
-                    message = "Error " + "Please unallocate the users who have access to the  site";
-                }
+                //    message = "Error " + "Please unallocate the users who have access to the  site";
+                //}
             }
             catch (Exception ex)
             {

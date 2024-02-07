@@ -167,7 +167,7 @@ namespace CityWatch.Data.Providers
             foreach (int guardId in guardIds)
             {
                 guardLogins.AddRange(_context.GuardLogins
-                .Where(z => z.GuardId== guardId)                   
+                .Where(z => z.GuardId== guardId && z.ClientSite.IsActive==true)                   
                     .Include(z => z.ClientSite)
                     .Include(z => z.Guard)
                     .ToList());
