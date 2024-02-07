@@ -508,6 +508,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             action: function () {
                
                 $('#ActionListControlRoomModal').modal('show');
+                isPaused = true;
                 $('#dglClientTypeActionListAll').val('');
                 $('#dglClientSiteIdActionListAll').val('');
                 $('#Site_Alarm_Keypad_codeAll').val('');
@@ -772,6 +773,10 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
     },
     
 
+});
+
+$("#ActionListControlRoomModal").on("hidden.bs.modal", function () {
+    isPaused = false;
 });
 
 
