@@ -173,7 +173,7 @@ namespace CityWatch.Data.Providers
         }
         public List<ClientType> GetClientTypes()
         {
-            return _context.ClientTypes.OrderBy(x => x.Name).ToList();
+            return _context.ClientTypes.Where(x=> x.IsActive==true).OrderBy(x => x.Name).ToList();
         }
         //code added to PSPF Dropdown start
         public List<IncidentReportPSPF> GetPSPF()
@@ -188,7 +188,7 @@ namespace CityWatch.Data.Providers
 
             if (clientType.Id == -1)
             {
-                _context.ClientTypes.Add(new ClientType() { Name = clientType.Name });
+                _context.ClientTypes.Add(new ClientType() { Name = clientType.Name,IsActive=true });
             }
             else
             {
@@ -210,7 +210,9 @@ namespace CityWatch.Data.Providers
             if (clientTypeToDelete == null)
                 throw new InvalidOperationException();
 
-            _context.ClientTypes.Remove(clientTypeToDelete);
+            clientTypeToDelete.IsActive = false;
+            
+            //_context.ClientTypes.Remove(clientTypeToDelete);
             _context.SaveChanges();
         }
 
