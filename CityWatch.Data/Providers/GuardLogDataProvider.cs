@@ -3381,7 +3381,7 @@ namespace CityWatch.Data.Providers
 
         public void UpdateDuressButtonAcknowledged(int ClientSiteId)
         {
-            var duressButtonList = _context.RadioCheckPushMessages.Where(x => x.ClientSiteId == ClientSiteId && x.IsAcknowledged == 0).ToList();
+            var duressButtonList = _context.RadioCheckPushMessages.Where(x => x.ClientSiteId == ClientSiteId &&x.IsDuress==1 && x.IsAcknowledged == 0).ToList();
             if (duressButtonList == null)
                 throw new InvalidOperationException();
             foreach (var row in duressButtonList)
