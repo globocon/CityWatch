@@ -386,7 +386,7 @@ $('#btnExportPatrolPdf').on('click', function () {
         data: $('#frm_patrol_report_request').serialize(),
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (response) {
-        const pdfName = response.fileName !== '' ? 'https://localhost:44356/Pdf/Output/' + response.fileName : '#';
+        const pdfName = response.fileName !== '' ? '/Pdf/Output/' + response.fileName : '#';
         window.open(pdfName, '_target/')
     }).fail(function () {
     }).always(function () {
