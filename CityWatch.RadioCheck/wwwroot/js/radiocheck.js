@@ -1314,22 +1314,29 @@ let clientSiteActiveGuardsSWDetails = $('#clientSiteActiveGuardsSWDetails').Data
         { data: 'id', visible: false },
         {
             data: 'templateName',
-            width: '25%',
+            width: '20%',
            
         },
         {
             data: 'smartWand',
-            width: '20%'
+            width: '15%'
 
         },
         {
             data: 'employeePhone',
-            width: '25%',
+            width: '22%',
            
 
         },
         {
             data: 'inspectionStartDatetimeLocal',
+            width: '25%',
+
+
+        },
+
+        {
+            data: 'locationScan',
             width: '30%',
 
 

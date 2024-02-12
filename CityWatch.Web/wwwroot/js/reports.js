@@ -375,6 +375,8 @@ $('#btnExportPatrolPdf').on('click', function () {
     var monthdiff = monthDiff(date1, date2);
     if (monthdiff > 12) {
         alert('Date Range is  greater than 12 months');
+
+
         return false;
     }
     //calculate month difference-end

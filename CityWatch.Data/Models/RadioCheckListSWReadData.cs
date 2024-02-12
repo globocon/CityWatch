@@ -13,6 +13,7 @@ namespace CityWatch.Data.Models
         public string EmployeePhone { get; set; }
         public string SmartWand { get; set; }
         public string TemplateName { get; set; }
+        public string LocationScan { get; set; }
         public DateTime InspectionStartDatetimeLocal { get; set; }
         public DateTime InspectionEndDatetimeLocal { get; set; }
        

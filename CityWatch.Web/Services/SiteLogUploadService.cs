@@ -137,7 +137,12 @@ namespace CityWatch.Web.Services
                 var fromAddress = _emailOptions.FromAddress.Split('|');
                 var subject = siteLogBook.Type.ToDisplayName();
                 var messageHtml = $"Dear Citywatch Security Client; <br><br>Please find attached {subject.ToLower()}.";
-                var message = new MimeMessage();
+                //to avoid duplicate emails sending-start
+                bool flag = false;
+                if (!flag)
+                {
+                    //to avoid duplicate emails sending-end
+                    var message = new MimeMessage();
                 message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
                 foreach (var email in siteLogBook.ClientSite.GuardLogEmailTo.Split(","))
                 {
@@ -164,6 +169,10 @@ namespace CityWatch.Web.Services
                     client.Authenticate(_emailOptions.SmtpUserName, _emailOptions.SmtpPassword);
                 client.Send(message);
                 client.Disconnect(true);
+                    //to avoid duplicate emails sending-start
+                    flag = true;
+                    //to avoid duplicate emails sending-end
+                }
             }
             catch (Exception ex)
             {
