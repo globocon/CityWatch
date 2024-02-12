@@ -128,7 +128,7 @@ namespace CityWatch.Web.Pages.Admin
                 else
                 {
                     status = false;
-                    message = "Error " + " Some client sites are active under this client type so delete the client sites first\"";
+                    message = "Error " + " Some Client Sites are Active under this Client Typ,e so delete the Client Sites first\"";
                 }
             }
             catch (Exception ex)

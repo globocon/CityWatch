@@ -230,21 +230,26 @@
                     data: { id: record },
                     type: 'POST',
                     headers: { 'RequestVerificationToken': token },
-                }).done(function () {
-                    gridType.reload();
+                }).done(function (respose) {
+                    if (respose.status == false) {
+                        alert(respose.message);
+                    }
+                    else {
+                        gridType.reload();
 
-                    $('#sel_client_type').html('');
-                    $.ajax({
-                        url: '/Admin/Settings?handler=ClientTypes',
-                        type: 'GET',
-                        dataType: 'json'
-                    }).done(function (data) {
-                        $('#sel_client_type').append('<option value="">All</option>');
-                        data.map(function (clientType) {
-                            $('#sel_client_type').append('<option value="' + clientType.id + '">' + clientType.name + '</option>');
+                        $('#sel_client_type').html('');
+                        $.ajax({
+                            url: '/Admin/Settings?handler=ClientTypes',
+                            type: 'GET',
+                            dataType: 'json'
+                        }).done(function (data) {
+                            $('#sel_client_type').append('<option value="">All</option>');
+                            data.map(function (clientType) {
+                                $('#sel_client_type').append('<option value="' + clientType.id + '">' + clientType.name + '</option>');
+                            });
+                            gridSite.reload();
                         });
-                        gridSite.reload();
-                    });
+                    }
                 }).fail(function () {
                     console.log('error');
                 }).always(function () {
