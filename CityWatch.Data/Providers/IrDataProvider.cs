@@ -32,7 +32,7 @@ namespace CityWatch.Data.Providers
             return _dbContext.IncidentReports
                 .Include(n => n.IncidentReportEventTypes)
                 .Where(x => x.ReportDateTime >= fromReportDate
-                            && x.ReportDateTime < toReportDate.AddDays(1))
+                            && x.ReportDateTime < toReportDate.AddDays(1) && x.ClientSite.IsActive==true)
                 .ToList();
         }
 

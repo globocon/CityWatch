@@ -136,6 +136,9 @@ namespace CityWatch.Data.Providers
         void RemoveWorker(int settingsId, int OrderId);
 
         List<ClientSiteLogBook> GetClientSiteLogBookWithOutType(int clientSiteId, DateTime date);
+        //for checking whther user has any access to the client site ie to be deleted-start
+        List<UserClientSiteAccess> GetUserAccessWithClientSiteId(int Id);
+        //for checking whther user has any access to the client site ie to be deleted-end
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -170,7 +173,7 @@ namespace CityWatch.Data.Providers
         }
         public List<ClientType> GetClientTypes()
         {
-            return _context.ClientTypes.OrderBy(x => x.Name).ToList();
+            return _context.ClientTypes.Where(x=> x.IsActive==true).OrderBy(x => x.Name).ToList();
         }
         //code added to PSPF Dropdown start
         public List<IncidentReportPSPF> GetPSPF()
@@ -185,7 +188,7 @@ namespace CityWatch.Data.Providers
 
             if (clientType.Id == -1)
             {
-                _context.ClientTypes.Add(new ClientType() { Name = clientType.Name });
+                _context.ClientTypes.Add(new ClientType() { Name = clientType.Name,IsActive=true });
             }
             else
             {
@@ -207,14 +210,16 @@ namespace CityWatch.Data.Providers
             if (clientTypeToDelete == null)
                 throw new InvalidOperationException();
 
-            _context.ClientTypes.Remove(clientTypeToDelete);
+            clientTypeToDelete.IsActive = false;
+            
+            //_context.ClientTypes.Remove(clientTypeToDelete);
             _context.SaveChanges();
         }
 
         public List<ClientSite> GetClientSites(int? typeId)
         {
             return _context.ClientSites
-                .Where(x => !typeId.HasValue || (typeId.HasValue && x.TypeId == typeId.Value))
+                .Where(x => (!typeId.HasValue || (typeId.HasValue && x.TypeId == typeId.Value)) && x.IsActive==true)
                 .Include(x => x.ClientType)
                 .OrderBy(x => x.ClientType.Name)
                 .ThenBy(x => x.Name)
@@ -264,7 +269,8 @@ namespace CityWatch.Data.Providers
                     DuressEmail = clientSite.DuressEmail,
                     DuressSms = clientSite.DuressSms,
                     LandLine = "+61 (3)",
-                    DataCollectionEnabled = true
+                    DataCollectionEnabled = true,
+                    IsActive=true
                 });
 
                 gpsHasChanged = !string.IsNullOrEmpty(clientSite.Gps);
@@ -303,13 +309,16 @@ namespace CityWatch.Data.Providers
             if (clientSiteToDelete == null)
                 throw new InvalidOperationException();
 
-            _context.ClientSites.Remove(clientSiteToDelete);
+
+            //_context.ClientSites.Remove(clientSiteToDelete);
+            clientSiteToDelete.IsActive = false;
             _context.SaveChanges();
         }
 
         public List<ClientSiteKpiSetting> GetClientSiteKpiSettings()
         {
             return _context.ClientSiteKpiSettings
+                .Where(x=> x.ClientSite.IsActive==true)
                 .Include(x => x.ClientSite)
                 .Include(x => x.ClientSite.ClientType)
                 .Include(x => x.Notes)
@@ -319,6 +328,7 @@ namespace CityWatch.Data.Providers
         public ClientSiteKpiSetting GetClientSiteKpiSetting(int clientSiteId)
         {
             var clientSiteKpiSetting = _context.ClientSiteKpiSettings
+                .Where(x => x.ClientSite.IsActive == true)
                 .Include(x => x.ClientSite)
                 .Include(x => x.ClientSite.ClientType)
                 .Include(x => x.ClientSiteDayKpiSettings)
@@ -342,7 +352,8 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.ClientSite)
                 .Include(x => x.ClientSite.ClientType)
                 .Include(x => x.ClientSiteDayKpiSettings)
-                .Where(x => clientSiteIds.Contains(x.ClientSiteId))
+                .Where(x => clientSiteIds.Contains(x.ClientSiteId) && x.ClientSite.IsActive == true)
+                
                 .ToList();
 
             return clientSiteKpiSetting;
@@ -491,6 +502,7 @@ namespace CityWatch.Data.Providers
         public List<ClientSiteLogBook> GetClientSiteLogBooks()
         {
             return _context.ClientSiteLogBooks
+                .Where(x => x.ClientSite.IsActive == true)
                 .Include(x => x.ClientSite)
                 .Include(x => x.ClientSite.ClientType)
                 .ToList();
@@ -757,7 +769,7 @@ namespace CityWatch.Data.Providers
         public List<ClientSite> GetNewClientSites()
         {
             return _context.ClientSites
-
+                .Where(x=>x.IsActive==true)
                 .Include(x => x.ClientType)
                 .OrderBy(x => x.ClientType.Name)
                 .ThenBy(x => x.Name)
@@ -852,7 +864,7 @@ namespace CityWatch.Data.Providers
         public List<ClientSiteKey> GetClientSiteKeys(int clientSiteId)
         {
             return _context.ClientSiteKeys
-                .Where(z => z.ClientSiteId == clientSiteId)
+                .Where(z => z.ClientSiteId == clientSiteId && z.ClientSite.IsActive == true)
                 .Include(x => x.ClientSite)
                 .OrderBy(z => z.KeyNo)
                 .ToList();
@@ -861,7 +873,7 @@ namespace CityWatch.Data.Providers
         public List<ClientSiteKey> GetClientSiteKeys(int[] clientSiteIds)
         {
             return _context.ClientSiteKeys
-                .Where(z => clientSiteIds.Contains(z.ClientSiteId))
+                .Where(z => clientSiteIds.Contains(z.ClientSiteId) && z.ClientSite.IsActive == true)
                 .Include(x => x.ClientSite)
                 .OrderBy(z => z.KeyNo)
                 .ToList();
@@ -884,7 +896,7 @@ namespace CityWatch.Data.Providers
         public List<ClientSiteLogBook> GetClientSiteLogBooks(int? logBookId, LogBookType type)
         {
             return _context.ClientSiteLogBooks
-                .Where(z => z.Id == logBookId && z.Type == type)
+                .Where(z => z.Id == logBookId && z.Type == type && z.ClientSite.IsActive == true)
                 .Include(x => x.ClientSite)
                 .Include(x => x.ClientSite.ClientType)
                 .ToList();
@@ -1381,7 +1393,7 @@ namespace CityWatch.Data.Providers
             else
             {
                 var allUserAccess = _context.UserClientSiteAccess
-                    .Where(x => !userId.HasValue || userId.HasValue && x.UserId == userId)
+                    .Where(x => (!userId.HasValue || userId.HasValue && x.UserId == userId) && x.ClientSite.IsActive == true)
                     .Include(x => x.ClientSite)
                     .Include(x => x.ClientSite.ClientType)
                     .Include(x => x.User)
@@ -1472,6 +1484,13 @@ namespace CityWatch.Data.Providers
             return _context.ReportTemplates.Select(x => x.DefaultEmail).FirstOrDefault();
         }
         //To Get the Default Email Address stop
+
+        //for checking whther user has any access to the client site ie to be deleted-start
+        public List<UserClientSiteAccess> GetUserAccessWithClientSiteId(int Id)
+        {
+            return _context.UserClientSiteAccess.Where(x => x.ClientSiteId == Id).ToList();
+        }
+        //for checking whther user has any access to the client site ie to be deleted-end
     }
 
 

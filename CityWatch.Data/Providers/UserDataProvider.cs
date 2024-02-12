@@ -49,7 +49,7 @@ namespace CityWatch.Data.Providers
         public List<UserClientSiteAccess> GetUserClientSiteAccess(int? userId)
         {
             return _context.UserClientSiteAccess
-                .Where(x => !userId.HasValue || userId.HasValue && x.UserId == userId)
+                .Where(x => (!userId.HasValue || userId.HasValue && x.UserId == userId) && x.ClientSite.IsActive==true)
                 .Include(x => x.ClientSite)
                 .Include(x => x.ClientSite.ClientType)
                 .Include(x => x.User)

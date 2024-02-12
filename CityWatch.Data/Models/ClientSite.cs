@@ -46,5 +46,6 @@ namespace CityWatch.Data.Models
         public string GuardLogEmailTo { get; set; }
 
         public bool DataCollectionEnabled { get; set; }
+        public bool IsActive { get; set; }
     }
 }

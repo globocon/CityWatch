@@ -5,6 +5,7 @@ using CityWatch.Web.Helpers;
 using CityWatch.Web.Services;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Bibliography;
+using MailKit.Search;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -119,7 +120,16 @@ namespace CityWatch.Web.Pages.Admin
             var message = "Success";
             try
             {
-                _clientDataProvider.DeleteClientType(id);
+                var clientsites = _viewDataService.GetUserClientSitesHavingAccess(id, AuthUserHelper.LoggedInUserId, null);
+                if (clientsites.Count == 0)
+                {
+                    _clientDataProvider.DeleteClientType(id);
+                }
+                else
+                {
+                    status = false;
+                    message = "Error " + " Some client sites are active under this client type so delete the client sites first\"";
+                }
             }
             catch (Exception ex)
             {
@@ -136,7 +146,17 @@ namespace CityWatch.Web.Pages.Admin
             var message = "Success";
             try
             {
-                _clientDataProvider.DeleteClientSite(id);
+                //var useraccess = _clientDataProvider.GetUserAccessWithClientSiteId(id);
+                //if (useraccess.Count == 0)
+                //{
+                    _clientDataProvider.DeleteClientSite(id);
+                //}
+                //else
+                //{
+                //    status = false;
+
+                //    message = "Error " + "Please unallocate the users who have access to the  site";
+                //}
             }
             catch (Exception ex)
             {

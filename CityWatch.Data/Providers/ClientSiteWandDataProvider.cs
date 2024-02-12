@@ -29,6 +29,7 @@ namespace CityWatch.Data.Providers
         public List<ClientSiteSmartWand> GetClientSiteSmartWands()
         {
             return _dbContext.ClientSiteSmartWands
+                .Where(x => x.ClientSite.IsActive == true)
                 .Include(x => x.ClientSite)
                 .ToList();
         }
@@ -36,7 +37,7 @@ namespace CityWatch.Data.Providers
         {
             return _dbContext.ClientSiteSmartWands
                 .Include(x => x.ClientSite)
-                .Where(x => (string.IsNullOrEmpty(searchTerms) || x.PhoneNumber.Contains(searchTerms)))
+                .Where(x => (string.IsNullOrEmpty(searchTerms) || x.PhoneNumber.Contains(searchTerms)) && x.ClientSite.IsActive == true)
                 .ToList();
         }
 
@@ -74,7 +75,7 @@ namespace CityWatch.Data.Providers
         public List<ClientSitePatrolCar> GetClientSitePatrolCars(int clientSiteId)
         {
             return _dbContext.ClientSitePatrolCars
-                .Where(x => x.ClientSiteId == clientSiteId)
+                .Where(x => x.ClientSiteId == clientSiteId && x.ClientSite.IsActive == true)
                 .Include(x => x.ClientSite)
                 .ToList();
         }

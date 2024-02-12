@@ -138,7 +138,7 @@ namespace CityWatch.Kpi.Services
                 var sites = new List<SelectListItem>();
                 //var mapping = _clientDataProvider.GetClientSites(null).Where(x => x.ClientType.Name == type);
                 var mapping = _context.UserClientSiteAccess
-               .Where(x => x.ClientSite.ClientType.Name.Trim() == type.Trim())
+               .Where(x => x.ClientSite.ClientType.Name.Trim() == type.Trim() && x.ClientSite.IsActive==true)
                .Include(x => x.ClientSite)
                .Include(x => x.ClientSite.ClientType).ToList();
                 foreach (var item in mapping)
