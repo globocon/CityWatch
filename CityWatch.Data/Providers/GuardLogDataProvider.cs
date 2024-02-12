@@ -470,7 +470,8 @@ namespace CityWatch.Data.Providers
                     EventDateTimeZoneShort = guardLog.EventDateTimeZoneShort,
                     EventDateTimeUtcOffsetMinute = guardLog.EventDateTimeUtcOffsetMinute, // Task p6#73_TimeZone issue -- added by Binoy - End
 
-                    PlayNotificationSound = guardLog.PlayNotificationSound
+                    PlayNotificationSound = guardLog.PlayNotificationSound,
+                    GpsCoordinates=guardLog.GpsCoordinates
 
 
                 });

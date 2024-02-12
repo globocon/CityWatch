@@ -976,7 +976,8 @@ namespace CityWatch.Web.Services
                     EventDateTimeZone = tmzdata.EventDateTimeZone,
                     EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
                     EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute, // Task p6#73_TimeZone issue -- added by Binoy - End
-                    PlayNotificationSound = true 
+                    PlayNotificationSound = true,
+                    GpsCoordinates= gpsCoordinates
                 });
 
              

@@ -1,10 +1,15 @@
 ﻿@page
 @using CityWatch.Data.Models
 @using CityWatch.Web.Helpers
+@using CityWatch.Data.Helpers
+@using Microsoft.Extensions.Configuration
 @model CityWatch.Web.Pages.Guard.LoginModel
+@inject IConfiguration Configuration
 @{
     ViewData["Title"] = "CityWatch Security | Guard Daily Log";
-    ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.DailyGuardLog;       
+    ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.DailyGuardLog;  
+    var mapSettings = @Configuration.GetSection("GoogleMap").Get(typeof(GoogleMapSettings)) as GoogleMapSettings;
+    var ApiKey = mapSettings.ApiKey;
 }
 <div id="loader"></div>
 <div class="m-auto p-4">
@@ -12,7 +17,9 @@
         <form id="frmGuardLogin">
             <input type="hidden" asp-for="@Model.GuardLogin.Id" />
             <input type="hidden" asp-for="@Model.GuardLogin.Guard.Id" />
-            <input type="hidden" asp-for="@Model.LogBookType" />           
+            <input type="hidden" asp-for="@Model.LogBookType" />
+            <input type="hidden" id="hid_duressEnabledGpsCoordinates" asp-for="@Model.GuardLogin.GpsCoordinates">
+           
             <div class="form-row">
                 <div class="form-group col-md-12">
                     <div class="d-flex flex-sm-row flex-column justify-content-between">
@@ -153,4 +160,8 @@
     <h3 class="text-center">
         @(Model.LogBookType == LogBookType.DailyGuardLog ? "LOGBOOK PORTAL" : "KEY, VEHICLE & VISITOR PORTAL")
     </h3>
+}
+@section scripts {
+    <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&callback=initialize&libraries=places"></script>
+
 }

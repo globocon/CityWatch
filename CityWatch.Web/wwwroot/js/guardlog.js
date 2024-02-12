@@ -609,7 +609,12 @@
                 { field: 'clientSiteId', hidden: true },
                 { field: 'eventDateTime', title: 'Time', width: 100, renderer: function (value, record) { return renderTime(value, record, false); } },
                 { field: 'notes', title: 'Event / Notes', width: 350, editor: logBookNotesEditor, renderer: renderLogBookNotes },
-                { field: 'guardInitials', title: 'Guard Initials', width: 100, renderer: function (value, record) { return record.guardLogin ? record.guardLogin.guard.initial : ''; } },
+                {
+                    field: 'guardInitials', title: 'Guard Initials', width: 100, renderer: function (value, record) {
+                        //return record.guardLogin ? record.guardLogin.guard.initial : '';
+                        return `${record.guardLogin ? record.guardLogin.guard.initial : ''}&nbsp;&nbsp;${record.gpsCoordinates ? `<a href="https://www.google.com/maps?q=${record.gpsCoordinates}" target="_blank" data-toggle="tooltip" title=""><i class="fa fa-map-marker" aria-hidden="true"></i></a>` : ''}`;
+                    }
+                },
                 { width: 75, renderer: renderDailyLogManagement },
                 { field: 'rcPushMessageId', hidden: true },
                 { field: 'playNotificationSound', hidden: true, renderer: playNotificationSound }
