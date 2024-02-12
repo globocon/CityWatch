@@ -9,6 +9,7 @@ using iText.Kernel.Colors;
 using iText.Kernel.Events;
 using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
+using iText.Kernel.Pdf.Action;
 using iText.Kernel.Pdf.Canvas;
 using iText.Layout;
 using iText.Layout.Borders;
@@ -19,10 +20,12 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using IO = System.IO;
+
 
 namespace CityWatch.Web.Services
 {
@@ -354,10 +357,11 @@ namespace CityWatch.Web.Services
 
         private Table CreateReportData(List<GuardLog> guardLog)
         {
-            var reportDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 10, 90 })).UseAllAvailableWidth();
+            var reportDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 10, 90,10 })).UseAllAvailableWidth();
 
             reportDataTable.AddHeaderCell(new Cell().SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_GREY_DARK)).Add(new Paragraph("Time").SetFontSize(CELL_FONT_SIZE)));
             reportDataTable.AddHeaderCell(new Cell().SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_GREY_DARK)).Add(new Paragraph("Event / Notes with Guard Initials").SetFontSize(CELL_FONT_SIZE)));
+            reportDataTable.AddHeaderCell(new Cell().SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_GREY_DARK)).Add(new Paragraph("GPS").SetFontSize(CELL_FONT_SIZE)));
 
             foreach (var entry in guardLog)
             {
@@ -373,13 +377,39 @@ namespace CityWatch.Web.Services
                 var bgColor = entry.IrEntryType.HasValue ?
                                 (entry.IrEntryType == IrEntryType.Normal ? COLOR_PALE_YELLOW : COLOR_PALE_RED) :
                                 COLOR_WHITE;
+                //Added To display GPS start
+                var imagePath = "wwwroot/images/GPSImage.png";
+                var siteImage = new Image(ImageDataFactory.Create(imagePath))
+                .SetWidth(UnitValue.CreatePercentValue(30));
+                
+                var paragraph = new Paragraph()
+            .SetBorder(Border.NO_BORDER);
+                if (entry.GpsCoordinates!=null && entry.GpsCoordinates!="")
+                {
+                    paragraph.Add(siteImage);
+                }
+                
+                var urlWithTargetBlank = $"https://www.google.com/maps?q={entry.GpsCoordinates}&target=_blank";
+                var linkAction = PdfAction.CreateURI(urlWithTargetBlank);
+                siteImage.SetAction(linkAction);
+
+
 
                 reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(bgColor)).Add(new Paragraph(notes).SetFontSize(CELL_FONT_SIZE)));
+                var cell = new Cell()
+                .SetKeepTogether(true)
+                .SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f))
+                .SetBackgroundColor(WebColors.GetRGBColor(bgColor));
+
+                cell.Add(paragraph);
+                //Added To display GPS stop
+
+                reportDataTable.AddCell(cell);
             }
 
             return reportDataTable;
         }
-
+        
         /* new Function for add New Dateformat*/
         public string getEventDateTimeUTCformat(GuardLog entry)
         {
@@ -408,6 +438,7 @@ namespace CityWatch.Web.Services
             var imagePath = GetSiteImage(clientSiteId);
             if (!string.IsNullOrEmpty(imagePath))
             {
+              
                 var siteImage = new Image(ImageDataFactory.Create(imagePath))
                     .SetWidth(UnitValue.CreatePercentValue(90));
                 cellSiteImage.Add(siteImage);

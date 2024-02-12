@@ -37,6 +37,7 @@ namespace CityWatch.Web.Models
         public string EventDateTimeZoneShort { get; set; }
 
         public int? EventDateTimeUtcOffsetMinute { get; set; }
+        public string GpsCoordinates { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {

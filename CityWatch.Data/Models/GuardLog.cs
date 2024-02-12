@@ -49,6 +49,8 @@ namespace CityWatch.Data.Models
 
         // Project 4 , Task 48, Audio notification, Added By Binoy
         public bool? PlayNotificationSound { get; set; } = true;
+        //Added for logbook Gps 
+        public string GpsCoordinates { get; set; }
 
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

@@ -80,6 +80,7 @@ namespace CityWatch.Web.Pages.Guard
             var message = string.Empty;
             var guardInitals = GuardLogin.Guard.Initial;
             var initalsUsed = string.Empty;
+            var GPSCoordinates = GuardLogin.GpsCoordinates;
             try
             {
                 GuardLogin.SmartWandOrPositionId = smartWandOrPositionId;
@@ -94,7 +95,8 @@ namespace CityWatch.Web.Pages.Guard
                     EventDateTimeZone = GuardLogin.EventDateTimeZone,
                     EventDateTimeZoneShort = GuardLogin.EventDateTimeZoneShort,
                     EventDateTimeUtcOffsetMinute = GuardLogin.EventDateTimeUtcOffsetMinute,
-                    PlayNotificationSound = false
+                    PlayNotificationSound = false,
+                    GpsCoordinates= GPSCoordinates
                 };
                 // Task p6#73_TimeZone issue -- added by Binoy - End
 
@@ -125,13 +127,13 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     // Task p6#73_TimeZone issue -- modified by Binoy
                     CreateLogbookLoggedInEntry(logBookId, guardLoginId, eventDateTimeLocal, 
-                        eventDateTimeLocalWithOffset, eventDateTimeZone, eventDateTimeZoneShort, eventDateTimeUtcOffsetMinute);
+                        eventDateTimeLocalWithOffset, eventDateTimeZone, eventDateTimeZoneShort, eventDateTimeUtcOffsetMinute, GPSCoordinates);
 
                 }
                 if (LogBookType == LogBookType.VehicleAndKeyLog)
                 {
                     CreateKeyVehicleLoggedInEntry(logBookId, guardLoginId, eventDateTimeLocal,
-                        eventDateTimeLocalWithOffset, eventDateTimeZone, eventDateTimeZoneShort, eventDateTimeUtcOffsetMinute);
+                        eventDateTimeLocalWithOffset, eventDateTimeZone, eventDateTimeZoneShort, eventDateTimeUtcOffsetMinute, GPSCoordinates);
 
                 }
 
@@ -438,7 +440,7 @@ namespace CityWatch.Web.Pages.Guard
 
         private void CreateKeyVehicleLoggedInEntry(int logBookId, int guardLoginId, DateTime? eventDateTimeLocal,
                        DateTimeOffset? eventDateTimeLocalWithOffset, string eventDateTimeZone,
-                       string eventDateTimeZoneShort, int? eventDateTimeUtcOffsetMinute)
+                       string eventDateTimeZoneShort, int? eventDateTimeUtcOffsetMinute, string GPSCoordinates)
         {
             var signInEntry = new GuardLog()
             {
@@ -451,14 +453,15 @@ namespace CityWatch.Web.Pages.Guard
                 EventDateTimeLocalWithOffset = eventDateTimeLocalWithOffset,
                 EventDateTimeZone = eventDateTimeZone,
                 EventDateTimeZoneShort = eventDateTimeZoneShort,
-                EventDateTimeUtcOffsetMinute = eventDateTimeUtcOffsetMinute // Task p6#73_TimeZone issue -- added by Binoy - End
+                EventDateTimeUtcOffsetMinute = eventDateTimeUtcOffsetMinute, // Task p6#73_TimeZone issue -- added by Binoy - End
+                GpsCoordinates = GPSCoordinates
             };
             _guardLogDataProvider.SaveGuardLog(signInEntry);
         }
 
             private void CreateLogbookLoggedInEntry(int logBookId, int guardLoginId,DateTime? eventDateTimeLocal,
                        DateTimeOffset? eventDateTimeLocalWithOffset, string eventDateTimeZone, 
-                       string eventDateTimeZoneShort,int? eventDateTimeUtcOffsetMinute)
+                       string eventDateTimeZoneShort,int? eventDateTimeUtcOffsetMinute,string GPSCoordinates)
         {
             var signInEntry = new GuardLog()
             {
@@ -471,7 +474,8 @@ namespace CityWatch.Web.Pages.Guard
                 EventDateTimeLocalWithOffset = eventDateTimeLocalWithOffset,
                 EventDateTimeZone = eventDateTimeZone,
                 EventDateTimeZoneShort = eventDateTimeZoneShort,
-                EventDateTimeUtcOffsetMinute = eventDateTimeUtcOffsetMinute // Task p6#73_TimeZone issue -- added by Binoy - End
+                EventDateTimeUtcOffsetMinute = eventDateTimeUtcOffsetMinute,// Task p6#73_TimeZone issue -- added by Binoy - End
+                GpsCoordinates = GPSCoordinates
             };
             _guardLogDataProvider.SaveGuardLog(signInEntry);
 
