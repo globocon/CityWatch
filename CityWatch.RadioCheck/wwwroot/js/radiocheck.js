@@ -200,6 +200,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     "scrollY": ($(window).height() - 300),
     "paging": false,
     "footer": true,
+    "scrollCollapse": true,
     "scroller": true, // Task p4#19 Screen Jumping day -- added by Binoy -- Start - 01-02-2024
     "stateSave": true,// Task p4#19 Screen Jumping day -- added by Binoy -- End - 01-02-2024
     ajax: {
@@ -340,10 +341,10 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     ],
 
     preDrawCallback: function (settings) {
-        clientSiteActiveGuardsscrollPosition = $('#clientSiteActiveGuards').closest('div.dataTables_scrollBody').scrollTop();                 
+        clientSiteActiveGuardsscrollPosition = $('#clientSiteActiveGuards').closest('div.dataTables_scrollBody').scrollTop();   
     },
     drawCallback: function () {
-       $('#clientSiteActiveGuards').closest('div.dataTables_scrollBody').scrollTop(clientSiteActiveGuardsscrollPosition);                
+        $('#clientSiteActiveGuards').closest('div.dataTables_scrollBody').scrollTop(clientSiteActiveGuardsscrollPosition); 
 
         /*for modifying the size of tables active  guards - start*/
         var count = $('#clientSiteActiveGuards tbody tr').length;
@@ -353,10 +354,10 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         }
         else {
 
-
             $('#clientSiteActiveGuards').closest('.dataTables_scrollBody').css('height', '100%');
 
         }
+        $('#clientSiteActiveGuards').closest('div.dataTables_scrollBody').css('overflow-x', 'hidden'); //Remove the x scrollbar
 
         /*for modifying the size of tables active  guards - end*/
         var api = this.api();
@@ -386,6 +387,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 }
             });
     },
+    
 });
 
 // Order by the grouping
@@ -562,7 +564,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         { data: 'clientSiteId', visible: false },
         {
             data: 'siteName',
-            width: '20%',
+            /*width: '20%',*/
             class: 'dt-control',
             render: function (value, type, data) {
               
@@ -571,7 +573,6 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         },
         {
             data: 'address',
-            width: '20%',
             visible: false,
             render: function (value, type, data) {
 
@@ -582,7 +583,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         {
             data: 'guardName',
             
-            width: '20%',
+            width: '15%',
             createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
                 // Define your conditions to add a class
                 if (rowData.isEnabled == 1) {
@@ -620,7 +621,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
         {
             data: 'guardLoginTime',
-            width: '9%',
+            width: '11%',
             className: "text-center",
             createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
                 // Define your conditions to add a class
@@ -652,7 +653,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         },
         {
             data: 'loginTimeZone',
-            width: '1%',
+            width: '3%',
             className: "text-center",
             createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
                 // Define your conditions to add a class
@@ -668,7 +669,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         },
         {
             data: 'twoHrAlert',
-            width: '1%',
+            width: '3%',
             className: "text-center",
             createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
                 // Define your conditions to add a class
@@ -685,7 +686,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
         {
             data: 'rcStatus',
-            width: '4%',
+            width: '8%',
             className: "text-center",
             createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
                 // Define your conditions to add a class
@@ -715,30 +716,24 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         },
         {
             data: 'siteName',
-            visible: false,
-            width: '20%',
-           
+            visible: false,           
         },
 
     ],
 
     preDrawCallback: function (settings) {
-        scrollPosition = $(".dataTables_scrollBody").scrollTop();
+        scrollPosition = $('#clientSiteInActiveGuards').closest("div.dataTables_scrollBody").scrollTop();
     },
     drawCallback: function () {
         /* Retain the Scroll position*/
-        $(".dataTables_scrollBody").scrollTop(scrollPosition);
+        $('#clientSiteInActiveGuards').closest("div.dataTables_scrollBody").scrollTop(scrollPosition);
         /*for modifying the size of tables   inactive guards - start*/
         var count = $('#clientSiteInActiveGuards tbody tr').length;
         if (count > 10) {
-            $('#clientSiteInActiveGuards').closest('.dataTables_scrollBody').css('height', ($(window).height() - 200));
-
+           $('#clientSiteInActiveGuards').closest('div.dataTables_scrollBody').css('height', ($(window).height() - 200));
         }
         else {
-
-
-            $('#clientSiteInActiveGuards').closest('.dataTables_scrollBody').css('height', '100%');
-
+            $('#clientSiteInActiveGuards').closest('div.dataTables_scrollBody').css('height', '100%');
         }
 
         /* for modifying the size of tables   inactive guards - end*/
@@ -768,6 +763,8 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                     last2 = group;
                 }
             });
+
+        $('#clientSiteInActiveGuards').closest('div.dataTables_scrollBody').css('overflow-x', 'hidden'); //Remove the x scrollbar
 
         PlayDuressAlarm();
     },
@@ -815,15 +812,14 @@ clientSiteInActiveGuards.on('draw', function () {
 
 // To fix the Datatable column header issue when hidden inside tab
 $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
-    $($.fn.dataTable.tables(true)).DataTable()
-        .columns.adjust();
+    $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
 });
 
 // To fix the Datatable column header issue when hidden inside accordion
 $('.collapse').on('shown.bs.collapse', function (e) {
-    $($.fn.dataTable.tables(true)).DataTable()
-        .columns.adjust();
+    $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
 });
+
 
 $('#clientSiteInActiveGuards tbody').on('click', '#btnUpArrow', function () {
 
@@ -2633,6 +2629,7 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
     drawCallback: function () {
         /* Retain the Scroll position*/
         $(".dataTables_scrollBody").scrollTop(scrollPosition);
+        $('.dataTables_scrollBody').css('overflow-x', 'hidden');  //Remove the x scrollbar
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;
@@ -2856,6 +2853,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
     },
     drawCallback: function () {
         $(".dataTables_scrollBody").scrollTop(scrollPosition);
+        $('.dataTables_scrollBody').css('overflow-x', 'hidden'); //Remove the x scrollbar
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;
