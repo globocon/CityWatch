@@ -140,8 +140,9 @@ namespace CityWatch.Web.Pages.Guard
                         int.Parse(dateParts[0]),
                         int.Parse(dateParts[1]),
                         0);                       
-                        GuardLog.EventDateTime = desiredDateTime;
-                        ModelState.Remove("GuardLog.EventDateTime");
+                       // GuardLog.EventDateTime = desiredDateTime;
+                        GuardLog.EventDateTime = DateTime.Now;
+                       ModelState.Remove("GuardLog.EventDateTime");
                     }
                     
                 }
