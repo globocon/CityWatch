@@ -45,7 +45,8 @@ builder.Services.AddSession();
 builder.Services.AddRazorPages(options =>
 {
 
-    options.Conventions.AuthorizeFolder("/");
+    // AllowAnonymousToFolder("/") given for allowing guard can access the KPI Dashboard 
+    options.Conventions.AllowAnonymousToFolder("/");
     options.Conventions.AuthorizeFolder("/Develop");
     options.Conventions.AllowAnonymousToFolder("/Account");
 });
