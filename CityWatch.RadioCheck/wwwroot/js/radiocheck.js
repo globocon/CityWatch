@@ -508,6 +508,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             action: function () {
                
                 $('#ActionListControlRoomModal').modal('show');
+                $('#btnSendActionListGlobal').prop('disabled', false);
                 isPaused = true;
                 $('#dglClientTypeActionListAll').val('');
                 $('#dglClientSiteIdActionListAll').val('');
@@ -777,6 +778,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
 $("#ActionListControlRoomModal").on("hidden.bs.modal", function () {
     isPaused = false;
+    $('#btnSendActionListGlobal').prop('disabled', false);
 });
 
 
@@ -1531,6 +1533,11 @@ $('#btnSaveRadioStatusActive').on('click', function () {
 $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
 
     isPaused = true;
+
+    $('#btnSendPushLotificationMessage').prop('disabled', false);
+    $('#btnSendGlabalNotificationMessage').prop('disabled', false);
+    $('#btnSendActionList').prop('disabled', false);
+    
     
     const button = $(event.relatedTarget);
     const id = button.data('id');
@@ -1641,6 +1648,7 @@ function clearGuardValidationSummary(validationControl) {
 
 
 $('#btnSendPushLotificationMessage').on('click', function () {
+    $(this).prop('disabled', true);
     const checkedLB = $('#chkLB').is(':checked');
     const checkedSiteEmail = $('#chkSiteEmail').is(':checked');
     const checkedSMSPersonal = $('#chkSMSPersonal').is(':checked');
@@ -1651,10 +1659,11 @@ $('#btnSendPushLotificationMessage').on('click', function () {
    
     if (Notifications === '') {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
+        $(this).prop('disabled', false);
     }
     else if (checkedLB == false && checkedSiteEmail == false && checkedSMSPersonal == false && checkedSMSSmartWand == false) {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select any one of the transfer options ');
-
+        $(this).prop('disabled', false);
     }
     else {
         $('#Access_permission_RC_status_new').hide();
@@ -1680,12 +1689,13 @@ $('#btnSendPushLotificationMessage').on('click', function () {
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (data) {
             if (data.success == true) {
+                $(this).prop('disabled', false);
                 $('#pushNoTificationsControlRoomModal').modal('hide');
                 $('#Access_permission_RC_status_new').hide();
             }
             else {
                 displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
-               
+                $(this).prop('disabled', false);
             }
             //$('#selectRadioStatus').val('');
             //$('#btnRefreshActivityStatus').trigger('click');
@@ -1709,6 +1719,10 @@ function displayGuardValidationSummary(validationControl, errors) {
             }
         });
     }
+    $('#btnSendPushLotificationMessage').prop('disabled', false);
+    $('#btnSendGlabalNotificationMessage').prop('disabled', false);
+    $('#btnSendActionList').prop('disabled', false);
+    $('#btnSendActionListGlobal').prop('disabled', false);
 }
 
 /*for pushing notifications from the control room - end*/
@@ -1730,6 +1744,7 @@ $('#openActiveGuardInNewPage').on('click', function () {
 });
 /*code added for Global Messsage start*/
 $('#btnSendGlabalNotificationMessage').on('click', function () {
+    $(this).prop('disabled', true);
     const checkedState = $('#chkSiteState').is(':checked');
     const checkedSiteEmail = $('#chkSiteEmail').is(':checked');
     const checkedSMSPersonal = $('#chkSMSPersonalGlobal').is(':checked');
@@ -1744,14 +1759,16 @@ $('#btnSendGlabalNotificationMessage').on('click', function () {
 
     if (Notifications === '') {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
+        $(this).prop('disabled', false);
     }
     else if (checkedState == false && chkClientType == false && chkClientType == false && checkedSMSPersonal == false && checkedSMSSmartWand == false && chkNationality == false) {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select any one of the transfer options ');
-
+        $(this).prop('disabled', false);
     }
     else if (chkClientType == true && ClientType == null)
     {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
+        $(this).prop('disabled', false);
     }
     else {
 
@@ -1780,11 +1797,13 @@ $('#btnSendGlabalNotificationMessage').on('click', function () {
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (data) {
             if (data.success == true) {
+                $(this).prop('disabled', false);
                 $('#pushNoTificationsControlRoomModal').modal('hide');
                 $('#Access_permission_RC_status').hide();
             }
             else {
                 displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
+                $(this).prop('disabled', false);
             }
             //$('#selectRadioStatus').val('');
             //$('#btnRefreshActivityStatus').trigger('click');
@@ -1800,7 +1819,7 @@ $('#btnSendGlabalNotificationMessage').on('click', function () {
 
 /*code added for RCActionList start*/
 $('#btnSendActionList').on('click', function () {
-   
+    $(this).prop('disabled', true);
     var clientSiteId = $('#dglClientSiteIdActionList2').val();
     var Notifications = $('#txtMessageActionList').val();
     var Subject = $('#txtGlobalNotificationSubject').val();
@@ -1819,16 +1838,20 @@ $('#btnSendActionList').on('click', function () {
 
     if (Notifications === '') {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
+        $(this).prop('disabled', false);
     }
     
     else if (chkClientType == true && ClientType == null) {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
+        $(this).prop('disabled', false);
     }
     else if (ClientType=='') {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
+        $(this).prop('disabled', false);
     }
     else if (ClientSite == '') {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client site ');
+        $(this).prop('disabled', false);
     }
     else {
 
@@ -1860,11 +1883,13 @@ $('#btnSendActionList').on('click', function () {
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (data) {
             if (data.success == true) {
+                $(this).prop('disabled', false);
                 $('#pushNoTificationsControlRoomModal').modal('hide');
                 $('#Access_permission_RC_status').hide();
             }
             else {
                 displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
+                $(this).prop('disabled', false);
             }
             //$('#selectRadioStatus').val('');
             //$('#btnRefreshActivityStatus').trigger('click');
@@ -1873,7 +1898,7 @@ $('#btnSendActionList').on('click', function () {
 });
 
 $('#btnSendActionListGlobal').on('click', function () {
-
+    $(this).prop('disabled', true);
     var clientSiteId = $('#dglClientSiteIdActionList2All').val();
     var Notifications = $('#txtMessageActionListAll').val();
     var Subject = $('#txtGlobalNotificationSubjectAll').val();
@@ -1894,16 +1919,20 @@ $('#btnSendActionListGlobal').on('click', function () {
     // Task p6#73_TimeZone issue -- added by Binoy - End
     if (Notifications === '') {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
+        $(this).prop('disabled', false);
     }
 
     else if (chkClientType == true && ClientType == null) {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
+        $(this).prop('disabled', false);
     }
     else if (ClientType == '') {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
+        $(this).prop('disabled', false);
     }
     else if (ClientSite == '') {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client site ');
+        $(this).prop('disabled', false);
     }
     else {
 
@@ -1933,11 +1962,13 @@ $('#btnSendActionListGlobal').on('click', function () {
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (data) {
             if (data.success == true) {
+                $(this).prop('disabled', false);
                 $('#ActionListControlRoomModal').modal('hide');
                 $('#Access_permission_RC_statusAll').hide();
             }
             else {
                 displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
+                $(this).prop('disabled', false);
             }
             //$('#selectRadioStatus').val('');
             //$('#btnRefreshActivityStatus').trigger('click');
