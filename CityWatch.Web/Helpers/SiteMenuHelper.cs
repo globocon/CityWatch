@@ -2,6 +2,7 @@
 using System.Text;
 using CityWatch.Web.Helpers;
 using DocumentFormat.OpenXml.Drawing.Diagrams;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace CityWatch.Web.Helpers
 {
@@ -137,7 +138,7 @@ namespace CityWatch.Web.Helpers
                 }
                 else
                 {
-                    menuHtml.AppendFormat(@"<a href=""{0}"" class=""nav-link py-0"" target=""_blank""><i class=""fa fa-bar-chart mr-2""></i>Telematics (KPI)</a>", kpiWebUrl).AppendLine();
+                    menuHtml.AppendFormat(@"<a href=""{0}"" class=""nav-link py-0"" target=""_blank""><i class=""fa fa-bar-chart mr-2""></i>Telematics (KPI)</a>", "//kpi.cws-ir.com").AppendLine();
 
                 }
                 menuHtml.AppendLine("</div>");
