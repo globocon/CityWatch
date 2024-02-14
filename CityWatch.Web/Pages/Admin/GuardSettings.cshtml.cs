@@ -1020,5 +1020,18 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
         //Dos and Donts-end
+        public IActionResult OnGetGuardLicenseAndCompliancForGuardse(int guardId)
+        {
+            //ViewData["Guard_Id"] = guardId;
+            //ViewData["Guard_License"] = _guardDataProvider.GetGuardLicenses(guardId);
+            //ViewData["Guard_Compliance"] = _guardDataProvider.GetGuardCompliances(guardId);
+
+            //return new PartialViewResult
+            //{
+            //    ViewName = "_GuardAdditionalDetails",
+            //    ViewData = new ViewDataDictionary(ViewData)
+            //};
+            return new JsonResult(_guardDataProvider.GetGuards().Where(x=>x.Id== guardId));
+        }
     }
 }
