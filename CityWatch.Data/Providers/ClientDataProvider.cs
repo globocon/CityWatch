@@ -139,6 +139,7 @@ namespace CityWatch.Data.Providers
         //for checking whther user has any access to the client site ie to be deleted-start
         List<UserClientSiteAccess> GetUserAccessWithClientSiteId(int Id);
         //for checking whther user has any access to the client site ie to be deleted-end
+        
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -1491,6 +1492,8 @@ namespace CityWatch.Data.Providers
             return _context.UserClientSiteAccess.Where(x => x.ClientSiteId == Id).ToList();
         }
         //for checking whther user has any access to the client site ie to be deleted-end
+
+        
     }
 
 

@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using static System.Net.WebRequestMethods;
 using IO = System.IO;
 
 
@@ -367,7 +368,7 @@ namespace CityWatch.Web.Services
             {
                 //Commented the following line and for fixing the time issue 29/01/2024 dileep//
                 //reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).Add(new Paragraph($"{entry.EventDateTime:HH:mm} hrs").SetFontSize(CELL_FONT_SIZE)));
-
+                
 
                 reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).Add(new Paragraph(getEventDateTimeUTCformat(entry)).SetFontSize(CELL_FONT_SIZE)));
                 //Commented the following line and for fixing the time issue 29/01/2024 dileep end//
@@ -380,8 +381,9 @@ namespace CityWatch.Web.Services
                 //Added To display GPS start
                 var imagePath = "wwwroot/images/GPSImage.png";
                 var siteImage = new Image(ImageDataFactory.Create(imagePath))
-                .SetWidth(UnitValue.CreatePercentValue(30));
-                
+                .SetWidth(UnitValue.CreatePercentValue(10));
+                siteImage.SetTextAlignment(TextAlignment.RIGHT);
+
                 var paragraph = new Paragraph()
             .SetBorder(Border.NO_BORDER);
                 if (entry.GpsCoordinates!=null && entry.GpsCoordinates!="")
@@ -393,9 +395,27 @@ namespace CityWatch.Web.Services
                 var linkAction = PdfAction.CreateURI(urlWithTargetBlank);
                 siteImage.SetAction(linkAction);
 
+                Paragraph notesParagraph = new Paragraph(notes).SetFontSize(CELL_FONT_SIZE);
+                if (entry.IrEntryType.HasValue && IrEntryType.Normal==entry.IrEntryType)
+                {
+                    var IncidentReport = entry.Notes + ".pdf";
+                    string baseUrl = "https://c4istorage1.blob.core.windows.net/irfiles/";
+                    string url = $"{baseUrl}{IncidentReport.Substring(0, 8)}/{IncidentReport}";
+                    string linkText = "    click here";
 
 
-                reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(bgColor)).Add(new Paragraph(notes).SetFontSize(CELL_FONT_SIZE)));
+                    var link = new Link(linkText, PdfAction.CreateURI(url))
+                        .SetFontColor(DeviceGray.BLACK)
+                        .SetFontColor(ColorConstants.BLUE);
+                    notesParagraph.Add(link);
+                }
+                
+                reportDataTable.AddCell(new Cell()
+                 .SetKeepTogether(true)
+                 .SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f))
+                 .SetBackgroundColor(WebColors.GetRGBColor(bgColor))
+                 .Add(notesParagraph));
+
                 var cell = new Cell()
                 .SetKeepTogether(true)
                 .SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f))
@@ -436,12 +456,25 @@ namespace CityWatch.Web.Services
             var notesTable = new Table(UnitValue.CreatePercentArray(new float[] { 20, 80 })).UseAllAvailableWidth().SetMarginTop(15);
             var cellSiteImage = new Cell().SetBorder(Border.NO_BORDER);
             var imagePath = GetSiteImage(clientSiteId);
+           
             if (!string.IsNullOrEmpty(imagePath))
             {
-              
-                var siteImage = new Image(ImageDataFactory.Create(imagePath))
-                    .SetWidth(UnitValue.CreatePercentValue(90));
-                cellSiteImage.Add(siteImage);
+                try
+                {
+                    var imageData = ImageDataFactory.Create(imagePath);
+                if (imageData != null)
+                {
+                    var siteImage = new Image(imageData)
+                        .SetWidth(UnitValue.CreatePercentValue(90));
+
+                    // Add the image to the cell
+                    cellSiteImage.Add(siteImage);
+                }
+                }
+                catch (Exception ex)
+                {
+                    
+                }
             }
             notesTable.AddCell(cellSiteImage);
 

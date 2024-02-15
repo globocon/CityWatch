@@ -141,6 +141,7 @@ namespace CityWatch.Web.Pages.Guard
                         int.Parse(dateParts[1]),
                         0);                       
                         GuardLog.EventDateTime = desiredDateTime;
+                        var GPSCoordinates = GuardLog.GpsCoordinates;
                         ModelState.Remove("GuardLog.EventDateTime");
                     }
                     
