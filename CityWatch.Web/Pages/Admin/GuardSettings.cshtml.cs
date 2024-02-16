@@ -1033,5 +1033,40 @@ namespace CityWatch.Web.Pages.Admin
             //};
             return new JsonResult(_guardDataProvider.GetGuards().Where(x=>x.Id== guardId));
         }
+        public IActionResult OnGetExpiredDocuments(int guardId)
+        {
+            var guardLicenses = _guardDataProvider.GetAllGuardLicenses().Where(z => z.ExpiryDate.HasValue && z.GuardId==guardId).ToList();
+            var guardcompliances = _guardDataProvider.GetAllGuardCompliances().Where(z => z.ExpiryDate.HasValue && z.GuardId == guardId).ToList();
+
+            var messages = new List<KeyValuePair<DateTime, string>>();
+            messages.AddRange(GetLicenseMessages(guardLicenses));
+            messages.AddRange(GetComplianceMessages(guardcompliances));
+            return new JsonResult(messages);
+        }
+        private static IEnumerable<KeyValuePair<DateTime, string>> GetComplianceMessages(List<GuardCompliance> guardCompliances)
+        {
+            foreach (var compliance in guardCompliances)
+            {
+                if ((DateTime.Today.AddDays(compliance.Reminder1.GetValueOrDefault()) == compliance.ExpiryDate) ||
+                    (DateTime.Today.AddDays(compliance.Reminder2.GetValueOrDefault()) == compliance.ExpiryDate))
+                {
+                    var message = $"<tr><td>Compliance</td><td>{compliance.ReferenceNo}</td><td>{compliance.Guard.Name}</td><td>{compliance.ExpiryDate?.ToString("dd-MMM-yyyy")}</td>";
+                    yield return new KeyValuePair<DateTime, string>(compliance.ExpiryDate.Value, message);
+                }
+            }
+        }
+
+        private static IEnumerable<KeyValuePair<DateTime, string>> GetLicenseMessages(List<GuardLicense> guardLicenses)
+        {
+            foreach (var license in guardLicenses)
+            {
+                if ((DateTime.Today.AddDays(license.Reminder1.GetValueOrDefault()) == license.ExpiryDate) ||
+                    (DateTime.Today.AddDays(license.Reminder2.GetValueOrDefault()) == license.ExpiryDate))
+                {
+                    var message = $"<tr><td>License</td><td>{license.LicenseNo}</td><td>{license.Guard.Name}</td><td>{license.ExpiryDate?.ToString("dd-MMM-yyyy")}</td>";
+                    yield return new KeyValuePair<DateTime, string>(license.ExpiryDate.Value, message);
+                }
+            }
+        }
     }
 }

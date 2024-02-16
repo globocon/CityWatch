@@ -4,7 +4,13 @@ var isPaused = false;
 window.onload = function () {
     if (document.querySelector('#clockRefresh')) {
         startClock();
+       
     }
+    if ($('#GuardLog_GuardLogin_GuardId').val() != null || $('#GuardLog_GuardLogin_GuardId').val() != '') {
+        ExpiredDocuments();
+        
+    }
+    
 };
 
 function startClock() {
@@ -1935,4 +1941,26 @@ $('#tbl_guard_compliances1 tbody').on('click', 'button[name=btn_delete_guard_com
         })
     }
 });
+function ExpiredDocuments() {
+    isPaused = true;
+    $.ajax({
+        type: 'GET',
+        url: '/Admin/GuardSettings?handler=ExpiredDocuments',
+        data: { 'guardId': $('#GuardLog_GuardLogin_GuardId').val() },
+        dataType: 'json',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        if (result.length > 0) {
+            var newmsg = "<b> Following Guard Documents are expiring.</br> </b>";
+            newmsg = newmsg + "<table  border=\"1px solid black\">";
+            newmsg = newmsg + " <thead><th>Document Type</th><th>Document No</th><th>Guard Name</th><th>Expiry Date</th></thead>";
+            newmsg = newmsg + "<tbody>";
+            $.each(result, function (key, value) {
+                newmsg = newmsg + value.value;
+            });
+            newmsg = newmsg + "</tbody></table>";
+            new MessageModal({ message: newmsg, onabort: isPaused = false }).showWarning();
+        }
+    })
+}
 /*to enable for guard to update their documents - end*/
