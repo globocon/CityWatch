@@ -28,7 +28,7 @@
                 <div>
                     <button type="button" class="btn btn-primary mx-1" id="btnPatrolReportSumbit">Generate Report</button>
                     <a href="#" target="_blank" class="btn btn-outline-secondary mx-1" id="btnExportExcel">Download Excel</a>
-                    <a href="#"  class="btn btn-outline-secondary mx-1" id="btnExportPatrolPdf">Download Pdf</a>
+                    <a href="#" class="btn btn-outline-secondary mx-1" id="btnExportPatrolPdf">Download Pdf</a>
                     <input type="hidden" id="txtDownloadfilename" />
                 </div>
             </div>
@@ -142,7 +142,7 @@
                     <div class="card">
                         <div class="card-header">
                             IR Event Type Quantity
-                            <div class="float-right">Total IR Count:  <span id="count_by_ir"></span></div>
+                            <div class="float-right">Total IR Count:  <a href="#" class="btn btn-link" id="btncount_event_type_quantity"><span id="count_by_ir"></span></a></div>
                         </div>
                         <div class="card-body">
                             <div class="d-flex flex-row align-items-center">
@@ -165,108 +165,133 @@
     <h3 class="text-center">PATROL DATA</h3>
 }
 <div id="modelIRRecordsbySiteGraph" class="modal fade " role="dialog">
-    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
         <div class="modal-content">
 
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    
-                </h5>
+            <div class="modal-header p-0 m-0">
+
                 <button type="button" class="close" data-dismiss="modal">
                     &times;
                 </button>
             </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header">
-                                IR Records Percentage By Site
-                                <div class="float-right">Total Site Count: <span id="count_by_site1"></span></div>
-                            </div>
-                            <div class="card-body">
-                                <svg width="850" height="400" id="pie_chart_ir_by_site1"></svg>
-                            </div>
-                        </div>
-                    </div>
-                   
-                </div>
-            </div>
-            <div class="modal-footer" style="display:block">
-                <div class="text-left">
-                    <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
-                </div>
-            </div>
+            @*<div class="modal-body">*@
+            @*  <div class="row">*@
+            @*  <div class="col-md-12">*@
+            @* <div class="card">*@
+            @* <div class="card-header">
+            IR Records Percentage By Site
+            <div class="float-right">Total Site Count: <span id="count_by_site1"></span></div>
+            </div>*@
+            @* <div class="card-body">*@
+            <svg width="1200" height="750" id="pie_chart_ir_by_site1"></svg>
+            @* </div>*@
+            @* </div>*@
+            @*</div>*@
+
+            @*</div>*@
+            @* </div>*@
+
         </div>
     </div>
 </div>
 <div id="modelIRRecordsbyAreaWardGraph" class="modal fade " role="dialog">
-    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
         <div class="modal-content">
-
-            <div class="modal-header">
-                <h5 class="modal-title">
-                </h5>
+            <div class="modal-header p-0 m-0">
                 <button type="button" class="close" data-dismiss="modal">
                     &times;
                 </button>
             </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header">
-                                IR Records Percentage By Area/Ward
-                                <div class="float-right">Total Area/Ward Count:: <span id="count_by_area_ward1"></span></div>
-                            </div>
-                            <div class="card-body">
-                                <svg width="850" height="400" id="pie_chart_ir_by_areaward1"></svg>
-                            </div>
-                        </div>
-                    </div>
+            @* <div class="modal-body">
+            <div class="row">
+            <div class="col-md-12">
+            <div class="card">
+            <div class="card-header">*@
+            @* IR Records Percentage By Area/Ward
+            <div class="float-right">Total Area/Ward Count:: <span id="count_by_area_ward1"></span></div>*@
+            @*  </div>*@
+            @* <div class="card-body">*@
+            <svg width="1200" height="750" id="pie_chart_ir_by_areaward1"></svg>
+            @*  </div>*@
+            @*  </div>
+            </div>
 
-                </div>
             </div>
-            <div class="modal-footer" style="display:block">
-                <div class="text-left">
-                    <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
-                </div>
+            </div>*@
+            @* <div class="modal-footer" style="display:block">
+            <div class="text-left">
+            <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
             </div>
+            </div>*@
         </div>
     </div>
 </div>
 <div id="modelIRRecordsbyColorCodeGraph" class="modal fade " role="dialog">
-    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
         <div class="modal-content">
-
-            <div class="modal-header">
-                <h5 class="modal-title">
-                </h5>
+            <div class="modal-header p-0 m-0">
+                @*  <h5 class="modal-title">
+                </h5>*@
                 <button type="button" class="close" data-dismiss="modal">
                     &times;
                 </button>
             </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header">
-                                IR Records Percentage By Colour Code
-                                <div class="float-right">Total Color Code Count:: <span id="count_color_code1"></span></div>
-                            </div>
-                            <div class="card-body">
-                                <svg width="850" height="400" id="pie_chart_ir_by_colorcode1"></svg>
-                            </div>
-                        </div>
-                    </div>
+            @* <div class="modal-body">
+            <div class="row">
+            <div class="col-md-12">
+            <div class="card">
+            <div class="card-header">
+            IR Records Percentage By Colour Code
+            <div class="float-right">Total Color Code Count:: <span id="count_color_code1"></span></div>
+            </div>*@
+            @*   <div class="card-body">*@
+            <svg width="1200" height="750" id="pie_chart_ir_by_colorcode1"></svg>
+            @*   </div>
+            </div>
+            </div>
 
-                </div>
             </div>
-            <div class="modal-footer" style="display:block">
-                <div class="text-left">
-                    <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
-                </div>
+            </div>*@
+            @* <div class="modal-footer" style="display:block">
+            <div class="text-left">
+            <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
             </div>
+            </div>*@
         </div>
     </div>
+</div>
+<div id="modelIreventypeQuantity" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                @*  <h5 class="modal-title">
+                </h5>*@
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            @* <div class="modal-body">
+            <div class="row">
+            <div class="col-md-12">
+            <div class="card">
+            <div class="card-header">
+            IR Records Percentage By Colour Code
+            <div class="float-right">Total Color Code Count:: <span id="count_color_code1"></span></div>
+            </div>*@
+            @*   <div class="card-body">*@
+            <svg width="1200" height="750" id="pie_chart_by_ireventype_quantity1"></svg>
+            @*   </div>
+            </div>
+            </div>
+
+            </div>
+            </div>*@
+            @* <div class="modal-footer" style="display:block">
+            <div class="text-left">
+            <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
+            </div>
+            </div>*@
+        </div>
+    </div>
+
 </div>

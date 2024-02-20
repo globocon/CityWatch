@@ -325,5 +325,87 @@ namespace CityWatch.RadioCheck.Pages.Admin
             }));
            
         }
+        //API Call Settings-start
+        /*SWChannels - start*/
+        public JsonResult OnPostSWChannel(SWChannels record)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+
+
+                _clientDataProvider.SaveSWChannel(record);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+        public JsonResult OnPostDeleteSWChannel(int id)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.DeleteSWChannel(id);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+        public JsonResult OnGetSWChannels()
+        {
+            return new JsonResult(_configDataProvider.GetSWChannels());
+        }
+        /*SWChannels - end*/
+        /*GeneralFeeds - start*/
+        public JsonResult OnPostGeneralFeeds(GeneralFeeds record)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+
+
+                _clientDataProvider.SaveGeneralFeeds(record);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+        public JsonResult OnPostDeleteGeneralFeeds(int id)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.DeleteGeneralFeeds(id);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+        public JsonResult OnGetGeneralFeeds()
+        {
+            return new JsonResult(_configDataProvider.GetGeneralFeeds());
+        }
+        /*GeneralFeeds - end*/
+        //API Call Settings-end
     }
 }

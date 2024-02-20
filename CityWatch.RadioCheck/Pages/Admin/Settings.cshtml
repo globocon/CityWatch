@@ -26,6 +26,9 @@
         <li class="nav-item">
             <a class="nav-link " id="logbook-tab" data-toggle="tab" href="#logbook" role="tab" aria-controls="logbook" aria-selected="false">Log Book</a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link " id="apicalls-tab" data-toggle="tab" href="#apicalls" role="tab" aria-controls="apicalls" aria-selected="false">API Calls</a>
+        </li>
 
     </ul>
     <div class="tab-content" id="settingsTabContent">
@@ -141,6 +144,54 @@
                 </div>
             </div>
 
+        </div>
+        <div class="tab-pane fade show  py-3" id="apicalls" role="tabpanel" aria-labelledby="apicalls-tab">
+
+
+            <div class="row mt-2">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between">
+                            <b><u>SW Channel</u></b>
+                            <div class="col text-right">
+                                <button class="btn btn-success" id="add_sw_channel"><i class="fa fa-plus mr-2"></i>Add New</button>
+                            </div>
+                        </div>
+
+
+                        <div class="card-body row m-0">
+                            <div class="col-md-12">
+
+                                <table class="table" id="tbl_SWChannel"></table>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between">
+                            <b><u>General Feeds (to appear into RC designated Log Book) </u></b>
+                            <div class="col text-right">
+                                <button class="btn btn-success" id="add_general_feeds"><i class="fa fa-plus mr-2"></i>Add New</button>
+                            </div>
+                        </div>
+
+
+                        <div class="card-body row m-0">
+                            <div class="col-md-12">
+
+                                <table class="table" id="tbl_GeneralFeeds"></table>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
         </div>
 
     </div>

@@ -141,9 +141,10 @@
             $('#count_by_ir').html(response.chartData.eventTypeCount.map(x => x.value).reduce((f, s) => f + s, 0));
 
             /* expanding grapph - start*/
-            drawPieChart(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site1");
-            drawPieChart(response.chartData.areaWardPercentage, response.recordCount, "svg#pie_chart_ir_by_areaward1");
-            drawPieChart(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode1")
+            drawPieChartLargeSize(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site1");
+            drawPieChartLargeSize(response.chartData.areaWardPercentage, response.recordCount, "svg#pie_chart_ir_by_areaward1");
+            drawPieChartLargeSize(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode1");
+            drawPieChartLargeSize(response.chartData.eventTypePercentage, response.recordCount, "svg#pie_chart_by_ireventype_quantity1");
             $('#count_by_site1').html(response.chartData.sitePercentage.length);
             $('#count_by_area_ward1').html(response.chartData.areaWardPercentage.length);
             $('#count_color_code1').html(response.chartData.colorCodePercentage.length);
@@ -154,7 +155,147 @@
             $('#loader-p').hide();
         });
     });
-    
+
+
+    /************Chart in popup 13/12/2024 large Size Start ***************** */
+
+    function drawPieChartLargeSize(data, recordCount, control) {
+
+        $(control).html('');
+
+        if (recordCount === 0) return;
+
+        var svg = d3.select(control),
+            width = svg.attr('width'),
+            height = svg.attr('height'),
+            radius = Math.min(width, height - 60) / 2,
+            arcX = (width / 2) - 150,
+            arcY = (height / 2),
+            legendX = (width / 2) + 205,
+            g = svg.append('g').attr('transform', 'translate(' + arcX + ',' + arcY + ')');
+
+        // Generate the pie
+        var pie = d3.pie()
+            .value(function (d) { return d.value; });
+
+        // Generate the arcs
+        var arc = d3.arc()
+            .innerRadius(0)
+            .outerRadius(radius);
+
+        //Generate groups
+        var arcs = g.selectAll('arc')
+            .data(pie(data))
+            .enter()
+            .append('g')
+            .attr('class', 'arc');
+
+        //Draw arc paths
+        arcs.append('path')
+            .attr('fill', function (d, i) { return getFillColor(d, i, data[i].key); })
+            .attr('d', arc);
+
+        //Append values on chart
+        arcs.append('text')
+            .attr('transform', function (d) { return 'translate(' + arc.centroid(d) + ')'; })
+            .style('font-size', "11px")
+            .attr('text-anchor', 'middle')
+            .text(function (d, i) {
+                if (data[i].value > 0)
+                    return data[i].value + '%';
+            });
+
+
+
+        // Draw labels outside the slices
+        var labels = arcs.append("text")
+            .attr("transform", function (d) {
+                var pos = arc.centroid(d);
+                var midAngle = Math.atan2(pos[1], pos[0]);
+                var x = Math.cos(midAngle) * (radius + 10);
+                var y = Math.sin(midAngle) * (radius + 10);
+                return "translate(" + x + "," + y + ")";
+            })
+            .attr("dy", "0.35em")
+            .attr("text-anchor", function (d) {
+                return (d.startAngle + d.endAngle) / 2 > Math.PI ? "end" : "start";
+            })
+            .text(function (d) { return d.data.label; });
+
+        // Draw leader lines
+        /*  arcs.append("line")
+              .attr("stroke", "black")
+              //.attr("x1", function (d) { return arc.centroid(d)[0]; })
+              .attr("x1", function (d) {
+                  var a = d.startAngle + (d.endAngle - d.startAngle) / 2 - Math.PI / 2;
+                  d.cx = Math.cos(a) * (radius - 1);
+                  return d.x = Math.cos(a) * (radius - 1);
+              })
+              // .attr("y1", function (d) { return arc.centroid(d)[1]; })
+              .attr("y1", function (d) {
+                  var a = d.startAngle + (d.endAngle - d.startAngle) / 2 - Math.PI / 2;
+                  d.cy = Math.sin(a) * (radius - 75);
+                  return d.y = Math.sin(a) * (radius - 1);
+  
+              })
+              .attr("x2", function (d) {
+                  var pos = arc.centroid(d);
+                  var midAngle = Math.atan2(pos[1], pos[0]);
+                  var x = Math.cos(midAngle) * (radius + 20);
+                  return x;
+              })
+              .attr("y2", function (d) {
+                  var pos = arc.centroid(d);
+                  var midAngle = Math.atan2(pos[1], pos[0]);
+                  var y = Math.sin(midAngle) * (radius + 20);
+                  return y;
+              });*/
+
+
+
+
+        arcs.select("text")
+            .attr("transform", function (d) {
+                var centroid = arc.centroid(d),
+                    x = centroid[0],
+                    y = centroid[1],
+                    h = Math.sqrt(x * x + y * y);
+                var angle = (d.startAngle + d.endAngle) / 2;
+                return "translate(" + (x / h * (radius + 1)) + ',' + (y / h * (radius + 1)) + ") rotate(" + (angle * 180 / Math.PI - 90) + ")";
+                /*return "translate(" + (x / h * (radius + 20)) + ',' + (y / h * (radius + 20)) + ")";*/
+            })
+            .style("text-anchor", function (d) {
+                return (d.endAngle + d.startAngle) / 2 > Math.PI ? "start" : "start";
+            });
+
+
+        //Generate legend
+        var legend = svg.selectAll("legend")
+            .data(pie(data))
+            .enter()
+            .append("g")
+            .attr("transform", function (d, i) { return "translate(" + legendX + "," + (i * 12 + 3) + ")"; });
+
+        //Append legend box
+        legend.append("rect")
+            .attr("width", 8)
+            .attr("height", 8)
+            .attr("fill", function (d, i) { return getFillColor(d, i, data[i].key); });
+
+        //Append legend text
+        legend.append("text")
+            .text(function (d, i) { return data[i].key + " (" + data[i].value + "%)"; })
+            .style("font-size", "10px")
+            .attr("x", 11)
+            .attr("y", 8);
+
+
+
+
+
+    }
+
+    /***************************** end  */
     /** Patrol Data Charts ***/
 
     /****************************************************************************************
@@ -359,6 +500,10 @@ $('#btncount_by_area_ward').on('click', function () {
 });
 $('#btncount_color_code').on('click', function () {
     $('#modelIRRecordsbyColorCodeGraph').modal('show');
+});
+
+$('#btncount_event_type_quantity').on('click', function () {
+    $('#modelIreventypeQuantity').modal('show');
 });
  //calculate month difference-end
 $('#btnExportPatrolPdf').on('click', function () {

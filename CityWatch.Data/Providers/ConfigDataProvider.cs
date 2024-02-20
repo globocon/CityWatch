@@ -54,7 +54,13 @@ namespace CityWatch.Data.Providers
         List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEventsByDate();
          void SaveDefaultEmail(string DefaultEmail);
         //broadcast banner calendar events-end
-
+        //broadcast banner calendar events-end
+        //SW Channels-start
+        public List<SWChannels> GetSWChannels();
+        //SW Channels-end
+        //General Feeds-start
+        List<GeneralFeeds> GetGeneralFeeds();
+        //General Feeds-end
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -444,5 +450,17 @@ namespace CityWatch.Data.Providers
             return _context.BroadcastBannerCalendarEvents.OrderBy(x=>Convert.ToInt32(x.ReferenceNo)).ToList();
         }
         //broadcast banner calendar events-end
+        //SW Channels-start
+        public List<SWChannels> GetSWChannels()
+        {
+            return _context.SWChannel.OrderBy(x=>x.Id).ToList();
+        }
+        //SW Channels-end
+        //General Feeds-start
+        public List<GeneralFeeds> GetGeneralFeeds()
+        {
+            return _context.GeneralFeeds.OrderBy(x => x.Id).ToList();
+        }
+        //General Feeds-end
     }
 }

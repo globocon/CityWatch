@@ -200,6 +200,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     "scrollY": ($(window).height() - 300),
     "paging": false,
     "footer": true,
+    "scrollCollapse": true,
     "scroller": true, // Task p4#19 Screen Jumping day -- added by Binoy -- Start - 01-02-2024
     "stateSave": true,// Task p4#19 Screen Jumping day -- added by Binoy -- End - 01-02-2024
     ajax: {
@@ -340,10 +341,10 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     ],
 
     preDrawCallback: function (settings) {
-        clientSiteActiveGuardsscrollPosition = $('#clientSiteActiveGuards').closest('div.dataTables_scrollBody').scrollTop();                 
+        clientSiteActiveGuardsscrollPosition = $('#clientSiteActiveGuards').closest('div.dataTables_scrollBody').scrollTop();   
     },
     drawCallback: function () {
-       $('#clientSiteActiveGuards').closest('div.dataTables_scrollBody').scrollTop(clientSiteActiveGuardsscrollPosition);                
+        $('#clientSiteActiveGuards').closest('div.dataTables_scrollBody').scrollTop(clientSiteActiveGuardsscrollPosition); 
 
         /*for modifying the size of tables active  guards - start*/
         var count = $('#clientSiteActiveGuards tbody tr').length;
@@ -353,10 +354,10 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         }
         else {
 
-
             $('#clientSiteActiveGuards').closest('.dataTables_scrollBody').css('height', '100%');
 
         }
+        $('#clientSiteActiveGuards').closest('div.dataTables_scrollBody').css('overflow-x', 'hidden'); //Remove the x scrollbar
 
         /*for modifying the size of tables active  guards - end*/
         var api = this.api();
@@ -386,6 +387,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 }
             });
     },
+    
 });
 
 // Order by the grouping
@@ -508,6 +510,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             action: function () {
                
                 $('#ActionListControlRoomModal').modal('show');
+                $('#btnSendActionListGlobal').prop('disabled', false);
                 isPaused = true;
                 $('#dglClientTypeActionListAll').val('');
                 $('#dglClientSiteIdActionListAll').val('');
@@ -562,7 +565,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         { data: 'clientSiteId', visible: false },
         {
             data: 'siteName',
-            width: '20%',
+            /*width: '20%',*/
             class: 'dt-control',
             render: function (value, type, data) {
               
@@ -571,7 +574,6 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         },
         {
             data: 'address',
-            width: '20%',
             visible: false,
             render: function (value, type, data) {
 
@@ -582,7 +584,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         {
             data: 'guardName',
             
-            width: '20%',
+            width: '15%',
             createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
                 // Define your conditions to add a class
                 if (rowData.isEnabled == 1) {
@@ -620,7 +622,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
         {
             data: 'guardLoginTime',
-            width: '9%',
+            width: '11%',
             className: "text-center",
             createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
                 // Define your conditions to add a class
@@ -652,7 +654,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         },
         {
             data: 'loginTimeZone',
-            width: '1%',
+            width: '3%',
             className: "text-center",
             createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
                 // Define your conditions to add a class
@@ -668,7 +670,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         },
         {
             data: 'twoHrAlert',
-            width: '1%',
+            width: '3%',
             className: "text-center",
             createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
                 // Define your conditions to add a class
@@ -685,7 +687,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
         {
             data: 'rcStatus',
-            width: '4%',
+            width: '8%',
             className: "text-center",
             createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
                 // Define your conditions to add a class
@@ -715,30 +717,24 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         },
         {
             data: 'siteName',
-            visible: false,
-            width: '20%',
-           
+            visible: false,           
         },
 
     ],
 
     preDrawCallback: function (settings) {
-        scrollPosition = $(".dataTables_scrollBody").scrollTop();
+        scrollPosition = $('#clientSiteInActiveGuards').closest("div.dataTables_scrollBody").scrollTop();
     },
     drawCallback: function () {
         /* Retain the Scroll position*/
-        $(".dataTables_scrollBody").scrollTop(scrollPosition);
+        $('#clientSiteInActiveGuards').closest("div.dataTables_scrollBody").scrollTop(scrollPosition);
         /*for modifying the size of tables   inactive guards - start*/
         var count = $('#clientSiteInActiveGuards tbody tr').length;
         if (count > 10) {
-            $('#clientSiteInActiveGuards').closest('.dataTables_scrollBody').css('height', ($(window).height() - 200));
-
+           $('#clientSiteInActiveGuards').closest('div.dataTables_scrollBody').css('height', ($(window).height() - 200));
         }
         else {
-
-
-            $('#clientSiteInActiveGuards').closest('.dataTables_scrollBody').css('height', '100%');
-
+            $('#clientSiteInActiveGuards').closest('div.dataTables_scrollBody').css('height', '100%');
         }
 
         /* for modifying the size of tables   inactive guards - end*/
@@ -769,6 +765,8 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                 }
             });
 
+        $('#clientSiteInActiveGuards').closest('div.dataTables_scrollBody').css('overflow-x', 'hidden'); //Remove the x scrollbar
+
         PlayDuressAlarm();
     },
     
@@ -777,6 +775,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
 $("#ActionListControlRoomModal").on("hidden.bs.modal", function () {
     isPaused = false;
+    $('#btnSendActionListGlobal').prop('disabled', false);
 });
 
 
@@ -815,15 +814,14 @@ clientSiteInActiveGuards.on('draw', function () {
 
 // To fix the Datatable column header issue when hidden inside tab
 $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
-    $($.fn.dataTable.tables(true)).DataTable()
-        .columns.adjust();
+    $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
 });
 
 // To fix the Datatable column header issue when hidden inside accordion
 $('.collapse').on('shown.bs.collapse', function (e) {
-    $($.fn.dataTable.tables(true)).DataTable()
-        .columns.adjust();
+    $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
 });
+
 
 $('#clientSiteInActiveGuards tbody').on('click', '#btnUpArrow', function () {
 
@@ -1531,6 +1529,11 @@ $('#btnSaveRadioStatusActive').on('click', function () {
 $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
 
     isPaused = true;
+
+    $('#btnSendPushLotificationMessage').prop('disabled', false);
+    $('#btnSendGlabalNotificationMessage').prop('disabled', false);
+    $('#btnSendActionList').prop('disabled', false);
+    
     
     const button = $(event.relatedTarget);
     const id = button.data('id');
@@ -1641,6 +1644,7 @@ function clearGuardValidationSummary(validationControl) {
 
 
 $('#btnSendPushLotificationMessage').on('click', function () {
+    $(this).prop('disabled', true);
     const checkedLB = $('#chkLB').is(':checked');
     const checkedSiteEmail = $('#chkSiteEmail').is(':checked');
     const checkedSMSPersonal = $('#chkSMSPersonal').is(':checked');
@@ -1651,10 +1655,11 @@ $('#btnSendPushLotificationMessage').on('click', function () {
    
     if (Notifications === '') {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
+        $(this).prop('disabled', false);
     }
     else if (checkedLB == false && checkedSiteEmail == false && checkedSMSPersonal == false && checkedSMSSmartWand == false) {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select any one of the transfer options ');
-
+        $(this).prop('disabled', false);
     }
     else {
         $('#Access_permission_RC_status_new').hide();
@@ -1680,12 +1685,13 @@ $('#btnSendPushLotificationMessage').on('click', function () {
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (data) {
             if (data.success == true) {
+                $(this).prop('disabled', false);
                 $('#pushNoTificationsControlRoomModal').modal('hide');
                 $('#Access_permission_RC_status_new').hide();
             }
             else {
                 displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
-               
+                $(this).prop('disabled', false);
             }
             //$('#selectRadioStatus').val('');
             //$('#btnRefreshActivityStatus').trigger('click');
@@ -1709,6 +1715,10 @@ function displayGuardValidationSummary(validationControl, errors) {
             }
         });
     }
+    $('#btnSendPushLotificationMessage').prop('disabled', false);
+    $('#btnSendGlabalNotificationMessage').prop('disabled', false);
+    $('#btnSendActionList').prop('disabled', false);
+    $('#btnSendActionListGlobal').prop('disabled', false);
 }
 
 /*for pushing notifications from the control room - end*/
@@ -1730,6 +1740,7 @@ $('#openActiveGuardInNewPage').on('click', function () {
 });
 /*code added for Global Messsage start*/
 $('#btnSendGlabalNotificationMessage').on('click', function () {
+    $(this).prop('disabled', true);
     const checkedState = $('#chkSiteState').is(':checked');
     const checkedSiteEmail = $('#chkSiteEmail').is(':checked');
     const checkedSMSPersonal = $('#chkSMSPersonalGlobal').is(':checked');
@@ -1744,14 +1755,16 @@ $('#btnSendGlabalNotificationMessage').on('click', function () {
 
     if (Notifications === '') {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
+        $(this).prop('disabled', false);
     }
     else if (checkedState == false && chkClientType == false && chkClientType == false && checkedSMSPersonal == false && checkedSMSSmartWand == false && chkNationality == false) {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select any one of the transfer options ');
-
+        $(this).prop('disabled', false);
     }
     else if (chkClientType == true && ClientType == null)
     {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
+        $(this).prop('disabled', false);
     }
     else {
 
@@ -1780,11 +1793,13 @@ $('#btnSendGlabalNotificationMessage').on('click', function () {
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (data) {
             if (data.success == true) {
+                $(this).prop('disabled', false);
                 $('#pushNoTificationsControlRoomModal').modal('hide');
                 $('#Access_permission_RC_status').hide();
             }
             else {
                 displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
+                $(this).prop('disabled', false);
             }
             //$('#selectRadioStatus').val('');
             //$('#btnRefreshActivityStatus').trigger('click');
@@ -1800,7 +1815,7 @@ $('#btnSendGlabalNotificationMessage').on('click', function () {
 
 /*code added for RCActionList start*/
 $('#btnSendActionList').on('click', function () {
-   
+    $(this).prop('disabled', true);
     var clientSiteId = $('#dglClientSiteIdActionList2').val();
     var Notifications = $('#txtMessageActionList').val();
     var Subject = $('#txtGlobalNotificationSubject').val();
@@ -1819,16 +1834,20 @@ $('#btnSendActionList').on('click', function () {
 
     if (Notifications === '') {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
+        $(this).prop('disabled', false);
     }
     
     else if (chkClientType == true && ClientType == null) {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
+        $(this).prop('disabled', false);
     }
     else if (ClientType=='') {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
+        $(this).prop('disabled', false);
     }
     else if (ClientSite == '') {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client site ');
+        $(this).prop('disabled', false);
     }
     else {
 
@@ -1860,11 +1879,13 @@ $('#btnSendActionList').on('click', function () {
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (data) {
             if (data.success == true) {
+                $(this).prop('disabled', false);
                 $('#pushNoTificationsControlRoomModal').modal('hide');
                 $('#Access_permission_RC_status').hide();
             }
             else {
                 displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
+                $(this).prop('disabled', false);
             }
             //$('#selectRadioStatus').val('');
             //$('#btnRefreshActivityStatus').trigger('click');
@@ -1873,7 +1894,7 @@ $('#btnSendActionList').on('click', function () {
 });
 
 $('#btnSendActionListGlobal').on('click', function () {
-
+    $(this).prop('disabled', true);
     var clientSiteId = $('#dglClientSiteIdActionList2All').val();
     var Notifications = $('#txtMessageActionListAll').val();
     var Subject = $('#txtGlobalNotificationSubjectAll').val();
@@ -1894,16 +1915,20 @@ $('#btnSendActionListGlobal').on('click', function () {
     // Task p6#73_TimeZone issue -- added by Binoy - End
     if (Notifications === '') {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
+        $(this).prop('disabled', false);
     }
 
     else if (chkClientType == true && ClientType == null) {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
+        $(this).prop('disabled', false);
     }
     else if (ClientType == '') {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
+        $(this).prop('disabled', false);
     }
     else if (ClientSite == '') {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client site ');
+        $(this).prop('disabled', false);
     }
     else {
 
@@ -1933,11 +1958,13 @@ $('#btnSendActionListGlobal').on('click', function () {
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (data) {
             if (data.success == true) {
+                $(this).prop('disabled', false);
                 $('#ActionListControlRoomModal').modal('hide');
                 $('#Access_permission_RC_statusAll').hide();
             }
             else {
                 displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
+                $(this).prop('disabled', false);
             }
             //$('#selectRadioStatus').val('');
             //$('#btnRefreshActivityStatus').trigger('click');
@@ -2633,6 +2660,7 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
     drawCallback: function () {
         /* Retain the Scroll position*/
         $(".dataTables_scrollBody").scrollTop(scrollPosition);
+        $('.dataTables_scrollBody').css('overflow-x', 'hidden');  //Remove the x scrollbar
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;
@@ -2856,6 +2884,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
     },
     drawCallback: function () {
         $(".dataTables_scrollBody").scrollTop(scrollPosition);
+        $('.dataTables_scrollBody').css('overflow-x', 'hidden'); //Remove the x scrollbar
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;

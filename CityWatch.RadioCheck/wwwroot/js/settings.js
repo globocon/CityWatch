@@ -344,3 +344,185 @@ $('#cs_client_type').on('change', function () {
 
 
 /*  broadcast calendar events-end*/
+
+
+/*API Calls - start*/
+/*SWChannels - start*/
+let gridSWChannels;
+let isAPICallsAdding = false;
+
+gridSWChannels = $('#tbl_SWChannel').grid({
+    dataSource: '/Admin/Settings?handler=SWChannels',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    inlineEditing: { mode: 'command' },
+
+    columns: [
+        { width: 130, field: 'id', title: 'Id', hidden: true },
+        { width: 950, field: 'swChannel', title: 'SW Channel', editor: true },
+        {
+            width: 120, field: 'keys', title: '<i class="fa fa-key" aria-hidden="true"></i>',
+
+            editor: true,
+
+
+        },
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
+
+if (gridSWChannels) {
+    gridSWChannels.on('rowDataChanged', function (e, id, record) {
+        const data = $.extend(true, {}, record);
+        data.id = data.id.replace(/\s{2,}/g, ' ').trim();
+        data.swChannel = data.swChannel;
+        data.keys = data.keys;
+        //data.radioCheckStatusColorId = !Number.isInteger(data.radioCheckStatusColorId) ? data.radioCheckStatusColorId.getValue() : data.radioCheckStatusColorId;
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            url: '/Admin/Settings?handler=SWChannel',
+            data: { record: data },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function () {
+            gridSWChannels.clear();
+            gridSWChannels.reload();
+        }).fail(function () {
+            console.log('error');
+        }).always(function () {
+            if (isAPICallsAdding)
+                isAPICallsAdding = false;
+        });
+    });
+
+    gridSWChannels.on('rowRemoving', function (e, id, record) {
+
+
+        if (confirm('Are you sure want to delete this  smart wand channel?')) {
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteSWChannel',
+                data: { id: record },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function () {
+                gridSWChannels.reload();
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isAPICallsAdding)
+                    isAPICallsAdding = false;
+            });
+        }
+    });
+}
+$('#add_sw_channel').on('click', function () {
+
+
+    if (isAPICallsAdding == true) {
+        alert('Unsaved changes in the grid. Refresh the page');
+    } else {
+        if ($('#tbl_SWChannel tbody tr').find('td').eq(1).text() === '') {
+            isAPICallsAdding = true;
+            gridSWChannels.addRow({
+                'id': -1
+            }).edit(-1);
+        }
+        else {
+            alert('Only one entry is allowed to be added in live events');
+
+        }
+    }
+});
+/*SWChannels - end*/
+
+
+/*GeneralFeeds - start*/
+let gridGeneralFeeds;
+gridGeneralFeeds = $('#tbl_GeneralFeeds').grid({
+    dataSource: '/Admin/Settings?handler=GeneralFeeds',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    inlineEditing: { mode: 'command' },
+
+    columns: [
+        { width: 130, field: 'id', title: 'Id', hidden: true },
+        { width: 150, field: 'brand', title: 'Brand', editor: true },
+        { width: 350, field: 'apiStrings', title: 'API String', editor: true },
+        {
+            width: 120, field: 'keys', title: '<i class="fa fa-key" aria-hidden="true"></i>',
+
+            editor: true,
+
+
+        },
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
+
+if (gridGeneralFeeds) {
+    gridGeneralFeeds.on('rowDataChanged', function (e, id, record) {
+        const data = $.extend(true, {}, record);
+        data.id = data.id.replace(/\s{2,}/g, ' ').trim();
+        data.brand = data.brand;
+        data.apiStrings = data.apiStrings;
+        data.keys = data.keys;
+        //data.radioCheckStatusColorId = !Number.isInteger(data.radioCheckStatusColorId) ? data.radioCheckStatusColorId.getValue() : data.radioCheckStatusColorId;
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            url: '/Admin/Settings?handler=GeneralFeeds',
+            data: { record: data },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function () {
+            gridGeneralFeeds.clear();
+            gridGeneralFeeds.reload();
+        }).fail(function () {
+            console.log('error');
+        }).always(function () {
+            if (isAPICallsAdding)
+                isAPICallsAdding = false;
+        });
+    });
+
+    gridGeneralFeeds.on('rowRemoving', function (e, id, record) {
+
+
+        if (confirm('Are you sure want to delete this  general feeds?')) {
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteGeneralFeeds',
+                data: { id: record },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function () {
+                gridGeneralFeeds.reload();
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isAPICallsAdding)
+                    isAPICallsAdding = false;
+            });
+        }
+    });
+}
+
+
+$('#add_general_feeds').on('click', function () {
+    if (isAPICallsAdding == true) {
+        alert('Unsaved changes in the grid. Refresh the page');
+    } else {
+        isAPICallsAdding = true;
+        gridGeneralFeeds.addRow({
+            'id': -1
+        }).edit(-1);
+    }
+});
+/*GeneralFeeds - end*/
+/*API Calls -end*/
