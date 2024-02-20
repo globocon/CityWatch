@@ -89,15 +89,18 @@ namespace CityWatch.Web.Services
         IEnumerable<string> GetCompanyNames(string startsWith);
         bool IsClientSiteDuressEnabled(int clientSiteId);
         void EnableClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId, string gpsCoordinates, string enabledAddress, GuardLog tmzdata);
+        int GetClientTypeCount(int? typeId);
 
         //For Access Type
         List<SelectListItem> GetAccessTypes(bool withoutSelect = false);
         string GetClientSiteKeyNo(int keyId, int clientSiteId);
+        List<SelectListItem> GetUserClientTypesCount(int? userId);
 
         List<ClientSiteKey> GetClientSiteKeysbySearchDesc(int clientSiteId, string searchKeyDesc);
         List<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistoryNew(int profileId);
         IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistoryWithPersonName(string PersonName);
         IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistoryWithKeyNo(string KeyNo);
+        
     }
 
     public class ViewDataService : IViewDataService
@@ -312,6 +315,21 @@ namespace CityWatch.Web.Services
 
             return items;
         }
+        //To get the count of ClientTypes start
+        public List<SelectListItem> GetUserClientTypesCount(int? userId)
+        {
+            var clientTypes = GetUserClientTypesHavingAccess(userId);
+            var sortedClientTypes = clientTypes.OrderByDescending(clientType => GetClientTypeCount(clientType.Id));
+            var items = new List<SelectListItem>() { new SelectListItem("Select", "", true) };
+            foreach (var item in sortedClientTypes)
+            {
+                var countClientType = GetClientTypeCount(item.Id);
+                items.Add(new SelectListItem($"{item.Name} ({countClientType})", item.Name));
+            }
+
+            return items;
+        }
+        //To get the count of ClientTypes stop
 
         public List<SelectListItem> GetUserClientSites(int? userId, string type = "")
         {
@@ -455,6 +473,13 @@ namespace CityWatch.Web.Services
             var clientTypeIds = allUserAccess.Select(x => x.ClientSite.TypeId).Distinct().ToList();
             return clientTypes.Where(x => clientTypeIds.Contains(x.Id)).ToList();
         }
+        //To get the count of ClientType start
+        public int GetClientTypeCount(int? typeId)
+        {
+            var result= _clientDataProvider.GetClientSite(typeId);
+            return result;
+        }
+        //To get the count of ClientType stop
 
         public List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm)
         {

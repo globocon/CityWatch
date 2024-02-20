@@ -210,7 +210,7 @@ namespace CityWatch.Data.Providers
         List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetailsWithPersonName(string personName);
         List<KeyVehicleLog> GetKeyVehicleLogsWithKeyNo(string KeyNo);
         List<KeyVehicleLogAuditHistory> GetAuditHistoryWithKeyVehicleLogId(int id);
-
+        int GetClientTypeCount(int? typeId);
 
         List<KeyVehicleLogVisitorPersonalDetail> GetPOIListFromVisitorPersonalDetails();
     }
@@ -3018,6 +3018,17 @@ namespace CityWatch.Data.Providers
                 return newLogBook.Id; ; // Return null or another suitable default value
             }
         }
+        //To get the count of ClientType start
+        public int GetClientTypeCount(int? typeId)
+        {
+            var result = GetClientSite(typeId);
+            return result;
+        }
+        public int GetClientSite(int? typeId)
+        {
+            return _context.ClientSites.Where(x => x.TypeId == typeId).Select(x => x.Id).Count();
+        }
+        //To get the count of ClientType stop
         //code added for client site dropdown starts
         public List<ClientType> GetUserClientTypesHavingAccess(int? userId)
         {
