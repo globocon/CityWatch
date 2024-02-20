@@ -558,10 +558,14 @@
                                                     <input type="checkbox" id="chkClientType" class="GlobalAlert-checkbox">
                                                     <label class="mx-1" for="dglClientType">Client Type</label>
                                                     <select class="form-control" id="dglClientType" multiple="multiple" style="width:209px" disabled>
-
-                                                        @foreach (var clientType in _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId))
+                                                         @{
+                                                            var userClientTypes = _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId);
+                                                            var sortedClientTypes = userClientTypes.OrderByDescending(clientType => _guardLogDataProvider.GetClientTypeCount(clientType.Id));
+                                                            foreach (var clientType in sortedClientTypes)
                                                         {
-                                                            <option value="@clientType.Id">@clientType.Name</option>
+                                                            var countClientType = _guardLogDataProvider.GetClientTypeCount(clientType.Id);
+                                                            <option value="@clientType.Id">@clientType.Name (@countClientType)</option>
+                                                        }
                                                         }
                                                     </select>
 
@@ -704,9 +708,14 @@
                                                     <label class="mx-1" for="dglClientTypeActionList">Client Type</label>
                                                     <select class="form-control" id="dglClientTypeActionList" style="width:209px">
                                                         <option value="">Select</option>
-                                                        @foreach (var clientType in _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId))
-                                                        {
-                                                            <option value="@clientType.Id">@clientType.Name</option>
+                                                        @{
+                                                            var userClientTypes1 = _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId);
+                                                            var sortedClientTypes1 = userClientTypes1.OrderByDescending(clientType => _guardLogDataProvider.GetClientTypeCount(clientType.Id));
+                                                            foreach (var clientType in sortedClientTypes1)
+                                                            {
+                                                                var countClientType1 = _guardLogDataProvider.GetClientTypeCount(clientType.Id);
+                                                                <option value="@clientType.Id">@clientType.Name (@countClientType1)</option>
+                                                            }
                                                         }
                                                     </select>
 
@@ -823,9 +832,14 @@
                                                     <label class="mx-1" for="dglClientTypeActionList2">Client Type</label>
                                                     <select class="form-control" id="dglClientTypeActionList2" style="width:209px">
                                                         <option value="">Select</option>
-                                                        @foreach (var clientType in _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId))
-                                                        {
-                                                            <option value="@clientType.Id">@clientType.Name</option>
+                                                        @{
+                                                            var userClientTypes2 = _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId);
+                                                            var sortedClientTypes2 = userClientTypes2.OrderByDescending(clientType => _guardLogDataProvider.GetClientTypeCount(clientType.Id));
+                                                            foreach (var clientType in sortedClientTypes2)
+                                                            {
+                                                                var countClientType2 = _guardLogDataProvider.GetClientTypeCount(clientType.Id);
+                                                                <option value="@clientType.Id">@clientType.Name (@countClientType2)</option>
+                                                            }
                                                         }
                                                     </select>
 
@@ -898,9 +912,14 @@
                                                     <label class="mx-1" for="dglClientTypeActionListAll">Client Type</label>
                                                     <select class="form-control" id="dglClientTypeActionListAll" style="width:209px">
                                                         <option value="">Select</option>
-                                                        @foreach (var clientType in _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId))
-                                                        {
-                                                            <option value="@clientType.Id">@clientType.Name</option>
+                                                        @{
+                                                            var userClientTypes3 = _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId);
+                                                            var sortedClientTypes3 = userClientTypes3.OrderByDescending(clientType => _guardLogDataProvider.GetClientTypeCount(clientType.Id));
+                                                            foreach (var clientType in sortedClientTypes3)
+                                                            {
+                                                                var countClientType3 = _guardLogDataProvider.GetClientTypeCount(clientType.Id);
+                                                                <option value="@clientType.Id">@clientType.Name (@countClientType3)</option>
+                                                            }
                                                         }
                                                     </select>
 
@@ -1017,9 +1036,14 @@
                                                     <label class="mx-1" for="dglClientTypeActionList2All">Client Type</label>
                                                     <select class="form-control" id="dglClientTypeActionList2All" style="width:209px">
                                                         <option value="">Select</option>
-                                                        @foreach (var clientType in _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId))
-                                                        {
-                                                            <option value="@clientType.Id">@clientType.Name</option>
+                                                        @{
+                                                            var userClientTypes4 = _guardLogDataProvider.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId);
+                                                            var sortedClientTypes4 = userClientTypes4.OrderByDescending(clientType => _guardLogDataProvider.GetClientTypeCount(clientType.Id));
+                                                            foreach (var clientType in sortedClientTypes4)
+                                                            {
+                                                                var countClientType4 = _guardLogDataProvider.GetClientTypeCount(clientType.Id);
+                                                                <option value="@clientType.Id">@clientType.Name (@countClientType4)</option>
+                                                            }
                                                         }
                                                     </select>
 

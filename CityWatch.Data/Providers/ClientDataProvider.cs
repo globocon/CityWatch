@@ -138,6 +138,7 @@ namespace CityWatch.Data.Providers
         List<ClientSiteLogBook> GetClientSiteLogBookWithOutType(int clientSiteId, DateTime date);
         //for checking whther user has any access to the client site ie to be deleted-start
         List<UserClientSiteAccess> GetUserAccessWithClientSiteId(int Id);
+        int GetClientSite(int? typeId);
         //for checking whther user has any access to the client site ie to be deleted-end
 
         //SWChannels - start
@@ -1585,9 +1586,18 @@ namespace CityWatch.Data.Providers
 
         //for checking whther user has any access to the client site ie to be deleted-end
 
+
+        //To get the clientsites according to the clientType start
+        public int GetClientSite(int? typeId)
+        {
+            return _context.ClientSites.Where(x => x.TypeId == typeId).Select(x=>x.Id).Count();
+        }
+        //To get the clientsites according to the clientType stop
+
         
 
         //GeneralFeeds - end
+
 
     }
 
