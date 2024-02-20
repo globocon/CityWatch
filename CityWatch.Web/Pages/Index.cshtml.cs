@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using CityWatch.Data.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
@@ -15,7 +16,8 @@ namespace CityWatch.Web.Pages
         {
             _logger = logger;
         }
-
+        [BindProperty]
+        public CompanyDetails CompanyDetails { get; set; }
         public IActionResult OnGet()
         {
             return Page();

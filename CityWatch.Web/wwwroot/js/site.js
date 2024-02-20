@@ -1836,13 +1836,15 @@
             if (data.success)
 
                 var result = prlogopath.lastIndexOf("/");
-            var newfile = data.filepath;
+            const newfile = data.filepath;
+            var url = window.location.origin; 
             var result1 = newfile.lastIndexOf("/");
-            var substr = prlogopath.substring(0, result + 1);
+            var substr = prlogopath.substring(0, result-1);
 
             var substr2 = newfile.substring(result1 + 1);
             substr = substr + "cr_primarylogo.JPG";
-            $("#img_PrimaryLogo").attr('src', substr);
+            var newpath = url + "/Images/cr_primarylogo.JPG";
+            $("#img_PrimaryLogo").attr('src', newpath);
 
         }).fail(function () {
             showStatusNotification(false, 'Something went wrong');
@@ -1884,7 +1886,9 @@
 
             var substr2 = newfile.substring(result1 + 1);
             substr = substr + "cr_bannerlogo.JPG";
-            $("#img_BannerLogo").attr('src', substr);
+            var url = window.location.origin; 
+            var newpath = url + "/Images/cr_bannerlogo.JPG";
+            $("#img_BannerLogo").attr('src', newpath);
 
 
 
