@@ -590,7 +590,7 @@
             { field: 'clientSiteId', hidden: true },
             { field: 'eventDateTime', title: 'Time', width: 100, renderer: function (value, record) { return renderTime(value, record, false); } },
             { field: 'notes', title: 'Event / Notes', width: 450 },
-            { field: 'guardInitials', title: 'Guard Initials', width: 100, renderer: function (value, record) { return record.guardLogin.guard.initial; } }
+            { field: 'guardInitials', title: 'Guard Initials', width: 80, renderer: function (value, record) { return record.guardLogin.guard.initial; } }
         ]
     };
     $('#card_new_entry').hide();
@@ -610,12 +610,12 @@
                 { field: 'eventDateTime', title: 'Time', width: 100, renderer: function (value, record) { return renderTime(value, record, false); } },
                 { field: 'notes', title: 'Event / Notes', width: 350, editor: logBookNotesEditor, renderer: renderLogBookNotes },
                 {
-                    field: 'guardInitials', title: 'Guard Initials', width: 100, renderer: function (value, record) {
+                    field: 'guardInitials', title: 'Guard Initials', width: 70, renderer: function (value, record) {
                         //return record.guardLogin ? record.guardLogin.guard.initial : '';
                         return `${record.guardLogin ? record.guardLogin.guard.initial : ''}&nbsp;&nbsp;${record.gpsCoordinates ? `<a href="https://www.google.com/maps?q=${record.gpsCoordinates}" target="_blank" data-toggle="tooltip" title=""><i class="fa fa-map-marker" aria-hidden="true"></i></a>` : ''}`;
                     }
                 },
-                { width: 75, renderer: renderDailyLogManagement },
+                { width: 75, renderer: renderDailyLogManagement, title: '<i class="fa fa-cogs" aria-hidden="true"></i>' },
                 { field: 'rcPushMessageId', hidden: true },
                 { field: 'playNotificationSound', hidden: true, renderer: playNotificationSound }
             ]
@@ -3593,6 +3593,7 @@ function initialize() {
             gpsCoordinatesValues = position.coords.latitude + ',' + position.coords.longitude;
             var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
             $("#hid_duressEnabledGpsCoordinates").val(gpsCoordinatesValues);
+            $("#hid_duressEnabledGpsCoordinatesDailyLog").val(gpsCoordinatesValues);
             reverseGeocode(position.coords.latitude, position.coords.longitude);
 
         });

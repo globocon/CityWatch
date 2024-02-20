@@ -139,9 +139,11 @@ namespace CityWatch.Data.Providers
         //for checking whther user has any access to the client site ie to be deleted-start
         List<UserClientSiteAccess> GetUserAccessWithClientSiteId(int Id);
         //for checking whther user has any access to the client site ie to be deleted-end
+
         //SWChannels - start
         void SaveSWChannel(SWChannels liveEvents);
         void DeleteSWChannel(int id);
+
 
         //SWChannels - end
         //GeneralFeeds - start
@@ -1580,7 +1582,13 @@ namespace CityWatch.Data.Providers
             _context.GeneralFeeds.Remove(generalFeedsToDelete);
             _context.SaveChanges();
         }
+
+        //for checking whther user has any access to the client site ie to be deleted-end
+
+        
+
         //GeneralFeeds - end
+
     }
 
 
