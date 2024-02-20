@@ -1,8 +1,10 @@
 using CityWatch.Common.Services;
 using CityWatch.Data;
+using CityWatch.Data.Helpers;
 using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
 using CityWatch.Kpi.Services;
+using CityWatch.Kpi.Helpers;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -19,6 +21,8 @@ var Configuration = builder.Configuration;
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<CityWatchDbContext>(options => options.UseSqlServer(connectionString));
+builder.Services.Configure<Settings>(Configuration.GetSection(Settings.Name));
+builder.Services.Configure<EmailOptions>(Configuration.GetSection(EmailOptions.Email));
 builder.Services.AddScoped<IClientDataProvider, ClientDataProvider>();
 builder.Services.AddScoped<IViewDataService, ViewDataService>();
 builder.Services.AddScoped<IReportGenerator, ReportGenerator>();
