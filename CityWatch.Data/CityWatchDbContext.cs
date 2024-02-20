@@ -108,6 +108,12 @@ namespace CityWatch.Data
         {
             configurationBuilder.Conventions.Add(_ => new BlankTriggerAddingConvention());
         }
+        //SW Channels-start
+        public DbSet<SWChannels> SWChannel { get; set; }
+        //SW Channels-end
+        //General Feeds-start
+        public DbSet<GeneralFeeds> GeneralFeeds { get; set; }
+        //General Feeds-end
 
     }
     /* 07022024 dileep to solve the trigger in table not allowed in enity framework 7.0
