@@ -30,7 +30,7 @@
                                     <div class="form-group">
                                         <label for="clientTypeName">Client Type</label>
                                         <select class="form-control" id="clientTypeName" name="clientTypeName">
-                                            @foreach (var item in Model.ViewDataService.ClientTypesUsingLoginUserId(@Model.GuardId))
+                                            @foreach (var item in Model.ViewDataService.ClientTypesUsingLoginUserIdCount(@Model.GuardId))
                                             {
                                                 <option value="@item.Value">@item.Text</option>
                                             }

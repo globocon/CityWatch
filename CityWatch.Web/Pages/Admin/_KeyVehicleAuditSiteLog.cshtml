@@ -9,9 +9,14 @@
         <div class="form-group col-md-2">
             <label class="mx-1">Client Type</label>
             <select class="form-control" multiple="multiple" id="vklClientType">
-                @foreach (var clientType in viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
+                @{
+                    var userClientTypes = viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId);
+                    var sortedClientTypes = userClientTypes.OrderByDescending(clientType => viewDataService.GetClientTypeCount(clientType.Id));
+                    foreach (var clientType in sortedClientTypes)
                 {
-                    <option value="@clientType.Name">@clientType.Name</option>
+                    var countClientType = viewDataService.GetClientTypeCount(clientType.Id);
+                    <option value="@clientType.Name">@clientType.Name (@countClientType)</option>
+                }
                 }
             </select>
         </div>

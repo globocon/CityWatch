@@ -47,6 +47,8 @@ namespace CityWatch.Kpi.Services
         List<GuardLogin> GetKpiGuardDetailsData(int clientSiteId, DateTime fromDate, DateTime toDate);
         List<GuardCompliance> GetKpiGuardDetailsCompliance(int guardId);
         List<GuardCompliance> GetKpiGuardDetailsComplianceData(int[] guardIds);
+        int GetClientTypeCount(int? typeId);
+        List<SelectListItem> ClientTypesUsingLoginUserIdCount(int guardId);
     }
 
     public class ViewDataService : IViewDataService
@@ -82,7 +84,52 @@ namespace CityWatch.Kpi.Services
                 return items;
             }
         }
+        //To get the count of ClientType start
+        public int GetClientTypeCount(int? typeId)
+        {
+            var result = _clientDataProvider.GetClientSite(typeId);
+            return result;
+        }
+        //To get the count of ClientType stop
+        public List<SelectListItem> ClientTypesUsingLoginUserIdCount(int guardId)
+        {
+            if (guardId == 0)
+            {
+                var clientTypes = _clientDataProvider.GetClientTypes();
+                var items = new List<SelectListItem>() { new SelectListItem("Select", "", true) };
+                var sortedClientTypes = clientTypes.OrderByDescending(clientType => GetClientTypeCount(clientType.Id));
+                foreach (var item in sortedClientTypes)
+                {
+                    var countClientType = GetClientTypeCount(item.Id);
+                    items.Add(new SelectListItem($"{item.Name} ({countClientType})", item.Name));
+                }
 
+                return items;
+            }
+            else
+            {
+                List<GuardLogin> guardLogins = new List<GuardLogin>();
+
+                var ClientType = _context.GuardLogins
+                    .Where(z => z.GuardId == guardId)
+                        .Include(x => x.ClientSite.ClientType)
+                        .ToList();
+                var sortedClientTypes = ClientType.OrderByDescending(clientType => GetClientTypeCount(clientType.Id));
+                var items = new List<SelectListItem>() { new SelectListItem("Select", "", true) };
+                foreach (var item in sortedClientTypes)
+                {
+                    if (!items.Any(cus => cus.Text == item.ClientSite.ClientType.Name))
+                    {
+                        var countClientType = GetClientTypeCount(item.Id);
+                        items.Add(new SelectListItem($"{item.ClientSite.ClientType.Name} ({countClientType})", item.ClientSite.ClientType.Name));
+                    }
+                }
+
+                return items;
+
+            }
+
+        }
         public List<SelectListItem> ClientTypesUsingLoginUserId(int guardId)
         {
             if (guardId == 0)

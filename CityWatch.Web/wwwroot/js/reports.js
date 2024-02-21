@@ -171,7 +171,7 @@
             radius = Math.min(width, height - 60) / 2,
             arcX = (width / 2) - 150,
             arcY = (height / 2),
-            legendX = (width / 2) + 280,
+            legendX = (width / 2) + 205,
             g = svg.append('g').attr('transform', 'translate(' + arcX + ',' + arcY + ')');
 
         // Generate the pie
@@ -274,20 +274,19 @@
             .data(pie(data))
             .enter()
             .append("g")
-            .attr("transform", function (d, i) { return "translate(" + legendX + "," + (i * 15 + 20) + ")"; });
+            .attr("transform", function (d, i) { return "translate(" + legendX + "," + (i * 12 + 3) + ")"; });
 
         //Append legend box
         legend.append("rect")
-            .attr("width", 10)
-            .attr("height", 10)
+            .attr("width", 8)
+            .attr("height", 8)
             .attr("fill", function (d, i) { return getFillColor(d, i, data[i].key); });
 
         //Append legend text
         legend.append("text")
-            .text(function (d, i) { return truncate(data[i].key) + " (" + data[i].value + "%)"; })
-            .style("font-size", "11px")
-            .style("font-family", "Arial")
-            .attr("x", 12)
+            .text(function (d, i) { return data[i].key + " (" + data[i].value + "%)"; })
+            .style("font-size", "10px")
+            .attr("x", 11)
             .attr("y", 8);
 
 

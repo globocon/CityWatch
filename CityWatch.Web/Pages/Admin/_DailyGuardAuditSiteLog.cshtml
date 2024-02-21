@@ -9,9 +9,15 @@
                     <label class="mx-1" for="dglClientType">Client Type</label>
                     <select class="form-control" id="dglClientType">
                         <option value="">Select</option>
-                        @foreach (var clientType in viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
-                        {
-                            <option value="@clientType.Id">@clientType.Name</option>
+                        @{
+                            var userClientTypes = viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId);
+                            var sortedClientTypes = userClientTypes.OrderByDescending(clientType => viewDataService.GetClientTypeCount(clientType.Id));
+
+                            foreach (var clientType in sortedClientTypes)
+                            {
+                                var countClientType = viewDataService.GetClientTypeCount(clientType.Id);
+                                <option value="@clientType.Id">@clientType.Name (@countClientType)</option>
+                            }
                         }
                     </select>
                 </div>
