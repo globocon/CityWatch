@@ -358,7 +358,7 @@ namespace CityWatch.Web.Services
 
         private Table CreateReportData(List<GuardLog> guardLog)
         {
-            var reportDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 10, 90,10 })).UseAllAvailableWidth();
+            var reportDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 10, 90,4 })).UseAllAvailableWidth();
 
             reportDataTable.AddHeaderCell(new Cell().SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_GREY_DARK)).Add(new Paragraph("Time").SetFontSize(CELL_FONT_SIZE)));
             reportDataTable.AddHeaderCell(new Cell().SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_GREY_DARK)).Add(new Paragraph("Event / Notes with Guard Initials").SetFontSize(CELL_FONT_SIZE)));
@@ -381,7 +381,7 @@ namespace CityWatch.Web.Services
                 //Added To display GPS start
                 var imagePath = "wwwroot/images/GPSImage.png";
                 var siteImage = new Image(ImageDataFactory.Create(imagePath))
-                .SetWidth(UnitValue.CreatePercentValue(10));
+                .SetWidth(UnitValue.CreatePercentValue(18));
                 siteImage.SetTextAlignment(TextAlignment.RIGHT);
 
                 var paragraph = new Paragraph()
