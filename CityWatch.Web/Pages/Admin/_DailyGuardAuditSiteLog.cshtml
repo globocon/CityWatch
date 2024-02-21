@@ -12,7 +12,7 @@
                         @{
                             var userClientTypes = viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId);
                             var sortedClientTypes = userClientTypes.OrderByDescending(clientType => viewDataService.GetClientTypeCount(clientType.Id));
-
+                            sortedClientTypes = userClientTypes.OrderBy(clientType => clientType.Name);
                             foreach (var clientType in sortedClientTypes)
                             {
                                 var countClientType = viewDataService.GetClientTypeCount(clientType.Id);
