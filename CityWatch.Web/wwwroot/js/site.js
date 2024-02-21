@@ -1794,6 +1794,7 @@
                 $('#txt_CompanyName').val(data[i].name);
                 $("#txt_CompanyDomain").val(data[i].domain);
                 $("#txt_HomePageMessage").val(data[i].homePageMessage);
+                $("#txt_HomePageMessage2").val(data[i].homePageMessage2);
                 $("#txt_color").val(data[i].messageBarColour);
                 $("#txt_BannerMessage").val(data[i].bannerMessage);
                 $("#txt_HyplerLink").val(data[i].hyperlink);
@@ -1914,6 +1915,7 @@
                 PrimaryLogoPath: $("#img_PrimaryLogo").prop('src'),
                 BannerLogoPath: $("#img_BannerLogo").prop('src'),
                 HomePageMessage: $("#txt_HomePageMessage").val(),
+                HomePageMessage2: $("#txt_HomePageMessage2").val(),
                 MessageBarColour: $("#txt_color").val(),
                 BannerMessage: $("#txt_BannerMessage").val(),
                 Hyperlink: $("#txt_HyplerLink").val(),

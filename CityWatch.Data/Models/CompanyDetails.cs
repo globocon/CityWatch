@@ -14,6 +14,7 @@ namespace CityWatch.Data.Models
         public DateTime PrimaryLogoUploadedOn { get; set; }
         public string PrimaryLogoPath { get; set; }
         public string HomePageMessage { get; set; }
+        public string HomePageMessage2 { get; set; }
         public string MessageBarColour { get; set; }
         public DateTime HomePageMessageUploadedOn { get; set; }
         public string BannerLogoPath { get; set; }

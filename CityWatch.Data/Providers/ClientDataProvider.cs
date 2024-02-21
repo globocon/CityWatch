@@ -604,6 +604,7 @@ namespace CityWatch.Data.Providers
                     templateToUpdate.PrimaryLogoUploadedOn = DateTime.Now;
                     templateToUpdate.PrimaryLogoPath = companyDetails.PrimaryLogoPath;
                     templateToUpdate.HomePageMessage = companyDetails.HomePageMessage;
+                    templateToUpdate.HomePageMessage2 = companyDetails.HomePageMessage2;
                     templateToUpdate.MessageBarColour = companyDetails.MessageBarColour;
                     templateToUpdate.HomePageMessageUploadedOn = DateTime.Now;
                     templateToUpdate.BannerLogoPath = companyDetails.BannerLogoPath;
