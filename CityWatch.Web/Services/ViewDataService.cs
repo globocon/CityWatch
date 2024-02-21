@@ -320,6 +320,7 @@ namespace CityWatch.Web.Services
         {
             var clientTypes = GetUserClientTypesHavingAccess(userId);
             var sortedClientTypes = clientTypes.OrderByDescending(clientType => GetClientTypeCount(clientType.Id));
+            sortedClientTypes = sortedClientTypes.OrderBy(clientType => clientType.Name);
             var items = new List<SelectListItem>() { new SelectListItem("Select", "", true) };
             foreach (var item in sortedClientTypes)
             {

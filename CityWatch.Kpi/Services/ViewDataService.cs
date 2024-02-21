@@ -98,6 +98,8 @@ namespace CityWatch.Kpi.Services
                 var clientTypes = _clientDataProvider.GetClientTypes();
                 var items = new List<SelectListItem>() { new SelectListItem("Select", "", true) };
                 var sortedClientTypes = clientTypes.OrderByDescending(clientType => GetClientTypeCount(clientType.Id));
+                sortedClientTypes = sortedClientTypes.OrderBy(clientType => clientType.Name);
+                
                 foreach (var item in sortedClientTypes)
                 {
                     var countClientType = GetClientTypeCount(item.Id);
@@ -113,8 +115,11 @@ namespace CityWatch.Kpi.Services
                 var ClientType = _context.GuardLogins
                     .Where(z => z.GuardId == guardId)
                         .Include(x => x.ClientSite.ClientType)
+                        .Include(x => x.ClientSite)
                         .ToList();
                 var sortedClientTypes = ClientType.OrderByDescending(clientType => GetClientTypeCount(clientType.Id));
+
+                sortedClientTypes = sortedClientTypes.OrderBy(clientType => clientType.ClientSite.Name);
                 var items = new List<SelectListItem>() { new SelectListItem("Select", "", true) };
                 foreach (var item in sortedClientTypes)
                 {
