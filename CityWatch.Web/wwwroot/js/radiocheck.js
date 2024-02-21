@@ -1961,6 +1961,12 @@ function ExpiredDocuments() {
             newmsg = newmsg + "</tbody></table>";
             new MessageModal({ message: newmsg, onabort: isPaused = false }).showWarning();
         }
+        else {
+            isPaused = false;
+        }
     })
 }
+$("#addGuardModalnew").on("hidden.bs.modal", function () {
+    isPaused = false;
+});
 /*to enable for guard to update their documents - end*/
