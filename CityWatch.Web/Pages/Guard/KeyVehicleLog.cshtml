@@ -7,6 +7,8 @@
 @model CityWatch.Web.Pages.Guard.KeyVehicleLogModel
 @inject IViewDataService viewDataService
 @inject IConfiguration Configuration
+@inject IViewDataService viewDataService
+@inject IClientSiteViewDataService clientViewDataService
 
 @{
     ViewData["title"] = "CityWatch Security | Vehicle And Key Log";
@@ -85,12 +87,28 @@
     </div>
 </div>
 <div class="row">
+    <div class="col-md-2"></div>
+    <div class="col-md-2 text-left">
+    <label class="col-form-label" style="width: 100px">Filter Records</label>
+    </div>
+    <div class="col-md-1 text-left mr-5">
+        <label class="col-form-label" style="width: 100px">Site POC</label>
+    </div>
+    <div class="col-md-1 text-left mr-4 ml-3">
+        <label class="col-form-label" style="width: 100px">Site Location</label>
+    </div>
+    <div class="col-md-1 text-left ml-5">
+        <label class="col-form-label" style="width: 100px">Search</label>
+    </div>
+</div>
+<div class="row">
     <div class="col-md-2 text-left">
         <button type="button" class="btn btn-primary " id="add_new_vehicle_and_key_log_one"><i class="fa fa-plus mr-2"></i>Add Entry</button>
     </div>
     <div class="col-md-7 text-left">
+       
         <div class="d-flex flex-row">
-            <label class="col-form-label" style="width: 100px">Filter Records</label>
+            
             <div>
                 <div class="dropdown kvl-rec-filter  mr-4">
                     <button class="btn btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
@@ -102,13 +120,20 @@
                         <a class="dropdown-item" href="#" data-val="3"><i class="fa fa-circle text-warning mr-2"></i>Pending (Bookings / Request)</a>
                         <a class="dropdown-item" href="#" data-val="2"><i class="fa fa-circle text-danger mr-2"></i>Closed (Exit Site / Key In)</a>
                     </div>
-                    <input type="hidden" value="0" id="kvl_status_filter" />
-                    <input type="hidden" asp-for="@Model.KeyVehicleLog.GuardLogin.GuardId" id="GuardLog_GuardLogin_GuardId" />
+                    
                 </div>
             </div>
-            <label class="col-form-label ml-5 mr-2">Search</label>
-            <div class="mx-2">
-                <input type="text" class="form-control" style="width: 240px" id="search_kvl_log" />
+           
+            <select class="form-control mr-4" asp-for="@Model.KeyVehicleLog.ClientSitePocId" asp-items="@clientViewDataService.GetClientSitePocs(new int[] { Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId })">
+            </select>
+            
+            <select class="form-control mr-2" asp-for="@Model.KeyVehicleLog.ClientSiteLocationId" asp-items="@clientViewDataService.GetClientSiteLocations(new int[] { Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId })">
+            </select>
+            <input type="hidden" value="0" id="kvl_status_filter" />
+            <input type="hidden" asp-for="@Model.KeyVehicleLog.GuardLogin.GuardId" id="GuardLog_GuardLogin_GuardId" />
+            @*<label class="col-form-label ml-5 mr-2">Search</label>*@
+            <div class="ml-2">
+                <input type="text" class="form-control" style="width: 140px" id="search_kvl_log" />
             </div>
         </div>
        
@@ -139,7 +164,18 @@
                    @*  for searching site location-start*@
                     <th rowspan="2" hidden></th>
                      @*for searching site location-end*@
-                    <th rowspan="2"></th>
+                    @*  for searching site poc-start*@
+                    <th rowspan="2" hidden></th>
+                    @*for searching site poc-end*@
+                    <th rowspan="2">
+                        <center>
+                            <div class="custom-control custom-switch custom-control-inline ml-2 mt-1" title="Toggle Print Docket">
+                            
+                                <input type="checkbox" class="custom-control-input" id="chkAllBatchDocketSelect" name="toggleDarkMode">
+                                <label class="custom-control-label" for="chkAllBatchDocketSelect"></label>
+                            </div>
+                        </center>
+                    </th>
                 </tr>
                 <tr>
                     <th style="display:none"></th>
