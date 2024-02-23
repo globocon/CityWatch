@@ -128,8 +128,8 @@ namespace CityWatch.Web.Models
         public string PSPFName { get; set; }
 
         public string HASH { get; set; }
-
-
+        public string IP { get; set; }
+        
         public int? FeedbackType { get; set; }
         public int? FeedbackTemplates { get; set; }
 
