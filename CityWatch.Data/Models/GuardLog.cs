@@ -51,6 +51,7 @@ namespace CityWatch.Data.Models
         public bool? PlayNotificationSound { get; set; } = true;
         //Added for logbook Gps 
         public string GpsCoordinates { get; set; }
+        public bool IsIRReportTypeEntry { get; set; }
 
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

@@ -20,6 +20,9 @@ namespace CityWatch.Web.Models
             GuardId = guardLog.GuardLogin?.Guard.Id;
             EventDateTimeLocal = guardLog.EventDateTimeLocal;
             EventDateTimeZoneShort = guardLog.EventDateTimeZoneShort;
+            IsIRReportTypeEntry = guardLog.IsIRReportTypeEntry;
+
+
         }
 
         public GuardLogViewModel(IEnumerable<PatrolCarLog> patrolCarLogs)
@@ -88,5 +91,6 @@ namespace CityWatch.Web.Models
         public string EventDateTimeZoneShort { get; set; }
 
         public int? EventDateTimeUtcOffsetMinute { get; set; }
+        public bool IsIRReportTypeEntry { get; set; }
     }
 }

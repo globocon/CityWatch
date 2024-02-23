@@ -608,7 +608,18 @@
             columns: [
                 { field: 'clientSiteId', hidden: true },
                 { field: 'eventDateTime', title: 'Time', width: 100, renderer: function (value, record) { return renderTime(value, record, false); } },
-                { field: 'notes', title: 'Event / Notes', width: 350, editor: logBookNotesEditor, renderer: renderLogBookNotes },
+                {
+                    field: 'notes', title: 'Event / Notes', width: 350, editor: logBookNotesEditor, renderer: renderLogBookNotes,
+                    renderer: function (value, record) {
+                        if (record.isIRReportTypeEntry == true) {
+
+                            return record.notes + '<a href="https://c4istorage1.blob.core.windows.net/irfiles/' + record.notes.substr(0, 8) + '/' + record.notes + '.pdf" target="_blank">          Click here</a>';
+                        }
+                        else {
+                            return record.notes;
+                        }
+                    }
+                  },
                 {
                     field: 'guardInitials', title: 'Guard Initials', width: 70, renderer: function (value, record) {
                         //return record.guardLogin ? record.guardLogin.guard.initial : '';
@@ -1037,7 +1048,18 @@
         columns: [
             { field: 'clientSiteId', hidden: true },
             { field: 'eventDateTime', title: 'Time', width: 100, renderer: function (value, record) { return renderDateTime(value, record, false); } },
-            { field: 'notes', title: 'Event / Notes', width: 440 },
+            {
+                field: 'notes', title: 'Event / Notes', width: 440,
+                renderer: function (value, record) {
+                    if (record.isIRReportTypeEntry == true) {
+
+                        return record.notes + '<a href="https://c4istorage1.blob.core.windows.net/irfiles/' + record.notes.substr(0, 8) + '/' + record.notes + '.pdf" target="_blank">          Click here</a>';
+                    }
+                    else {
+                        return record.notes;
+                    }
+                }
+},
             { field: 'guardInitials', title: 'Guard Initials', width: 60, renderer: renderGuardInitialColumn }
         ],
         paramNames: { page: 'pageNo' },

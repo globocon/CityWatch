@@ -381,7 +381,7 @@ namespace CityWatch.Web.Services
                 //Added To display GPS start
                 var imagePath = "wwwroot/images/GPSImage.png";
                 var siteImage = new Image(ImageDataFactory.Create(imagePath))
-                .SetWidth(UnitValue.CreatePercentValue(18));
+                .SetWidth(UnitValue.CreatePercentValue(27));
                 siteImage.SetTextAlignment(TextAlignment.RIGHT);
 
                 var paragraph = new Paragraph()
@@ -396,12 +396,12 @@ namespace CityWatch.Web.Services
                 siteImage.SetAction(linkAction);
 
                 Paragraph notesParagraph = new Paragraph(notes).SetFontSize(CELL_FONT_SIZE);
-                if (entry.IrEntryType.HasValue && IrEntryType.Normal==entry.IrEntryType)
+                if (entry.IsIRReportTypeEntry==true)
                 {
                     var IncidentReport = entry.Notes + ".pdf";
                     string baseUrl = "https://c4istorage1.blob.core.windows.net/irfiles/";
                     string url = $"{baseUrl}{IncidentReport.Substring(0, 8)}/{IncidentReport}";
-                    string linkText = "    click here";
+                    string linkText = "          click here";
 
 
                     var link = new Link(linkText, PdfAction.CreateURI(url))
