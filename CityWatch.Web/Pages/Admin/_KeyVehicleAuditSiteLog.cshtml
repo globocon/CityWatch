@@ -5,18 +5,19 @@
 @model CityWatch.Web.Pages.Admin.AuditSiteLogModel
 
 <form id="form_kvl_auditlog_request" method="post" class="border-bottom">
-    <div class="form-row">       
+    <div class="form-row">
         <div class="form-group col-md-2">
             <label class="mx-1">Client Type</label>
             <select class="form-control" multiple="multiple" id="vklClientType">
                 @{
                     var userClientTypes = viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId);
                     var sortedClientTypes = userClientTypes.OrderByDescending(clientType => viewDataService.GetClientTypeCount(clientType.Id));
+                    sortedClientTypes = userClientTypes.OrderBy(clientType => clientType.Name);
                     foreach (var clientType in sortedClientTypes)
-                {
-                    var countClientType = viewDataService.GetClientTypeCount(clientType.Id);
-                    <option value="@clientType.Name">@clientType.Name (@countClientType)</option>
-                }
+                    {
+                        var countClientType = viewDataService.GetClientTypeCount(clientType.Id);
+                        <option value="@clientType.Name">@clientType.Name (@countClientType)</option>
+                    }
                 }
             </select>
         </div>
@@ -37,7 +38,7 @@
             <div>
                 <button type="button" class="btn btn-primary" id="btnGenerateVklAuditReport">View Report</button>
                 <button type="button" class="btn btn-primary" id="btnGenerateVklAuditLogReport">View Audit Log</button>
-                <a href="#"  class="btn btn-primary" id="btnDownloadVklAuditExcel">Download Exl</a>
+                <a href="#" class="btn btn-primary" id="btnDownloadVklAuditExcel">Download Exl</a>
                 <button type="button" class="btn btn-primary" id="btnDownloadVklAuditZip" title="Download Logs As Zip">Download Zip</button>
             </div>
         </div>
@@ -96,15 +97,13 @@
                     </div>
                     <div class="form-group col-md-2">
                         <label>Site POC</label>
-                        <select class="form-control" multiple="multiple" id="vklSitePOC" >
-                            
+                        <select class="form-control" multiple="multiple" id="vklSitePOC">
                         </select>
-                      
+
                     </div>
                     <div class="form-group col-md-2">
                         <label class="mx-1">Site Location</label>
-                        <select class="form-control" multiple="multiple"id="vklSiteLoc" >
-                            
+                        <select class="form-control" multiple="multiple" id="vklSiteLoc">
                         </select>
                     </div>
                     <div class="form-group col-md-2">
