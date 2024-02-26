@@ -1275,10 +1275,10 @@ namespace CityWatch.Web.Services
 
 
 
-                        if (i != last)
-                        {
-                            docList.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-                        }
+                        //if (i != last)
+                        //{
+                        //    docList.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                        //}
 
 
                     }
