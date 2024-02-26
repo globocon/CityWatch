@@ -86,13 +86,63 @@
         </div>
     </div>
 </div>
-<div class="row">
+@*<div class="row">
+    <table class="table table-sm table-borderless" style="border:none;" width="100%">
+        <tbody>
+            <tr>
+                <td rowspan="2" class="text-center text-md-center"><button type="button" class="btn btn-primary mt-4" id="add_new_vehicle_and_key_log_one"><i class="fa fa-plus mr-2"></i>Add Entry</button></td>
+                <td rowspan="2">
+                    <label class="col-form-label">Filter Records</label>
+                    <div class="dropdown kvl-rec-filter  mr-4">
+                        <button class="btn btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
+                            <i class="fa fa-circle text-primary mr-2"></i>Show All Entries
+                        </button>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="#" data-val="0"><i class="fa fa-circle text-primary mr-2"></i>Show All Entries</a>
+                            <a class="dropdown-item" href="#" data-val="1"><i class="fa fa-circle text-success mr-2"></i>Open (On Site / Key Out)</a>
+                            <a class="dropdown-item" href="#" data-val="3"><i class="fa fa-circle text-warning mr-2"></i>Pending (Bookings / Request)</a>
+                            <a class="dropdown-item" href="#" data-val="2"><i class="fa fa-circle text-danger mr-2"></i>Closed (Exit Site / Key In)</a>
+                        </div>
+
+                    </div>
+                </td>
+                <td rowspan="2">
+                    <label class="col-form-label" width="100%">Site POC</label>
+                    <select class="form-control mr-4" asp-for="@Model.KeyVehicleLog.ClientSitePocId" asp-items="@clientViewDataService.GetClientSitePocs(new int[] { Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId })">
+                    </select>
+                </td>
+                <td rowspan="2">
+
+                    <label class="col-form-label" width="100%">Site Location</label>
+                    <select class="form-control mr-2" asp-for="@Model.KeyVehicleLog.ClientSiteLocationId" asp-items="@clientViewDataService.GetClientSiteLocations(new int[] { Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId })">
+                    </select>
+                </td>
+                <td rowspan="2">
+                    <label class="col-form-label" width="100%">Search</label>
+                    <input type="hidden" value="0" id="kvl_status_filter" />
+                    <input type="hidden" asp-for="@Model.KeyVehicleLog.GuardLogin.GuardId" id="GuardLog_GuardLogin_GuardId" />
+                    
+                    <div class="ml-2">
+                        <input type="text" class="form-control" width="100%" id="search_kvl_log" />
+                    </div>
+                </td>
+                <td rowspan="2">
+                    <input type="hidden" asp-for="@Model.KeyVehicleLog.ClientSiteLogBookId" />
+                    <label class="col-form-label mt-4">Total Events: <span id="total_events"></span></label>
+                    <button type="button" class="btn btn-primary mt-1" id="add_new_vehicle_and_key_log"><i class="fa fa-plus mr-2"></i>Add Entry</button>
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+</div>*@
+@*<div class="row">
     <div class="col-md-2"></div>
     <div class="col-md-2 text-left">
     <label class="col-form-label" style="width: 100px">Filter Records</label>
     </div>
-    <div class="col-md-1 text-left mr-5">
-        <label class="col-form-label" style="width: 100px">Site POC</label>
+    <div class="col-md-1 text-left mr-2">
+        <label class="col-form-label" width="100%">Site POC</label>
     </div>
     <div class="col-md-1 text-left mr-4 ml-3">
         <label class="col-form-label" style="width: 100px">Site Location</label>
@@ -102,7 +152,7 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-md-2 text-left">
+    <div class="col-md-2 text-left ">
         <button type="button" class="btn btn-primary " id="add_new_vehicle_and_key_log_one"><i class="fa fa-plus mr-2"></i>Add Entry</button>
     </div>
     <div class="col-md-7 text-left">
@@ -131,7 +181,7 @@
             </select>
             <input type="hidden" value="0" id="kvl_status_filter" />
             <input type="hidden" asp-for="@Model.KeyVehicleLog.GuardLogin.GuardId" id="GuardLog_GuardLogin_GuardId" />
-            @*<label class="col-form-label ml-5 mr-2">Search</label>*@
+            <label class="col-form-label ml-5 mr-2">Search</label>
             <div class="ml-2">
                 <input type="text" class="form-control" style="width: 140px" id="search_kvl_log" />
             </div>
@@ -144,6 +194,62 @@
         <input type="hidden" asp-for="@Model.KeyVehicleLog.ClientSiteLogBookId" />
         <label class="col-form-label mx-2">Total Events: <span id="total_events"></span></label>
         <button type="button" class="btn btn-primary ml-2" id="add_new_vehicle_and_key_log"><i class="fa fa-plus mr-2"></i>Add Entry</button>
+    </div>
+</div>*@
+
+<div class="row">
+    <div class="col-md-2 text-left ">
+        <button type="button" class="btn btn-primary mt-3" id="add_new_vehicle_and_key_log_one"><i class="fa fa-plus mr-2"></i>Add Entry</button>
+    </div>
+    <div class="col-md-7 text-left">
+
+        <div class="d-flex flex-row">
+
+            <div>
+                <div class="dropdown kvl-rec-filter  mr-2">
+                    <label class="col-form-label" width="100%">Filter Records</label>
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
+                        <i class="fa fa-circle text-primary mr-2"></i>Show All Entries
+                    </button>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="#" data-val="0"><i class="fa fa-circle text-primary mr-2"></i>Show All Entries</a>
+                        <a class="dropdown-item" href="#" data-val="1"><i class="fa fa-circle text-success mr-2"></i>Open (On Site / Key Out)</a>
+                        <a class="dropdown-item" href="#" data-val="3"><i class="fa fa-circle text-warning mr-2"></i>Pending (Bookings / Request)</a>
+                        <a class="dropdown-item" href="#" data-val="2"><i class="fa fa-circle text-danger mr-2"></i>Closed (Exit Site / Key In)</a>
+                    </div>
+
+                </div>
+            </div>
+            <div class="mr-2">
+                <label class="col-form-label" width="100%">Site POC</label>
+                <select class="form-control mr-4" asp-for="@Model.KeyVehicleLog.ClientSitePocId" asp-items="@clientViewDataService.GetClientSitePocs(new int[] { Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId })">
+                </select>
+            </div>
+            <div class="mr-2">
+                <label class="col-form-label" width="100%">Site Location</label>
+                <select class="form-control mr-2" asp-for="@Model.KeyVehicleLog.ClientSiteLocationId" asp-items="@clientViewDataService.GetClientSiteLocations(new int[] { Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId })">
+                </select>
+            </div>
+
+            
+            <input type="hidden" value="0" id="kvl_status_filter" />
+            <input type="hidden" asp-for="@Model.KeyVehicleLog.GuardLogin.GuardId" id="GuardLog_GuardLogin_GuardId" />
+            <div>
+                <label class="col-form-label ml-4" width="100%">Search</label>
+                <div class="ml-4">
+                    <input type="text" class="form-control" width="100%" id="search_kvl_log" />
+                </div>
+            </div>
+           
+        </div>
+
+
+    </div>
+
+    <div class="col-md-3 text-right">
+        <input type="hidden" asp-for="@Model.KeyVehicleLog.ClientSiteLogBookId" />
+        <label class="col-form-label mt-2">Total Events: <span id="total_events"></span></label>
+        <button type="button" class="btn btn-primary mt-1" id="add_new_vehicle_and_key_log"><i class="fa fa-plus mr-2"></i>Add Entry</button>
     </div>
 </div>
 <div class="row mt-2">
@@ -161,7 +267,7 @@
                     <th rowspan="2" style="background-color:#EAF0ED"><center>Key / Card Scan</center></th>
                     <th rowspan="2" hidden></th>
                     <th rowspan="2" hidden></th>
-                   @*  for searching site location-start*@
+                    @*  for searching site location-start*@
                     <th rowspan="2" hidden></th>
                      @*for searching site location-end*@
                     @*  for searching site poc-start*@
