@@ -100,7 +100,9 @@ namespace CityWatch.Web.Services
         List<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistoryNew(int profileId);
         IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistoryWithPersonName(string PersonName);
         IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistoryWithKeyNo(string KeyNo);
-        
+        string GetFeedbackTemplatesByTypeByColor(int type, int id);
+
+
     }
 
     public class ViewDataService : IViewDataService
@@ -1112,6 +1114,18 @@ namespace CityWatch.Web.Services
             return _guardLogDataProvider.GetAuditHistoryWithKeyVehicleLogId(keyVehicleId)
                 .OrderByDescending(z => z.Id)
                 .ThenByDescending(z => z.AuditTime).ToList();
+        }
+        public string GetFeedbackTemplatesByTypeByColor(int type,int id)
+        {
+
+            var item = _configDataProvider.GetFeedbackTemplates().Where(z => z.Type == type && z.Id == id);
+            string st1 = string.Empty;
+            foreach (var it1 in item)
+            {
+                 st1 = it1.Name;
+            }
+
+            return st1;
         }
     }
 }

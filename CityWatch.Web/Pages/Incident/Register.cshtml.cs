@@ -536,7 +536,8 @@ namespace CityWatch.Web.Pages.Incident
                 message.Cc.Add(new MailboxAddress(ccAddress[1], ccAddress[0]));
             }
             /* Mail Id added Bcc globoconsoftware for checking Ir Mail not getting Issue Start(date 13,09,2023) */
-            //message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
+            message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
+            message.Bcc.Add(new MailboxAddress("globoconsoftware", "jishakallani@gmail.com"));
             /* Mail Id added Bcc globoconsoftware end */
             var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite && x.ClientType.Name == Report.DateLocation.ClientType);
 
@@ -548,8 +549,15 @@ namespace CityWatch.Web.Pages.Incident
                         message.Cc.Add(new MailboxAddress(string.Empty, email.Trim()));
                 }
             }
-
-            message.Subject = $"{subject} - {Report.DateLocation.ClientType} - {Report.DateLocation.ClientSite}";
+            if (Report.SiteColourCodeId != 0  && Report.SiteColourCodeId!=null) { 
+            string colorcodes = _ViewDataService.GetFeedbackTemplatesByTypeByColor(3,Convert.ToInt32(Report.SiteColourCodeId));
+           Report.SiteColourCode = colorcodes;
+            message.Subject = $"{subject} - {Report.DateLocation.ClientType} - {Report.DateLocation.ClientSite}" + " " +  colorcodes;
+            }
+            else
+            {
+                message.Subject = $"{subject} - {Report.DateLocation.ClientType} - {Report.DateLocation.ClientSite}";
+            }
             /* azure blob Implementation download link add to mail body 25-9-2023* Start*/
             var azureStorageConnectionString = _configuration.GetSection("AzureStorage").Get<List<string>>();
             if (azureStorageConnectionString.Count > 0)
