@@ -976,7 +976,7 @@ namespace CityWatch.Web.Services
                 {
                     ClientSiteId = clientSiteId,
                     LogBookId = logBookId,
-                    Notes = "Duress Alarm Activated By "+ GuradName+"From "+ clientSiteName,
+                    Notes = "Duress Alarm Activated By "+ GuradName+" From "+ clientSiteName,
                     EntryType = (int)IrEntryType.Alarm,
                     Date = logBook_Date.Value,
                     IsAcknowledged = 0,
@@ -990,7 +990,7 @@ namespace CityWatch.Web.Services
 
                 _guardLogDataProvider.SaveGuardLog(new GuardLog()
                 {
-                    Notes = "Duress Alarm Activated By " + GuradName + "From " + clientSiteName,
+                    Notes = "Duress Alarm Activated By " + GuradName + " From " + clientSiteName,
                     IsSystemEntry = true,
                     IrEntryType = Data.Enums.IrEntryType.Alarm,
                     EventDateTime = DateTime.Now,

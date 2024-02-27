@@ -600,7 +600,7 @@ namespace CityWatch.Web.Pages.Guard
             var success = true;
             var message = "success";
             var Subject = "Global Duress Alert";
-            var Notifications = "Duress Button Activated" + "\n" + "By" + GuradName + "\n" + "ClientSite:" + Name + "<a href=\"https://www.google.com/maps?q=" + gpsCoordinates + "\" target=\"_blank\" data-toggle=\"tooltip\" title=\"\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i></a>";
+            var Notifications = "Duress Button Activated" + "\n" + "By " + GuradName + "\n" + " From " + Name + "<a href=\"https://www.google.com/maps?q=" + gpsCoordinates + "\" target=\"_blank\" data-toggle=\"tooltip\" title=\"\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i></a>";
             #region Email
             if (Email != null)
             {
