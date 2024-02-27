@@ -315,15 +315,20 @@ $(function () {
 
     $('#search_kvl_log').on('keyup', function () {
         keyVehicleLog.search($(this).val()).draw();
+        $("#KeyVehicleLog_ClientSiteLocationId").find('option:selected').prop("selected", false);
+        $("#KeyVehicleLog_ClientSitePocId").find('option:selected').prop("selected", false);
     });
     //to search through checkbox-start
     $('#KeyVehicleLog_ClientSiteLocationId').on('change', function () {
         var item = $(this).find('option:selected').text();
+   
         keyVehicleLog.search(item).draw();
+      $("#KeyVehicleLog_ClientSitePocId").find('option:selected').prop("selected", false);
     });
     $('#KeyVehicleLog_ClientSitePocId').on('change', function () {
         var item = $(this).find('option:selected').text();
         keyVehicleLog.search(item).draw();
+        $("#KeyVehicleLog_ClientSiteLocationId").find('option:selected').prop("selected", false);
     });
     //to search through checkbox-end
     $('#vehicle_key_daily_log tbody').on('click', 'td.dt-control', function () {
