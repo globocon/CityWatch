@@ -1058,7 +1058,7 @@ namespace CityWatch.Web.Pages.Guard
 
 
         //To Generate the bulk Pdf In List start
-        public async Task<JsonResult> OnPostGenerateManualDocketBulk(bool IsGlobal, ManualDocketReason option, string otherReason, string stakeholderEmails, int clientSiteId, string blankNoteOnOrOff, List<int> ids)
+        public async Task<JsonResult> OnPostGenerateManualDocketBulk(bool IsGlobal, ManualDocketReason option, string otherReason, string stakeholderEmails, int clientSiteId, string blankNoteOnOrOff, List<int> ids,string pdfBinderOnOrOff)
         {
             //id = 37200;
             var fileName = string.Empty;
@@ -1067,9 +1067,15 @@ namespace CityWatch.Web.Pages.Guard
             try
             {
                 //var serialNo = GetNextDocketSequenceNumber(id);
-                fileName = _keyVehicleLogDocketGenerator.GenerateBulkPdfReport(ids, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, "1");
-                
+                if (pdfBinderOnOrOff != "true")
+                {
+                    fileName = _keyVehicleLogDocketGenerator.GenerateBulkPdfReport(ids, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, "1");
 
+                }
+                else
+                {
+                    fileName = _keyVehicleLogDocketGenerator.GenerateBulkIndividualPdfReportWithZip(ids, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, "1");
+                }
 
 
             }
@@ -1114,7 +1120,8 @@ namespace CityWatch.Web.Pages.Guard
             //}
 
 
-
+            if(Path.GetExtension(fileName) == ".zip" || Path.GetExtension(fileName) == ".ZIP")
+                return new JsonResult(new { fileName = @Url.Content($"~/Pdf/FromDropbox/{fileName}"), statusCode });
 
             return new JsonResult(new { fileName = @Url.Content($"~/Pdf/Output/{fileName}"), statusCode });
         }

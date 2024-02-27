@@ -76,19 +76,27 @@
                 </div>
             </div>
             <div class="modal-footer justify-content-start">
-                <div class="form-group col-md-7">
+                <div class="form-group col-md-6">
                     <button class="btn btn-primary" id="generate_kvl_docket">Generate Docket</button>
                     <button class="btn btn-primary" id="generate_kvl_AlldocketList" style="display:none">Generate Docket</button>
                     <button class="btn btn-primary" id="generate_logbook_AlldocketList" style="display:none">Generate Docket</button>
                     <a class="btn btn-outline-primary" id="download_kvl_docket" href="#" target="_blank" style="display:none">Download Pdf</a>
                 </div>
-                <div class="form-group col-md-5 b-0">
+                <div class="form-group col-md-6 b-0">
                     <div class="custom-control custom-switch custom-control-inline">
                             <input type="checkbox" class="custom-control-input" id="chb_IsBlankNote">
                             <label class="custom-control-label ml-5 mb-2" for="chb_IsBlankNote"></label>
                             <input hidden id="IsBlankNoteOn" />
                         <label id="lbl_BlankNotes">Blank Notes Off</label>
                     </div>
+                    
+                        <div class="custom-control custom-switch custom-control-inline">
+                            <input type="checkbox" class="custom-control-input" id="chb_IsPDFBinder">
+                            <label class="custom-control-label ml-5 mb-2" for="chb_IsPDFBinder"></label>
+                            <input hidden id="IsPDFBinderOn" />
+                            <label id="lbl_PDFBinder">PDF Binder Off</label>
+                        </div>
+                    
                     <div class="row">
                         <span style="font-size:0.8rem;font:italic bold;color:red" class="mr-5">
                             Note: Consider "Blanking" POI Profiles

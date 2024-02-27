@@ -173,19 +173,21 @@ $(function () {
            /* for searching site location-start*/
             { data: 'clientSiteLocationName', visible: false },
                 /* for searching site location-end*/
-               
+                /* for searching site poc-start*/
+                { data: 'clientSitePocName', visible: false },
+                /* for searching site poc-end*/
                
             {
                 targets: -1,
                 data: 'detail.id',
                 width: '12%',
                 defaultContent: '',
-
+               
                 render: function (value, type, data) {
                     return '<button id="btnEditVkl" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil"></i></button>' +
                         '<button id="btnPrintVkl" class="btn btn-outline-primary mr-1 "><i class="fa fa-print"></i></button>' +
                         '<button id="btnDeleteVkl" class="btn btn-outline-danger mr-2 mt-1"><i class="fa fa-trash"></i></button>' +
-                        '<div class="custom-control custom-switch custom-control-inline mr-0"  title="Toggle Print Docket">'+
+                        '<div class="custom-control custom-switch custom-control-inline ml-2 mt-1"  title="Toggle Print Docket">'+
                         '<input type="checkbox" class="custom-control-input" id="' + value +'" name="toggleDarkMode">'+
                         '<label class="custom-control-label" for="' + value +'"></label>'+
                         '</div>'
@@ -314,7 +316,16 @@ $(function () {
     $('#search_kvl_log').on('keyup', function () {
         keyVehicleLog.search($(this).val()).draw();
     });
-
+    //to search through checkbox-start
+    $('#KeyVehicleLog_ClientSiteLocationId').on('change', function () {
+        var item = $(this).find('option:selected').text();
+        keyVehicleLog.search(item).draw();
+    });
+    $('#KeyVehicleLog_ClientSitePocId').on('change', function () {
+        var item = $(this).find('option:selected').text();
+        keyVehicleLog.search(item).draw();
+    });
+    //to search through checkbox-end
     $('#vehicle_key_daily_log tbody').on('click', 'td.dt-control', function () {
         var tr = $(this).closest('tr');
         var row = keyVehicleLog.row(tr);
@@ -390,7 +401,15 @@ $(function () {
             });
         }
     });
-
+    /*for deselecting the common checkbox-start*/
+    $('#vehicle_key_daily_log tbody').on('change', 'input[type=checkbox]', function () {
+        var isChecked = $(this).is(':checked');
+        
+        if (isChecked == false) {
+            $('#chkAllBatchDocketSelect').prop('checked', false);
+        }
+    });
+     /*for deselecting the common checkbox-end*/
     let isKeyAllocatedModal;
     let isVehicleOnsiteModal
     let isVehicleInAnotherSiteModal;
@@ -2986,6 +3005,7 @@ $(function () {
                         clientSiteId: $('#ClientSiteID').val(),
                         blankNoteOnOrOff: $('#IsBlankNoteOn').val(),
                         ids: checkboxIdsArray,
+                        pdfBinderOnOrOff: $('#IsPDFBinderOn').val(),
                     },
                     type: 'POST',
                     headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -3692,3 +3712,41 @@ $(function () {
     /*to add do's and donts -end*/
 
 });
+/*to add poi binder - start*/
+$('#chb_IsPDFBinder').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+    $('#lbl_PDFBinder').text(isChecked ? 'PDF Binder  On' : 'PDF Binder Off'); lbl_PDFBinder
+    $('#IsPDFBinderOn').val(isChecked);
+
+});
+$('#chkAllBatchDocketSelect').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+    if (isChecked == true) {
+     
+        $("#vehicle_key_daily_log  input[type=checkbox]").each(function () {
+            var isChecked1 = $(this).is(':checked');
+            if (isChecked1 == false) {
+                $(this).prop('checked', true);
+            }
+
+        });
+    }
+    else {
+      
+        //to uncheck the ticked options-start
+        $("#vehicle_key_daily_log  input[type=checkbox]:checked").each(function () {
+            var isChecked1 = $(this).is(':checked');
+            if (isChecked1 == true) {
+                $(this).prop('checked', false);
+            }
+
+        });
+    
+        //to uncheck the ticked options-end
+    }
+
+});
+
+/*to add poi binder - end*/

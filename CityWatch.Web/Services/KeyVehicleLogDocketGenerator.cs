@@ -1,4 +1,5 @@
-﻿using CityWatch.Data.Helpers;
+﻿using CityWatch.Common.Helpers;
+using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
@@ -17,6 +18,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text.RegularExpressions;
 using static Dropbox.Api.TeamLog.ClassificationType;
@@ -42,6 +45,7 @@ namespace CityWatch.Web.Services
         string GeneratePdfReportList(int keyVehicleLogId, string docketReason, string blankNoteOnOrOff, string serialNo, List<int> ids, int clientsiteid);
         string GeneratePdfReportListGlobal(int keyVehicleLogId1, string docketReason, string blankNoteOnOrOff, string serialNo, List<int> ids);
         public string GenerateBulkPdfReport(List<int> keyVehicleLogId, string docketReason, string blankNoteOnOrOff, string serialNo);
+        public string GenerateBulkIndividualPdfReportWithZip(List<int> keyVehicleLogId, string docketReason, string blankNoteOnOrOff, string serialNo);
 
     }
     public class KeyVehicleLogDocketGenerator : IKeyVehicleLogDocketGenerator
@@ -63,6 +67,7 @@ namespace CityWatch.Web.Services
         private const string REPORT_DIR = "Output";
         private const string COLOR_LIGHT_BLUE = "#d9e2f3";
         private const string LAST_USED_DOCKET_SEQ_NO_CONFIG_NAME = "LastUsedDocketSn";
+        private readonly string _downloadsFolderPath;
         public KeyVehicleLogDocketGenerator(IWebHostEnvironment webHostEnvironment,
            IGuardLogDataProvider guardLogDataProvider,
            IClientDataProvider clientDataProvider,
@@ -79,6 +84,7 @@ namespace CityWatch.Web.Services
             _SiteimageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "SiteImage");
             _settings = settings.Value;
             _appConfigurationProvider= appConfigurationProvider;
+            _downloadsFolderPath = IO.Path.Combine(webHostEnvironment.WebRootPath, "Pdf", "FromDropbox");
         }
         //To Generate the Pdf In List start
         public string GeneratePdfReportList(int keyVehicleLogId1, string docketReason, string blankNoteOnOrOff, string serialNo, List<int> ids, int clientsiteid)
@@ -1204,5 +1210,115 @@ namespace CityWatch.Web.Services
             }
             return string.Join("; ", listKeys);
         }
+        //generate bulk dock with individual pdfs with zip file-start
+        public string GenerateBulkIndividualPdfReportWithZip(List<int> keyVehicleLogId, string docketReason, string blankNoteOnOrOff, string serialNo)
+        {
+            var zipfilepath = GetZipFolderPath();
+            var fileNamePart = $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{"Bulk"}_SN{serialNo}.zip";
+            foreach (var i in keyVehicleLogId)
+            {
+                var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(i);
+                var reportPdfPath1 = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{keyVehicleLog.GuardLogin.ClientSite.Name}_SN{serialNo}.pdf");
+
+                var pdfDocList = new PdfDocument(new PdfWriter(reportPdfPath1));
+            pdfDocList.SetDefaultPageSize(PageSize.A4);
+            var docList = new Document(pdfDocList);
+            docList.Add(CreateReportHeaderTable(keyVehicleLog.ClientSiteLogBook.ClientSiteId));
+            //docList.Add(CreateReportHeaderTableListforBulkDocket(0));
+
+            var reportPdfPath = "";
+
+            var last = keyVehicleLogId.Last();
+            
+
+                
+                serialNo = GetNextDocketSequenceNumber(i);
+                _guardLogDataProvider.SaveDocketSerialNo(i, serialNo);
+
+                if (keyVehicleLog == null)
+                    return string.Empty;
+
+                var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
+                var keyVehicleLogViewModel = new KeyVehicleLogViewModel(keyVehicleLog, kvlFields);
+
+
+
+                if (keyVehicleLog != null)
+                {
+                    if (keyVehicleLog.ClientSiteLogBook != null)
+                    {
+
+
+
+                        //_guardLogDataProvider.SaveDocketSerialNo(keyVehicleLog.Id, serialNo);
+
+                        if (keyVehicleLog == null)
+                            return string.Empty;
+
+
+
+                        reportPdfPath = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{"POI_ListAll"}_SN{serialNo}.pdf");
+
+                        if (IO.File.Exists(reportPdfPath))
+                            //IO.File.Delete(reportPdfPath);
+
+
+                            docList.SetMargins(15f, 30f, 40f, 30f);
+
+                        docList.Add(CreateSiteDetailsTable(keyVehicleLog));
+                        docList.Add(CreateReportDetailsTable(keyVehicleLogViewModel, blankNoteOnOrOff));
+                        docList.Add(GetKeyAndOtherDetailsTable(keyVehicleLogViewModel));
+                        docList.Add(GetCustomerRefAndVwiTable(keyVehicleLogViewModel));
+                        docList.Add(CreateWeightandOtherDetailsTable(keyVehicleLogViewModel, docketReason));
+                        docList.Add(CreateImageDetailsTable(keyVehicleLogViewModel, docketReason));
+
+
+
+
+                        //if (i != last)
+                        //{
+                        //    docList.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                        //}
+
+
+                    }
+
+
+
+
+                }
+                docList.Close();
+                pdfDocList.Close();
+                var reportFilePath = IO.Path.Combine(_reportRootDir, "Pdf", "Output", $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{keyVehicleLog.GuardLogin.ClientSite.Name}_SN{serialNo}.pdf");
+                File.Copy(reportPdfPath1, IO.Path.Combine(zipfilepath, $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{keyVehicleLog.GuardLogin.ClientSite.Name}_SN{serialNo}.pdf"));
+                //File.Delete(reportFilePath);
+            }
+
+            
+
+
+            return GetZipFileName(zipfilepath, DateTime.Today, DateTime.Today, fileNamePart);
+
+        }
+        private string GetZipFolderPath()
+        {
+            var zipFolderPath = IO.Path.Combine(_downloadsFolderPath, Guid.NewGuid().ToString());
+            if (!Directory.Exists(zipFolderPath))
+                Directory.CreateDirectory(zipFolderPath);
+            return zipFolderPath;
+        }
+        private string GetZipFileName(string zipFolderPath, DateTime logFromDate, DateTime logToDate, string fileNamePart)
+        {
+            var zipFileName = $"{FileNameHelper.GetSanitizedFileNamePart(fileNamePart)}";
+
+            
+            if (File.Exists(IO.Path.Combine(_downloadsFolderPath, zipFileName)))
+                File.Delete(IO.Path.Combine(_downloadsFolderPath, zipFileName));
+            ZipFile.CreateFromDirectory(zipFolderPath, IO.Path.Combine(_downloadsFolderPath, zipFileName), CompressionLevel.Optimal, false);
+            if (Directory.Exists(zipFolderPath))
+                Directory.Delete(zipFolderPath,true);
+            return zipFileName;
+        }
+
     }
 }
