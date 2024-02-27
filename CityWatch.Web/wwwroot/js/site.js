@@ -1794,6 +1794,7 @@
                 $('#txt_CompanyName').val(data[i].name);
                 $("#txt_CompanyDomain").val(data[i].domain);
                 $("#txt_HomePageMessage").val(data[i].homePageMessage);
+                $("#txt_HomePageMessage2").val(data[i].homePageMessage2);
                 $("#txt_color").val(data[i].messageBarColour);
                 $("#txt_BannerMessage").val(data[i].bannerMessage);
                 $("#txt_HyplerLink").val(data[i].hyperlink);
@@ -1836,13 +1837,15 @@
             if (data.success)
 
                 var result = prlogopath.lastIndexOf("/");
-            var newfile = data.filepath;
+            const newfile = data.filepath;
+            var url = window.location.origin; 
             var result1 = newfile.lastIndexOf("/");
-            var substr = prlogopath.substring(0, result + 1);
+            var substr = prlogopath.substring(0, result-1);
 
             var substr2 = newfile.substring(result1 + 1);
             substr = substr + "cr_primarylogo.JPG";
-            $("#img_PrimaryLogo").attr('src', substr);
+            var newpath = url + "/Images/cr_primarylogo.JPG";
+            $("#img_PrimaryLogo").attr('src', newpath);
 
         }).fail(function () {
             showStatusNotification(false, 'Something went wrong');
@@ -1884,7 +1887,9 @@
 
             var substr2 = newfile.substring(result1 + 1);
             substr = substr + "cr_bannerlogo.JPG";
-            $("#img_BannerLogo").attr('src', substr);
+            var url = window.location.origin; 
+            var newpath = url + "/Images/cr_bannerlogo.JPG";
+            $("#img_BannerLogo").attr('src', newpath);
 
 
 
@@ -1910,6 +1915,7 @@
                 PrimaryLogoPath: $("#img_PrimaryLogo").prop('src'),
                 BannerLogoPath: $("#img_BannerLogo").prop('src'),
                 HomePageMessage: $("#txt_HomePageMessage").val(),
+                HomePageMessage2: $("#txt_HomePageMessage2").val(),
                 MessageBarColour: $("#txt_color").val(),
                 BannerMessage: $("#txt_BannerMessage").val(),
                 Hyperlink: $("#txt_HyplerLink").val(),

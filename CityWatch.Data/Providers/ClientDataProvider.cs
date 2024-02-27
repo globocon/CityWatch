@@ -608,24 +608,23 @@ namespace CityWatch.Data.Providers
                 }
                 else
                 {
-                    var templateToUpdate = _context.CompanyDetails.SingleOrDefault(x => x.Id == companyDetails.Id);
-                    if (templateToUpdate != null)
-                    {
-                        templateToUpdate.Name = companyDetails.Name;
-                        templateToUpdate.Domain = companyDetails.Domain;
-                        templateToUpdate.LastUploaded = DateTime.Now;
-                        templateToUpdate.PrimaryLogoUploadedOn = DateTime.Now;
-                        templateToUpdate.PrimaryLogoPath = companyDetails.PrimaryLogoPath;
-                        templateToUpdate.HomePageMessage = companyDetails.HomePageMessage;
-                        templateToUpdate.MessageBarColour = companyDetails.MessageBarColour;
-                        templateToUpdate.HomePageMessageUploadedOn = DateTime.Now;
-                        templateToUpdate.BannerLogoPath = companyDetails.BannerLogoPath;
-                        templateToUpdate.BannerMessage = companyDetails.BannerMessage;
-                        templateToUpdate.BannerMessageUploadedOn = DateTime.Now;
-                        templateToUpdate.Hyperlink = companyDetails.Hyperlink;
-                        templateToUpdate.EmailMessage = companyDetails.EmailMessage;
-                        templateToUpdate.EmailMessageUploadedOn = DateTime.Now;
-                    }
+
+                    templateToUpdate.Name = companyDetails.Name;
+                    templateToUpdate.Domain = companyDetails.Domain;
+                    templateToUpdate.LastUploaded = DateTime.Now;
+                    templateToUpdate.PrimaryLogoUploadedOn = DateTime.Now;
+                    templateToUpdate.PrimaryLogoPath = companyDetails.PrimaryLogoPath;
+                    templateToUpdate.HomePageMessage = companyDetails.HomePageMessage;
+                    templateToUpdate.HomePageMessage2 = companyDetails.HomePageMessage2;
+                    templateToUpdate.MessageBarColour = companyDetails.MessageBarColour;
+                    templateToUpdate.HomePageMessageUploadedOn = DateTime.Now;
+                    templateToUpdate.BannerLogoPath = companyDetails.BannerLogoPath;
+                    templateToUpdate.BannerMessage = companyDetails.BannerMessage;
+                    templateToUpdate.BannerMessageUploadedOn = DateTime.Now;
+                    templateToUpdate.Hyperlink = companyDetails.Hyperlink;
+                    templateToUpdate.EmailMessage = companyDetails.EmailMessage;
+                    templateToUpdate.EmailMessageUploadedOn = DateTime.Now;
+
                 }
                 _context.SaveChanges();
             }

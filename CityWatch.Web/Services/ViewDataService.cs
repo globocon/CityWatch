@@ -425,6 +425,7 @@ namespace CityWatch.Web.Services
                     company.PrimaryLogoUploadedOn,
                     company.FormattedPrimaryLogoUploaded,
                     company.HomePageMessage,
+                    company.HomePageMessage2,
                     company.MessageBarColour,
                     company.HomePageMessageUploadedOn,
                     company.FormattedHomePageMessageUploaded,

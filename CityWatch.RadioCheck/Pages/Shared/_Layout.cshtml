@@ -1,10 +1,13 @@
-﻿@using Microsoft.AspNetCore.Hosting
+﻿@using CityWatch.Data.Providers;
+@using Microsoft.AspNetCore.Hosting
 @using Microsoft.Extensions.Hosting
 @using System.Security.Claims;
 @inject IWebHostEnvironment environment
+@inject IUserDataProvider viewDataService
 @{
     var claimsIdentity = User.Identity as ClaimsIdentity;
-
+    var companydetail = viewDataService.GetCompanyDetails().SingleOrDefault(x => x.Id == 1);
+    var companydetailsprimarylogo = companydetail.PrimaryLogoPath;
 }
 
 
@@ -28,8 +31,11 @@
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom mb-3">
             <div class="container">
               
-                <a class="navbar-brand" href="https://www.citywatchsecurity.com.au" target="_blank">
-                    <img src="~/images/CWSLogo.png" alt="cws logo" height="60px"/>
+                @*<a class="navbar-brand" href="https://www.citywatchsecurity.com.au" target="_blank">*@
+                <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
+                
+                    @*<img src="~/images/CWSLogo.png" alt="cws logo" height="60px"/>*@
+                    <img src="@companydetail.PrimaryLogoPath" alt="cws logo" height="60px" />
                 </a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse"
                         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
