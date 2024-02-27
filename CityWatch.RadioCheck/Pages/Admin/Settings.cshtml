@@ -24,7 +24,7 @@
         </li>
 
         <li class="nav-item">
-            <a class="nav-link " id="logbook-tab" data-toggle="tab" href="#logbook" role="tab" aria-controls="logbook" aria-selected="false">Log Book</a>
+            <a class="nav-link " id="logbook-tab" data-toggle="tab" href="#logbook" role="tab" aria-controls="logbook" aria-selected="false">Log Book & Duress</a>
         </li>
         <li class="nav-item">
             <a class="nav-link " id="apicalls-tab" data-toggle="tab" href="#apicalls" role="tab" aria-controls="apicalls" aria-selected="false">API Calls</a>
@@ -136,6 +136,34 @@
                         <div class="card-body row m-0">
                             <div class="col-md-12">
                                 <table class="table" id="gridSiteDetailsforRcLogbook"></table>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between">
+                            <b><u>Duress Assignment(Global)</u></b>
+                            <div class="col text-right">
+                                <button class="btn btn-success" id="add_GloblEmail">Save</button>
+                            </div>
+                        </div>
+
+                        <div class="card-body row m-0">
+                            <div class="col-md-12">
+                                <div class="form-group row">
+                                    <label for="gs_duress_email" class="col-md-2 col-form-label">Email alert</label>
+                                    <div class="col-md-3">
+                                        <input type="email" class="form-control" id="du_duress_email">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="gs_duress_sms" class="col-md-2 col-form-label">SMS alert</label>
+                                    <div class="col-md-3">
+                                        <input type="text" class="form-control" id="du_duress_sms">
+                                    </div>
+                                </div>
                             </div>
 
                         </div>

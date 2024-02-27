@@ -88,7 +88,7 @@ namespace CityWatch.Web.Services
         IEnumerable<string> GetCompanyAndSenderNames(string startsWith);
         IEnumerable<string> GetCompanyNames(string startsWith);
         bool IsClientSiteDuressEnabled(int clientSiteId);
-        void EnableClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId, string gpsCoordinates, string enabledAddress, GuardLog tmzdata);
+        void EnableClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId, string gpsCoordinates, string enabledAddress, GuardLog tmzdata, string clientSiteName, string GuradName);
         int GetClientTypeCount(int? typeId);
 
         //For Access Type
@@ -961,7 +961,7 @@ namespace CityWatch.Web.Services
         }
 
         public void EnableClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId,
-                                            string gpsCoordinates, string enabledAddress, GuardLog tmzdata)
+                                            string gpsCoordinates, string enabledAddress, GuardLog tmzdata,string clientSiteName,string GuradName)
         // GuardLog tmzdata parameter added by binoy for Task p6#73_TimeZone issue
         {
             if (!IsClientSiteDuressEnabled(clientSiteId))
@@ -976,7 +976,7 @@ namespace CityWatch.Web.Services
                 {
                     ClientSiteId = clientSiteId,
                     LogBookId = logBookId,
-                    Notes = "Duress Alarm Activated",
+                    Notes = "Duress Alarm Activated By "+ GuradName+"From "+ clientSiteName,
                     EntryType = (int)IrEntryType.Alarm,
                     Date = logBook_Date.Value,
                     IsAcknowledged = 0,
@@ -990,7 +990,7 @@ namespace CityWatch.Web.Services
 
                 _guardLogDataProvider.SaveGuardLog(new GuardLog()
                 {
-                    Notes = "Duress Alarm Activated",
+                    Notes = "Duress Alarm Activated By " + GuradName + "From " + clientSiteName,
                     IsSystemEntry = true,
                     IrEntryType = Data.Enums.IrEntryType.Alarm,
                     EventDateTime = DateTime.Now,

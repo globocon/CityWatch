@@ -187,6 +187,33 @@ namespace CityWatch.RadioCheck.Pages.Admin
 
             return new JsonResult(new { status = status, message = message });
         }
+        //To save the Gloabl Duress Email Start
+        public JsonResult OnGetDuressEmail()
+        {
+            var Emails = _clientDataProvider.GetDuressEmails();
+            var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
+            return new JsonResult(new { Emails = emailAddresses });
+        }
+            public JsonResult OnPostSaveDuressEmail(string Email)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+               
+                    _clientDataProvider.DuressGloablEmail(Email);
+                
+                
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = Email, message = message });
+        }
+        //To save the Gloabl Duress Email Stop
         public JsonResult OnGetBroadcastLiveEvents()
         {
             return new JsonResult(_configDataProvider.GetBroadcastLiveEvents());

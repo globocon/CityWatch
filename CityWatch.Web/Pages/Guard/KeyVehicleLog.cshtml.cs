@@ -62,6 +62,7 @@ namespace CityWatch.Web.Pages.Guard
         private readonly ILogger<KeyVehicleLogModel> _logger;
         private readonly IAppConfigurationProvider _appConfigurationProvider;
         private readonly string _imageRootDir;
+   
 
         public KeyVehicleLogModel(IWebHostEnvironment webHostEnvironment,
             IGuardLogDataProvider guardLogDataProvider,
@@ -1233,7 +1234,17 @@ namespace CityWatch.Web.Pages.Guard
                     Type = LogBookType.DailyGuardLog,
                     Date = DateTime.Today
                 });
-                _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logbookId.Value, guardId, gpsCoordinates, enabledAddress, tmdata);
+               
+                var Name = _clientDataProvider.GetClientSiteName(clientSiteId);
+                var Emails = _clientDataProvider.GetGlobalDuressEmail().ToList();
+                var GuradName = _clientDataProvider.GetGuradName(guardId);
+
+                _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logbookId.Value, guardId, gpsCoordinates, enabledAddress, tmdata, Name, GuradName);
+                var emailAddresses = Emails.Select(email => email.Email).ToList();
+                foreach (var emailAddress in emailAddresses) {
+                    EmailSender(emailAddress, Name, gpsCoordinates, GuradName);
+                }
+               
             }
             catch (Exception ex)
             {
@@ -1241,6 +1252,74 @@ namespace CityWatch.Web.Pages.Guard
                 message = "Error " + ex.Message;
             }
             return new JsonResult(new { status, message });
+        }
+
+        public JsonResult EmailSender(string Email,string Name,string gpsCoordinates,string GuradName)
+        {
+            var success = true;
+            var message = "success";
+            var Subject = "Global Duress Alert";
+            var Notifications = "Duress Button Activated" + "\n" + "By"+ GuradName +  "\n" + "ClientSite:" + Name + "<a href=\"https://www.google.com/maps?q="+ gpsCoordinates+"\" target=\"_blank\" data-toggle=\"tooltip\" title=\"\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i></a>";
+            #region Email
+            if (Email != null)
+            {
+                string smsSiteEmails = null;
+
+                if (Email != null)
+                {
+                    smsSiteEmails = Email;
+                }
+                else
+                {
+                    success = false;
+                    message = "Please Enter the Site Email";
+                    return new JsonResult(new { success, message });
+                }
+
+
+                var fromAddress = _emailOptions.FromAddress.Split('|');
+                var toAddress = smsSiteEmails.Split(','); ;
+                var subject = Subject;
+                var messageHtml = Notifications;
+
+                var messagenew = new MimeMessage();
+                messagenew.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+                foreach (var address in GetToEmailAddressList(toAddress))
+                    messagenew.To.Add(address);
+
+                messagenew.Subject = $"{subject}";
+
+                var builder = new BodyBuilder()
+                {
+                    HtmlBody = messageHtml
+                };
+
+                messagenew.Body = builder.ToMessageBody();
+
+                using (var client = new SmtpClient())
+                {
+                    client.Connect(_emailOptions.SmtpServer, _emailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                    if (!string.IsNullOrEmpty(_emailOptions.SmtpUserName) &&
+                        !string.IsNullOrEmpty(_emailOptions.SmtpPassword))
+                        client.Authenticate(_emailOptions.SmtpUserName, _emailOptions.SmtpPassword);
+                    client.Send(messagenew);
+                    client.Disconnect(true);
+                }
+            }
+            #endregion
+
+            return new JsonResult(new { success, message });
+        }
+        private List<MailboxAddress> GetToEmailAddressList(string[] toAddress)
+        {
+            var emailAddressList = new List<MailboxAddress>();
+            foreach (var item in toAddress)
+            {
+                emailAddressList.Add(new MailboxAddress(string.Empty, item));
+            }
+
+
+            return emailAddressList;
         }
 
         private async Task UploadToDropbox(int clientSiteId, string fileName)

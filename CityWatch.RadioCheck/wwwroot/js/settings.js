@@ -1,6 +1,15 @@
 ﻿window.onload = function () {
 
+    //To get the Duress Emails in pageload start
+    $.ajax({
+        url: '/Admin/Settings?handler=DuressEmail',
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (Emails) {
+        $('#du_duress_email').val(Emails.emails);
+    });
 
+     //To get the Duress Emails in pageload stop
 
 };
 let gridRadioCheckStatusTypeSettings;
@@ -261,7 +270,38 @@ $('#add_logbook').on('click', function () {
     gridClientSiteSettings.reload({ type: $('#cs_client_type').val(), searchTerm: $('#search_sites_settings').val() });
     $('#logbook-modal').modal('show');
 })
-
+//To save the Global Email Of Duress Button start
+$('#add_GloblEmail').on('click', function () {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    var Email = $('#du_duress_email').val();
+    var emailsArray = Email.split(',');
+    for (var i = 0; i < emailsArray.length; i++) {
+        var emailAddress = emailsArray[i].trim();
+        if (isValidEmail(emailAddress))
+        {
+            $.ajax({
+                url: '/Admin/Settings?handler=SaveDuressEmail',
+                data: { Email: emailAddress },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function () {
+            })
+        }
+            else {
+                alert("Invalid email address");
+            }
+    
+    
+        
+    } 
+    
+    function isValidEmail(email) {
+        // Regular expression for basic email validation
+        var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailPattern.test(email);
+    }
+})
+//To save the Global Email Of Duress Button stop
 /***** Client Site KPI Settings *****/
 let gridSiteDetailsforRcLogbook;
 gridSiteDetailsforRcLogbook = $('#gridSiteDetailsforRcLogbook').grid({

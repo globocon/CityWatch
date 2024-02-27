@@ -5,11 +5,13 @@ using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Services;
 using DocumentFormat.OpenXml.Office2010.Word;
+using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MimeKit;
 using Org.BouncyCastle.Tls;
 using System;
@@ -28,6 +30,7 @@ namespace CityWatch.Web.Pages.Guard
         private readonly IViewDataService _viewDataService;
         private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
         private readonly ILogger<DailyLogModel> _logger;
+        private readonly EmailOptions _emailOptions;
 
         [BindProperty]
         public GuardLog GuardLog { get; set; }
@@ -40,6 +43,7 @@ namespace CityWatch.Web.Pages.Guard
              IClientDataProvider clientDataProvider,
              IViewDataService viewDataService,
              IClientSiteWandDataProvider clientSiteWandDataProvider,
+             IOptions<EmailOptions> emailOptions,
              ILogger<DailyLogModel> logger)
         {
             _guardDataProvider = guardDataProvider;
@@ -48,6 +52,7 @@ namespace CityWatch.Web.Pages.Guard
             _viewDataService = viewDataService;
             _clientSiteWandDataProvider = clientSiteWandDataProvider;
             _logger = logger;
+            _emailOptions = emailOptions.Value;
         }
 
         public void OnGet()
@@ -573,7 +578,15 @@ namespace CityWatch.Web.Pages.Guard
             var message = "Success";
             try
             {
-                _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logBookId, guardId, gpsCoordinates, enabledAddress, tmdata);
+               
+                var Name = _clientDataProvider.GetClientSiteName(clientSiteId);
+                var Emails = _clientDataProvider.GetGlobalDuressEmail().ToList();
+                var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
+                var GuradName = _clientDataProvider.GetGuradName(guardId);
+
+                _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logBookId, guardId, gpsCoordinates, enabledAddress, tmdata, Name, GuradName);
+                EmailSender(emailAddresses, Name, gpsCoordinates, GuradName);
+                
             }
             catch (Exception ex)
             {
@@ -582,6 +595,80 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(new { status, message });
         }
+        public JsonResult EmailSender(string Email, string Name, string gpsCoordinates, string GuradName)
+        {
+            var success = true;
+            var message = "success";
+            var Subject = "Global Duress Alert";
+            var Notifications = "Duress Button Activated" + "\n" + "By" + GuradName + "\n" + "ClientSite:" + Name + "<a href=\"https://www.google.com/maps?q=" + gpsCoordinates + "\" target=\"_blank\" data-toggle=\"tooltip\" title=\"\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i></a>";
+            #region Email
+            if (Email != null)
+            {
+                string[] values = Email.Split(',');
+                foreach (string value in values)
+                {
+                    string smsSiteEmails = null;
+
+                    if (value != null)
+                    {
+                        smsSiteEmails = value;
+                    }
+                    else
+                    {
+                        success = false;
+                        message = "Please Enter the Site Email";
+                        return new JsonResult(new { success, message });
+                    }
+
+
+                    var fromAddress = _emailOptions.FromAddress.Split('|');
+                    var toAddress = smsSiteEmails.Split(','); ;
+                    var subject = Subject;
+                    var messageHtml = Notifications;
+
+                    var messagenew = new MimeMessage();
+                    messagenew.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+                    foreach (var address in GetToEmailAddressList(toAddress))
+                        messagenew.To.Add(address);
+
+                    messagenew.Subject = $"{subject}";
+
+                    var builder = new BodyBuilder()
+                    {
+                        HtmlBody = messageHtml
+                    };
+
+                    messagenew.Body = builder.ToMessageBody();
+
+                    using (var client = new SmtpClient())
+                    {
+                        client.Connect(_emailOptions.SmtpServer, _emailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                        if (!string.IsNullOrEmpty(_emailOptions.SmtpUserName) &&
+                            !string.IsNullOrEmpty(_emailOptions.SmtpPassword))
+                            client.Authenticate(_emailOptions.SmtpUserName, _emailOptions.SmtpPassword);
+                        client.Send(messagenew);
+                        client.Disconnect(true);
+                    }
+                }
+            }
+
+                
+            #endregion
+
+            return new JsonResult(new { success, message });
+        }
+        private List<MailboxAddress> GetToEmailAddressList(string[] toAddress)
+        {
+            var emailAddressList = new List<MailboxAddress>();
+            foreach (var item in toAddress)
+            {
+                emailAddressList.Add(new MailboxAddress(string.Empty, item));
+            }
+
+
+            return emailAddressList;
+        }
+
         public JsonResult OnPostSavePushNotificationTestMessages(int guardLoginId, int clientSiteLogBookId, string Notifications,int rcPushMessageId,GuardLog tmdata)
         {
             var success = true;
