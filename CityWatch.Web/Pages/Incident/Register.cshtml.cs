@@ -734,7 +734,8 @@ namespace CityWatch.Web.Pages.Incident
                 EventDateTimeLocalWithOffset = report.CreatedOnDateTimeLocalWithOffset,
                 EventDateTimeZone = report.CreatedOnDateTimeZone,
                 EventDateTimeZoneShort = report.CreatedOnDateTimeZoneShort,
-                EventDateTimeUtcOffsetMinute = report.CreatedOnDateTimeUtcOffsetMinute
+                EventDateTimeUtcOffsetMinute = report.CreatedOnDateTimeUtcOffsetMinute,
+                IsIRReportTypeEntry=true
             };
             _guardLogDataProvider.SaveGuardLog(guardLog);
         }
