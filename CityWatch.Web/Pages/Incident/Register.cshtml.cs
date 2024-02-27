@@ -90,7 +90,7 @@ namespace CityWatch.Web.Pages.Incident
             HttpContext.Session.Remove("IsIrFromNotifyPage");
             string reuse = Request.Query["reuse"];
             /* Check the Query String */
-
+            
             ////To get the Hash code 
             //string input = GenerateFormattedString();
             //string hashCode = GenerateHashCode(input);
@@ -798,6 +798,8 @@ namespace CityWatch.Web.Pages.Incident
 
             string input = GenerateFormattedString();
             string hashCode = GenerateHashCode(input);
+            
+            var remoteIpAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
 
             // TODO: Remove session dependency on attachments
             Report.ReportReference = HttpContext.Session.GetString("ReportReference");
@@ -807,6 +809,7 @@ namespace CityWatch.Web.Pages.Incident
             try
             {
                 Report.HASH = hashCode;
+                Report.IP = remoteIpAddress;
                 Report.SerialNumber = GetIrSerialNumber(Report);
             }
             catch (Exception ex)
