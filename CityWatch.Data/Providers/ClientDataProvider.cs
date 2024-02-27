@@ -608,7 +608,9 @@ namespace CityWatch.Data.Providers
                 }
                 else
                 {
-
+                var templateToUpdate = _context.CompanyDetails.SingleOrDefault(x => x.Id == companyDetails.Id);
+                if (templateToUpdate != null)
+                {
                     templateToUpdate.Name = companyDetails.Name;
                     templateToUpdate.Domain = companyDetails.Domain;
                     templateToUpdate.LastUploaded = DateTime.Now;
@@ -624,6 +626,7 @@ namespace CityWatch.Data.Providers
                     templateToUpdate.Hyperlink = companyDetails.Hyperlink;
                     templateToUpdate.EmailMessage = companyDetails.EmailMessage;
                     templateToUpdate.EmailMessageUploadedOn = DateTime.Now;
+                }
 
                 }
                 _context.SaveChanges();
