@@ -17,6 +17,7 @@ using static Dropbox.Api.FileProperties.PropertyType;
 using static Dropbox.Api.Files.ListRevisionsMode;
 //using static Dropbox.Api.Files.ListRevisionsMode;
 using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CityWatch.Data.Providers
 {
@@ -129,7 +130,9 @@ namespace CityWatch.Data.Providers
 
         List<RadioCheckPushMessages> GetDuressMessageNotAcknowledged(int clientSiteId, DateTime date);
         List<RadioCheckPushMessages> GetDuressMessageNotAcknowledgedForControlRoom(DateTime date);
-
+        string GetClientSiteName(int clientSiteId);
+        string GetGuradName(int guardId);
+        List<GlobalDuressEmail> GetGlobalDuressEmail();
         public string GetDefaultEmailAddress();
 
 
@@ -150,6 +153,8 @@ namespace CityWatch.Data.Providers
         //GeneralFeeds - start
         void SaveGeneralFeeds(GeneralFeeds generalFeeds);
         void DeleteGeneralFeeds(int id);
+        void DuressGloablEmail(string Email);
+        List<GlobalDuressEmail> GetDuressEmails();
       //GeneralFeeds - end
 
     }
@@ -533,7 +538,22 @@ namespace CityWatch.Data.Providers
                 return _context.ClientSiteLogBooks
                      .SingleOrDefault(z => z.ClientSiteId == clientSiteId && z.Type == type && z.Date == date);
             }
-
+             public string GetClientSiteName(int clientSiteId)
+                {
+                    var ClientSiteName= _context.ClientSites
+                             .SingleOrDefault(z => z.Id == clientSiteId);
+                    return ClientSiteName.Name;
+                }
+        public string GetGuradName(int guardId)
+        {
+            var GuradName = _context.Guards
+                     .SingleOrDefault(z => z.Id == guardId);
+            return GuradName.Name;
+        }
+        public List<GlobalDuressEmail> GetGlobalDuressEmail()
+                {
+                return _context.GlobalDuressEmail.ToList();
+                }
             public List<ClientSiteLogBook> GetClientSiteLogBookWithOutType(int clientSiteId, DateTime date)
             {
                 return _context.ClientSiteLogBooks
@@ -1345,9 +1365,35 @@ namespace CityWatch.Data.Providers
                 _context.BroadcastBannerLiveEvents.Remove(liveEventsToDelete);
                 _context.SaveChanges();
             }
-            //to add functions for Calendar events -end
-            //to add functions for Calendar events -start
-            public void SaveCalendarEvents(BroadcastBannerCalendarEvents calendarEvents)
+        //to add functions for Calendar events -end
+        //to add functions for Calendar events -start
+
+        //To save the Duress Email start
+        public void DuressGloablEmail(string Email)
+        {
+
+            var EmailUpdate = _context.GlobalDuressEmail.SingleOrDefault(x => x.Email == Email);
+            if (EmailUpdate!=null)
+            {
+                EmailUpdate.Email = Email;
+            }
+            else
+            {
+                var Emailnew = new GlobalDuressEmail()
+                {
+                    Email = Email
+                };
+                _context.GlobalDuressEmail.Add(Emailnew);
+            }
+           
+            _context.SaveChanges();
+        }
+        public List<GlobalDuressEmail> GetDuressEmails()
+        {
+            return _context.GlobalDuressEmail.ToList();
+        }
+        //To save the Duress Email stop
+        public void SaveCalendarEvents(BroadcastBannerCalendarEvents calendarEvents)
             {
                 if (calendarEvents == null)
                     throw new ArgumentNullException();
