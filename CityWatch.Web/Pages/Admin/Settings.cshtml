@@ -1,11 +1,13 @@
 ﻿@page
 @using CityWatch.Data.Helpers
 @using CityWatch.Data.Models
+@using CityWatch.Data.Providers;
 @using CityWatch.Web.Helpers
 @using Microsoft.Extensions.Configuration
 @using System.Security.Claims
 @model CityWatch.Web.Pages.Admin.SettingsModel
 @inject IConfiguration Configuration
+@inject IUserDataProvider viewDataService
 @{
     ViewData["Title"] = "CityWatch Security | Settings";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.Settings;
@@ -13,6 +15,7 @@
     var mapSettings = @Configuration.GetSection("GoogleMap").Get(typeof(GoogleMapSettings)) as GoogleMapSettings;
     var ApiKey = mapSettings.ApiKey;
     var hideTabStyle = !AuthUserHelper.IsAdminUserLoggedIn ? "style=display:none" : "";
+     var companydetail = viewDataService.GetCompanyDetails().SingleOrDefault(x=>x.Id==1);
 }
 <div>
     <input type="hidden" id="hdnIsAdminLoggedIn" value="@AuthUserHelper.IsAdminUserLoggedIn.ToString()" />
@@ -348,7 +351,7 @@
                 <div class="form-group row">
                     <label class="col-form-label col-md-2">Primary Logo</label>
                     <div class="col-md-4">
-                        <a class="navbar-brand" href="https:// CompanyDetails.Hyperlink" target="_blank">
+                        <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
                             @*<img id="img_PrimaryLogo" height="60px" src="CompanyDetails.PrimaryLogoPath" />*@
                             <img id="img_PrimaryLogo" height="60px" src=""  />
                         </a>
@@ -363,7 +366,7 @@
                     </div>
                     <label class="col-form-label col-md-2">Banner Logo</label>
                     <div class="col-md-4">
-                        <a class="navbar-brand" href="https:// CompanyDetails.Hyperlink" target="_blank">
+                        <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
                             @*<img id="img_BannerLogo" height="60px" src="CompanyDetails.BannerLogoPath" />*@
                             <img id="img_BannerLogo" height="60px" src="" />
                         </a>
