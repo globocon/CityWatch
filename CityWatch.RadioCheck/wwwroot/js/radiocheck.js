@@ -235,7 +235,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         },
         {
             data: 'guardName',
-            width: '20%',
+            width: '15%',
             orderable: false, // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024
             render: function (value, type, data) {
                 if (data.isEnabled === 1) {
@@ -287,12 +287,19 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardSWInfoModal" id="btnSWdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '"> ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
             }
         },
-        //{
-        //    data: 'rcStatus',
-        //    width: '5%',
-        //    className: "text-center",
+        {
+            data: 'latestDate',
+            width: '2%',
+            className: "text-center",
+            render: function (value, type, data) {
+                if (value < 80)
+                    return '<div class="p-1 mb-1" style="background: #AFE1AF;">' + value + '</div>';
+                if (value >= 80)
+                    return '<div class="p-1 mb-1" style="background: #FFD580;">' + value + '</div>';
+                return value;
+            }
 
-        //},
+        },
         {
             data: 'rcColorId',
             width: '5%',
@@ -2759,7 +2766,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
         { data: 'clientSiteId', visible: false },
         {
             data: 'siteName',
-            width: '20%',
+            width: '18%',
             class: 'dt-control',
             render: function (value, type, data) {
 
@@ -2823,11 +2830,19 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
                 return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardSWInfoModal" id="btnSWdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '"> ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
             }
         },
-        //{
-        //    data: 'rcStatus',
-        //    width: '5%',
-        //    className: "text-center",
-        //},
+        {
+            data: 'latestDate',
+            width: '2%',
+            className: "text-center",
+            render: function (value, type, data) {
+                if (value < 80)
+                    return '<div class="p-1 mb-1" style="background: #AFE1AF;">' + value + '</div>';
+                if (value >= 80)
+                    return '<div class="p-1 mb-1" style="background: #FFD580;">' + value + '</div>';
+                return value;
+            }
+
+        },
 
         {
             data: 'rcColorId',
