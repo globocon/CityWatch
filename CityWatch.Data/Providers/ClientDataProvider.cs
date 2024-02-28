@@ -130,8 +130,8 @@ namespace CityWatch.Data.Providers
 
         List<RadioCheckPushMessages> GetDuressMessageNotAcknowledged(int clientSiteId, DateTime date);
         List<RadioCheckPushMessages> GetDuressMessageNotAcknowledgedForControlRoom(DateTime date);
-        string GetClientSiteName(int clientSiteId);
-        string GetGuradName(int guardId);
+        ClientSite GetClientSiteName(int clientSiteId);
+        Guard GetGuradName(int guardId);
         List<GlobalDuressEmail> GetGlobalDuressEmail();
         public string GetDefaultEmailAddress();
 
@@ -538,17 +538,17 @@ namespace CityWatch.Data.Providers
                 return _context.ClientSiteLogBooks
                      .SingleOrDefault(z => z.ClientSiteId == clientSiteId && z.Type == type && z.Date == date);
             }
-             public string GetClientSiteName(int clientSiteId)
+             public ClientSite GetClientSiteName(int clientSiteId)
                 {
-                    var ClientSiteName= _context.ClientSites
+                   return  _context.ClientSites
                              .SingleOrDefault(z => z.Id == clientSiteId);
-                    return ClientSiteName.Name;
+                    
                 }
-        public string GetGuradName(int guardId)
+        public Guard GetGuradName(int guardId)
         {
-            var GuradName = _context.Guards
+            return  _context.Guards
                      .SingleOrDefault(z => z.Id == guardId);
-            return GuradName.Name;
+             
         }
         public List<GlobalDuressEmail> GetGlobalDuressEmail()
                 {
