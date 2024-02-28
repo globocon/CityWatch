@@ -16,7 +16,7 @@ namespace CityWatch.Data.Models
         public int ClientSiteLogBookId { get; set; }
 
         public int GuardLoginId { get; set; }
-       
+
 
         [NotMapped]
         public int? ActiveGuardLoginId { get; set; }
@@ -52,8 +52,8 @@ namespace CityWatch.Data.Models
         public string BDMList { get; set; }
 
         public int PlateId { get; set; }
-       
-        
+
+
         public string KeyNo { get; set; }
 
         public string CompanyName { get; set; }
@@ -96,7 +96,7 @@ namespace CityWatch.Data.Models
 
         public int? ClientSitePocId { get; set; }
 
-        public decimal? Reels { get; set; } 
+        public decimal? Reels { get; set; }
 
         public string CustomerRef { get; set; }
 
@@ -191,12 +191,17 @@ namespace CityWatch.Data.Models
 
             if (!string.IsNullOrEmpty(Email))
             {
-                string regex = @"^[^@\s]+@[^@\s]+\.(com|net|org|gov)$";
-                if (!Regex.IsMatch( Email, regex))
+                if (!Email.Contains('@'))
                 {
-
-                    errors.Add(new ValidationResult("Email is invalid"));
+                    //KV wont accept email - bug
+                    //It will NOT accept group@swcsecurity.com.au   
+                    errors.Add(new ValidationResult("Email is invalid")); 
                 }
+                //if (!Regex.IsMatch(Email, regex))
+                //{
+
+                //    errors.Add(new ValidationResult("Email is invalid"));
+                //}
             }
 
             return errors;

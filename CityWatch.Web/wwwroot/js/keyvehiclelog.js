@@ -929,7 +929,44 @@ $(function () {
                 $('#ActiveGuardLoginId').val('');
                 $('#titlePOIWarning').attr('hidden', true)
                 $('#imagesiren').attr('hidden', true);
+                 // New code added for solve the product list issue KV 28022024 Start
+                $('#list_product').val('');
+                $('#Product').val();
+                var ulElement = document.querySelector('ul.es-list');
+
+                // Check if the <ul> element exists
+                if (ulElement) {
+                    // Get all <li> elements within the <ul> element
+                    var listItems = ulElement.querySelectorAll('li');
+
+                    // Loop through each <li> element
+                    listItems.forEach(function (item) {
+                        // Remove the 'style' attribute
+                        item.removeAttribute('style');
+                        item.classList.add('es-visible');
+                    });
+                }
+                  // New code added for solve the product list issue KV 28022024 end
             } else {
+                // New code added for solve the product list issue KV 28022024 Start
+                $('#list_product').val('');
+                var ulElement = document.querySelector('ul.es-list');
+
+                // Check if the <ul> element exists
+                if (ulElement) {
+                    // Get all <li> elements within the <ul> element
+                    var listItems = ulElement.querySelectorAll('li');
+
+                    // Loop through each <li> element
+                    listItems.forEach(function (item) {
+                        // Remove the 'style' attribute
+                        item.removeAttribute('style');
+                        item.classList.add('es-visible');
+                    });
+                }
+                  // New code added for solve the product list issue KV 28022024 end
+
+
                 if ($('#InialCallTime').val() !== '') {
                     $('#new_log_initial_call').val(getTimeFromDateTime(new Date($('#InitialCallTime').val())));
                 }
