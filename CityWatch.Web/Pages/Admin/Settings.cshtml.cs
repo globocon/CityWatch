@@ -982,10 +982,10 @@ namespace CityWatch.Web.Pages.Admin
                         }
                         //string kpipath = _webHostEnvironment.WebRootPath;
                         //kpipath=kpipath.Replace("CityWatch.Web", "CityWatch.Kpi");
-                        string kpipath = "https://kpi.cws-ir.com/";
+                        string kpipath = "C:\\c4isystem\\Websites\\kpi\\prod-citywatch\\wwwroot";
                         var reportRootDir2 = Path.Combine(kpipath, "Images");
-                        filepath2 = Path.Combine(reportRootDir2, "CWSLogoPdfnew.png");
-                        using (var stream = System.IO.File.Create(Path.Combine(reportRootDir2, "CWSLogoPdfnew.png")))
+                        filepath2 = Path.Combine(reportRootDir2, "CWSLogoPdf.png");
+                        using (var stream = System.IO.File.Create(Path.Combine(reportRootDir2, "CWSLogoPdf.png")))
                         {
                             file.CopyTo(stream);
                         }
