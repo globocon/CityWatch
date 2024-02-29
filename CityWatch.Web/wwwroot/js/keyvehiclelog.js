@@ -2755,6 +2755,10 @@ $(function () {
     });
 
     $('#btn_update_kvl_profile').on('click', function () {
+        /*To get the text inside the product dropdown*/
+        var inputElement = document.querySelector(".es-input");
+        // Get the value of the input element
+        if (inputElement) { var inputValue = inputElement.value; $('#ProductOther').val(inputValue); }
         $.ajax({
             url: '/Admin/AuditSiteLog?handler=UpdateKeyVehicleLogProfile',
             data: $('#frm_edit_kvl_profile').serialize(),
@@ -2792,6 +2796,50 @@ $(function () {
         });
 
         const isNewEntry = $('#Id').val() === '0';
+
+        if (isNewEntry) {
+            $('#list_product_profile').val('');
+            $('#KeyVehicleLogProfile_Product').val();
+            var ulElement = document.querySelector('ul.es-list');
+
+            // Check if the <ul> element exists
+            if (ulElement) {
+                // Get all <li> elements within the <ul> element
+                var listItems = ulElement.querySelectorAll('li');
+
+                // Loop through each <li> element
+                listItems.forEach(function (item) {
+                    // Remove the 'style' attribute
+                    item.removeAttribute('style');
+                    item.classList.add('es-visible');
+                });
+            }
+
+        }
+        else {
+
+            $('#list_product_profile').val('');
+            var ulElement = document.querySelector('ul.es-list');
+
+            // Check if the <ul> element exists
+            if (ulElement) {
+                // Get all <li> elements within the <ul> element
+                var listItems = ulElement.querySelectorAll('li');
+
+                // Loop through each <li> element
+                listItems.forEach(function (item) {
+                    // Remove the 'style' attribute
+                    item.removeAttribute('style');
+                    item.classList.add('es-visible');
+                });
+            }
+
+
+        }
+
+
+
+
         $('#KeyVehicleLogProfile_VehicleRego').prop('disabled', !isNewEntry);
 
         $('#KeyVehicleLogProfile_VehicleRego, #KeyVehicleLogProfile_Trailer1Rego, #KeyVehicleLogProfile_Trailer2Rego, #KeyVehicleLogProfile_Trailer3Rego, #KeyVehicleLogProfile_Trailer4Rego').on('keyup', vehicleRegoToUpperCase);
