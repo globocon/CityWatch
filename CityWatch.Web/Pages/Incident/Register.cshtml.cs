@@ -630,8 +630,7 @@ namespace CityWatch.Web.Pages.Incident
                     string containerName = "irfiles";
                     BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
                     BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(containerName);
-                    containerCli
-                        ent.CreateIfNotExists();
+                    containerClient.CreateIfNotExists();
                     /* The container Structure like irfiles/20230925*/
                     BlobClient blobClient = containerClient.GetBlobClient(new string(blobName.Take(8).ToArray()) + "/" + blobName);
                     using FileStream fs = System.IO.File.OpenRead(fileName);
