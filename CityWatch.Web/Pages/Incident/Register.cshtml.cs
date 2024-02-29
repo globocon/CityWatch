@@ -581,18 +581,11 @@ namespace CityWatch.Web.Pages.Incident
                 {
                     Report.SiteColourCode = "Code BROWN Event";
                 }
-                else if (colorcodes.Contains("Code GREY (ASCOM)"))
+                else if (colorcodes.Contains("Code GREY"))
                 {
-                    Report.SiteColourCode = "Code GREY (ASCOM) Event";
+                    Report.SiteColourCode = "Code GREY Event";
                 }
-                else if (colorcodes.Contains("Code GREY (PA)"))
-                {
-                    Report.SiteColourCode = "Code GREY (PA) Event";
-                }
-                else if (colorcodes.Contains("CODE GREY BOC"))
-                {
-                    Report.SiteColourCode = "Code GREY BOC Event";
-                }
+               
                 else if (colorcodes.Contains("NON BOC SEARCH"))
                 {
                     Report.SiteColourCode = "NON BOC SEARCH Event";
@@ -601,10 +594,7 @@ namespace CityWatch.Web.Pages.Incident
                 {
                     Report.SiteColourCode = "Code RED Event";
                 }
-                else if (colorcodes.Contains("Code GREY (Hostile)"))
-                {
-                    Report.SiteColourCode = "Code GREY (Hostile) Event";
-                }
+               
                 else
                 {
                     Report.SiteColourCode = "General (Other) Event";
