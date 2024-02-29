@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
+using System.Web;
 
 namespace CityWatch.Web.Pages.Guard
 {
@@ -579,13 +580,13 @@ namespace CityWatch.Web.Pages.Guard
             try
             {
                
-                var Name = _clientDataProvider.GetClientSiteName(clientSiteId);
+                var ClientsiteDetails = _clientDataProvider.GetClientSiteName(clientSiteId);
                 var Emails = _clientDataProvider.GetGlobalDuressEmail().ToList();
                 var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
-                var GuradName = _clientDataProvider.GetGuradName(guardId);
+                var GuradDetails = _clientDataProvider.GetGuradName(guardId);
 
-                _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logBookId, guardId, gpsCoordinates, enabledAddress, tmdata, Name, GuradName);
-                EmailSender(emailAddresses, Name, gpsCoordinates, GuradName);
+                _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logBookId, guardId, gpsCoordinates, enabledAddress, tmdata, ClientsiteDetails.Name, GuradDetails.Name);
+                EmailSender(emailAddresses, ClientsiteDetails.Name, ClientsiteDetails.Address, ClientsiteDetails.LandLine, gpsCoordinates, GuradDetails.Name, GuradDetails.Initial, GuradDetails.Mobile);
                 
             }
             catch (Exception ex)
@@ -595,12 +596,22 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(new { status, message });
         }
-        public JsonResult EmailSender(string Email, string Name, string gpsCoordinates, string GuradName)
+        public JsonResult EmailSender(string Email, string Name,string Address,string Lnadline, string gpsCoordinates, string GuradName,string GuradInitial,string Mobile)
         {
             var success = true;
             var message = "success";
             var Subject = "Global Duress Alert";
-            var Notifications = "Duress Button Activated" + "\n" + "By " + GuradName + "\n" + " From " + Name + "<a href=\"https://www.google.com/maps?q=" + gpsCoordinates + "\" target=\"_blank\" data-toggle=\"tooltip\" title=\"\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i></a>";
+            var Notifications = "Duress Button Activated By:" +
+                      (string.IsNullOrEmpty(GuradName) ? string.Empty : GuradName) + "["+ GuradInitial + "]" + "<br/>" +
+                      (string.IsNullOrEmpty(Mobile) ? string.Empty : "Mobile No: "+ Mobile) + "<br/>" +
+                     (string.IsNullOrEmpty(Name) ? string.Empty : "From: " + Name) + "<br/>" +
+                     (string.IsNullOrEmpty(Address) ? string.Empty : "Address:: " + Address) + "<br/>" +
+                     (string.IsNullOrEmpty(Lnadline) ? string.Empty : "Mobile No: " + Lnadline);
+            if (gpsCoordinates != null)
+            {
+                var googleMapsLink = "https://www.google.com/maps?q=" + HttpUtility.UrlEncode(gpsCoordinates);
+                Notifications += "\n<a href=\"" + googleMapsLink + "\" target=\"_blank\" data-toggle=\"tooltip\" title=\"View on Google Maps\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i> Location</a>";
+            }
             #region Email
             if (Email != null)
             {
