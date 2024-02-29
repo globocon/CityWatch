@@ -14,6 +14,8 @@ using Microsoft.Data.SqlClient;
 using System;
 using System.IO;
 using System.Linq;
+using static Dropbox.Api.TeamLog.ActorLogInfo;
+using static Dropbox.Api.TeamLog.EventCategory;
 
 namespace CityWatch.Web.Pages.Admin
 {
@@ -184,7 +186,7 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { status, message });
         }
 
-        public JsonResult OnPostShowPassword(User user)
+        public JsonResult OnPostShowPassword(Data.Models.User user)
         {
             var value = string.Empty;
             try
@@ -445,7 +447,7 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(users);
         }
 
-        public JsonResult OnPostUser(User record)
+        public JsonResult OnPostUser(Data.Models.User record)
         {
             var status = true;
             var message = "Success";
@@ -949,5 +951,55 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { status = status, message = message });
         }
+
+        //for adding a report logo-start
+        public JsonResult OnPostCrReportLogoUpload()
+        {
+            var success = false;
+            var message = "Uploaded successfully";
+            var dateTimeUpdated = DateTime.Now;
+            var files = Request.Form.Files;
+            var filepath = "";
+            var filepath2 = "";
+            if (files.Count == 1)
+            {
+                var file = files[0];
+
+
+
+                if (file.Length > 0)
+                {
+                    try
+                    {
+                        if (Path.GetExtension(file.FileName) != ".JPG" && Path.GetExtension(file.FileName) != ".jpg" && Path.GetExtension(file.FileName) != ".JPEG" && Path.GetExtension(file.FileName) != ".jpeg" && Path.GetExtension(file.FileName) != ".png" && Path.GetExtension(file.FileName) != ".PNG" && Path.GetExtension(file.FileName) != ".GIF" && Path.GetExtension(file.FileName) != ".gif")
+                            throw new ArgumentException("Unsupported file type");
+
+                        var reportRootDir = Path.Combine(_webHostEnvironment.WebRootPath, "Images");
+                        filepath = Path.Combine(reportRootDir, "CWSLogoPdf.png");
+                        using (var stream = System.IO.File.Create(Path.Combine(reportRootDir, "CWSLogoPdf.png")))
+                        {
+                            file.CopyTo(stream);
+                        }
+                        //string kpipath = _webHostEnvironment.WebRootPath;
+                        //kpipath=kpipath.Replace("CityWatch.Web", "CityWatch.Kpi");
+                        string kpipath = "https://kpi.cws-ir.com/";
+                        var reportRootDir2 = Path.Combine(kpipath, "Images");
+                        filepath2 = Path.Combine(reportRootDir2, "CWSLogoPdfnew.png");
+                        using (var stream = System.IO.File.Create(Path.Combine(reportRootDir2, "CWSLogoPdfnew.png")))
+                        {
+                            file.CopyTo(stream);
+                        }
+                        success = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        message = ex.Message;
+                    }
+                }
+            }
+
+            return new JsonResult(new { success, message, dateTimeUpdated = dateTimeUpdated.ToString("dd MMM yyyy @ HH:mm"), filepath });
+        }
+        //for adding a report logo-end
     }
 }
