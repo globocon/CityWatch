@@ -364,6 +364,7 @@
                             </form>
                         </label>
                     </div>
+                  
                     <label class="col-form-label col-md-2">Banner Logo</label>
                     <div class="col-md-4">
                         <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
@@ -378,6 +379,25 @@
                         </label>
                     </div>
                 </div>
+                @*for logo in report-start*@
+                <div class="form-group row">
+                    <label class="col-form-label col-md-2">Report Logo</label>
+                    <div class="col-md-4">
+                        <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
+                            @*<img id="img_PrimaryLogo" height="60px" src="CompanyDetails.PrimaryLogoPath" />*@
+                            <img id="img_ReportLogo" height="60px" src="~/images/CWSLogoPdf.png" />
+                        </a>
+
+
+                        <label class="btn btn-success mb-0">
+                            <form id="form_cs_reportlogo" method="post">
+                                <i class="fa fa-upload mr-2"></i>Replace
+                                <input type="file" id="cr_reportlogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.gif,.GIF" hidden />
+                            </form>
+                        </label>
+                    </div>
+                </div>
+                @*for logo in report-end*@
                 <div class="form-group row">
                   @*  <label class="col-form-label col-md-2">Home Page Message</label>
                     <div class="col-md-4">

@@ -2093,3 +2093,46 @@
         return false;
     });
 });
+/*for adding a reportlogo-start*/
+$('#cr_reportlogo_upload').on('change', function () {
+
+    const file = $(this).get(0).files.item(0);
+    const fileExtn = file.name.split('.').pop();
+    // if (!fileExtn || fileExtn !== 'jpg' || fileExtn !=='JPG' || fileExtn !=='jpeg' || fileExtn !=='JPEG') {
+    if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'png' && fileExtn !== 'PNG' && fileExtn !== 'GIF' && fileExtn !== 'gif')) {
+        showModal('Unsupported file type. Please upload a .jpg/.jpeg file');
+        return false;
+    }
+    const prlogopath = $("#img_ReportLogo").prop('src');
+    const fileForm = new FormData();
+    fileForm.append('file', file);
+    fileForm.append('prlogopath', prlogopath);
+    $.ajax({
+        url: '/Admin/Settings?handler=CrReportLogoUpload',
+        type: 'POST',
+        data: fileForm,
+        processData: false,
+        contentType: false,
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+    }).done(function (data) {
+
+        if (data.success)
+
+            var result = prlogopath.lastIndexOf("/");
+        const newfile = data.filepath;
+        var url = window.location.origin;
+        var result1 = newfile.lastIndexOf("/");
+        var substr = prlogopath.substring(0, result - 1);
+
+        var substr2 = newfile.substring(result1 + 1);
+        substr = substr + "CWSLogoPdf.png";
+        var newpath = url + "/Images/CWSLogoPdf.png";
+        $("#img_ReportLogo").attr('src', newpath);
+
+    }).fail(function () {
+        showStatusNotification(false, 'Something went wrong');
+    }).always(function () {
+
+    });
+});
+/*for adding a reportlogo-end*/
