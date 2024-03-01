@@ -3071,13 +3071,13 @@ $(function () {
                         $('#generate_kvl_docket').attr('disabled', false);
                         /*for changing the button name-start*/
                         $('#download_kvl_docket').show();
-                        const isChecked = $('#chb_IsPDFBinder').is(':checked');
-                        if (isChecked == true) {
-                            $('#download_kvl_docket').text('Download ZIP')
-                        }
-                        else {
-                            $('#download_kvl_docket').text('Download PDF')
-                        }
+                        //const isChecked = $('#chb_IsPDFBinder').is(':checked');
+                        //if (isChecked == true) {
+                        //    $('#download_kvl_docket').text('Download ZIP')
+                        //}
+                        //else {
+                        //    $('#download_kvl_docket').text('Download PDF')
+                        //}
                         $('#chkAllBatchDocketSelect').prop('checked', false);
                        
                         /*for changing the button name - end*/
@@ -3122,7 +3122,7 @@ $(function () {
                             }
                         });
                         const isChecked = $('#chb_IsPDFBinder').is(':checked');
-                        if (isChecked == true) {
+                        if (isChecked == false) {
                             $('#download_kvl_docket').text('Download ZIP')
                         }
                         else {
@@ -3144,7 +3144,7 @@ $(function () {
 
                             }
                             const isChecked = $('#chb_IsPDFBinder').is(':checked');
-                            if (isChecked == true) {
+                            if (isChecked == false) {
                                 $('#download_kvl_docket').text('Download ZIP')
                             }
                             else {
