@@ -1068,7 +1068,7 @@ namespace CityWatch.Web.Pages.Guard
             try
             {
                 //var serialNo = GetNextDocketSequenceNumber(id);
-                if (pdfBinderOnOrOff != "true")
+                if (pdfBinderOnOrOff != "false")
                 {
                     fileName = _keyVehicleLogDocketGenerator.GenerateBulkPdfReport(ids, GetManualDocketReason(option, otherReason), blankNoteOnOrOff, "1");
 
