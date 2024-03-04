@@ -585,7 +585,10 @@ namespace CityWatch.Web.Pages.Incident
                 {
                     Report.SiteColourCode = "Code GREY Event";
                 }
-               
+               else if(colorcodes.Contains("SEARCH - CODE GREY BOC"))
+                {
+                    Report.SiteColourCode = "Code GREY Event";
+                }
                 else if (colorcodes.Contains("NON BOC SEARCH"))
                 {
                     Report.SiteColourCode = "NON BOC SEARCH Event";
