@@ -272,21 +272,21 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
 
-        public void OnPostSaveSiteEmail(int siteId, string siteEmail, bool enableLogDump, string landLine, string guardEmailTo, string duressEmail, string duressSms)
-        {
-            var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(z => z.Id == siteId);
-            if (clientSite != null)
-            {
-                clientSite.SiteEmail = siteEmail;
-                clientSite.UploadGuardLog = enableLogDump;
-                clientSite.LandLine = landLine;
-                clientSite.GuardLogEmailTo = guardEmailTo;
-                clientSite.DuressEmail = duressEmail;
-                clientSite.DuressSms = duressSms;
-            }
+        //public void OnPostSaveSiteEmail(int siteId, string siteEmail, bool enableLogDump, string landLine, string guardEmailTo, string duressEmail, string duressSms)
+        //{
+        //    var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(z => z.Id == siteId);
+        //    if (clientSite != null)
+        //    {
+        //        clientSite.SiteEmail = siteEmail;
+        //        clientSite.UploadGuardLog = enableLogDump;
+        //        clientSite.LandLine = landLine;
+        //        clientSite.GuardLogEmailTo = guardEmailTo;
+        //        clientSite.DuressEmail = duressEmail;
+        //        clientSite.DuressSms = duressSms;
+        //    }
 
-            _clientDataProvider.SaveClientSite(clientSite);
-        }
+        //    _clientDataProvider.SaveClientSite(clientSite);
+        //}
 
         public JsonResult OnGetGuards()
         {

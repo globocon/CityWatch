@@ -1584,3 +1584,31 @@ $(function () {
 
 
 });
+//menu change 04-03-2024 start
+$('#div_site_settings').on('click','#btnSaveGuardSiteSettingsnew', function () {
+    var isUpdateDailyLog = false;
+
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    if ($('#enableLogDump').is(":checked")) {
+        isUpdateDailyLog = true;
+    }
+    $.ajax({
+        url: '/Admin/Settings?handler=SaveSiteEmail',
+        type: 'POST',
+        data: {
+            siteId: $('#gl_client_site_id').val(),
+            siteEmail: $('#gs_site_email').val(),
+            enableLogDump: isUpdateDailyLog,
+            landLine: $('#gs_land_line').val(),
+            guardEmailTo: $('#gs_email_recipients').val(),
+            duressEmail: $('#gs_duress_email').val(),
+            duressSms: $('#gs_duress_sms').val()
+        },
+        headers: { 'RequestVerificationToken': token }
+    }).done(function () {
+        alert("Saved successfully");
+    }).fail(function () {
+        console.log("error");
+    });
+});
+//menu change 04-03-2024 end
