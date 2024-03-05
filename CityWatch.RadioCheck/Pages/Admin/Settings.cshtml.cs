@@ -434,5 +434,48 @@ namespace CityWatch.RadioCheck.Pages.Admin
         }
         /*GeneralFeeds - end*/
         //API Call Settings-end
+
+
+        #region SMS Channel
+        public JsonResult OnPostSmsChannel(SmsChannel record)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.SaveSmsChannel(record);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+        public JsonResult OnPostDeleteSmsChannel(int id)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.DeleteSmsChannel(id);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+        public JsonResult OnGetSmsChannels()
+        {
+            return new JsonResult(_configDataProvider.GetSmsChannels());
+        }
+        
+        #endregion
+
+
     }
 }

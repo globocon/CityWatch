@@ -36,11 +36,14 @@ builder.Services.AddScoped<IIrDataProvider, IrDataProvider>();
 builder.Services.AddScoped<IPatrolDataReportService, PatrolDataReportService>();
 builder.Services.AddScoped<IConfigDataProvider, ConfigDataProvider>();
 builder.Services.AddScoped<IGuardDataProvider, GuardDataProvider>();
-builder.Services.AddScoped<IGuardDataProvider, GuardDataProvider>();
 builder.Services.AddScoped<IGuardLogDataProvider, GuardLogDataProvider>();
 builder.Services.AddScoped<IRadioChecksActivityStatusService, RadioChecksActivityStatusService>();
 builder.Services.AddScoped<IUserDataProvider, UserDataProvider>();
 builder.Services.AddScoped<IUserAuthenticationService, UserAuthenticationService>();
+builder.Services.AddScoped<ISmsService, SmsService>();
+builder.Services.AddScoped<ISmsSenderProvider, SmsSenderProvider>();
+builder.Services.AddScoped<ISiteEventLogDataProvider, SiteEventLogDataProvider>();
+builder.Services.AddScoped<ISmsGlobalService, SmsGlobalService>();
 builder.Services.AddSession();
 builder.Services.AddRazorPages(options =>
 {

@@ -61,6 +61,7 @@ namespace CityWatch.Data.Providers
         //General Feeds-start
         List<GeneralFeeds> GetGeneralFeeds();
         //General Feeds-end
+        public List<SmsChannel> GetSmsChannels();
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -462,5 +463,9 @@ namespace CityWatch.Data.Providers
             return _context.GeneralFeeds.OrderBy(x => x.Id).ToList();
         }
         //General Feeds-end
+        public List<SmsChannel> GetSmsChannels()
+        {
+            return _context.SmsChannel.OrderBy(x => x.Id).ToList();
+        }
     }
 }
