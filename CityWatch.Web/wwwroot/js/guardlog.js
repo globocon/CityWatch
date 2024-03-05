@@ -1769,15 +1769,15 @@
         $('#gl_client_site_id').val(siteId);
         $('#ClientSiteKey_ClientSiteId').val(siteId);
         $('#ClientSiteCustomField_ClientSiteId').val(siteId);
-        $('#gs_site_email').val(siteEmail);
-        $('#gs_duress_email').val(duressEmail);
-        $('#gs_duress_sms').val(duressSms);
-        $('#gs_land_line').val(landLine);
-        $('#gs_email_recipients').val(guardLogEmailTo);
-        $('#enableLogDump').prop('checked', false);
+        //$('#gs_site_email').val(siteEmail);
+        //$('#gs_duress_email').val(duressEmail);
+        //$('#gs_duress_sms').val(duressSms);
+        //$('#gs_land_line').val(landLine);
+        //$('#gs_email_recipients').val(guardLogEmailTo);
+        //$('#enableLogDump').prop('checked', false);
         $('#cbxDisableDataCollection').prop('checked', !isDataCollectionEnabled);
-        if (isUpdateDailyLog)
-            $('#enableLogDump').prop('checked', true);
+        //if (isUpdateDailyLog)
+        //    $('#enableLogDump').prop('checked', true);
         gritdSmartWands.reload({ clientSiteId: $('#gl_client_site_id').val() });
         gridSitePatrolCars.reload({ clientSiteId: $('#gl_client_site_id').val() });
         loadCustomFields();
@@ -2068,32 +2068,32 @@
         }
     }
 
-    $('#btnSaveGuardSiteSettings').on('click', function () {
-        var isUpdateDailyLog = false;
+    //$('#btnSaveGuardSiteSettings').on('click', function () {
+    //    var isUpdateDailyLog = false;
 
-        const token = $('input[name="__RequestVerificationToken"]').val();
-        if ($('#enableLogDump').is(":checked")) {
-            isUpdateDailyLog = true;
-        }
-        $.ajax({
-            url: '/Admin/GuardSettings?handler=SaveSiteEmail',
-            type: 'POST',
-            data: {
-                siteId: $('#gl_client_site_id').val(),
-                siteEmail: $('#gs_site_email').val(),
-                enableLogDump: isUpdateDailyLog,
-                landLine: $('#gs_land_line').val(),
-                guardEmailTo: $('#gs_email_recipients').val(),
-                duressEmail: $('#gs_duress_email').val(),
-                duressSms: $('#gs_duress_sms').val()
-            },
-            headers: { 'RequestVerificationToken': token }
-        }).done(function () {
-            alert("Saved successfully");
-        }).fail(function () {
-            console.log("error");
-        });
-    });
+    //    const token = $('input[name="__RequestVerificationToken"]').val();
+    //    if ($('#enableLogDump').is(":checked")) {
+    //        isUpdateDailyLog = true;
+    //    }
+    //    $.ajax({
+    //        url: '/Admin/GuardSettings?handler=SaveSiteEmail',
+    //        type: 'POST',
+    //        data: {
+    //            siteId: $('#gl_client_site_id').val(),
+    //            siteEmail: $('#gs_site_email').val(),
+    //            enableLogDump: isUpdateDailyLog,
+    //            landLine: $('#gs_land_line').val(),
+    //            guardEmailTo: $('#gs_email_recipients').val(),
+    //            duressEmail: $('#gs_duress_email').val(),
+    //            duressSms: $('#gs_duress_sms').val()
+    //        },
+    //        headers: { 'RequestVerificationToken': token }
+    //    }).done(function () {
+    //        alert("Saved successfully");
+    //    }).fail(function () {
+    //        console.log("error");
+    //    });
+    //});
 
     $('#btnSaveCustomFields').on('click', function () {
         $('#custom-field-validation ul').html('');
