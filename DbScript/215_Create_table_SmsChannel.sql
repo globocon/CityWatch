@@ -17,3 +17,6 @@ GO
 ALTER TABLE [SmsChannel] CHECK CONSTRAINT [FK_SmsChannel_CompanyDetails]
 GO
 
+INSERT INTO [SmsChannel] ([CompanyId],[SmsProvider],[ApiKey],[ApiSecret],[SmsSender])
+     VALUES (1,'SMS Global','6ef008a5d1e5b18784237e608689e2ac','3a889ce06ce04646e928af123ca56f2d','CWS IR')
+GO
