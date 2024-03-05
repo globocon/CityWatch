@@ -118,7 +118,9 @@ namespace CityWatch.Data
         public DbSet<GeneralFeeds> GeneralFeeds { get; set; }
         //General Feeds-end
         public DbSet<SmsChannel> SmsChannel { get; set; }
-       
+
+        //public DbSet<SiteEventLog> SiteEventLog { get; set; }
+
 
     }
     /* 07022024 dileep to solve the trigger in table not allowed in enity framework 7.0
