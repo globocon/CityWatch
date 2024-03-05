@@ -3833,7 +3833,7 @@ $(function () {
 $('#chb_IsPDFBinder').on('change', function () {
 
     const isChecked = $(this).is(':checked');
-    $('#lbl_PDFBinder').text(isChecked ? 'PDF Binder  On' : 'PDF Binder Off (zip)'); lbl_PDFBinder
+    $('#lbl_PDFBinder').text(isChecked ? 'PDF Binder  On' : 'PDF Binder Off (ZIP)'); lbl_PDFBinder
     $('#IsPDFBinderOn').val(isChecked);
 
 });
