@@ -1264,6 +1264,7 @@ namespace CityWatch.Web.Pages.Guard
                         GoogleMapCoordinates = gpsCoordinates,
                         IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
                         EventTime = DateTime.Now,
+                        EventLocalTime= DateTime.Now,
                         ToAddress = string.Empty,
                         ToMessage = string.Empty,
                     }
@@ -1346,6 +1347,7 @@ namespace CityWatch.Web.Pages.Guard
                         GoogleMapCoordinates = gpsCoordinates,
                         IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
                         EventTime = DateTime.Now,
+                        EventLocalTime = DateTime.Now,
                         ToAddress = Email,
                         ToMessage = "Global Duress Alert",
                     }
