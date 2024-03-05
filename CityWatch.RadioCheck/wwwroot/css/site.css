@@ -514,6 +514,22 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
     border: 1px solid #ccc;
     padding: 10px;
 }
+/* duress enalbeled Tooltip flickers while hovering on the tooltip */
+.tooltip {
+    pointer-events: none;
+}
+.tooltip-arrow {
+    display: none !important;
+}
+
+.list-group-item {
+    transition: background-color 0.3s;
+}
+
+    .list-group-item:hover {
+        background-color: #f0f0f0; /* Change background color on hover */
+    }
+
 
 /* Dark Mode Change 20/09/2023 Start*/
 .dark-mode {
@@ -657,7 +673,6 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
         color: #333 !important;
     }
 
-    
 
 
 

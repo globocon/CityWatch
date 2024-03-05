@@ -1,5 +1,6 @@
 ﻿using CityWatch.Data.Enums;
 using CityWatch.Data.Models;
+using Dropbox.Api.Files;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +22,7 @@ namespace CityWatch.Web.Models
             EventDateTimeLocal = guardLog.EventDateTimeLocal;
             EventDateTimeZoneShort = guardLog.EventDateTimeZoneShort;
             IsIRReportTypeEntry = guardLog.IsIRReportTypeEntry;
+            GpsCoordinates = guardLog.GpsCoordinates;
 
 
         }
@@ -92,5 +94,7 @@ namespace CityWatch.Web.Models
 
         public int? EventDateTimeUtcOffsetMinute { get; set; }
         public bool IsIRReportTypeEntry { get; set; }
+
+        public string GpsCoordinates  { get; set; }
     }
 }

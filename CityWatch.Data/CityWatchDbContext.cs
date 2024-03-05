@@ -96,7 +96,9 @@ namespace CityWatch.Data
 
         public DbSet<RadioCheckListSWReadData> RadioCheckListSWReadData { get; set; }
         public DbSet<GlobalDuressEmail> GlobalDuressEmail { get; set; }
-        
+
+        public DbSet<SiteEventLog> SiteEventLog { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<GuardLog>()

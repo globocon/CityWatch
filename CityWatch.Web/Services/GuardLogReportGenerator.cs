@@ -376,7 +376,7 @@ namespace CityWatch.Web.Services
                                     entry.Notes :
                                     (string.IsNullOrEmpty(entry.GuardLogin.Guard.Initial) ? $"{entry.Notes} ;" : $"{entry.Notes} ;{entry.GuardLogin.Guard.Initial}");
                 var bgColor = entry.IrEntryType.HasValue ?
-                                (entry.IrEntryType == IrEntryType.Normal ? COLOR_PALE_YELLOW : COLOR_PALE_RED) :
+                                ((entry.IrEntryType == IrEntryType.Normal)|| (entry.IrEntryType == IrEntryType.Notification) ? COLOR_PALE_YELLOW : COLOR_PALE_RED) :
                                 COLOR_WHITE;
                 //Added To display GPS start
                 var imagePath = "wwwroot/images/GPSImage.png";
