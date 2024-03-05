@@ -12,6 +12,8 @@
      //To get the Duress Emails in pageload stop
 
 };
+
+
 let gridRadioCheckStatusTypeSettings;
 gridRadioCheckStatusTypeSettings = $('#radiocheck_status_type_settings').grid({
     dataSource: '/Admin/Settings?handler=RadioCheckStatusWithOutcome',
@@ -75,7 +77,16 @@ if (gridRadioCheckStatusTypeSettings) {
 
 
         if (isRadionCheckStatusAdding == true) {
-            alert('Unsaved changes in the grid. Refresh the page');
+            $.notify("Unsaved changes in the grid. Please Refresh the page.",
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#A5881B",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );
         } else {
             isRadionCheckStatusAdding = true;
             gridRadioCheckStatusTypeSettings.addRow({
@@ -90,7 +101,16 @@ $('#add_live_events').on('click', function () {
 
 
     if (isBroadCastLiveeventsAdding == true) {
-        alert('Unsaved changes in the grid. Refresh the page');
+        $.notify("Unsaved changes in the grid. Please Refresh the page.",
+            {
+                align: "center",
+                verticalAlign: "top",
+                color: "#fff",
+                background: "#A5881B",
+                blur: 0.4,
+                delay: 0
+            }
+        );
     } else {
         if ($('#BroadCastBannerLiveEvents tbody tr').find('td').eq(1).text() === '') {
             isBroadCastLiveeventsAdding = true;
@@ -99,8 +119,16 @@ $('#add_live_events').on('click', function () {
             }).edit(-1);
         }
         else {
-            alert('Only one entry is allowed to be added in live events');
-
+            $.notify("Only one entry is allowed to be added in live events.",
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#D44950",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );
         }
     }
 });
@@ -179,7 +207,16 @@ if (gridBroadCastBannerLiveEvents) {
 let isBroadCastCalendareventsAdding = false;
 $('#add_calendar_events').on('click', function () {
         if (isBroadCastCalendareventsAdding == true) {
-            alert('Unsaved changes in the grid. Refresh the page');
+            $.notify("Unsaved changes in the grid. Please Refresh the page.",
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#A5881B",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );
         } else {
             isBroadCastCalendareventsAdding = true;
             gridBroadCastBannerCalendarEvents.addRow({
@@ -287,9 +324,19 @@ $('#add_GloblEmail').on('click', function () {
             }).done(function () {
             })
         }
-            else {
-                alert("Invalid email address");
-            }
+        else {
+            $.notify("Invalid email address.",
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#D44950",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );
+
+        }
     
     
         
@@ -399,14 +446,11 @@ gridSWChannels = $('#tbl_SWChannel').grid({
     inlineEditing: { mode: 'command' },
 
     columns: [
-        { width: 130, field: 'id', title: 'Id', hidden: true },
-        { width: 950, field: 'swChannel', title: 'SW Channel', editor: true },
+        { width: '0%', field: 'id', title: 'Id', hidden: true },
+        { width: '70%', field: 'swChannel', title: 'SW Channel', editor: true },
         {
-            width: 120, field: 'keys', title: '<i class="fa fa-key" aria-hidden="true"></i>',
-
+            width: '20%', field: 'keys', title: '<i class="fa fa-key" aria-hidden="true"></i>',
             editor: true,
-
-
         },
     ],
     initialized: function (e) {
@@ -460,10 +504,17 @@ if (gridSWChannels) {
     });
 }
 $('#add_sw_channel').on('click', function () {
-
-
-    if (isAPICallsAdding == true) {
-        alert('Unsaved changes in the grid. Refresh the page');
+    if (isAPICallsAdding == true) {        
+        $.notify("Unsaved changes in the grid. Please Refresh the page.",
+            {
+                align: "center",
+                verticalAlign: "top",
+                color: "#fff",
+                background: "#A5881B",
+                blur: 0.4,
+                delay: 0
+            }
+        );
     } else {
         if ($('#tbl_SWChannel tbody tr').find('td').eq(1).text() === '') {
             isAPICallsAdding = true;
@@ -472,13 +523,126 @@ $('#add_sw_channel').on('click', function () {
             }).edit(-1);
         }
         else {
-            alert('Only one entry is allowed to be added in live events');
-
+            $.notify("Only one entry is allowed to be added in Smart Wand Channels.",
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#D44950",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );
         }
     }
 });
 /*SWChannels - end*/
 
+/* Sms Channel - Start */
+
+let gridSmsChannels;
+let isSmsAPICallsAdding = false;
+
+gridSmsChannels = $('#tbl_SmsChannel').grid({
+    dataSource: '/Admin/Settings?handler=SmsChannels',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    inlineEditing: { mode: 'command' },
+
+    columns: [
+        { width: '0%', field: 'id', title: 'Id', hidden: true },
+        { width: '0%', field: 'companyId', title: 'Company Id', hidden: true },
+        { width: '15%', field: 'smsProvider', title: 'SMS Provider Name', editor: true},
+        { width: '15%', field: 'smsSender', title: 'Sender ID', editor: true},
+        { width: '25%', field: 'apiKey', title: 'Api Key', editor: true, align: 'center' },
+        { width: '25%', field: 'apiSecret', title: 'Api Password', editor: true, align: 'center' },
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs text-success" aria-hidden="true"></i>');
+    }
+});
+
+if (gridSmsChannels) {
+    gridSmsChannels.on('rowDataChanged', function (e, id, record) {
+        const data = $.extend(true, {}, record);
+        data.id = data.id.replace(/\s{2,}/g, ' ').trim();
+        data.companyId = data.companyId.replace(/\s{2,}/g, ' ').trim();
+        data.smsProvider = data.smsProvider;
+        data.apiKey = data.apiKey;  
+        data.apiSecret = data.apiSecret;  
+        data.smsSender = data.smsSender;  
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            url: '/Admin/Settings?handler=SmsChannel',
+            data: { record: data },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function () {
+            gridSmsChannels.clear();
+            gridSmsChannels.reload();
+        }).fail(function () {
+            console.log('error');
+        }).always(function () {
+            if (isSmsAPICallsAdding)
+                isSmsAPICallsAdding = false;
+        });
+    });
+
+    gridSmsChannels.on('rowRemoving', function (e, id, record) {
+        if (confirm('Are you sure want to delete this  SMS channel?')) {
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteSmsChannel',
+                data: { id: record },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function () {
+                gridSmsChannels.reload();
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isSmsAPICallsAdding)
+                    isSmsAPICallsAdding = false;
+            });
+        }
+    });
+}
+$('#add_sms_channel').on('click', function () {
+    if (isSmsAPICallsAdding == true) {       
+        $.notify("Unsaved changes in the grid. Please Refresh the page.",
+            {
+                align: "center",
+                verticalAlign: "top",
+                color: "#fff",
+                background: "#A5881B",
+                blur: 0.4,
+                delay: 0
+            }
+        );
+    } else {
+        if ($('#tbl_SmsChannel tbody tr').find('td').eq(1).text() === '') {
+            isSmsAPICallsAdding = true;
+            gridSmsChannels.addRow({
+                'id': -1,
+                'companyId': 1
+            }).edit(-1);
+        }
+        else {            
+            $.notify("Only one entry is allowed to be added in SMS Channel.",
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#D44950",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );
+        }
+    }
+});
+/* Sms Channel - End */
 
 /*GeneralFeeds - start*/
 let gridGeneralFeeds;
@@ -556,7 +720,16 @@ if (gridGeneralFeeds) {
 
 $('#add_general_feeds').on('click', function () {
     if (isAPICallsAdding == true) {
-        alert('Unsaved changes in the grid. Refresh the page');
+        $.notify("Unsaved changes in the grid. Please Refresh the page.",
+            {
+                align: "center",
+                verticalAlign: "top",
+                color: "#fff",
+                background: "#A5881B",
+                blur: 0.4,
+                delay: 0
+            }
+        );
     } else {
         isAPICallsAdding = true;
         gridGeneralFeeds.addRow({

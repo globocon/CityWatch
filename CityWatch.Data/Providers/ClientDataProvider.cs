@@ -3,6 +3,7 @@ using CityWatch.Data.Models;
 using iText.Commons.Actions.Contexts;
 using iText.Layout.Element;
 using iText.StyledXmlParser.Jsoup.Safety;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -155,7 +156,10 @@ namespace CityWatch.Data.Providers
         void DeleteGeneralFeeds(int id);
         void DuressGloablEmail(string Email);
         List<GlobalDuressEmail> GetDuressEmails();
-      //GeneralFeeds - end
+        //GeneralFeeds - end
+
+        void SaveSmsChannel(SmsChannel smsChannel);
+        void DeleteSmsChannel(int id);
 
     }
 
@@ -1631,6 +1635,54 @@ namespace CityWatch.Data.Providers
             _context.GeneralFeeds.Remove(generalFeedsToDelete);
             _context.SaveChanges();
         }
+
+
+        #region Sms Channel
+        public void SaveSmsChannel(SmsChannel smsChannel)
+        {
+            if (smsChannel == null)
+                throw new ArgumentNullException();
+
+            if (smsChannel.Id == -1)
+            {
+                var SmsChannelnew = new SmsChannel()
+                {
+                    CompanyId = smsChannel.CompanyId,
+                    SmsProvider = smsChannel.SmsProvider,
+                    ApiKey = smsChannel.ApiKey,
+                    ApiSecret = smsChannel.ApiSecret,
+                    SmsSender = smsChannel.SmsSender,
+                };
+                _context.SmsChannel.Add(SmsChannelnew);
+            }
+            else
+            {
+                var SmsChannelnew = _context.SmsChannel.SingleOrDefault(x => x.Id == smsChannel.Id);
+                if (SmsChannelnew == null)
+                    throw new InvalidOperationException();
+
+                SmsChannelnew.CompanyId = smsChannel.CompanyId;
+                SmsChannelnew.SmsProvider = smsChannel.SmsProvider;
+                SmsChannelnew.ApiKey = smsChannel.ApiKey;
+                SmsChannelnew.ApiSecret = smsChannel.ApiSecret;
+                SmsChannelnew.SmsSender = smsChannel.SmsSender;
+            }
+            _context.SaveChanges();
+        }
+        public void DeleteSmsChannel(int id)
+        {
+            if (id == -1)
+                return;
+
+            var smsChannelToDelete = _context.SmsChannel.SingleOrDefault(x => x.Id == id);
+            if (smsChannelToDelete == null)
+                throw new InvalidOperationException();
+
+            _context.SmsChannel.Remove(smsChannelToDelete);
+            _context.SaveChanges();
+        }
+        #endregion
+
 
         //for checking whther user has any access to the client site ie to be deleted-end
 
