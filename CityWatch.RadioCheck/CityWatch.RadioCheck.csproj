@@ -27,5 +27,6 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <Folder Include="Logs\" />
+	  <Folder Include="wwwroot\lib\Notify\" />
 	</ItemGroup>
 </Project>

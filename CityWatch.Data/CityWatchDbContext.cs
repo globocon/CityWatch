@@ -96,7 +96,9 @@ namespace CityWatch.Data
 
         public DbSet<RadioCheckListSWReadData> RadioCheckListSWReadData { get; set; }
         public DbSet<GlobalDuressEmail> GlobalDuressEmail { get; set; }
+
         public DbSet<SiteEventLog> SiteEventLog { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<GuardLog>()
@@ -115,6 +117,8 @@ namespace CityWatch.Data
         //General Feeds-start
         public DbSet<GeneralFeeds> GeneralFeeds { get; set; }
         //General Feeds-end
+        public DbSet<SmsChannel> SmsChannel { get; set; }
+        public DbSet<SiteEventLog> SiteEventLog { get; set; }
 
     }
     /* 07022024 dileep to solve the trigger in table not allowed in enity framework 7.0

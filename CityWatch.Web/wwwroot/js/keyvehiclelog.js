@@ -3071,13 +3071,13 @@ $(function () {
                         $('#generate_kvl_docket').attr('disabled', false);
                         /*for changing the button name-start*/
                         $('#download_kvl_docket').show();
-                        const isChecked = $('#chb_IsPDFBinder').is(':checked');
-                        if (isChecked == true) {
-                            $('#download_kvl_docket').text('Download ZIP')
-                        }
-                        else {
-                            $('#download_kvl_docket').text('Download PDF')
-                        }
+                        //const isChecked = $('#chb_IsPDFBinder').is(':checked');
+                        //if (isChecked == true) {
+                        //    $('#download_kvl_docket').text('Download ZIP')
+                        //}
+                        //else {
+                        //    $('#download_kvl_docket').text('Download PDF')
+                        //}
                         $('#chkAllBatchDocketSelect').prop('checked', false);
                        
                         /*for changing the button name - end*/
@@ -3121,6 +3121,14 @@ $(function () {
 
                             }
                         });
+                        const isChecked = $('#chb_IsPDFBinder').is(':checked');
+                        if (isChecked == false) {
+                            $('#download_kvl_docket').text('Download ZIP')
+                        }
+                        else {
+                            $('#download_kvl_docket').text('Download PDF')
+                        }
+                        $('#chkAllBatchDocketSelect').prop('checked', false);
                         $("#generate_kvl_AlldocketList").removeAttr("disabled");
                         $("#generate_kvl_docket").removeAttr("disabled");
                         $('#generate_kvl_docket_status').html('<i class="fa fa-times-circle text-danger mr-2"></i> Error generating report').show();
@@ -3135,6 +3143,14 @@ $(function () {
                                 $(this).find('input[type="checkbox"]').prop('checked', false);
 
                             }
+                            const isChecked = $('#chb_IsPDFBinder').is(':checked');
+                            if (isChecked == false) {
+                                $('#download_kvl_docket').text('Download ZIP')
+                            }
+                            else {
+                                $('#download_kvl_docket').text('Download PDF')
+                            }
+                            $('#chkAllBatchDocketSelect').prop('checked', false);
                         });
                         $("#generate_kvl_docket").removeAttr("disabled");
                        // $('#generate_kvl_AlldocketList').attr('disabled', false);
@@ -3819,7 +3835,7 @@ $(function () {
 $('#chb_IsPDFBinder').on('change', function () {
 
     const isChecked = $(this).is(':checked');
-    $('#lbl_PDFBinder').text(isChecked ? 'PDF Binder  On' : 'PDF Binder Off'); lbl_PDFBinder
+    $('#lbl_PDFBinder').text(isChecked ? 'PDF Binder  On' : 'PDF Binder Off (ZIP)'); lbl_PDFBinder
     $('#IsPDFBinderOn').val(isChecked);
 
 });

@@ -14,7 +14,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Security.Claims;
-
+using System.ComponentModel.Design;
 
 namespace CityWatch.Kpi.Pages.Admin
 {
@@ -128,7 +128,8 @@ namespace CityWatch.Kpi.Pages.Admin
                         z.Id,
                         ClientTypeName = z.ClientType.Name,
                         ClientSiteName = z.Name,
-                        HasSettings = clientSiteWithSettings.Any(x => x == z.Id)
+                        HasSettings = clientSiteWithSettings.Any(x => x == z.Id),
+                        z.SiteEmail
                     }));
 
                 }
@@ -145,7 +146,8 @@ namespace CityWatch.Kpi.Pages.Admin
                         z.Id,
                         ClientTypeName = z.ClientType.Name,
                         ClientSiteName = z.Name,
-                        HasSettings = clientSiteWithSettings.Any(x => x == z.Id)
+                        HasSettings = clientSiteWithSettings.Any(x => x == z.Id),
+                       z.SiteEmail
                     }));
                 }
             }
@@ -717,6 +719,23 @@ namespace CityWatch.Kpi.Pages.Admin
             // Return the PDF file as a download
             return File(pdfBytes, "application/pdf", "CityWatch_Schedule_" + reportYear + "_" + reportMonth + "_Doc.pdf");
         }
+        //Menu chage -start
+        public void OnPostSaveSiteEmail(int siteId, string siteEmail, bool enableLogDump, string landLine, string guardEmailTo, string duressEmail, string duressSms)
+        {
+            var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(z => z.Id == siteId);
+            if (clientSite != null)
+            {
+                clientSite.SiteEmail = siteEmail;
+                clientSite.UploadGuardLog = enableLogDump;
+                clientSite.LandLine = landLine;
+                clientSite.GuardLogEmailTo = guardEmailTo;
+                clientSite.DuressEmail = duressEmail;
+                clientSite.DuressSms = duressSms;
+            }
+
+            _clientDataProvider.SaveClientSite(clientSite);
+        }
+        //Menu change -end
 
     }
 }

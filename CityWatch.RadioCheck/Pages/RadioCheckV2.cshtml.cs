@@ -17,6 +17,7 @@ using System.Security.Claims;
 using static Dropbox.Api.TeamLog.EventCategory;
 using MailKit.Net.Smtp;
 using static iText.Kernel.Pdf.Function.PdfFunction;
+using Dropbox.Api.Users;
 
 namespace CityWatch.Web.Pages.Radio
 {
@@ -28,13 +29,14 @@ namespace CityWatch.Web.Pages.Radio
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly EmailOptions _EmailOptions;
         private readonly IConfiguration _configuration;
+        private readonly ISmsSenderProvider _smsSenderProvider;
         public RadioCheckNewModel(IGuardLogDataProvider guardLogDataProvider, IOptions<EmailOptions> emailOptions,
-            IConfiguration configuration)
+            IConfiguration configuration, ISmsSenderProvider smsSenderProvider)
         {
-
             _guardLogDataProvider = guardLogDataProvider;
             _EmailOptions = emailOptions.Value;
             _configuration = configuration;
+            _smsSenderProvider = smsSenderProvider;
         }
         public int UserId { get; set; }
         public int GuardId { get; set; }
@@ -238,16 +240,21 @@ namespace CityWatch.Web.Pages.Radio
             var message = "success";
             try
             {
+                var guardid = HttpContext.Session.GetInt32("GuardId");
+                string guardname = string.Empty;
+                string clientsitename = _guardLogDataProvider.GetClientSites(clientSiteId).Select(x=> x.Name).FirstOrDefault();
                 if (checkedLB == true)
                 {
                     var logbookdate = DateTime.Today;
                     var logbooktype = LogBookType.DailyGuardLog;
                     //var logBookId = _guardLogDataProvider.GetClientSiteLogBookId(clientSiteId, logbooktype, DateTime.Today);
                     // Get Last Logbookid and logbook Date by latest logbookid // p6#73 timezone bug - Added by binoy 24-01-2024
-                    var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdByLogBookMaxID(clientSiteId, logbooktype, out logbookdate);                    
-                    var guardid = HttpContext.Session.GetInt32("GuardId");
+                    var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdByLogBookMaxID(clientSiteId, logbooktype, out logbookdate);
+
                     if (guardid != 0)
-                    {
+                    {                      
+                        guardname = _guardLogDataProvider.GetGuards(guardid.Value).Name;
+                        
                         /* Save the push message for reload to logbook on next day Start*/
                         var radioCheckPushMessages = new RadioCheckPushMessages()
                         {
@@ -266,7 +273,7 @@ namespace CityWatch.Web.Pages.Radio
 
 
                         var guardLoginId = _guardLogDataProvider.GetGuardLoginId(Convert.ToInt32(guardid), DateTime.Today);
-                        
+
                         var guardLog = new GuardLog()
                         {
                             ClientSiteLogBookId = logBookId,
@@ -383,108 +390,60 @@ namespace CityWatch.Web.Pages.Radio
                 }
                 if (checkedSMSPersonal == true)
                 {
-                    var logbooktype = LogBookType.DailyGuardLog;
                     var guardlogins = _guardLogDataProvider.GetGuardLoginsByClientSiteId(clientSiteId, DateTime.Now);
-                    string smsPersonalEmails = null;
+                    List<SmsChannelEventLog> _smsChannelEventLogList = new List<SmsChannelEventLog>();                    
                     foreach (var item in guardlogins)
                     {
                         if (item.Guard.Mobile != null || item.Guard.Mobile != "+61 4")
                         {
-                            item.Guard.Mobile = item.Guard.Mobile.Replace(" ", "") + "@smsglobal.com";
-                            item.Guard.Mobile = item.Guard.Mobile.Replace("+", "");
-                            if (smsPersonalEmails == null)
-                            {
-                                smsPersonalEmails = item.Guard.Mobile;
-                            }
-                            else
-                            {
-                                smsPersonalEmails = smsPersonalEmails + "," + item.Guard.Mobile;
-                            }
+                            SmsChannelEventLog smslog = new SmsChannelEventLog();
+                            smslog.GuardId = guardid.HasValue ? guardid.Value != 0 ? guardid.Value : null : null; // ID of guard who is sending the message
+                            smslog.GuardName = guardname.Length > 0 ? guardname : null; // Name of guard who is sending the message
+                            smslog.GuardNumber = item.Guard.Mobile; //  "+00 (91) -9747435124";
+                            smslog.SiteId = null;  // setting as null since it is from RC else clientSiteId
+                            smslog.SiteName = null;  // setting as null since it is from RC else  clientsitename
+                            _smsChannelEventLogList.Add(smslog);
                         }
-
                     }
-                    var fromAddress = _EmailOptions.FromAddress.Split('|');
-                    var toAddress = smsPersonalEmails.Split(',');
-                    var subject = Subject;
-                    var messageHtml = Notifications;
-
-                    var messagenew = new MimeMessage();
-                    messagenew.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
-                    foreach (var address in GetToEmailAddressList(toAddress))
-                        messagenew.To.Add(address);
-                    messagenew.Subject = $"{subject}";
-
-                    var builder = new BodyBuilder()
-                    {
-                        HtmlBody = messageHtml
-                    };
-
-                    messagenew.Body = builder.ToMessageBody();
-
-                    using (var client = new SmtpClient())
-                    {
-                        client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
-                        if (!string.IsNullOrEmpty(_EmailOptions.SmtpUserName) &&
-                            !string.IsNullOrEmpty(_EmailOptions.SmtpPassword))
-                            client.Authenticate(_EmailOptions.SmtpUserName, _EmailOptions.SmtpPassword);
-                        client.Send(messagenew);
-                        client.Disconnect(true);
-                    }
-
-
+                    SiteEventLog svl = new SiteEventLog();
+                    svl.ProjectName = "Radio Check";
+                    svl.ActivityType = "SMS Personal";
+                    svl.Module = "Radio Check V2";
+                    svl.SubModule = "Push Notification";
+                    svl.EventLocalTime = tmzdata.EventDateTimeLocal.Value;
+                    svl.EventLocalOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute;
+                    svl.EventLocalTimeZone = tmzdata.EventDateTimeZoneShort;
+                    svl.IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
+                    _smsSenderProvider.SendSms(_smsChannelEventLogList, Subject + " : " + Notifications, svl);
                 }
+
                 if (checkedSMSSmartWand == true)
-                {
-                    var logbooktype = LogBookType.DailyGuardLog;
+                {  
                     var smartWands = _guardLogDataProvider.GetClientSiteSmartWands(clientSiteId);
-                    string smsPersonalEmails = null;
+                    List<SmsChannelEventLog> _smsChannelEventLogList = new List<SmsChannelEventLog>();
                     foreach (var item in smartWands)
                     {
                         if (item.PhoneNumber != null || item.PhoneNumber != "+61 4")
                         {
-                            item.PhoneNumber = item.PhoneNumber.Replace("(0)", "") + "@smsglobal.com";
-                            item.PhoneNumber = item.PhoneNumber.Replace("+", "");
-                            item.PhoneNumber = item.PhoneNumber.Replace(" ", "");
-                            if (smsPersonalEmails == null)
-                            {
-                                smsPersonalEmails = item.PhoneNumber;
-                            }
-                            else
-                            {
-                                smsPersonalEmails = smsPersonalEmails + "," + item.PhoneNumber;
-                            }
+                            SmsChannelEventLog smslog = new SmsChannelEventLog();
+                            smslog.GuardId = guardid.HasValue ? guardid.Value != 0 ? guardid.Value : null : null; // ID of guard who is sending the message
+                            smslog.GuardName = guardname.Length > 0 ? guardname : null; // Name of guard who is sending the message
+                            smslog.GuardNumber = item.PhoneNumber; // "+00 (91) -9747435124";
+                            smslog.SiteId = null;  // setting as null since it is from RC else clientSiteId
+                            smslog.SiteName = null;  // setting as null since it is from RC else  clientsitename
+                            _smsChannelEventLogList.Add(smslog);
                         }
-
                     }
-                    var fromAddress = _EmailOptions.FromAddress.Split('|');
-                    var toAddress = smsPersonalEmails.Split(',');
-                    var subject = Subject;
-                    var messageHtml = Notifications;
-
-                    var messagenew = new MimeMessage();
-                    messagenew.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
-                    foreach (var address in GetToEmailAddressList(toAddress))
-                        messagenew.To.Add(address);
-                    messagenew.Subject = $"{subject}";
-
-                    var builder = new BodyBuilder()
-                    {
-                        HtmlBody = messageHtml
-                    };
-
-                    messagenew.Body = builder.ToMessageBody();
-
-                    using (var client = new SmtpClient())
-                    {
-                        client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
-                        if (!string.IsNullOrEmpty(_EmailOptions.SmtpUserName) &&
-                            !string.IsNullOrEmpty(_EmailOptions.SmtpPassword))
-                            client.Authenticate(_EmailOptions.SmtpUserName, _EmailOptions.SmtpPassword);
-                        client.Send(messagenew);
-                        client.Disconnect(true);
-                    }
-
-
+                    SiteEventLog svl = new SiteEventLog();
+                    svl.ProjectName = "Radio Check";
+                    svl.ActivityType = "SMS Smart Wand";
+                    svl.Module = "Radio Check V2";
+                    svl.SubModule = "Push Notification";
+                    svl.EventLocalTime = tmzdata.EventDateTimeLocal.Value;
+                    svl.EventLocalOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute;
+                    svl.EventLocalTimeZone = tmzdata.EventDateTimeZoneShort;
+                    svl.IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
+                    _smsSenderProvider.SendSms(_smsChannelEventLogList, Subject + " : " + Notifications, svl);
                 }
             }
             catch (Exception ex)
@@ -531,7 +490,7 @@ namespace CityWatch.Web.Pages.Radio
 
         // Save Global Text Alert Start
         public JsonResult OnPostSaveGlobalNotificationTestMessages(bool checkedState, string state, string Notifications, string Subject,
-            bool chkClientType, int[] ClientType, bool chkNationality, bool checkedSMSPersonal, bool checkedSMSSmartWand, int[] clientSiteId,GuardLog tmzdata)
+            bool chkClientType, int[] ClientType, bool chkNationality, bool checkedSMSPersonal, bool checkedSMSSmartWand, int[] clientSiteId, GuardLog tmzdata)
         {
             var success = true;
             var message = "success";
@@ -732,7 +691,7 @@ namespace CityWatch.Web.Pages.Radio
             return new JsonResult(new { success, message });
         }
 
-        public void LogBookDetails(int Id, string Notifications, string Subject,GuardLog tmzdata)
+        public void LogBookDetails(int Id, string Notifications, string Subject, GuardLog tmzdata)
         {
             #region Logbook
             if (Id != null)
@@ -741,10 +700,10 @@ namespace CityWatch.Web.Pages.Radio
                 var logbooktype = LogBookType.DailyGuardLog;
                 //var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdGloablmessage(Id, logbooktype, DateTime.Today);
 
-                var logbookdate = DateTime.Today;               
+                var logbookdate = DateTime.Today;
                 // Get Last Logbookid and logbook Date by latest logbookid // p6#73 timezone bug - Modified by binoy 29-01-2024
                 var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdByLogBookMaxID(Id, logbooktype, out logbookdate);
-                
+
                 if (logBookId != 0)
                 {
                     var guardid = HttpContext.Session.GetInt32("GuardId");
@@ -931,8 +890,8 @@ namespace CityWatch.Web.Pages.Radio
         //p4#48 AudioNotification - Binoy - 12-01-2024 -- End
 
         //code added for ActionList Send start
-        public JsonResult OnPostSaveActionList(string Notifications, string Subject, int[] ClientType, int[] clientSiteId, string AlarmKeypadCode, 
-            string Action1, string Physicalkey, string Action2, string SiteCombinationLook, string Action3, string Action4, string Action5, 
+        public JsonResult OnPostSaveActionList(string Notifications, string Subject, int[] ClientType, int[] clientSiteId, string AlarmKeypadCode,
+            string Action1, string Physicalkey, string Action2, string SiteCombinationLook, string Action3, string Action4, string Action5,
             string CommentsForControlRoomOperator, GuardLog tmzdata)
         {
             var success = true;
@@ -1005,7 +964,7 @@ namespace CityWatch.Web.Pages.Radio
         {
             var success = true;
             var message = "success";
-            
+
             var ActionListMessage = (string.IsNullOrEmpty(AlarmKeypadCode) ? string.Empty : "AlarmKeypadCode: " + AlarmKeypadCode + "\n") +
                     (string.IsNullOrEmpty(Physicalkey) ? string.Empty : "PhysicalKey: " + Physicalkey + "\n") +
                     (string.IsNullOrEmpty(AlarmKeypadCode) ? string.Empty : "AlarmKeypadCode: " + AlarmKeypadCode + "\n") +
@@ -1014,9 +973,9 @@ namespace CityWatch.Web.Pages.Radio
                    (string.IsNullOrEmpty(Action2) ? string.Empty : "Action2: " + Action2 + "\n") +
                     (string.IsNullOrEmpty(Action3) ? string.Empty : "Action3: " + Action3 + "\n") +
                     (string.IsNullOrEmpty(Action4) ? string.Empty : "Action4: " + Action4 + "\n") +
-                    (string.IsNullOrEmpty(CommentsForControlRoomOperator) ? string.Empty : "CommentsForControlRoomOperator: " + CommentsForControlRoomOperator + "\n")+
+                    (string.IsNullOrEmpty(CommentsForControlRoomOperator) ? string.Empty : "CommentsForControlRoomOperator: " + CommentsForControlRoomOperator + "\n") +
                     (string.IsNullOrEmpty(Notifications) ? string.Empty : "Message: " + Notifications + "\n");
-                    
+
             try
             {
 
@@ -1033,7 +992,7 @@ namespace CityWatch.Web.Pages.Radio
                     }
                     /* log book entry to citywtch control room */
                     var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
-                    _guardLogDataProvider.LogBookEntryFromRcControlRoomMessages(loginguardid, 0, Subject, Notifications, IrEntryType.Alarm, 1, 0,tmzdata);
+                    _guardLogDataProvider.LogBookEntryFromRcControlRoomMessages(loginguardid, 0, Subject, Notifications, IrEntryType.Alarm, 1, 0, tmzdata);
                     foreach (var clientSiteTypeID in clientSitesClientType)
                     {
                         EmailSender(clientSiteTypeID.SiteEmail, clientSiteTypeID.Id, Subject, ActionListMessage);
