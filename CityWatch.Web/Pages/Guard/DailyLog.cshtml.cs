@@ -603,11 +603,12 @@ namespace CityWatch.Web.Pages.Guard
                         SubModule = "LogBook",
                         GoogleMapCoordinates = gpsCoordinates,
                         IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
-                        EventTime = DateTime.Now,
                         ToAddress = string.Empty,
                         ToMessage = string.Empty,
+                        EventTime= DateTime.Now,
+                        EventLocalTime = DateTime.Now
                     }
-                 );
+                 ) ;
                 /* Save log for duress button enable end*/
                 EmailSender(emailAddresses, ClientsiteDetails.Name, ClientsiteDetails.Address, ClientsiteDetails.LandLine, gpsCoordinates, GuradDetails.Name, GuradDetails.Initial, GuradDetails.Mobile);
 
@@ -678,7 +679,8 @@ namespace CityWatch.Web.Pages.Guard
                             SubModule = "LogBook",
                             GoogleMapCoordinates = gpsCoordinates,
                             IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
-                            EventTime = DateTime.Now,
+                            EventTime = DateTime.Now,                            
+                            EventLocalTime = DateTime.Now,
                             ToAddress = Email,
                             ToMessage = "Global Duress Alert",
                         }
