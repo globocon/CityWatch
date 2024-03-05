@@ -793,6 +793,31 @@ namespace CityWatch.Web.Pages.Incident
             };
             _guardLogDataProvider.SaveGuardLog(guardLog);
         }
+        //To Save IR in control room start
+        private void CreateControlRoomLogEntry(IncidentReport report)
+        {
+            var RadioCheckDetails = _guardLogDataProvider.GetRadiocheckLogbookDetails();
+            // p6#73 timezone bug - Added by binoy 24-01-2024
+            var logBookId = GetLogBookId(RadioCheckDetails.ClientSiteId, (int)report.CreatedOnDateTimeUtcOffsetMinute);
+            //var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)report.CreatedOnDateTimeUtcOffsetMinute);
+            var guardLog = new GuardLog()
+            {
+                ClientSiteLogBookId = logBookId,
+                EventDateTime = DateTime.Now,
+                Notes = Path.GetFileNameWithoutExtension(report.FileName),
+                IsSystemEntry = true,
+                IrEntryType = report.IsEventFireOrAlarm ? IrEntryType.Alarm : IrEntryType.Normal,
+                EventDateTimeLocal = report.CreatedOnDateTimeLocal,
+                EventDateTimeLocalWithOffset = report.CreatedOnDateTimeLocalWithOffset,
+                EventDateTimeZone = report.CreatedOnDateTimeZone,
+                EventDateTimeZoneShort = report.CreatedOnDateTimeZoneShort,
+                EventDateTimeUtcOffsetMinute = report.CreatedOnDateTimeUtcOffsetMinute,
+                IsIRReportTypeEntry = true
+            };
+            _guardLogDataProvider.SaveGuardLog(guardLog);
+        }
+        //To Save IR in control room stop
+
         //To Generate Hash Code start
         private string GenerateHashCode(string input)
         {
@@ -994,6 +1019,9 @@ namespace CityWatch.Web.Pages.Incident
                 {
                     if (report.ClientSiteId.HasValue)
                         CreateGuardLogEntry(report);
+                    CreateControlRoomLogEntry(report);//To Save in the control room
+
+
                 }
                 catch (Exception ex)
                 {

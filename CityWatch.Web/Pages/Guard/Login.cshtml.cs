@@ -479,7 +479,7 @@ namespace CityWatch.Web.Pages.Guard
             };
             _guardLogDataProvider.SaveGuardLog(signInEntry);
 
-
+           
             ////logBookId entry for radio checklist-start
 
             //var gaurdlogin = _clientDataProvider.GetGuardLogin(guardLoginId,logBookId);

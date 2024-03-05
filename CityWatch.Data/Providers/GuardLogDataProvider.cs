@@ -213,6 +213,8 @@ namespace CityWatch.Data.Providers
         int GetClientTypeCount(int? typeId);
 
         List<KeyVehicleLogVisitorPersonalDetail> GetPOIListFromVisitorPersonalDetails();
+        RadioCheckLogbookSiteDetails GetRadiocheckLogbookDetails();
+       
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -3521,8 +3523,13 @@ namespace CityWatch.Data.Providers
                 .ThenInclude(z => z.Guard)
                 .ToList();
         }
-
-
+        //To get the Details of RadiocheckLogbookDetails start
+        public RadioCheckLogbookSiteDetails GetRadiocheckLogbookDetails()
+        {
+            return _context.RadioCheckLogbookSiteDetails.SingleOrDefault();
+        }
+       
+        //To get the Details of RadiocheckLogbookDetails stop
     }
 
 
