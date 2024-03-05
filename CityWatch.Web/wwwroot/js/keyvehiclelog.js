@@ -3659,38 +3659,40 @@ $(function () {
 
 
     function GFG_Fun() {
-        // Task p6#73_TimeZone issue -- added by Binoy - Start
-        var tmdata = {
-            'EventDateTimeLocal': null,
-            'EventDateTimeLocalWithOffset': null,
-            'EventDateTimeZone': null,
-            'EventDateTimeZoneShort': null,
-            'EventDateTimeUtcOffsetMinute': null,
-        };
-        fillRefreshLocalTimeZoneDetails(tmdata, "", false)
-        // Task p6#73_TimeZone issue -- added by Binoy - End
+        if ($("#kv_duress_status").text() !== "Active") {
+            // Task p6#73_TimeZone issue -- added by Binoy - Start
+            var tmdata = {
+                'EventDateTimeLocal': null,
+                'EventDateTimeLocalWithOffset': null,
+                'EventDateTimeZone': null,
+                'EventDateTimeZoneShort': null,
+                'EventDateTimeUtcOffsetMinute': null,
+            };
+            fillRefreshLocalTimeZoneDetails(tmdata, "", false)
+            // Task p6#73_TimeZone issue -- added by Binoy - End
 
-        $.ajax({
-            url: '/Guard/KeyVehicleLog?handler=SaveClientSiteDuress',
-            data: {
-                clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),
-                GuardId: $('#KeyVehicleLog_GuardLogin_GuardId').val(),
-                guardLoginId: $('#KeyVehicleLog_GuardLogin_Id').val(),
-                logBookId: $('#KeyVehicleLog_ClientSiteLogBookId').val(),
-                gpsCoordinates: $("#hid_duressEnabledGpsCoordinates").val(),
-                enabledAddress: $("#hid_duressEnabledAddress").val(),
-                tmdata: tmdata
-            },
-            dataType: 'json',
-            type: 'POST',
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {
-            if (result.status) {
-                $('#kv_duress_btn').removeClass('normal').addClass('active');
-                $("#kv_duress_status").addClass('font-weight-bold');
-                $("#kv_duress_status").text("Active");
-            }
-        });
+            $.ajax({
+                url: '/Guard/KeyVehicleLog?handler=SaveClientSiteDuress',
+                data: {
+                    clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),
+                    GuardId: $('#KeyVehicleLog_GuardLogin_GuardId').val(),
+                    guardLoginId: $('#KeyVehicleLog_GuardLogin_Id').val(),
+                    logBookId: $('#KeyVehicleLog_ClientSiteLogBookId').val(),
+                    gpsCoordinates: $("#hid_duressEnabledGpsCoordinates").val(),
+                    enabledAddress: $("#hid_duressEnabledAddress").val(),
+                    tmdata: tmdata
+                },
+                dataType: 'json',
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.status) {
+                    $('#kv_duress_btn').removeClass('normal').addClass('active');
+                    $("#kv_duress_status").addClass('font-weight-bold');
+                    $("#kv_duress_status").text("Active");
+                }
+            });
+        }
     } 
 
     // Task p6#73_TimeZone issue -- added by Binoy - Start

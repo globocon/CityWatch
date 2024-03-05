@@ -32,6 +32,7 @@ namespace CityWatch.Web.Pages.Guard
         private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
         private readonly ILogger<DailyLogModel> _logger;
         private readonly EmailOptions _emailOptions;
+        private readonly ISiteEventLogDataProvider _SiteEventLogDataProvider;
 
         [BindProperty]
         public GuardLog GuardLog { get; set; }
@@ -45,7 +46,8 @@ namespace CityWatch.Web.Pages.Guard
              IViewDataService viewDataService,
              IClientSiteWandDataProvider clientSiteWandDataProvider,
              IOptions<EmailOptions> emailOptions,
-             ILogger<DailyLogModel> logger)
+             ILogger<DailyLogModel> logger,
+             ISiteEventLogDataProvider siteEventLogDataProvider)
         {
             _guardDataProvider = guardDataProvider;
             _guardLogDataProvider = guardLogDataProvider;
@@ -54,6 +56,7 @@ namespace CityWatch.Web.Pages.Guard
             _clientSiteWandDataProvider = clientSiteWandDataProvider;
             _logger = logger;
             _emailOptions = emailOptions.Value;
+            _SiteEventLogDataProvider = siteEventLogDataProvider;
         }
 
         public void OnGet()
@@ -89,8 +92,8 @@ namespace CityWatch.Web.Pages.Guard
             if (logBookId > 0)
             {
                 logBook_Date = _guardDataProvider.GetLogbookDateFromLogbook(logBookId);
-            }           
-            if(logBook_Date != null)
+            }
+            if (logBook_Date != null)
             {
                 logBookDate = logBook_Date;
             }
@@ -98,7 +101,7 @@ namespace CityWatch.Web.Pages.Guard
             {
                 logBookDate = DateTime.Today;
             }
-            
+
             var guardLogs = _guardLogDataProvider.GetGuardLogswithKvLogData(logBookId, logBookDate ?? DateTime.Today)
                 .OrderByDescending(z => z.Id)
                 .ThenByDescending(z => z.EventDateTime);
@@ -108,17 +111,17 @@ namespace CityWatch.Web.Pages.Guard
         // Project 4 , Task 48, Audio notification, Added By Binoy -- Start
         public JsonResult OnPostGuardLogsUpdateNotificationSoundStatus(List<int> logBookId, bool isControlRoomLogBook)
         {
-            foreach(var r in logBookId)
+            foreach (var r in logBookId)
             {
                 int id = Convert.ToInt32(r);
                 _guardLogDataProvider.UpdateNotificationSoundPlayedStatusForGuardLogs(id, isControlRoomLogBook);
-            }                         
+            }
             return new JsonResult(new { status = "Ok" });
         }
 
         public JsonResult OnGetGuardLogsAcknowledgedForControlroom()
         {
-            List<int> audioToPlayId = new List<int> {}; 
+            List<int> audioToPlayId = new List<int> { };
             audioToPlayId = _guardLogDataProvider.GetGuardLogsNotAcknowledgedForNotificationSound();
             return new JsonResult(audioToPlayId);
         }
@@ -145,14 +148,14 @@ namespace CityWatch.Web.Pages.Guard
                         DateTime.Now.Day,
                         int.Parse(dateParts[0]),
                         int.Parse(dateParts[1]),
-                        0);                       
+                        0);
 
                         GuardLog.EventDateTime = desiredDateTime;
                         var GPSCoordinates = GuardLog.GpsCoordinates;
                         ModelState.Remove("GuardLog.EventDateTime");
 
                     }
-                    
+
                 }
             }
 
@@ -181,7 +184,7 @@ namespace CityWatch.Web.Pages.Guard
                 foreach (var item in guardlogins)
                 {
 
-                    var ClientSiteRadioChecksActivityDetails = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == item.GuardId && x.ClientSiteId==item.ClientSiteId && x.GuardLoginTime!=null);
+                    var ClientSiteRadioChecksActivityDetails = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == item.GuardId && x.ClientSiteId == item.ClientSiteId && x.GuardLoginTime != null);
                     foreach (var ClientSiteRadioChecksActivity in ClientSiteRadioChecksActivityDetails)
                     {
                         ClientSiteRadioChecksActivity.NotificationCreatedTime = GuardLog.EventDateTime;
@@ -251,7 +254,7 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { status, message });
         }
 
-        public JsonResult OnPostUpdateOffDuty(int guardLoginId, int clientSiteLogBookId,GuardLog tmdata)
+        public JsonResult OnPostUpdateOffDuty(int guardLoginId, int clientSiteLogBookId, GuardLog tmdata)
         {
             var status = true;
             var message = "Success";
@@ -307,10 +310,10 @@ namespace CityWatch.Web.Pages.Guard
                             ClientSiteId = ClientSiteRadioChecksActivity.ClientSiteId,
                             GuardId = ClientSiteRadioChecksActivity.GuardId,
                             Status = "Off Duty",
-                            RadioCheckStatusId=1,
+                            RadioCheckStatusId = 1,
                             CheckedAt = DateTime.Now,
                             Active = true
-                        }) ;
+                        });
                     }
                 }
                 /* new Change 07/11/2023 no need to remove the all the deatils when logoff remove after a buffer time end */
@@ -501,20 +504,20 @@ namespace CityWatch.Web.Pages.Guard
                 /*check if id is Citywatch M1 - Romeo Patrol Cars site id=625*/
 
                 // p6#73 timezone bug - Added by binoy 24-01-2024
-                if (logBook.Count==0)
+                if (logBook.Count == 0)
                 {
 
 
 
-                  
-                        if (clientSiteId == 625)
+
+                    if (clientSiteId == 625)
+                    {
+                        var previousPuShMessages = _clientDataProvider.GetPushMessagesNotAcknowledged(clientSiteId, DateTime.Today.AddDays(-1));
+                        if (previousPuShMessages != null)
                         {
-                            var previousPuShMessages = _clientDataProvider.GetPushMessagesNotAcknowledged(clientSiteId, DateTime.Today.AddDays(-1));
-                            if (previousPuShMessages != null)
-                            {
-                                _guardLogDataProvider.CopyPreviousDaysPushMessageToLogBook(previousPuShMessages, newLogBookId, guardLoginId, signInEntry);
-                            }
+                            _guardLogDataProvider.CopyPreviousDaysPushMessageToLogBook(previousPuShMessages, newLogBookId, guardLoginId, signInEntry);
                         }
+                    }
 
                     /* Copy Previous duress message not deactivated (Repete in each logbook untill deactivated )*/
                     var isDurssEnabled = _viewDataService.IsClientSiteDuressEnabled(clientSiteId);
@@ -546,7 +549,7 @@ namespace CityWatch.Web.Pages.Guard
 
                     }
 
-                    
+
 
                 }
                 /* get previous day push messages end */
@@ -572,22 +575,42 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { success = false, message = exMessage.ToString() });
         }
 
-        public JsonResult OnPostSaveClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, 
-                                                     int guardId,string gpsCoordinates,string enabledAddress, GuardLog tmdata)
+        public JsonResult OnPostSaveClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId,
+                                                     int guardId, string gpsCoordinates, string enabledAddress, GuardLog tmdata)
         {
             var status = true;
             var message = "Success";
             try
             {
-               
+
                 var ClientsiteDetails = _clientDataProvider.GetClientSiteName(clientSiteId);
                 var Emails = _clientDataProvider.GetGlobalDuressEmail().ToList();
                 var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
                 var GuradDetails = _clientDataProvider.GetGuradName(guardId);
 
                 _viewDataService.EnableClientSiteDuress(clientSiteId, guardLoginId, logBookId, guardId, gpsCoordinates, enabledAddress, tmdata, ClientsiteDetails.Name, GuradDetails.Name);
+                /* Save log for duress button enable Start 02032024 dileep*/
+                _SiteEventLogDataProvider.SaveSiteEventLogData(
+                    new SiteEventLog()
+                    {
+                        GuardId = guardId,
+                        SiteId = clientSiteId,
+                        GuardName = GuradDetails.Name,
+                        SiteName = ClientsiteDetails.Name,
+                        ProjectName = "ClientPortal",
+                        ActivityType = "Duress Button Enable",
+                        Module = "Guard",
+                        SubModule = "LogBook",
+                        GoogleMapCoordinates = gpsCoordinates,
+                        IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
+                        EventTime = DateTime.Now,
+                        ToAddress = string.Empty,
+                        ToMessage = string.Empty,
+                    }
+                 );
+                /* Save log for duress button enable end*/
                 EmailSender(emailAddresses, ClientsiteDetails.Name, ClientsiteDetails.Address, ClientsiteDetails.LandLine, gpsCoordinates, GuradDetails.Name, GuradDetails.Initial, GuradDetails.Mobile);
-                
+
             }
             catch (Exception ex)
             {
@@ -596,14 +619,14 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(new { status, message });
         }
-        public JsonResult EmailSender(string Email, string Name,string Address,string Lnadline, string gpsCoordinates, string GuradName,string GuradInitial,string Mobile)
+        public JsonResult EmailSender(string Email, string Name, string Address, string Lnadline, string gpsCoordinates, string GuradName, string GuradInitial, string Mobile)
         {
             var success = true;
             var message = "success";
             var Subject = "Global Duress Alert";
             var Notifications = "Duress Button Activated By:" +
-                      (string.IsNullOrEmpty(GuradName) ? string.Empty : GuradName) + "["+ GuradInitial + "]" + "<br/>" +
-                      (string.IsNullOrEmpty(Mobile) ? string.Empty : "Mobile No: "+ Mobile) + "<br/>" +
+                      (string.IsNullOrEmpty(GuradName) ? string.Empty : GuradName) + "[" + GuradInitial + "]" + "<br/>" +
+                      (string.IsNullOrEmpty(Mobile) ? string.Empty : "Mobile No: " + Mobile) + "<br/>" +
                      (string.IsNullOrEmpty(Name) ? string.Empty : "From: " + Name) + "<br/>" +
                      (string.IsNullOrEmpty(Address) ? string.Empty : "Address:: " + Address) + "<br/>" +
                      (string.IsNullOrEmpty(Lnadline) ? string.Empty : "Mobile No: " + Lnadline);
@@ -615,55 +638,57 @@ namespace CityWatch.Web.Pages.Guard
             #region Email
             if (Email != null)
             {
-                string[] values = Email.Split(',');
-                foreach (string value in values)
+                var fromAddress = _emailOptions.FromAddress.Split('|');
+                var toAddress = Email.Split(','); ;
+                var subject = Subject;
+                var messageHtml = Notifications;
+
+                var messagenew = new MimeMessage();
+                messagenew.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+                foreach (var address in GetToEmailAddressList(toAddress))
+                    messagenew.To.Add(address);
+
+                messagenew.Subject = $"{subject}";
+
+                var builder = new BodyBuilder()
                 {
-                    string smsSiteEmails = null;
+                    HtmlBody = messageHtml
+                };
 
-                    if (value != null)
-                    {
-                        smsSiteEmails = value;
-                    }
-                    else
-                    {
-                        success = false;
-                        message = "Please Enter the Site Email";
-                        return new JsonResult(new { success, message });
-                    }
+                messagenew.Body = builder.ToMessageBody();
 
-
-                    var fromAddress = _emailOptions.FromAddress.Split('|');
-                    var toAddress = smsSiteEmails.Split(','); ;
-                    var subject = Subject;
-                    var messageHtml = Notifications;
-
-                    var messagenew = new MimeMessage();
-                    messagenew.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
-                    foreach (var address in GetToEmailAddressList(toAddress))
-                        messagenew.To.Add(address);
-
-                    messagenew.Subject = $"{subject}";
-
-                    var builder = new BodyBuilder()
-                    {
-                        HtmlBody = messageHtml
-                    };
-
-                    messagenew.Body = builder.ToMessageBody();
-
-                    using (var client = new SmtpClient())
-                    {
-                        client.Connect(_emailOptions.SmtpServer, _emailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
-                        if (!string.IsNullOrEmpty(_emailOptions.SmtpUserName) &&
-                            !string.IsNullOrEmpty(_emailOptions.SmtpPassword))
-                            client.Authenticate(_emailOptions.SmtpUserName, _emailOptions.SmtpPassword);
-                        client.Send(messagenew);
-                        client.Disconnect(true);
-                    }
+                using (var client = new SmtpClient())
+                {
+                    client.Connect(_emailOptions.SmtpServer, _emailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                    if (!string.IsNullOrEmpty(_emailOptions.SmtpUserName) &&
+                        !string.IsNullOrEmpty(_emailOptions.SmtpPassword))
+                        client.Authenticate(_emailOptions.SmtpUserName, _emailOptions.SmtpPassword);
+                    client.Send(messagenew);
+                    client.Disconnect(true);
+                    /* Save log for duress button enable Start 02032024 dileep*/
+                    _SiteEventLogDataProvider.SaveSiteEventLogData(
+                        new SiteEventLog()
+                        {
+                           
+                            GuardName = GuradName,
+                            SiteName = Name,
+                            ProjectName = "ClientPortal",
+                            ActivityType = "Duress Button Enable Email",
+                            Module = "Guard",
+                            SubModule = "LogBook",
+                            GoogleMapCoordinates = gpsCoordinates,
+                            IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
+                            EventTime = DateTime.Now,
+                            ToAddress = Email,
+                            ToMessage = "Global Duress Alert",
+                        }
+                     );
+                    /* Save log for duress button enable end*/
                 }
+
             }
 
-                
+
             #endregion
 
             return new JsonResult(new { success, message });
@@ -680,7 +705,7 @@ namespace CityWatch.Web.Pages.Guard
             return emailAddressList;
         }
 
-        public JsonResult OnPostSavePushNotificationTestMessages(int guardLoginId, int clientSiteLogBookId, string Notifications,int rcPushMessageId,GuardLog tmdata)
+        public JsonResult OnPostSavePushNotificationTestMessages(int guardLoginId, int clientSiteLogBookId, string Notifications, int rcPushMessageId, GuardLog tmdata)
         {
             var success = true;
             var message = "success";
@@ -728,7 +753,7 @@ namespace CityWatch.Web.Pages.Guard
                     {
                         ClientSiteLogBookId = logBookId,
                         GuardLoginId = guardLoginId,
-                        EventDateTime = DateTime.Now, 
+                        EventDateTime = DateTime.Now,
                         Notes = Notifications + " - " + guardInitials + " - " + clientsitename,
                         IrEntryType = IrEntryType.Normal,
                         EventDateTimeLocal = tmdata.EventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
@@ -752,9 +777,9 @@ namespace CityWatch.Web.Pages.Guard
         }
 
 
-      
+
 
     }
 
-   
+
 }

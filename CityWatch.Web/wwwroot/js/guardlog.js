@@ -527,9 +527,12 @@
 
     const renderGuardInitialColumn = function (value, record, $cell, $displayEl) {
         if (record.guardId !== null) {
-            return value + '<a href="#" class="ml-2"><i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + record.guardId + '"></i></a>';
+
+            var googleMap=record.gpsCoordinates ? '<a href="https://www.google.com/maps?q='+record.gpsCoordinates+'" target="_blank" data-toggle="tooltip" title=""><i class="fa fa-map-marker" aria-hidden="true"></i></a>' : '';
+            return value + '<a href="#" class="ml-2"><i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + record.guardId + '"></i></a>' + googleMap;
         }
-        else return value;
+        else return 'Admin'
+        /*else return value;*/
     }
 
     $('#guardInfoModal').on('shown.bs.modal', function (event) {
@@ -1059,7 +1062,7 @@
                         return record.notes;
                     }
                 }
-},
+            },
             { field: 'guardInitials', title: 'Guard Initials', width: 60, renderer: renderGuardInitialColumn }
         ],
         paramNames: { page: 'pageNo' },

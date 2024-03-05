@@ -56,6 +56,8 @@ builder.Services.AddScoped<IGuardReminderService, GuardReminderService>();
 builder.Services.AddScoped<IClientSiteActivityStatusDataProvider, ClientSiteActivityStatusDataProvider>();
 builder.Services.AddScoped<IRadioCheckViewDataService, RadioCheckViewDataService>();
 builder.Services.AddScoped<IRadioChecksActivityStatusService, RadioChecksActivityStatusService>();
+builder.Services.AddScoped<ISiteEventLogDataProvider, SiteEventLogDataProvider>();
+
 
 builder.Services.AddRazorPages(options =>
 {

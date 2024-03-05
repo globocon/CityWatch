@@ -2,7 +2,7 @@ let nIntervId;
 const duration = 60 * 3;
 var isPaused = false;
 //p4#48 AudioNotification - Binoy - 12-01-2024 -- Start
-let playAlarm = 0; 
+let playAlarm = 0;
 let audiourl = '/NotificationSound/duressAlarm01.mp3'
 const audio = new Audio(audiourl);
 audio.loop = true;
@@ -173,7 +173,7 @@ $(window).resize(function () {
         $('#clientSiteActiveGuards').closest('.dataTables_scrollBody').css('height', '100%');
 
     }
-   /* for modifying the size of tables active and inactive guards - end*/
+    /* for modifying the size of tables active and inactive guards - end*/
 
 });
 
@@ -189,9 +189,9 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
     ordering: true,
     "columnDefs": [
-        { "visible": false, "targets": 1 } ,// Hide the group column initially
-        { "visible": false, "targets": 2 } 
-    ],    
+        { "visible": false, "targets": 1 },// Hide the group column initially
+        { "visible": false, "targets": 2 }
+    ],
     order: [[11, 'asc']], // Task p4#41_A~Z and Z~A sorting issue -- modified by Binoy - 31-01-2024
     info: false,
     searching: true,
@@ -212,7 +212,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         dataSrc: ''
     },
     columns: [
-        { data: 'clientSiteId', visible: false  },
+        { data: 'clientSiteId', visible: false },
         {
             data: 'siteName',
             width: '20%',
@@ -222,7 +222,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
             }
 
-        }, 
+        },
         {
             data: 'address',
             width: '20%',
@@ -240,7 +240,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             render: function (value, type, data) {
                 if (data.isEnabled === 1) {
                     return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                        '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>'+
+                        '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>' +
                         '&nbsp;&nbsp;&nbsp; <i class="fa fa-map-marker" aria-hidden="true"></i>';
 
                 }
@@ -309,14 +309,14 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 else if (value === 4)
                     return '<i class="fa fa-check-circle text-success"></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover" >' + 1 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '"><input type="hidden" id="ClientSiteIdHover" value="' + data.clientSiteId + '"><input type="hidden" id="GuardIdHover" value="' + data.guardId + '"><input type="hidden" id="ColorIdHover" value="' + data.rcColorId + '">';
                 else if (value === 1)
-                     return data.status;
-                    //return '<i class="fa fa-check-circle text-danger"></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 1 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+                    return data.status;
+                //return '<i class="fa fa-check-circle text-danger"></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 1 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
                 else if (value === 2)
                     return data.status;
-                  //  return '<i class="fa fa-check-circle text-danger "></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 2 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
-                else  
+                //  return '<i class="fa fa-check-circle text-danger "></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 2 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+                else
                     return data.status;
-                    //return '<i class="fa fa-check-circle text-danger "></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 3 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
+                //return '<i class="fa fa-check-circle text-danger "></i>' + ' [' + '<a href="#hoverModal" id="btnGreen1hover">' + 3 + '</a>' + '] <input type="hidden" id="RCStatusId" value="' + data.rcSatus + '"><input type="hidden" id="RCColortype" value="' + data.rcColor + '"><input type="hidden" id="RCStatus" value="' + data.status + '">';
             }
         },
         {
@@ -330,7 +330,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
             }
         },
-           
+
         {
             data: 'siteName',
             visible: false,
@@ -343,15 +343,15 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             visible: false,
             width: '20%',
 
-        },       
+        },
         // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- End - 31-01-2024
     ],
 
     preDrawCallback: function (settings) {
-        clientSiteActiveGuardsscrollPosition = $('#clientSiteActiveGuards').closest('div.dataTables_scrollBody').scrollTop();   
+        clientSiteActiveGuardsscrollPosition = $('#clientSiteActiveGuards').closest('div.dataTables_scrollBody').scrollTop();
     },
     drawCallback: function () {
-        $('#clientSiteActiveGuards').closest('div.dataTables_scrollBody').scrollTop(clientSiteActiveGuardsscrollPosition); 
+        $('#clientSiteActiveGuards').closest('div.dataTables_scrollBody').scrollTop(clientSiteActiveGuardsscrollPosition);
 
         /*for modifying the size of tables active  guards - start*/
         var count = $('#clientSiteActiveGuards tbody tr').length;
@@ -394,14 +394,14 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 }
             });
     },
-    
+
 });
 
 // Order by the grouping
 // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- Start - 31-01-2024
 $(clientSiteActiveGuards.table().header()).on('click', 'th', function () {
     // Checkout issue on https://datatables.net/reference/api/table().header()  , https://datatables.net/forums/discussion/43165/click-event-in-column-header-never-fired    
-     var index = clientSiteActiveGuards.column(this).index();     
+    var index = clientSiteActiveGuards.column(this).index();
     var currentOrder = clientSiteActiveGuards.order()[0];
     if (index === 3) {
         if (currentOrder[1] === 'asc') {
@@ -416,7 +416,7 @@ $(clientSiteActiveGuards.table().header()).on('click', 'th', function () {
 // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- End - 31-01-2024
 
 $('#clientSiteActiveGuards tbody').on('click', '#btnUpArrow', function () {
-    
+
 
     if ($(this).closest('tr').next('tr').is(':hidden') == true) {
         $(this).closest('tr').next('tr').prop('hidden', false);
@@ -430,20 +430,20 @@ $('#clientSiteActiveGuards tbody').on('click', '#btnUpArrow', function () {
         $(this).closest('tr').find('#btnUpArrow').addClass('fa-caret-down')
 
     }
-    
-    
+
+
     //}
 });
 
 
 //$('#clientSiteActiveGuards tbody').on('click', '#btnActiveGuardsMap', function (value, record) {
-   
+
 //    var Gps = $(this).closest("tr").find("#txtGPSActiveguards").val();
 //    var loc=getGpsAsHyperLink(Gps);
 //    window.open('https://www.google.com/maps?q=' + value,'_blank' )
-   
+
 //    '<a href="https://www.google.com/maps?q=' + value + '" target="_blank">' + loc + '</a>'
-   
+
 
 //});
 function getGpsAsHyperLink(value) {
@@ -467,13 +467,13 @@ function getGpsAsHyperLink(value) {
 function format_kvl_child_row(d) {
     return (
         '<table cellpadding="7" cellspacing="0"  border="0" style="padding-left:50px;">' +
-        
+
         '<tr>' +
         '<td>' + d.address + '</td>' +
-       
+
         '</tr>' +
         '<tr>' +
-       
+
         '</table>'
     );
 }
@@ -509,13 +509,13 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             titleAttr: 'Print',
             className: 'btn btn-md mr-2 btn-print'
         },
-        
+
         {
             text: '<img src="/images/man-climbing-stairs.png" alt="Image" height="16" width="16">',
             titleAttr: 'Custom',
             className: 'btn btn-md mr-2 btn-custom',
             action: function () {
-               
+
                 $('#ActionListControlRoomModal').modal('show');
                 $('#btnSendActionListGlobal').prop('disabled', false);
                 isPaused = true;
@@ -534,8 +534,8 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                 $('#txtMessageActionListAll').val('');
                 $('#dglClientTypeActionList2All').val('');
                 $('#dglClientSiteIdActionList2All').val('');
-                
-                
+
+
             }
         }
 
@@ -550,11 +550,11 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         },
         { "visible": false, "targets": 2 } // Hide the group column initially
     ],
-    order: [[groupColumn, 'asc']],   
+    order: [[groupColumn, 'asc']],
     info: false,
     searching: true,
     autoWidth: true,
-    fixedHeader: true,    
+    fixedHeader: true,
     "scrollY": ($(window).height() - 300),
     "paging": false,
     "footer": true,
@@ -575,7 +575,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             /*width: '20%',*/
             class: 'dt-control',
             render: function (value, type, data) {
-              
+
                 return '<tr class="group group-start "><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
             }
         },
@@ -590,7 +590,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
         {
             data: 'guardName',
-            
+
             width: '15%',
             createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
                 // Define your conditions to add a class
@@ -602,7 +602,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                     }
                     //p4#48 AudioNotification - Binoy - 12-01-2024 -- End
                 }
-                
+
             },
             render: function (value, type, data) {
 
@@ -614,14 +614,14 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                     }
                     else {
                         return '&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i> <i class="fa fa-user" aria-hidden="true"></i> ' + data.guardName +
-                            '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>'+
-                            '&nbsp;&nbsp;&nbsp;<a href="https://www.google.com/maps?q='+data.gpsCoordinates+'" target="_blank" data-toggle="tooltip" title="' + data.enabledAddress+'"><i class="fa fa-map-marker" aria-hidden="true"></i></a>';
+                            '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>' +
+                            '&nbsp;&nbsp;&nbsp;<a href="https://www.google.com/maps?q=' + data.gpsCoordinates + '" target="_blank" data-toggle="tooltip" data-placement="right" title="' + data.enabledAddress + '"><i class="fa fa-map-marker" aria-hidden="true"></i></a>';
                     }
 
                 }
                 else {
                     return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true" style="color:#FF0000;"></i> ' + data.guardName;
-                      
+
                 }
 
             }
@@ -724,7 +724,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         },
         {
             data: 'siteName',
-            visible: false,           
+            visible: false,
         },
 
     ],
@@ -733,12 +733,13 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         scrollPosition = $('#clientSiteInActiveGuards').closest("div.dataTables_scrollBody").scrollTop();
     },
     drawCallback: function () {
+
         /* Retain the Scroll position*/
         $('#clientSiteInActiveGuards').closest("div.dataTables_scrollBody").scrollTop(scrollPosition);
         /*for modifying the size of tables   inactive guards - start*/
         var count = $('#clientSiteInActiveGuards tbody tr').length;
         if (count > 10) {
-           $('#clientSiteInActiveGuards').closest('div.dataTables_scrollBody').css('height', ($(window).height() - 200));
+            $('#clientSiteInActiveGuards').closest('div.dataTables_scrollBody').css('height', ($(window).height() - 200));
         }
         else {
             $('#clientSiteInActiveGuards').closest('div.dataTables_scrollBody').css('height', '100%');
@@ -776,7 +777,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
         PlayDuressAlarm();
     },
-    
+
 
 });
 
@@ -788,7 +789,7 @@ $("#ActionListControlRoomModal").on("hidden.bs.modal", function () {
 
 //p4#48 AudioNotification - Binoy - 12-01-2024 -- Start
 function PlayDuressAlarm() {
-    if (playAlarm == 1) { 
+    if (playAlarm == 1) {
         //audio.muted = false; // New browser rule doesn't lets audio play automatically        
         audio.play();
         //setting timer to play for 10 sec
@@ -797,7 +798,7 @@ function PlayDuressAlarm() {
             audio.currentTime = 0; // Works as audio stop
         }, 10000);
         UpdateDuressAlarmPlayed();
-    }    
+    }
 }
 
 function UpdateDuressAlarmPlayed() {
@@ -888,7 +889,7 @@ const renderGuardInitialColumn = function (value, record, $cell, $displayEl) {
 $('#btnNonActiveList').on('click', function () {
     let newTab = window.open();
     newTab.location.href = "/NonActiveGuards";
-   
+
 });
 let clientSiteNotAvailableGuards = $('#clientSiteNotAvailableGuards').DataTable({
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
@@ -915,7 +916,7 @@ let clientSiteNotAvailableGuards = $('#clientSiteNotAvailableGuards').DataTable(
         dataSrc: ''
     },
     columns: [
-        { data: 'clientSiteId', visible: false},
+        { data: 'clientSiteId', visible: false },
         {
             data: 'siteName',
             width: '20%',
@@ -1089,7 +1090,7 @@ let clientSiteActiveGuardsLogBookDetails = $('#clientSiteActiveGuardsLogBookDeta
 });
 
 $('#clientSiteActiveGuards tbody').on('click', '#btnLogBookDetailsByGuard', function (value, record) {
-    $('#guardLogBookInfoModal').modal('show');   
+    $('#guardLogBookInfoModal').modal('show');
     isPaused = true;
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
     var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
@@ -1200,11 +1201,11 @@ $('#clientSiteActiveGuards tbody').on('click', '#btnKeyVehicleDetailsByGuard', f
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
     var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
     var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
-    if (GuardId.length == 0 ) {
-         GuardId = $(this).closest("tr").find('td').eq(2).find('#GuardId').val();
+    if (GuardId.length == 0) {
+        GuardId = $(this).closest("tr").find('td').eq(2).find('#GuardId').val();
     }
     if (ClientSiteId.length == 0) {
-         ClientSiteId = $(this).closest("tr").find('td').eq(2).find('#ClientSiteId').val();
+        ClientSiteId = $(this).closest("tr").find('td').eq(2).find('#ClientSiteId').val();
     }
     $('#txtClientSiteId').val(ClientSiteId);
     $('#txtGuardId').val(GuardId);
@@ -1325,7 +1326,7 @@ let clientSiteActiveGuardsSWDetails = $('#clientSiteActiveGuardsSWDetails').Data
         {
             data: 'templateName',
             width: '20%',
-           
+
         },
         {
             data: 'smartWand',
@@ -1335,7 +1336,7 @@ let clientSiteActiveGuardsSWDetails = $('#clientSiteActiveGuardsSWDetails').Data
         {
             data: 'employeePhone',
             width: '22%',
-           
+
 
         },
         {
@@ -1352,11 +1353,11 @@ let clientSiteActiveGuardsSWDetails = $('#clientSiteActiveGuardsSWDetails').Data
 
         },
 
-       
+
 
 
     ],
-   
+
 });
 
 $('#clientSiteActiveGuards tbody').on('click', '#btnSWdetails', function (value, record) {
@@ -1412,7 +1413,7 @@ $('#clientSiteInActiveGuards').on('click', 'button[name="btnRadioCheckStatus"]',
     var rcSatus = data.rcStatus;
 
     var IsEnabled = data.isEnabled;
-    
+
     if (IsEnabled == 0) {
         // Remove the option based on its value
         $('#selectRadioStatus option:contains("Deactivate")').hide();
@@ -1420,7 +1421,7 @@ $('#clientSiteInActiveGuards').on('click', 'button[name="btnRadioCheckStatus"]',
     else {
         $('#selectRadioStatus option:contains("Deactivate")').show();
     }
-    
+
 
     $("#selectRadioStatus").val(data.statusId);
 
@@ -1520,12 +1521,12 @@ $('#btnSaveRadioStatusActive').on('click', function () {
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function () {
         $('#selectRadioCheckStatusActive').modal('hide');
-        $('#selectRadioStatus').val('');      
+        $('#selectRadioStatus').val('');
         clientSiteActiveGuards.ajax.reload(null, false); // Task p4#19 Screen Jumping day -- modified by Binoy -- End - 01-02-2024
         clientSiteInActiveGuards.ajax.reload(null, false); // Task p4#19 Screen Jumping day -- modified by Binoy -- End - 01-02-2024
         clientSiteInActiveGuardsSinglePage.ajax.reload(null, false); // Task p4#19 Screen Jumping day -- modified by Binoy -- End - 01-02-2024
         clientSiteActiveGuardsSinglePage.ajax.reload(null, false); // Task p4#19 Screen Jumping day -- modified by Binoy -- End - 01-02-2024
-        
+
     });
 });
 
@@ -1540,8 +1541,8 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     $('#btnSendPushLotificationMessage').prop('disabled', false);
     $('#btnSendGlabalNotificationMessage').prop('disabled', false);
     $('#btnSendActionList').prop('disabled', false);
-    
-    
+
+
     const button = $(event.relatedTarget);
     const id = button.data('id');
     $('#txtNotificationsCompanyId').val(id);
@@ -1584,9 +1585,9 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     $('#dglClientTypeActionList2').val('');
     $('#dglClientSiteIdActionList').val('');
     $('#dglClientSiteIdActionList2').val('');
-    
-    
-   
+
+
+
     //var clientSiteId = $('#dglClientSiteIdActionList').val();
 
     $.ajax({
@@ -1610,10 +1611,10 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
             $('#txtComments').html(data.controlRoomOperator);
             $('#download_imageRCList').attr('href', '/RCImage/' + data.imagepath + '');
         }
-        
+
     });
 
-  
+
 });
 
 
@@ -1659,7 +1660,7 @@ $('#btnSendPushLotificationMessage').on('click', function () {
     var clientSiteId = $('#txtNotificationsCompanyId').val();
     var Notifications = $('#txtPushNotificationMessage').val();
     var Subject = $('#txtPushNotificationSubject').val();
-   
+
     if (Notifications === '') {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
         $(this).prop('disabled', false);
@@ -1737,7 +1738,7 @@ function clearGuardValidationSummary(validationControl) {
 $('#openInActiveGuardInNewPage').on('click', function () {
     let newTab = window.open();
     newTab.location.href = "/InActiveGuardSinglePage";
-    
+
 });
 
 $('#openActiveGuardInNewPage').on('click', function () {
@@ -1768,8 +1769,7 @@ $('#btnSendGlabalNotificationMessage').on('click', function () {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select any one of the transfer options ');
         $(this).prop('disabled', false);
     }
-    else if (chkClientType == true && ClientType == null)
-    {
+    else if (chkClientType == true && ClientType == null) {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
         $(this).prop('disabled', false);
     }
@@ -1826,7 +1826,7 @@ $('#btnSendActionList').on('click', function () {
     var clientSiteId = $('#dglClientSiteIdActionList2').val();
     var Notifications = $('#txtMessageActionList').val();
     var Subject = $('#txtGlobalNotificationSubject').val();
-  
+
     var ClientType = $('#dglClientTypeActionList2').val();
     var ClientSite = $('#dglClientSiteIdActionList2').val();
     var AlarmKeypadCode = $('#Site_Alarm_Keypad_code').val();
@@ -1843,12 +1843,12 @@ $('#btnSendActionList').on('click', function () {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
         $(this).prop('disabled', false);
     }
-    
+
     else if (chkClientType == true && ClientType == null) {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
         $(this).prop('disabled', false);
     }
-    else if (ClientType=='') {
+    else if (ClientType == '') {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
         $(this).prop('disabled', false);
     }
@@ -1991,27 +1991,27 @@ $('#dglClientSiteIdActionList').on('change', function () {
     $('#Site_Combination_Look').val('');
     $('#txtComments').html('');
     var clientSiteId = $('#dglClientSiteIdActionList').val();
-   
-        $.ajax({
-            url: '/RadioCheckV2?handler=ActionList',
-            type: 'POST',
-            data: {  
-                clientSiteId: clientSiteId
-         },
-            dataType: 'json',
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (data) {
-            $('#Site_Alarm_Keypad_code').val(data.siteAlarmKeypadCode);
-            $('#Action1').val(data.action1);
-            $('#site_Physical_key').val(data.sitephysicalkey);
-            $('#Action2').val(data.action2);
-            $('#Action3').val(data.action3);
-            $('#Action4').val(data.action4);
-            $('#Action5').val(data.action5);
-            $('#Site_Combination_Look').val(data.siteCombinationLook);
-            $('#txtComments').html(data.controlRoomOperator);
-        });
-    
+
+    $.ajax({
+        url: '/RadioCheckV2?handler=ActionList',
+        type: 'POST',
+        data: {
+            clientSiteId: clientSiteId
+        },
+        dataType: 'json',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (data) {
+        $('#Site_Alarm_Keypad_code').val(data.siteAlarmKeypadCode);
+        $('#Action1').val(data.action1);
+        $('#site_Physical_key').val(data.sitephysicalkey);
+        $('#Action2').val(data.action2);
+        $('#Action3').val(data.action3);
+        $('#Action4').val(data.action4);
+        $('#Action5').val(data.action5);
+        $('#Site_Combination_Look').val(data.siteCombinationLook);
+        $('#txtComments').html(data.controlRoomOperator);
+    });
+
 });
 $('#dglClientSiteIdActionListAll').on('change', function () {
     $('#Site_Alarm_Keypad_codeAll').val('');
@@ -2068,17 +2068,17 @@ function performSearch() {
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (data) {
         var html = '';
-        if (data =='No matching record found') {
-             html = '<p style="color:brown">' + data + '</p>';
+        if (data == 'No matching record found') {
+            html = '<p style="color:brown">' + data + '</p>';
         }
         else {
             html = '<p style="color:brown"><i class="fa fa-map-marker" aria-hidden="true"></i>' + data + '</p>';
         }
-         
+
         $('#searchResults').html(html);
     });
 
-   
+
 }
 $('#search_client_siteAll').keypress(function (e) {
     var searchInput = $('#search_client_siteAll');
@@ -2127,8 +2127,8 @@ function performSearchClientSite() {
             $('#Site_Combination_LookAll').val(data.siteCombinationLook);
             $('#txtCommentsAll').html(data.controlRoomOperator);
         }
-        
-       
+
+
     });
 
 
@@ -2280,7 +2280,7 @@ $('#dglClientTypeActionList').on('change', function () {
             data.map(function (site) {
                 $('#dglClientSiteIdActionList').append(new Option(site.name, site.id, false, false));
             });
-            
+
         }
     });
 
@@ -2385,19 +2385,19 @@ $('#chkClientType').change(function () {
         $('#dglClientSiteId').multiselect("enable");
         $('#dglClientSiteId').val('');
         $('#dglClientSiteId').html('');
-        
+
     } else {
         $('#dglClientType').val('').trigger("change");
-        
+
         $('#dglClientType').multiselect("refresh");
         $('#dglClientType').val('');
         $('#dglClientSiteId').val('');
         $('#dglClientType').multiselect("disable");
         $('#dglClientSiteId').multiselect("disable");
-        
+
         $('#dglClientSiteId').html('');
-       
-        
+
+
     }
     $('#dglClientType').on('change', function () {
         const clientTypeId = $(this).val().join(';');
@@ -2406,7 +2406,7 @@ $('#chkClientType').change(function () {
         const clientSiteControl = $('#dglClientSiteId');
         var selectedOption = $(this).find("option:selected");
         var selectedText = selectedOption.text();
-        
+
         /*$("#vklClientType").multiselect("refresh");*/
         // gridsiteLog.clear();
 
@@ -2436,7 +2436,7 @@ $('#chkClientType').change(function () {
 
 
     });
-    
+
 
 });
 /*to get the client type and site as multiselect-end*/
@@ -2472,7 +2472,7 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
             titleAttr: 'Print',
             className: 'btn btn-md mr-2 btn-print'
         },
-        
+
 
 
     ],
@@ -2547,7 +2547,7 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
                             '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#guardInfoModal" data-id="' + data.guardId + '"></i>' +
                             '&nbsp;&nbsp;&nbsp;<a href="https://www.google.com/maps?q=' + data.gpsCoordinates + '" target="_blank" data-toggle="tooltip" title="' + data.enabledAddress + '"><i class="fa fa-map-marker" aria-hidden="true"></i></a>';
                     }
-                    
+
                 }
                 else {
                     return '&nbsp;&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true" style="color:#FF0000;"></i> ' + data.guardName;
@@ -2726,7 +2726,7 @@ $('#clientSiteInActiveGuardsSinglePage').on('click', 'button[name="btnRadioCheck
     var rowClientSiteId = data.clientSiteId;
     var rowGuardId = data.guardId;
     var rcSatus = data.rcStatus;
-    $("#selectRadioStatus").val(data.statusId);    
+    $("#selectRadioStatus").val(data.statusId);
     $('#clientSiteId').val(rowClientSiteId);
     $('#guardId').val(rowGuardId);
     $('#selectRadioCheckStatus').modal('show');
@@ -2749,7 +2749,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
     searching: true,
     autoWidth: true,
     fixedHeader: true,
-    "scrollY": ($(window).height() ),
+    "scrollY": ($(window).height()),
     "paging": false,
     "footer": true,
     "scroller": true, // Task p4#19 Screen Jumping day -- added by Binoy -- Start - 01-02-2024
@@ -3077,7 +3077,7 @@ $('#heading-example').on('click', function () {
 
 
         }
-       /* for modifying the size of tables active  guards - end*/
+        /* for modifying the size of tables active  guards - end*/
     }
     else {
         console.log($(window).height());
@@ -3094,7 +3094,7 @@ $('#heading-example').on('click', function () {
 
 
         }
-       /* for modifying the size of tables active  guards - end*/
+        /* for modifying the size of tables active  guards - end*/
 
     }
     // Toggle the state
@@ -3145,7 +3145,7 @@ function settingsButtonRenderer(value, record) {
 }
 
 gridRadioCheckStatusTypeSettings = $('#radiocheck_status_type_settings').grid({
-   dataSource: '/Admin/Settings?handler=RadioCheckStatusWithOutcome',
+    dataSource: '/Admin/Settings?handler=RadioCheckStatusWithOutcome',
     uiLibrary: 'bootstrap4',
     iconsLibrary: 'fontawesome',
     primaryKey: 'id',
@@ -3182,7 +3182,7 @@ if (gridRadioCheckStatusTypeSettings) {
     });
 
     gridRadioCheckStatusTypeSettings.on('rowRemoving', function (e, id, record) {
-     
+
 
         if (confirm('Are you sure want to delete this radio check status?')) {
             const token = $('input[name="__RequestVerificationToken"]').val();
@@ -3204,9 +3204,9 @@ if (gridRadioCheckStatusTypeSettings) {
 }
 let isRadionCheckStatusAdding = false;
 $('#add_radiocheck_status').on('click', function () {
-  
 
-    if (isRadionCheckStatusAdding==true) {
+
+    if (isRadionCheckStatusAdding == true) {
         alert('Unsaved changes in the grid. Refresh the page');
     } else {
         isRadionCheckStatusAdding = true;
@@ -3238,9 +3238,9 @@ let clientSiteRadiostatusDetailsHover = $('#clientSiteRadiostatusDetailsHover').
         url: '/RadioCheckV2?handler=ClientSiteRadiocheckStatus',
         datatype: 'json',
         data: function (d) {
-        d.clientSiteId = $('#ClientSiteIdHover').val();
-         d.guardId = $('#GuardIdHover').val();
-         d.ColorId=$('#ColorIdHover').val();
+            d.clientSiteId = $('#ClientSiteIdHover').val();
+            d.guardId = $('#GuardIdHover').val();
+            d.ColorId = $('#ColorIdHover').val();
         },
         dataSrc: ''
     },
@@ -3400,6 +3400,48 @@ function fillRefreshLocalTimeZoneDetails(formData, modelname, isform) {
         formData.EventDateTimeUtcOffsetMinute = diffTZ;
     }
 }
+// Task p6#73_TimeZone issue -- added by Binoy - End
+//New Grdi
+$('#itemList,#itemList2').on('click', '.btn-select-radio-status', function (event) {
 
+    var target = event.target;
+    var parentId = target.parentNode.innerText.trim();
+    var itemToDelete = target.parentNode.dataset.index;
+    var itemToDelete = target.parentNode.value;
+    var clientSiteId = $('#clientSiteId').val();
+    const checkedStatus = target.parentNode.innerText.trim();
+    var statusId = target.parentNode.dataset.index;
+    var guardId = $('#guardId').val();
+    if (checkedStatus === '') {
+        return;
+    }
+    // Task p6#73_TimeZone issue -- added by Binoy - Start   
+    fillRefreshLocalTimeZoneDetails(tmzdata, "", false);
     // Task p6#73_TimeZone issue -- added by Binoy - End
+    $.ajax({
+        url: '/RadioCheckV2?handler=SaveRadioStatus',
+        type: 'POST',
+        data: {
+            clientSiteId: clientSiteId,
+            guardId: guardId,
+            checkedStatus: checkedStatus,
+            active: true,
+            statusId: statusId,
+            tmzdata: tmzdata
+        },
+        dataType: 'json',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function () {
+        $('#selectRadioCheckStatusActive').modal('hide');
+        $('#selectRadioCheckStatus').modal('hide');
+        $('#selectRadioStatus').val('');
+        clientSiteActiveGuards.ajax.reload(null, false); // Task p4#19 Screen Jumping day -- modified by Binoy - 01-02-2024
+        clientSiteInActiveGuards.ajax.reload(null, false); // Task p4#19 Screen Jumping day -- modified by Binoy - 01-02-2024
+        clientSiteInActiveGuardsSinglePage.ajax.reload(null, false); // Task p4#19 Screen Jumping day -- modified by Binoy - 01-02-2024
+        clientSiteActiveGuardsSinglePage.ajax.reload(null, false); // Task p4#19 Screen Jumping day -- modified by Binoy - 01-02-2024
+    });
+
+});
+
+
 

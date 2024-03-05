@@ -988,7 +988,7 @@ namespace CityWatch.Web.Services
                 var pushMessageId = _guardLogDataProvider.SavePushMessage(radioCheckPushMessages);
                 /* Save the push message for reload to logbook on next day end*/
 
-                _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(guardId, guardId, null, "Duress Alarm Activated", IrEntryType.Alarm, 1,0, tmzdata); // GuardLog tmzdata parameter added by binoy for Task p6#73_TimeZone issue
+                _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(guardId, guardId, null, "Duress Alarm Activated By " + GuradName + " From " + clientSiteName, IrEntryType.Alarm, 1,0, tmzdata); // GuardLog tmzdata parameter added by binoy for Task p6#73_TimeZone issue
                 _guardLogDataProvider.SaveClientSiteDuress(clientSiteId, guardId, gpsCoordinates, enabledAddress, tmzdata);
 
                 _guardLogDataProvider.SaveGuardLog(new GuardLog()
