@@ -3458,9 +3458,61 @@ $(function () {
 
 
     $('#Report_VehicleRego').typeahead({
+       
         minLength: 3,
         autoSelect: true,
         source: function (request, response) {
+            alert(test);
+            $.ajax({
+                url: '/Guard/KeyVehiclelog?handler=VehicleRegos',
+                data: { regoPart: request },
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    items = [];
+                    map = {};
+                    $.each(data, function (i, item) {
+                        items.push(item);
+                    });
+                    response(items);
+                    if (data.length == 0) {
+                        $('#Report_VehicleRego').val('');
+                    }
+                },
+                error: function (response) {
+                    alert(response.responseText);
+                },
+                failure: function (response) {
+                    alert(response.responseText);
+                }
+            });
+        },
+        afterSelect: function (item) {
+            if (item) {
+                $.ajax({
+                    url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + item,
+                    type: 'GET',
+                    dataType: 'json',
+                }).done(function (result) {
+                    if (result.length > 0) {
+                        gridIncidentReportsVehicleLogProfile.clear().rows.add(result).draw();
+
+                        $('#driver_name').val('Unknown');
+                        $('#duplicate_profile_status').text('');
+                        $('#incident-report-profiles-modal').find('#kvl-profile-title-rego').html(item);
+                        $('#Report_VehicleRego').val(item);
+                        $('#incident-report-profiles-modal').modal('show');
+                    }
+                });
+            }
+        }
+    });
+
+    $('#Report_DateLocation_ClientSite').typeahead({
+        minLength: 3,
+        autoSelect: true,
+        source: function (request, response) {
+            debugger;
             $.ajax({
                 url: '/Guard/KeyVehiclelog?handler=VehicleRegos',
                 data: { regoPart: request },
