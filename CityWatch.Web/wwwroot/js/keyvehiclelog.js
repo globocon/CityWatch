@@ -3462,7 +3462,6 @@ $(function () {
         minLength: 3,
         autoSelect: true,
         source: function (request, response) {
-            alert(test);
             $.ajax({
                 url: '/Guard/KeyVehiclelog?handler=VehicleRegos',
                 data: { regoPart: request },
@@ -3507,54 +3506,67 @@ $(function () {
             }
         }
     });
+    $('#Report_DateLocation_ClientSite').on('keyup', function (e) {
+       
+            var inputValue = $(this).val();
+            if (inputValue.length >= 3 && inputValue.match(/[a-zA-Z]/)) {
+                e.preventDefault();
+              
+                gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $(this).val() });
+                $('#logbook-modal').modal('show');
+                //alert('Letter typed and Enter pressed: ' + inputValue);
+            }
+        
+    });
 
-    $('#Report_DateLocation_ClientSite').typeahead({
-        minLength: 3,
-        autoSelect: true,
-        source: function (request, response) {
-            debugger;
-            $.ajax({
-                url: '/Guard/KeyVehiclelog?handler=VehicleRegos',
-                data: { regoPart: request },
-                type: 'GET',
-                dataType: 'json',
-                success: function (data) {
-                    items = [];
-                    map = {};
-                    $.each(data, function (i, item) {
-                        items.push(item);
-                    });
-                    response(items);
-                    if (data.length == 0) {
-                        $('#Report_VehicleRego').val('');
-                    }
-                },
-                error: function (response) {
-                    alert(response.responseText);
-                },
-                failure: function (response) {
-                    alert(response.responseText);
+    let gridSite;
+    gridSite = $('#client_site_settings').grid({
+        dataSource: '/Admin/Settings?handler=ClientSites',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        columns: [
+            { field: 'typeId', hidden: true },
+            { field: 'clientType', title: 'Client Type', width: 180, renderer: function (value, record) { return value.name; } },
+            { field: 'name', title: 'Client Site', width: 180, editor: false },
+            { width: 100, renderer: settingsButtonRenderer },
+           
+            
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+    function settingsButtonRenderer(value, record) {
+        
+        var ClientTypeName = record.clientType.name;
+        var ClientSiteName = record.name;
+        
+        return '<button class="btn btn-outline-success mt-2 del-schedule d-block" data-sch-id="' + ClientSiteName + '_' + ClientTypeName + '""><i class="fa fa-check mr-2" aria-hidden="true"></i>Select</button>';
+    }
+    $('#client_site_settings').on('click', '.del-schedule', function () {
+        const ClientSiteName1 = $(this).attr('data-sch-id');
+        const lastUnderscoreIndex = ClientSiteName1.lastIndexOf('_');
+
+        if (lastUnderscoreIndex !== -1) {
+            const recordName = ClientSiteName1.slice(0, lastUnderscoreIndex);
+            const ClientTypeName = ClientSiteName1.slice(lastUnderscoreIndex + 1);
+
+            $('#logbook-modal').modal('hide');
+            $('#Report_DateLocation_ClientSite').val(recordName);
+            $('#Report_DateLocation_ClientType option').each(function () {
+               
+                if ($(this).val() === ClientTypeName) {
+                    $(this).prop('selected', true);
+                    return false; 
                 }
             });
-        },
-        afterSelect: function (item) {
-            if (item) {
-                $.ajax({
-                    url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + item,
-                    type: 'GET',
-                    dataType: 'json',
-                }).done(function (result) {
-                    if (result.length > 0) {
-                        gridIncidentReportsVehicleLogProfile.clear().rows.add(result).draw();
 
-                        $('#driver_name').val('Unknown');
-                        $('#duplicate_profile_status').text('');
-                        $('#incident-report-profiles-modal').find('#kvl-profile-title-rego').html(item);
-                        $('#Report_VehicleRego').val(item);
-                        $('#incident-report-profiles-modal').modal('show');
-                    }
-                });
-            }
+            // Use recordName and ClientTypeName here
+            console.log('record.name:', recordName);
+            console.log('ClientTypeName:', ClientTypeName);
+        } else {
+            console.log('Invalid data-sch-id format');
         }
     });
 
