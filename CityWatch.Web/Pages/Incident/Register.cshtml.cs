@@ -557,55 +557,52 @@ namespace CityWatch.Web.Pages.Incident
             if (Report.SiteColourCodeId != 0  && Report.SiteColourCodeId!=null) { 
             string colorcodes = _ViewDataService.GetFeedbackTemplatesByTypeByColor(3,Convert.ToInt32(Report.SiteColourCodeId));
                 //for DESCRIBING color codes-start
-               if(colorcodes.Contains("Code ORANGE"))
-                { 
-                        Report.SiteColourCode = "Code ORANGE Event";
-                }
-               else if(colorcodes.Contains("Code BLUE"))
-                {
-                    Report.SiteColourCode = "Code BLUE Event";
-                }
-                else if (colorcodes.Contains("Code PINK"))
-                {
-                    Report.SiteColourCode = "Code PINK Event";
-                }
-                else if (colorcodes.Contains("Code PURPLE"))
-                {
-                    Report.SiteColourCode = "Code PURPLE Event";
-                }
-                else if (colorcodes.Contains("Code BLACK"))
-                {
-                    Report.SiteColourCode = "Code BLACK Event";
-                }
-                else if (colorcodes.Contains("Code YELLOW"))
-                {
-                    Report.SiteColourCode = "Code YELLOW Event";
-                }
-                else if (colorcodes.Contains("Code BROWN"))
-                {
-                    Report.SiteColourCode = "Code BROWN Event";
-                }
-                else if (colorcodes.Contains("Code GREY"))
-                {
-                    Report.SiteColourCode = "Code GREY Event";
-                }
-               else if(colorcodes.Contains("SEARCH - CODE GREY BOC"))
-                {
-                    Report.SiteColourCode = "Code GREY Event";
-                }
-                else if (colorcodes.Contains("NON BOC SEARCH"))
-                {
-                    Report.SiteColourCode = "NON BOC SEARCH Event";
-                }
-                else if (colorcodes.Contains("Code RED"))
-                {
-                    Report.SiteColourCode = "Code RED Event";
-                }
+               //if(colorcodes.Contains("Code ORANGE"))
+               // { 
+               //         Report.SiteColourCode = "Code ORANGE Event";
+               // }
+               //else if(colorcodes.Contains("Code BLUE"))
+               // {
+               //     Report.SiteColourCode = "Code BLUE Event";
+               // }
+               // else if (colorcodes.Contains("Code PINK"))
+               // {
+               //     Report.SiteColourCode = "Code PINK Event";
+               // }
+               // else if (colorcodes.Contains("Code PURPLE"))
+               // {
+               //     Report.SiteColourCode = "Code PURPLE Event";
+               // }
+               // else if (colorcodes.Contains("Code BLACK"))
+               // {
+               //     Report.SiteColourCode = "Code BLACK Event";
+               // }
+               // else if (colorcodes.Contains("Code YELLOW"))
+               // {
+               //     Report.SiteColourCode = "Code YELLOW Event";
+               // }
+               // else if (colorcodes.Contains("Code BROWN"))
+               // {
+               //     Report.SiteColourCode = "Code BROWN Event";
+               // }
+               // else if (colorcodes.Contains("Code GREY"))
+               // {
+               //     Report.SiteColourCode = "Code GREY Event";
+               // }
+               //else if(colorcodes.Contains("SEARCH - CODE GREY BOC"))
+               // {
+               //     Report.SiteColourCode = "Code GREY Event";
+               // }
                
-                else
-                {
-                    Report.SiteColourCode = "General (Other) Event";
-                }
+               // else if (colorcodes.Contains("Code RED"))
+               // {
+               //     Report.SiteColourCode = "Code RED Event";
+               // }
+               
+               // else
+                //{
+                    Report.SiteColourCode = colorcodes;
+                //}
                 //for DESCRIBING color codes - end
 
                // Report.SiteColourCode = colorcodes;
