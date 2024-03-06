@@ -3030,7 +3030,12 @@ $(function () {
         $('#generate_kvl_docket_status').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i> Generating Manual Docket. Please wait...').show();
         $('#download_kvl_docket').hide();
         $('#generate_kvl_docket').attr('disabled', true);
-
+       /* to check pdf binder is on -start*/
+        const pdfbinder = $('#IsPDFBinderOn').val();
+        if (pdfbinder == '') {
+            $('#IsPDFBinderOn').val(false);
+        }
+        /* to check pdf binder is on - end*/
         /* Manual docket generation Single Start */
         if (checkboxIdsArray.length != 0) {
 
@@ -3837,7 +3842,7 @@ $('#chb_IsPDFBinder').on('change', function () {
     const isChecked = $(this).is(':checked');
     $('#lbl_PDFBinder').text(isChecked ? 'PDF Binder  On' : 'PDF Binder Off (ZIP)'); lbl_PDFBinder
     $('#IsPDFBinderOn').val(isChecked);
-
+    $('#download_kvl_docket').hide();
 });
 $('#chkAllBatchDocketSelect').on('change', function () {
 
