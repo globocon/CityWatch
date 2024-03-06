@@ -30,6 +30,7 @@ using static Dropbox.Api.Paper.ListPaperDocsSortBy;
 using System.Text;
 using System.Security.Cryptography;
 using DocumentFormat.OpenXml.Vml.Spreadsheet;
+using Dropbox.Api.Files;
 
 namespace CityWatch.Web.Pages.Incident
 {
@@ -48,6 +49,7 @@ namespace CityWatch.Web.Pages.Incident
         private readonly IIncidentReportGenerator _incidentReportGenerator;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly IConfiguration _configuration;
+        private readonly ISiteEventLogDataProvider _SiteEventLogDataProvider;
 
         [BindProperty]
         public IncidentRequest Report { get; set; }
@@ -68,7 +70,8 @@ namespace CityWatch.Web.Pages.Incident
             ILogger<RegisterModel> logger,
             IIncidentReportGenerator incidentReportGenerator,
             IGuardLogDataProvider guardLogDataProvider,
-            IConfiguration configuration
+            IConfiguration configuration,
+            ISiteEventLogDataProvider siteEventLogDataProvider
             )
         {
             _WebHostEnvironment = webHostEnvironment;
@@ -82,6 +85,7 @@ namespace CityWatch.Web.Pages.Incident
             _incidentReportGenerator = incidentReportGenerator;
             _guardLogDataProvider = guardLogDataProvider;
             _configuration = configuration;
+            _SiteEventLogDataProvider = siteEventLogDataProvider;
         }
         public IConfigDataProvider ConfigDataProiver { get { return _configDataProvider; } }
         public IActionResult OnGet()
@@ -673,8 +677,47 @@ namespace CityWatch.Web.Pages.Incident
 
 
 
+        private bool AzureBlobUploadIrUploadWithOutMail(string fileName)
+        {
 
+            var status = true;
+            try
+            {
+                /* azure blob Implementation download link add to mail body 25-9-2023* Start*/
+                var azureStorageConnectionString = _configuration.GetSection("AzureStorage").Get<List<string>>();
+                if (azureStorageConnectionString.Count > 0)
+                {
+                    if (azureStorageConnectionString[0] != null)
+                    {
+                        string connectionString = azureStorageConnectionString[0];
+                        string blobName = Path.GetFileName(fileName);
+                        string containerName = "irfiles";
+                        BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
+                        BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+                        containerClient.CreateIfNotExists();
+                        /* The container Structure like irfiles/20230925*/
+                        BlobClient blobClient = containerClient.GetBlobClient(new string(blobName.Take(8).ToArray()) + "/" + blobName);
+                        using FileStream fs = System.IO.File.OpenRead(fileName);
+                        var blobHttpHeader = new BlobHttpHeaders { ContentType = "application/pdf" };
+                        /*Commented for local testing ,uncomment when go on live*/
+                        blobClient.Upload(fs, new BlobUploadOptions { HttpHeaders = blobHttpHeader });
+                        fs.Close();
+                    }
 
+                }
+                /* azure blob Implementation 25-9-2023* End*/
+
+                
+
+            }
+            catch (Exception ex)
+            {
+                status = false;
+
+            }
+
+            return status;
+        }
 
 
 
@@ -1031,7 +1074,76 @@ namespace CityWatch.Web.Pages.Incident
                 try
                 {
                     if (!Convert.ToBoolean(Request.Form["Report.DisableEmail"]))
+                    {
                         SendEmailWithAzureBlob(Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
+
+                        /* Save log for duress button enable Start 02032024 dileep*/
+                        var guradDetailsName = "Admin";
+                        var guardId=0;
+                        if (HttpContext.Session.GetString("GuardId") != null)
+                        {
+                            var GuradDetails = _clientDataProvider.GetGuradName(int.Parse(HttpContext.Session.GetString("GuardId")));
+                            guradDetailsName = GuradDetails.Name;
+                            guardId= GuradDetails.Id;
+                        }
+                        _SiteEventLogDataProvider.SaveSiteEventLogData(
+                            new SiteEventLog()
+                            {
+                                GuardId = guardId,
+                                SiteId = report.ClientSiteId,
+                                GuardName = guradDetailsName,
+                                SiteName = _guardLogDataProvider.GetClientSites(report.ClientSiteId).FirstOrDefault().Name,
+                                ProjectName = "ClientPortal",
+                                ActivityType = "IR Generated",
+                                Module = "Incident",
+                                SubModule = "Register",
+                                GoogleMapCoordinates = "",
+                                IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
+                                ToAddress = string.Empty,
+                                ToMessage = string.Empty,
+                                EventTime = DateTime.Now,
+                                EventLocalTime = DateTime.Now,
+                                EventStatus = "IR Generated"
+                            }
+                         ); 
+                        /* Save log for duress button enable end*/
+                    }
+                    else
+                    {
+                        /* Store in Azure blobwithout mail send 06/032024 dileep*/
+                        AzureBlobUploadIrUploadWithOutMail(Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
+
+                        /* Save log for duress button enable Start 02032024 dileep*/
+                        var guradDetailsName = "Admin";
+                        var guardId = 0;
+                        if (HttpContext.Session.GetString("GuardId") != null)
+                        {
+                            var GuradDetails = _clientDataProvider.GetGuradName(int.Parse(HttpContext.Session.GetString("GuardId")));
+                            guradDetailsName = GuradDetails.Name;
+                            guardId = GuradDetails.Id;
+                        }
+                        _SiteEventLogDataProvider.SaveSiteEventLogData(
+                            new SiteEventLog()
+                            {
+                                GuardId = guardId,
+                                SiteId = report.ClientSiteId,
+                                GuardName = guradDetailsName,
+                                SiteName = _guardLogDataProvider.GetClientSites(report.ClientSiteId).FirstOrDefault().Name,
+                                ProjectName = "ClientPortal",
+                                ActivityType = "IR Generated",
+                                Module = "Incident",
+                                SubModule = "Register",
+                                GoogleMapCoordinates = "",
+                                IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
+                                ToAddress = string.Empty,
+                                ToMessage = string.Empty,
+                                EventTime = DateTime.Now,
+                                EventLocalTime = DateTime.Now,
+                                EventStatus = "IR Generated without email"
+                            }
+                         );
+                        /* Save log for duress button enable end*/
+                    }
                 }
                 catch (Exception ex)
                 {
