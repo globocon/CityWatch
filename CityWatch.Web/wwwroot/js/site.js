@@ -87,6 +87,32 @@
         effects: 'slide'
     });
 
+
+
+    // editable dropbox issue select the first itesm by deafult Start 
+    const urlParams = new URLSearchParams(window.location.search);
+    const myParam = urlParams.get('reuse');
+    if (myParam === null) {
+        //if the resuse IR not clicked 
+        $('#Report_Officer_NotifiedBy').val('');
+        $('#Report_Officer_CallSign').val('');
+
+    }
+    var uls = document.getElementsByClassName('es-list');
+    // Loop through each <ul> element
+    for (var i = 0; i < uls.length; i++) {
+        var ul = uls[i];
+
+        // Loop through each <li> element within the current <ul>
+        ul.querySelectorAll('li').forEach(function (li) {
+            // Retrieve and log the text content of each <li>
+            li.removeAttribute('style');
+            li.classList.add('es-visible');
+
+        });
+    }
+    // editable dropbox select by deafult end
+
     $('#Report_DateLocation_ClientArea').attr('placeholder', 'n/a')
 
     $('#ddFeedbackTemplateType').on('change', function (e, colorCode) {
@@ -634,7 +660,7 @@
     });
 
 
-   
+
 
     let isReportTooolsAdding = false;
     $('#add_tools_settings').on('click', function () {
@@ -715,7 +741,7 @@
             }
         });
     }
-   
+
     $('#add_tools_page').on('click', function () {
         $('#pageType').val('');
         $('#tools-modal').modal();
@@ -726,10 +752,10 @@
         $('#feedBackType').val('');
         $('#category-modal').modal();
     });
-   
-  
 
-    
+
+
+
     $('#btnSavePageType').on('click', function () {
         if (newpageTypeIsValid()) {
             var newItem = $("#pageType").val();
@@ -858,7 +884,7 @@
         });
     }
 
-   
+
     const refreshFeedBackType = function () {
         $.ajax({
             url: '/Admin/Settings?handler=FeedBackTypeList',
@@ -866,7 +892,7 @@
             success: function (data) {
                 if (data) {
                     $('#FeedbackTemplate_Type').html('');
-                    
+
                     data.map(function (template) {
                         $('#FeedbackTemplate_Type').append('<option value="' + template.id + '">' + template.name + '</option>');
                     });
@@ -924,7 +950,7 @@
     });
 
     /* code added for PSPF subfields start*/
-    
+
 
     $('#add_PSPF_settings').on('click', function () {
         if (isPSPFAdding) {
@@ -933,7 +959,7 @@
             isPSPFAdding = true;
             gridPSPF.addRow({
                 'id': -1,
-                'ReferenceNo':'',
+                'ReferenceNo': '',
                 'name': '',
                 'isDefault': ''
             }).edit(-1);
@@ -957,7 +983,7 @@
         }
     });
     let isPSPFAdding = false;
-   
+
     if (gridPSPF) {
         gridPSPF.on('rowDataChanged', function (e, id, record) {
             const data = $.extend(true, {}, record);
@@ -1475,20 +1501,20 @@
         $('#DefaultMail').hide();
         $('#btn_DefaultEmailUpdate').show();
         $('#btn_DefaultEmailEdit').hide();
-       
-       
+
+
     });
     $("#btn_DefaultEmailUpdate").on("click", function () {
         var defaultMailEdit = $('#DefaultMailTextboxval').val();
         var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(defaultMailEdit)) {
-           
+
             showStatusNotification(false, 'Please enter a valid email address.');
             return;
         }
 
         $.ajax({
-            url: '/Admin/Settings?handler=DefaultEmailUpdate', 
+            url: '/Admin/Settings?handler=DefaultEmailUpdate',
             type: 'POST',
             data: { defaultMailEdit: defaultMailEdit }, // Send data as key-value pair
             headers: {
@@ -1838,9 +1864,9 @@
 
                 var result = prlogopath.lastIndexOf("/");
             const newfile = data.filepath;
-            var url = window.location.origin; 
+            var url = window.location.origin;
             var result1 = newfile.lastIndexOf("/");
-            var substr = prlogopath.substring(0, result-1);
+            var substr = prlogopath.substring(0, result - 1);
 
             var substr2 = newfile.substring(result1 + 1);
             substr = substr + "cr_primarylogo.JPG";
@@ -1887,7 +1913,7 @@
 
             var substr2 = newfile.substring(result1 + 1);
             substr = substr + "cr_bannerlogo.JPG";
-            var url = window.location.origin; 
+            var url = window.location.origin;
             var newpath = url + "/Images/cr_bannerlogo.JPG";
             $("#img_BannerLogo").attr('src', newpath);
 
@@ -1951,7 +1977,7 @@
 
 
 
-   
+
     /* Block Print Screen start 27092023 */
     function copyToClipboard() {
         /* when click Print screen it's copy a blank text in clipboard*/
