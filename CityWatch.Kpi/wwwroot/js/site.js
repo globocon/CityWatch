@@ -982,15 +982,13 @@ $(function () {
         $('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + button.data('cs-id'));
         // gritdSmartWands.ajax.reload();
         //gritdSmartWands.load();
-        $("#div_site_settings div").each(function () {
-            alert($(this).attr("class"));
-        });
-        gritdSmartWands.reload();
+      
+        //gritdSmartWands.reload();
     });
     
+   
 
-    
-    gritdSmartWands = $('#cs_smart_wands_new').grid({
+    gritdSmartWands = $('#div_site_settings table').find('#cs-smart-wands').grid({
         dataSource: '/Admin/Settings?handler=SmartWandSettings',
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
@@ -1004,7 +1002,8 @@ $(function () {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
-
+   
+   
     if (gritdSmartWands) {
         gritdSmartWands.on('rowDataChanged', function (e, id, record) {
             const data = $.extend(true, {}, record);

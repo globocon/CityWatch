@@ -36,6 +36,7 @@ namespace CityWatch.Kpi.Pages.Admin
         public IViewDataService ViewDataService { get { return _viewDataService; } }
 
         public IImportJobDataProvider ImportJobDataProvider { get { return _importJobDataProvider; } }
+        public ClientSiteKpiSetting _clientsitekpisettings;
         public int GuardId { get; set; }
         public SettingsModel(IWebHostEnvironment webHostEnvironment,
             IViewDataService viewDataService,
