@@ -1898,71 +1898,71 @@
     });
 
 
-    let gritdSmartWands;
-    gritdSmartWands = $('#cs-smart-wands').grid({
-        dataSource: '/Admin/GuardSettings?handler=SmartWandSettings',
-        uiLibrary: 'bootstrap4',
-        iconsLibrary: 'fontawesome',
-        primaryKey: 'id',
-        inlineEditing: { mode: 'command' },
-        columns: [
-            { width: 250, field: 'smartWandId', title: 'Smart Wand Id', editor: true },
-            { width: 250, field: 'phoneNumber', title: 'Number', editor: true },
-        ],
-        initialized: function (e) {
-            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
-        }
-    });
+    //let gritdSmartWands;
+    //gritdSmartWands = $('#cs-smart-wands').grid({
+    //    dataSource: '/Admin/GuardSettings?handler=SmartWandSettings',
+    //    uiLibrary: 'bootstrap4',
+    //    iconsLibrary: 'fontawesome',
+    //    primaryKey: 'id',
+    //    inlineEditing: { mode: 'command' },
+    //    columns: [
+    //        { width: 250, field: 'smartWandId', title: 'Smart Wand Id', editor: true },
+    //        { width: 250, field: 'phoneNumber', title: 'Number', editor: true },
+    //    ],
+    //    initialized: function (e) {
+    //        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    //    }
+    //});
 
-    if (gritdSmartWands) {
-        gritdSmartWands.on('rowDataChanged', function (e, id, record) {
-            const data = $.extend(true, {}, record);
-            const token = $('input[name="__RequestVerificationToken"]').val();
-            $.ajax({
-                url: '/Admin/GuardSettings?handler=SmartWandSettings',
-                data: { record: data },
-                type: 'POST',
-                headers: { 'RequestVerificationToken': token },
-            }).done(function () {
-                gritdSmartWands.reload({ clientSiteId: $('#gl_client_site_id').val() });
-            }).fail(function () {
-                console.log('error');
-            }).always(function () {
-                if (isSmartWandAdding)
-                    isSmartWandAdding = false;
-            });
-        });
+    //if (gritdSmartWands) {
+    //    gritdSmartWands.on('rowDataChanged', function (e, id, record) {
+    //        const data = $.extend(true, {}, record);
+    //        const token = $('input[name="__RequestVerificationToken"]').val();
+    //        $.ajax({
+    //            url: '/Admin/GuardSettings?handler=SmartWandSettings',
+    //            data: { record: data },
+    //            type: 'POST',
+    //            headers: { 'RequestVerificationToken': token },
+    //        }).done(function () {
+    //            gritdSmartWands.reload({ clientSiteId: $('#gl_client_site_id').val() });
+    //        }).fail(function () {
+    //            console.log('error');
+    //        }).always(function () {
+    //            if (isSmartWandAdding)
+    //                isSmartWandAdding = false;
+    //        });
+    //    });
 
-        gritdSmartWands.on('rowRemoving', function (e, id, record) {
-            if (confirm('Are you sure want to delete this smart wand details?')) {
-                const token = $('input[name="__RequestVerificationToken"]').val();
-                $.ajax({
-                    url: '/Admin/GuardSettings?handler=DeleteSmartWandSettings',
-                    data: { id: record },
-                    type: 'POST',
-                    headers: { 'RequestVerificationToken': token },
-                }).done(function () {
-                    gritdSmartWands.reload({ clientSiteId: $('#gl_client_site_id').val() });
-                }).fail(function () {
-                    console.log('error');
-                }).always(function () {
-                    if (isSmartWandAdding)
-                        isSmartWandAdding = false;
-                });
-            }
-        });
-    }
+    //    gritdSmartWands.on('rowRemoving', function (e, id, record) {
+    //        if (confirm('Are you sure want to delete this smart wand details?')) {
+    //            const token = $('input[name="__RequestVerificationToken"]').val();
+    //            $.ajax({
+    //                url: '/Admin/GuardSettings?handler=DeleteSmartWandSettings',
+    //                data: { id: record },
+    //                type: 'POST',
+    //                headers: { 'RequestVerificationToken': token },
+    //            }).done(function () {
+    //                gritdSmartWands.reload({ clientSiteId: $('#gl_client_site_id').val() });
+    //            }).fail(function () {
+    //                console.log('error');
+    //            }).always(function () {
+    //                if (isSmartWandAdding)
+    //                    isSmartWandAdding = false;
+    //            });
+    //        }
+    //    });
+    //}
 
-    let isSmartWandAdding = false;
-    $('#add_smart_wand').on('click', function () {
+    //let isSmartWandAdding = false;
+    //$('#add_smart_wand').on('click', function () {
 
-        if (isSmartWandAdding) {
-            alert('Unsaved changes in the grid. Refresh the page');
-        } else {
-            isSmartWandAdding = true;
-            gritdSmartWands.addRow({ 'id': -1, 'smartWandId': '', phoneNumber: '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
-        }
-    });
+    //    if (isSmartWandAdding) {
+    //        alert('Unsaved changes in the grid. Refresh the page');
+    //    } else {
+    //        isSmartWandAdding = true;
+    //        gritdSmartWands.addRow({ 'id': -1, 'smartWandId': '', phoneNumber: '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
+    //    }
+    //});
     /*  code added to 1000 pages in Excel */
     let gridClientSiteKeys = $('#cs_client_site_keys').DataTable({
         lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],

@@ -28,6 +28,7 @@ namespace CityWatch.Kpi.Pages.Admin
         private readonly IKpiSchedulesDataProvider _kpiSchedulesDataProvider;
         private readonly ISendScheduleService _sendScheduleService;
         private readonly ILogger<SettingsModel> _logger;
+        private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
 
         [BindProperty]
         public KpiRequest ReportRequest { get; set; }
@@ -43,7 +44,8 @@ namespace CityWatch.Kpi.Pages.Admin
             IClientDataProvider clientDataProvider,
             IKpiSchedulesDataProvider kpiSchedulesDataProvider,
             ISendScheduleService sendScheduleService,
-            ILogger<SettingsModel> logger)
+            ILogger<SettingsModel> logger,
+            IClientSiteWandDataProvider clientSiteWandDataProvider)
         {
             _webHostEnvironment = webHostEnvironment;
             _viewDataService = viewDataService;
@@ -53,6 +55,7 @@ namespace CityWatch.Kpi.Pages.Admin
             _kpiSchedulesDataProvider = kpiSchedulesDataProvider;
             _sendScheduleService = sendScheduleService;
             _logger = logger;
+            _clientSiteWandDataProvider = clientSiteWandDataProvider;
         }
 
         public IActionResult OnGet()
@@ -123,14 +126,31 @@ namespace CityWatch.Kpi.Pages.Admin
                         clientSites = _clientDataProvider.GetClientSitesUsingGuardId(GuardId);
                     var clientSiteWithSettings = _clientDataProvider.GetClientSiteKpiSettings().Select(z => z.ClientSiteId).ToList();
 
+                    //return new JsonResult(clientSites.Select(z => new
+                    //{
+                    //    z.Id,
+                    //    ClientTypeName = z.ClientType.Name,
+                    //    ClientSiteName = z.Name,
+                    ////    HasSettings = clientSiteWithSettings.Any(x => x == z.Id),
+                    ////    z.SiteEmail
+                    ////}));
+                    //for combining site sttings from web to kpi-start
                     return new JsonResult(clientSites.Select(z => new
+
+
                     {
+
                         z.Id,
                         ClientTypeName = z.ClientType.Name,
                         ClientSiteName = z.Name,
-                        HasSettings = clientSiteWithSettings.Any(x => x == z.Id),
-                        z.SiteEmail
-                    }));
+                        z.SiteEmail,
+                        z.LandLine,
+                        SiteUploadDailyLog = z.UploadGuardLog,
+                        z.GuardLogEmailTo,
+                        z.DataCollectionEnabled,
+                        HasSettings = clientSiteWithSettings.Any(x => x == z.Id) || !string.IsNullOrEmpty(z.SiteEmail)
+                    }).Where(x => (clientSiteWithSettings.Any(c => c == x.Id)) && (x.ClientTypeName == type)));
+                    //for combining site sttings from web to kpi-end
 
                 }
                 else
@@ -141,14 +161,31 @@ namespace CityWatch.Kpi.Pages.Admin
                         clientSites = _clientDataProvider.GetClientSitesUsingGuardId(GuardId);
                     var clientSiteWithSettings = _clientDataProvider.GetClientSiteKpiSettings().Select(z => z.ClientSiteId).ToList();
 
+                    //return new JsonResult(clientSites.Select(z => new
+                    //{
+                    //    z.Id,
+                    //    ClientTypeName = z.ClientType.Name,
+                    //    ClientSiteName = z.Name,
+                    //    HasSettings = clientSiteWithSettings.Any(x => x == z.Id),
+                    //   z.SiteEmail
+                    //}));
+                    //for combining site sttings from web to kpi-start
                     return new JsonResult(clientSites.Select(z => new
+
+
                     {
+
                         z.Id,
                         ClientTypeName = z.ClientType.Name,
                         ClientSiteName = z.Name,
-                        HasSettings = clientSiteWithSettings.Any(x => x == z.Id),
-                       z.SiteEmail
-                    }));
+                        z.SiteEmail,
+                        z.LandLine,
+                        SiteUploadDailyLog = z.UploadGuardLog,
+                        z.GuardLogEmailTo,
+                        z.DataCollectionEnabled,
+                        HasSettings = clientSiteWithSettings.Any(x => x == z.Id) || !string.IsNullOrEmpty(z.SiteEmail)
+                    }).Where(x => (clientSiteWithSettings.Any(c => c == x.Id)) && (x.ClientTypeName == type)));
+                    //for combining site sttings from web to kpi-end
                 }
             }
             return new JsonResult(new { });
@@ -736,6 +773,28 @@ namespace CityWatch.Kpi.Pages.Admin
             _clientDataProvider.SaveClientSite(clientSite);
         }
         //Menu change -end
+        /*adding smart wands from other setting from web - start*/
+        public IActionResult OnGetSmartWandSettings(int clientSiteId)
+        {
+            return new JsonResult(_clientSiteWandDataProvider.GetClientSiteSmartWands().Where(z => z.ClientSiteId == clientSiteId).ToList());
+        }
+        public JsonResult OnPostDeleteSmartWandSettings(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _clientSiteWandDataProvider.DeleteClientSiteSmartWand(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
+        /*adding smart wands from other setting from web - end*/
 
     }
 }
