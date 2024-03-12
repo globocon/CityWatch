@@ -43,7 +43,6 @@ namespace CityWatch.Data.Models
         public ClientSiteLogBook ClientSiteLogBook { get; set; }
 
 
-
     }
 
 }

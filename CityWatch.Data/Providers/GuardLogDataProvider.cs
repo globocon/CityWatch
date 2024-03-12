@@ -852,37 +852,52 @@ namespace CityWatch.Data.Providers
         {
             return _context.ClientSiteCustomFields.Where(z => z.ClientSiteId == clientSiteId).ToList();
         }
-        
+
         public List<GuardLog> GetLastLoginNew(int GuradId)
         {
-
-            var guardLogins = _context.GuardLogins.Where(x => x.GuardId == GuradId);
-
-            if (!guardLogins.Any())
+            try
             {
-                // No records found for the provided GuradId, return an empty list
+                var guardLogins = _context.GuardLogins.Where(x => x.GuardId == GuradId);
+
+                if (!guardLogins.Any())
+                {
+                    // No records found for the provided GuradId, return an empty list
+                    return new List<GuardLog>();
+                }
+
+                var lastLoginDate = guardLogins
+                    .Select(x => x.LoginDate)
+                    .Max(); // Find the maximum LoginDate
+
+                var GuraLoginId = _context.GuardLogins
+                    .Where(x => x.GuardId == GuradId && x.LoginDate.Date == lastLoginDate.Date)
+                    .OrderByDescending(x => x.Id)
+                    .FirstOrDefault();
+
+                if (GuraLoginId == null)
+                {
+                    // GuraLoginId is null, which means no corresponding record found, return an empty list
+                    return new List<GuardLog>();
+                }
+
+                var GuardLogGuraId = _context.GuardLogs.Where(x => x.GuardLoginId == GuraLoginId.Id);
+
+                var LastEventLoginDate = GuardLogGuraId.Select(x => x.EventDateTime).Max();
+
+                var result = _context.GuardLogs
+                    .Where(x => x.GuardLoginId == GuraLoginId.Id && x.EventDateTime.Date == LastEventLoginDate.Date)
+                    .Take(1)
+                    .ToList();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                // Handle the exception here (log it, return a specific error response, etc.)
+                // For now, we'll just return an empty list
+                Console.WriteLine($"An error occurred: {ex.Message}");
                 return new List<GuardLog>();
             }
-
-            var lastLoginDate = guardLogins
-                .Select(x => x.LoginDate)
-                .Max(); // Find the maximum LoginDate
-
-            var GuraLoginId = _context.GuardLogins
-                .Where(x => x.GuardId == GuradId && x.LoginDate.Date == lastLoginDate.Date)
-                .FirstOrDefault();
-
-            var GuardLogGuraId = _context.GuardLogs.Where(x => x.GuardLoginId == GuraLoginId.Id);
-
-            var LastEventLoginDate = GuardLogGuraId.Select(x => x.EventDateTime).Max();
-
-
-            var result = _context.GuardLogs
-         .Where(x => x.GuardLoginId == GuraLoginId.Id && x.EventDateTime.Date == LastEventLoginDate.Date).Take(1)
-
-         .ToList();
-
-            return result;
         }
         public int SaveClientSiteCustomFields(ClientSiteCustomField clientSiteCustomField)
         {
