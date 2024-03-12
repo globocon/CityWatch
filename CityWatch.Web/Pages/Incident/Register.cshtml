@@ -317,8 +317,8 @@
                                 </div>
                                 <div class="col-md-5 pt-2">
                                     <label asp-for="@Model.Report.DateLocation.ClientSite" class="font-weight-normal"></label>
-                                    <select asp-for="@Model.Report.DateLocation.ClientSite" class="form-control" asp-items="@Model.ClientSites"></select>
-                                    <span asp-validation-for="@Model.Report.DateLocation.ClientSite"></span>
+                                 <select asp-for="@Model.Report.DateLocation.ClientSite" class="form-control" asp-items="@Model.ClientSites"></select> 
+                                   <span asp-validation-for="@Model.Report.DateLocation.ClientSite"></span>
                                 </div>
                                 <div class="col-md-2 pt-2">
                                     <label asp-for="@Model.Report.DateLocation.ClientArea" class="font-weight-normal"></label>
@@ -632,6 +632,33 @@
         </div>
     </div>
 </div>
+
+<!-- logbook model popup start-->
+<div class="modal fade bd-example-modal-lg" id="logbook-modal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="logbook" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    Client Type & Client Site Select
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+               
+                <div class="row">
+                    <div class="col-md-12">
+                        <div id="scrollableDiv">
+                            <table class="table" id="client_site_settings"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- logbook model popup end-->
 <script>
 
     window.addEventListener('load', onWindowLoad);

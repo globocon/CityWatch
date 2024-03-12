@@ -150,8 +150,12 @@
             $('#btnExportExcel').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.fileName);
             $('#count_by_site').html(response.chartData.sitePercentage.length);
             $('#count_by_area_ward').html(response.chartData.areaWardPercentage.length);
-            $('#count_color_code').html(response.chartData.colorCodePercentage.length);
-            $('#count_by_ir').html(response.chartData.eventTypeCount.map(x => x.value).reduce((f, s) => f + s, 0));
+
+            $('#count_color_code').html(response.chartData.colorCodePercentage.length);            
+           // $('#count_by_ir').html(response.chartData.eventTypeCount.map(x => x.value).reduce((f, s) => f + s, 0));
+            /*to get the correct IR Count-start*/
+            $('#count_by_ir').html(response.recordCount);
+           /*to get the correct IR Count - end*/
 
             /* expanding grapph - start*/
             drawPieChartLargeSize(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site1");
