@@ -10,12 +10,15 @@ namespace CityWatch.Web.Models
         private readonly Guard _guard;
         private readonly IEnumerable<GuardLogin> _guardLogins;
         private readonly IEnumerable<ClientSite> _clientSites;
-
+       
         public GuardViewModel(Guard guard, IEnumerable<GuardLogin> guardLogins)
         {
             _guard = guard;
             _guardLogins = guardLogins;
             _clientSites = _guardLogins.Select(z => z.ClientSite);
+           
+
+
         }
 
         public int Id { get { return _guard.Id; } }
@@ -64,5 +67,8 @@ namespace CityWatch.Web.Models
         public bool IsKPIAccess { get { return _guard.IsKPIAccess; } }
         public bool IsLB_KV_IR { get { return _guard.IsLB_KV_IR; } }
         public bool IsSTATS { get { return _guard.IsSTATS; } }
+
+       
+       
     }
 }

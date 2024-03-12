@@ -8,6 +8,9 @@
     ViewData["Title"] = "CityWatch Security | Guard Settings";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.GuardSettings;
 }
+@*----------------Hidden Inputs---------------------*@
+<input type="hidden" id="txtGuardId" />
+
 <div id="loader" style="z-index: 99999"></div>
 <div>
     <ul class="nav nav-tabs" id="guardSettingsTab" role="tablist">
@@ -290,6 +293,40 @@
             <div class="modal-footer justify-content-start">
                 <button type="button" class="btn btn-primary" id="btn_save_guard">Save Guard</button>
             </div>
+           
+        </div>
+    </div>
+</div>
+
+<!----------------- Log Book Details Modal -------------------->
+<div class="modal" tabindex="-1" role="dialog" id="guardLogBookInfoModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8">Last data guard signed in</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <table id="ActiveGuardsLogBookDetails" class="table table-bordered" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    
+                                    <th>Last Login Date</th>
+
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
         </div>
     </div>
 </div>

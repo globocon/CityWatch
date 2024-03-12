@@ -2378,7 +2378,7 @@
 
     function renderGuardActiveCell(value, type, data) {
         if (type === 'display') {
-            let cellValue = value ? '<i class="fa fa-check-circle text-success"></i>' : '<i class="fa fa-times-circle text-danger"></i>';
+            let cellValue = value ? '<i class="fa fa-check-circle text-success"></i>' + '[' + '<a href="#guardLogBookInfoModal" id="btnLogBookDetailsByGuard">1</a>' + ']<input type="hidden" id="GuardId" value="' + data.id + '">' : '<i class="fa fa-times-circle text-danger"></i>';
             if (data.dateEnrolled) {
                 cellValue += '<br/> <span class="small">Enrolled: ' + getFormattedDate(new Date(data.dateEnrolled), null, ' ') + '</span>';
             }
@@ -2386,7 +2386,7 @@
         }
         return value;
     }
-
+   
     function format_guards_child_row(d) {
         var val = d;
         return val;
@@ -2489,6 +2489,18 @@
         $("#Guard_Access").val(selectedValues);
         $("#Guard_Access").multiselect("refresh");
     });
+    $('#guard_settings tbody').on('click', '#btnLogBookDetailsByGuard', function () {
+       
+        $('#guardLogBookInfoModal').modal('show');
+        var GuardId = $(this).closest("td").find('#GuardId').val();
+        $('#txtGuardId').val(GuardId);
+        ActiveGuardsLogBookDetails.ajax.reload();
+       
+    });
+    
+
+
+
 
     $('#btn_add_guard_top, #btn_add_guard_bottom').on('click', function () {
         gridGuardLicenses.clear().draw();
@@ -3907,6 +3919,47 @@ $('#btnGenerateVklAuditLogReport').on('click', function () {
             $('#loader').hide();
         });
     }
+});
+
+let ActiveGuardsLogBookDetails = $('#ActiveGuardsLogBookDetails').DataTable({
+    autoWidth: false,
+    ordering: false,
+    searching: false,
+    paging: false,
+    info: false,
+    ajax: {
+        url: '/Admin/GuardSettings?handler=LastTimeLogin',
+        data: function (d) {
+            d.guardId = $('#txtGuardId').val();
+
+        },
+        dataSrc: ''
+    },
+    columns: [
+
+        {
+            data: 'eventDateTime',
+            width: "10%",
+            render: function (data, type, row) {
+                // Convert the date string to a JavaScript Date object
+                var date = new Date(data);
+
+                // Format the date to display only the date part without the time
+                var formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                var additionalData = row.eventDateTimeZoneShort;
+                if (additionalData != null) {
+                    return formattedDate + ' (' + additionalData + ')';
+                }
+                else {
+                    return formattedDate
+                }
+                
+            }
+        }
+
+    ],
+
+
 });
 /*to view thw audit log report-end*/
 
