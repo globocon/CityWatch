@@ -3463,6 +3463,7 @@ $(function () {
 
 
     $('#Report_VehicleRego').typeahead({
+       
         minLength: 3,
         autoSelect: true,
         source: function (request, response) {
@@ -3508,6 +3509,69 @@ $(function () {
                     }
                 });
             }
+        }
+    });
+    $('#Report_DateLocation_ClientSite').on('keyup', function (e) {
+       
+            var inputValue = $(this).val();
+            if (inputValue.length >= 3 && inputValue.match(/[a-zA-Z]/)) {
+                e.preventDefault();
+              
+                gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $(this).val() });
+                $('#logbook-modal').modal('show');
+                //alert('Letter typed and Enter pressed: ' + inputValue);
+            }
+        
+    });
+
+    let gridSite;
+    gridSite = $('#client_site_settings').grid({
+        dataSource: '/Admin/Settings?handler=ClientSites',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        columns: [
+            { field: 'typeId', hidden: true },
+            { field: 'clientType', title: 'Client Type', width: 180, renderer: function (value, record) { return value.name; } },
+            { field: 'name', title: 'Client Site', width: 180, editor: false },
+            { width: 100, renderer: settingsButtonRenderer },
+           
+            
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+    function settingsButtonRenderer(value, record) {
+        
+        var ClientTypeName = record.clientType.name;
+        var ClientSiteName = record.name;
+        
+        return '<button class="btn btn-outline-success mt-2 del-schedule d-block" data-sch-id="' + ClientSiteName + '_' + ClientTypeName + '""><i class="fa fa-check mr-2" aria-hidden="true"></i>Select</button>';
+    }
+    $('#client_site_settings').on('click', '.del-schedule', function () {
+        const ClientSiteName1 = $(this).attr('data-sch-id');
+        const lastUnderscoreIndex = ClientSiteName1.lastIndexOf('_');
+
+        if (lastUnderscoreIndex !== -1) {
+            const recordName = ClientSiteName1.slice(0, lastUnderscoreIndex);
+            const ClientTypeName = ClientSiteName1.slice(lastUnderscoreIndex + 1);
+
+            $('#logbook-modal').modal('hide');
+            $('#Report_DateLocation_ClientSite').val(recordName);
+            $('#Report_DateLocation_ClientType option').each(function () {
+               
+                if ($(this).val() === ClientTypeName) {
+                    $(this).prop('selected', true);
+                    return false; 
+                }
+            });
+
+            // Use recordName and ClientTypeName here
+            console.log('record.name:', recordName);
+            console.log('ClientTypeName:', ClientTypeName);
+        } else {
+            console.log('Invalid data-sch-id format');
         }
     });
 
