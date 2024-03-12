@@ -151,7 +151,11 @@
     <script src="~/lib/bootstrap-multiselect/js/bootstrap-multiselect.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-3-typeahead/4.0.2/bootstrap3-typeahead.min.js"></script>
     <script src="~/lib/select2/js/select2.min.js"></script>
-    <script src="~/lib/d3/d3.min.js"></script>   
+    <script src="~/lib/d3/d3.min.js"></script> 
+    @*/* Chart js files for chart in petrol data start *@
+    <script src="~/chartjs/chart.min.js"></script>
+    <script src="~/chartjs/chartjs-plugin-labels.min.js"></script>
+    @*/* Chart js files for chart in petrol data end *@
     <script src="~/js/reports.js" asp-append-version="true"></script>
     <script src="~/js/guardlog.js" asp-append-version="true"></script>
     <script src="~/js/keyvehiclelog.js" asp-append-version="true"></script>
@@ -160,6 +164,8 @@
     <script src="~/lib/luxon/luxon.min.js" asp-append-version="true"></script>
     <script src="~/lib/timezone_abbreviation/timezone_abbreviation.js" asp-append-version="true"></script>
     <script src="https://code.jquery.com/jquery-migrate-1.3.0.js"></script>
+
+   
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

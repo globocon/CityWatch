@@ -23,14 +23,14 @@
             { data: 'nameOfDay' },
             { data: 'date' },
             { data: 'serialNo' },
-           // { data: 'fileNametodownload' },
+            // { data: 'fileNametodownload' },
             {
-                data: 'fileNametodownload', 
+                data: 'fileNametodownload',
                 render: function (data, type, row) {
                     if (data) {
                         return '<a href="https://c4istorage1.blob.core.windows.net/irfiles/' + data.substring(0, 8) + '/' + data + '"target="_blank"><img src="/images/pdfimage.jpg" style="width:115%" alt="Image"></a>';
                     } else {
-                        return ''; 
+                        return '';
                     }
                 }
             },
@@ -101,8 +101,21 @@
             }
         });
     });
-
+    window.myChart1;
+    window.myChart2;
+    window.myChart3;
+    window.myChart4;
     $('#btnPatrolReportSumbit').on('click', function () {
+
+        if (window.myChart1 != undefined)
+            window.myChart1.destroy();
+        if (window.myChart2 != undefined)
+            window.myChart2.destroy();
+        if (window.myChart3 != undefined)
+            window.myChart3.destroy();
+        if (window.myChart4 != undefined)
+            window.myChart4.destroy();
+
         $('#btnExportExcel').attr('href', '#');
         const fromDate = $('#date_from').val();
         const toDate = $('#date_to').val();
@@ -110,10 +123,10 @@
             alert('From date and to date is required');
             return false;
         }
-         //calculate month difference-start
+        //calculate month difference-start
         var date1 = new Date($('#ReportRequest_FromDate').val());
         var date2 = new Date($('#ReportRequest_ToDate').val());
-        var monthdiff = monthDiff(date1, date2); 
+        var monthdiff = monthDiff(date1, date2);
         if (monthdiff > 12) {
             alert('Date Range is  greater than 12 months');
             return false;
@@ -128,27 +141,30 @@
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (response) {
             patrolReport.clear().rows.add(response.results).draw();
-           
+
             drawPieChart(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site");
-            drawPieChart(response.chartData.areaWardPercentage, response.recordCount, "svg#pie_chart_ir_by_areaward");
-            drawPieChart(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode")
+            /*drawPieChart(response.chartData.areaWardPercentage, response.recordCount, "svg#pie_chart_ir_by_areaward");*/
+            /*drawPieChart(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode")*/
             drawPieChart(response.chartData.eventTypePercentage, response.recordCount, "svg#pie_chart_by_ireventype_quantity");
             drawBarChart(response.chartData.eventTypeCount, response.recordCount, "svg#bar_chart_by_ireventype_quantity");
             $('#btnExportExcel').attr('href', '/Reports/PatrolData?handler=DownloadReport&file=' + response.fileName);
             $('#count_by_site').html(response.chartData.sitePercentage.length);
             $('#count_by_area_ward').html(response.chartData.areaWardPercentage.length);
-            $('#count_color_code').html(response.chartData.colorCodePercentage.length);            
+            $('#count_color_code').html(response.chartData.colorCodePercentage.length);
             $('#count_by_ir').html(response.chartData.eventTypeCount.map(x => x.value).reduce((f, s) => f + s, 0));
 
             /* expanding grapph - start*/
             drawPieChartLargeSize(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site1");
-            drawPieChartLargeSize(response.chartData.areaWardPercentage, response.recordCount, "svg#pie_chart_ir_by_areaward1");
-            drawPieChartLargeSize(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode1");
+            /* drawPieChartLargeSize(response.chartData.areaWardPercentage, response.recordCount, "svg#pie_chart_ir_by_areaward1");*/
+            /* drawPieChartLargeSize(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode1");*/
             drawPieChartLargeSize(response.chartData.eventTypePercentage, response.recordCount, "svg#pie_chart_by_ireventype_quantity1");
             $('#count_by_site1').html(response.chartData.sitePercentage.length);
             $('#count_by_area_ward1').html(response.chartData.areaWardPercentage.length);
             $('#count_color_code1').html(response.chartData.colorCodePercentage.length);
             $('#txtDownloadfilename').val(response.fileName2)
+
+            drawPieChartUsingChartJsChart(response.chartData.areaWardPercentage);
+            drawPieChartUsingChartJsChartColorCode(response.chartData.colorCodePercentage);
             /* expanding grapph - start*/
         }).fail(function () {
         }).always(function () {
@@ -322,7 +338,7 @@
         });
 
         if (colorFound) return colorFound.color;
-        
+
         return d3Colors(i);
     }
 
@@ -483,7 +499,7 @@
             });
     }
 });
- //calculate month difference-start
+//calculate month difference-start
 
 function monthDiff(d1, d2) {
     var months;
@@ -505,7 +521,7 @@ $('#btncount_color_code').on('click', function () {
 $('#btncount_event_type_quantity').on('click', function () {
     $('#modelIreventypeQuantity').modal('show');
 });
- //calculate month difference-end
+//calculate month difference-end
 $('#btnExportPatrolPdf').on('click', function () {
     $('#btnExportExcel').attr('href', '#');
     const fromDate = $('#date_from').val();
@@ -540,3 +556,575 @@ $('#btnExportPatrolPdf').on('click', function () {
         $('#loader-p').hide();
     });
 });
+
+
+function drawPieChartUsingChartJsChart(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+        return e.key;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.value;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("pie_chart_ir_by_areaward");
+    var canvas2 = document.getElementById("pie_chart_ir_by_areaward1");
+    if (canvas !== null) {
+        const ctx = document.getElementById('pie_chart_ir_by_areaward').getContext('2d');
+       
+        window.myChart1 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+       
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx = document.getElementById('pie_chart_ir_by_areaward1').getContext('2d');
+        window.myChart2 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+    //// Configuration options
+    //const options = {
+    //    responsive: false,
+    //    plugins: {
+    //        legend: {
+    //            position: 'right',
+    //            onClick: function (event, legendItem) {
+    //                const index = legendItem.index;
+    //                const meta = this.chart.getDatasetMeta(0);
+    //                meta.data[index].hidden = !meta.data[index].hidden;
+    //                this.chart.update();
+    //            }
+    //        },
+    //        datalabels: {
+    //            backgroundColor: function (context) {
+    //                return context.dataset.backgroundColor;
+    //            },
+    //            borderColor: 'white',
+    //            borderRadius: 25,
+    //            borderWidth: 2,
+    //            color: 'white',
+    //            display: function (context) {
+    //                var dataset = context.dataset;
+    //                var count = dataset.data.length;
+    //                var value = dataset.data[context.dataIndex];
+    //                return value > count * 1.5;
+    //            }
+    //        }
+    //    }
+
+    //};
+
+    //// Create the pie chart
+    //var canvas = document.getElementById("myPieChart");
+    //if (canvas !== null) {
+    //    const ctx = document.getElementById('myPieChart').getContext('2d');
+    //    const myPieChart = new Chart(ctx, {
+    //        type: 'pie',
+    //        data: data,
+    //        options: options
+    //    });
+
+    //}
+
+}
+
+
+
+function drawPieChartUsingChartJsChartColorCode(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+        return e.key;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.value;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("pie_chart_ir_by_colorcode");
+    var canvas2 = document.getElementById("pie_chart_ir_by_colorcode1");
+    if (canvas !== null) {
+        const ctx = document.getElementById('pie_chart_ir_by_colorcode').getContext('2d');
+        window.myChart3 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx = document.getElementById('pie_chart_ir_by_colorcode1').getContext('2d');
+        window.myChart4 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 50,
+                        right: 5,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+    //// Configuration options
+    //const options = {
+    //    responsive: false,
+    //    plugins: {
+    //        legend: {
+    //            position: 'right',
+    //            onClick: function (event, legendItem) {
+    //                const index = legendItem.index;
+    //                const meta = this.chart.getDatasetMeta(0);
+    //                meta.data[index].hidden = !meta.data[index].hidden;
+    //                this.chart.update();
+    //            }
+    //        },
+    //        datalabels: {
+    //            backgroundColor: function (context) {
+    //                return context.dataset.backgroundColor;
+    //            },
+    //            borderColor: 'white',
+    //            borderRadius: 25,
+    //            borderWidth: 2,
+    //            color: 'white',
+    //            display: function (context) {
+    //                var dataset = context.dataset;
+    //                var count = dataset.data.length;
+    //                var value = dataset.data[context.dataIndex];
+    //                return value > count * 1.5;
+    //            }
+    //        }
+    //    }
+
+    //};
+
+    //// Create the pie chart
+    //var canvas = document.getElementById("myPieChart");
+    //if (canvas !== null) {
+    //    const ctx = document.getElementById('myPieChart').getContext('2d');
+    //    const myPieChart = new Chart(ctx, {
+    //        type: 'pie',
+    //        data: data,
+    //        options: options
+    //    });
+
+    //}
+
+}
