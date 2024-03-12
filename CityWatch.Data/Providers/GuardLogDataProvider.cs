@@ -215,7 +215,7 @@ namespace CityWatch.Data.Providers
         List<KeyVehicleLogVisitorPersonalDetail> GetPOIListFromVisitorPersonalDetails();
         RadioCheckLogbookSiteDetails GetRadiocheckLogbookDetails();
         
-        List<GuardLogin> GetLastLoginNew(int GuradId);
+        List<GuardLog> GetLastLoginNew(int GuradId);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -853,7 +853,7 @@ namespace CityWatch.Data.Providers
             return _context.ClientSiteCustomFields.Where(z => z.ClientSiteId == clientSiteId).ToList();
         }
         
-        public List<GuardLogin> GetLastLoginNew(int GuradId)
+        public List<GuardLog> GetLastLoginNew(int GuradId)
         {
 
             var guardLogins = _context.GuardLogins.Where(x => x.GuardId == GuradId);
@@ -861,16 +861,26 @@ namespace CityWatch.Data.Providers
             if (!guardLogins.Any())
             {
                 // No records found for the provided GuradId, return an empty list
-                return new List<GuardLogin>();
+                return new List<GuardLog>();
             }
 
             var lastLoginDate = guardLogins
                 .Select(x => x.LoginDate)
                 .Max(); // Find the maximum LoginDate
 
-            var result = _context.GuardLogins
+            var GuraLoginId = _context.GuardLogins
                 .Where(x => x.GuardId == GuradId && x.LoginDate.Date == lastLoginDate.Date)
-                .ToList(); // Retrieve the GuardLogin object with the last login date
+                .FirstOrDefault();
+
+            var GuardLogGuraId = _context.GuardLogs.Where(x => x.GuardLoginId == GuraLoginId.Id);
+
+            var LastEventLoginDate = GuardLogGuraId.Select(x => x.EventDateTime).Max();
+
+
+            var result = _context.GuardLogs
+         .Where(x => x.GuardLoginId == GuraLoginId.Id && x.EventDateTime.Date == LastEventLoginDate.Date).Take(1)
+
+         .ToList();
 
             return result;
         }

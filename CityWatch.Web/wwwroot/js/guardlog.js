@@ -3934,16 +3934,22 @@ let ActiveGuardsLogBookDetails = $('#ActiveGuardsLogBookDetails').DataTable({
     columns: [
 
         {
-            data: 'loginDate',
+            data: 'eventDateTime',
             width: "10%",
-            render: function (data) {
+            render: function (data, type, row) {
                 // Convert the date string to a JavaScript Date object
                 var date = new Date(data);
 
                 // Format the date to display only the date part without the time
-                var formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
-
-                return formattedDate;
+                var formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                var additionalData = row.eventDateTimeZoneShort;
+                if (additionalData != null) {
+                    return formattedDate + ' (' + additionalData + ')';
+                }
+                else {
+                    return formattedDate
+                }
+                
             }
         }
 

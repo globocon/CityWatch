@@ -38,7 +38,7 @@ namespace CityWatch.Data.Providers
 
         List<GuardCompliance> GetGuardCompliancesList(int[] guardIds);
 
-        List<Guard> GetGuardsCount();
+        //List<Guard> GetGuardsCount();
         List<GuardLogin> GetGuardLogins(int[] guardIds);
 
     }
@@ -56,29 +56,29 @@ namespace CityWatch.Data.Providers
         {
             return _context.Guards.ToList();
         }
-        public List<Guard> GetGuardsCount()
-        {
-            var guards = _context.Guards.ToList();
-            foreach (var guard in guards)
-            {
+        //public List<Guard> GetGuardsCount()
+        //{
+        //    var guards = _context.Guards.ToList();
+        //    foreach (var guard in guards)
+        //    {
               
-                guard.IsActiveCount = CalculateIsActiveCountForGuard(guard.Id); 
-            }
+        //        guard.IsActiveCount = CalculateIsActiveCountForGuard(guard.Id); 
+        //    }
 
-            return guards;
-        }
-        public int CalculateIsActiveCountForGuard(int GuradID)
-        {
-            var guardLoginsForId = _context.GuardLogins
-                    .Where(z => z.GuardId == GuradID && z.ClientSite.IsActive && z.GuardLogs.Notes== "Logbook Logged In")
-                    .Include(z => z.ClientSite)
-                    .Include(z => z.Guard)
-                    .Include(z => z.GuardLogs)
-                    .ToList();
+        //    return guards;
+        //}
+        //public int CalculateIsActiveCountForGuard(int GuradID)
+        //{
+        //    var guardLoginsForId = _context.GuardLogins
+        //            .Where(z => z.GuardId == GuradID && z.ClientSite.IsActive && z.GuardLogs.Notes== "Logbook Logged In")
+        //            .Include(z => z.ClientSite)
+        //            .Include(z => z.Guard)
+        //            .Include(z => z.GuardLogs)
+        //            .ToList();
 
-            int isActiveCount = guardLoginsForId.Count;
-            return isActiveCount;
-        }
+        //    int isActiveCount = guardLoginsForId.Count;
+        //    return isActiveCount;
+        //}
 
         public Guard GetGuardDetailsbySecurityLicenseNo(string securityLicenseNo)
         {

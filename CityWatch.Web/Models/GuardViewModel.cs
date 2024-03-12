@@ -68,7 +68,7 @@ namespace CityWatch.Web.Models
         public bool IsLB_KV_IR { get { return _guard.IsLB_KV_IR; } }
         public bool IsSTATS { get { return _guard.IsSTATS; } }
 
-        public int IsActiveCount { get { return _guard.IsActiveCount; } }
+       
        
     }
 }
