@@ -1039,7 +1039,9 @@
     const today = new Date();
     const start = new Date(today.getFullYear(), today.getMonth(), 2);
     $('#dglAudtitFromDate').val(start.toISOString().substr(0, 10));
-    $('#dglAudtitToDate').val(new Date().toISOString().substr(0, 10));
+    var systemDate = $('#dglAudtitToDateVal').val();
+    //var dateObject = new Date().toISOString().substr(0, 10);
+    $('#dglAudtitToDate').val(systemDate);
 
     let gridsiteLog;
     gridsiteLog = $('#dgl_site_log').grid({
@@ -1281,7 +1283,9 @@
     const todayDate = new Date();
     const startDate = new Date(todayDate.getFullYear(), today.getMonth(), 2);
     $('#vklAudtitFromDate').val(startDate.toISOString().substr(0, 10));
-    $('#vklAudtitToDate').val(new Date().toISOString().substr(0, 10));
+    //$('#vklAudtitToDate').val(new Date().toISOString().substr(0, 10));
+    $('#vklAudtitToDate').val(systemDate);
+    
 
     // TODO: Duplicate function definition - take out
     function getTimeFromDateTime(value) {
