@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace CityWatch.Data.Providers
 {
@@ -11,7 +12,6 @@ namespace CityWatch.Data.Providers
         List<Guard> GetGuards();
         int SaveGuard(Guard guard, out string initalsUsed);
         int UpdateGuard(Guard guard, string state, out string initalsUsed);
-        List<GuardLogin> GetGuardLogins(int[] guardIds);
         List<GuardLogin> GetGuardLogins(int clientSiteId, DateTime fromDate, DateTime toDate);
         List<GuardLogin> GetUniqueGuardLogins();
         List<GuardLogin> GetGuardLoginsBySmartWandId(int smartWandId);
@@ -38,7 +38,8 @@ namespace CityWatch.Data.Providers
 
         List<GuardCompliance> GetGuardCompliancesList(int[] guardIds);
 
-
+        List<Guard> GetGuardsCount();
+        List<GuardLogin> GetGuardLogins(int[] guardIds);
 
     }
 
@@ -54,6 +55,29 @@ namespace CityWatch.Data.Providers
         public List<Guard> GetGuards()
         {
             return _context.Guards.ToList();
+        }
+        public List<Guard> GetGuardsCount()
+        {
+            var guards = _context.Guards.ToList();
+            foreach (var guard in guards)
+            {
+              
+                guard.IsActiveCount = CalculateIsActiveCountForGuard(guard.Id); 
+            }
+
+            return guards;
+        }
+        public int CalculateIsActiveCountForGuard(int GuradID)
+        {
+            var guardLoginsForId = _context.GuardLogins
+                    .Where(z => z.GuardId == GuradID && z.ClientSite.IsActive && z.GuardLogs.Notes== "Logbook Logged In")
+                    .Include(z => z.ClientSite)
+                    .Include(z => z.Guard)
+                    .Include(z => z.GuardLogs)
+                    .ToList();
+
+            int isActiveCount = guardLoginsForId.Count;
+            return isActiveCount;
         }
 
         public Guard GetGuardDetailsbySecurityLicenseNo(string securityLicenseNo)
@@ -166,8 +190,9 @@ namespace CityWatch.Data.Providers
             List<GuardLogin> guardLogins = new List<GuardLogin>();
             foreach (int guardId in guardIds)
             {
+
                 guardLogins.AddRange(_context.GuardLogins
-                .Where(z => z.GuardId== guardId && z.ClientSite.IsActive==true)                   
+                .Where(z => z.GuardId == guardId && z.ClientSite.IsActive == true)
                     .Include(z => z.ClientSite)
                     .Include(z => z.Guard)
                     .ToList());
@@ -185,6 +210,8 @@ namespace CityWatch.Data.Providers
                 .GroupBy(z => new { z.GuardId, z.ClientSiteId })
                 .Select(z => z.Last())
                 .ToList();
+
+
         }
 
         public List<GuardLogin> GetGuardLoginsBySmartWandId(int smartWandId)

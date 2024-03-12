@@ -214,7 +214,8 @@ namespace CityWatch.Data.Providers
 
         List<KeyVehicleLogVisitorPersonalDetail> GetPOIListFromVisitorPersonalDetails();
         RadioCheckLogbookSiteDetails GetRadiocheckLogbookDetails();
-       
+        
+        List<GuardLogin> GetLastLoginNew(int GuradId);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -851,7 +852,28 @@ namespace CityWatch.Data.Providers
         {
             return _context.ClientSiteCustomFields.Where(z => z.ClientSiteId == clientSiteId).ToList();
         }
+        
+        public List<GuardLogin> GetLastLoginNew(int GuradId)
+        {
 
+            var guardLogins = _context.GuardLogins.Where(x => x.GuardId == GuradId);
+
+            if (!guardLogins.Any())
+            {
+                // No records found for the provided GuradId, return an empty list
+                return new List<GuardLogin>();
+            }
+
+            var lastLoginDate = guardLogins
+                .Select(x => x.LoginDate)
+                .Max(); // Find the maximum LoginDate
+
+            var result = _context.GuardLogins
+                .Where(x => x.GuardId == GuradId && x.LoginDate.Date == lastLoginDate.Date)
+                .ToList(); // Retrieve the GuardLogin object with the last login date
+
+            return result;
+        }
         public int SaveClientSiteCustomFields(ClientSiteCustomField clientSiteCustomField)
         {
             if (clientSiteCustomField.Id == 0)

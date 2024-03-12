@@ -292,7 +292,13 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(new { data = _viewDataService.GetGuards() });
         }
-
+        //To Get the Last Login Date 
+        public IActionResult OnGetLastTimeLogin(int guardId)
+        {
+            
+            return new JsonResult(_guardLogDataProvider.GetLastLoginNew(guardId));
+        }
+        
         public JsonResult OnPostGuards(Data.Models.Guard guard, string ClientSiteIds)
         {
             if (guard.GuardAccess != null)
