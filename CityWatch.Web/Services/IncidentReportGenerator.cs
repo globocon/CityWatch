@@ -1111,7 +1111,7 @@ namespace CityWatch.Web.Services
         {
             var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 70, 30 })).UseAllAvailableWidth().SetMarginTop(5);
 
-            var eventTypeCount = patrolDataReport.EventTypeQuantity.Sum(z => z.Value);
+            var eventTypeCount = patrolDataReport.ResultsCount;
             chartDataTable.AddCell(GetChartHeaderCell("IR EVENT TYPE QUANTITY", "Total IR Count: " + eventTypeCount, 2));
 
             var eventTypePieChartImage = GetChartImage(patrolDataReport.EventTypePercentage.OrderBy(z => z.Key).ToArray(), chartWidth: 615);
