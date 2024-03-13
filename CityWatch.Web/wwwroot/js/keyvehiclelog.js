@@ -3517,15 +3517,15 @@ $(function () {
             if (inputValue.length >= 3 && inputValue.match(/[a-zA-Z]/)) {
                 e.preventDefault();
               
-                gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $(this).val() });
+                gridSiteSearch.reload({ typeId: $('#sel_client_type').val(), searchTerm: $(this).val() });
                 $('#logbook-modal').modal('show');
                 //alert('Letter typed and Enter pressed: ' + inputValue);
             }
         
     });
 
-    let gridSite;
-    gridSite = $('#client_site_settings').grid({
+    let gridSiteSearch;
+    gridSiteSearch = $('#client_site_settingsSearch').grid({
         dataSource: '/Admin/Settings?handler=ClientSites',
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
@@ -3549,7 +3549,7 @@ $(function () {
         
         return '<button class="btn btn-outline-success mt-2 del-schedule d-block" data-sch-id="' + ClientSiteName + '_' + ClientTypeName + '""><i class="fa fa-check mr-2" aria-hidden="true"></i>Select</button>';
     }
-    $('#client_site_settings').on('click', '.del-schedule', function () {
+    $('#client_site_settingsSearch').on('click', '.del-schedule', function () {
         const ClientSiteName1 = $(this).attr('data-sch-id');
         const lastUnderscoreIndex = ClientSiteName1.lastIndexOf('_');
 
