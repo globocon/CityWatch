@@ -15,6 +15,7 @@ using iText.Layout.Element;
 using iText.Layout.Properties;
 using iText.StyledXmlParser.Jsoup.Helper;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -935,8 +936,11 @@ namespace CityWatch.Web.Services
         private static Table GetReelsDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
         {
             var reelsDetailsTable = new Table(1).UseAllAvailableWidth();
-
-            reelsDetailsTable.AddCell(GetHeaderCell("Reels", textAlignment: TextAlignment.LEFT));
+            //manifest options-start
+            var headerReels = keyVehicleLogViewModel.Detail.IsReels ? "Reels" : "QTY";
+            reelsDetailsTable.AddCell(GetHeaderCell(headerReels, textAlignment: TextAlignment.LEFT));
+            //manifest options-end
+            // reelsDetailsTable.AddCell(GetHeaderCell("Reels", textAlignment: TextAlignment.LEFT));
 
             reelsDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Reels.ToString(), textAlignment: TextAlignment.LEFT));
 
@@ -978,8 +982,11 @@ namespace CityWatch.Web.Services
         private static Table GetVwiDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
         {
             var vwiDetailsTable = new Table(1).UseAllAvailableWidth();
-
-            vwiDetailsTable.AddCell(GetHeaderCell("VWI", textAlignment: TextAlignment.LEFT));
+            //manifest options -start
+            var headerVWI = keyVehicleLogViewModel.Detail.IsVWI ? "VWI" : "Manifest";
+            vwiDetailsTable.AddCell(GetHeaderCell(headerVWI, textAlignment: TextAlignment.LEFT));
+            //manifest options -end
+            //vwiDetailsTable.AddCell(GetHeaderCell("VWI", textAlignment: TextAlignment.LEFT));
 
             vwiDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Vwi, textAlignment: TextAlignment.LEFT));
 

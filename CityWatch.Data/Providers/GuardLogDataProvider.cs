@@ -659,6 +659,8 @@ namespace CityWatch.Data.Providers
                         keyVehicleLogToUpdate.BDMList = keyVehicleLog.BDMList;
 
                     }
+                    keyVehicleLogToUpdate.IsReels = keyVehicleLog.IsReels;
+                    keyVehicleLogToUpdate.IsVWI = keyVehicleLog.IsVWI;
                     _context.SaveChanges();
                 }
 
