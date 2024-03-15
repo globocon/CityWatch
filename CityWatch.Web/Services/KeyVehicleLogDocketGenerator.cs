@@ -621,10 +621,14 @@ namespace CityWatch.Web.Services
                 .SetTextAlignment(TextAlignment.CENTER)
                 .SetHorizontalAlignment(HorizontalAlignment.CENTER);
             siteDataTable.AddCell(siteName);
+            //docket output issues- start
+            string date = keyVehicleLog.ClientSiteLogBook.Date.ToString("yyyy-MMM-dd").ToUpper();
+            string day = keyVehicleLog.ClientSiteLogBook.Date.ToString("dddd");
 
             siteDataTable.AddCell(GetSiteHeaderCell("Date of Log:"));
-            siteDataTable.AddCell(GetSiteValueCell(keyVehicleLog.ClientSiteLogBook.Date.ToString("yyyy-MMM-dd-dddd")));
-
+            siteDataTable.AddCell(GetSiteValueCell(date + "-" + day));
+            //siteDataTable.AddCell(GetSiteValueCell(keyVehicleLog.ClientSiteLogBook.Date.ToString("yyyy-MMM-dd-dddd").ToUpper()));
+            //docket output issues- end
             siteDataTable.AddCell(GetSiteHeaderCell("Guard Intials"));
             siteDataTable.AddCell(GetSiteValueCell(keyVehicleLog.GuardLogin.Guard.Initial ?? string.Empty));
 
