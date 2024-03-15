@@ -40,6 +40,7 @@ builder.Services.AddScoped<IPatrolDataReportService, PatrolDataReportService>();
 builder.Services.AddScoped<IConfigDataProvider, ConfigDataProvider>();
 builder.Services.AddScoped<IGuardDataProvider, GuardDataProvider>();
 builder.Services.AddScoped<IUserDataProvider, UserDataProvider>();
+builder.Services.AddScoped <IClientSiteWandDataProvider,ClientSiteWandDataProvider>();
 builder.Services.AddSession();
 builder.Services.AddRazorPages(options =>
 {

@@ -970,14 +970,36 @@ $(function () {
     });
     /*code added for search client stop */
     var currentDiv = 1;
+    let gritdSmartWands;
     $('#kpi-settings-modal').on('shown.bs.modal', function (event) {
         currentDiv = 1;
         
         $('#div_site_settings').html('');
         const button = $(event.relatedTarget);
         $('#client_site_name').text(button.data('cs-name'))
-        $('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + button.data('cs-id'));
+       // $('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + button.data('cs-id'));
+
+      
+        $('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + button.data('cs-id'), function () {
+            // This function will be executed after the content is loaded
+            window.sharedVariable = button.data('cs-id');
+            console.log('Load operation completed!');
+            // You can add your additional code or actions here
+            console.log(button.data('cs-id'));
+            $("#OtherSettingsNew").load('settingsOther?clientSiteId=53');
+           
+          
+           
+            //alert('Removed the worker successfully');
+        });
     });
+
+   
+      
+    
+
+    
+
 
     $('#div_site_settings').on('change', '.patrol-frequency', function () {
         $('input[name="ClientSiteDayKpiSettings[' + $(this).attr('data-index') + '].PatrolFrequency"]').val(Number($(this).prop('checked')));
@@ -1578,13 +1600,18 @@ $(function () {
         }
     }
 
+
+  
+    
+
    
      
 
 
 
 });
-//menu change 04-03-2024 start
+
+
 $('#div_site_settings').on('click','#btnSaveGuardSiteSettingsnew', function () {
     var isUpdateDailyLog = false;
 
