@@ -4,6 +4,7 @@ using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
+using DocumentFormat.OpenXml.Bibliography;
 using iText.IO.Font.Constants;
 using iText.IO.Image;
 using iText.Kernel.Colors;
@@ -16,6 +17,7 @@ using iText.Layout.Properties;
 using iText.StyledXmlParser.Jsoup.Helper;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Options;
+using Org.BouncyCastle.Crypto.Paddings;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -712,7 +714,10 @@ namespace CityWatch.Web.Services
                                     .SetPaddingRight(0)
                                     .SetPaddingTop(0)
                                     .SetBorder(Border.NO_BORDER)
-                                    .Add(GetSignDetailsTable());
+                                    //p7-115 docket output issues-start
+                                    //.Add(GetSignDetailsTable());
+                                    .Add(GetSignDetailsTable(keyVehicleLogViewModel));
+                                    //p7-115 docket output issues-end
             outerTable2.AddCell(cellSignDetails);
 
             return outerTable2;
@@ -745,11 +750,19 @@ namespace CityWatch.Web.Services
                                     .Add(innerTable2);
             outerTable2.AddCell(cellInnerTable2);
 
+            //p7-115 Docket output issues-start
+            //var cellSignDetails = new Cell()
+            //                        .SetPaddingRight(0)
+            //                        .SetPaddingTop(0)
+            //                        .SetBorder(Border.NO_BORDER)
+            //                        .Add(GetSignDetailsTable());
             var cellSignDetails = new Cell()
                                     .SetPaddingRight(0)
                                     .SetPaddingTop(0)
                                     .SetBorder(Border.NO_BORDER)
-                                    .Add(GetSignDetailsTable());
+                                    .Add(GetSignDetailsTable( keyVehicleLogViewModel));
+            //p7 - 115 Docket output issues - end
+            
             outerTable2.AddCell(cellSignDetails);
 
             return outerTable2;
@@ -1081,7 +1094,23 @@ namespace CityWatch.Web.Services
 
             return otherDetailsTable;
         }
-        private static Table GetSignDetailsTable()
+        //p7-115 docket output issues-start 
+        //private static Table GetSignDetailsTable()
+        //{
+        //    var signDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 25, 75 })).UseAllAvailableWidth();
+
+        //    signDetailsTable.AddCell(GetHeaderCell("Loader"));
+        //    signDetailsTable.AddCell(GetDataCell("Name: \n\nSign:\n\n", textAlignment: TextAlignment.LEFT));
+
+        //    signDetailsTable.AddCell(GetHeaderCell("Dispatch"));
+        //    signDetailsTable.AddCell(GetDataCell("Name: \n\nSign:\n\n", textAlignment: TextAlignment.LEFT));
+
+        //    signDetailsTable.AddCell(GetHeaderCell("Driver"));
+        //    signDetailsTable.AddCell(GetDataCell("Name: \n\nSign:\n\n", textAlignment: TextAlignment.LEFT));
+
+        //    return signDetailsTable;
+        //}
+        private static Table GetSignDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
         {
             var signDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 25, 75 })).UseAllAvailableWidth();
 
@@ -1092,10 +1121,14 @@ namespace CityWatch.Web.Services
             signDetailsTable.AddCell(GetDataCell("Name: \n\nSign:\n\n", textAlignment: TextAlignment.LEFT));
 
             signDetailsTable.AddCell(GetHeaderCell("Driver"));
-            signDetailsTable.AddCell(GetDataCell("Name: \n\nSign:\n\n", textAlignment: TextAlignment.LEFT));
-
+            //p7-115 docket output issues-start
+            signDetailsTable.AddCell(GetDataCell("Name: " + keyVehicleLogViewModel.Detail.PersonName + "\n\nSign:\n\n", textAlignment: TextAlignment.LEFT));
+            //signDetailsTable.AddCell(GetDataCell("Name:\n\nSign:\n\n", textAlignment: TextAlignment.LEFT));
+            //p7 - 115 docket output issues - end
             return signDetailsTable;
         }
+        
+            //p7-115 docket output issues-end
         // added to display the image
         private Table GetImageTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
         {
