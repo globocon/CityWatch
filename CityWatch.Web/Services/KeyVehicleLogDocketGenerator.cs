@@ -1064,12 +1064,16 @@ namespace CityWatch.Web.Services
         private static Table GetOtherDetailsTable(string docketReason)
         {
             var otherDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 40, 60 })).UseAllAvailableWidth().SetMarginTop(12);
-
-            otherDetailsTable.AddCell(GetHeaderCell("STMS Form \n(Outbound / pickup only)", textAlignment: TextAlignment.LEFT));
+            //p7-115 docket output issues-start
+                //otherDetailsTable.AddCell(GetHeaderCell("STMS Form \n(Outbound / pickup only)", textAlignment: TextAlignment.LEFT));
+                otherDetailsTable.AddCell(GetHeaderCell("Compliance Documents \n(NHVR HML / STMS / HACCP / etc)", textAlignment: TextAlignment.LEFT));
+            //p7 - 115 docket output issues - end
             otherDetailsTable.AddCell(GetHeaderCell("Why was MANUAL Docket Created?", textAlignment: TextAlignment.LEFT));
-
-            otherDetailsTable.AddCell(GetDataCell("Y / NA", textAlignment: TextAlignment.CENTER, cellFontSize: CELL_FONT_SIZE_BIG)
-                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+            //p7-115 docket output issues-start
+                //otherDetailsTable.AddCell(GetDataCell("Y / NA", textAlignment: TextAlignment.CENTER, cellFontSize: CELL_FONT_SIZE_BIG)
+                otherDetailsTable.AddCell(GetDataCell("NA", textAlignment: TextAlignment.CENTER, cellFontSize: CELL_FONT_SIZE_BIG)
+            //p7 - 115 docket output issues - end
+               .SetHorizontalAlignment(HorizontalAlignment.CENTER)
                 .SetVerticalAlignment(VerticalAlignment.MIDDLE));
             otherDetailsTable.AddCell(GetDataCell(docketReason, textAlignment: TextAlignment.LEFT)
                  .SetVerticalAlignment(VerticalAlignment.MIDDLE)
