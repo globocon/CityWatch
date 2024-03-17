@@ -220,3 +220,41 @@
         </div>
     </div>
 </div>
+<div class="modal fade" tabindex="-1" role="dialog" id="client-site-key-modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-gear mr-2" aria-hidden="true"></i>Manage Key Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="frm_add_key">
+                    <input hidden id="ClientSiteKey_ClientSiteId" name="ClientSiteKey.ClientSiteId" />
+                    <input hidden id="ClientSiteKey_Id" name="ClientSiteKey.Id" />
+                    <div class="form-group row">
+                        <label class="col-md-3 col-form-label">Key No</label>
+                        <div class="col-md-8">
+                            @*<input type="text" class="form-control" id="ClientSiteKey_KeyNo" name="ClientSiteKey.KeyNo">*@
+                            <input type="text" class="form-control" id="ClientSiteKey_KeyNo" >
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-md-3 col-form-label">Description</label>
+                        <div class="col-md-8">
+                            @*<input type="text" class="form-control" id="ClientSiteKey_Description" name="ClientSiteKey.Description">*@
+                            <input type="text" class="form-control" id="ClientSiteKey_Description">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div asp-validation-summary="All" id="csKeyValidationSummary"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-start">
+                <button type="button" class="btn btn-primary" id="btn_save_cs_key">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
