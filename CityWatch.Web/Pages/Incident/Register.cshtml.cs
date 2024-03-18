@@ -189,7 +189,11 @@ namespace CityWatch.Web.Pages.Incident
                             };
 
                             ClientSites = _ViewDataService.GetUserClientSites(AuthUserHelper.LoggedInUserId, IrPreviousObject.DateLocation.ClientType);
-                            ClientSitesPosition = _ViewDataService.GetUserClientSites(AuthUserHelper.LoggedInUserId, IrPreviousObject.DateLocation.ClientTypePosition);
+                            if (IrPreviousObject.DateLocation.ClientTypePosition!=null)
+                            {
+                                ClientSitesPosition = _ViewDataService.GetUserClientSites(AuthUserHelper.LoggedInUserId, IrPreviousObject.DateLocation.ClientTypePosition);
+                            }
+                           
                             FeedBackTemplates = _ViewDataService.GetFeedbackTemplatesByType((int)IrPreviousObject.FeedbackType);
                             if (IrPreviousObject.IsPositionPatrolCar)
                                 OfficerPosition = ViewDataService.GetOfficerPositions(OfficerPositionFilter.PatrolOnly);
