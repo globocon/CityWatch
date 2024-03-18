@@ -4,7 +4,9 @@ using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Models;
 using DocumentFormat.OpenXml.Office.CustomUI;
+using DocumentFormat.OpenXml.Office2010.CustomUI;
 using DocumentFormat.OpenXml.Spreadsheet;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Azure;
 using System;
@@ -102,7 +104,7 @@ namespace CityWatch.Web.Services
         IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistoryWithKeyNo(string KeyNo);
         string GetFeedbackTemplatesByTypeByColor(int type, int id);
 
-
+        public IncidentReportPosition GetLoogbookdata(string IncidentName);
     }
 
     public class ViewDataService : IViewDataService
@@ -184,10 +186,19 @@ namespace CityWatch.Web.Services
                  positionFilter == OfficerPositionFilter.SecurityOnly && z.Name.Contains("Security")))
             {
                 items.Add(new SelectListItem(officerPosition.Name, officerPosition.Name));
+                
+
+
             }
 
             return items;
         }
+        //To get the logbook data in IncidentReport start
+        public IncidentReportPosition GetLoogbookdata(string IncidentName)
+        {
+            return _configDataProvider.GetIsLogbookData(IncidentName);
+        }
+        //To get the logbook data in IncidentReport stop
 
         public List<ClientSiteSmartWand> GetSmartWands(string siteName, int? guardId)
         {
