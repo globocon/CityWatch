@@ -40,7 +40,12 @@ namespace CityWatch.Data.Providers
 
         //List<Guard> GetGuardsCount();
         List<GuardLogin> GetGuardLogins(int[] guardIds);
-
+        //for toggle areas - start 
+        List<ClientSiteToggle> GetClientSiteToggle();
+        List<ClientSiteToggle> GetClientSiteToggle(int siteId);
+        List<ClientSiteToggle> GetClientSiteToggle(int siteId,int toggleId);
+        
+        //for toggle areas - end 
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -500,6 +505,22 @@ namespace CityWatch.Data.Providers
             var lbdt = _context.ClientSiteLogBooks.Where(x => x.Id == logbookId).FirstOrDefault().Date;
             return lbdt;
         }
+        //for toggle areas - start 
+        public List<ClientSiteToggle> GetClientSiteToggle()
+        {
+            return _context.ClientSiteToggle.ToList();
+        }
+        public List<ClientSiteToggle> GetClientSiteToggle(int siteId)
+        {
+            var toggles= _context.ClientSiteToggle.Where(x=> x.ClientSiteId==siteId ).ToList();
+            return toggles;
+        }
+        public List<ClientSiteToggle> GetClientSiteToggle(int siteId, int toggleId)
+        {
+            var toggles = _context.ClientSiteToggle.Where(x => x.ClientSiteId == siteId && x.ToggleTypeId == toggleId).ToList();
+            return toggles;
+        }
+        //for toggle areas - end 
 
     }
 }

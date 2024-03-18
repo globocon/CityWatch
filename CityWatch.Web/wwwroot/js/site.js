@@ -187,11 +187,62 @@
             $('#Report_Officer_Position').html('');
             data.map(function (position) {
                 $('#Report_Officer_Position').append('<option value="' + position.value + '">' + position.text + '</option>');
+                
             });
         });
     });
+    $('#Report_Officer_Position').on('change', function () {
+        var chechedvalue = $('#positionfilter').is(':checked');
+        const filtercheck = chechedvalue ? 1 : 2;
+        if (filtercheck==1) {
+            var logbbokName = $('#Report_Officer_Position').val();
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            //To get the IsLogbook data from db start
+            $.ajax({
+                url: '/Incident/Register?handler=LogbookData',
+                data: { logbook: logbbokName },
+                type: 'GET',
+                dataType: 'json',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function (data) {
+               
+                if (data.isLogbook == true) {
+                    $('#PositionModel').modal('show');
+                }
+                
+            });
+                //To get the IsLogbook data from db stop
+        }
+        
+                });
+                
+    $('#Report_DateLocation_ClientTypePosition').on('change', function () {
+        $('#Report_DateLocation_ClientSitePosition').val('');
+        //$('#Report_DateLocation_ClientAddress').val('');
+       
+        const ulClientsPosition = $('#Report_DateLocation_ClientSitePosition').siblings('ul.es-list');
+        ulClientsPosition.html('');
 
+        const option = $(this).val();
+        if (option == '')
+            return false;
 
+        $.ajax({
+            url: '/Incident/Register?handler=ClientSites&type=' + encodeURIComponent(option),
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                data.map(function (site) {
+                    ulClientsPosition.append('<li class="es-visible" value="' + site.value + '">' + site.text + '</li>');
+                });
+            }
+        });
+    });
+    $('#Report_DateLocation_ClientSitePosition').attr('placeholder', 'Select Site');
+    $('#Report_DateLocation_ClientSitePosition').editableSelect({
+        //filter: false,
+        effects: 'slide'
+    });
     /****** Client Type & Client Site Settings *******/
     let gridType,
         gridSite;
@@ -1039,7 +1090,8 @@
             { field: 'name', title: 'Name', width: 250, editor: true },
             { field: 'emailTo', title: 'Special Email Condition', width: 200, editor: true },
             { field: 'isPatrolCar', title: 'Patrol Car?', type: 'checkbox', align: 'center', width: 100, editor: true },
-            { field: 'dropboxDir', title: 'Dropbox Directory', width: 300, editor: true }
+            { field: 'dropboxDir', title: 'Dropbox Directory', width: 300, editor: true },
+            { field: 'isLogbook', title: 'Logbook', type: 'checkbox', align: 'center', width: 100, editor: true }
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');

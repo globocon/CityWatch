@@ -54,6 +54,7 @@ namespace CityWatch.Web.Pages.Incident
         [BindProperty]
         public IncidentRequest Report { get; set; }
         public List<SelectListItem> ClientSites { get; set; }
+        public List<SelectListItem> ClientSitesPosition { get; set; }
         public List<SelectListItem> FeedBackTemplates { get; set; }
         public List<SelectListItem> OfficerPosition { get; set; }
 
@@ -188,6 +189,11 @@ namespace CityWatch.Web.Pages.Incident
                             };
 
                             ClientSites = _ViewDataService.GetUserClientSites(AuthUserHelper.LoggedInUserId, IrPreviousObject.DateLocation.ClientType);
+                            if (IrPreviousObject.DateLocation.ClientTypePosition!=null)
+                            {
+                                ClientSitesPosition = _ViewDataService.GetUserClientSites(AuthUserHelper.LoggedInUserId, IrPreviousObject.DateLocation.ClientTypePosition);
+                            }
+                           
                             FeedBackTemplates = _ViewDataService.GetFeedbackTemplatesByType((int)IrPreviousObject.FeedbackType);
                             if (IrPreviousObject.IsPositionPatrolCar)
                                 OfficerPosition = ViewDataService.GetOfficerPositions(OfficerPositionFilter.PatrolOnly);
@@ -395,6 +401,10 @@ namespace CityWatch.Web.Pages.Incident
         public IActionResult OnGetOfficerPositions(OfficerPositionFilter filter)
         {
             return new JsonResult(_ViewDataService.GetOfficerPositions((OfficerPositionFilter)filter));
+        }
+        public IActionResult OnGetLogbookData(string logbook)
+        {
+            return new JsonResult(_ViewDataService.GetLoogbookdata(logbook));
         }
 
         public JsonResult OnPostSubmit()
@@ -833,6 +843,29 @@ namespace CityWatch.Web.Pages.Incident
             };
             _guardLogDataProvider.SaveGuardLog(guardLog);
         }
+        //To Save the Position Of IR in to logbook start
+        private void CreatePositionGuardLogEntry(IncidentReport report)
+        {
+            // p6#73 timezone bug - Added by binoy 24-01-2024
+            var logBookId = GetLogBookId(report.ClientSitePositionId.Value, (int)report.CreatedOnDateTimeUtcOffsetMinute);
+            //var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)report.CreatedOnDateTimeUtcOffsetMinute);
+            var guardLog = new GuardLog()
+            {
+                ClientSiteLogBookId = logBookId,
+                EventDateTime = DateTime.Now,
+                Notes = Path.GetFileNameWithoutExtension(report.FileName),
+                IsSystemEntry = true,
+                IrEntryType = report.IsEventFireOrAlarm ? IrEntryType.Alarm : IrEntryType.Normal,
+                EventDateTimeLocal = report.CreatedOnDateTimeLocal,
+                EventDateTimeLocalWithOffset = report.CreatedOnDateTimeLocalWithOffset,
+                EventDateTimeZone = report.CreatedOnDateTimeZone,
+                EventDateTimeZoneShort = report.CreatedOnDateTimeZoneShort,
+                EventDateTimeUtcOffsetMinute = report.CreatedOnDateTimeUtcOffsetMinute,
+                IsIRReportTypeEntry = true
+            };
+            _guardLogDataProvider.SaveGuardLog(guardLog);
+        }
+        //To Save the Position Of IR in to logbook stop
         //To Save IR in control room start
         private void CreateControlRoomLogEntry(IncidentReport report)
         {
@@ -943,6 +976,12 @@ namespace CityWatch.Web.Pages.Incident
             var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Name == Report.DateLocation.ClientType);
             var clientSite = _clientDataProvider.GetClientSites(clientType.Id).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite);
             var PSPFName = _clientDataProvider.GetPSPF().SingleOrDefault(z => z.Name == Report.PSPFName);
+            //To get the clientType oF position start
+            var clientTypePosition = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Name == Report.DateLocation.ClientTypePosition);
+
+            var clientSitePosition = _clientDataProvider.GetClientSites(clientTypePosition?.Id)
+    ?.SingleOrDefault(x => x.Name == Report.DateLocation.ClientSitePosition);
+            //To get the clientType oF position stop
             // var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite);
             try
             {
@@ -992,7 +1031,8 @@ namespace CityWatch.Web.Pages.Incident
                 CreatedOnDateTimeZone = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeZone,
                 CreatedOnDateTimeZoneShort = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeZoneShort,
                 CreatedOnDateTimeUtcOffsetMinute = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeUtcOffsetMinute, // Task p6#73_TimeZone issue -- added by Binoy -- End
-                HASH=hashCode
+                HASH=hashCode,
+                ClientSitePositionId= clientSitePosition?.Id//To get the Client Site Position 
 
             };
             if (HttpContext.Session.GetString("GuardId") != null)
@@ -1064,6 +1104,10 @@ namespace CityWatch.Web.Pages.Incident
                     if (report.ClientSiteId.HasValue)
                         CreateGuardLogEntry(report);
                     CreateControlRoomLogEntry(report);//To Save in the control room
+                    if (report.ClientSitePositionId.HasValue)
+                    {
+                        CreatePositionGuardLogEntry(report);
+                    }
 
 
                 }
