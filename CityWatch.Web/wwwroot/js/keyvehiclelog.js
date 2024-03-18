@@ -1028,6 +1028,14 @@ $(function () {
 
         if (!isEdit) {
             /*for manifest options-start*/
+            $('#IsTimeSlotNo').val(true);
+            $('#cbIsTimeSlotNo').prop('checked', true);
+            $('#IsVWI').val(true);
+            $('#cbIsVWI').prop('checked', true);
+            $('#IsSender').val(true);
+            $('#cbIsSender').prop('checked', true);
+            $('#IsReels').val(true);
+            $('#cbIsReels').prop('checked', true);
             GetToggles($('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),1);
 
            
@@ -3981,58 +3989,58 @@ function GetToggles(siteId, toggleId) {
         },
         headers: { 'RequestVerificationToken': token }
     }).done(function (response) {
-        if (response[0].toggleTypeId == 1) {
-            if (response[0].isActive == true) {
-                $('#IsTimeSlotNo').val(true);
-                $('#cbIsTimeSlotNo').prop('checked', true);
-                $('#lblIsTimeSlotNo').text(response[0].isActive ? 'Time Slot No.' : 'T.No. (Load)');
+        if (response.length != 0) {
+            if (response[0].toggleTypeId == 1) {
+                if (response[0].isActive == true) {
+                    $('#IsTimeSlotNo').val(true);
+                    $('#cbIsTimeSlotNo').prop('checked', true);
+                    $('#lblIsTimeSlotNo').text(response[0].isActive ? 'Time Slot No.' : 'T.No. (Load)');
+                }
+                else {
+                    $('#IsTimeSlotNo').val(false);
+                    $('#cbIsTimeSlotNo').prop('checked', false);
+                    $('#lblIsTimeSlotNo').text(response[0].isActive ? 'Time Slot No.' : 'T.No. (Load)');
+                }
             }
-            else {
-                $('#IsTimeSlotNo').val(false);
-                $('#cbIsTimeSlotNo').prop('checked', false);
-                $('#lblIsTimeSlotNo').text(response[0].isActive ? 'Time Slot No.' : 'T.No. (Load)');
+            if (response[0].toggleTypeId == 2) {
+                if (response[0].isActive == true) {
+                    $('#IsVWI').val(true);
+                    $('#cbIsVWI').prop('checked', true);
+                    $('#lblIsVXI').text(response[0].isActive ? 'VWI' : 'Manifest');
+                }
+                else {
+                    $('#IsVWI').val(false);
+                    $('#cbIsVWI').prop('checked', false);
+                    $('#lblIsVXI').text(response[0].isActive ? 'VWI' : 'Manifest');
+                }
             }
+            if (response[0].toggleTypeId == 3) {
+                if (response[0].isActive == true) {
+                    $('#IsSender').val(true);
+                    $('#cbIsSender').prop('checked', true);
+                    $('#lblIsSender').text(response[0].isActive ? 'Sender Address' : 'Reciever Address');
+                }
+                else {
+                    $('#IsSender').val(false);
+                    $('#cbIsSender').prop('checked', false);
+                    $('#lblIsSender').text(response[0].isActive ? 'Sender Address' : 'Reciever Address');
+                }
+            }
+            if (response[0].toggleTypeId == 4) {
+                if (response[0].isActive == true) {
+                    $('#IsReels').val(true);
+                    $('#cbIsReels').prop('checked', true);
+                    $('#lblIsReels').text(response[0].isActive ? 'Reels' : 'QTY');
+                }
+                else {
+                    $('#IsReels').val(false);
+                    $('#cbIsReels').prop('checked', false);
+                    $('#lblIsReels').text(response[0].isActive ? 'Reels' : 'QTY');
+                }
+            }
+            return response[0].isActive;
         }
-        if (response[0].toggleTypeId == 2) {
-            if (response[0].isActive == true) {
-                $('#IsVWI').val(true);
-                $('#cbIsVWI').prop('checked', true);
-                $('#lblIsVXI').text(response[0].isActive ? 'VWI' : 'Manifest');
-            }
-            else {
-                $('#IsVWI').val(false);
-                $('#cbIsVWI').prop('checked', false);
-                $('#lblIsVXI').text(response[0].isActive ? 'VWI' : 'Manifest');
-            }
-        }
-        if (response[0].toggleTypeId == 3) {
-            if (response[0].isActive == true) {
-                $('#IsSender').val(true);
-                $('#cbIsSender').prop('checked', true);
-                $('#lblIsSender').text(response[0].isActive ? 'Sender Address' : 'Reciever Address');
-            }
-            else {
-                $('#IsSender').val(false);
-                $('#cbIsSender').prop('checked', false);
-                $('#lblIsSender').text(response[0].isActive ? 'Sender Address' : 'Reciever Address');
-            }
-        }
-        if (response[0].toggleTypeId == 4) {
-            if (response[0].isActive == true) {
-                $('#IsReels').val(true);
-                $('#cbIsReels').prop('checked', true);
-                $('#lblIsReels').text(response[0].isActive ? 'Reels' : 'QTY');
-            }
-            else {
-                $('#IsReels').val(false);
-                $('#cbIsReels').prop('checked', false);
-                $('#lblIsReels').text(response[0].isActive ? 'Reels' : 'QTY');
-            }
-        }
-        return response[0].isActive;
-
-
-
+       
     }).fail(function () {
         console.log("error");
     });
