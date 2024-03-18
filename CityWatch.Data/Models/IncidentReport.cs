@@ -45,6 +45,8 @@ namespace CityWatch.Data.Models
         public string CreatedOnDateTimeZone { get; set; }
         public string CreatedOnDateTimeZoneShort { get; set; }
         public int? CreatedOnDateTimeUtcOffsetMinute { get; set; }
+        [NotMapped]
+        public int? ClientSitePositionId { get; set; }
 
     }
 }

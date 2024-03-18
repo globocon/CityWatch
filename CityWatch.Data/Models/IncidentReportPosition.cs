@@ -14,5 +14,6 @@ namespace CityWatch.Data.Models
         public bool IsPatrolCar { get; set; }
 
         public string DropboxDir { get; set; }
+        public bool IsLogbook { get; set; }
     }
 }
