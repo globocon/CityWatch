@@ -1071,7 +1071,7 @@ $(function () {
             $('#lblIsVWI').text(isVWI ? 'VWI' : 'Manifest');
             $('#cbIsVWI').prop('checked', isVWI);
             /*for manifest options-end*/
-            GetToggles($('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(), 1);
+            //GetToggles($('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(), 1);
             /*for cheking  the BDM is true-start*/
             let isBDM = $('#IsBDM').val().toLowerCase() === 'true';
             if (isBDM == true) {
