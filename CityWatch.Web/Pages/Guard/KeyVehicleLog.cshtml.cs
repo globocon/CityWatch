@@ -1627,6 +1627,10 @@ namespace CityWatch.Web.Pages.Guard
         }
 
         //to get next crm number-end
+        public IActionResult OnGetClientSiteToggle(int siteId,int toggleId)
+        {
 
+            return new JsonResult(_guardDataProvider.GetClientSiteToggle(siteId, toggleId));
+        }
     }
 }

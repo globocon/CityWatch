@@ -120,6 +120,9 @@ namespace CityWatch.Data
         public DbSet<SmsChannel> SmsChannel { get; set; }
 
         //public DbSet<SiteEventLog> SiteEventLog { get; set; }
+        //for toggle areas - start 
+        public DbSet<ClientSiteToggle> ClientSiteToggle { get; set; }
+        //for toggle areas - end 
 
 
     }

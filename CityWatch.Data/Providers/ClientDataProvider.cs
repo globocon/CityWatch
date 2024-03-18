@@ -14,6 +14,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Policy;
 using static Dropbox.Api.FileProperties.PropertyType;
 using static Dropbox.Api.Files.ListRevisionsMode;
 //using static Dropbox.Api.Files.ListRevisionsMode;
@@ -160,7 +161,9 @@ namespace CityWatch.Data.Providers
 
         void SaveSmsChannel(SmsChannel smsChannel);
         void DeleteSmsChannel(int id);
-
+        //for toggle areas - start 
+        void SaveClientSiteToggle(int siteId, int toggleTypeId, bool IsActive);
+        //for toggle areas - end
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -1694,11 +1697,49 @@ namespace CityWatch.Data.Providers
         }
         //To get the clientsites according to the clientType stop
 
-        
+
 
         //GeneralFeeds - end
+        //for toggle areas - start 
+        public void SaveClientSiteToggle(int siteId, int toggleTypeId, bool IsActive)
+        {
+            var clientSitetoggle = _context.ClientSiteToggle.Where(x => x.ClientSiteId == siteId && x.ToggleTypeId == toggleTypeId).FirstOrDefault();
+            //if (clientSitetoggle == null)
+            //    throw new ArgumentNullException();
+
+           
+
+            if (clientSitetoggle == null)
+            {
+                _context.ClientSiteToggle.Add(new ClientSiteToggle()
+                {
+                     ToggleTypeId= toggleTypeId,
+                    ClientSiteId = siteId,
+              
+                    IsActive = IsActive
+                });
+
+              
+            }
+            else
+            {
+                var clientSiteToggleToUpdate = _context.ClientSiteToggle.SingleOrDefault(x => x.Id == clientSitetoggle.Id);
+                if (clientSiteToggleToUpdate == null)
+                    throw new InvalidOperationException();
 
 
+                clientSiteToggleToUpdate.ToggleTypeId = toggleTypeId;
+                clientSiteToggleToUpdate.ClientSiteId = siteId;
+                clientSiteToggleToUpdate.IsActive = IsActive;
+                
+            }
+            _context.SaveChanges();
+
+            
+        }
+
+        //for toggle areas - end
+        //
     }
 
 

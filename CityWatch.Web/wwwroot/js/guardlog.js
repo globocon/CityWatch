@@ -1792,6 +1792,9 @@
         gridSiteLocations.reload({ clientSiteId: $('#gl_client_site_id').val() });
         gridSitePocs.reload({ clientSiteId: $('#gl_client_site_id').val() });
         gridClientSiteKeys.ajax.reload();
+        /*for manifest options-start*/
+        GetClientSiteToggle();
+        /*for manifest options - end*/
     });
 
     $('#gl-site-settings-modal').on('hide.bs.modal', function (event) {
@@ -3963,5 +3966,228 @@ let ActiveGuardsLogBookDetails = $('#ActiveGuardsLogBookDetails').DataTable({
 });
 /*to view thw audit log report-end*/
 
+//for toggle areas - start
+//for time slot - start 
+$('#chk_cs_time_slot').on('change', function () {
 
+    const isChecked = $(this).is(':checked');
+    if (isChecked == true) {
+        $('#chk_cs_tn_no_load').prop('checked', false);
+    }
+    else {
+        $('#chk_cs_tn_no_load').prop('checked', true);
+    }
+    $('#chk_cs_Is_Time_Slot').val(isChecked);
+});
+$('#chk_cs_tn_no_load').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+    if (isChecked == true) {
+        $('#chk_cs_time_slot').prop('checked', false);
+    }
+    else {
+        $('#chk_cs_time_slot').prop('checked', true);
+    }
+    $('#chk_cs_Is_Time_Slot').val(isChecked);
+});
+//for time slot - end
+//for VWI  - start 
+$('#chk_cs_vwi').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+    if (isChecked == true) {
+        $('#chk_cs_Manifest').prop('checked', false);
+    }
+    else {
+        $('#chk_cs_Manifest').prop('checked', true);
+    }
+    $('#chk_cs_Is_VWI').val(isChecked);
+});
+$('#chk_cs_Manifest').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+    if (isChecked == true) {
+        $('#chk_cs_vwi').prop('checked', false);
+    }
+    else {
+        $('#chk_cs_vwi').prop('checked', true);
+    }
+    $('#chk_cs_Is_VWI').val(isChecked);
+});
+//for VWI areas - start 
+//for sender  - start 
+$('#chk_cs_Sender').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+    if (isChecked == true) {
+        $('#chk_cs_Receiver').prop('checked', false);
+    }
+    else {
+        $('#chk_cs_Receiver').prop('checked', true);
+    }
+    $('#chk_cs_Is_Sender').val(isChecked);
+});
+$('#chk_cs_Receiver').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+    if (isChecked == true) {
+        $('#chk_cs_Sender').prop('checked', false);
+    }
+    else {
+        $('#chk_cs_Sender').prop('checked', true);
+    }
+    $('#chk_cs_Is_Sender').val(isChecked);
+});
+//for sender - end
+//for Reels  - start 
+$('#chk_cs_Reels').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+    if (isChecked == true) {
+        $('#chk_cs_QTY').prop('checked', false);
+    }
+    else {
+        $('#chk_cs_QTY').prop('checked', true);
+    }
+    $('#chk_cs_Is_Reels').val(isChecked);
+});
+$('#chk_cs_QTY').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+    if (isChecked == true) {
+        $('#chk_cs_Reels').prop('checked', false);
+    }
+    else {
+        $('#chk_cs_Reels').prop('checked', true);
+    }
+    $('#chk_cs_Is_Reels').val(isChecked);
+});
+//for Reels - start
+$('#btnSaveToggleKeys').on('click', function () {
+    var toggleType;
+    var IsActive;
+     
+    if ($('#chk_cs_time_slot').is(":checked")) {
+        $('#chk_cs_Is_Time_Slot').val(true);
+       
+    }
+    else {
+        $('#chk_cs_Is_Time_Slot').val(false);
+        
+    }
+    if ($('#chk_cs_vwi').is(":checked")) {
+        $('#chk_cs_Is_VWI').val(true);
+       
+    }
+    else {
+        $('#chk_cs_Is_VWI').val(false);
+        
+    }
+    if ($('#chk_cs_Sender').is(":checked")) {
+        $('#chk_cs_Is_Sender').val(true);
+       
+    }
+    else {
+        $('#chk_cs_Is_Sender').val(false);
+        
+    }
+    if ($('#chk_cs_Reels').is(":checked")) {
+        $('#chk_cs_Is_Reels').val(true);
+        
+    }
+    else {
+        $('#chk_cs_Is_Reels').val(false);
+       
+    }
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Admin/GuardSettings?handler=SaveToggleType',
+        type: 'POST',
+        data: {
+            siteId: $('#gl_client_site_id').val(),
+            timeslottoggleTypeId: 1,
+            timeslotIsActive: $('#chk_cs_Is_Time_Slot').val(),
+            vwitoggleTypeId: 2,
+            vwiIsActive: $('#chk_cs_Is_VWI').val(),
+            sendertoggleTypeId: 3,
+            senderIsActive: $('#chk_cs_Is_Sender').val(),
+            reelstoggleTypeId: 3,
+            reelsIsActive: $('#chk_cs_Is_Reels').val(),
+        },
+        headers: { 'RequestVerificationToken': token }
+    }).done(function () {
+
+    }).fail(function () {
+        console.log("error");
+    });
+});
+
+function GetClientSiteToggle() {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Admin/GuardSettings?handler=ClientSiteToggle',
+        type: 'GET',
+        data: {
+            siteId: $('#gl_client_site_id').val()
+        },
+        headers: { 'RequestVerificationToken': token }
+    }).done(function (response) {
+        for (var i = 0; i < response.length; i++) {
+
+            if (response[i].toggleTypeId == 1) {
+                $('#chk_cs_Is_Time_Slot').val(response[i].isActive);
+                if (response[i].isActive == true) {
+                    $('#chk_cs_time_slot').prop('checked', true);
+                    $('#chk_cs_tn_no_load').prop('checked', false);
+                }
+                else {
+                    $('#chk_cs_time_slot').prop('checked', false);
+                    $('#chk_cs_tn_no_load').prop('checked', true);
+                }
+
+            }
+            if (response[i].toggleTypeId == 2) {
+                $('#chk_cs_Is_VWI').val(response[i].isActive);
+                if (response[i].isActive == true) {
+                    $('#chk_cs_vwi').prop('checked', true);
+                    $('#chk_cs_Manifest').prop('checked', false);
+                }
+                else {
+                    $('#chk_cs_vwi').prop('checked', false);
+                    $('#chk_cs_Manifest').prop('checked', true);
+                }
+
+            }
+            if (response[i].toggleTypeId == 3) {
+                $('#chk_cs_Is_Sender').val(response[i].isActive);
+                if (response[i].isActive == true) {
+                    $('#chk_cs_Sender').prop('checked', true);
+                    $('#chk_cs_Receiver').prop('checked', false);
+                }
+                else {
+                    $('#chk_cs_Sender').prop('checked', false);
+                    $('#chk_cs_Receiver').prop('checked', true);
+                }
+
+            }
+            if (response[i].toggleTypeId == 4) {
+                $('#chk_cs_Is_Reels').val(response[i].isActive);
+                if (response[i].isActive == true) {
+                    $('#chk_cs_Reels').prop('checked', true);
+                    $('#chk_cs_QTY').prop('checked', false);
+                }
+                else {
+                    $('#chk_cs_Reels').prop('checked', false);
+                    $('#chk_cs_QTY').prop('checked', true);
+                }
+
+            }
+
+        }
+        
+    }).fail(function () {
+        console.log("error");
+    });
+}
+//for toggle areas - start 
 
