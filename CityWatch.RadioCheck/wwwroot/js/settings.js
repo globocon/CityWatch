@@ -298,6 +298,166 @@ $('#btn_confrim_wand_usok').on('click', function () {
     $('#alert-wand-in-use-modal').modal('hide')
 })
 
+// ################ Global SMS Start ####################
+let gridGlobalDuressSmsSettings, editManager;;
+
+editManager = function (value, record, $cell, $displayEl, id, $grid) {
+    var data = $grid.data(),
+        $delete = $('<button role="delete" class="gj-button-md"><i class="gj-icon delete text-danger"></i> Delete</button>').attr('data-key', id);
+    $delete.on('click', function (e) {
+        $grid.removeRow($(this).data('key'));
+    });
+    $displayEl.empty().append($delete);
+}
+
+gridGlobalDuressSmsSettings = $('#tbl_GlobalSmsNumbersList').grid({
+    dataSource: '/Admin/Settings?handler=GetGlobalSmsNumberList',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    inlineEditing: { mode: 'command', managementColumn: false },
+    columns: [
+        { field: 'companyId', title: 'Company ID', hidden: true },
+        { field: 'smsNumber', title: 'SMS Number', width: 350 },
+        { width: 100, align: 'center', renderer: editManager }
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
+
+if (gridGlobalDuressSmsSettings) {
+    gridGlobalDuressSmsSettings.on('rowRemoving', function (e, id, record) {
+
+        if (confirm('Are you sure to delete this sms number ?')) {
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteGlobalSmsNumber',
+                data: { SmsNumberId: record },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function (d) {
+                if (d.status == true) {
+                    //Success
+                    $.notify(d.message,
+                        {
+                            align: "center",
+                            verticalAlign: "top",
+                            color: "#fff",
+                            background: "#20D67B",
+                            blur: 0.4,
+                            delay: 0
+                        }
+                    );
+                    gridGlobalDuressSmsSettings.reload();
+                } else {
+                    //Failed
+                    $.notify(d.message,
+                        {
+                            align: "center",
+                            verticalAlign: "top",
+                            color: "#fff",
+                            background: "#D44950",
+                            blur: 0.4,
+                            delay: 0
+                        }
+                    );
+                }        
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                
+            });
+        }
+    });
+
+    gridGlobalDuressSmsSettings.on('dataBound', function (e, records, totalRecords) {       
+        var SmsNumbers = "";        
+        records.forEach(function (item) {            
+            SmsNumbers += item.smsNumber + ", "; 
+        });        
+        if (SmsNumbers.endsWith(", ")) {            
+            SmsNumbers = SmsNumbers.substring(0, SmsNumbers.length - 2);            
+        }        
+        $('#du_duress_sms').val(SmsNumbers);
+    });
+}
+
+
+$('#add_GlobalSms').on('click', function () {
+    $('#sms_number').val('');
+    $('#sms_country_code option:first-child').attr("selected", "selected");
+    $('#sms_country_code')[0].selectedIndex = 0;
+    $('#sms_local_code option:first-child').attr("selected", "selected");
+    $('#sms_local_code')[0].selectedIndex = 0;
+    gridGlobalDuressSmsSettings.reload();
+    $('#smsnumber-modal').modal('show');
+});
+
+$('#btn_add_smsnumber').on('click', function () {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    const countrycode = $('#sms_country_code').val();
+    const localcode = $('#sms_local_code').val();
+    let sms_number = $('#sms_number').val();
+    if (sms_number == '' || sms_number == null || sms_number.length != 9) {
+        $.notify("Invalid sms number.",
+            {
+                align: "center",
+                verticalAlign: "top",
+                color: "#fff",
+                background: "#D44950",
+                blur: 0.4,
+                delay: 0
+            }
+        );
+        return;
+    } 
+    sms_number = sms_number.substring(0, 3) + ' ' + sms_number.substring(3, 6) + ' ' + sms_number.substring(6, 9);
+    var smsnumber = countrycode + ' ' + localcode + ' ' + sms_number ;
+    var adddata = {
+        CompanyId: 1,
+        SmsNumber: smsnumber
+    };
+    $.ajax({
+        url: '/Admin/Settings?handler=AddGlobalSmsNumber',
+        data: { SmsNumber: adddata },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (d) {
+        if (d.status == true) {
+            //Success
+            $.notify(d.message,
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#20D67B",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );
+            gridGlobalDuressSmsSettings.reload();
+        } else {
+            //Failed
+            $.notify(d.message,
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#D44950",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );            
+        }        
+    }).fail(function () {
+        console.log('error');
+    }).always(function () {
+
+    });
+});
+// ################ Global SMS End ####################
+
 
 $('#add_logbook').on('click', function () {
 
@@ -306,7 +466,9 @@ $('#add_logbook').on('click', function () {
     $('#cs_client_type')[0].selectedIndex = 0;
     gridClientSiteSettings.reload({ type: $('#cs_client_type').val(), searchTerm: $('#search_sites_settings').val() });
     $('#logbook-modal').modal('show');
-})
+});
+
+
 //To save the Global Email Of Duress Button start
 $('#add_GloblEmail').on('click', function () {
     const token = $('input[name="__RequestVerificationToken"]').val();
