@@ -4111,12 +4111,12 @@ $('#btnSaveToggleKeys').on('click', function () {
             vwiIsActive: $('#chk_cs_Is_VWI').val(),
             sendertoggleTypeId: 3,
             senderIsActive: $('#chk_cs_Is_Sender').val(),
-            reelstoggleTypeId: 3,
+            reelstoggleTypeId: 4,
             reelsIsActive: $('#chk_cs_Is_Reels').val(),
         },
         headers: { 'RequestVerificationToken': token }
     }).done(function () {
-
+        alert("Saved Successfully")
     }).fail(function () {
         console.log("error");
     });
