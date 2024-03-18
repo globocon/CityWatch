@@ -929,7 +929,10 @@ $(function () {
 
     function settingsButtonRenderer(value, record) {
         return '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#kpi-settings-modal" ' +
-            'data-cs-id="' + record.id + '" data-cs-name="' + record.clientSiteName + '"><i class="fa fa-pencil mr-2"></i>Edit</button>';
+            'data-cs-id="' + record.id + '" data-cs-name="' + record.clientSiteName + '"data-cs-email="' + record.siteEmail + '" data-cs-landline="' + record.landLine + '" data-cs-duressemail="' + record.duressEmail + '" data-cs-duresssms="' + record.duressSms +
+            '" data-cs-guardlog-emailto="' + record.guardLogEmailTo + '" data-cs-dbx-upload="' + record.siteUploadDailyLog +
+            '"data-cs-datacollection-enabled ="' + record.dataCollectionEnabled + '"><i class="fa fa-pencil mr-2"></i>Edit</button>';
+
     }
 
     gridClientSiteSettings = $('#kpi_client_site_settings').grid({
@@ -940,6 +943,11 @@ $(function () {
         columns: [
             { width: 150, field: 'clientTypeName', title: 'Client Type' },
             { width: 250, field: 'clientSiteName', title: 'Client Site' },
+            { width: 250, field: 'siteEmail', title: 'Site Email', hidden: true },
+            { width: 250, field: 'landLine', title: 'Site Land Line', hidden: true },
+            { width: 250, field: 'guardLogEmailTo', title: 'Email Recipients', hidden: true },
+            { width: 50, field: 'siteUploadDailyLog', title: 'Daily Log Dump?', renderer: function (value, record) { return value === true ? '<i class="fa fa-check-circle text-success"></i>' : ''; } },
+
             { width: 100, field: 'hasSettings', title: 'Settings Available?', renderer: function (value, record) { return value === true ? '<i class="fa fa-check-circle text-success"></i>' : ''; } },
             { width: 100, renderer: settingsButtonRenderer },
         ],
@@ -987,11 +995,14 @@ $(function () {
             // You can add your additional code or actions here
             console.log(button.data('cs-id'));
             $("#OtherSettingsNew").load('settingsOther?clientSiteId=53');
-           
-          
-           
+                  
             //alert('Removed the worker successfully');
+            
         });
+       
+        
+        
+       
     });
 
    

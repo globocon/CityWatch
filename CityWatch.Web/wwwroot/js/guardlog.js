@@ -1674,19 +1674,19 @@
     //code addded  to download Excel start for auditsite key vehicle-end
    
 
-    $('#btnDisableDataCollection').on('click', function () {
-        $.ajax({
-            url: '/Admin/GuardSettings?handler=UpdateSiteDataCollection',
-            type: 'POST',
-            data: {
-                clientSiteId: $('#gl_client_site_id').val(),
-                disabled: $('#cbxDisableDataCollection').is(":checked")
-            },
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
-        }).done(function () {
-            alert("Saved successfully");
-        });
-    });
+    //$('#btnDisableDataCollection').on('click', function () {
+    //    $.ajax({
+    //        url: '/Admin/GuardSettings?handler=UpdateSiteDataCollection',
+    //        type: 'POST',
+    //        data: {
+    //            clientSiteId: $('#gl_client_site_id').val(),
+    //            disabled: $('#cbxDisableDataCollection').is(":checked")
+    //        },
+    //        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+    //    }).done(function () {
+    //        alert("Saved successfully");
+    //    });
+    //});
 
     //code addded  to download Excel start
 
@@ -2024,21 +2024,21 @@
     //    $('#client-site-key-modal').modal('show');
     //});
 
-    $('#btn_save_cs_key').on('click', function () {
-        $.ajax({
-            url: '/Admin/GuardSettings?handler=ClientSiteKey',
-            data: $('#frm_add_key').serialize(),
-            type: 'POST',
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {
-            if (result.success) {
-                $('#client-site-key-modal').modal('hide');
-                gridClientSiteKeys.ajax.reload();
-            } else {
-                displaySiteKeyValidationSummary(result.message);
-            }
-        });
-    });
+    //$('#btn_save_cs_key').on('click', function () {
+    //    $.ajax({
+    //        url: '/Admin/GuardSettings?handler=ClientSiteKey',
+    //        data: $('#frm_add_key').serialize(),
+    //        type: 'POST',
+    //        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    //    }).done(function (result) {
+    //        if (result.success) {
+    //            $('#client-site-key-modal').modal('hide');
+    //            gridClientSiteKeys.ajax.reload();
+    //        } else {
+    //            displaySiteKeyValidationSummary(result.message);
+    //        }
+    //    });
+    //});
 
     //function loadClientSiteKeyModal(data) {
     //    $('#ClientSiteKey_Id').val(data.id);

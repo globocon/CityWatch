@@ -2,8 +2,9 @@
     let gritdSmartWands;
     var clientSiteId = getUrlVars()["clientSiteId"];
     $("#gl_client_site_id").val(window.sharedVariable);
+    $("#ClientSiteKey_ClientSiteId").val(window.sharedVariable);
     $('#ClientSiteCustomField_ClientSiteId').val(window.sharedVariable);
-   
+
     gritdSmartWands = $('#cs-smart-wands').grid({
         dataSource: '/admin/settings?handler=SmartWandSettings&&clientSiteId=' + $('#gl_client_site_id').val(),
         uiLibrary: 'bootstrap4',
@@ -97,7 +98,7 @@
     });
 
     //gritdSmartWands.reload({ clientSiteId: $('#gl_client_site_id').val() });
-    
+
     function getUrlVars() {
         var vars = [], hash;
         var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
@@ -178,7 +179,7 @@
     /*patrolcar settings-end*/
     /*custom fields-start*/
     loadCustomFields();
-    
+
     function loadCustomFields() {
         $.ajax({
             url: '/Admin/Settings?handler=CustomFields',
@@ -317,7 +318,7 @@
             }
         });
     }
-    
+
     $('#ClientSiteCustomField_Name').editableSelect({
         effects: 'slide'
     });
@@ -468,6 +469,7 @@
     });
     /* site poc and locations - end*/
     /*key settings-start*/
+
     let gridClientSiteKeys = $('#cs_client_site_keys').DataTable({
         lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
         paging: true,
@@ -479,7 +481,7 @@
         ajax: {
             url: '/Admin/Settings?handler=ClientSiteKeys',
             data: function (d) {
-                d.clientSiteId = $('#ClientSiteKey_ClientSiteId').val();
+                d.clientSiteId = $('#gl_client_site_id').val();
             },
             dataSrc: ''
         },
@@ -573,10 +575,9 @@
     });
     $('#add_client_site_key').on('click', function () {
         resetClientSiteKeyModal();
-        $('#client-site-key-modal').removeClass('fade');
-       
+
         $('#client-site-key-modal').modal('show');
-        $('#client-site-key-modal').removeClass('modal-backdrop');
+        $('#client-site-key-modal').removeClass('fade');
     });
     function loadClientSiteKeyModal(data) {
         $('#ClientSiteKey_Id').val(data.id);
@@ -591,12 +592,299 @@
         $('#ClientSiteKey_KeyNo').val('');
         $('#ClientSiteKey_Description').val('');
         $('#csKeyValidationSummary').html('');
-       // $('#client-site-key-modal').modal('hide');
+        // $('#client-site-key-modal').modal('hide');
     }
+    $('#btn_save_cs_key').on('click', function () {
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSiteKey',
+            data: $('#frm_add_key').serialize(),
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.success) {
+                $('#client-site-key-modal').modal('hide');
+                gridClientSiteKeys.ajax.reload();
+            } else {
+                displaySiteKeyValidationSummary(result.message);
+            }
+        });
+    });
     /*key settings - end*/
+    /*toggle settings-start*/
+    /*for manifest options-start*/
+    GetClientSiteToggle();
+    /*for manifest options - end*/
+    //for time slot - start 
+    $('#chk_cs_time_slot').on('change', function () {
+
+
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_tn_no_load').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_tn_no_load').prop('checked', true);
+        }
+        $('#chk_cs_Is_Time_Slot').val(isChecked);
+    });
+    $('#chk_cs_tn_no_load').on('change', function () {
+
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_time_slot').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_time_slot').prop('checked', true);
+        }
+        $('#chk_cs_Is_Time_Slot').val(isChecked);
+    });
+    //for time slot - end
+    //for VWI  - start 
+    $('#chk_cs_vwi').on('change', function () {
+
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_Manifest').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_Manifest').prop('checked', true);
+        }
+        $('#chk_cs_Is_VWI').val(isChecked);
+    });
+    $('#chk_cs_Manifest').on('change', function () {
+
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_vwi').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_vwi').prop('checked', true);
+        }
+        $('#chk_cs_Is_VWI').val(isChecked);
+    });
+    //for VWI areas - start 
+    //for sender  - start 
+    $('#chk_cs_Sender').on('change', function () {
+
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_Receiver').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_Receiver').prop('checked', true);
+        }
+        $('#chk_cs_Is_Sender').val(isChecked);
+    });
+    $('#chk_cs_Receiver').on('change', function () {
+
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_Sender').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_Sender').prop('checked', true);
+        }
+        $('#chk_cs_Is_Sender').val(isChecked);
+    });
+    //for sender - end
+    //for Reels  - start 
+    $('#chk_cs_Reels').on('change', function () {
+
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_QTY').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_QTY').prop('checked', true);
+        }
+        $('#chk_cs_Is_Reels').val(isChecked);
+    });
+    $('#chk_cs_QTY').on('change', function () {
+
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_Reels').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_Reels').prop('checked', true);
+        }
+        $('#chk_cs_Is_Reels').val(isChecked);
+    });
+    //for Reels - start
+    $('#btnSaveToggleKeys').on('click', function () {
+        var toggleType;
+        var IsActive;
+
+        if ($('#chk_cs_time_slot').is(":checked")) {
+            $('#chk_cs_Is_Time_Slot').val(true);
+
+        }
+        else {
+            $('#chk_cs_Is_Time_Slot').val(false);
+
+        }
+        if ($('#chk_cs_vwi').is(":checked")) {
+            $('#chk_cs_Is_VWI').val(true);
+
+        }
+        else {
+            $('#chk_cs_Is_VWI').val(false);
+
+        }
+        if ($('#chk_cs_Sender').is(":checked")) {
+            $('#chk_cs_Is_Sender').val(true);
+
+        }
+        else {
+            $('#chk_cs_Is_Sender').val(false);
+
+        }
+        if ($('#chk_cs_Reels').is(":checked")) {
+            $('#chk_cs_Is_Reels').val(true);
+
+        }
+        else {
+            $('#chk_cs_Is_Reels').val(false);
+
+        }
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            url: '/Admin/Settings?handler=SaveToggleType',
+            type: 'POST',
+            data: {
+                siteId: $('#gl_client_site_id').val(),
+                timeslottoggleTypeId: 1,
+                timeslotIsActive: $('#chk_cs_Is_Time_Slot').val(),
+                vwitoggleTypeId: 2,
+                vwiIsActive: $('#chk_cs_Is_VWI').val(),
+                sendertoggleTypeId: 3,
+                senderIsActive: $('#chk_cs_Is_Sender').val(),
+                reelstoggleTypeId: 3,
+                reelsIsActive: $('#chk_cs_Is_Reels').val(),
+            },
+            headers: { 'RequestVerificationToken': token }
+        }).done(function () {
+
+        }).fail(function () {
+            console.log("error");
+        });
+    });
+
+    function GetClientSiteToggle() {
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSiteToggle',
+            type: 'GET',
+            data: {
+                siteId: $('#gl_client_site_id').val()
+            },
+            headers: { 'RequestVerificationToken': token }
+        }).done(function (response) {
+            for (var i = 0; i < response.length; i++) {
+
+                if (response[i].toggleTypeId == 1) {
+                    $('#chk_cs_Is_Time_Slot').val(response[i].isActive);
+                    if (response[i].isActive == true) {
+                        $('#chk_cs_time_slot').prop('checked', true);
+                        $('#chk_cs_tn_no_load').prop('checked', false);
+                    }
+                    else {
+                        $('#chk_cs_time_slot').prop('checked', false);
+                        $('#chk_cs_tn_no_load').prop('checked', true);
+                    }
+
+                }
+                if (response[i].toggleTypeId == 2) {
+                    $('#chk_cs_Is_VWI').val(response[i].isActive);
+                    if (response[i].isActive == true) {
+                        $('#chk_cs_vwi').prop('checked', true);
+                        $('#chk_cs_Manifest').prop('checked', false);
+                    }
+                    else {
+                        $('#chk_cs_vwi').prop('checked', false);
+                        $('#chk_cs_Manifest').prop('checked', true);
+                    }
+
+                }
+                if (response[i].toggleTypeId == 3) {
+                    $('#chk_cs_Is_Sender').val(response[i].isActive);
+                    if (response[i].isActive == true) {
+                        $('#chk_cs_Sender').prop('checked', true);
+                        $('#chk_cs_Receiver').prop('checked', false);
+                    }
+                    else {
+                        $('#chk_cs_Sender').prop('checked', false);
+                        $('#chk_cs_Receiver').prop('checked', true);
+                    }
+
+                }
+                if (response[i].toggleTypeId == 4) {
+                    $('#chk_cs_Is_Reels').val(response[i].isActive);
+                    if (response[i].isActive == true) {
+                        $('#chk_cs_Reels').prop('checked', true);
+                        $('#chk_cs_QTY').prop('checked', false);
+                    }
+                    else {
+                        $('#chk_cs_Reels').prop('checked', false);
+                        $('#chk_cs_QTY').prop('checked', true);
+                    }
+
+                }
+
+            }
+
+        }).fail(function () {
+            console.log("error");
+        });
+    }
+    //Ring Fence Settings - Start
+    $('#btnDisableDataCollection').on('click', function () {
+        $.ajax({
+            url: '/Admin/Settings?handler=UpdateSiteDataCollection',
+            type: 'POST',
+            data: {
+                clientSiteId: $('#gl_client_site_id').val(),
+                disabled: $('#cbxDisableDataCollection').is(":checked")
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+        }).done(function () {
+            alert("Saved successfully");
+        });
+    });
+    //Ring Fence Settings - End
+    
+    GetClientSites();
+    function GetClientSites() {
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSiteEmail',
+            type: 'GET',
+            data: { clientSiteId: $('#gl_client_site_id').val() },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            
+          
+            const siteEmail = result[0].siteEmail;
+            const duressEmail = result[0].duressEmail;
+            const duressSms = result[0].duressSms;
+            const landLine = result[0].landLine;
+            const isDataCollectionEnabled = result[0].isDataCollectionEnabled;
+
+            const guardLogEmailTo = result[0].guardLogEmailTo;
+            const isUpdateDailyLog = result[0].uploadGuardLog;
+            $('#gs_site_email').val(siteEmail);
+            $('#gs_duress_email').val(duressEmail);
+            $('#gs_duress_sms').val(duressSms);
+            $('#gs_land_line').val(landLine);
+            $('#gs_email_recipients').val(guardLogEmailTo);
+            $('#enableLogDump').prop('checked', false);
+            $('#cbxDisableDataCollection').prop('checked', !isDataCollectionEnabled);
+        if (isUpdateDailyLog)
+            $('#enableLogDump').prop('checked', true);
+        }).fail(function () { });
+    }
+
 });
 
-/*to view thw audit log report-end*/
 
 
 

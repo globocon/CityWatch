@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using System.Security.Claims;
 using System.ComponentModel.Design;
 using Microsoft.Data.SqlClient;
+using System.Net.NetworkInformation;
 
 namespace CityWatch.Kpi.Pages.Admin
 {
@@ -32,6 +33,7 @@ namespace CityWatch.Kpi.Pages.Admin
         private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly IGuardSettingsDataProvider _guardSettingsDataProvider;
+        private readonly IGuardDataProvider _guardDataProvider;
 
         [BindProperty]
         public KpiRequest ReportRequest { get; set; }
@@ -50,7 +52,8 @@ namespace CityWatch.Kpi.Pages.Admin
             ILogger<SettingsModel> logger,
             IClientSiteWandDataProvider clientSiteWandDataProvider,
              IGuardLogDataProvider guardLogDataProvider,
-             IGuardSettingsDataProvider guardSettingsDataProvider)
+             IGuardSettingsDataProvider guardSettingsDataProvider,
+             IGuardDataProvider guardDataProvider)
         {
             _webHostEnvironment = webHostEnvironment;
             _viewDataService = viewDataService;
@@ -63,6 +66,7 @@ namespace CityWatch.Kpi.Pages.Admin
             _clientSiteWandDataProvider = clientSiteWandDataProvider;
             _guardLogDataProvider = guardLogDataProvider;
             _guardSettingsDataProvider = guardSettingsDataProvider;
+            _guardDataProvider = guardDataProvider;
         }
 
         public IActionResult OnGet()
@@ -138,8 +142,12 @@ namespace CityWatch.Kpi.Pages.Admin
                         z.Id,
                         ClientTypeName = z.ClientType.Name,
                         ClientSiteName = z.Name,
+                        SiteUploadDailyLog = z.UploadGuardLog,
                         HasSettings = clientSiteWithSettings.Any(x => x == z.Id),
-                        z.SiteEmail
+                        z.SiteEmail,
+                        z.LandLine,
+                        z.GuardLogEmailTo,
+                        z.DataCollectionEnabled
                     }));
 
                 }
@@ -1029,5 +1037,45 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(new { success, message });
         }
         /*key settings - end*/
+        //for toggle areas - start 
+        //public void OnPostSaveToggleType(int siteId, int timeslottoggleTypeId, bool timeslotIsActive, int vwitoggleTypeId, bool vwiIsActive,
+        //    int sendertoggleTypeId, bool senderIsActive, int reelstoggleTypeId, bool reelsIsActive)
+        //{
+
+        //    _clientDataProvider.SaveClientSiteToggle(siteId, timeslottoggleTypeId, timeslotIsActive);
+        //    _clientDataProvider.SaveClientSiteToggle(siteId, vwitoggleTypeId, vwiIsActive);
+        //    _clientDataProvider.SaveClientSiteToggle(siteId, sendertoggleTypeId, senderIsActive);
+        //    _clientDataProvider.SaveClientSiteToggle(siteId, reelstoggleTypeId, reelsIsActive);
+        //}
+        //public IActionResult OnGetClientSiteToggle(int siteId)
+        //{
+
+        //    return new JsonResult(_guardDataProvider.GetClientSiteToggle().Where(x => x.ClientSiteId == siteId));
+        //}
+        //for toggle areas - end
+        //for ring fence-start
+        public JsonResult OnPostUpdateSiteDataCollection(int clientSiteId, bool disabled)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _clientDataProvider.SetDataCollectionStatus(clientSiteId, !disabled);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        //for ring fence-end
+        public JsonResult OnGetClientSiteEmail(int clientSiteId)
+        {
+            
+            return new JsonResult(_clientDataProvider.GetNewClientSites(clientSiteId));
+        }
+
     }
+
 }

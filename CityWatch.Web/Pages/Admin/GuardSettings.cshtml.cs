@@ -579,21 +579,21 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
 
-        public JsonResult OnPostUpdateSiteDataCollection(int clientSiteId, bool disabled)
-        {
-            var success = false;
-            var message = string.Empty;
-            try
-            {
-                _clientDataProvider.SetDataCollectionStatus(clientSiteId, !disabled);
-                success = true;
-            }
-            catch (Exception ex)
-            {
-                message = ex.Message;
-            }
-            return new JsonResult(new { success, message });
-        }
+        //public JsonResult OnPostUpdateSiteDataCollection(int clientSiteId, bool disabled)
+        //{
+        //    var success = false;
+        //    var message = string.Empty;
+        //    try
+        //    {
+        //        _clientDataProvider.SetDataCollectionStatus(clientSiteId, !disabled);
+        //        success = true;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        message = ex.Message;
+        //    }
+        //    return new JsonResult(new { success, message });
+        //}
 
         public JsonResult OnGetGuardLicense(int guardId)
         {

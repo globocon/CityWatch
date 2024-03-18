@@ -160,6 +160,7 @@ namespace CityWatch.Data.Providers
 
         void SaveSmsChannel(SmsChannel smsChannel);
         void DeleteSmsChannel(int id);
+        List<ClientSite> GetNewClientSites(int siteId);
 
     }
 
@@ -1694,11 +1695,20 @@ namespace CityWatch.Data.Providers
         }
         //To get the clientsites according to the clientType stop
 
-        
+
 
         //GeneralFeeds - end
 
+        public List<ClientSite> GetNewClientSites(int siteId)
+        {
+            return _context.ClientSites
+                .Where(x => x.IsActive == true && x.Id==siteId)
+                .Include(x => x.ClientType)
+                .OrderBy(x => x.ClientType.Name)
+                .ThenBy(x => x.Name)
+                .ToList();
 
+        }
     }
 
 
