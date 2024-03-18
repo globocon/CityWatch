@@ -202,7 +202,9 @@ namespace CityWatch.RadioCheck.Services
 
 
             /*Remove the Radio check status <2 hrs*/
+            /*commented temperory to fix issue off duty not statping*/
             _guardLogDataProvider.RemoveClientSiteRadioChecksGreaterthanTwoHours();
+            
             Process2();
             Process3();
 

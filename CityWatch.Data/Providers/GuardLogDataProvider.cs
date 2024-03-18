@@ -1454,10 +1454,10 @@ namespace CityWatch.Data.Providers
             var ClientSiteRadioChecksActivity = _context.ClientSiteRadioChecksActivityStatus.SingleOrDefault(x => x.Id == ClientSiteRadioChecksActivityStatus.Id);
             if (ClientSiteRadioChecksActivity != null)
             {
-                var clientSiteRcStatus = _context.ClientSiteRadioChecks.Where(x => x.GuardId == ClientSiteRadioChecksActivity.GuardId && x.ClientSiteId == ClientSiteRadioChecksActivity.ClientSiteId);
+                /*var clientSiteRcStatus = _context.ClientSiteRadioChecks.Where(x => x.GuardId == ClientSiteRadioChecksActivity.GuardId && x.ClientSiteId == ClientSiteRadioChecksActivity.ClientSiteId);
                 /* remove the Pervious Status*/
-                if (clientSiteRcStatus != null)
-                    _context.ClientSiteRadioChecks.RemoveRange(clientSiteRcStatus);
+                /*if (clientSiteRcStatus != null)
+                  /*  _context.ClientSiteRadioChecks.RemoveRange(clientSiteRcStatus);*/
 
                 _context.ClientSiteRadioChecksActivityStatus.Remove(ClientSiteRadioChecksActivity);
 

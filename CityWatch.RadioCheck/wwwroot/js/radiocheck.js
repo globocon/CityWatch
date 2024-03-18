@@ -292,11 +292,19 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             width: '2%',
             className: "text-center",
             render: function (value, type, data) {
-                if (value < 80)
-                    return '<div class="p-1 mb-1" style="background: #AFE1AF;">' + value + '</div>';
-                if (value >= 80)
-                    return '<div class="p-1 mb-1" style="background: #FFD580;">' + value + '</div>';
-                return value;
+               
+                if (data.rcColorId != 1) {
+                   
+                    if (value < 80)
+                        return '<div class="p-1 mb-1" style="background: #AFE1AF;">' + value + '</div>';
+                    if (value >= 80)
+                        return '<div class="p-1 mb-1" style="background: #FFD580;">' + value + '</div>';
+
+                }
+                else {
+                    return '<div class="p-1 mb-1" style="background:  #A9A9A9;">' + '00' + '</div>';
+                }
+                //return value;
             }
 
         },
@@ -2835,11 +2843,19 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             width: '2%',
             className: "text-center",
             render: function (value, type, data) {
-                if (value < 80)
-                    return '<div class="p-1 mb-1" style="background: #AFE1AF;">' + value + '</div>';
-                if (value >= 80)
-                    return '<div class="p-1 mb-1" style="background: #FFD580;">' + value + '</div>';
-                return value;
+
+                if (data.rcColorId != 1) {
+
+                    if (value < 80)
+                        return '<div class="p-1 mb-1" style="background: #AFE1AF;">' + value + '</div>';
+                    if (value >= 80)
+                        return '<div class="p-1 mb-1" style="background: #FFD580;">' + value + '</div>';
+
+                }
+                else {
+                    return '<div class="p-1 mb-1" style="background:  #A9A9A9;">' + '00' + '</div>';
+                }
+                //return value;
             }
 
         },
