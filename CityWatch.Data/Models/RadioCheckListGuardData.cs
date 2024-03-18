@@ -27,6 +27,9 @@ namespace CityWatch.Data.Models
 
         public int LatestDate { get; set; }
         public int ShowColor { get; set; }
+
+        public int hasmartwand { get; set; }
+        
     }
 
 }
