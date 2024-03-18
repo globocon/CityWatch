@@ -576,15 +576,23 @@
     $('#add_client_site_key').on('click', function () {
         resetClientSiteKeyModal();
 
-        $('#client-site-key-modal').modal('show');
-        $('#client-site-key-modal').removeClass('fade');
+        $('#client-site-key-modal-new').modal('show');
+       // $('#client-site-key-modal-new').appendTo("body").modal('show');
+        
+    });
+    $('#btnkeyclose').on('click', function () {
+        
+
+        $('#client-site-key-modal-new').modal('hide');
+        // $('#client-site-key-modal-new').appendTo("body").modal('show');
+
     });
     function loadClientSiteKeyModal(data) {
         $('#ClientSiteKey_Id').val(data.id);
         $('#ClientSiteKey_KeyNo').val(data.keyNo);
         $('#ClientSiteKey_Description').val(data.description);
         $('#csKeyValidationSummary').html('');
-        $('#client-site-key-modal').modal('show');
+       $('#client-site-key-modal-new').modal('show');
     }
 
     function resetClientSiteKeyModal() {
@@ -592,7 +600,8 @@
         $('#ClientSiteKey_KeyNo').val('');
         $('#ClientSiteKey_Description').val('');
         $('#csKeyValidationSummary').html('');
-        // $('#client-site-key-modal').modal('hide');
+        //$('#client-site-key-modal-new').modal('hide');
+        $('#client-site-key-modal-new').modal('hide');
     }
     $('#btn_save_cs_key').on('click', function () {
         $.ajax({
@@ -602,13 +611,32 @@
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (result) {
             if (result.success) {
-                $('#client-site-key-modal').modal('hide');
+                $('#client-site-key-modal-new').modal('hide');
                 gridClientSiteKeys.ajax.reload();
             } else {
                 displaySiteKeyValidationSummary(result.message);
             }
         });
     });
+    function displaySiteKeyValidationSummary(errors) {
+        $('#csKeyValidationSummary').removeClass('validation-summary-valid').addClass('validation-summary-errors');
+        $('#csKeyValidationSummary').html('');
+        $('#csKeyValidationSummary').append('<ul></ul>');
+        if (!Array.isArray(errors)) {
+            $('#csKeyValidationSummary ul').append('<li>' + errors + '</li>');
+        } else {
+            errors.forEach(function (item) {
+                if (item.indexOf(',') > 0) {
+                    item.split(',').forEach(function (itemInner) {
+                        $('#csKeyValidationSummary ul').append('<li>' + itemInner + '</li>');
+                    });
+                } else {
+                    $('#csKeyValidationSummary ul').append('<li>' + item + '</li>');
+                }
+            });
+        }
+    }
+    
     /*key settings - end*/
     /*toggle settings-start*/
     /*for manifest options-start*/
