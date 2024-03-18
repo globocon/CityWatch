@@ -225,9 +225,9 @@
                 <select class="form-control mr-4" asp-for="@Model.KeyVehicleLog.ClientSitePocId" asp-items="@clientViewDataService.GetClientSitePocs(new int[] { Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId })">
                 </select>
             </div>
-            <div class="mr-2">
+            <div class="mr-4">
                 <label class="col-form-label" width="100%">Site Location</label>
-                <select class="form-control mr-3" asp-for="@Model.KeyVehicleLog.ClientSiteLocationId" asp-items="@clientViewDataService.GetClientSiteLocations(new int[] { Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId })">
+                <select class="form-control mr-4" asp-for="@Model.KeyVehicleLog.ClientSiteLocationId" asp-items="@clientViewDataService.GetClientSiteLocations(new int[] { Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId })">
                 </select>
             </div>
 
