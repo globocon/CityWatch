@@ -102,7 +102,9 @@ namespace CityWatch.Data.Providers
                 {
                     Name = template.Name,
                     Text = template.Text,
-                    Type = template.Type
+                    Type = template.Type,
+                    BackgroundColour = template.BackgroundColour,
+                    TextColor = template.TextColor
                 });
             }
             else
@@ -113,6 +115,8 @@ namespace CityWatch.Data.Providers
 
                 templateToUpdate.Text = template.Text;
                 templateToUpdate.Type = template.Type;
+                templateToUpdate.BackgroundColour = template.BackgroundColour;
+                templateToUpdate.TextColor = template.TextColor;
             }
             _context.SaveChanges();
         }

@@ -114,7 +114,8 @@ namespace CityWatch.Web.Services
             IOptions<Settings> settings,
             IConfiguration configuration,
             ILogger<IncidentReportGenerator> logger,
-            IPatrolDataReportService irChartDataService)
+            IPatrolDataReportService irChartDataService,
+            CityWatchDbContext context)
         {
             _configDataProvider = configDataProvider;
             _clientDataProvider = clientDataProvider;
@@ -122,6 +123,7 @@ namespace CityWatch.Web.Services
             _settings = settings.Value;
             _configuration = configuration;
             _logger = logger;
+            _context = context;
 
             _ReportRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "Pdf");
             _GpsMapRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "GpsImage");
@@ -194,6 +196,18 @@ namespace CityWatch.Web.Services
 
                     else
                         acroField.SetValue(propValue);
+
+                    if (field.Name == "CC-List")
+                    {
+                        var colorcode = _context.FeedbackTemplates.SingleOrDefault(x => x.Id == _IncidentReport.SiteColourCodeId);
+                        if(colorcode != null)
+                        {
+                            var bgcolor = colorcode.BackgroundColour;
+                            var txtcolor = colorcode.TextColor;
+                            acroField.SetBackgroundColor(WebColors.GetRGBColor(bgcolor));
+                            acroField.SetColor(WebColors.GetRGBColor(txtcolor));
+                        }                        
+                    }
                 }
 
                 acroForm.PartialFormFlattening(field.Name);
