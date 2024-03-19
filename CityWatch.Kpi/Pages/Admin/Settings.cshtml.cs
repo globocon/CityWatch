@@ -1038,20 +1038,20 @@ namespace CityWatch.Kpi.Pages.Admin
         }
         /*key settings - end*/
         //for toggle areas - start 
-        //public void OnPostSaveToggleType(int siteId, int timeslottoggleTypeId, bool timeslotIsActive, int vwitoggleTypeId, bool vwiIsActive,
-        //    int sendertoggleTypeId, bool senderIsActive, int reelstoggleTypeId, bool reelsIsActive)
-        //{
+        public void OnPostSaveToggleType(int siteId, int timeslottoggleTypeId, bool timeslotIsActive, int vwitoggleTypeId, bool vwiIsActive,
+            int sendertoggleTypeId, bool senderIsActive, int reelstoggleTypeId, bool reelsIsActive)
+        {
 
-        //    _clientDataProvider.SaveClientSiteToggle(siteId, timeslottoggleTypeId, timeslotIsActive);
-        //    _clientDataProvider.SaveClientSiteToggle(siteId, vwitoggleTypeId, vwiIsActive);
-        //    _clientDataProvider.SaveClientSiteToggle(siteId, sendertoggleTypeId, senderIsActive);
-        //    _clientDataProvider.SaveClientSiteToggle(siteId, reelstoggleTypeId, reelsIsActive);
-        //}
-        //public IActionResult OnGetClientSiteToggle(int siteId)
-        //{
+            _clientDataProvider.SaveClientSiteToggle(siteId, timeslottoggleTypeId, timeslotIsActive);
+            _clientDataProvider.SaveClientSiteToggle(siteId, vwitoggleTypeId, vwiIsActive);
+            _clientDataProvider.SaveClientSiteToggle(siteId, sendertoggleTypeId, senderIsActive);
+            _clientDataProvider.SaveClientSiteToggle(siteId, reelstoggleTypeId, reelsIsActive);
+        }
+        public IActionResult OnGetClientSiteToggle(int siteId)
+        {
 
-        //    return new JsonResult(_guardDataProvider.GetClientSiteToggle().Where(x => x.ClientSiteId == siteId));
-        //}
+            return new JsonResult(_guardDataProvider.GetClientSiteToggle().Where(x => x.ClientSiteId == siteId));
+        }
         //for toggle areas - end
         //for ring fence-start
         public JsonResult OnPostUpdateSiteDataCollection(int clientSiteId, bool disabled)
