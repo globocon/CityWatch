@@ -793,6 +793,7 @@
             headers: { 'RequestVerificationToken': token }
         }).done(function () {
 
+            alert("Saved Successfully");
         }).fail(function () {
             console.log("error");
         });
@@ -895,7 +896,7 @@
             const duressEmail = result[0].duressEmail;
             const duressSms = result[0].duressSms;
             const landLine = result[0].landLine;
-            const isDataCollectionEnabled = result[0].isDataCollectionEnabled;
+            const isDataCollectionEnabled = result[0].dataCollectionEnabled;
 
             const guardLogEmailTo = result[0].guardLogEmailTo;
             const isUpdateDailyLog = result[0].uploadGuardLog;
