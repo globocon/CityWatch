@@ -1142,9 +1142,17 @@ $(function () {
                             console.log('Load operation completed!');
                             // You can add your additional code or actions here
                             $('#contracted-manning-tab').tab('show');
+
+                            window.sharedVariable = result.clientSiteId;
+                            console.log('Load operation completed!');
+                            // You can add your additional code or actions here
+                            console.log(result.clientSiteId);
+                            $("#OtherSettingsNew").load('settingsOther?clientSiteId=53');
+
                             //alert('Removed the worker successfully');
                         });
                         $('#kpi-settings-modal').modal('show');
+                        $("#kpi-settings-modal").appendTo("body");
                         currentDiv = 1;
                     }
                    
@@ -1273,8 +1281,14 @@ $(function () {
                     console.log('Load operation completed!');                  
                     // You can add your additional code or actions here
                     $('#contracted-manning-tab').tab('show');
+                    window.sharedVariable = data.clientSiteId;
+                    console.log('Load operation completed!');
+                    // You can add your additional code or actions here
+                    console.log(data.clientSiteId);
+                    $("#OtherSettingsNew").load('settingsOther?clientSiteId=53');
                 });
                 $('#kpi-settings-modal').modal('show');
+                $("#kpi-settings-modal").appendTo("body");
                 currentDiv = 1;
               
             }
