@@ -1072,7 +1072,7 @@ namespace CityWatch.Kpi.Pages.Admin
         //for ring fence-end
         public JsonResult OnGetClientSiteEmail(int clientSiteId)
         {
-            var check = _clientDataProvider.GetNewClientSites(clientSiteId);
+           
             return new JsonResult(_clientDataProvider.GetNewClientSites(clientSiteId));
         }
 
