@@ -12,6 +12,7 @@
         count++;
     var check = count;
 }
+
 <div class="test">
     <ul class="nav nav-tabs" id="kpiSettingsTab" role="tablist">
         <li class="nav-item" role="presentation">
@@ -227,7 +228,7 @@
                                         {
 
                                             var totalMin = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId).Select(x => x.SumOfHours).Sum();
-                                            var guardQty = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId && x.NoOfPatrols!=null).Select(x => x.NoOfPatrols ?? 0).FirstOrDefault();
+                                            var guardQty = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId && x.NoOfPatrols != null).Select(x => x.NoOfPatrols ?? 0).FirstOrDefault();
                                             if (totalMin != null && guardQty != null)
                                                 monthilyHours = Math.Round(((totalMin) * guardQty * 52.143) / 12);
 
@@ -566,10 +567,9 @@
                             <h6>Alarm Response</h6>
                         </div>
                         <div class="col">
-                         
                         </div>
                     </div>
-                    
+
                 </div>
                 <br />
                 <div class="row col-md-12">
@@ -686,57 +686,9 @@
         </div>
         @*for menu change-start(jisha)*@
         <div class="tab-pane" id="OtherSettings" role="tabpanel" aria-labelledby="notes-tab">
-            <input type="hidden" id="gl_client_site_id" asp-for="@Model.ClientSiteId" />
-            <div class="row m-0">
-                <div class="col-md-12">
-                    <form>
-                        <div>
-                            <label>LB & KV Site Report Settings</label>
-                        </div>
-                        <div class="form-group row">
-                            <label for="gs_site_email" class="col-md-3 col-form-label">Site Email</label>
-                            <div class="col-md-6">
-                                <input type="email" class="form-control" id="gs_site_email" asp-for="@Model.ClientSite.SiteEmail">
-                            </div>
-                        </div>
-                        <div class="form-group row">
-                            <label for="gs_land_line" class="col-md-3 col-form-label">Site Landline</label>
-                            <div class="col-md-6">
-                                <input type="text" class="form-control" id="gs_land_line" asp-for="@Model.ClientSite.LandLine">
-                            </div>
-                        </div>
-                        <div class="form-check mb-1">
-                            <input type="checkbox" id="enableLogDump" class="form-check-input" asp-for="@Model.ClientSite.DataCollectionEnabled" />
-                            <label for="gs_site_log_dump" class="form-check-label">Enable Daily Log Dump</label>
-                        </div>
-                        <div class="form-group row">
-                            <label for="gs_email_recipients" class="col-md-3 col-form-label">Email Recipients</label>
-                            <div class="col-md-6">
-                                <input type="email" class="form-control" id="gs_email_recipients" asp-for="@Model.ClientSite.GuardLogEmailTo">
-                                <label><em>Preceding day log will be sent &#64; 2 am on the next day</em></label>
-                            </div>
-                        </div>
-                        <div>
-                            <label>Duress Local Site Setting</label>
-                        </div>
-                        <div class="form-group row">
-                            <label for="gs_duress_email" class="col-md-3 col-form-label">Email alert</label>
-                            <div class="col-md-6">
-                                <input type="email" class="form-control" id="gs_duress_email" asp_for="@Model.ClientSite.DuressEmail">
-                            </div>
-                        </div>
-                        <div class="form-group row">
-                            <label for="gs_duress_sms" class="col-md-3 col-form-label">SMS alert</label>
-                            <div class="col-md-6">
-                                <input type="text" class="form-control" id="gs_duress_sms" asp-for="@Model.ClientSite.DuressSms">
-                            </div>
-                        </div>
-                        <div class="form-row mt-3">
-                            <button type="button" id="btnSaveGuardSiteSettingsnew" class="btn btn-success"><i class="fa fa-save mr-2"></i>Save</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+            
+            <div id="OtherSettingsNew"></div>
+         
         </div>
         @*for menu change-end(jisha)*@
     </div>

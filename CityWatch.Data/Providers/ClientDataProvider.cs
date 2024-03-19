@@ -160,6 +160,7 @@ namespace CityWatch.Data.Providers
 
         void SaveSmsChannel(SmsChannel smsChannel);
         void DeleteSmsChannel(int id);
+        List<ClientSite> GetNewClientSites(int siteId);
 
         List<GlobalDuressSms> GetDuressSms();
         string SaveDuressGloablSMS(GlobalDuressSms SmsNumber, out bool status);
@@ -1785,6 +1786,7 @@ namespace CityWatch.Data.Providers
                     throw new InvalidOperationException();
 
 
+
                 clientSiteToggleToUpdate.ToggleTypeId = toggleTypeId;
                 clientSiteToggleToUpdate.ClientSiteId = siteId;
                 clientSiteToggleToUpdate.IsActive = IsActive;
@@ -1796,7 +1798,18 @@ namespace CityWatch.Data.Providers
         }
 
         //for toggle areas - end
+          public List<ClientSite> GetNewClientSites(int siteId)
+        {
+            return _context.ClientSites
+                .Where(x => x.IsActive == true && x.Id==siteId)
+                .Include(x => x.ClientType)
+                .OrderBy(x => x.ClientType.Name)
+                .ThenBy(x => x.Name)
+                .ToList();
+
+        }
         //
+
     }
 
 
