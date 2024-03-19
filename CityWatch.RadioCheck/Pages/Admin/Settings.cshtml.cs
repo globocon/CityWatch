@@ -30,7 +30,7 @@ namespace CityWatch.RadioCheck.Pages.Admin
         //private readonly IUserDataProvider _userDataProvider;
         public readonly IConfigDataProvider _configDataProvider;
         private readonly IWebHostEnvironment _webHostEnvironment;
-        
+
 
         public SettingsModel(IWebHostEnvironment webHostEnvironment,
             IClientDataProvider clientDataProvider,
@@ -45,7 +45,7 @@ namespace CityWatch.RadioCheck.Pages.Admin
             _webHostEnvironment = webHostEnvironment;
         }
 
-      
+
 
         public IConfigDataProvider ConfigDataProiver { get { return _configDataProvider; } }
 
@@ -53,7 +53,7 @@ namespace CityWatch.RadioCheck.Pages.Admin
 
         public IClientDataProvider ClientDataProvider { get { return _clientDataProvider; } }
 
-        
+
 
         [BindProperty]
         public FeedbackTemplate FeedbackTemplate { get; set; }
@@ -160,7 +160,7 @@ namespace CityWatch.RadioCheck.Pages.Admin
             try
             {
 
-                
+
                 _clientDataProvider.SaveLiveEvents(record);
             }
             catch (Exception ex)
@@ -194,16 +194,13 @@ namespace CityWatch.RadioCheck.Pages.Admin
             var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
             return new JsonResult(new { Emails = emailAddresses });
         }
-            public JsonResult OnPostSaveDuressEmail(string Email)
+        public JsonResult OnPostSaveDuressEmail(string Email)
         {
             var status = true;
             var message = "Success";
             try
             {
-               
-                    _clientDataProvider.DuressGloablEmail(Email);
-                
-                
+                _clientDataProvider.DuressGloablEmail(Email);
             }
             catch (Exception ex)
             {
@@ -214,6 +211,40 @@ namespace CityWatch.RadioCheck.Pages.Admin
             return new JsonResult(new { status = Email, message = message });
         }
         //To save the Gloabl Duress Email Stop
+
+        //To save the Clobal Duress SMS numbers start
+        public JsonResult OnGetGetGlobalSmsNumberList()
+        {
+            var SmsNumbers = _clientDataProvider.GetDuressSms();
+            return new JsonResult(SmsNumbers);
+        }
+        public JsonResult OnPostDeleteGlobalSmsNumber(int SmsNumberId)
+        {
+            bool Success = false;
+            string message = string.Empty;
+            message = _clientDataProvider.DeleteDuressGloablSMSNumber(SmsNumberId,out Success);
+            return new JsonResult(new {status = Success , message = message });
+        }
+        public JsonResult OnPostAddGlobalSmsNumber(GlobalDuressSms SmsNumber)
+        {
+            bool Success = false;
+            string message = string.Empty;
+            var claimsIdentity = User.Identity as ClaimsIdentity;
+            string sidValue = "";
+            var UserId1 = claimsIdentity.Claims;
+            foreach (var item in UserId1)
+            {
+                if (item.Type == ClaimTypes.Sid)
+                {
+                    sidValue = item.Value;
+                    break;
+                }
+            }            
+            SmsNumber.RecordCreateUserId = Convert.ToInt32(sidValue);
+            message = _clientDataProvider.SaveDuressGloablSMS(SmsNumber,out Success);
+            return new JsonResult(new { status = Success, message = message });
+        }
+        //To save the Clobal Duress SMS numbers stop
         public JsonResult OnGetBroadcastLiveEvents()
         {
             return new JsonResult(_configDataProvider.GetBroadcastLiveEvents());
@@ -228,7 +259,7 @@ namespace CityWatch.RadioCheck.Pages.Admin
             var message = "Success";
             try
             {
-                
+
                 if (record.id == -1)
                 {
 
@@ -249,10 +280,10 @@ namespace CityWatch.RadioCheck.Pages.Admin
 
 
                     }
-                    var existsevents = _configDataProvider.GetBroadcastCalendarEvents().Where(x => x.ExpiryDate == record.ExpiryDate && x.StartDate==record.StartDate);
+                    var existsevents = _configDataProvider.GetBroadcastCalendarEvents().Where(x => x.ExpiryDate == record.ExpiryDate && x.StartDate == record.StartDate);
                     if (existsevents.Count() > 0)
                     {
-                        
+
                         return new JsonResult(new { status = false, message = "Another Event Exists" });
                     }
                 }
@@ -304,7 +335,7 @@ namespace CityWatch.RadioCheck.Pages.Admin
                         ClientTypeName = z.ClientType.Name,
                         ClientSiteName = z.Name,
                         HasSettings = true
-                    })) ;
+                    }));
 
                 }
                 else
@@ -350,7 +381,7 @@ namespace CityWatch.RadioCheck.Pages.Admin
                 ClientSiteName = z.Name,
                 HasSettings = true
             }));
-           
+
         }
         //API Call Settings-start
         /*SWChannels - start*/
@@ -473,7 +504,7 @@ namespace CityWatch.RadioCheck.Pages.Admin
         {
             return new JsonResult(_configDataProvider.GetSmsChannels());
         }
-        
+
         #endregion
 
 

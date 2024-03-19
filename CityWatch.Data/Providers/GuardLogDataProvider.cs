@@ -659,6 +659,8 @@ namespace CityWatch.Data.Providers
                         keyVehicleLogToUpdate.BDMList = keyVehicleLog.BDMList;
 
                     }
+                    keyVehicleLogToUpdate.IsReels = keyVehicleLog.IsReels;
+                    keyVehicleLogToUpdate.IsVWI = keyVehicleLog.IsVWI;
                     _context.SaveChanges();
                 }
 
@@ -1343,6 +1345,11 @@ namespace CityWatch.Data.Providers
                .Select(x => x.PhoneNumber)
                .ToList();
                 var phoneNumbersString = string.Join("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
+                if(phoneNumbers.Count!=0)
+                {
+                    item.hasmartwand = 1;
+
+                }
 
                 item.SiteName = item.SiteName + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x => x.PhoneNumber).ToList()) + " <i class=\"fa fa-caret-down\" aria-hidden=\"true\" id=\"btnUpArrow\"></i> ";
                 item.Address = " <a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q=" + item.GPS + "\"target=\"_blank\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i> </a>" + item.Address + " <input type=\"hidden\" class=\"form-control\" value=\"" + item.GPS + "\" id=\"txtGPSActiveguards\" />";
@@ -1452,10 +1459,10 @@ namespace CityWatch.Data.Providers
             var ClientSiteRadioChecksActivity = _context.ClientSiteRadioChecksActivityStatus.SingleOrDefault(x => x.Id == ClientSiteRadioChecksActivityStatus.Id);
             if (ClientSiteRadioChecksActivity != null)
             {
-                var clientSiteRcStatus = _context.ClientSiteRadioChecks.Where(x => x.GuardId == ClientSiteRadioChecksActivity.GuardId && x.ClientSiteId == ClientSiteRadioChecksActivity.ClientSiteId);
+                /*var clientSiteRcStatus = _context.ClientSiteRadioChecks.Where(x => x.GuardId == ClientSiteRadioChecksActivity.GuardId && x.ClientSiteId == ClientSiteRadioChecksActivity.ClientSiteId);
                 /* remove the Pervious Status*/
-                if (clientSiteRcStatus != null)
-                    _context.ClientSiteRadioChecks.RemoveRange(clientSiteRcStatus);
+                /*if (clientSiteRcStatus != null)
+                  /*  _context.ClientSiteRadioChecks.RemoveRange(clientSiteRcStatus);*/
 
                 _context.ClientSiteRadioChecksActivityStatus.Remove(ClientSiteRadioChecksActivity);
 

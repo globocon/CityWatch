@@ -6,10 +6,12 @@ using CityWatch.Web.Helpers;
 using CityWatch.Web.Services;
 using DocumentFormat.OpenXml.Office2010.Word;
 using MailKit.Net.Smtp;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
@@ -33,6 +35,8 @@ namespace CityWatch.Web.Pages.Guard
         private readonly ILogger<DailyLogModel> _logger;
         private readonly EmailOptions _emailOptions;
         private readonly ISiteEventLogDataProvider _SiteEventLogDataProvider;
+        private readonly ISmsSenderProvider _smsSenderProvider;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
         [BindProperty]
         public GuardLog GuardLog { get; set; }
@@ -47,7 +51,9 @@ namespace CityWatch.Web.Pages.Guard
              IClientSiteWandDataProvider clientSiteWandDataProvider,
              IOptions<EmailOptions> emailOptions,
              ILogger<DailyLogModel> logger,
-             ISiteEventLogDataProvider siteEventLogDataProvider)
+             ISiteEventLogDataProvider siteEventLogDataProvider,
+             ISmsSenderProvider smsSenderProvider,
+             IWebHostEnvironment webHostEnvironment)
         {
             _guardDataProvider = guardDataProvider;
             _guardLogDataProvider = guardLogDataProvider;
@@ -57,6 +63,8 @@ namespace CityWatch.Web.Pages.Guard
             _logger = logger;
             _emailOptions = emailOptions.Value;
             _SiteEventLogDataProvider = siteEventLogDataProvider;
+            _smsSenderProvider = smsSenderProvider;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         public void OnGet()
@@ -605,13 +613,98 @@ namespace CityWatch.Web.Pages.Guard
                         IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
                         ToAddress = string.Empty,
                         ToMessage = string.Empty,
-                        EventTime= DateTime.Now,
+                        EventTime = DateTime.Now,
                         EventLocalTime = DateTime.Now
                     }
-                 ) ;
+                 );
                 /* Save log for duress button enable end*/
-                EmailSender(emailAddresses, ClientsiteDetails.Name, ClientsiteDetails.Address, ClientsiteDetails.LandLine, gpsCoordinates, GuradDetails.Name, GuradDetails.Initial, GuradDetails.Mobile);
 
+                #region GlobalDuressEmailAndSms
+                var Subject = "Global Duress Alert";
+                var Notifications = "C4i Duress Button Activated By:" +
+                         (string.IsNullOrEmpty(GuradDetails.Name) ? string.Empty : GuradDetails.Name) + "[" + GuradDetails.Initial + "]" + "<br/>" +
+                         (string.IsNullOrEmpty(GuradDetails.Mobile) ? string.Empty : "Mobile No: " + GuradDetails.Mobile) + "<br/>" +
+                        (string.IsNullOrEmpty(ClientsiteDetails.Name) ? string.Empty : "From: " + ClientsiteDetails.Name) + "<br/>" +
+                        (string.IsNullOrEmpty(ClientsiteDetails.Address) ? string.Empty : "Address:: " + ClientsiteDetails.Address) + "<br/>" +
+                        (string.IsNullOrEmpty(ClientsiteDetails.LandLine) ? string.Empty : "Mobile No: " + ClientsiteDetails.LandLine);
+                var SmsNotifications = Notifications.Replace("<br/>", "\n");
+                if (gpsCoordinates != null)
+                {
+                    var googleMapsLink = "https://www.google.com/maps?q=" + HttpUtility.UrlEncode(gpsCoordinates);
+                    Notifications += "\n<a href=\"" + googleMapsLink + "\" target=\"_blank\" data-toggle=\"tooltip\" title=\"View on Google Maps\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i> Location</a>";
+                    SmsNotifications += "\n" + googleMapsLink;
+                }
+
+                EmailSender(emailAddresses, Subject, Notifications, GuradDetails.Name, ClientsiteDetails.Name, gpsCoordinates);
+                                
+                var GlobalDuressSmsNumbers = _clientDataProvider.GetDuressSms();
+                if (ClientsiteDetails.DuressSms != null)
+                {// Adding Site Duress Sms number.
+                    GlobalDuressSms SiteDuressSmsNumbers = new GlobalDuressSms() { SmsNumber = ClientsiteDetails.DuressSms };
+                    GlobalDuressSmsNumbers.Add(SiteDuressSmsNumbers);
+                }
+                if (_webHostEnvironment.IsDevelopment())
+                {
+                    string smsnumber = "+61 (0) 423 404 982"; // Sending to Jino sir number for testing purpose
+                    GlobalDuressSmsNumbers = new List<GlobalDuressSms>();
+                    GlobalDuressSms gd = new GlobalDuressSms() {SmsNumber = smsnumber }; 
+                    GlobalDuressSmsNumbers.Add(gd);
+                }
+
+                if (GlobalDuressSmsNumbers != null)
+                {
+                    List<SmsChannelEventLog> _smsChannelEventLogList = new List<SmsChannelEventLog>();
+                    foreach (var item in GlobalDuressSmsNumbers)
+                    {
+                        if (item.SmsNumber != null)
+                        {
+                            SmsChannelEventLog smslog = new SmsChannelEventLog();
+                            smslog.GuardId = guardId != 0 ? guardId : null; // ID of guard who is sending the message
+                            smslog.GuardName = GuradDetails.Name.Length > 0 ? GuradDetails.Name : null; // Name of guard who is sending the message
+                            smslog.GuardNumber = item.SmsNumber;
+                            smslog.SiteId = clientSiteId;
+                            smslog.SiteName = ClientsiteDetails.Name;
+                            _smsChannelEventLogList.Add(smslog);
+                        }
+                    }
+                    SiteEventLog svl = new SiteEventLog();
+                    svl.ProjectName = "ClientPortal";
+                    svl.ActivityType = "C41 Duress Enable - Global Duress SMS Alert";
+                    svl.Module = "Guard";
+                    svl.SubModule = "LogBook";
+                    svl.GoogleMapCoordinates = gpsCoordinates;
+                    svl.IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
+                    svl.EventLocalTime = tmdata.EventDateTimeLocal.Value;
+                    svl.EventLocalOffsetMinute = tmdata.EventDateTimeUtcOffsetMinute;
+                    svl.EventLocalTimeZone = tmdata.EventDateTimeZoneShort;
+                    svl.IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
+                    _smsSenderProvider.SendSms(_smsChannelEventLogList, Subject + " : " + SmsNotifications, svl);
+                }
+                else
+                {
+                    _SiteEventLogDataProvider.SaveSiteEventLogData(
+                       new SiteEventLog()
+                       {
+                           GuardName = GuradDetails.Name,
+                           SiteName = ClientsiteDetails.Name,
+                           ProjectName = "ClientPortal",
+                           ActivityType = "C41 Duress Enable - Global Duress SMS Alert",
+                           Module = "Guard",
+                           SubModule = "LogBook",
+                           GoogleMapCoordinates = gpsCoordinates,
+                           IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
+                           EventTime = DateTime.Now,
+                           EventLocalTime = DateTime.Now,
+                           ToAddress = null,
+                           ToMessage = Subject + " : " + SmsNotifications,
+                           EventStatus = "Error",
+                           EventErrorMsg = "No Global duress sms numbers configured.",
+                           EventServerOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
+                           EventServerTimeZone = TimeZoneHelper.GetCurrentTimeZoneShortName()
+                       }
+                    );
+                }
+                #endregion
             }
             catch (Exception ex)
             {
@@ -620,22 +713,10 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(new { status, message });
         }
-        public JsonResult EmailSender(string Email, string Name, string Address, string Lnadline, string gpsCoordinates, string GuradName, string GuradInitial, string Mobile)
+        public JsonResult EmailSender(string Email, string Subject, string Notifications, string GuradName, string Name, string gpsCoordinates)
         {
             var success = true;
             var message = "success";
-            var Subject = "Global Duress Alert";
-            var Notifications = "Duress Button Activated By:" +
-                      (string.IsNullOrEmpty(GuradName) ? string.Empty : GuradName) + "[" + GuradInitial + "]" + "<br/>" +
-                      (string.IsNullOrEmpty(Mobile) ? string.Empty : "Mobile No: " + Mobile) + "<br/>" +
-                     (string.IsNullOrEmpty(Name) ? string.Empty : "From: " + Name) + "<br/>" +
-                     (string.IsNullOrEmpty(Address) ? string.Empty : "Address:: " + Address) + "<br/>" +
-                     (string.IsNullOrEmpty(Lnadline) ? string.Empty : "Mobile No: " + Lnadline);
-            if (gpsCoordinates != null)
-            {
-                var googleMapsLink = "https://www.google.com/maps?q=" + HttpUtility.UrlEncode(gpsCoordinates);
-                Notifications += "\n<a href=\"" + googleMapsLink + "\" target=\"_blank\" data-toggle=\"tooltip\" title=\"View on Google Maps\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i> Location</a>";
-            }
             #region Email
             if (Email != null)
             {
@@ -670,7 +751,6 @@ namespace CityWatch.Web.Pages.Guard
                     _SiteEventLogDataProvider.SaveSiteEventLogData(
                         new SiteEventLog()
                         {
-                           
                             GuardName = GuradName,
                             SiteName = Name,
                             ProjectName = "ClientPortal",
@@ -679,7 +759,7 @@ namespace CityWatch.Web.Pages.Guard
                             SubModule = "LogBook",
                             GoogleMapCoordinates = gpsCoordinates,
                             IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
-                            EventTime = DateTime.Now,                            
+                            EventTime = DateTime.Now,
                             EventLocalTime = DateTime.Now,
                             ToAddress = Email,
                             ToMessage = "Global Duress Alert",
@@ -687,9 +767,7 @@ namespace CityWatch.Web.Pages.Guard
                      );
                     /* Save log for duress button enable end*/
                 }
-
             }
-
 
             #endregion
 
@@ -702,8 +780,6 @@ namespace CityWatch.Web.Pages.Guard
             {
                 emailAddressList.Add(new MailboxAddress(string.Empty, item));
             }
-
-
             return emailAddressList;
         }
 
