@@ -2064,7 +2064,7 @@ namespace CityWatch.Data.Providers
                 {
 
 
-                    var isActive = (DateTime.Now - item.CheckedAt).TotalHours < 6;
+                    var isActive = (DateTime.Now - item.CheckedAt).TotalHours < 2.5;
                     if (!isActive)
                     {
                         var clientSiteRadioCheckActivityStatusToDelete = _context.ClientSiteRadioChecks.Where(x => x.Id == item.Id);
