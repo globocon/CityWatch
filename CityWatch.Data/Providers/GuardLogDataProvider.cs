@@ -1442,6 +1442,14 @@ namespace CityWatch.Data.Providers
                             break;
                         }
                     }
+                    if (activity.LastSWCreatedTime != null)
+                    {
+                        if ((DateTime.Now - activity.LastSWCreatedTime).Value.TotalMinutes < 90)
+                        {
+                            status = true;
+                            break;
+                        }
+                    }
                 }
             }
             else
