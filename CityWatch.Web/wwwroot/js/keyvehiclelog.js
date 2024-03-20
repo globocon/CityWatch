@@ -3938,3 +3938,10 @@ $('#chkAllBatchDocketSelect').on('change', function () {
 });
 
 /*to add poi binder - end*/
+/*p7-115 docket output issues-start*/
+$('#cbIsDocketNo').on('change', function () {
+
+    const isChecked = $(this).is(':checked');
+    $('#IsDocketNo').val(isChecked);
+});
+/*p7 - 115 docket output issues - end*/
