@@ -1163,7 +1163,7 @@ namespace CityWatch.Web.Services
                 results = results.Where(x => x.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
                 (!string.IsNullOrEmpty(x.Address) && x.Address.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))).ToList();
             if (!string.IsNullOrEmpty(searchTermtwo))
-                results = results.Where(x => x.Emails.Contains(searchTermtwo, StringComparison.OrdinalIgnoreCase)).ToList();
+                results = results.Where(x => !string.IsNullOrEmpty(x.Emails) && x.Emails.Contains(searchTermtwo, StringComparison.OrdinalIgnoreCase)).ToList();
 
             return results;
         }
