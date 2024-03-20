@@ -72,9 +72,9 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(_viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId));
         }
 
-        public JsonResult OnGetClientSites(int? page, int? limit, int? typeId, string searchTerm)
+        public JsonResult OnGetClientSites(int? page, int? limit, int? typeId, string searchTerm,string searchTermtwo)
         {
-            return new JsonResult(_viewDataService.GetUserClientSitesHavingAccess(typeId, AuthUserHelper.LoggedInUserId, searchTerm));
+            return new JsonResult(_viewDataService.GetUserClientSitesHavingAccess(typeId, AuthUserHelper.LoggedInUserId, searchTerm, searchTermtwo));
         }
 
         public JsonResult OnGetClientStates()

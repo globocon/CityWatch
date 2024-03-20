@@ -65,8 +65,8 @@
             <div class="row mb-3">
                 <div class="col-md-10">
                     <div class="form-group row">
-                        <label class="col-form-label col-md-3">Filter by Client Type</label>
-                        <div class="col-md-5">
+                        <label class="col-form-label ">Filter by Client Type</label>
+                        <div class="col-md-3">
                             <select class="form-control" id="sel_client_type">
                                 <option value="">All</option>
                                 @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
@@ -75,7 +75,17 @@
                                 }
                             </select>
                         </div>
-                        <div class="input-group col-md-4">
+                        @*p1-192 client email search-start*@
+                        <label class="col-form-label">Email</label>
+                        <div class="input-group col-md-3">
+                            
+                            <input type="text" id="search_kw_client_site_email" class="form-control" placeholder="Search Client Email">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-primary" id="btnSearchClientEmail"><i class="fa fa-search"></i></button>
+                            </div>
+                        </div>
+                        @*p1-192 client email search-end*@
+                        <div class="input-group col-md-3">
                             <input type="text" id="search_kw_client_site" class="form-control" placeholder="Search Client Site">
                             <div class="input-group-append">
                                 <button class="btn btn-outline-primary" id="btnSearchClientSite"><i class="fa fa-search"></i></button>
