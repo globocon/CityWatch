@@ -379,7 +379,7 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { status, message });
         }
 
-        public JsonResult OnPostKeyVehicleLogQuickExit(int Id)
+        public JsonResult OnPostKeyVehicleLogQuickExit(int Id, GuardLog tmdata)
         {
             var status = true;
             var message = "Success";
@@ -389,7 +389,7 @@ namespace CityWatch.Web.Pages.Guard
                 KeyVehicleLogAuditHistory keyVehicleLogAuditHistory = null;
                 var keyVehicleLogInExitTime = _guardLogDataProvider.GetKeyVehicleLogById(Id);
                 keyVehicleLogInExitTime.ActiveGuardLoginId = HttpContext.Session.GetInt32("GuardLoginId");
-                keyVehicleLogInExitTime.ExitTime = DateTime.Now;
+                keyVehicleLogInExitTime.ExitTime = tmdata.EventDateTimeLocal; // DateTime.Now;
                 keyVehicleLogAuditHistory = GetKvlAuditHistory(keyVehicleLogInExitTime);
                 keyVehicleLogAuditHistory.AuditMessage = "Exit entry";
                 var profileId = GetKvlProfileId(keyVehicleLogInExitTime);
