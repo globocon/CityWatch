@@ -1479,7 +1479,17 @@ $(function () {
             $('#crmVehicleRego').val($('#VehicleRego').val());
 
         });
-        /*same changes in vehicle rego-start*/
+
+        //taliler changes New change for Add rigo without plate number 21032024*/
+        $('#Trailer1Rego').on('blur', function () {
+            const vehicleRegoHasVal = $(this).val() !== '';
+            $('#kvl_list_plates').attr('disabled', !vehicleRegoHasVal);
+           
+
+        });
+
+      
+        /*same changes in vehicle rego-end*/
         $('#crmVehicleRego').on('blur', function () {
             const vehicleRegoHasVal = $(this).val() !== '';
             $('#kvl_list_plates').attr('disabled', !vehicleRegoHasVal);
@@ -3937,6 +3947,9 @@ $(function () {
         });
     }
     /*to add do's and donts -end*/
+
+
+   
 
 });
 /*to add poi binder - start*/

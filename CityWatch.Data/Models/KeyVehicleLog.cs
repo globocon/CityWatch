@@ -167,17 +167,35 @@ namespace CityWatch.Data.Models
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             var errors = new List<ValidationResult>();
+            var RegoStatus = false;
 
             if (!InitialCallTime.HasValue && !EntryTime.HasValue)
                 errors.Add(new ValidationResult("Initial Call or Entry Time is required"));
-
+            // if (string.IsNullOrEmpty(VehicleRego))
+            //errors.Add(new ValidationResult("ID No or Vehicle Registration is required"));
+            /* New change for Add rigo without plate number 21032024 dileep*/
             if (string.IsNullOrEmpty(VehicleRego))
-                errors.Add(new ValidationResult("ID No or Vehicle Registration is required"));
+            {
+                if (!string.IsNullOrEmpty(Trailer1Rego) || !string.IsNullOrEmpty(Trailer2Rego) || !string.IsNullOrEmpty(Trailer3Rego))
+                {
+
+                    RegoStatus = true;
+                }
+                else
+                {
+
+                    errors.Add(new ValidationResult("ID No or Vehicle Registration or Trailer Rego is required"));
+                }
+
+            }
 
             if (!string.IsNullOrEmpty(VehicleRego) && PlateId <= 0)
                 errors.Add(new ValidationResult("State of ID / Plate is required"));
 
-            if (!PersonType.HasValue)
+            //Tailer Change New change for Add rigo without plate number 21032024
+            //if (!PersonType.HasValue)
+            //errors.Add(new ValidationResult("Type of Individual is required"));
+            if (!PersonType.HasValue && !RegoStatus)
                 errors.Add(new ValidationResult("Type of Individual is required"));
 
             if (InWeight.HasValue && InWeight.Value < 0)
