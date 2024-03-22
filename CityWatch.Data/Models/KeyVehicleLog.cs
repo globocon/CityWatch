@@ -164,6 +164,15 @@ namespace CityWatch.Data.Models
         public string EntryCreatedDateTimeZoneShort { get; set; }
         public int? EntryCreatedDateTimeUtcOffsetMinute { get; set; }
 
+
+        public int? Trailer1PlateId { get; set; }
+
+        public int? Trailer2PlateId { get; set; }
+
+        public int? Trailer3PlateId { get; set; }
+
+        public int? Trailer4PlateId { get; set; }
+
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             var errors = new List<ValidationResult>();

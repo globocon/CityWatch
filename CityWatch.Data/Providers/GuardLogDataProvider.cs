@@ -216,6 +216,8 @@ namespace CityWatch.Data.Providers
         RadioCheckLogbookSiteDetails GetRadiocheckLogbookDetails();
         
         List<GuardLog> GetLastLoginNew(int GuradId);
+
+        List<string> GetTrailerRegosForKVL(string regoStart = null);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -661,6 +663,10 @@ namespace CityWatch.Data.Providers
                     }
                     keyVehicleLogToUpdate.IsReels = keyVehicleLog.IsReels;
                     keyVehicleLogToUpdate.IsVWI = keyVehicleLog.IsVWI;
+                    keyVehicleLogToUpdate.Trailer1PlateId = keyVehicleLog.Trailer1PlateId;
+                    keyVehicleLogToUpdate.Trailer2PlateId = keyVehicleLog.Trailer2PlateId;
+                    keyVehicleLogToUpdate.Trailer3PlateId = keyVehicleLog.Trailer3PlateId;
+                    keyVehicleLogToUpdate.Trailer4PlateId = keyVehicleLog.Trailer4PlateId;
                     _context.SaveChanges();
                 }
 
@@ -995,7 +1001,50 @@ namespace CityWatch.Data.Providers
                 .OrderBy(z => z)
                 .ToList();
         }
+       ////trailer changes New change for Add rigo without plate number 21032024 dileep start*//
+        public List<string> GetTrailerRegosForKVL(string regoStart = null)
+        {
+            var newList =new List<string>();
+            var trailer1Rego =  _context.KeyVehicleLogVisitorProfiles
+                .Where(z => string.IsNullOrEmpty(regoStart) ||
+                            (!string.IsNullOrEmpty(z.Trailer1Rego) &&
+                                z.Trailer1Rego.Contains(regoStart)))
+                .Select(z => z.Trailer1Rego)
+                .Distinct()
+                .OrderBy(z => z)
+                .ToList();
+            var trailer2Rego = _context.KeyVehicleLogVisitorProfiles
+                .Where(z => string.IsNullOrEmpty(regoStart) ||
+                            (!string.IsNullOrEmpty(z.Trailer2Rego) &&
+                                z.Trailer2Rego.Contains(regoStart)))
+                .Select(z => z.Trailer2Rego)
+                .Distinct()
+                .OrderBy(z => z)
+                .ToList();
+            var trailer3Rego = _context.KeyVehicleLogVisitorProfiles
+                .Where(z => string.IsNullOrEmpty(regoStart) ||
+                            (!string.IsNullOrEmpty(z.Trailer3Rego) &&
+                                z.Trailer3Rego.Contains(regoStart)))
+                .Select(z => z.Trailer3Rego)
+                .Distinct()
+                .OrderBy(z => z)
+                .ToList();
+            var trailer4Rego = _context.KeyVehicleLogVisitorProfiles
+               .Where(z => string.IsNullOrEmpty(regoStart) ||
+                           (!string.IsNullOrEmpty(z.Trailer4Rego) &&
+                               z.Trailer4Rego.Contains(regoStart)))
+               .Select(z => z.Trailer4Rego)
+               .Distinct()
+               .OrderBy(z => z)
+               .ToList();
 
+            newList.AddRange(trailer1Rego);
+            newList.AddRange(trailer2Rego);
+            newList.AddRange(trailer3Rego);
+            newList.AddRange(trailer3Rego);
+            return newList.Distinct().OrderBy(s => s.FirstOrDefault()).ToList();
+        }
+        ////taliler changes New change for Add rigo without plate number 21032024 dileep end*//
         public List<string> GetCompanyNames(string companyNameStart)
         {
             return _context.KeyVehicleLogVisitorPersonalDetails
@@ -1220,6 +1269,10 @@ namespace CityWatch.Data.Providers
             kvlProfileToDb.Sender = keyVehicleLogProfile.Sender;
             kvlProfileToDb.IsSender = keyVehicleLogProfile.IsSender;
             kvlProfileToDb.Notes = keyVehicleLogProfile.Notes;
+            kvlProfileToDb.Trailer1PlateId = keyVehicleLogProfile.Trailer1PlateId;
+            kvlProfileToDb.Trailer2PlateId = keyVehicleLogProfile.Trailer2PlateId;
+            kvlProfileToDb.Trailer3PlateId = keyVehicleLogProfile.Trailer3PlateId;
+            kvlProfileToDb.Trailer4PlateId = keyVehicleLogProfile.Trailer3PlateId;
 
             if (kvlProfileToDb.Id == 0)
             {
