@@ -26,13 +26,16 @@ namespace CityWatch.Web.Pages.Admin
         public readonly IConfigDataProvider _configDataProvider;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IViewDataService _viewDataService;
+        private readonly IGuardLogDataProvider _guardLogDataProvider;
 
         public SettingsModel(IWebHostEnvironment webHostEnvironment,
             IClientDataProvider clientDataProvider,
             IConfigDataProvider configDataProvider,
             IUserDataProvider userDataProvider,
-            IViewDataService viewDataService)
+            IViewDataService viewDataService,
+            IGuardLogDataProvider guardLogDataProvider)
         {
+            _guardLogDataProvider = guardLogDataProvider;
             _clientDataProvider = clientDataProvider;
             _configDataProvider = configDataProvider;
             _userDataProvider = userDataProvider;
@@ -1001,5 +1004,26 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message, dateTimeUpdated = dateTimeUpdated.ToString("dd MMM yyyy @ HH:mm"), filepath });
         }
         //for adding a report logo-end
+
+        public JsonResult OnGetClientSitesNew(string typeId)
+        {
+            if (typeId != null)
+            {
+                string[] typeId2 = typeId.Split(';');
+                int[] typeId3 = new int[typeId2.Length];
+                int i = 0;
+                foreach (var item in typeId2)
+                {
+
+                    typeId3[i] = Convert.ToInt32(item);
+                    i++;
+
+
+                }
+
+                return new JsonResult(_guardLogDataProvider.GetAllClientSites().Where(x => typeId == null || typeId3.Contains(x.TypeId)).OrderBy(z => z.Name).ThenBy(z => z.TypeId));
+            }
+            return new JsonResult(_guardLogDataProvider.GetAllClientSites().Where(x => x.TypeId == 0).OrderBy(z => z.Name).ThenBy(z => z.TypeId));
+        }
     }
 }

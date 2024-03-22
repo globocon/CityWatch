@@ -510,6 +510,46 @@
     </div>
     <div class="toast-body"></div>
 </div>
+<!-- The Modal -->
+<div class="modal fade bd-example-modal-sm" id="PositionModel" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="logbook" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    Client Type & Client Site
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div id="scrollableDiv">
+                            <div class="pt-2">
+                                <label class="font-weight-normal">Client Type</label>
+                                <select class="form-control" id="po_client_type">
+                                    <option value="">All</option>
+                                    @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
+                                    {
+                                        <option value="@item.Id">@item.Name</option>
+                                    }
+                                </select>
+
+                                
+                            </div>
+                            <div class="pt-2">
+                                <label class="mx-1" for="dglClientSiteId">Client Site</label>
+                                <select class="form-control mx-1" id="PositionClientSiteId"></select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <partial name="_SettingsPopup" />
 @Html.AntiForgeryToken()
 

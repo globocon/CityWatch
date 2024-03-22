@@ -323,6 +323,8 @@ namespace CityWatch.Data.Providers
         //To get the Logbbok Data-p6-101 stop
         public void SavePostion(IncidentReportPosition incidentReportPosition)
         {
+            var ClientSiteName = _context.ClientSites.Where(x => x.Id == incidentReportPosition.ClientsiteId).FirstOrDefault();
+           
             if (incidentReportPosition.Id == -1)
             {
                 _context.IncidentReportPositions.Add(new IncidentReportPosition()
@@ -331,7 +333,9 @@ namespace CityWatch.Data.Providers
                     EmailTo = incidentReportPosition.EmailTo,
                     IsPatrolCar = incidentReportPosition.IsPatrolCar,
                     DropboxDir = incidentReportPosition.DropboxDir,
-                    IsLogbook= incidentReportPosition.IsLogbook
+                    IsLogbook= incidentReportPosition.IsLogbook,
+                    ClientsiteId= incidentReportPosition.ClientsiteId,
+                    ClientsiteName= ClientSiteName.Name
                 });
             }
             else
@@ -344,6 +348,16 @@ namespace CityWatch.Data.Providers
                     positionToUpdate.IsPatrolCar = incidentReportPosition.IsPatrolCar;
                     positionToUpdate.DropboxDir = incidentReportPosition.DropboxDir;
                     positionToUpdate.IsLogbook = incidentReportPosition.IsLogbook;
+                    positionToUpdate.ClientsiteId = incidentReportPosition.ClientsiteId;
+                    if (ClientSiteName!=null)
+                    {
+                        positionToUpdate.ClientsiteName = ClientSiteName.Name;
+                    }
+                    else
+                    {
+                        positionToUpdate.ClientsiteName = null;
+                    }
+                    
                 }
             }
             _context.SaveChanges();

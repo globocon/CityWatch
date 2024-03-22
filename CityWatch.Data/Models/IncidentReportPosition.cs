@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CityWatch.Data.Models
 {
@@ -15,5 +16,8 @@ namespace CityWatch.Data.Models
 
         public string DropboxDir { get; set; }
         public bool IsLogbook { get; set; }
+        public int? ClientsiteId { get; set; }
+        public string ClientsiteName { get; set; }
+
     }
 }
