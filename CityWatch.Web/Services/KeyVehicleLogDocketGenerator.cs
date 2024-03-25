@@ -14,6 +14,7 @@ using iText.Layout;
 using iText.Layout.Borders;
 using iText.Layout.Element;
 using iText.Layout.Properties;
+using iText.Pdfa;
 using iText.StyledXmlParser.Jsoup.Helper;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Options;
@@ -57,6 +58,7 @@ namespace CityWatch.Web.Services
         private readonly IGuardSettingsDataProvider _guardSettingsDataProvider;
         private readonly IWebHostEnvironment _WebHostEnvironment;
         private readonly IAppConfigurationProvider _appConfigurationProvider;
+        private readonly IViewDataService _viewDataService;
         private readonly string _reportRootDir;
         private readonly string _imageRootDir;
         private readonly string _PersonimageRootDir;
@@ -74,7 +76,8 @@ namespace CityWatch.Web.Services
            IGuardLogDataProvider guardLogDataProvider,
            IClientDataProvider clientDataProvider,
            IGuardSettingsDataProvider guardSettingsDataProvider,
-           IOptions<Settings> settings, IAppConfigurationProvider appConfigurationProvider)
+           IOptions<Settings> settings, IAppConfigurationProvider appConfigurationProvider,
+            IViewDataService viewDataService)
         {
             _clientDataProvider = clientDataProvider;
             _guardLogDataProvider = guardLogDataProvider;
@@ -87,6 +90,8 @@ namespace CityWatch.Web.Services
             _settings = settings.Value;
             _appConfigurationProvider= appConfigurationProvider;
             _downloadsFolderPath = IO.Path.Combine(webHostEnvironment.WebRootPath, "Pdf", "FromDropbox");
+            _viewDataService = viewDataService;
+            _WebHostEnvironment = webHostEnvironment;
         }
         //To Generate the Pdf In List start
         public string GeneratePdfReportList(int keyVehicleLogId1, string docketReason, string blankNoteOnOrOff, string serialNo, List<int> ids, int clientsiteid)
@@ -323,12 +328,89 @@ namespace CityWatch.Web.Services
             doc.Add(CreateImageDetailsTable(keyVehicleLogViewModel, docketReason));
 
 
+            
+            //p7-115 docket output issues-start
+            //pdfDocument.AddNewPage();
+            var path = keyVehicleLog.Id + "/ComplianceDocuments";
+        
+        var keyVehicleLogDetails = _viewDataService.GetKeyVehicleLogAttachments(
+             IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path)
+             .ToList();
+            if(keyVehicleLogDetails.Count>0)
+            {
+                for(int i=0;i<keyVehicleLogDetails.Count;i++)
+                {
+                    string filename = IO.Path.Combine(IO.Path.Combine(IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path), keyVehicleLogDetails[i]);
+                    int pagecount = 0;
+                    if (IO.Path.GetExtension(filename) == ".pdf")
+                    {
+                        using (StreamReader sr = new StreamReader(File.OpenRead(filename)))
+                        {
+                            Regex regex = new Regex(@"/Type\s*/Page[^s]");
+                            MatchCollection matches = regex.Matches(sr.ReadToEnd());
+
+                            pagecount = matches.Count;
+                        }
+                        PdfReader reader = new PdfReader(filename);
+                        PdfDocument docfile = new PdfDocument(reader);
+                        int pagecountnew=docfile.GetNumberOfPages();
+                        docfile.CopyPagesTo(1, pagecountnew, pdfDoc);
+                       
+                    }
+                    if(IO.Path.GetExtension(filename) == ".jpg")
+                    {
+                        var pdfDocneew = new PdfDocument(new PdfWriter(filename));
+                        pdfDocneew.SetDefaultPageSize(PageSize.A4);
+                        var docnew = new Document(pdfDocneew);
+
+                        docnew.SetMargins(15f, 30f, 40f, 30f);
+
+                        docnew.Add(GetImageFileTable(filename,keyVehicleLog.Id));
+                        docnew.Close();
+                        pdfDocneew.Close();
+                        //PdfReader reader = new PdfReader(pdfDocneew);
+                        //PdfDocument docfile = new PdfDocument(reader);
+                        int pagecountnew = pdfDocneew.GetNumberOfPages();
+                        pdfDocneew.CopyPagesTo(1, pagecountnew, pdfDoc);
+                    }
+                }
+            }
+
+            //p7 - 115 docket output issues - end
             doc.Close();
             pdfDoc.Close();
 
             return IO.Path.GetFileName(reportPdfPath);
         }
+        //p7 - 115 docket output issues - start
+        private Table GetImageFileTable(string filename,int id)
+        {
+            string originalfile= IO.Path.GetFileName(filename);
+            var ImageTable = new Table(1).UseAllAvailableWidth();
+            //var path = id + "/c";
+            var fromFolderPath = IO.Path.Combine(IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), id.ToString(), "ComplianceDocuments");
+            //var toFolderPath= IO.Path.Combine(IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path +"/Images");
+            //if (!Directory.Exists(toFolderPath))
+            //    Directory.CreateDirectory(toFolderPath);
+           
+            //    System.IO.File.Copy(IO.Path.Combine(fromFolderPath, originalfile), IO.Path.Combine(toFolderPath, originalfile), true);
+             
+            ImageData imagedata = ImageDataFactory.Create(IO.Path.Combine(fromFolderPath, IO.Path.GetFileNameWithoutExtension(filename) + ".jpg"));
+            iText.Layout.Element.Image coverImage = new iText.Layout.Element.Image(imagedata);
 
+            var Imagepath = new Image(ImageDataFactory.Create(IO.Path.Combine(fromFolderPath, originalfile)))
+             .SetHeight(160);
+
+           
+                ImageTable.AddCell(new Cell().Add(Imagepath).SetBorder(Border.NO_BORDER));
+          
+
+
+
+
+            return ImageTable;
+        }
+        //p7 - 115 docket output issues - end
         /* bulk docket generate Start*/
         public string GenerateBulkPdfReport(List<int> keyVehicleLogId, string docketReason, string blankNoteOnOrOff, string serialNo)
         {
@@ -700,7 +782,10 @@ namespace CityWatch.Web.Services
                                         .SetPaddingLeft(0)
                                         .SetPaddingTop(7)
                                         .SetBorder(Border.NO_BORDER)
-                                        .Add(GetOtherDetailsTable(docketReason));
+                                        //.Add(GetOtherDetailsTable(docketReason));
+                                        //p7 - 115 docket output issues-start
+                                        .Add(GetOtherDetailsTable(docketReason, keyVehicleLogViewModel));
+                                        //p7 - 115 docket output issues-end
             innerTable2.AddCell(otherDetailsTable);
 
             var cellInnerTable2 = new Cell()
@@ -1081,6 +1166,41 @@ namespace CityWatch.Web.Services
 
             return otherDetailsTable;
         }
+        //p7-115 docket output issues-start
+        private static Table GetOtherDetailsTable(string docketReason, KeyVehicleLogViewModel keyVehicleLogViewModel)
+        {
+            var otherDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 40, 60 })).UseAllAvailableWidth().SetMarginTop(12);
+            
+            //otherDetailsTable.AddCell(GetHeaderCell("STMS Form \n(Outbound / pickup only)", textAlignment: TextAlignment.LEFT));
+            otherDetailsTable.AddCell(GetHeaderCell("Compliance Documents \n(NHVR HML / STMS / HACCP / etc)", textAlignment: TextAlignment.LEFT));
+           
+            otherDetailsTable.AddCell(GetHeaderCell("Why was MANUAL Docket Created?", textAlignment: TextAlignment.LEFT));
+            //p7-115 docket output issues-start
+            if (keyVehicleLogViewModel.Detail.IsDocketNo == true)
+            {
+                otherDetailsTable.AddCell(GetDataCell("Y", textAlignment: TextAlignment.CENTER, cellFontSize: CELL_FONT_SIZE_BIG)
+                //otherDetailsTable.AddCell(GetDataCell("NA", textAlignment: TextAlignment.CENTER, cellFontSize: CELL_FONT_SIZE_BIG)
+               //p7 - 115 docket output issues - end
+               .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE));
+                otherDetailsTable.AddCell(GetDataCell(docketReason, textAlignment: TextAlignment.LEFT)
+                     .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                    .SetHeight(10));
+            }
+            else
+            {
+                otherDetailsTable.AddCell(GetDataCell("NA", textAlignment: TextAlignment.CENTER, cellFontSize: CELL_FONT_SIZE_BIG)
+               //otherDetailsTable.AddCell(GetDataCell("NA", textAlignment: TextAlignment.CENTER, cellFontSize: CELL_FONT_SIZE_BIG)
+               //p7 - 115 docket output issues - end
+               .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE));
+                otherDetailsTable.AddCell(GetDataCell(docketReason, textAlignment: TextAlignment.LEFT)
+                     .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                    .SetHeight(10));
+            }
+            return otherDetailsTable;
+        }
+        //p7 - 115 docket output issues - end
         //PO List 
         private static Table GetOtherDetailsTablePOList(string docketReason)
         {
@@ -1119,10 +1239,10 @@ namespace CityWatch.Web.Services
             var signDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 25, 75 })).UseAllAvailableWidth();
 
             signDetailsTable.AddCell(GetHeaderCell("Loader"));
-            signDetailsTable.AddCell(GetDataCell("Name: \n\nSign:\n\n", textAlignment: TextAlignment.LEFT));
+            signDetailsTable.AddCell(GetDataCell("Name: "+ keyVehicleLogViewModel.Detail.LoaderName + "\n\nSign:\n\n", textAlignment: TextAlignment.LEFT));
 
             signDetailsTable.AddCell(GetHeaderCell("Dispatch"));
-            signDetailsTable.AddCell(GetDataCell("Name: \n\nSign:\n\n", textAlignment: TextAlignment.LEFT));
+            signDetailsTable.AddCell(GetDataCell("Name: " + keyVehicleLogViewModel.Detail.DispatchName + "\n\nSign:\n\n", textAlignment: TextAlignment.LEFT));
 
             signDetailsTable.AddCell(GetHeaderCell("Driver"));
             //p7-115 docket output issues-start
