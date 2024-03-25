@@ -189,10 +189,7 @@ namespace CityWatch.Web.Pages.Incident
                             };
 
                             ClientSites = _ViewDataService.GetUserClientSites(AuthUserHelper.LoggedInUserId, IrPreviousObject.DateLocation.ClientType);
-                            if (IrPreviousObject.DateLocation.ClientTypePosition!=null)
-                            {
-                                ClientSitesPosition = _ViewDataService.GetUserClientSites(AuthUserHelper.LoggedInUserId, IrPreviousObject.DateLocation.ClientTypePosition);
-                            }
+                   
                            
                             FeedBackTemplates = _ViewDataService.GetFeedbackTemplatesByType((int)IrPreviousObject.FeedbackType);
                             if (IrPreviousObject.IsPositionPatrolCar)
@@ -976,11 +973,8 @@ namespace CityWatch.Web.Pages.Incident
             var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Name == Report.DateLocation.ClientType);
             var clientSite = _clientDataProvider.GetClientSites(clientType.Id).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite);
             var PSPFName = _clientDataProvider.GetPSPF().SingleOrDefault(z => z.Name == Report.PSPFName);
-            //To get the clientType oF position start
-            var clientTypePosition = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Name == Report.DateLocation.ClientTypePosition);
-
-            var clientSitePosition = _clientDataProvider.GetClientSites(clientTypePosition?.Id)
-    ?.SingleOrDefault(x => x.Name == Report.DateLocation.ClientSitePosition);
+            
+            var clientSitePosition = _clientDataProvider.GetClientSitePosition(Report.Officer.Position);
             //To get the clientType oF position stop
             // var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite);
             try
@@ -1032,7 +1026,7 @@ namespace CityWatch.Web.Pages.Incident
                 CreatedOnDateTimeZoneShort = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeZoneShort,
                 CreatedOnDateTimeUtcOffsetMinute = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeUtcOffsetMinute, // Task p6#73_TimeZone issue -- added by Binoy -- End
                 HASH=hashCode,
-                ClientSitePositionId= clientSitePosition?.Id//To get the Client Site Position 
+                ClientSitePositionId= clientSitePosition?.ClientsiteId//To get the Client Site Position 
 
             };
             if (HttpContext.Session.GetString("GuardId") != null)
