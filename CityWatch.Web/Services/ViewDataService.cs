@@ -9,6 +9,8 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Azure;
+using Org.BouncyCastle.Asn1.Pkcs;
+using SMSGlobal.api;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -105,6 +107,10 @@ namespace CityWatch.Web.Services
         string GetFeedbackTemplatesByTypeByColor(int type, int id);
         List<FeedbackTemplate> GetFeedbackTemplateListByType(int type);
         public IncidentReportPosition GetLoogbookdata(string IncidentName);
+
+        //p2-192 client email search-start
+        List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm, string searchTermtwo);
+        //p2-192 client email search-end
     }
 
     public class ViewDataService : IViewDataService
@@ -1144,5 +1150,28 @@ namespace CityWatch.Web.Services
 
             return st1;
         }
+        //p2-192 client email search-start
+        public List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm,string searchTermtwo)
+        {
+            var results = new List<ClientSite>();
+            var clientSites = _clientDataProvider.GetClientSites(typeId);
+            if (userId == null)
+                results = clientSites;
+            else
+            {
+                var allUserAccess = _userDataProvider.GetUserClientSiteAccess(userId);
+                var clientSiteIds = allUserAccess.Select(x => x.ClientSite.Id).Distinct().ToList();
+                results = clientSites.Where(x => clientSiteIds.Contains(x.Id)).ToList();
+            }
+
+            if (!string.IsNullOrEmpty(searchTerm))
+                results = results.Where(x => x.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                (!string.IsNullOrEmpty(x.Address) && x.Address.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))).ToList();
+            if (!string.IsNullOrEmpty(searchTermtwo))
+                results = results.Where(x => !string.IsNullOrEmpty(x.Emails) && x.Emails.Contains(searchTermtwo, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            return results;
+        }
+        //p2-192 client email search-end
     }
 }

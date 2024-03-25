@@ -539,14 +539,25 @@
     $('#search_kw_client_site').on('keyup', function (event) {
         // Enter key pressed
         if (event.keyCode === 13) {
-            gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $(this).val() });
+            gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $(this).val(), searchTermtwo: $('#search_kw_client_site_email').val() });
         }
     });
 
-    $('#btnSearchClientSite').on('click', function () {
-        gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val() });
-    });
 
+    $('#btnSearchClientSite').on('click', function () {
+        gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val(), searchTermtwo: $('#search_kw_client_site_email').val() });
+    });
+    /*p1-192 client site email seach-start*/
+    $('#btnSearchClientEmail').on('click', function () {
+        gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val(), searchTermtwo: $('#search_kw_client_site_email').val() });
+    });
+    $('#search_kw_client_site_email').on('keyup', function (event) {
+        // Enter key pressed
+        if (event.keyCode === 13) {
+            gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val(), searchTermtwo:  $(this).val()  });
+        }
+    });
+   /* p1 - 192 client site email seach - end*/
     /****** Report Fileds start *******/
     let gridReportFields;
 
