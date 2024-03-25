@@ -359,19 +359,26 @@ namespace CityWatch.Web.Services
                     }
                     if(IO.Path.GetExtension(filename) == ".jpg")
                     {
-                        var pdfDocneew = new PdfDocument(new PdfWriter(filename));
-                        pdfDocneew.SetDefaultPageSize(PageSize.A4);
-                        var docnew = new Document(pdfDocneew);
+                        //var pdfDocneew = new PdfDocument(new PdfReader(filename));
+                        //pdfDocneew.SetDefaultPageSize(PageSize.A4);
+                        //var docnew = new Document(pdfDocneew);
 
-                        docnew.SetMargins(15f, 30f, 40f, 30f);
-
-                        docnew.Add(GetImageFileTable(filename,keyVehicleLog.Id));
-                        docnew.Close();
-                        pdfDocneew.Close();
-                        //PdfReader reader = new PdfReader(pdfDocneew);
-                        //PdfDocument docfile = new PdfDocument(reader);
-                        int pagecountnew = pdfDocneew.GetNumberOfPages();
-                        pdfDocneew.CopyPagesTo(1, pagecountnew, pdfDoc);
+                        //docnew.SetMargins(15f, 30f, 40f, 30f);
+                        var pageSize = new PageSize(pdfDoc.GetLastPage().GetPageSize());
+                        pdfDoc.AddNewPage(1, pageSize);
+                        
+                        
+                        doc.Add(GetImageFileTable(filename,keyVehicleLog.Id));
+                       
+                        var countpage = pdfDoc.GetNumberOfPages();
+                        var page = pdfDoc.GetFirstPage();
+                        pdfDoc.MovePage(page, countpage + 1);
+                        //docnew.Close();
+                        //pdfDocneew.Close();
+                        ////PdfReader reader = new PdfReader(pdfDocneew);
+                        ////PdfDocument docfile = new PdfDocument(reader);
+                        //int pagecountnew = pdfDocneew.GetNumberOfPages();
+                        //pdfDocneew.CopyPagesTo(1, pagecountnew, pdfDoc);
                     }
                 }
             }

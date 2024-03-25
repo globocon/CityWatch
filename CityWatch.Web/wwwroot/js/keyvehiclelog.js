@@ -2542,7 +2542,13 @@ $(function () {
                     li.appendChild(liText);
                     li.appendChild(icon);
                     const anchorTag = document.createElement("a");
-                    anchorTag.href = '/KvlUploads/' + $('#VehicleRego').val() + "/ComplianceDocuments" + file;
+                    var id = $('#Id').val();
+                    if (id == 0) {
+                        anchorTag.href = '/KvlUploads/' + $('#VehicleRego').val() + "/ComplianceDocuments/" + file;
+                    }
+                    else {
+                        anchorTag.href = '/KvlUploads/' + id + "/ComplianceDocuments/" + file;
+                    }
                     anchorTag.target = "_blank";
                     const icon2 = document.createElement("i");
                     icon2.className = 'fa fa-download ml-2 text-primary';
@@ -2559,6 +2565,33 @@ $(function () {
                 $('#kvl_attachments_count').html(result.length);
             });
         }
+        $('#kvl-attachment_compliance_documents-list').on('click', '.btn-delete-kvl-attachment_compliance_documents', function (event) {
+            if (confirm('Are you sure want to remove this attachment?')) {
+                var target = event.target;
+                const fileName = target.parentNode.innerText.trim();
+                const vehicleRego = $('#VehicleRego').val()
+                $.ajax({
+                    url: '/Guard/KeyVehiclelog?handler=DeleteComplianceDocumentsAttachment',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        reportReference: $('#ReportReference').val(),
+                        fileName: fileName,
+                        vehicleRego: vehicleRego,
+                        id: $('#Id').val()
+                    },
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (result) {
+                    if (result) {
+                        target.parentNode.parentNode.removeChild(target.parentNode);
+                        GetComplianceDocumentsAttachmentLists()
+                    }
+                });
+            }
+        });
+        $('#btn_save_guard_compliancedocuments').on('click', function (event) {
+            $('#addCompliancesDocumentsModal').modal('hide');
+        })
         /*p7 - 115 Docket Output issues - end*/
         /*to upload the other image-start*/
         function OtherImageUpload() {

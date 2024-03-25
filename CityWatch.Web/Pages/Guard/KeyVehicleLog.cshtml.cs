@@ -360,6 +360,7 @@ namespace CityWatch.Web.Pages.Guard
                     {
                         string newid = keyVehicleLogDetails[i];
                         System.IO.File.Move(Path.Combine(fromFolderPath, newid), Path.Combine(toFolderPath, newid), true);
+                       
                     }
                     Directory.Delete(fromFolderPath, true);
                 }
@@ -1727,11 +1728,11 @@ namespace CityWatch.Web.Pages.Guard
             var path = string.Empty;
             if(id==0)
             {
-                path = truck + "/ComplianceDocuments";
+                path = truck + "/ComplianceDocuments/";
             }
             else
             {
-                path=id + "/ComplianceDocuments";
+                path=id + "/ComplianceDocuments/";
             }
             var keyVehicleLogDetails = _viewDataService.GetKeyVehicleLogAttachments(
                  IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path)
@@ -1746,6 +1747,35 @@ namespace CityWatch.Web.Pages.Guard
 
 
             return new JsonResult(keyVehicleLogDetails);
+        }
+        public JsonResult OnPostDeleteComplianceDocumentsAttachment(string reportReference, string fileName, string vehicleRego,int id)
+
+        {
+            var success = false;
+            var filepath = string.Empty;
+            if(id==0)
+            {
+                filepath= IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", vehicleRego,"ComplianceDocuments", fileName);
+            }
+            else
+            {
+                filepath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", id.ToString(), "ComplianceDocuments", fileName) ;
+            }
+               
+                if (IO.File.Exists(filepath))
+                {
+                    try
+                    {
+                        IO.File.Delete(filepath);
+                        success = true;
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            
+            return new JsonResult(success);
         }
         //P7-115 DOCKET OUTPUT ISSUES-start
 
