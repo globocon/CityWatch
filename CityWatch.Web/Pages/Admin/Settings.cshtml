@@ -110,7 +110,7 @@
                         <div class="col-md-5 text-right">
                             <button class="btn btn-success mb-3" id="add_fbktpl"><i class="fa fa-plus mr-2"></i>New Template</button>
                         </div>
-                    </div>
+                    </div>                   
                     <div class="alert alert-success alert-dismissible fade show" role="alert" id="fbktpl_status" style="display:none">
                         <span>Message</span>
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -118,6 +118,16 @@
                         </button>
                     </div>
                     <form id="form_fbktpl" style="display:none" method="post">
+                        <div class="form-group row">
+                            <label class="col-form-label col-md-2 text-right">Background Colour</label>
+                            <div class="col-md-1">
+                                <input type="color" asp-for="@Model.FeedbackTemplate.BackgroundColour" />
+                            </div>
+                            <label class="col-form-label col-md-1 pl-0 pr-0 text-right">Text Colour</label>
+                            <div class="col-md-1">
+                                <input type="color" asp-for="@Model.FeedbackTemplate.TextColor" />
+                            </div>
+                        </div>
                         <div class="form-group row" style="display:none" id="new_fbktpl_name">
                             <label class="col-md-3 col-form-label">New template name:</label>
                             <div class="col-md-4">

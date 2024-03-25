@@ -103,7 +103,7 @@ namespace CityWatch.Web.Services
         IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistoryWithPersonName(string PersonName);
         IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistoryWithKeyNo(string KeyNo);
         string GetFeedbackTemplatesByTypeByColor(int type, int id);
-
+        List<FeedbackTemplate> GetFeedbackTemplateListByType(int type);
         public IncidentReportPosition GetLoogbookdata(string IncidentName);
     }
 
@@ -392,6 +392,11 @@ namespace CityWatch.Web.Services
             }
 
             return items;
+        }
+        public List<FeedbackTemplate> GetFeedbackTemplateListByType(int type)
+        {
+            var feedbackTemplates = _configDataProvider.GetFeedbackTemplates().Where(z => z.Type == type).ToList();   
+            return feedbackTemplates;
         }
         public string GetFeedbackTemplateText(int id)
         {

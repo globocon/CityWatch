@@ -1427,6 +1427,8 @@
             $('#FeedbackTemplate_Id').val(selfeedback);
             $('#FeedbackTemplate_Name').val($("option:selected", this).text());
             $('#FeedbackTemplate_Type').prop('selectedIndex', 0);
+            $('#FeedbackTemplate_BackgroundColour').val('#FFFFFF');
+            $('#FeedbackTemplate_TextColor').val('#000000');
             $.ajax({
                 url: '/Admin/Settings?handler=FeedbackTemplate',
                 type: 'GET',
@@ -1435,6 +1437,8 @@
             }).done(function (data) {
                 $('#FeedbackTemplate_Text').val(data.text);
                 $('#FeedbackTemplate_Type').val(data.type);
+                $('#FeedbackTemplate_BackgroundColour').val(data.backgroundColour);
+                $('#FeedbackTemplate_TextColor').val(data.textColor);
             }).fail(function () {
                 showStatusNotification(false, 'Something went wrong');
             });
@@ -1446,6 +1450,8 @@
         $('#FeedbackTemplate_Id').val('')
         $('#FeedbackTemplate_Name').val('');
         $('#FeedbackTemplate_Text').val('');
+        $('#FeedbackTemplate_BackgroundColour').val('#FFFFFF');
+        $('#FeedbackTemplate_TextColor').val('#000000');
         $('#FeedbackTemplate_Type').prop('selectedIndex', 0);
         $('#delete_fbktpl').hide();
         $('#sel_fbktpl_name').html('new template');
@@ -1539,6 +1545,8 @@
         $('#FeedbackTemplate_Name').val('');
         $('#FeedbackTemplate_Text').val('');
         $('#FeedbackTemplate_Type').prop('selectedIndex', 0);
+        $('#FeedbackTemplate_BackgroundColour').val('#FFFFFF');
+        $('#FeedbackTemplate_TextColor').val('#000000');
         $('#sel_fbktpl_name').html('');
         $('#new_fbktpl_name').hide();
         $('#delete_fbktpl').hide();
