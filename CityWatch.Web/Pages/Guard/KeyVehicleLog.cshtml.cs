@@ -152,6 +152,11 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(_viewDataService.GetKeyVehicleLogAuditHistory(vehicleRego).ToList());
         }
 
+        public JsonResult OnGetAuditHistoryUsingProfileId(int profileId)
+        {
+            return new JsonResult(_viewDataService.GetKeyVehicleLogAuditHistory(profileId).ToList());
+        }
+
         public JsonResult OnPostSaveKeyVehicleLog()
         {
             var results = new List<ValidationResult>();
@@ -302,12 +307,23 @@ namespace CityWatch.Web.Pages.Guard
                 //string imagepath = Path.Combine(reportRootDir, "ziren.png");
 
                 KeyVehicleLog.POIImage = Path.Combine("../images", "ziren.png");
-                var profileId = GetKvlProfileId(KeyVehicleLog);
+                //Dileep change 21032024  for trailer Start
+                var profileId = 0;
+                if (!string.IsNullOrEmpty(KeyVehicleLog.VehicleRego))
+                    profileId = GetKvlProfileId(KeyVehicleLog);
+                else
+                    profileId = GetKvlProfileIdWithOutVehicleRego(KeyVehicleLog);
+                //Dileep change 21032024  for trailer end
                 keyVehicleLogAuditHistory.ProfileId = profileId;
                 keyVehicleLogAuditHistory.KeyVehicleLogId = KeyVehicleLog.Id;
                 _guardLogDataProvider.SaveKeyVehicleLogAuditHistory(keyVehicleLogAuditHistory);
-
-                _guardLogDataProvider.SaveKeyVehicleLogProfileNotes(KeyVehicleLog.VehicleRego, KeyVehicleLog.Notes);
+                //Dileep change 21032024  for trailer Start
+                if (!string.IsNullOrEmpty(KeyVehicleLog.VehicleRego))
+                    _guardLogDataProvider.SaveKeyVehicleLogProfileNotes(KeyVehicleLog.VehicleRego, KeyVehicleLog.Notes);
+                else
+                _guardLogDataProvider.SaveKeyVehicleLogProfileNotesByTrailerRiog(KeyVehicleLog.Trailer1Rego, KeyVehicleLog.Trailer2Rego, KeyVehicleLog.Trailer3Rego, KeyVehicleLog.Trailer4Rego, KeyVehicleLog.Trailer1PlateId,
+                    KeyVehicleLog.Trailer2PlateId, KeyVehicleLog.Trailer3PlateId, KeyVehicleLog.Trailer4PlateId, KeyVehicleLog.Notes);
+                //Dileep change 21032024  for trailer end
                 var guardlogins = _guardLogDataProvider.GetGuardLogins(Convert.ToInt32(KeyVehicleLog.GuardLoginId));
                 foreach (var item in guardlogins)
                 {
@@ -447,6 +463,13 @@ namespace CityWatch.Web.Pages.Guard
             string imagepath = "~/images/ziren.png";
             return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRegoNew(truckRego, imagepath).OrderBy(z => z, new KeyVehicleLogProfileViewModelComparer()));
         }
+
+        public JsonResult OnGetTrailerDetails(string truckRego)
+        {
+
+            return new JsonResult(_viewDataService.GetKeyVehicleTrailerNew(truckRego));
+        }
+
 
         public JsonResult OnGetProfileById(int id)
         {
@@ -649,24 +672,26 @@ namespace CityWatch.Web.Pages.Guard
 
         {
             var success = false;
-
-
-            var uploadFileName = VehicleRego + ".jpg";
-            //     var folderPath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", VehicleRego, uploadFileName);
-            var folderPath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", VehicleRego);
-            //var folderPath = Path.Combine("../KvlUploads", VehicleRego);
-            var fulePath = Path.Combine(folderPath, uploadFileName);
-
-            if (!IO.File.Exists(fulePath))
+            var fulePath = "";
+            if (!string.IsNullOrEmpty(VehicleRego))
             {
-                success = false;
-            }
-            else
-            {
-
-                success = true;
-                folderPath = Path.Combine("../KvlUploads", VehicleRego);
+                var uploadFileName = VehicleRego + ".jpg";
+                //     var folderPath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", VehicleRego, uploadFileName);
+                var folderPath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", VehicleRego);
+                //var folderPath = Path.Combine("../KvlUploads", VehicleRego);
                 fulePath = Path.Combine(folderPath, uploadFileName);
+
+                if (!IO.File.Exists(fulePath))
+                {
+                    success = false;
+                }
+                else
+                {
+
+                    success = true;
+                    folderPath = Path.Combine("../KvlUploads", VehicleRego);
+                    fulePath = Path.Combine(folderPath, uploadFileName);
+                }
             }
             return new JsonResult(new { fulePath, success });
         }
@@ -1306,16 +1331,16 @@ namespace CityWatch.Web.Pages.Guard
                 EmailSender(emailAddresses, Subject, Notifications, GuradDetails.Name, ClientsiteDetails.Name, gpsCoordinates);
 
                 var GlobalDuressSmsNumbers = _clientDataProvider.GetDuressSms();
-                if(ClientsiteDetails.DuressSms != null)
+                if (ClientsiteDetails.DuressSms != null)
                 {// Adding Site Duress Sms number.
-                    GlobalDuressSms SiteDuressSmsNumbers = new GlobalDuressSms() { SmsNumber = ClientsiteDetails.DuressSms};
+                    GlobalDuressSms SiteDuressSmsNumbers = new GlobalDuressSms() { SmsNumber = ClientsiteDetails.DuressSms };
                     GlobalDuressSmsNumbers.Add(SiteDuressSmsNumbers);
-                }               
+                }
                 if (_WebHostEnvironment.IsDevelopment())
                 {
                     string smsnumber = "+61 (0) 423 404 982"; // Sending to Jino sir number for testing purpose
                     GlobalDuressSmsNumbers = new List<GlobalDuressSms>();
-                    GlobalDuressSms gd = new GlobalDuressSms() { SmsNumber = smsnumber }; 
+                    GlobalDuressSms gd = new GlobalDuressSms() { SmsNumber = smsnumber };
                     GlobalDuressSmsNumbers.Add(gd);
                 }
                 if (GlobalDuressSmsNumbers != null)
@@ -1574,6 +1599,37 @@ namespace CityWatch.Web.Pages.Guard
             return profileId;
         }
 
+        private int GetKvlProfileIdWithOutVehicleRego(KeyVehicleLog keyVehicleLog)
+        {
+            int profileId;
+            var kvlPersonalDetail = new KeyVehicleLogVisitorPersonalDetail(keyVehicleLog);
+            var personalDetails = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetailsUsingTrailerRego
+                (keyVehicleLog.Trailer1Rego, keyVehicleLog.Trailer2Rego, keyVehicleLog.Trailer3Rego, keyVehicleLog.Trailer4Rego,
+                keyVehicleLog.Trailer1PlateId, keyVehicleLog.Trailer2PlateId, keyVehicleLog.Trailer3PlateId, keyVehicleLog.Trailer4PlateId );
+            if (!personalDetails.Any() || !personalDetails.Any(z => z.EqualsTrailer(kvlPersonalDetail)))
+            {
+                kvlPersonalDetail.KeyVehicleLogProfile.CreatedLogId = keyVehicleLog.Id;
+                profileId = _guardLogDataProvider.SaveKeyVehicleLogProfileWithPersonalDetailForTrailer(kvlPersonalDetail);
+            }
+            else
+            {
+                var kvlVisitorProfile = _guardLogDataProvider.GetKeyVehicleLogVisitorProfileUsingTrailerRigo(kvlPersonalDetail.KeyVehicleLogProfile.Trailer1Rego, kvlPersonalDetail.KeyVehicleLogProfile.Trailer2Rego,
+                    kvlPersonalDetail.KeyVehicleLogProfile.Trailer3Rego, kvlPersonalDetail.KeyVehicleLogProfile.Trailer4Rego, kvlPersonalDetail.KeyVehicleLogProfile.Trailer1PlateId, 
+                    kvlPersonalDetail.KeyVehicleLogProfile.Trailer2PlateId, kvlPersonalDetail.KeyVehicleLogProfile.Trailer3PlateId, kvlPersonalDetail.KeyVehicleLogProfile.Trailer4PlateId);
+                if (personalDetails.Any(z => z.EqualsTrailer(kvlPersonalDetail)))
+                {
+                    kvlPersonalDetail.Id = personalDetails.Where(z => z.PersonName == kvlPersonalDetail.PersonName).Max(z => z.Id);
+                    kvlPersonalDetail.KeyVehicleLogProfile.CreatedLogId = keyVehicleLog.Id;
+                }
+
+                profileId = _guardLogDataProvider.SaveKeyVehicleLogProfileWithPersonalDetailForTrailer(kvlPersonalDetail);
+                profileId = kvlVisitorProfile.Id;
+            }
+            return profileId;
+        }
+
+
+
         private KeyVehicleLogAuditHistory GetKvlAuditHistory(KeyVehicleLog keyVehicleLog)
         {
             var isNewKvlEntry = keyVehicleLog.Id == 0;
@@ -1707,7 +1763,7 @@ namespace CityWatch.Web.Pages.Guard
         }
 
         //to get next crm number-end
-        public IActionResult OnGetClientSiteToggle(int siteId,int toggleId)
+        public IActionResult OnGetClientSiteToggle(int siteId, int toggleId)
         {
 
             return new JsonResult(_guardDataProvider.GetClientSiteToggle(siteId, toggleId));

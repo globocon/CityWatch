@@ -98,6 +98,7 @@ namespace CityWatch.Data
         public DbSet<GlobalDuressEmail> GlobalDuressEmail { get; set; }
 
         public DbSet<SiteEventLog> SiteEventLog { get; set; }
+        public DbSet<TrailerDeatilsViewModel> TrailerDeatilsViewModel { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -2,6 +2,7 @@
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using Dropbox.Api.Users;
+using iText.Commons.Actions.Contexts;
 using iText.Layout.Element;
 using iText.StyledXmlParser.Css.Resolve.Shorthand.Impl;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -77,7 +78,7 @@ namespace CityWatch.Data.Providers
         void DeleteKeyVehicleLogField(int id);
         List<KeyVehicleLogAuditHistory> GetAuditHistory(int id);
         void SaveKeyVehicleLogAuditHistory(KeyVehicleLogAuditHistory keyVehicleLogAuditHistory);
-        void SaveClientSiteDuress(int clientSiteId, int guardId, string gpsCoordinates, string enabledAddress,GuardLog tmzdata);
+        void SaveClientSiteDuress(int clientSiteId, int guardId, string gpsCoordinates, string enabledAddress, GuardLog tmzdata);
         ClientSiteDuress GetClientSiteDuress(int clientSiteId);
         List<CompanyDetails> GetCompanyDetails();
         //logBookId entry for radio checklist-start
@@ -167,8 +168,8 @@ namespace CityWatch.Data.Providers
 
         List<GuardLog> GetGuardLogswithKvLogData(int logBookId, DateTime logDate);
 
-        void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications, 
-                                                    IrEntryType entryType, int type,int clientSiteId, GuardLog tmzdata);
+        void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications,
+                                                    IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata);
         void LogBookEntryFromRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications,
                                                     IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata);
         //do's and donts-start
@@ -186,7 +187,7 @@ namespace CityWatch.Data.Providers
         /* Save push messages*/
         int SavePushMessage(RadioCheckPushMessages radioCheckPushMessages);
 
-        
+
         void UpdateIsAcknowledged(int rcPushMessageId);
 
         void CopyPreviousDaysPushMessageToLogBook(List<RadioCheckPushMessages> previousDayPushmessageList, int logBookId, int guardLoginId, GuardLog tmzdata);
@@ -196,7 +197,7 @@ namespace CityWatch.Data.Providers
 
 
         // Project 4 , Task 48, Audio notification, Added By Binoy
-        void UpdateNotificationSoundPlayedStatusForGuardLogs(int logBookId,bool isControlRoomLogBook);
+        void UpdateNotificationSoundPlayedStatusForGuardLogs(int logBookId, bool isControlRoomLogBook);
 
         List<int> GetGuardLogsNotAcknowledgedForNotificationSound();
 
@@ -214,10 +215,26 @@ namespace CityWatch.Data.Providers
 
         List<KeyVehicleLogVisitorPersonalDetail> GetPOIListFromVisitorPersonalDetails();
         RadioCheckLogbookSiteDetails GetRadiocheckLogbookDetails();
-        
+
         List<GuardLog> GetLastLoginNew(int GuradId);
 
         List<string> GetTrailerRegosForKVL(string regoStart = null);
+
+        List<TrailerDeatilsViewModel> GetKeyVehicleLogProfileDetails(string pattern);
+        public KeyVehicleLogProfile GetKeyVehicleLogVisitorProfileUsingTrailerRigo(string TrailerRigo1, string TrailerRigo2,
+            string TrailerRigo3, string TrailerRigo4, int? TrailerRigo1Id, int? TrailerRigo2Id, int? TrailerRigo3Id, int? TrailerRigo4Id);
+        public List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetailsUsingTrailerRego(
+          string trailerRego1, string trailerRego2, string trailerRego3, string trailerRego4, int? trailerRego1Id, int? trailerRego2Id,
+          int? trailerRego3Id, int? trailerRego4Id
+          );
+
+        public void SaveKeyVehicleLogProfileNotesByTrailerRiog(string Trailer1Rego, string Trailer2Rego, string Trailer3Rego,
+            string Trailer4Rego, int? Trailer1PlateId, int? Trailer2PlateId, int? Trailer3PlateId, int? Trailer4PlateId, string notes);
+        public int SaveKeyVehicleLogProfileWithPersonalDetailForTrailer(KeyVehicleLogVisitorPersonalDetail kvlVisitorPersonalDetail);
+
+
+
+
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -297,8 +314,8 @@ namespace CityWatch.Data.Providers
 
 
         // Project 4 , Task 48, Audio notification, By Binoy -- Start
-        public void UpdateNotificationSoundPlayedStatusForGuardLogs(int logBookId,bool isControlRoomLogBook)
-        {            
+        public void UpdateNotificationSoundPlayedStatusForGuardLogs(int logBookId, bool isControlRoomLogBook)
+        {
             if (isControlRoomLogBook)
             {
                 var ControlRoomLog = _context.RadioCheckPushMessages.Where(x => x.Id == logBookId).SingleOrDefault();
@@ -402,8 +419,8 @@ namespace CityWatch.Data.Providers
                 IsEnabled = true,
                 EnabledBy = guardId,
                 EnabledDate = localDateTime, //DateTime.Today,
-                GpsCoordinates=gpsCoordinates,
-                EnabledAddress= enabledAddress,
+                GpsCoordinates = gpsCoordinates,
+                EnabledAddress = enabledAddress,
                 PlayDuressAlarm = true,
                 EnabledDateTimeLocal = tmzdata.EventDateTimeLocal,
                 EnabledDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
@@ -420,7 +437,7 @@ namespace CityWatch.Data.Providers
         public void SaveActionList(ActionListNotification ActionList)
         {
             var ActionListToUpdate = _context.ActionListNotification.SingleOrDefault(x => x.ClientSiteID == ActionList.ClientSiteID);
-            if (ActionListToUpdate==null)
+            if (ActionListToUpdate == null)
             {
                 _context.ActionListNotification.Add(new ActionListNotification()
                 {
@@ -435,7 +452,7 @@ namespace CityWatch.Data.Providers
                     Action5 = ActionList.Action5,
                     CommentsForControlRoomOperator = ActionList.CommentsForControlRoomOperator,
                     Message = ActionList.Message
-                }) ; 
+                });
             }
             else
             {
@@ -450,7 +467,7 @@ namespace CityWatch.Data.Providers
                 ActionListToUpdate.CommentsForControlRoomOperator = ActionList.CommentsForControlRoomOperator;
                 ActionListToUpdate.Message = ActionList.Message;
             }
-            
+
             _context.SaveChanges();
 
 
@@ -468,7 +485,7 @@ namespace CityWatch.Data.Providers
                     GuardLoginId = guardLog.GuardLoginId,
                     IsSystemEntry = guardLog.IsSystemEntry,
                     IrEntryType = guardLog.IrEntryType,
-                    RcPushMessageId= guardLog.RcPushMessageId,
+                    RcPushMessageId = guardLog.RcPushMessageId,
                     EventDateTimeLocal = guardLog.EventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
                     EventDateTimeLocalWithOffset = guardLog.EventDateTimeLocalWithOffset,
                     EventDateTimeZone = guardLog.EventDateTimeZone,
@@ -476,8 +493,8 @@ namespace CityWatch.Data.Providers
                     EventDateTimeUtcOffsetMinute = guardLog.EventDateTimeUtcOffsetMinute, // Task p6#73_TimeZone issue -- added by Binoy - End
 
                     PlayNotificationSound = guardLog.PlayNotificationSound,
-                    GpsCoordinates=guardLog.GpsCoordinates,
-                    IsIRReportTypeEntry=guardLog.IsIRReportTypeEntry
+                    GpsCoordinates = guardLog.GpsCoordinates,
+                    IsIRReportTypeEntry = guardLog.IsIRReportTypeEntry
 
 
                 });
@@ -574,7 +591,7 @@ namespace CityWatch.Data.Providers
         }
         public List<KeyVehicleLog> GetKeyVehicleLogByIds(int[] ids)
         {
-            return _context.KeyVehicleLogs.Where(z => ids.Contains(z.Id) && z.ClientSiteLogBook.ClientSite.IsActive==true)
+            return _context.KeyVehicleLogs.Where(z => ids.Contains(z.Id) && z.ClientSiteLogBook.ClientSite.IsActive == true)
                 .Include(z => z.ClientSiteLogBook)
                 .ThenInclude(z => z.ClientSite)
                 .ToList();
@@ -1001,11 +1018,11 @@ namespace CityWatch.Data.Providers
                 .OrderBy(z => z)
                 .ToList();
         }
-       ////trailer changes New change for Add rigo without plate number 21032024 dileep start*//
+        ////trailer changes New change for Add rigo without plate number 21032024 dileep start*//
         public List<string> GetTrailerRegosForKVL(string regoStart = null)
         {
-            var newList =new List<string>();
-            var trailer1Rego =  _context.KeyVehicleLogVisitorProfiles
+            var newList = new List<string>();
+            var trailer1Rego = _context.KeyVehicleLogVisitorProfiles
                 .Where(z => string.IsNullOrEmpty(regoStart) ||
                             (!string.IsNullOrEmpty(z.Trailer1Rego) &&
                                 z.Trailer1Rego.Contains(regoStart)))
@@ -1077,12 +1094,45 @@ namespace CityWatch.Data.Providers
             return _context.KeyVehicleLogVisitorProfiles
                             .SingleOrDefault(z => z.VehicleRego == truckRego);
         }
+        public KeyVehicleLogProfile GetKeyVehicleLogVisitorProfileUsingTrailerRigo(string TrailerRigo1, string TrailerRigo2,
+            string TrailerRigo3, string TrailerRigo4, int? TrailerRigo1Id, int? TrailerRigo2Id, int? TrailerRigo3Id, int? TrailerRigo4Id)
+        {
+            return _context.KeyVehicleLogVisitorProfiles
+            .SingleOrDefault(z => z.Trailer1Rego == TrailerRigo1
+            && z.Trailer2Rego == TrailerRigo2
+            && z.Trailer3Rego == TrailerRigo3
+            && z.Trailer4Rego == TrailerRigo4
+            && z.Trailer1PlateId == TrailerRigo1Id
+            && z.Trailer2PlateId == TrailerRigo2Id
+            && z.Trailer3PlateId == TrailerRigo3Id
+            && z.Trailer4PlateId == TrailerRigo4Id
+            );
+        }
 
         public List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetails(string truckRego)
         {
             return _context.KeyVehicleLogVisitorPersonalDetails
                 .Include(z => z.KeyVehicleLogProfile)
                 .Where(z => string.IsNullOrEmpty(truckRego) || string.Equals(z.KeyVehicleLogProfile.VehicleRego, truckRego))
+                .ToList();
+        }
+
+        public List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetailsUsingTrailerRego(
+            string trailerRego1, string trailerRego2, string trailerRego3, string trailerRego4, int? trailerRego1Id, int? trailerRego2Id,
+            int? trailerRego3Id, int? trailerRego4Id
+            )
+        {
+            return _context.KeyVehicleLogVisitorPersonalDetails
+                .Include(z => z.KeyVehicleLogProfile)
+                .Where(z => (string.IsNullOrEmpty(trailerRego1) || string.Equals(z.KeyVehicleLogProfile.Trailer1Rego, trailerRego1))
+                && (string.IsNullOrEmpty(trailerRego2) || string.Equals(z.KeyVehicleLogProfile.Trailer2Rego, trailerRego2))
+                && (string.IsNullOrEmpty(trailerRego3) || string.Equals(z.KeyVehicleLogProfile.Trailer3Rego, trailerRego3))
+                && (string.IsNullOrEmpty(trailerRego4) || string.Equals(z.KeyVehicleLogProfile.Trailer4Rego, trailerRego4))
+                && z.KeyVehicleLogProfile.Trailer1PlateId == trailerRego1Id
+                && z.KeyVehicleLogProfile.Trailer2PlateId == trailerRego2Id
+                && z.KeyVehicleLogProfile.Trailer3PlateId == trailerRego3Id
+                && z.KeyVehicleLogProfile.Trailer4PlateId == trailerRego4Id
+                )
                 .ToList();
         }
 
@@ -1097,7 +1147,7 @@ namespace CityWatch.Data.Providers
         {
             return _context.KeyVehicleLogVisitorPersonalDetails
                  .Include(z => z.KeyVehicleLogProfile)
-                .Where(z =>z.PersonOfInterest!=null).ToList();
+                .Where(z => z.PersonOfInterest != null).ToList();
         }
 
         public List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetailsWithIndividualType(int individualtype)
@@ -1110,6 +1160,13 @@ namespace CityWatch.Data.Providers
         public int SaveKeyVehicleLogProfileWithPersonalDetail(KeyVehicleLogVisitorPersonalDetail kvlVisitorPersonalDetail)
         {
             kvlVisitorPersonalDetail.ProfileId = SaveKeyVehicleLogProfile(kvlVisitorPersonalDetail.KeyVehicleLogProfile);
+            SaveKeyVehicleLogVisitorPersonalDetail(kvlVisitorPersonalDetail);
+            return kvlVisitorPersonalDetail.ProfileId;
+        }
+
+        public int SaveKeyVehicleLogProfileWithPersonalDetailForTrailer(KeyVehicleLogVisitorPersonalDetail kvlVisitorPersonalDetail)
+        {
+            kvlVisitorPersonalDetail.ProfileId = SaveKeyVehicleLogProfileForTrailer(kvlVisitorPersonalDetail.KeyVehicleLogProfile);
             SaveKeyVehicleLogVisitorPersonalDetail(kvlVisitorPersonalDetail);
             return kvlVisitorPersonalDetail.ProfileId;
         }
@@ -1166,6 +1223,21 @@ namespace CityWatch.Data.Providers
             }
         }
 
+        public void SaveKeyVehicleLogProfileNotesByTrailerRiog(string Trailer1Rego, string Trailer2Rego, string Trailer3Rego,
+            string Trailer4Rego, int? Trailer1PlateId, int? Trailer2PlateId, int? Trailer3PlateId, int? Trailer4PlateId, string notes)
+        {
+            var profileDetailsInDb = _context.KeyVehicleLogVisitorProfiles.SingleOrDefault(z => z.Trailer1Rego == Trailer1Rego
+            && z.Trailer2Rego == Trailer2Rego && z.Trailer3Rego == Trailer3Rego && z.Trailer4Rego == Trailer4Rego
+            && z.Trailer1PlateId == Trailer1PlateId && z.Trailer2PlateId == Trailer2PlateId && z.Trailer3PlateId == Trailer3PlateId
+            && z.Trailer4PlateId == Trailer4PlateId
+            );
+            if (profileDetailsInDb != null && !string.Equals(profileDetailsInDb.Notes, notes))
+            {
+                profileDetailsInDb.Notes = notes;
+                _context.SaveChanges();
+            }
+        }
+
         public void DeleteKeyVehicleLogPersonalDetails(int id)
         {
             var kvlPersonalDetailsToDelete = _context.KeyVehicleLogVisitorPersonalDetails.SingleOrDefault(x => x.Id == id);
@@ -1194,6 +1266,15 @@ namespace CityWatch.Data.Providers
                 .OrderBy(x => x.TypeId)
                 .ThenBy(x => x.Name)
                 .ToList();
+        }
+
+        public List<TrailerDeatilsViewModel> GetKeyVehicleLogProfileDetails(string pattern)
+        {
+            var param1 = new SqlParameter();
+            param1.ParameterName = "@pattern";
+            param1.SqlDbType = SqlDbType.VarChar;
+            param1.SqlValue = pattern;
+            return _context.TrailerDeatilsViewModel.FromSqlRaw($"EXEC sp_GetTrailerDetailsUsingSearchQuery @pattern", param1).ToList();
         }
 
         public List<KeyVehcileLogField> GetKeyVehicleLogFieldsByType(KvlFieldType type)
@@ -1253,6 +1334,48 @@ namespace CityWatch.Data.Providers
         private int SaveKeyVehicleLogProfile(KeyVehicleLogProfile keyVehicleLogProfile)
         {
             var kvlProfileToDb = _context.KeyVehicleLogVisitorProfiles.SingleOrDefault(z => z.VehicleRego == keyVehicleLogProfile.VehicleRego) ?? new KeyVehicleLogProfile();
+            kvlProfileToDb.VehicleRego = keyVehicleLogProfile.VehicleRego;
+            kvlProfileToDb.Trailer1Rego = keyVehicleLogProfile.Trailer1Rego;
+            kvlProfileToDb.Trailer2Rego = keyVehicleLogProfile.Trailer2Rego;
+            kvlProfileToDb.Trailer3Rego = keyVehicleLogProfile.Trailer3Rego;
+            kvlProfileToDb.Trailer4Rego = keyVehicleLogProfile.Trailer4Rego;
+            kvlProfileToDb.TruckConfig = keyVehicleLogProfile.TruckConfig;
+            kvlProfileToDb.TrailerType = keyVehicleLogProfile.TrailerType;
+            kvlProfileToDb.MaxWeight = keyVehicleLogProfile.MaxWeight;
+            kvlProfileToDb.MobileNumber = keyVehicleLogProfile.MobileNumber;
+            kvlProfileToDb.Product = keyVehicleLogProfile.Product;
+            kvlProfileToDb.EntryReason = keyVehicleLogProfile.EntryReason;
+            kvlProfileToDb.CreatedLogId = keyVehicleLogProfile.CreatedLogId;
+            kvlProfileToDb.PlateId = keyVehicleLogProfile.PlateId;
+            kvlProfileToDb.Sender = keyVehicleLogProfile.Sender;
+            kvlProfileToDb.IsSender = keyVehicleLogProfile.IsSender;
+            kvlProfileToDb.Notes = keyVehicleLogProfile.Notes;
+            kvlProfileToDb.Trailer1PlateId = keyVehicleLogProfile.Trailer1PlateId;
+            kvlProfileToDb.Trailer2PlateId = keyVehicleLogProfile.Trailer2PlateId;
+            kvlProfileToDb.Trailer3PlateId = keyVehicleLogProfile.Trailer3PlateId;
+            kvlProfileToDb.Trailer4PlateId = keyVehicleLogProfile.Trailer3PlateId;
+
+            if (kvlProfileToDb.Id == 0)
+            {
+                _context.KeyVehicleLogVisitorProfiles.Add(kvlProfileToDb);
+            }
+
+            _context.SaveChanges();
+
+            return kvlProfileToDb.Id;
+        }
+
+        private int SaveKeyVehicleLogProfileForTrailer(KeyVehicleLogProfile keyVehicleLogProfile)
+        {
+            var kvlProfileToDb = _context.KeyVehicleLogVisitorProfiles.SingleOrDefault(z => (z.Trailer1Rego == keyVehicleLogProfile.Trailer1Rego)
+            && (z.Trailer2Rego == keyVehicleLogProfile.Trailer2Rego)
+            && (z.Trailer3Rego == keyVehicleLogProfile.Trailer3Rego)
+            && (z.Trailer4Rego == keyVehicleLogProfile.Trailer4Rego)
+            && (z.Trailer1PlateId == keyVehicleLogProfile.Trailer1PlateId)
+            && (z.Trailer2PlateId == keyVehicleLogProfile.Trailer2PlateId)
+            && (z.Trailer3PlateId == keyVehicleLogProfile.Trailer2PlateId)
+            && (z.Trailer4PlateId == keyVehicleLogProfile.Trailer2PlateId)
+            ) ?? new KeyVehicleLogProfile();
             kvlProfileToDb.VehicleRego = keyVehicleLogProfile.VehicleRego;
             kvlProfileToDb.Trailer1Rego = keyVehicleLogProfile.Trailer1Rego;
             kvlProfileToDb.Trailer2Rego = keyVehicleLogProfile.Trailer2Rego;
@@ -1398,7 +1521,7 @@ namespace CityWatch.Data.Providers
                .Select(x => x.PhoneNumber)
                .ToList();
                 var phoneNumbersString = string.Join("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
-                if(phoneNumbers.Count!=0)
+                if (phoneNumbers.Count != 0)
                 {
                     item.hasmartwand = 1;
 
@@ -2225,7 +2348,7 @@ namespace CityWatch.Data.Providers
                     // Task p6#73_TimeZone_Midnight_Perth_CreateEntryAfterMidnight issue -- Start -- added by Binoy - 02-02-2024
                     // To Log the entry to the last logbook id of the client.
                     var logbookdate = DateTime.Today;
-                    var logbooktype = LogBookType.DailyGuardLog;      
+                    var logbooktype = LogBookType.DailyGuardLog;
                     var logBookId = GetClientSiteLogBookIdByLogBookMaxID(clientSiteRadioCheck.ClientSiteId, logbooktype, out logbookdate); // Get Last Logbookid and logbook Date by latest logbookid  of the client site
                     var logbook = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == logBookId);
                     // Task p6#73_TimeZone_Midnight_Perth_CreateEntryAfterMidnight issue -- End -- added by Binoy - 02-02-2024
@@ -2393,7 +2516,7 @@ namespace CityWatch.Data.Providers
 
                                 }
 
-                               
+
 
 
                             }
@@ -3238,8 +3361,8 @@ namespace CityWatch.Data.Providers
             return results.ToList();
         }
 
-        public void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications, 
-                                                         IrEntryType entryType, int type,int clientSiteId, GuardLog tmzdata)
+        public void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications,
+                                                         IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata)
         {
 
             var guardInitials = string.Empty;
@@ -3257,18 +3380,18 @@ namespace CityWatch.Data.Providers
             {
                 if (clientSiteForLogbook.Count() > 0)
                 {
-                   
+
                     var clientsitename = GetClientSites(clientSiteId).FirstOrDefault().Name;
                     notifications = "Control Room Alert for " + guardInitials + " - " + clientsitename + ": " + notifications;
                 }
-                
+
 
             }
-           
+
             if (clientSiteForLogbook.Count != 0)
             {
                 // p6#73 timezone bug - Modified by binoy 24-01-2024 changed DateTime.Today to localDateTime.Date
-                var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int) tmzdata.EventDateTimeUtcOffsetMinute);
+                var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)tmzdata.EventDateTimeUtcOffsetMinute);
                 var logBookId = GetClientSiteLogBookIdGloablmessage(clientSiteForLogbook.FirstOrDefault().Id, LogBookType.DailyGuardLog, localDateTime.Date);
 
                 if (loginGuardId != 0)
@@ -3519,7 +3642,7 @@ namespace CityWatch.Data.Providers
 
         public void UpdateDuressButtonAcknowledged(int ClientSiteId)
         {
-            var duressButtonList = _context.RadioCheckPushMessages.Where(x => x.ClientSiteId == ClientSiteId &&x.IsDuress==1 && x.IsAcknowledged == 0).ToList();
+            var duressButtonList = _context.RadioCheckPushMessages.Where(x => x.ClientSiteId == ClientSiteId && x.IsDuress == 1 && x.IsAcknowledged == 0).ToList();
             if (duressButtonList == null)
                 throw new InvalidOperationException();
             foreach (var row in duressButtonList)
@@ -3530,7 +3653,7 @@ namespace CityWatch.Data.Providers
             }
 
         }
-        public void CopyPreviousDaysPushMessageToLogBook(List<RadioCheckPushMessages> previousDayPushmessageList, int logBookId, int guardLoginId,GuardLog tmzdata)
+        public void CopyPreviousDaysPushMessageToLogBook(List<RadioCheckPushMessages> previousDayPushmessageList, int logBookId, int guardLoginId, GuardLog tmzdata)
         {
             foreach (var pushMessage in previousDayPushmessageList)
             {
@@ -3643,7 +3766,7 @@ namespace CityWatch.Data.Providers
         {
             return _context.RadioCheckLogbookSiteDetails.SingleOrDefault();
         }
-       
+
         //To get the Details of RadiocheckLogbookDetails stop
     }
 
