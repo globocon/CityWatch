@@ -191,30 +191,7 @@
             });
         });
     });
-    $('#Report_Officer_Position').on('change', function () {
-        var chechedvalue = $('#positionfilter').is(':checked');
-        const filtercheck = chechedvalue ? 1 : 2;
-        if (filtercheck==1) {
-            var logbbokName = $('#Report_Officer_Position').val();
-            const token = $('input[name="__RequestVerificationToken"]').val();
-            //To get the IsLogbook data from db start
-            $.ajax({
-                url: '/Incident/Register?handler=LogbookData',
-                data: { logbook: logbbokName },
-                type: 'GET',
-                dataType: 'json',
-                headers: { 'RequestVerificationToken': token },
-            }).done(function (data) {
-               
-                if (data.isLogbook == true) {
-                    $('#PositionModel').modal('show');
-                }
-                
-            });
-                //To get the IsLogbook data from db stop
-        }
-        
-                });
+    
                 
     $('#Report_DateLocation_ClientTypePosition').on('change', function () {
         $('#Report_DateLocation_ClientSitePosition').val('');
@@ -562,14 +539,25 @@
     $('#search_kw_client_site').on('keyup', function (event) {
         // Enter key pressed
         if (event.keyCode === 13) {
-            gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $(this).val() });
+            gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $(this).val(), searchTermtwo: $('#search_kw_client_site_email').val() });
         }
     });
 
-    $('#btnSearchClientSite').on('click', function () {
-        gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val() });
-    });
 
+    $('#btnSearchClientSite').on('click', function () {
+        gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val(), searchTermtwo: $('#search_kw_client_site_email').val() });
+    });
+    /*p1-192 client site email seach-start*/
+    $('#btnSearchClientEmail').on('click', function () {
+        gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val(), searchTermtwo: $('#search_kw_client_site_email').val() });
+    });
+    $('#search_kw_client_site_email').on('keyup', function (event) {
+        // Enter key pressed
+        if (event.keyCode === 13) {
+            gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val(), searchTermtwo:  $(this).val()  });
+        }
+    });
+   /* p1 - 192 client site email seach - end*/
     /****** Report Fileds start *******/
     let gridReportFields;
 
@@ -1087,19 +1075,72 @@
         primaryKey: 'id',
         inlineEditing: { mode: 'command' },
         columns: [
-            { field: 'name', title: 'Name', width: 250, editor: true },
+            { field: 'name', title: 'Name', width: 230, editor: true },
             { field: 'emailTo', title: 'Special Email Condition', width: 200, editor: true },
-            { field: 'isPatrolCar', title: 'Patrol Car?', type: 'checkbox', align: 'center', width: 100, editor: true },
-            { field: 'dropboxDir', title: 'Dropbox Directory', width: 300, editor: true },
-            { field: 'isLogbook', title: 'Logbook', type: 'checkbox', align: 'center', width: 100, editor: true }
+            { field: 'isPatrolCar', title: 'Patrol Car?', type: 'checkbox', align: 'center', width: 80, editor: true },
+            { field: 'dropboxDir', title: 'Dropbox Directory', width: 250, editor: true },
+            {
+                field: 'isLogbook', title: 'Logbook',
+                type: 'checkbox', align: 'center', width: 80, editor: true,
+            },
+            { field: 'clientsiteName', title: 'Nominated logbook', width: 130, editor: false },
         ],
         initialized: function (e) {
-            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>').css('width', '205px');
         }
     });
+    //To Position Checkbox and Popup start
+    $('#PositionClientSiteId').select({
+        placeholder: 'Select',
+        theme: 'bootstrap4'
+    });
+    $('#position_settings').on('click', 'input[type="checkbox"]', function () {
+        var itemId = $(this).data('id');
+        var isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#po_client_type').val('');
+            $('#PositionClientSiteId').val('');
+            $('#PositionModel').modal('show');
+        }
+        
+    });
+    $('#po_client_type').on('change', function () {
+        const clientTypeId = $(this).val();
+        const clientSiteControl = $('#PositionClientSiteId');
+        clientSiteControl.html('');
+      
 
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSitesNew',
+            type: 'GET',
+            data: {
+                typeId: clientTypeId
+
+            },
+            dataType: 'json',
+            success: function (data) {
+                $('#PositionClientSiteId').append(new Option('Select', '', true, true));
+                data.map(function (site) {
+                    $('#PositionClientSiteId').append(new Option(site.name, site.id, false, false));
+                });
+
+            }
+
+
+        });
+    });
+    //To Position Checkbox and Popup stop
     if (gridPositions) {
         gridPositions.on('rowDataChanged', function (e, id, record) {
+            var Clientsiteid = '';
+            if (record.isLogbook == false) {
+                Clientsiteid = 0;
+            }
+            else {
+                Clientsiteid = $('#PositionClientSiteId').val();
+            }
+           
+            record.clientsiteId = Clientsiteid;
             const data = $.extend(true, {}, record);
             const token = $('input[name="__RequestVerificationToken"]').val();
             $.ajax({
@@ -1397,6 +1438,8 @@
             $('#FeedbackTemplate_Id').val(selfeedback);
             $('#FeedbackTemplate_Name').val($("option:selected", this).text());
             $('#FeedbackTemplate_Type').prop('selectedIndex', 0);
+            $('#FeedbackTemplate_BackgroundColour').val('#FFFFFF');
+            $('#FeedbackTemplate_TextColor').val('#000000');
             $.ajax({
                 url: '/Admin/Settings?handler=FeedbackTemplate',
                 type: 'GET',
@@ -1405,6 +1448,8 @@
             }).done(function (data) {
                 $('#FeedbackTemplate_Text').val(data.text);
                 $('#FeedbackTemplate_Type').val(data.type);
+                $('#FeedbackTemplate_BackgroundColour').val(data.backgroundColour);
+                $('#FeedbackTemplate_TextColor').val(data.textColor);
             }).fail(function () {
                 showStatusNotification(false, 'Something went wrong');
             });
@@ -1416,6 +1461,8 @@
         $('#FeedbackTemplate_Id').val('')
         $('#FeedbackTemplate_Name').val('');
         $('#FeedbackTemplate_Text').val('');
+        $('#FeedbackTemplate_BackgroundColour').val('#FFFFFF');
+        $('#FeedbackTemplate_TextColor').val('#000000');
         $('#FeedbackTemplate_Type').prop('selectedIndex', 0);
         $('#delete_fbktpl').hide();
         $('#sel_fbktpl_name').html('new template');
@@ -1509,6 +1556,8 @@
         $('#FeedbackTemplate_Name').val('');
         $('#FeedbackTemplate_Text').val('');
         $('#FeedbackTemplate_Type').prop('selectedIndex', 0);
+        $('#FeedbackTemplate_BackgroundColour').val('#FFFFFF');
+        $('#FeedbackTemplate_TextColor').val('#000000');
         $('#sel_fbktpl_name').html('');
         $('#new_fbktpl_name').hide();
         $('#delete_fbktpl').hide();

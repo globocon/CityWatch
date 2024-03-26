@@ -375,11 +375,20 @@ $(function () {
 
     $('#vehicle_key_daily_log tbody').on('click', '.btn-exit-quick', function () {
         var data = keyVehicleLog.row($(this).parents('tr')).data();
+        var tmdata = {
+            'EventDateTimeLocal': null,
+            'EventDateTimeLocalWithOffset': null,
+            'EventDateTimeZone': null,
+            'EventDateTimeZoneShort': null,
+            'EventDateTimeUtcOffsetMinute': null,
+        };
+        fillRefreshLocalTimeZoneDetails(tmdata, "", false)
         $.ajax({
             url: '/Guard/KeyVehicleLog?handler=KeyVehicleLogQuickExit',
             type: 'POST',
             data: {
-                id: data.detail.id
+                id: data.detail.id,
+                tmdata: tmdata
             },
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function () {

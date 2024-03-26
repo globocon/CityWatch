@@ -669,7 +669,7 @@ namespace CityWatch.Web.Pages.Guard
                     }
                     SiteEventLog svl = new SiteEventLog();
                     svl.ProjectName = "ClientPortal";
-                    svl.ActivityType = "C41 Duress Enable - Global Duress SMS Alert";
+                    svl.ActivityType = "C4i Duress Enable - Global Duress SMS Alert";
                     svl.Module = "Guard";
                     svl.SubModule = "LogBook";
                     svl.GoogleMapCoordinates = gpsCoordinates;
@@ -688,7 +688,7 @@ namespace CityWatch.Web.Pages.Guard
                            GuardName = GuradDetails.Name,
                            SiteName = ClientsiteDetails.Name,
                            ProjectName = "ClientPortal",
-                           ActivityType = "C41 Duress Enable - Global Duress SMS Alert",
+                           ActivityType = "C4i Duress Enable - Global Duress SMS Alert",
                            Module = "Guard",
                            SubModule = "LogBook",
                            GoogleMapCoordinates = gpsCoordinates,

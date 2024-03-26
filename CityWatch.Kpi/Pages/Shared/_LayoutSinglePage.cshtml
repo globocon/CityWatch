@@ -1,0 +1,51 @@
+﻿@using CityWatch.Data.Providers;
+@using Microsoft.AspNetCore.Hosting
+@using Microsoft.Extensions.Hosting
+@using System.Security.Claims;
+@inject IWebHostEnvironment environment
+@inject IUserDataProvider viewDataService
+@{
+    var claimsIdentity = User.Identity as ClaimsIdentity;
+    var companydetail = viewDataService.GetCompanyDetails().SingleOrDefault(x => x.Id == 1);
+    var companydetailsprimarylogo = companydetail.PrimaryLogoPath;
+
+}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/jquery-editable-select/dist/jquery-editable-select.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/gijgo@1.9.13/css/gijgo.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link href="~/css/siteportal.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <script type="text/javascript" src="https://unpkg.com/xlsx@0.15.1/dist/xlsx.full.min.js"></script>
+</head>
+<body class="d-flex flex-column">
+    <header>
+    </header>
+
+    <div class="container-fluid flex-fill">
+        <main role="main">
+            @RenderBody()
+        </main>
+    </div>
+
+
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery-editable-select/dist/jquery-editable-select.min.js"></script>
+    <script src="https://unpkg.com/gijgo@1.9.13/js/gijgo.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+    <script src="~/js/singlepage.js" asp-append-version="true"></script>
+    
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -15,6 +15,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Security.Claims;
 using System.ComponentModel.Design;
+using Microsoft.Data.SqlClient;
+using System.Net.NetworkInformation;
 
 namespace CityWatch.Kpi.Pages.Admin
 {
@@ -28,6 +30,10 @@ namespace CityWatch.Kpi.Pages.Admin
         private readonly IKpiSchedulesDataProvider _kpiSchedulesDataProvider;
         private readonly ISendScheduleService _sendScheduleService;
         private readonly ILogger<SettingsModel> _logger;
+        private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
+        private readonly IGuardLogDataProvider _guardLogDataProvider;
+        private readonly IGuardSettingsDataProvider _guardSettingsDataProvider;
+        private readonly IGuardDataProvider _guardDataProvider;
 
         [BindProperty]
         public KpiRequest ReportRequest { get; set; }
@@ -43,7 +49,11 @@ namespace CityWatch.Kpi.Pages.Admin
             IClientDataProvider clientDataProvider,
             IKpiSchedulesDataProvider kpiSchedulesDataProvider,
             ISendScheduleService sendScheduleService,
-            ILogger<SettingsModel> logger)
+            ILogger<SettingsModel> logger,
+            IClientSiteWandDataProvider clientSiteWandDataProvider,
+             IGuardLogDataProvider guardLogDataProvider,
+             IGuardSettingsDataProvider guardSettingsDataProvider,
+             IGuardDataProvider guardDataProvider)
         {
             _webHostEnvironment = webHostEnvironment;
             _viewDataService = viewDataService;
@@ -53,6 +63,10 @@ namespace CityWatch.Kpi.Pages.Admin
             _kpiSchedulesDataProvider = kpiSchedulesDataProvider;
             _sendScheduleService = sendScheduleService;
             _logger = logger;
+            _clientSiteWandDataProvider = clientSiteWandDataProvider;
+            _guardLogDataProvider = guardLogDataProvider;
+            _guardSettingsDataProvider = guardSettingsDataProvider;
+            _guardDataProvider = guardDataProvider;
         }
 
         public IActionResult OnGet()
@@ -128,8 +142,12 @@ namespace CityWatch.Kpi.Pages.Admin
                         z.Id,
                         ClientTypeName = z.ClientType.Name,
                         ClientSiteName = z.Name,
+                        SiteUploadDailyLog = z.UploadGuardLog,
                         HasSettings = clientSiteWithSettings.Any(x => x == z.Id),
-                        z.SiteEmail
+                        z.SiteEmail,
+                        z.LandLine,
+                        z.GuardLogEmailTo,
+                        z.DataCollectionEnabled
                     }));
 
                 }
@@ -720,6 +738,28 @@ namespace CityWatch.Kpi.Pages.Admin
             return File(pdfBytes, "application/pdf", "CityWatch_Schedule_" + reportYear + "_" + reportMonth + "_Doc.pdf");
         }
         //Menu chage -start
+        public JsonResult OnGetSmartWandSettings(int clientSiteId)
+        {
+            return new JsonResult(_clientSiteWandDataProvider.GetClientSiteSmartWands().Where(z => z.ClientSiteId == clientSiteId).ToList());
+        }
+
+        public JsonResult OnPostDeleteSmartWandSettings(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _clientSiteWandDataProvider.DeleteClientSiteSmartWand(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
+
         public void OnPostSaveSiteEmail(int siteId, string siteEmail, bool enableLogDump, string landLine, string guardEmailTo, string duressEmail, string duressSms)
         {
             var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(z => z.Id == siteId);
@@ -735,7 +775,307 @@ namespace CityWatch.Kpi.Pages.Admin
 
             _clientDataProvider.SaveClientSite(clientSite);
         }
+
+
+        public JsonResult OnPostSmartWandSettings(ClientSiteSmartWand record)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _clientSiteWandDataProvider.SaveClientSiteSmartWand(record);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
         //Menu change -end
 
+        /*patrolcar settings-start*/
+        public JsonResult OnGetPatrolCar(int clientSiteId)
+        {
+            return new JsonResult(_clientSiteWandDataProvider.GetClientSitePatrolCars(clientSiteId).ToList());
+        }
+
+        public JsonResult OnPostPatrolCar(ClientSitePatrolCar record)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _clientSiteWandDataProvider.SaveClientSitePatrolCar(record);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
+
+
+        public JsonResult OnPostDeletePatrolCar(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _clientSiteWandDataProvider.DeleteClientSitePatrolCar(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
+
+        /*patrolcar settings-end*/
+        //custom fields settings-start
+        public IActionResult OnGetCustomFields()
+        {
+            var customFields = _guardLogDataProvider.GetClientSiteCustomFields();
+            var fieldNames = customFields.Select(z => z.Name).Distinct().OrderBy(z => z);
+            var slots = customFields.Select(z => z.TimeSlot).Distinct().OrderBy(z => z);
+            return new JsonResult(new { fieldNames, slots });
+        }
+        public IActionResult OnGetClientSiteCustomFields(int clientSiteId)
+        {
+            return new JsonResult(_guardLogDataProvider.GetCustomFieldsByClientSiteId(clientSiteId));
+        }
+        public JsonResult OnPostCustomFields(ClientSiteCustomField clientSiteCustomField)
+        {
+            var status = true;
+            var message = "Success";
+            var id = -1;
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return new JsonResult(new { status = false, message = ModelState.Where(x => x.Value.Errors.Count > 0).Select(x => string.Join(',', x.Value.Errors.Select(y => y.ErrorMessage))) });
+                }
+
+                id = _guardLogDataProvider.SaveClientSiteCustomFields(clientSiteCustomField);
+
+                var clientSiteLogBookId = _clientDataProvider.GetClientSiteLogBook(clientSiteCustomField.ClientSiteId, LogBookType.DailyGuardLog, DateTime.Today)?.Id;
+                if (clientSiteLogBookId.HasValue)
+                {
+                    var customFieldLogs = _guardLogDataProvider.GetCustomFieldLogs(clientSiteLogBookId.Value).Where(x => x.CustomFieldId == id);
+                    if (!customFieldLogs.Any())
+                    {
+                        var customFieldLog = new CustomFieldLog
+                        {
+                            CustomFieldId = id,
+                            ClientSiteLogBookId = clientSiteLogBookId.Value
+                        };
+                        _guardLogDataProvider.SaveCustomFieldLog(customFieldLog);
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message = new[] { message }, id });
+        }
+        public IActionResult OnPostDeleteClientSiteCustomField(int id)
+        {
+            var success = true;
+            var message = "Success";
+            try
+            {
+                _guardLogDataProvider.DeleteClientSiteCustomFields(id);
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        //custom fields settings-end
+        /*site poc and locations-start*/
+        public IActionResult OnGetSitePocs(int clientSiteId)
+        {
+            return new JsonResult(_guardSettingsDataProvider.GetClientSitePocs(clientSiteId));
+        }
+
+        public IActionResult OnPostSitePoc(ClientSitePoc record)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _guardSettingsDataProvider.SaveClientSitePoc(record);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+
+                if (ex.InnerException != null &&
+                    ex.InnerException is SqlException &&
+                    ex.InnerException.Message.StartsWith("Violation of UNIQUE KEY constraint"))
+                {
+                    message = "A site POC with same name already exists. This may be deleted";
+                }
+            }
+            return new JsonResult(new { success, message });
+        }
+
+        public IActionResult OnPostDeleteSitePoc(int id)
+        {
+            var success = true;
+            var message = "Success";
+            try
+            {
+                _guardSettingsDataProvider.DeleteClientSitePoc(id);
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+
+        public IActionResult OnGetSiteLocations(int clientSiteId)
+        {
+            return new JsonResult(_guardSettingsDataProvider.GetClientSiteLocations(clientSiteId));
+        }
+
+        public IActionResult OnPostSiteLocation(ClientSiteLocation record)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _guardSettingsDataProvider.SaveClientSiteLocation(record);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+
+                if (ex.InnerException != null &&
+                    ex.InnerException is SqlException &&
+                    ex.InnerException.Message.StartsWith("Violation of UNIQUE KEY constraint"))
+                {
+                    message = "A site location with same name already exists. This may be deleted";
+                }
+            }
+            return new JsonResult(new { success, message });
+        }
+
+        public IActionResult OnPostDeleteSiteLocation(int id)
+        {
+            var success = true;
+            var message = "Success";
+            try
+            {
+                _guardSettingsDataProvider.DeleteClientSiteLocation(id);
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        /*site poc and locations-end*/
+        /*key settings-start*/
+        public JsonResult OnGetClientSiteKeys(int clientSiteId)
+        {
+            return new JsonResult(_guardSettingsDataProvider.GetClientSiteKeys(clientSiteId).ToList());
+        }
+        public JsonResult OnPostClientSiteKey(ClientSiteKey clientSiteKey)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _guardSettingsDataProvider.SaveClientSiteKey(clientSiteKey);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+                if (ex.InnerException != null &&
+                    ex.InnerException is SqlException &&
+                    ex.InnerException.Message.StartsWith("Violation of UNIQUE KEY constraint"))
+                {
+                    message = "Key number already exists";
+                }
+            }
+
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnPostDeleteClientSiteKey(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _guardSettingsDataProvider.DeleteClientSiteKey(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
+        /*key settings - end*/
+        //for toggle areas - start 
+        public void OnPostSaveToggleType(int siteId, int timeslottoggleTypeId, bool timeslotIsActive, int vwitoggleTypeId, bool vwiIsActive,
+            int sendertoggleTypeId, bool senderIsActive, int reelstoggleTypeId, bool reelsIsActive)
+        {
+
+            _clientDataProvider.SaveClientSiteToggle(siteId, timeslottoggleTypeId, timeslotIsActive);
+            _clientDataProvider.SaveClientSiteToggle(siteId, vwitoggleTypeId, vwiIsActive);
+            _clientDataProvider.SaveClientSiteToggle(siteId, sendertoggleTypeId, senderIsActive);
+            _clientDataProvider.SaveClientSiteToggle(siteId, reelstoggleTypeId, reelsIsActive);
+        }
+        public IActionResult OnGetClientSiteToggle(int siteId)
+        {
+
+            return new JsonResult(_guardDataProvider.GetClientSiteToggle().Where(x => x.ClientSiteId == siteId));
+        }
+        //for toggle areas - end
+        //for ring fence-start
+        public JsonResult OnPostUpdateSiteDataCollection(int clientSiteId, bool disabled)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _clientDataProvider.SetDataCollectionStatus(clientSiteId, !disabled);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        //for ring fence-end
+        public JsonResult OnGetClientSiteEmail(int clientSiteId)
+        {
+           
+            return new JsonResult(_clientDataProvider.GetNewClientSites(clientSiteId));
+        }
+
     }
+
 }

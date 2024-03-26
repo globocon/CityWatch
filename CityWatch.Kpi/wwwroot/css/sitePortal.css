@@ -496,40 +496,8 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
 }
 
 .grouped-column {
-    background-color: #EFEFEF; 
+    background-color: #EFEFEF;
 }
-
-.card-header .fa {
-    transition: .3s transform ease-in-out;
-}
-
-.card-header .collapsed .fa {
-    transform: rotate(90deg);
-}
-
-#scrollableDiv {
-    width: 100%;
-    height: 400px;
-    overflow: auto; /* This property enables the scrollbar when content overflows */
-    border: 1px solid #ccc;
-    padding: 10px;
-}
-/* duress enalbeled Tooltip flickers while hovering on the tooltip */
-.tooltip {
-    pointer-events: none;
-}
-.tooltip-arrow {
-    display: none !important;
-}
-
-.list-group-item {
-    transition: background-color 0.3s;
-}
-
-    .list-group-item:hover {
-        background-color: #f0f0f0; /* Change background color on hover */
-    }
-
 
 /* Dark Mode Change 20/09/2023 Start*/
 .dark-mode {
@@ -669,6 +637,7 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
     .dark-mode .list-group-item {
         color: white !important;
     }
+
     .dark-mode #kvl-attachment-list li {
         color: #333 !important;
     }
@@ -677,51 +646,102 @@ table.dataTable tr.dt-hasChild td.dt-control:before {
 
 
 
-
-
-
-
-
-
-
 /* Dark Mode Change 20/09/2023 End*/
-
-/* Added by Binoy on 19-03-2024 to include satellite-3 icon */
-@font-face {
-  font-family: 'icomoon';
-  src:  url('../fonts/satellite-3.eot?cofx19');
-  src:  url('../fonts/satellite-3.eot?cofx19#iefix') format('embedded-opentype'),
-    url('../fonts/satellite-3.ttf?cofx19') format('truetype'),
-    url('../fonts/satellite-3.woff?cofx19') format('woff'),
-    url('../fonts/satellite-3.svg?cofx19#icomoon') format('svg');
-  font-weight: normal;
-  font-style: normal;
-  font-display: block;
+/* for scroll events -start*/
+.marquee-style {
+    background-color: dimgrey;
+    font-size: 20px;
+    font-family: georgia;
+    font-style: italic;
+    font-weight: bold;
+    color: White;
+    text-shadow: 2px 2px 8px #FF0000;
 }
 
-[class^="icon-"], [class*=" icon-"] {
-  /* use !important to prevent issues with browser extensions that change fonts */
-  font-family: 'icomoon' !important;
-  speak: never;
-  font-style: normal;
-  font-weight: normal;
-  font-variant: normal;
-  text-transform: none;
-  line-height: 1;
-
-  /* Better Font Rendering =========== */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+.marquee-stylenew {
+    background-color: #737CA1;
+    font-size: 16px;
+    font-family: georgia;
+    font-style: italic;
+    font-weight: bold;
+    color: White;
+    /*text-shadow: 2px 2px 8px #FF0000;*/
 }
 
-.icon-satellite-3:before {
-    content: "\e900";
-    cursor: pointer;
+.dark-mode .marquee-style {
+    background-color: white;
+    font-size: 20px;
+    font-family: georgia;
+    font-style: italic;
+    font-weight: bold;
+    color: black;
+    text-shadow: 2px 2px 8px #fff;
 }
 
-.satellite-3-fontsize {
-    font-size: 16px !important;
+.dark-mode .marquee-stylenew {
+    background-color: white;
+    font-size: 16px;
+    font-family: georgia;
+    font-style: italic;
+    font-weight: bold;
+    color: black;
+    /*text-shadow: 2px 2px 8px #fff;*/
 }
 
-/* Added by Binoy on 19-03-2024 to include satellite-3 icon */
+.dark-mode .lblclass {
+    background-color: white;
+    color: black;
+}
+
+pre {
+    font-size: 16px;
+    font-family: georgia;
+    font-style: italic;
+    font-weight: bold;
+    color: White;
+    overflow: hidden;
+    margin-bottom: 0px;
+    margin-top: 5px;
+    height: auto;
+    width: auto;
+    /*text-shadow: 2px 2px 8px #FF0000;*/
+}
+
+#divmarqueeLiveEvents {
+    width: 900px;
+    overflow: hidden;
+    display: grid;
+}
+
+    #divmarqueeLiveEvents .dark-mode {
+        background-color: white;
+        color: black;
+    }
+
+pre.dark-mode {
+    background-color: white;
+    color: black;
+    overflow: hidden;
+    margin-top: 5px;
+    margin-bottom: 0px;
+    height: auto;
+    width: auto;
+}
+
+
+/* for scroll events -end*/
+/*form trafiic lights-start*/
+.initial-call-colour {
+    background-color: #FCF3CF;
+}
+
+.entry-time-colour {
+    background-color: #A9DFBF;
+}
+
+.exit-time-colour {
+    background-color: #F5B7B1;
+}
+/*form trafiic lights-end*/
+
 

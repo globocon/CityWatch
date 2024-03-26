@@ -160,6 +160,7 @@ namespace CityWatch.Data.Providers
 
         void SaveSmsChannel(SmsChannel smsChannel);
         void DeleteSmsChannel(int id);
+        List<ClientSite> GetNewClientSites(int siteId);
 
         List<GlobalDuressSms> GetDuressSms();
         string SaveDuressGloablSMS(GlobalDuressSms SmsNumber, out bool status);
@@ -168,6 +169,7 @@ namespace CityWatch.Data.Providers
         //for toggle areas - start 
         void SaveClientSiteToggle(int siteId, int toggleTypeId, bool IsActive);
         //for toggle areas - end
+        IncidentReportPosition GetClientSitePosition(string Name);
 
     }
 
@@ -255,7 +257,10 @@ namespace CityWatch.Data.Providers
                 .ThenBy(x => x.Name)
                 .ToList();
         }
-
+        public IncidentReportPosition GetClientSitePosition(string Name)
+        {
+            return _context.IncidentReportPositions.Where(x => x.Name == Name).FirstOrDefault();
+        }
         public ClientSite GetClientSitesUsingName(string name)
         {
             return _context.ClientSites
@@ -1785,6 +1790,7 @@ namespace CityWatch.Data.Providers
                     throw new InvalidOperationException();
 
 
+
                 clientSiteToggleToUpdate.ToggleTypeId = toggleTypeId;
                 clientSiteToggleToUpdate.ClientSiteId = siteId;
                 clientSiteToggleToUpdate.IsActive = IsActive;
@@ -1796,7 +1802,18 @@ namespace CityWatch.Data.Providers
         }
 
         //for toggle areas - end
+          public List<ClientSite> GetNewClientSites(int siteId)
+        {
+            return _context.ClientSites
+                .Where(x => x.IsActive == true && x.Id==siteId)
+                .Include(x => x.ClientType)
+                .OrderBy(x => x.ClientType.Name)
+                .ThenBy(x => x.Name)
+                .ToList();
+
+        }
         //
+
     }
 
 

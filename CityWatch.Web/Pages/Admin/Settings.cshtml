@@ -65,8 +65,8 @@
             <div class="row mb-3">
                 <div class="col-md-10">
                     <div class="form-group row">
-                        <label class="col-form-label col-md-3">Filter by Client Type</label>
-                        <div class="col-md-5">
+                        <label class="col-form-label ">Filter by Client Type</label>
+                        <div class="col-md-3">
                             <select class="form-control" id="sel_client_type">
                                 <option value="">All</option>
                                 @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
@@ -75,7 +75,17 @@
                                 }
                             </select>
                         </div>
-                        <div class="input-group col-md-4">
+                        @*p1-192 client email search-start*@
+                        <label class="col-form-label">Email</label>
+                        <div class="input-group col-md-3">
+                            
+                            <input type="text" id="search_kw_client_site_email" class="form-control" placeholder="Search Client Email">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-primary" id="btnSearchClientEmail"><i class="fa fa-search"></i></button>
+                            </div>
+                        </div>
+                        @*p1-192 client email search-end*@
+                        <div class="input-group col-md-3">
                             <input type="text" id="search_kw_client_site" class="form-control" placeholder="Search Client Site">
                             <div class="input-group-append">
                                 <button class="btn btn-outline-primary" id="btnSearchClientSite"><i class="fa fa-search"></i></button>
@@ -110,7 +120,7 @@
                         <div class="col-md-5 text-right">
                             <button class="btn btn-success mb-3" id="add_fbktpl"><i class="fa fa-plus mr-2"></i>New Template</button>
                         </div>
-                    </div>
+                    </div>                   
                     <div class="alert alert-success alert-dismissible fade show" role="alert" id="fbktpl_status" style="display:none">
                         <span>Message</span>
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -118,6 +128,16 @@
                         </button>
                     </div>
                     <form id="form_fbktpl" style="display:none" method="post">
+                        <div class="form-group row">
+                            <label class="col-form-label col-md-2 text-right">Background Colour</label>
+                            <div class="col-md-1">
+                                <input type="color" asp-for="@Model.FeedbackTemplate.BackgroundColour" />
+                            </div>
+                            <label class="col-form-label col-md-1 pl-0 pr-0 text-right">Text Colour</label>
+                            <div class="col-md-1">
+                                <input type="color" asp-for="@Model.FeedbackTemplate.TextColor" />
+                            </div>
+                        </div>
                         <div class="form-group row" style="display:none" id="new_fbktpl_name">
                             <label class="col-md-3 col-form-label">New template name:</label>
                             <div class="col-md-4">
@@ -509,6 +529,46 @@
         </button>
     </div>
     <div class="toast-body"></div>
+</div>
+<!-- The Modal -->
+<div class="modal fade bd-example-modal-sm" id="PositionModel" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="logbook" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    Client Type & Client Site
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div id="scrollableDiv">
+                            <div class="pt-2">
+                                <label class="font-weight-normal">Client Type</label>
+                                <select class="form-control" id="po_client_type">
+                                    <option value="">All</option>
+                                    @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
+                                    {
+                                        <option value="@item.Id">@item.Name</option>
+                                    }
+                                </select>
+
+                                
+                            </div>
+                            <div class="pt-2">
+                                <label class="mx-1" for="dglClientSiteId">Client Site</label>
+                                <select class="form-control mx-1" id="PositionClientSiteId"></select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 <partial name="_SettingsPopup" />
 @Html.AntiForgeryToken()
