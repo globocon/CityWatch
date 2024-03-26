@@ -209,5 +209,9 @@ namespace CityWatch.Data.Models
 
             return errors;
         }
+        [HiddenInput]
+        public bool IsReels { get; set; }
+        [HiddenInput]
+        public bool IsVWI { get; set; }
     }
 }

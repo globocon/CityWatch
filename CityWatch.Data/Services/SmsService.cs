@@ -2,14 +2,12 @@
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
-using Dropbox.Api.Users;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
+using System.Text.Json;
 using System.Threading.Tasks;
+
 
 namespace CityWatch.Data.Services
 {
@@ -91,21 +89,11 @@ namespace CityWatch.Data.Services
                     {
                         string outgoingid = result.Select(x => x.outgoing_id).FirstOrDefault();
                         statusmsg += "\r\n" + "Message sending failed. Outgoing Id: " + outgoingid;
-                        statusmsg += "\r\n" + result.ToString();
-
-                        //try
-                        //{
-                        //    var msgsts = await _smsGlobalService.GetAllMsgStatus(_ApiKey, _ApiSecret);
-                        //    var sts = msgsts.messages.Where(x => x.outgoing_id == outgoingid);
-                        //    statusmsg += msgsts.statuscode.ToString() + " " + msgsts.statusmessage;
-                        //}
-                        //catch (Exception)
-                        //{
-
-                        //   // throw;
-                        //}
-
-
+                        statusmsg += "\r\n" + JsonSerializer.Serialize(result);
+                    }
+                    else
+                    {
+                        statusmsg += "\r\n" + JsonSerializer.Serialize(result);
                     }
                                        
                     svl.EventStatus = status;
@@ -153,10 +141,13 @@ namespace CityWatch.Data.Services
         }
 
         private string CleanupSmsNumber(string smsnumber)
-        {           
+        {
+            smsnumber = smsnumber.Trim();
 
             if (smsnumber.Contains('+'))
                 smsnumber = smsnumber.Replace("+", "");
+            if (smsnumber.Contains("(0)"))
+                smsnumber = smsnumber.Replace("(0)", "");
             if (smsnumber.Contains('('))
                 smsnumber = smsnumber.Replace("(", "");
             if (smsnumber.Contains(' '))
@@ -169,8 +160,7 @@ namespace CityWatch.Data.Services
                 smsnumber = smsnumber.Substring(2, smsnumber.Length-2) ;
             if (smsnumber.StartsWith("0"))
                 smsnumber = smsnumber.Substring(1, smsnumber.Length - 1);            
-            
-            smsnumber = smsnumber.Trim();
+                       
             return smsnumber;
         }
 

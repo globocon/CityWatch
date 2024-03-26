@@ -1,5 +1,4 @@
-﻿using CityWatch.Common.Models;
-using SMSGlobal.api;
+﻿using SMSGlobal.api;
 using System.Threading.Tasks;
 
 namespace CityWatch.Common.Services

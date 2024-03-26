@@ -63,7 +63,13 @@
                                 <span>Site COLOUR Code Alert <em class="text-muted">(Code Blue, Code Grey, Code Yellow, etc)</em></span>
                                 @*<select asp-for="@Model.Report.SiteColourCodeId" class="form-control form-control-sm ml-0 ml-lg-2 w-75" disabled asp-items="@Model.ViewDataService.GetFeedbackTemplatesByType(FeedbackType.ColourCodes)"></select>*@
                                 @*Template type is directly taken from database -jisha-start *@
-                                <select asp-for="@Model.Report.SiteColourCodeId" class="form-control form-control-sm ml-0 ml-lg-2 w-75" disabled asp-items="@Model.ViewDataService.GetFeedbackTemplatesByType(Convert.ToInt16(colourcode))"></select>
+                                <select asp-for="@Model.Report.SiteColourCodeId" class="form-control form-control-sm ml-0 ml-lg-2 w-75" disabled>
+                                    <option style="background-color:white; color:black" value="" selected>Select Template</option>
+                                    @foreach (var item in @Model.ViewDataService.GetFeedbackTemplateListByType(Convert.ToInt16(colourcode)))
+                                    {
+                                        <option style="background-color:@item.BackgroundColour; color:@item.TextColor" value="@item.Id">@item.Name</option>
+                                    }
+                                </select>
                                 @*Template type is directly taken from database -jisha-end *@
                                 <input type="hidden" asp-for="@Model.Report.SiteColourCode" />
                             </div>
@@ -526,6 +532,7 @@
             </div>
         </div>
     </div>
+    
 </form>
 <form method="post" id="cwsir-form-attachments">
     <!-- Attachments -->
@@ -667,6 +674,7 @@
     </div>
 </div>
 <!-- logbook model popup end-->
+
 <script>
 
     window.addEventListener('load', onWindowLoad);

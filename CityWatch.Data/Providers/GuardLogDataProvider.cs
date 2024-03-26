@@ -659,9 +659,14 @@ namespace CityWatch.Data.Providers
                         keyVehicleLogToUpdate.BDMList = keyVehicleLog.BDMList;
 
                     }
+
                     keyVehicleLogToUpdate.IsDocketNo = keyVehicleLog.IsDocketNo;
                     keyVehicleLogToUpdate.LoaderName = keyVehicleLog.LoaderName;
                     keyVehicleLogToUpdate.DispatchName = keyVehicleLog.DispatchName;
+
+                    keyVehicleLogToUpdate.IsReels = keyVehicleLog.IsReels;
+                    keyVehicleLogToUpdate.IsVWI = keyVehicleLog.IsVWI;
+
                     _context.SaveChanges();
                 }
 
@@ -1346,8 +1351,13 @@ namespace CityWatch.Data.Providers
                .Select(x => x.PhoneNumber)
                .ToList();
                 var phoneNumbersString = string.Join("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
+                if(phoneNumbers.Count!=0)
+                {
+                    item.hasmartwand = 1;
 
-                item.SiteName = item.SiteName + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x => x.PhoneNumber).ToList()) + " <i class=\"fa fa-caret-down\" aria-hidden=\"true\" id=\"btnUpArrow\"></i> ";
+                }
+                                
+                item.SiteName = item.SiteName + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x => x.PhoneNumber).ToList()) + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp<span class=\"icon-satellite-3 satellite-3-fontsize\" aria-hidden=\"true\" id=\"btnUpArrow\"></span> ";
                 item.Address = " <a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q=" + item.GPS + "\"target=\"_blank\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i> </a>" + item.Address + " <input type=\"hidden\" class=\"form-control\" value=\"" + item.GPS + "\" id=\"txtGPSActiveguards\" />";
             }
             return allvalues;
@@ -1365,7 +1375,7 @@ namespace CityWatch.Data.Providers
                 .ToList();
                 var phoneNumbersString = string.Join("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
 
-                item.SiteName = item.SiteName + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + phoneNumbersString + " <i class=\"fa fa-caret-down\" aria-hidden=\"true\" id=\"btnUpArrow\"></i> ";
+                item.SiteName = item.SiteName + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + phoneNumbersString + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp<span class=\"icon-satellite-3 satellite-3-fontsize\" aria-hidden=\"true\" id=\"btnUpArrow\"></span>";
 
 
 
@@ -1438,6 +1448,14 @@ namespace CityWatch.Data.Providers
                             break;
                         }
                     }
+                    if (activity.LastSWCreatedTime != null)
+                    {
+                        if ((DateTime.Now - activity.LastSWCreatedTime).Value.TotalMinutes < 90)
+                        {
+                            status = true;
+                            break;
+                        }
+                    }
                 }
             }
             else
@@ -1455,10 +1473,10 @@ namespace CityWatch.Data.Providers
             var ClientSiteRadioChecksActivity = _context.ClientSiteRadioChecksActivityStatus.SingleOrDefault(x => x.Id == ClientSiteRadioChecksActivityStatus.Id);
             if (ClientSiteRadioChecksActivity != null)
             {
-                var clientSiteRcStatus = _context.ClientSiteRadioChecks.Where(x => x.GuardId == ClientSiteRadioChecksActivity.GuardId && x.ClientSiteId == ClientSiteRadioChecksActivity.ClientSiteId);
+                /*var clientSiteRcStatus = _context.ClientSiteRadioChecks.Where(x => x.GuardId == ClientSiteRadioChecksActivity.GuardId && x.ClientSiteId == ClientSiteRadioChecksActivity.ClientSiteId);
                 /* remove the Pervious Status*/
-                if (clientSiteRcStatus != null)
-                    _context.ClientSiteRadioChecks.RemoveRange(clientSiteRcStatus);
+                /*if (clientSiteRcStatus != null)
+                  /*  _context.ClientSiteRadioChecks.RemoveRange(clientSiteRcStatus);*/
 
                 _context.ClientSiteRadioChecksActivityStatus.Remove(ClientSiteRadioChecksActivity);
 
@@ -2060,7 +2078,7 @@ namespace CityWatch.Data.Providers
                 {
 
 
-                    var isActive = (DateTime.Now - item.CheckedAt).TotalHours < 6;
+                    var isActive = (DateTime.Now - item.CheckedAt).TotalHours < 2.5;
                     if (!isActive)
                     {
                         var clientSiteRadioCheckActivityStatusToDelete = _context.ClientSiteRadioChecks.Where(x => x.Id == item.Id);
