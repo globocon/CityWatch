@@ -1,8 +1,10 @@
 ﻿@using CityWatch.Data.Models;
+@using CityWatch.Data.Providers;
 @using CityWatch.Web.Services;
 @model CityWatch.Data.Models.KeyVehicleLog
 @inject IViewDataService viewDataService
 @inject IClientSiteViewDataService clientViewDataService
+@inject IGuardDataProvider _guardDataProvider;
 <input type="hidden" asp-for="@Model.ClientSiteLogBook.ClientSiteId" />
 <input type="hidden" id="kvlActionIsEdit" value="" />
 <div class="row" style="display:none" id="kvl_status_pd">
@@ -106,6 +108,9 @@
                                 <div class="custom-control custom-switch duty-day-switch">
                                     <input type="checkbox" class="custom-control-input" id="cbIsTimeSlotNo">
                                     <label class="custom-control-label" for="cbIsTimeSlotNo"></label>
+
+                                   
+                                    
                                     <input hidden asp-for="@Model.IsTimeSlotNo" />
                                 </div>
                             </div>
@@ -126,8 +131,21 @@
                             <input class="form-control" type="number" asp-for="@Model.MaxWeight" min="0" />
                         </div>
                         <div class="form-group col-md-2">
-                            <label>Reels</label>
+                            <div class="d-flex flex-row justify-content-between">
+                            <label id="lblIsReels">Reels</label>
+                            @*for manifest options-start*@
+                                <div class="custom-control custom-switch duty-day-switch">
+                                    <input type="checkbox" class="custom-control-input" id="cbIsReels">
+                                    <label class="custom-control-label" for="cbIsReels"></label>
+
+
+
+                                    <input hidden asp-for="@Model.IsReels" />
+                                </div>
+                            </div>
+                            @*for manifest options-end*@
                             <input class="form-control" type="number" asp-for="@Model.Reels" />
+                            
                         </div>
                     </div>
                     <div class="form-row">
@@ -382,7 +400,19 @@
                     <input class="form-control" type="text" asp-for="@Model.CustomerRef" />
                 </div>
                 <div class="form-group col-md-4">
-                    <label>VWI</label>
+                    <div class="d-flex flex-row justify-content-between">
+                    <label id="lblIsVXI">VWI</label>
+                    
+                        @*for manifest options-start*@
+                            <div class="custom-control custom-switch duty-day-switch">
+                                <input type="checkbox" class="custom-control-input" id="cbIsVWI">
+                                <label class="custom-control-label" for="cbIsVWI"></label>
+
+
+
+                                <input hidden asp-for="@Model.IsVWI" />
+                            </div>
+                    </div>
                     <input class="form-control" type="text" asp-for="@Model.Vwi" />
                 </div>
                 <div class="form-group col-md-4">

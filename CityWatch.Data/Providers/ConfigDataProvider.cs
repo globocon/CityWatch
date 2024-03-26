@@ -62,6 +62,7 @@ namespace CityWatch.Data.Providers
         List<GeneralFeeds> GetGeneralFeeds();
         //General Feeds-end
         public List<SmsChannel> GetSmsChannels();
+        public IncidentReportPosition GetIsLogbookData(string Name);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -101,7 +102,9 @@ namespace CityWatch.Data.Providers
                 {
                     Name = template.Name,
                     Text = template.Text,
-                    Type = template.Type
+                    Type = template.Type,
+                    BackgroundColour = template.BackgroundColour,
+                    TextColor = template.TextColor
                 });
             }
             else
@@ -112,6 +115,8 @@ namespace CityWatch.Data.Providers
 
                 templateToUpdate.Text = template.Text;
                 templateToUpdate.Type = template.Type;
+                templateToUpdate.BackgroundColour = template.BackgroundColour;
+                templateToUpdate.TextColor = template.TextColor;
             }
             _context.SaveChanges();
         }
@@ -314,9 +319,16 @@ namespace CityWatch.Data.Providers
         {
             return _context.IncidentReportPositions.OrderBy(z => z.Name).ToList();
         }
-
+        //To get the Logbbok Data-p6-101 start
+        public IncidentReportPosition GetIsLogbookData(string Name)
+        {
+            return _context.IncidentReportPositions.Where(x => x.Name == Name).FirstOrDefault();
+        }
+        //To get the Logbbok Data-p6-101 stop
         public void SavePostion(IncidentReportPosition incidentReportPosition)
         {
+            var ClientSiteName = _context.ClientSites.Where(x => x.Id == incidentReportPosition.ClientsiteId).FirstOrDefault();
+           
             if (incidentReportPosition.Id == -1)
             {
                 _context.IncidentReportPositions.Add(new IncidentReportPosition()
@@ -324,7 +336,10 @@ namespace CityWatch.Data.Providers
                     Name = incidentReportPosition.Name,
                     EmailTo = incidentReportPosition.EmailTo,
                     IsPatrolCar = incidentReportPosition.IsPatrolCar,
-                    DropboxDir = incidentReportPosition.DropboxDir
+                    DropboxDir = incidentReportPosition.DropboxDir,
+                    IsLogbook= incidentReportPosition.IsLogbook,
+                    ClientsiteId= incidentReportPosition.ClientsiteId,
+                    ClientsiteName= ClientSiteName.Name
                 });
             }
             else
@@ -336,6 +351,17 @@ namespace CityWatch.Data.Providers
                     positionToUpdate.EmailTo = incidentReportPosition.EmailTo;
                     positionToUpdate.IsPatrolCar = incidentReportPosition.IsPatrolCar;
                     positionToUpdate.DropboxDir = incidentReportPosition.DropboxDir;
+                    positionToUpdate.IsLogbook = incidentReportPosition.IsLogbook;
+                    positionToUpdate.ClientsiteId = incidentReportPosition.ClientsiteId;
+                    if (ClientSiteName!=null)
+                    {
+                        positionToUpdate.ClientsiteName = ClientSiteName.Name;
+                    }
+                    else
+                    {
+                        positionToUpdate.ClientsiteName = null;
+                    }
+                    
                 }
             }
             _context.SaveChanges();

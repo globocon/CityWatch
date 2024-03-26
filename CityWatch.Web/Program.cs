@@ -57,7 +57,9 @@ builder.Services.AddScoped<IClientSiteActivityStatusDataProvider, ClientSiteActi
 builder.Services.AddScoped<IRadioCheckViewDataService, RadioCheckViewDataService>();
 builder.Services.AddScoped<IRadioChecksActivityStatusService, RadioChecksActivityStatusService>();
 builder.Services.AddScoped<ISiteEventLogDataProvider, SiteEventLogDataProvider>();
-
+builder.Services.AddScoped<ISmsService, SmsService>();
+builder.Services.AddScoped<ISmsSenderProvider, SmsSenderProvider>();
+builder.Services.AddScoped<ISmsGlobalService, SmsGlobalService>();
 
 builder.Services.AddRazorPages(options =>
 {

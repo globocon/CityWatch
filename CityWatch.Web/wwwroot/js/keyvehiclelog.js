@@ -375,11 +375,20 @@ $(function () {
 
     $('#vehicle_key_daily_log tbody').on('click', '.btn-exit-quick', function () {
         var data = keyVehicleLog.row($(this).parents('tr')).data();
+        var tmdata = {
+            'EventDateTimeLocal': null,
+            'EventDateTimeLocalWithOffset': null,
+            'EventDateTimeZone': null,
+            'EventDateTimeZoneShort': null,
+            'EventDateTimeUtcOffsetMinute': null,
+        };
+        fillRefreshLocalTimeZoneDetails(tmdata, "", false)
         $.ajax({
             url: '/Guard/KeyVehicleLog?handler=KeyVehicleLogQuickExit',
             type: 'POST',
             data: {
-                id: data.detail.id
+                id: data.detail.id,
+                tmdata: tmdata
             },
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function () {
@@ -1027,10 +1036,28 @@ $(function () {
     function bindKvlPopupEvents(isEdit) {
 
         if (!isEdit) {
+            /*for manifest options-start*/
             $('#IsTimeSlotNo').val(true);
             $('#cbIsTimeSlotNo').prop('checked', true);
+            $('#IsVWI').val(true);
+            $('#cbIsVWI').prop('checked', true);
             $('#IsSender').val(true);
             $('#cbIsSender').prop('checked', true);
+            $('#IsReels').val(true);
+            $('#cbIsReels').prop('checked', true);
+            GetToggles($('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),1);
+
+           
+            //$('#IsTimeSlotNo').val(true);
+            //$('#cbIsTimeSlotNo').prop('checked', true);
+
+            GetToggles($('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(), 3);
+            
+            //$('#IsSender').val(true);
+            //$('#cbIsSender').prop('checked', true);
+            GetToggles($('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(), 2);
+            GetToggles($('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(), 4);
+            /*for manifest options-end*/
             /*for initializing the BDM to true-start*/
             $('#cbIsBDMOrSales').prop('checked', true);
             $('#IsBDM').val(true);
@@ -1044,7 +1071,16 @@ $(function () {
             let isSender = $('#IsSender').val().toLowerCase() === 'true';
             $('#lblIsSender').text(isSender ? 'Sender Address' : 'Reciever Address');
             $('#cbIsSender').prop('checked', isSender);
+            /*for manifest options-start*/
+            let isReels = $('#IsReels').val().toLowerCase() === 'true';
+            $('#lblIsReels').text(isReels ? 'Reels' : 'QTY');
+            $('#cbIsReels').prop('checked', isReels);
 
+            let isVWI = $('#IsVWI').val().toLowerCase() === 'true';
+            $('#lblIsVWI').text(isVWI ? 'VWI' : 'Manifest');
+            $('#cbIsVWI').prop('checked', isVWI);
+            /*for manifest options-end*/
+            //GetToggles($('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(), 1);
             /*for cheking  the BDM is true-start*/
             let isBDM = $('#IsBDM').val().toLowerCase() === 'true';
             if (isBDM == true) {
@@ -1136,6 +1172,18 @@ $(function () {
             $('#lblIsSender').text(isChecked ? 'Sender Address' : 'Reciever Address');
             $('#IsSender').val(isChecked);
         });
+        /*for manifest options-start*/
+        $('#cbIsReels').on('change', function () {
+            const isChecked = $(this).is(':checked');
+            $('#lblIsReels').text(isChecked ? 'Reels' : 'QTY');
+            $('#IsReels').val(isChecked);
+        });
+        $('#cbIsVWI').on('change', function () {
+            const isChecked = $(this).is(':checked');
+            $('#lblIsVXI').text(isChecked ? 'VWI' : 'Manifest');
+            $('#IsVWI').val(isChecked);
+        });
+        /*for manifest options-end*/
         /*for changing the BDM-start*/
         $('#cbIsBDMOrSales').on('change', function () {
 
@@ -4160,4 +4208,75 @@ $('#chkAllBatchDocketSelect').on('change', function () {
 });
 
 /*to add poi binder - end*/
+
+/*for manifest options-start*/
+function GetToggles(siteId, toggleId) {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    $.ajax({
+        url: '/Guard/KeyVehicleLog?handler=ClientSiteToggle',
+        type: 'GET',
+        data: {
+            siteId: siteId,
+            toggleId: toggleId
+        },
+        headers: { 'RequestVerificationToken': token }
+    }).done(function (response) {
+        if (response.length != 0) {
+            if (response[0].toggleTypeId == 1) {
+                if (response[0].isActive == true) {
+                    $('#IsTimeSlotNo').val(true);
+                    $('#cbIsTimeSlotNo').prop('checked', true);
+                    $('#lblIsTimeSlotNo').text(response[0].isActive ? 'Time Slot No.' : 'T.No. (Load)');
+                }
+                else {
+                    $('#IsTimeSlotNo').val(false);
+                    $('#cbIsTimeSlotNo').prop('checked', false);
+                    $('#lblIsTimeSlotNo').text(response[0].isActive ? 'Time Slot No.' : 'T.No. (Load)');
+                }
+            }
+            if (response[0].toggleTypeId == 2) {
+                if (response[0].isActive == true) {
+                    $('#IsVWI').val(true);
+                    $('#cbIsVWI').prop('checked', true);
+                    $('#lblIsVXI').text(response[0].isActive ? 'VWI' : 'Manifest');
+                }
+                else {
+                    $('#IsVWI').val(false);
+                    $('#cbIsVWI').prop('checked', false);
+                    $('#lblIsVXI').text(response[0].isActive ? 'VWI' : 'Manifest');
+                }
+            }
+            if (response[0].toggleTypeId == 3) {
+                if (response[0].isActive == true) {
+                    $('#IsSender').val(true);
+                    $('#cbIsSender').prop('checked', true);
+                    $('#lblIsSender').text(response[0].isActive ? 'Sender Address' : 'Reciever Address');
+                }
+                else {
+                    $('#IsSender').val(false);
+                    $('#cbIsSender').prop('checked', false);
+                    $('#lblIsSender').text(response[0].isActive ? 'Sender Address' : 'Reciever Address');
+                }
+            }
+            if (response[0].toggleTypeId == 4) {
+                if (response[0].isActive == true) {
+                    $('#IsReels').val(true);
+                    $('#cbIsReels').prop('checked', true);
+                    $('#lblIsReels').text(response[0].isActive ? 'Reels' : 'QTY');
+                }
+                else {
+                    $('#IsReels').val(false);
+                    $('#cbIsReels').prop('checked', false);
+                    $('#lblIsReels').text(response[0].isActive ? 'Reels' : 'QTY');
+                }
+            }
+            return response[0].isActive;
+        }
+       
+    }).fail(function () {
+        console.log("error");
+    });
+}
+
+/*for manifest options-start*/
 

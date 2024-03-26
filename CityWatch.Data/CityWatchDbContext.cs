@@ -118,8 +118,13 @@ namespace CityWatch.Data
         public DbSet<GeneralFeeds> GeneralFeeds { get; set; }
         //General Feeds-end
         public DbSet<SmsChannel> SmsChannel { get; set; }
+        public DbSet<GlobalDuressSms> GlobalDuressSms { get; set; }
+
 
         //public DbSet<SiteEventLog> SiteEventLog { get; set; }
+        //for toggle areas - start 
+        public DbSet<ClientSiteToggle> ClientSiteToggle { get; set; }
+        //for toggle areas - end 
 
 
     }
