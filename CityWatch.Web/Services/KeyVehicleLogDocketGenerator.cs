@@ -165,6 +165,64 @@ namespace CityWatch.Web.Services
                                         docList.Add(CreateWeightandOtherDetailsTablePOI(keyVehicleLogViewModel, docketReason));
                                         docList.Add(CreateImageDetailsTable(keyVehicleLogViewModel, docketReason));
 
+                                        var path = keyVehicleLog.Id + "/ComplianceDocuments";
+                                        int countpagebreak = 0;
+                                        var keyVehicleLogDetails = _viewDataService.GetKeyVehicleLogAttachments(
+                                             IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path)
+                                             .ToList();
+                                        if (keyVehicleLogDetails.Count > 0)
+                                        {
+                                            for (int j = 0; j < keyVehicleLogDetails.Count; j++)
+                                            {
+                                                string filename = IO.Path.Combine(IO.Path.Combine(IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path), keyVehicleLogDetails[j]);
+                                                int pagecount = 0;
+
+                                                if (IO.Path.GetExtension(filename) == ".pdf")
+                                                {
+                                                    using (StreamReader sr = new StreamReader(File.OpenRead(filename)))
+                                                    {
+                                                        Regex regex = new Regex(@"/Type\s*/Page[^s]");
+                                                        MatchCollection matches = regex.Matches(sr.ReadToEnd());
+
+                                                        pagecount = matches.Count;
+                                                    }
+                                                    PdfReader reader = new PdfReader(filename);
+                                                    PdfDocument docfile = new PdfDocument(reader);
+                                                    int pagecountnew = docfile.GetNumberOfPages();
+                                                    docfile.CopyPagesTo(1, pagecountnew, pdfDocList);
+                                                    for (int countpage = 0; countpage < pagecountnew; countpage++)
+                                                    {
+                                                        docList.Add(new AreaBreak(AreaBreakType.NEXT_AREA));
+                                                        
+                                                    }
+
+                                                }
+                                                if (IO.Path.GetExtension(filename) == ".jpg")
+                                                {
+                                                    //var pdfDocneew = new PdfDocument(new PdfReader(filename));
+                                                    //pdfDocneew.SetDefaultPageSize(PageSize.A4);
+                                                    //var docnew = new Document(pdfDocneew);
+
+                                                    //docnew.SetMargins(15f, 30f, 40f, 30f);
+                                                    //var pageSize = new PageSize(pdfDoc.GetLastPage().GetPageSize());
+                                                    //pdfDoc.AddNewPage(1, pageSize);
+                                                    //doc.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                                                  
+                                                    docList.Add(new AreaBreak(AreaBreakType.NEXT_AREA));
+                                                    docList.Add(GetImageFileTable(filename, keyVehicleLog.Id));
+
+                                                    //var countpage = pdfDoc.GetNumberOfPages();
+                                                    //var page = pdfDoc.GetFirstPage();
+                                                    //pdfDoc.MovePage(page, countpage + 1);
+                                                    //docnew.Close();
+                                                    //pdfDocneew.Close();
+                                                    ////PdfReader reader = new PdfReader(pdfDocneew);
+                                                    ////PdfDocument docfile = new PdfDocument(reader);
+                                                    //int pagecountnew = pdfDocneew.GetNumberOfPages();
+                                                    //pdfDocneew.CopyPagesTo(1, pagecountnew, pdfDoc);
+                                                }
+                                            }
+                                        }
 
 
 
@@ -266,7 +324,65 @@ namespace CityWatch.Web.Services
                                     docList.Add(CreateWeightandOtherDetailsTablePOI(keyVehicleLogViewModel, docketReason));
                                     docList.Add(CreateImageDetailsTable(keyVehicleLogViewModel, docketReason));
 
+                                    var path = keyVehicleLog.Id + "/ComplianceDocuments";
+                                    int countpagebreak = 0;
+                                    var keyVehicleLogDetails = _viewDataService.GetKeyVehicleLogAttachments(
+                                         IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path)
+                                         .ToList();
+                                    if (keyVehicleLogDetails.Count > 0)
+                                    {
+                                        for (int j = 0; j < keyVehicleLogDetails.Count; j++)
+                                        {
+                                            string filename = IO.Path.Combine(IO.Path.Combine(IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path), keyVehicleLogDetails[j]);
+                                            int pagecount = 0;
 
+                                            if (IO.Path.GetExtension(filename) == ".pdf")
+                                            {
+                                                using (StreamReader sr = new StreamReader(File.OpenRead(filename)))
+                                                {
+                                                    Regex regex = new Regex(@"/Type\s*/Page[^s]");
+                                                    MatchCollection matches = regex.Matches(sr.ReadToEnd());
+
+                                                    pagecount = matches.Count;
+                                                }
+                                                PdfReader reader = new PdfReader(filename);
+                                                PdfDocument docfile = new PdfDocument(reader);
+                                                int pagecountnew = docfile.GetNumberOfPages();
+                                                docfile.CopyPagesTo(1, pagecountnew, pdfDocList);
+                                                for (int countpage = 0; countpage < pagecountnew; countpage++)
+                                                {
+                                                    docList.Add(new AreaBreak(AreaBreakType.NEXT_AREA));
+                                                   
+                                                }
+                                            }
+                                            if (IO.Path.GetExtension(filename) == ".jpg")
+                                            {
+                                                //var pdfDocneew = new PdfDocument(new PdfReader(filename));
+                                                //pdfDocneew.SetDefaultPageSize(PageSize.A4);
+                                                //var docnew = new Document(pdfDocneew);
+
+                                                //docnew.SetMargins(15f, 30f, 40f, 30f);
+                                                //var pageSize = new PageSize(pdfDoc.GetLastPage().GetPageSize());
+                                                //pdfDoc.AddNewPage(1, pageSize);
+                                                //doc.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                                                int pagecount1 = pdfDocList.GetNumberOfPages();
+                                                
+                                                    docList.Add(new AreaBreak(AreaBreakType.NEXT_AREA));
+                                                
+                                                docList.Add(GetImageFileTable(filename, keyVehicleLog.Id));
+
+                                                //var countpage = pdfDoc.GetNumberOfPages();
+                                                //var page = pdfDoc.GetFirstPage();
+                                                //pdfDoc.MovePage(page, countpage + 1);
+                                                //docnew.Close();
+                                                //pdfDocneew.Close();
+                                                ////PdfReader reader = new PdfReader(pdfDocneew);
+                                                ////PdfDocument docfile = new PdfDocument(reader);
+                                                //int pagecountnew = pdfDocneew.GetNumberOfPages();
+                                                //pdfDocneew.CopyPagesTo(1, pagecountnew, pdfDoc);
+                                            }
+                                        }
+                                    }
 
 
                                     if (i != last)
@@ -332,7 +448,7 @@ namespace CityWatch.Web.Services
             //p7-115 docket output issues-start
             //pdfDocument.AddNewPage();
             var path = keyVehicleLog.Id + "/ComplianceDocuments";
-        
+            int countpagebreak = 0;
         var keyVehicleLogDetails = _viewDataService.GetKeyVehicleLogAttachments(
              IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path)
              .ToList();
@@ -342,6 +458,7 @@ namespace CityWatch.Web.Services
                 {
                     string filename = IO.Path.Combine(IO.Path.Combine(IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path), keyVehicleLogDetails[i]);
                     int pagecount = 0;
+                    
                     if (IO.Path.GetExtension(filename) == ".pdf")
                     {
                         using (StreamReader sr = new StreamReader(File.OpenRead(filename)))
@@ -364,15 +481,27 @@ namespace CityWatch.Web.Services
                         //var docnew = new Document(pdfDocneew);
 
                         //docnew.SetMargins(15f, 30f, 40f, 30f);
-                        var pageSize = new PageSize(pdfDoc.GetLastPage().GetPageSize());
-                        pdfDoc.AddNewPage(1, pageSize);
-                        
-                        
+                        //var pageSize = new PageSize(pdfDoc.GetLastPage().GetPageSize());
+                        //pdfDoc.AddNewPage(1, pageSize);
+                        //doc.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                        int pagecount1 = pdfDoc.GetNumberOfPages();
+                        if (countpagebreak == 0)
+                        {
+                            for (int countpage = 0; countpage < pagecount1; countpage++)
+                            {
+                                doc.Add(new AreaBreak(AreaBreakType.NEXT_AREA));
+                                countpagebreak = countpagebreak + 1;
+                            }
+                        }
+                        else
+                        {
+                            doc.Add(new AreaBreak(AreaBreakType.NEXT_AREA));
+                        }
                         doc.Add(GetImageFileTable(filename,keyVehicleLog.Id));
                        
-                        var countpage = pdfDoc.GetNumberOfPages();
-                        var page = pdfDoc.GetFirstPage();
-                        pdfDoc.MovePage(page, countpage + 1);
+                        //var countpage = pdfDoc.GetNumberOfPages();
+                        //var page = pdfDoc.GetFirstPage();
+                        //pdfDoc.MovePage(page, countpage + 1);
                         //docnew.Close();
                         //pdfDocneew.Close();
                         ////PdfReader reader = new PdfReader(pdfDocneew);
@@ -431,6 +560,7 @@ namespace CityWatch.Web.Services
             var reportPdfPath = "";
 
             var last = keyVehicleLogId.Last();
+            int countpagebreak = 0;
             foreach (var i in keyVehicleLogId)
             {
 
@@ -475,7 +605,70 @@ namespace CityWatch.Web.Services
                         docList.Add(CreateWeightandOtherDetailsTable(keyVehicleLogViewModel, docketReason));
                         docList.Add(CreateImageDetailsTable(keyVehicleLogViewModel, docketReason));
 
+                        //p7-115 docket output issues-start
+                        //pdfDocument.AddNewPage();
+                        var path = keyVehicleLog.Id + "/ComplianceDocuments";
 
+                        var keyVehicleLogDetails = _viewDataService.GetKeyVehicleLogAttachments(
+                             IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path)
+                             .ToList();
+                        
+                        if (keyVehicleLogDetails.Count > 0)
+                        {
+                            for (int j = 0; j < keyVehicleLogDetails.Count; j++)
+                            {
+                                string filename = IO.Path.Combine(IO.Path.Combine(IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path), keyVehicleLogDetails[j]);
+                                int pagecount = 0;
+                                if (IO.Path.GetExtension(filename) == ".pdf")
+                                {
+                                    using (StreamReader sr = new StreamReader(File.OpenRead(filename)))
+                                    {
+                                        Regex regex = new Regex(@"/Type\s*/Page[^s]");
+                                        MatchCollection matches = regex.Matches(sr.ReadToEnd());
+
+                                        pagecount = matches.Count;
+                                    }
+                                    PdfReader reader = new PdfReader(filename);
+                                    PdfDocument docfile = new PdfDocument(reader);
+                                    int pagecountnew = docfile.GetNumberOfPages();
+                                    docfile.CopyPagesTo(1, pagecountnew, pdfDocList);
+                                   
+                                        for (int countpage = 0; countpage < pagecountnew; countpage++)
+                                        {
+                                            docList.Add(new AreaBreak(AreaBreakType.NEXT_AREA));
+                                            //countpagebreak = countpagebreak + 1;
+                                        }
+                                   
+                                }
+                                if (IO.Path.GetExtension(filename) == ".jpg")
+                                {
+                                    //var pdfDocneew = new PdfDocument(new PdfReader(filename));
+                                    //pdfDocneew.SetDefaultPageSize(PageSize.A4);
+                                    //var docnew = new Document(pdfDocneew);
+
+                                    //docnew.SetMargins(15f, 30f, 40f, 30f);
+                                    //var pageSize = new PageSize(pdfDocList.GetLastPage().GetPageSize());
+                                    //pdfDocList.AddNewPage(1, pageSize);
+                                    //int pagecount1 = pdfDocList.GetNumberOfPages();
+
+                                    docList.Add(new AreaBreak(AreaBreakType.NEXT_AREA));
+
+                                    docList.Add(GetImageFileTable(filename, keyVehicleLog.Id));
+
+                                    //var countpage = pdfDocList.GetNumberOfPages();
+                                    //var page = pdfDocList.GetFirstPage();
+                                    //pdfDocList.MovePage(page, countpage + 1);
+                                    //docnew.Close();
+                                    //pdfDocneew.Close();
+                                    ////PdfReader reader = new PdfReader(pdfDocneew);
+                                    ////PdfDocument docfile = new PdfDocument(reader);
+                                    //int pagecountnew = pdfDocneew.GetNumberOfPages();
+                                    //pdfDocneew.CopyPagesTo(1, pagecountnew, pdfDoc);
+                                }
+                            }
+                        }
+
+                        //p7 - 115 docket output issues - end
 
 
                         if (i != last)
@@ -1440,7 +1633,76 @@ namespace CityWatch.Web.Services
                         docList.Add(CreateWeightandOtherDetailsTable(keyVehicleLogViewModel, docketReason));
                         docList.Add(CreateImageDetailsTable(keyVehicleLogViewModel, docketReason));
 
+                        //p7-115 docket output issues-start
+                        //pdfDocument.AddNewPage();
+                        var path = keyVehicleLog.Id + "/ComplianceDocuments";
 
+                        var keyVehicleLogDetails = _viewDataService.GetKeyVehicleLogAttachments(
+                             IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path)
+                             .ToList();
+                        int countpagebreak = 0;
+                        if (keyVehicleLogDetails.Count > 0)
+                        {
+                            for (int j = 0; j < keyVehicleLogDetails.Count; j++)
+                            {
+                                string filename = IO.Path.Combine(IO.Path.Combine(IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path), keyVehicleLogDetails[j]);
+                                int pagecount = 0;
+                                if (IO.Path.GetExtension(filename) == ".pdf")
+                                {
+                                    using (StreamReader sr = new StreamReader(File.OpenRead(filename)))
+                                    {
+                                        Regex regex = new Regex(@"/Type\s*/Page[^s]");
+                                        MatchCollection matches = regex.Matches(sr.ReadToEnd());
+
+                                        pagecount = matches.Count;
+                                    }
+                                    PdfReader reader = new PdfReader(filename);
+                                    PdfDocument docfile = new PdfDocument(reader);
+                                    int pagecountnew = docfile.GetNumberOfPages();
+                                    docfile.CopyPagesTo(1, pagecountnew, pdfDocList);
+
+                                }
+                                if (IO.Path.GetExtension(filename) == ".jpg")
+                                {
+                                    //var pdfDocneew = new PdfDocument(new PdfReader(filename));
+                                    //pdfDocneew.SetDefaultPageSize(PageSize.A4);
+                                    //var docnew = new Document(pdfDocneew);
+
+                                    //docnew.SetMargins(15f, 30f, 40f, 30f);
+                                    //var pageSize = new PageSize(pdfDocList.GetLastPage().GetPageSize());
+                                    //pdfDocList.AddNewPage(1, pageSize);
+                                    int pagecount1 = pdfDocList.GetNumberOfPages();
+                                    if (countpagebreak == 0)
+                                    {
+                                        for (int countpage = 0; countpage < pagecount1; countpage++)
+                                        {
+                                            docList.Add(new AreaBreak(AreaBreakType.NEXT_AREA));
+                                            countpagebreak = countpagebreak + 1;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        docList.Add(new AreaBreak(AreaBreakType.NEXT_AREA));
+                                    }
+
+
+
+                                    docList.Add(GetImageFileTable(filename, keyVehicleLog.Id));
+
+                                    //var countpage = pdfDocList.GetNumberOfPages();
+                                    //var page = pdfDocList.GetFirstPage();
+                                    //pdfDocList.MovePage(page, countpage + 1);
+                                    ////docnew.Close();
+                                    //pdfDocneew.Close();
+                                    ////PdfReader reader = new PdfReader(pdfDocneew);
+                                    ////PdfDocument docfile = new PdfDocument(reader);
+                                    //int pagecountnew = pdfDocneew.GetNumberOfPages();
+                                    //pdfDocneew.CopyPagesTo(1, pagecountnew, pdfDoc);
+                                }
+                            }
+                        }
+
+                        //p7 - 115 docket output issues - end
 
 
                         //if (i != last)
