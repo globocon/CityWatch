@@ -1124,14 +1124,14 @@ namespace CityWatch.Data.Providers
         {
             return _context.KeyVehicleLogVisitorPersonalDetails
                 .Include(z => z.KeyVehicleLogProfile)
-                .Where(z => (string.IsNullOrEmpty(trailerRego1) || string.Equals(z.KeyVehicleLogProfile.Trailer1Rego, trailerRego1))
-                && (string.IsNullOrEmpty(trailerRego2) || string.Equals(z.KeyVehicleLogProfile.Trailer2Rego, trailerRego2))
-                && (string.IsNullOrEmpty(trailerRego3) || string.Equals(z.KeyVehicleLogProfile.Trailer3Rego, trailerRego3))
-                && (string.IsNullOrEmpty(trailerRego4) || string.Equals(z.KeyVehicleLogProfile.Trailer4Rego, trailerRego4))
-                && z.KeyVehicleLogProfile.Trailer1PlateId == trailerRego1Id
-                && z.KeyVehicleLogProfile.Trailer2PlateId == trailerRego2Id
-                && z.KeyVehicleLogProfile.Trailer3PlateId == trailerRego3Id
-                && z.KeyVehicleLogProfile.Trailer4PlateId == trailerRego4Id
+                .Where(z => z.KeyVehicleLogProfile.Trailer1Rego ==trailerRego1
+                  && (z.KeyVehicleLogProfile.Trailer2Rego == trailerRego2)
+                  &&(z.KeyVehicleLogProfile.Trailer3Rego == trailerRego3) 
+                  &&(z.KeyVehicleLogProfile.Trailer4Rego == trailerRego4)
+                  && z.KeyVehicleLogProfile.Trailer1PlateId == trailerRego1Id
+                  && z.KeyVehicleLogProfile.Trailer2PlateId == trailerRego2Id
+                  && z.KeyVehicleLogProfile.Trailer3PlateId == trailerRego3Id
+                  && z.KeyVehicleLogProfile.Trailer4PlateId == trailerRego4Id
                 )
                 .ToList();
         }
@@ -1373,8 +1373,8 @@ namespace CityWatch.Data.Providers
             && (z.Trailer4Rego == keyVehicleLogProfile.Trailer4Rego)
             && (z.Trailer1PlateId == keyVehicleLogProfile.Trailer1PlateId)
             && (z.Trailer2PlateId == keyVehicleLogProfile.Trailer2PlateId)
-            && (z.Trailer3PlateId == keyVehicleLogProfile.Trailer2PlateId)
-            && (z.Trailer4PlateId == keyVehicleLogProfile.Trailer2PlateId)
+            && (z.Trailer3PlateId == keyVehicleLogProfile.Trailer3PlateId)
+            && (z.Trailer4PlateId == keyVehicleLogProfile.Trailer4PlateId)
             ) ?? new KeyVehicleLogProfile();
             kvlProfileToDb.VehicleRego = keyVehicleLogProfile.VehicleRego;
             kvlProfileToDb.Trailer1Rego = keyVehicleLogProfile.Trailer1Rego;
@@ -1395,7 +1395,7 @@ namespace CityWatch.Data.Providers
             kvlProfileToDb.Trailer1PlateId = keyVehicleLogProfile.Trailer1PlateId;
             kvlProfileToDb.Trailer2PlateId = keyVehicleLogProfile.Trailer2PlateId;
             kvlProfileToDb.Trailer3PlateId = keyVehicleLogProfile.Trailer3PlateId;
-            kvlProfileToDb.Trailer4PlateId = keyVehicleLogProfile.Trailer3PlateId;
+            kvlProfileToDb.Trailer4PlateId = keyVehicleLogProfile.Trailer4PlateId;
 
             if (kvlProfileToDb.Id == 0)
             {

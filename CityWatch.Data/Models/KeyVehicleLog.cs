@@ -185,7 +185,8 @@ namespace CityWatch.Data.Models
             /* New change for Add rigo without plate number 21032024 dileep*/
             if (string.IsNullOrEmpty(VehicleRego))
             {
-                if (!string.IsNullOrEmpty(Trailer1Rego) || !string.IsNullOrEmpty(Trailer2Rego) || !string.IsNullOrEmpty(Trailer3Rego))
+                if (!string.IsNullOrEmpty(Trailer1Rego) || !string.IsNullOrEmpty(Trailer2Rego) 
+                    || !string.IsNullOrEmpty(Trailer3Rego) || !string.IsNullOrEmpty(Trailer4Rego))
                 {
 
                     RegoStatus = true;

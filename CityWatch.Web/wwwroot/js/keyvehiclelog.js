@@ -721,9 +721,21 @@ $(function () {
         }).done(function (result) {
             let personName = result.personName ? result.personName : 'Unknown';
 
-            if (!$('#PlateId').val()) {
-                $('#PlateId').val(result.keyVehicleLogProfile.plateId);
+
+            var check1 = $('#PlateId').val();
+            var check = result.keyVehicleLogProfile.plateId;
+            if (check1 != 0 && check1 != '') {
+
             }
+            else {
+
+                if (check != 0) {
+                    $('#PlateId').val(result.keyVehicleLogProfile.plateId);
+                }
+
+            }
+            
+
             if (!$('#kvl_list_plates').val()) {
                 $('#kvl_list_plates').val(result.keyVehicleLogProfile.plateId);
             }
@@ -915,7 +927,7 @@ $(function () {
             if ($('#Trailer4Rego').val() !== '') {
                 $('#Trailer4Rego_Vehicle_type').attr('disabled', false);
             }
-          //traliler changes New change for Add rigo without plate number 21032024 dileep end
+            //traliler changes New change for Add rigo without plate number 21032024 dileep end
 
 
         });
@@ -972,7 +984,16 @@ $(function () {
                 $('#TruckConfigure').val(result1.truckConfigText[0].name);
             })
 
-            loadAuditHistory(result.keyVehicleLogProfile.vehicleRego);
+            //new change for trailer rego start 21032024
+            if (result.keyVehicleLogProfile.vehicleRego != null) {
+                loadAuditHistory(result.keyVehicleLogProfile.vehicleRego);
+
+            }
+            else {
+                loadAuditHistoryWithProfileId(result.keyVehicleLogProfile.id);
+            }
+            //new change for trailer rego end 21032024
+            //loadAuditHistory(result.keyVehicleLogProfile.vehicleRego);
         });
         $('#incident-report-profiles-modal').modal('hide');
     }
@@ -1193,8 +1214,10 @@ $(function () {
 
 
 
+            if ($('#VehicleRego').val() !== '') {
 
-            loadAuditHistory($('#VehicleRego').val());
+                loadAuditHistory($('#VehicleRego').val());
+            }
             var checkedornot = $('#IsCRMId').val();
 
             /* to load the selected items in BDM-start*/
@@ -1507,8 +1530,8 @@ $(function () {
             if ($('#Trailer4Rego').val() !== '') {
                 $('#Trailer4Rego_Vehicle_type').attr('disabled', false);
             }
-             //traliler changes New change for Add rigo without plate number 21032024 dileep end
-           
+            //traliler changes New change for Add rigo without plate number 21032024 dileep end
+
         }
 
 
@@ -2725,7 +2748,7 @@ $(function () {
         //trailer changes New change for Add rigo without plate number 21032024 dileep Start*/
         $('#Trailer1Rego').on('blur', function () {
             const vehicleRegoHasVal = $(this).val() !== '';
-           
+
 
 
         });
@@ -2769,46 +2792,56 @@ $(function () {
             searching: false,
             data: [],
             columns: [
-               
+
                 { data: 'id', visible: false },
                 {
                     data: 'trailer1Rego',
                     render: function (value, type, data) {
-                        
-                        return value + '(' + data.trailer1State +')' ;
+                        if (value !== '' && value !==null)
+                            return value + '(' + data.trailer1State + ')';
+                        else
+                        return ''
                     }
                 },
 
                 {
                     data: 'trailer2Rego',
                     render: function (value, type, data) {
-
-                        return value + '(' + data.trailer2State + ')';
+                        if (value !== ''  && value !== null)
+                            return value + '(' + data.trailer2State + ')';
+                        else
+                            return ''
                     }
                 },
                 {
                     data: 'trailer3Rego',
                     render: function (value, type, data) {
-
-                        return value + '(' + data.trailer3State + ')';
+                        if (value !== '' && value !== null)
+                            return value + '(' + data.trailer3State + ')';
+                        else
+                            return ''
                     }
                 },
                 {
                     data: 'trailer4Rego',
                     render: function (value, type, data) {
-
-                        return value + '(' + data.trailer4State + ')';
+                        if (value !== '' && value !== null)
+                            return value + '(' + data.trailer4State + ')';
+                        else
+                            return ''
                     }
                 },
 
                 {
                     data: 'trailerTypeName',
                     render: function (value, type, data) {
-
-                        return value ;
+                        if (value !== '' && value !== null)
+                            return value;
+                        else
+                            return ''
                     }
                 },
-                
+
 
 
                 {
@@ -3039,7 +3072,7 @@ $(function () {
             var data = gridKeyVehicleLogtrailerProfile.row($(this).parents('tr')).data();
             populateKvlModal(data.id);
             GetVehicleImage()
-            
+
 
         });
 
