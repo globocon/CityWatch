@@ -1093,6 +1093,14 @@ $(function () {
             let isDocket = $('#IsDocketNo').val().toLowerCase() === 'true';
 
             $('#cbIsDocketNo').prop('checked', isDocket);
+            if (isDocket == true) {
+                $('#txtLoaderName').prop('disabled', false);
+                $('#txtDispatchName').prop('disabled', false);
+            }
+            else {
+                $('#txtLoaderName').prop('disabled', 'disabled');
+                $('#txtDispatchName').prop('disabled', 'disabled');
+            }
             /*p1 - 115 docket output issues - end*/
         }
 
@@ -1108,6 +1116,9 @@ $(function () {
             $('#IsDocketNo').val(isChecked);
             if (isChecked == true) {
                 $('#addCompliancesDocumentsModal').modal('show');
+                $('#txtLoaderName').prop('disabled', false);
+                $('#txtDispatchName').prop('disabled', false);
+                
                 GetComplianceDocumentsAttachmentLists();
             }
 
