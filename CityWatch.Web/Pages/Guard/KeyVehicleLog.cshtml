@@ -390,10 +390,10 @@
 
 
 <div class="modal" tabindex="-1" role="dialog" id="kvl-trailer_profiles-modal" data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fa fa-gear mr-2" aria-hidden="true"></i> Trailer Rego : <span id="kvl-profile-title-rego"></span></h5>
+                <h5 class="modal-title"><i class="fa fa-gear mr-2" aria-hidden="true"></i>Vehicle Rego/Trailer Rego : <span id="kvl-profile-title-rego"></span></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -403,16 +403,23 @@
                     <div class="col-md-12">
                         <table class="table table-bordered" width="100%" id="key_vehicle_log_trailerprofiles">
                             <thead>
-                                <tr>
-                                    <th>Id</th>
-                                    <th><center>Trailer1 Rego</center></th>
-                                    <th><center>Trailer2 Rego</center></th>
-                                    <th><center>Trailer3 Rego</center></th>
-                                    <th><center>Trailer4 Rego</center></th>
-                                    <th><center>Trailer Type</center></th>
-                                    <th></th>
-                                </tr>
 
+                                <tr>
+                                    <th rowspan="2" hidden></th>
+                                    <th rowspan="2"><center>ID / Plate</center></th>
+                                    <th rowspan="2"><center>Company Name</center></th>
+                                    <th colspan="2"><center>Individual</center></th>
+                                    <th rowspan="2"></th>
+                                    <th rowspan="2"><center>Trailer1 Rego</center></th>
+                                    <th rowspan="2"><center>Trailer2 Rego</center></th>
+                                    <th rowspan="2"><center>Trailer3 Rego</center></th>
+                                    <th rowspan="2"><center>Trailer4 Rego</center></th>
+                                    <th rowspan="2"><center>Trailer Type</center></th>
+                                </tr>
+                                <tr>
+                                    <th>Person Name</th>
+                                    <th>Person Type</th>
+                                </tr>
                             </thead>
                         </table>
                     </div>

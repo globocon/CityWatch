@@ -13,6 +13,10 @@ namespace CityWatch.Data.Models
     {
         [Key]
         public int Id { get; set; }
+        public string plate { get; set; }
+        public string companyName { get; set; }
+        public string PersonName { get; set; }
+        public string personTypeText { get; set; }
         public string Trailer1Rego { get; set; }
         public string Trailer1State { get; set; }
         public string Trailer2Rego { get; set; }

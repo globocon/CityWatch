@@ -734,7 +734,9 @@ $(function () {
                 }
 
             }
-            
+            if ($('#VehicleRego').val() === '') {
+                $('#VehicleRego').val(result.keyVehicleLogProfile.vehicleRego);
+            }
 
             if (!$('#kvl_list_plates').val()) {
                 $('#kvl_list_plates').val(result.keyVehicleLogProfile.plateId);
@@ -2794,6 +2796,10 @@ $(function () {
             columns: [
 
                 { data: 'id', visible: false },
+                { data: 'plate' },
+                { data: 'companyName' },
+                { data: 'personName' },
+                { data: 'personTypeText' },
                 {
                     data: 'trailer1Rego',
                     render: function (value, type, data) {

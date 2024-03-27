@@ -199,6 +199,48 @@ namespace CityWatch.Data.Models
 
             }
 
+            if(RegoStatus)
+            {
+                if (!string.IsNullOrEmpty(Trailer1Rego))
+                {
+                    if (Trailer1PlateId == null || Trailer1PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult("State of ID / Plate is required for Trailer 1 Rego"));
+                    }
+
+                }
+                if (!string.IsNullOrEmpty(Trailer2Rego))
+                {
+                    if (Trailer2PlateId == null || Trailer2PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult("State of ID / Plate is required for Trailer 2 Rego"));
+                    }
+
+                }
+                if (!string.IsNullOrEmpty(Trailer3Rego))
+                {
+                    if (Trailer3PlateId == null || Trailer3PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult("State of ID / Plate is required for Trailer 3 Rego"));
+                    }
+
+                }
+                if (!string.IsNullOrEmpty(Trailer4Rego))
+                {
+                    if (Trailer4PlateId == null || Trailer4PlateId == 0)
+                    {
+                        errors.Add(new ValidationResult("State of ID / Plate is required for Trailer 4 Rego"));
+                    }
+
+                }
+
+                if(TrailerType==null || TrailerType==0)
+                {
+                    errors.Add(new ValidationResult("Please select Trailer Type"));
+
+                }
+            }
+
             if (!string.IsNullOrEmpty(VehicleRego) && PlateId <= 0)
                 errors.Add(new ValidationResult("State of ID / Plate is required"));
 

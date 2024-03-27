@@ -1022,6 +1022,16 @@ namespace CityWatch.Data.Providers
         public List<string> GetTrailerRegosForKVL(string regoStart = null)
         {
             var newList = new List<string>();
+            var trailerRego = _context.KeyVehicleLogVisitorProfiles
+                .Where(z => string.IsNullOrEmpty(regoStart) ||
+                            (!string.IsNullOrEmpty(z.VehicleRego) &&
+                                z.VehicleRego.Contains(regoStart)))
+                .Select(z => z.VehicleRego)
+                .Distinct()
+                .OrderBy(z => z)
+                .ToList();
+
+
             var trailer1Rego = _context.KeyVehicleLogVisitorProfiles
                 .Where(z => string.IsNullOrEmpty(regoStart) ||
                             (!string.IsNullOrEmpty(z.Trailer1Rego) &&
@@ -1054,7 +1064,8 @@ namespace CityWatch.Data.Providers
                .Distinct()
                .OrderBy(z => z)
                .ToList();
-
+            
+            newList.AddRange(trailerRego);
             newList.AddRange(trailer1Rego);
             newList.AddRange(trailer2Rego);
             newList.AddRange(trailer3Rego);

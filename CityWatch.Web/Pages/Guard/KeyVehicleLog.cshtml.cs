@@ -408,7 +408,13 @@ namespace CityWatch.Web.Pages.Guard
                 keyVehicleLogInExitTime.ExitTime = DateTime.Now;
                 keyVehicleLogAuditHistory = GetKvlAuditHistory(keyVehicleLogInExitTime);
                 keyVehicleLogAuditHistory.AuditMessage = "Exit entry";
-                var profileId = GetKvlProfileId(keyVehicleLogInExitTime);
+                /*21022024 modification for trailer dileep Start*/
+                var profileId=0;
+                if (!string.IsNullOrEmpty(keyVehicleLogInExitTime.VehicleRego))
+                    profileId = GetKvlProfileId(keyVehicleLogInExitTime);
+                 else
+                    profileId = GetKvlProfileIdWithOutVehicleRego(keyVehicleLogInExitTime);
+                /*21022024 modification for trailer dileep end*/
                 keyVehicleLogAuditHistory.ProfileId = profileId;
                 keyVehicleLogAuditHistory.KeyVehicleLogId = KeyVehicleLog.Id;
                 _guardLogDataProvider.SaveKeyVehicleLogAuditHistory(keyVehicleLogAuditHistory);
