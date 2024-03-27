@@ -256,7 +256,10 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
-                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardLogBookInfoModal" id="btnLogBookDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" text="' + data.clientSiteId + '"><input type="hidden" id="GuardId" text="' + data.guardId + '"> ';
+                if (value != 0)
+                    return '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardLogBookInfoModal" id="btnLogBookDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                else
+                    return '<button type="button" class="btn" id="btnLogBookHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
             }
         },
         {
@@ -1417,6 +1420,93 @@ $('#clientSiteActiveGuards tbody').on('click', '#btnIncidentReportdetails', func
 
 });
 /*for incident report details of the guard - end*/
+
+/* for logbook history of the guard start*/
+function renderLogbookDateTime(value, record) {  
+    if (record.eventDateTimeLocal != null && record.eventDateTimeLocal != '') {
+        const date = new Date(record.eventDateTimeLocal);
+        var DateTime = luxon.DateTime;
+        var dt1 = DateTime.fromJSDate(date);
+        var dt = dt1.toFormat('dd LLL yyyy @ HH:mm') + ' (' + record.eventDateTimeZoneShort + ')';
+        return dt;
+    }
+    else if (value !== '') {
+        const date = new Date(value);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        let day = date.getDate();
+
+        if (day < 10) {
+            day = '0' + day;
+        }
+        return day + ' ' + months[date.getMonth()] + ' ' + date.getFullYear() + ' @ ' + date.toLocaleString('en-Au', { hourCycle: 'h23', timeStyle: 'short' }) + ' Hrs';
+    }
+}
+
+
+let clientSiteActiveGuardsLogBookHistory = $('#clientSiteActiveGuardsLogBookHistory').DataTable({
+    ordering: false,
+    info: false,
+    searching: false,
+    autoWidth: false,
+    fixedHeader: true,
+    deferLoading: 57,
+    "scrollY": "300px", // Set the desired height for the scrollable area
+    "paging": false,
+    "footer": true,
+    "processing": true,
+    'language': {
+        'loadingRecords': '&nbsp;',
+        'processing': 'Loading...Please wait...'
+    },     
+    ajax: {
+        url: '/RadioCheckV2?handler=ClientSitelogBookHistory',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteId = $('#txtClientSiteId').val();
+            d.guardId = $('#txtGuardId').val();
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'id', title: 'Id', visible: false },        
+        {
+            data: 'clientSiteLogBookId',
+            width: '20%',
+            title: 'LogBook Id',
+            visible: false,
+        },
+        {
+            data: 'notes',
+            width: '9%',
+            title: 'Notes',
+            className: "text-center",
+        },
+        {
+            data: 'eventDateTime',
+            width: '9%',
+            title: 'Created Time',
+            className: "text-center",
+            render: function (value, type, data) {
+                return renderLogbookDateTime(value, data);
+            }
+        }
+    ]   
+});
+
+$('#clientSiteActiveGuards tbody').on('dblclick', '#btnLogBookHistoryByGuard', function (value, record) {
+    $('#guardLogBookHistoryModal').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).attr("data-guardid");
+    var ClientSiteId = $(this).attr('data-clientsiteid');  
+    var ClientSiteName = $(this).attr('data-clientsitename');
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    $('#lbl_GuardLogBookHistoryModalHeader').text(GuardName);
+    $('#lbl_lb_History_SitenameInfo').text('Last log book activity on site ' + ClientSiteName);
+    clientSiteActiveGuardsLogBookHistory.ajax.reload();
+});
+/* for logbook history of the guard end*/
 
 /*For radio check dropdown start*/
 
@@ -2813,7 +2903,10 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
-                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardLogBookInfoModal" id="btnLogBookDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" text="' + data.clientSiteId + '"><input type="hidden" id="GuardId" text="' + data.guardId + '"> ';
+                if (value != 0)
+                    return '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardLogBookInfoModal" id="btnLogBookDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                else
+                    return '<button type="button" class="btn" id="btnLogBookHistoryByGuardSinglePage" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
             }
         },
         {
@@ -3021,6 +3114,20 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnLogBookDetailsByGu
     $('#lbl_GuardActivityHeader').text(GuardName + '-' + 'Log Book Details');
     clientSiteActiveGuardsLogBookDetails.ajax.reload();
 
+});
+
+$('#clientSiteActiveGuardsSinglePage tbody').on('dblclick', '#btnLogBookHistoryByGuardSinglePage', function (value, record) {
+    $('#guardLogBookHistoryModal').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).attr("data-guardid");
+    var ClientSiteId = $(this).attr('data-clientsiteid');
+    var ClientSiteName = $(this).attr('data-clientsitename');
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    $('#lbl_GuardLogBookHistoryModalHeader').text(GuardName);
+    $('#lbl_lb_History_SitenameInfo').text('Last log book activity on site ' + ClientSiteName);
+    clientSiteActiveGuardsLogBookHistory.ajax.reload();
 });
 
 $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnKeyVehicleDetailsByGuard', function (value, record) {
@@ -3395,8 +3502,18 @@ $("#hoverModal").on("hidden.bs.modal", function () {
 $("#guardInfoModal").on("hidden.bs.modal", function () {
     isPaused = false;
 });
-
-
+$("#guardLogBookHistoryModal").on("hidden.bs.modal", function () {
+    isPaused = false;
+});
+$("#guardKeyVehicleHistoryModal").on("hidden.bs.modal", function () {
+    isPaused = false;
+});
+$("#guardIncidentReportsHistoryModal").on("hidden.bs.modal", function () {
+    isPaused = false;
+});
+$("#guardSWHistoryModal").on("hidden.bs.modal", function () {
+    isPaused = false;
+});
 
 //hover display tooltip-end
 

@@ -171,7 +171,6 @@ namespace CityWatch.Web.Pages.Radio
         //for getting Incident Report Details of Guards-start
         public IActionResult OnGetClientSiteIncidentReportActivityStatus(int clientSiteId, int guardId)
         {
-
             return new JsonResult(_guardLogDataProvider.GetActiveGuardIncidentReportDetails(clientSiteId, guardId));
         }
 
@@ -468,15 +467,13 @@ namespace CityWatch.Web.Pages.Radio
         //Send Text Notifications-end
 
 
-        //to check whthere there is any siteemail or smartwand or guards exists
-        //for getting guards not available -end
-
-        //public JsonResult OnGetCompanyTextMessageData(int id)
-        //{
-        //    var clientsite = _guardLogDataProvider.GetClientSites(id).FirstOrDefault() ;
-        //    var clientsitesmartwands = _guardLogDataProvider.GetClientSiteSmartWands(id);
-        //    return new JsonResult(_guardLogDataProvider.GetGuards(id));
-        //}
+        //for getting logBookDetails of Guards-start
+        public IActionResult OnGetClientSitelogBookHistory(int clientSiteId, int guardId)
+        {
+            var jsresult = _guardLogDataProvider.GetActiveGuardlogBookHistory(clientSiteId, guardId);
+            return new JsonResult(jsresult);
+        }
+        //for getting logBookDetails of Guards-end
 
 
         //for getting logBookDetails of Guards-start

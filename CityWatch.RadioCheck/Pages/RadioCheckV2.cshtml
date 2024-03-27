@@ -367,6 +367,144 @@
 </div>
 
 
+<!----------------- Log Book History Modal -------------------->
+<div class="modal" tabindex="-1" role="dialog" id="guardLogBookHistoryModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+                <h5 class="modal-title col-md-8"><i class="fa fa-vcard-o mr-2"></i><label id="lbl_GuardLogBookHistoryModalHeader"></label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12 bg-info text-center mb-2">
+                        <label id="lbl_lb_History_SitenameInfo" class="col-form-label text-white"></label>
+                    </div>
+                    <div class="col-md-12">
+                        <table id="clientSiteActiveGuardsLogBookHistory" class="table table-bordered" style="width:100%;">
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!----------------- Vehicle  History Modal -------------------->
+<div class="modal" tabindex="-1" role="dialog" id="guardKeyVehicleHistoryModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><i class="fa fa-vcard-o mr-2"></i><label id="lbl_KvGuardActivityHistoryHeader"></label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12 bg-info text-center mb-2">
+                        <label id="lbl_kv_History_SitenameInfo" class="col-form-label text-white"></label>
+                    </div>
+                    <div class="col-md-12">
+                        <table id="clientSiteActiveGuardsKeyVehicleHistory" class="table table-bordered" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>Id</th>
+                                    <th>SiteName</th>
+                                    <th>KeyVehicleLog Id</th>
+                                    <th>License No</th>
+                                    <th>Individual</th>
+                                    <th>Company</th>
+                                    <th>Activity Type</th>
+                                    <th>Created Time</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!----------------- Incident Reports  History Modal -------------------->
+<div class="modal" tabindex="-1" role="dialog" id="guardIncidentReportsHistoryModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><i class="fa fa-vcard-o mr-2"></i><label id="lbl_IrGuardActivityHistoryHeader"></label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12 bg-info text-center mb-2">
+                        <label id="lbl_Ir_History_SitenameInfo" class="col-form-label text-white"></label>
+                    </div>
+                    <div class="col-md-12">
+                        <table id="clientSiteActiveGuardsIncidentReportsHistory" class="table table-bordered" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>Id</th>
+                                    <th>SiteName</th>
+                                    <th>IncidentReport Id</th>
+                                    <th>File</th>
+                                    <th>Activity Type</th>
+                                    <th>Created Time</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!----------------- SW  History Modal -------------------->
+
+<div class="modal" tabindex="-1" role="dialog" id="guardSWHistoryModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><i class="fa fa-vcard-o mr-2"></i><label id="lbl_SwGuardActivityHistoryHeader"></label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12 bg-info text-center mb-2">
+                        <label id="lbl_Sw_History_SitenameInfo" class="col-form-label text-white"></label>
+                    </div>
+                    <div class="col-md-12">
+                        <table id="clientSiteActiveGuardsSwHistory" class="table table-bordered" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>Id</th>
+                                    <th>Template Name       </th>
+                                    <th>Smart Wand</th>
+                                    <th>Smart Wand Number</th>
+                                    <th>Inspection Start</th>
+                                    <th>Location</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <!----------------- Radio Check Status pop up -------------------->
 @*<div class="modal fade" id="selectRadioCheckStatus" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="selectRadioCheckStatusLabel" aria-hidden="true">
     <div class="modal-dialog modal-sm">

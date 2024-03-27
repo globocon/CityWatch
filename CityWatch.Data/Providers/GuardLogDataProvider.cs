@@ -90,9 +90,13 @@ namespace CityWatch.Data.Providers
         //logBookId entry for radio checklist-end
 
         //for getting logBook details of the  guard-start
-
         List<RadioCheckListGuardLoginData> GetActiveGuardlogBookDetails(int clientSiteId, int guardId);
         //for getting logBook details of the  guard-end
+
+        //for getting logBook history of the  guard-start
+        List<GuardLog> GetActiveGuardlogBookHistory(int clientSiteId, int guardId);
+        //for getting logBook history of the  guard-end
+
 
         //for getting list of guards not available-start
         List<RadioCheckListNotAvailableGuardData> GetNotAvailableGuardDetails();
@@ -1490,6 +1494,31 @@ namespace CityWatch.Data.Providers
             return allvalues;
         }
         //for getting logbookdetails of the guard-end
+
+        //for getting logbookdetails of the guard-start
+       public List<GuardLog> GetActiveGuardlogBookHistory(int clientSiteId, int guardId)
+        {
+            List<GuardLog> gl = new List<GuardLog>();
+            if (clientSiteId == 0 || guardId == 0)
+            {                
+                return gl;
+            }
+            var logins = _context.GuardLogins.Where(x => x.GuardId == guardId && x.ClientSiteId == clientSiteId)
+                .Include(y=> y.ClientSiteLogBook).Where(t=> t.ClientSiteLogBook.Type == LogBookType.DailyGuardLog)
+                .OrderByDescending(d=> d.LoginDate)
+                .Take(1).FirstOrDefault();
+            if(logins == null)
+            {
+                return gl;
+            }
+
+            var guardhistory = _context.GuardLogs.Where(x => x.GuardLoginId == logins.Id && x.ClientSiteLogBookId == logins.ClientSiteLogBookId)
+                .OrderByDescending(x => x.EventDateTime)
+                .Take(1).ToList(); 
+
+            return guardhistory;
+        }
+       //for getting logbookdetails of the guard-end
 
         //for getting the details of guards not available-start
         public List<RadioCheckListNotAvailableGuardData> GetNotAvailableGuardDetails()
