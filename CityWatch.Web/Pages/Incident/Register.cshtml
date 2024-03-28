@@ -817,13 +817,16 @@
         }
     }
 
-    function onEventTypeSiteColourChange(event) {
-        document.getElementById("Report_SiteColourCodeId").disabled = !this.checked;
-        document.getElementById("Report_SiteColourCodeId").value = '';
+    function onEventTypeSiteColourChange(event) {        
+        var ddlSiteColourCodeId = document.getElementById("Report_SiteColourCodeId");
+        ddlSiteColourCodeId.value = '';
+        ddlSiteColourCodeId.disabled = !this.checked;            
+        ddlSiteColourCodeId.style.backgroundColor = "#EBEBE4"; // rgb(235, 235, 228);
+        ddlSiteColourCodeId.style.color = "black";
         document.getElementById("Report_SiteColourCode").value = '';
         document.getElementById("Report_Feedback").value = '';
         document.getElementById("ddFeedbackTemplateType").value = 1;
-        document.getElementById("ddFeedbackTemplateType").dispatchEvent(new Event('change'));
+        document.getElementById("ddFeedbackTemplateType").dispatchEvent(new Event('change'));       
     }
 
    
