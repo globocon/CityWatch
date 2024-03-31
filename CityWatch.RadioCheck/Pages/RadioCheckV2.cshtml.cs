@@ -466,24 +466,48 @@ namespace CityWatch.Web.Pages.Radio
 
         //Send Text Notifications-end
 
-
-        //for getting logBookDetails of Guards-start
+        #region history
+        //for getting logBook History of Guards-start
         public IActionResult OnGetClientSitelogBookHistory(int clientSiteId, int guardId)
         {
             var jsresult = _guardLogDataProvider.GetActiveGuardlogBookHistory(clientSiteId, guardId);
             return new JsonResult(jsresult);
         }
-        //for getting logBookDetails of Guards-end
+        //for getting logBook History of Guards-end
 
+        //for getting Key Vehicle History of Guards-start
+        public IActionResult OnGetClientSiteKeyVehicleHistory(int clientSiteId, int guardId)
+        {
+            var jsresult = _guardLogDataProvider.GetActiveGuardKeyVehicleHistory(clientSiteId, guardId);
+            return new JsonResult(jsresult);
+        }
+        //for getting Key Vehicle History of Guards-end
 
-        //for getting logBookDetails of Guards-start
+        //for getting Incident Report History of Guards-start
+        public IActionResult OnGetClientSiteIncidentReportHistory(int clientSiteId, int guardId)
+        {
+            var jsresult = _guardLogDataProvider.GetActiveGuardIncidentReportHistory(clientSiteId, guardId);
+            return new JsonResult(jsresult);
+        }
+        //for getting Incident Report History of Guards-end
+          
+        //for getting SW Details of Guards-start
+        public IActionResult OnGetClientSiteSWHistory(int clientSiteId, int guardId)
+        {
+            var jsresult = _guardLogDataProvider.GetActiveGuardSwHistory(clientSiteId, guardId);  // GetActiveGuardSwHistory
+            return new JsonResult(jsresult);
+        }
+        //for getting SW details of Guards-end
+
+        #endregion history
+
+        //for getting ClientSiteRadiocheckStatus of Guards-start
         public IActionResult OnGetClientSiteRadiocheckStatus(int clientSiteId, int guardId, int ColorId)
         {
 
             return new JsonResult(_guardLogDataProvider.GetClientSiteRadiocheckStatus(clientSiteId, guardId));
         }
-
-        //for getting logBookDetails of Guards-end
+        //for getting ClientSiteRadiocheckStatus of Guards-end
 
         // Save Global Text Alert Start
         public JsonResult OnPostSaveGlobalNotificationTestMessages(bool checkedState, string state, string Notifications, string Subject,
