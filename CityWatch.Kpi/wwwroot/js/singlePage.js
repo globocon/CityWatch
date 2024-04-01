@@ -347,7 +347,8 @@
         primaryKey: 'id',
         inlineEditing: { mode: 'command' },
         columns: [
-            { width: 120, field: 'name', title: 'Name', editor: true }
+            { width: 120, field: 'name', title: 'Name', editor: true },
+            { width: 120, field: 'email', title: 'Email', editor: true }
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');

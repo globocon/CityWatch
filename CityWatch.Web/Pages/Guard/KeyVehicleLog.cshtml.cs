@@ -146,10 +146,14 @@ namespace CityWatch.Web.Pages.Guard
                 ViewData = new ViewDataDictionary<KeyVehicleLog>(ViewData, keyVehicleLog)
             };
         }
-
+        
         public JsonResult OnGetAuditHistory(string vehicleRego)
         {
             return new JsonResult(_viewDataService.GetKeyVehicleLogAuditHistory(vehicleRego).ToList());
+        }
+        public JsonResult OnGetPOCSDropdown(int[] clientsiteid)
+        {
+            return new JsonResult(_viewDataService.GetClientSitePocsVehicleLog(clientsiteid).ToList());
         }
 
         public JsonResult OnPostSaveKeyVehicleLog()
@@ -942,6 +946,23 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(_guardLogDataProvider.GetVehicleRegosForKVL(regoPart).ToList());
 
         }
+        //To Get the Emails Related to POC start
+        public async Task<JsonResult> OnPostGetPOCEmails(List<int> Emails)
+        {
+            List<string> pocEmails = new List<string>();
+            if (Emails.Count > 0)
+            {
+                foreach (var item in Emails)
+                {
+                    var poc = _guardLogDataProvider.GetEmailPOC(item);
+                    var email = poc.Email;
+                    pocEmails.Add(email);
+                }
+
+            }
+            return new JsonResult(new { pocEmails });
+        }
+        //To Get the Emails Related to POC stop
 
         public async Task<JsonResult> OnPostGenerateManualDocket(int id, ManualDocketReason option, string otherReason, string stakeholderEmails, int clientSiteId, string blankNoteOnOrOff)
         {
@@ -1039,7 +1060,7 @@ namespace CityWatch.Web.Pages.Guard
                     _logger.LogError(ex.StackTrace);
                 }
             }
-
+           
             //try
             //{
             //    var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(id);

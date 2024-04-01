@@ -11,6 +11,8 @@ namespace CityWatch.Web.Services
     {
         List<SelectListItem> GetUserClientSitesWithId(string types);
         List<SelectListItem> GetClientSitePocs(int[] clientSiteIds);
+        List<SelectListItem> GetClientSitePocsVehicleLog(int[] clientSiteIds);
+        
         List<SelectListItem> GetClientSiteLocations(int[] clientSiteIds);
         List<ClientSiteKey> GetClientSiteKeys(int[] clientSiteIds, string searchKeyNo);
         List<SelectListItem> GetClientSiteLocationsNew(int[] clientSiteIds);
@@ -49,6 +51,16 @@ namespace CityWatch.Web.Services
 
             return sitePocs;
         }
+        public List<SelectListItem> GetClientSitePocsVehicleLog(int[] clientSiteIds)
+        {
+            var sitePocs = new List<SelectListItem>();
+
+            sitePocs.AddRange(_guardSettingsDataProvider.GetClientSitePocs(clientSiteIds)
+                .Select(z => new SelectListItem(z.Name, z.Id.ToString())));
+
+            return sitePocs;
+        }
+       
 
         public List<SelectListItem> GetClientSiteLocations(int[] clientSiteIds)
         {
