@@ -2263,3 +2263,72 @@ $('#cr_reportlogo_upload').on('change', function () {
     });
 });
 /*for adding a reportlogo-end*/
+/*p1-191 hr files task 3-start*/
+let gridHrSettings;
+gridHrSettings = $('#tbl_hr_settings tbody').grid({
+    dataSource: '/Admin/Settings?handler=ClientSites',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    inlineEditing: { mode: 'command' },
+    columns: [
+        { field: 'id', hidden: true },
+        { field: 'hrGroup', width: 80, type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } } ,
+
+        { field: 'referenceNoNumberId',   width: 80, type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
+        { field: 'referenceNoAlphabet', width: 80, type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
+
+        { field: 'description', width: 100, editor: true },
+ 
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
+let isHrSettingsAdding=false
+if (gridHrSettings) {
+    gridHrSettings.on('rowDataChanged', function (e, id, record) {
+        const data = $.extend(true, {}, record);
+        data.status = !Number.isInteger(data.status) ? clientSiteStatuses.getValue(data.status) : data.status;
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSites',
+            data: { record: data },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function () {
+            gridHrSettings.clear();
+            gridHrSettings.reload({ typeId: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val() });
+        }).fail(function () {
+            console.log('error');
+        }).always(function () {
+            if (isHrSettingsAdding)
+                isHrSettingsAdding = false;
+        });
+    });
+
+    gridHrSettings.on('rowRemoving', function (e, id, record) {
+        const isAdminLoggedIn = $('#hdnIsAdminLoggedIn').val();
+        if (isAdminLoggedIn === 'False') {
+            showModal('Insufficient permission to perform this operation');
+            return;
+        }
+
+        if (confirm('Are you sure want to delete this client site?')) {
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteClientSite',
+                data: { id: record },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function () {
+                gridHrSettings.reload();
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isHrSettingsAdding)
+                    isHrSettingsAdding = false;
+            });
+        }
+    });
+}

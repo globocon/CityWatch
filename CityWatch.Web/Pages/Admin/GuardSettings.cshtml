@@ -21,6 +21,9 @@
             <a class="nav-link" id="gs-settings-tab" data-toggle="tab" href="#gsSettings" role="tab" aria-controls="gsSettings" aria-selected="false">Site Settings</a>
         </li>*@
         <li class="nav-item">
+            <a class="nav-link" id="kvl-fields-tab" data-toggle="tab" href="#hrSettings" role="tab" aria-controls="hrSettings" aria-selected="false">HR Settings</a>
+        </li>
+        <li class="nav-item">
             <a class="nav-link" id="kvl-fields-tab" data-toggle="tab" href="#kvlFields" role="tab" aria-controls="kvlFields" aria-selected="false">KV Fields</a>
         </li>
         <li class="nav-item">
@@ -83,6 +86,39 @@
             <div class="row">
                 <div class="col-md-12">
                     <table class="table" id="gl_site_settings"></table>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade py-3" id="hrSettings" role="tabpanel" aria-labelledby="hr-settings-tab">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group row">
+                        <label class="col-form-label col-md-2">Select a Field Type</label>
+                        <div class="col-md-5">
+                            <select class="form-control" id="hr_settings_fields_types" asp-items="@Html.GetEnumSelectList<HrSettingsType>()">
+                                <option value="">None</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="text-right">
+                        <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <table class="table" id="tbl_hr_settings">
+                        <thead>
+                            <tr>
+                                <th rowspan="2">HR Group</th>
+                                <th colspan="2">Reference No</th>
+                                <th rowspan="2">Description</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                    </table>
                 </div>
             </div>
         </div>
