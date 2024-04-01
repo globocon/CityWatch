@@ -46,7 +46,62 @@ namespace CityWatch.Web.Helpers
                 menuHtml.AppendLine("</div>");
             }
 
-            if (pageName == PageNameHelper.Index || pageName == PageNameHelper.Notify || pageName == PageNameHelper.Settings)
+
+            //p1#187 &188 Hyperlink Missing - Manju - 26-03-2024 --start
+
+
+            if (pageName == PageNameHelper.Notify || pageName == PageNameHelper.VehicleAndKeyLog)
+            {
+                menuHtml.AppendLine("<div>");
+                if (!AuthUserHelper.IsAdminUserLoggedIn)
+                {   /* Check the guard Login Conformation*/
+                    menuHtml.AppendLine(@"<a href=""/Guard/Login?t=gl"" class=""nav-link py-0""><i class=""fa fa-list-alt mr-2""></i>Daily Log Book (LB)</a>");
+                }
+                else
+                {
+                    menuHtml.AppendLine(@"<a href=""/Guard/Login?t=gl"" class=""nav-link py-0""><i class=""fa fa-list-alt mr-2""></i>Daily Log Book (LB)</a>");
+                }
+                menuHtml.AppendLine("</div>");
+
+
+            }
+
+            if (pageName == PageNameHelper.Notify)
+            {
+                menuHtml.AppendLine("<div>");
+                if (!AuthUserHelper.IsAdminUserLoggedIn)
+                {   /* Check the guard Login Conformation*/
+                    menuHtml.AppendLine(@"<a href=""/Guard/Login?t=gl"" class=""nav-link py-0""><i class=""fa fa-list-alt mr-2""></i>Key & Vehicle Register (KV)</a>");
+                }
+                else
+                {
+                    menuHtml.AppendLine(@"<a href=""/Guard/Login?t=gl"" class=""nav-link py-0""><i class=""fa fa-list-alt mr-2""></i>Key & Vehicle Register (KV)</a>");
+                }
+                menuHtml.AppendLine("</div>");
+               
+            }
+            
+            if (pageName == PageNameHelper.DailyGuardLog || pageName == PageNameHelper.VehicleAndKeyLog)
+            {
+                menuHtml.AppendLine("<div>");
+                menuHtml.AppendLine(@"<a href=""/Incident/Register"" class=""nav-link py-0""><i class=""fa fa-file-pdf-o mr-2""></i>Incident Report (IR)</a>");
+                menuHtml.AppendLine("</div>");
+            }
+            if (pageName == PageNameHelper.DailyGuardLog)
+            {
+                menuHtml.AppendLine("<div>");
+                menuHtml.AppendLine(@"<a href=""/Guard/Login?t=vl"" class=""nav-link py-0""><i class=""fa fa-key mr-2""></i>Key & Vehicle Register (KV)</a>");
+                menuHtml.AppendLine("</div>");
+            }
+
+       
+
+            // p1#187 Hyperlink Missing - Manju - 26-03-2024 --end
+
+
+
+
+            if (pageName == PageNameHelper.Index  || pageName == PageNameHelper.Settings)
             {
                 menuHtml.AppendLine("<div>");
                 if (!AuthUserHelper.IsAdminUserLoggedIn)
@@ -68,33 +123,33 @@ namespace CityWatch.Web.Helpers
                 menuHtml.AppendLine("</div>");
             }
 
-            if (pageName == PageNameHelper.Index || pageName == PageNameHelper.Tools || pageName==PageNameHelper.Notify)
+            if (pageName == PageNameHelper.Index || pageName == PageNameHelper.Tools || pageName==PageNameHelper.Notify || pageName == PageNameHelper.DailyGuardLog || pageName == PageNameHelper.VehicleAndKeyLog)
             {
                 menuHtml.AppendLine("<div>");
                 menuHtml.AppendLine(@"<a href=""/Incident/ToolSelecter"" class=""nav-link py-0""><i class=""fa fa-wrench mr-2""></i>Tools</a>");
                 menuHtml.AppendLine("</div>");
             }
 
-            if (pageName == PageNameHelper.Index || pageName == PageNameHelper.Downloads)
+            if (pageName == PageNameHelper.Index || pageName == PageNameHelper.Downloads || pageName == PageNameHelper.DailyGuardLog || pageName == PageNameHelper.VehicleAndKeyLog)
             {
                 menuHtml.AppendLine("<div>");
                 menuHtml.AppendLine(@"<a href=""/Incident/DownloadSelecter"" class=""nav-link py-0""><i class=""fa fa-download mr-2""></i>Downloads</a>");
                 menuHtml.AppendLine("</div>");
             }
-
-            if (pageName == PageNameHelper.ControlRoom)
-            {
-                menuHtml.AppendLine("<div>");
-                menuHtml.AppendLine(@"<a href=""https://citywatch.koios.pl"" class=""nav-link py-0"" target=""_blank""><img src=""/images/wand-scanner-i.png"" alt=""smart wands icon"" class=""mr-2""/>Smart WANDs (SW)</a>");
-                menuHtml.AppendLine("</div>");
-            }
-
-            if (pageName == PageNameHelper.ControlRoom)
-            {
-                menuHtml.AppendLine("<div>");
-                menuHtml.AppendLine(@"<a href=""https://wds-pr-wocausnz.anz.msiwoc.com/WebDispatcher/v5/index.html"" class=""nav-link py-0"" target=""_blank""><i class=""fa fa-map-marker mr-2"" aria-hidden=""true""></i>Radio PTToC (GPS)</a>");
-                menuHtml.AppendLine("</div>");
-            }
+            //p1#188 Commenting- Pttoc Link not required - Manju - 26-03-2024 --start
+            //if (pageName == PageNameHelper.ControlRoom)
+            //{
+            //    menuHtml.AppendLine("<div>");
+            //    menuHtml.AppendLine(@"<a href=""https://citywatch.koios.pl"" class=""nav-link py-0"" target=""_blank""><img src=""/images/wand-scanner-i.png"" alt=""smart wands icon"" class=""mr-2""/>Smart WANDs (SW)</a>");
+            //    menuHtml.AppendLine("</div>");
+            //}
+            //p1#188 Commenting- Pttoc Link not required - Manju - 26-03-2024 --end
+            //if (pageName == PageNameHelper.ControlRoom)
+            //{
+            //    menuHtml.AppendLine("<div>");
+            //    menuHtml.AppendLine(@"<a href=""https://wds-pr-wocausnz.anz.msiwoc.com/WebDispatcher/v5/index.html"" class=""nav-link py-0"" target=""_blank""><i class=""fa fa-map-marker mr-2"" aria-hidden=""true""></i>Radio PTToC (GPS)</a>");
+            //    menuHtml.AppendLine("</div>");
+            //}
 
             if (pageName == PageNameHelper.ControlRoom)
             {
@@ -143,20 +198,29 @@ namespace CityWatch.Web.Helpers
                 }
                 menuHtml.AppendLine("</div>");
             }
-
-            if (pageName == PageNameHelper.Register || pageName == PageNameHelper.Notify)
+            // p1#188 Hyperlink Missing - Manju - 26-03-2024 --end
+            if (pageName == PageNameHelper.ControlRoom)
             {
                 menuHtml.AppendLine("<div>");
-                menuHtml.AppendLine(@"<a href=""/Admin/Settings"" class=""nav-link py-0""><i class=""fa fa-cog mr-2""></i>Report Settings</a>");
+                menuHtml.AppendLine(@"<a href=""/Admin/Settings"" class=""nav-link py-0""><i class=""fa fa-cog mr-2""></i>C4i System Settings</a>");
                 menuHtml.AppendLine("</div>");
             }
+            // p1#188 Hyperlink Missing - Manju - 26-03-2024 --end
 
+            // p1#187 Hyperlink Missing Below lines are commented- Manju - 26-03-2024 --Start
+            //if (pageName == PageNameHelper.Notify)
+            //{
+            //    menuHtml.AppendLine("<div>");
+            //    menuHtml.AppendLine(@"<a href=""/Admin/Settings"" class=""nav-link py-0""><i class=""fa fa-cog mr-2""></i>Report Settings</a>");
+            //    menuHtml.AppendLine("</div>");
+            //}
+            //p1#187 Hyperlink Missing Below lines are commented- Manju - 26-03-2024 --end
             if (AuthUserHelper.IsAdminUserLoggedIn)
             {
                 if (pageName == PageNameHelper.DailyGuardLog || pageName == PageNameHelper.AuditSiteLogs)
                 {
                     menuHtml.AppendLine("<div>");
-                    menuHtml.AppendLine(@"<a href=""/Admin/GuardSettings"" class=""nav-link py-0""><i class=""fa fa-cog mr-2""></i>Guard & Site Settings</a>");
+                    menuHtml.AppendLine(@"<a href=""/Admin/GuardSettings"" class=""nav-link py-0""><i class=""fa fa-cog mr-2""></i>HR, LB & KV Settings</a>");
                     menuHtml.AppendLine("</div>");
                 }
 
@@ -166,6 +230,7 @@ namespace CityWatch.Web.Helpers
                     menuHtml.AppendLine(@"<a href=""/Admin/AuditSiteLog"" class=""nav-link py-0""><i class=""fa fa-list-alt mr-2""></i>Audit Site Logs</a>");
                     menuHtml.AppendLine("</div>");
                 }
+                
             }
 
             return menuHtml.ToString();
@@ -190,5 +255,6 @@ namespace CityWatch.Web.Helpers
         public const string DailyGuardLog = "DailyGuardLog";
         public const string VehicleAndKeyLog = "VehicleAndKeyLog";
         public const string RadioCheck = "RadioCheck";
+       
     }
 }
