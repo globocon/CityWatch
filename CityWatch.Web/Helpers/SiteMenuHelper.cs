@@ -136,13 +136,13 @@ namespace CityWatch.Web.Helpers
                 menuHtml.AppendLine(@"<a href=""/Incident/DownloadSelecter"" class=""nav-link py-0""><i class=""fa fa-download mr-2""></i>Downloads</a>");
                 menuHtml.AppendLine("</div>");
             }
-            //p1#188 Commenting- Pttoc Link not required - Manju - 26-03-2024 --start
-            //if (pageName == PageNameHelper.ControlRoom)
-            //{
-            //    menuHtml.AppendLine("<div>");
-            //    menuHtml.AppendLine(@"<a href=""https://citywatch.koios.pl"" class=""nav-link py-0"" target=""_blank""><img src=""/images/wand-scanner-i.png"" alt=""smart wands icon"" class=""mr-2""/>Smart WANDs (SW)</a>");
-            //    menuHtml.AppendLine("</div>");
-            //}
+          
+            if (pageName == PageNameHelper.ControlRoom)
+            {
+                menuHtml.AppendLine("<div>");
+                menuHtml.AppendLine(@"<a href=""https://citywatch.koios.pl"" class=""nav-link py-0"" target=""_blank""><img src=""/images/wand-scanner-i.png"" alt=""smart wands icon"" class=""mr-2""/>Smart WANDs (SW)</a>");
+                menuHtml.AppendLine("</div>");
+            }
             //p1#188 Commenting- Pttoc Link not required - Manju - 26-03-2024 --end
             //if (pageName == PageNameHelper.ControlRoom)
             //{
