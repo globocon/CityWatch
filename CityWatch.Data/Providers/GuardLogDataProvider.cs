@@ -45,7 +45,7 @@ namespace CityWatch.Data.Providers
         void SaveDocketSerialNo(int id, string serialNo);
         void SaveKeyVehicleLog(KeyVehicleLog keyVehicleLog);
         void DeleteKeyVehicleLog(int id);
-        void KeyVehicleLogQuickExit(int id);
+        void KeyVehicleLogQuickExit(int id, DateTime? ExitTimeLocal);
         List<PatrolCarLog> GetPatrolCarLogs(int logBookId);
         List<PatrolCarLog> GetPatrolCarLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate);
         void SavePatrolCarLog(PatrolCarLog patrolCarLog);
@@ -786,12 +786,12 @@ namespace CityWatch.Data.Providers
             }
         }
 
-        public void KeyVehicleLogQuickExit(int id)
+        public void KeyVehicleLogQuickExit(int id, DateTime? ExitTimeLocal)
         {
             var keyVehicleLog = _context.KeyVehicleLogs.SingleOrDefault(x => x.Id == id);
             if (keyVehicleLog != null)
             {
-                keyVehicleLog.ExitTime = DateTime.Now;
+                keyVehicleLog.ExitTime = ExitTimeLocal;
                 _context.SaveChanges();
             }
         }

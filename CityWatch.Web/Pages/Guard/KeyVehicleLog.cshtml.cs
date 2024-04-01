@@ -397,7 +397,7 @@ namespace CityWatch.Web.Pages.Guard
                 keyVehicleLogAuditHistory.KeyVehicleLogId = KeyVehicleLog.Id;
                 _guardLogDataProvider.SaveKeyVehicleLogAuditHistory(keyVehicleLogAuditHistory);
                 //for entering the audit history of the person who exit the entry-end
-                _guardLogDataProvider.KeyVehicleLogQuickExit(Id);
+                _guardLogDataProvider.KeyVehicleLogQuickExit(Id, tmdata.EventDateTimeLocal);
 
                 //for rc entry-start
                 //if (KeyVehicleLog.GuardLoginId != HttpContext.Session.GetInt32("GuardLoginId"))
