@@ -108,9 +108,13 @@ namespace CityWatch.Web.Services
         List<FeedbackTemplate> GetFeedbackTemplateListByType(int type);
         public IncidentReportPosition GetLoogbookdata(string IncidentName);
 
+        List<SelectListItem> GetClientSitePocsVehicleLog(int[] clientSiteIds);
+
+
         //p2-192 client email search-start
         List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm, string searchTermtwo);
         //p2-192 client email search-end
+
     }
 
     public class ViewDataService : IViewDataService
@@ -944,7 +948,15 @@ namespace CityWatch.Web.Services
             }
             return Enumerable.Empty<ClientSiteKey>();
         }
+        public List<SelectListItem> GetClientSitePocsVehicleLog(int[] clientSiteIds)
+        {
+            var sitePocs = new List<SelectListItem>();
 
+            sitePocs.AddRange(_guardSettingsDataProvider.GetClientSitePocs(clientSiteIds)
+                .Select(z => new SelectListItem(z.Name, z.Id.ToString())));
+
+            return sitePocs;
+        }
         public IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistory(string vehicleRego)
         {
             var kvlVisitorProfile = _guardLogDataProvider.GetKeyVehicleLogVisitorProfile(vehicleRego);
@@ -1042,6 +1054,23 @@ namespace CityWatch.Web.Services
         //{
         //    return _clientDataProvider.GetGuardAccess();
         public List<SelectListItem> GetAccessTypes(bool withoutSelect = true)
+        {
+            var Access = _clientDataProvider.GetGuardAccess();
+            var items = new List<SelectListItem>();
+
+            if (!withoutSelect)
+            {
+                items.Add(new SelectListItem("Select", "", true));
+            }
+
+            foreach (var item in Access)
+            {
+                items.Add(new SelectListItem(item.AccessName, item.Id.ToString()));
+            }
+
+            return items;
+        }
+        public List<SelectListItem> GetAccessTypes1(bool withoutSelect = true)
         {
             var Access = _clientDataProvider.GetGuardAccess();
             var items = new List<SelectListItem>();

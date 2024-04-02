@@ -95,7 +95,8 @@ namespace CityWatch.Data.Models
         public int? ClientSiteLocationId { get; set; }
 
         public int? ClientSitePocId { get; set; }
-
+        
+        public string ClientSitePocIdsVehicleLog { get; set; }
         public decimal? Reels { get; set; }
 
         public string CustomerRef { get; set; }

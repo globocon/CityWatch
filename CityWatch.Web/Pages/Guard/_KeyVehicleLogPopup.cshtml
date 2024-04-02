@@ -5,6 +5,11 @@
 @inject IViewDataService viewDataService
 @inject IClientSiteViewDataService clientViewDataService
 @inject IGuardDataProvider _guardDataProvider;
+<!-- Include jQuery -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<!-- Include multiselect CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css" rel="stylesheet">
 <input type="hidden" asp-for="@Model.ClientSiteLogBook.ClientSiteId" />
 <input type="hidden" id="kvlActionIsEdit" value="" />
 <div class="row" style="display:none" id="kvl_status_pd">
@@ -21,6 +26,7 @@
     <input type="hidden" asp-for="@Model.ReportReference" />
     <input type="hidden" asp-for="@Model.ActiveGuardLoginId" />
     <input type="hidden" asp-for="@Model.IsPreviousDayEntry" />
+    <input type="hidden" asp-for="@Model.ClientSitePocIdsVehicleLog" />
     @{
         var kvlAttachments = ViewData["KeyVehicleLog_Attachments"] as List<string>;
         var kvlAttachmentsCount = kvlAttachments != null ? kvlAttachments.Count : 0;
@@ -430,8 +436,16 @@
             <div class="form-row">
                 <div class=" form-group col-md-4">
                     <label>Site POC</label>
-                    <select class="form-control" asp-for="@Model.ClientSitePocId" asp-items="@clientViewDataService.GetClientSitePocs(new int[] { Model.ClientSiteLogBook.ClientSiteId })">
+                   
+                  @*   <select class="form-control" asp-for="@Model.ClientSitePocId" asp-items="@clientViewDataService.GetClientSitePocs(new int[] { Model.ClientSiteLogBook.ClientSiteId })">
+                    </select> *@
+                    <select id="multiselectVehiclelog" class="form-control js-example-basic-multiple" asp-for="@Model.ClientSitePocId" multiple>
+                        @foreach (var item in clientViewDataService.GetClientSitePocsVehicleLog(new int[] { Model.ClientSiteLogBook.ClientSiteId }))
+                        {
+                            <option value="@item.Value">@item.Text</option>
+                        }
                     </select>
+
                 </div>
                 <div class=" form-group col-md-4">
                     <label>Site Location</label>
@@ -596,6 +610,7 @@
             </div>
         </div>
     </div>
+    
     <div class="row">
         <div class="col-md-12">
             <div asp-validation-summary="All" id="validation-summary"></div>
@@ -610,3 +625,4 @@
         border: 2px black solid;
     }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/js/bootstrap-multiselect.min.js"></script>

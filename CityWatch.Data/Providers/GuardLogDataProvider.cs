@@ -232,6 +232,7 @@ namespace CityWatch.Data.Providers
         RadioCheckLogbookSiteDetails GetRadiocheckLogbookDetails();
         
         List<GuardLog> GetLastLoginNew(int GuradId);
+        ClientSitePoc GetEmailPOC(int id);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -581,6 +582,11 @@ namespace CityWatch.Data.Providers
                 .Include(z => z.ClientSitePoc)
                 .Include(z => z.ClientSiteLocation)
                 .SingleOrDefault(z => z.Id == id);
+        }
+        public ClientSitePoc GetEmailPOC(int id)
+        {
+            return _context.ClientSitePocs
+                .Where(x => x.Id == id).SingleOrDefault();
         }
         public KeyVehcileLogField GetIndividualType(int PersonType)
         {

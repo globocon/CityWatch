@@ -48,7 +48,7 @@ $(function () {
             summaryDiv.querySelector('ul').appendChild(li);
         });
     }
-
+    
     function displayProfileValidationSummary(errors) {
         const summaryDiv = document.getElementById('kvl-profiles-validation-summary');
         summaryDiv.className = "validation-summary-errors";
@@ -453,7 +453,7 @@ $(function () {
             onYes: function () { GetPOINumber(); }
         });
     }
-
+    
     $('.save_new_vehicle_and_key_log').on('click', function () {
         if ($('#kvlActionIsEdit').val() === 'true') {
             saveKeyVehicleLogEntry();
@@ -478,8 +478,10 @@ $(function () {
             });
         }
     });
-
+    
     function saveKeyVehicleLogEntry() {
+        var SitePOCIds = $('#ClientSitePocId').val();
+        //$('#ClientSitePocId').val(SitePOCIds);
         $('#validation-summary ul').html('');
 
         const mobileNo = $('#MobileNumber').val();
@@ -508,6 +510,7 @@ $(function () {
         // Task p6#73_TimeZone issue -- added by Binoy -- Start
         var form = document.getElementById('form_new_vehicle_and_key_log');
         var jsformData = new FormData(form);
+   
         fillRefreshLocalTimeZoneDetails(jsformData, "", true);
         // Task p6#73_TimeZone issue -- added by Binoy -- End
         $.ajax({
@@ -909,6 +912,8 @@ $(function () {
 
 
     function loadVklPopup(id, isNewEntry) {
+       
+
         if (isLogbookExpired($('#KeyVehicleLog_ClientSiteLogBook_Date').val())) {
             alert('A new day started and this logbook expired. Please logout and login again');
             return false;
@@ -927,7 +932,18 @@ $(function () {
                 $('#loader').show();
             }
         }).done(function (response) {
+           
             $('#vkl-modal').find(".modal-body").html(response);
+            var siteidd = $('#ClientSitePocIdsVehicleLog').val();
+            var selectedValues = siteidd.split(',');
+            selectedValues.forEach(function (value) {
+                
+                $('#multiselectVehiclelog option[value="' + value + '"]').prop('selected', true);
+                
+            });
+
+           
+            
             $('#vkl-modal').modal('show', { isNewEntry: isNewEntry });
             $('#kvl_status_pd').hide();
 
@@ -1509,7 +1525,14 @@ $(function () {
         });
 
 
-       
+        $('#multiselectVehiclelog').multiselect({
+            maxHeight: 400,
+            buttonWidth: '100%',
+            nonSelectedText: 'Select',
+            buttonTextAlignment: 'left',
+            includeSelectAllOption: true,
+        });
+        
 
 
         $('#VehicleRego').on('blur', function () {
@@ -1538,6 +1561,13 @@ $(function () {
             $('#VehicleRego').val($('#crmVehicleRego').val());
             GetVehicleImage();
 
+        });
+        $('#multiselectVehiclelog').on('change', function () {
+          
+            var selectedValues = $(this).val();
+            $('#ClientSitePocIdsVehicleLog').val(selectedValues);
+
+            
         });
         /*same changes in vehicle rego-start*/
 
@@ -2834,7 +2864,7 @@ $(function () {
                             $('#driver_name').val('Unknown');
                             $('#duplicate_profile_status').text('');
                             $('#kvl-profiles-modal').find('#kvl-profile-title-rego').html(item);
-                            $('#kvl-profiles-modal').modal('show');
+                            //$('#kvl-profiles-modal').modal('show');
                         }
                     });
                 }
@@ -3291,6 +3321,7 @@ $(function () {
 
     $('#generate_kvl_docket').on('click', function () {
         $('#generate_kvl_docket_status').hide();
+      
         var checkboxIdsArray = $('#printDocketForKvlId').val().split(',');
         const checkedReason = $('.print-docket-reason:checkbox:checked');
         if (checkedReason.length === 0) {
@@ -3464,6 +3495,28 @@ $(function () {
     });
     //To Generate All PO List start
     $('#btn_kvl_pdf_POIList').on('click', function () {
+        var clientsiteid = $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val();
+        $('#clientsiteIDNew').val(clientsiteid);
+
+   
+        const clientSiteControlKeyvehicle = $('#multiselectVehiclelogDocket');
+        
+
+        clientSiteControlKeyvehicle.html('');
+        $.ajax({
+            url: '/Guard/KeyVehicleLog?handler=POCSDropdown',
+            type: 'GET',
+            data: { 'clientsiteID': clientsiteid },
+            dataType: 'json',
+            success: function (data) {
+                data.map(function (site) {
+                    clientSiteControlKeyvehicle.append('<option value="' + site.value + '">' + site.text + '</option>');
+                });
+                clientSiteControlKeyvehicle.multiselect('rebuild');
+            }
+        });
+
+
         $('#generate_kvl_docket_status').hide();
         $('#download_kvl_docket').hide();
         $('.print-docket-reason').prop('checked', false);
@@ -3487,9 +3540,49 @@ $(function () {
         //    $('#imagesirenprint').attr('hidden', true);
         //}
     });
+
+    
+    $('#multiselectVehiclelogDocket').multiselect({
+        maxHeight: 400,
+        buttonWidth: '210%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
+    $('#multiselectVehiclelogDocket').on('change', function () {
+        var Emaillen = $('#multiselectVehiclelogDocket').val();
+        if (Emaillen.length > 0) {
+            $('#stakeholderEmail').val(''); 
+            $.ajax({
+                url: '/Guard/KeyVehicleLog?handler=GetPOCEmails',
+                data: {
+
+                    Emails: $('#multiselectVehiclelogDocket').val()
+                },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (response) {
+                if (response.pocEmails != null) {
+                    var emails = response.pocEmails.filter(function (email) {
+                        return email !== null;
+                    }).join(', ');
+                    $('#stakeholderEmail').val(function (_, val) {
+                        return val + emails;
+                    });
+                }
+
+            });
+        }
+        else {
+            $('#stakeholderEmail').val(''); 
+                
+        }
+       
+        
+    });
     $('#generate_kvl_AlldocketList').on('click', function () {
         $('#generate_kvl_docket_status').hide();
-
+        var SitePOCIds = $('#multiselectVehiclelogDocket').val();
         const checkedReason = $('.print-docket-reason:checkbox:checked');
         if (checkedReason.length === 0) {
             $('#generate_kvl_docket_status').html('<i class="fa fa-times-circle text-danger"></i> Please select a reason').show();
