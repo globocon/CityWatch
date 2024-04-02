@@ -185,7 +185,7 @@ namespace CityWatch.Data.Models
             /* New change for Add rigo without plate number 21032024 dileep*/
             if (string.IsNullOrEmpty(VehicleRego))
             {
-                if (!string.IsNullOrEmpty(Trailer1Rego) || !string.IsNullOrEmpty(Trailer2Rego) 
+                if (!string.IsNullOrEmpty(Trailer1Rego) || !string.IsNullOrEmpty(Trailer2Rego)
                     || !string.IsNullOrEmpty(Trailer3Rego) || !string.IsNullOrEmpty(Trailer4Rego))
                 {
 
@@ -199,7 +199,36 @@ namespace CityWatch.Data.Models
 
             }
 
-            if(RegoStatus)
+            if (!string.IsNullOrEmpty(Trailer1Rego)
+                || !string.IsNullOrEmpty(Trailer2Rego)
+                    || !string.IsNullOrEmpty(Trailer3Rego)
+                    || !string.IsNullOrEmpty(Trailer4Rego)
+                    || !string.IsNullOrEmpty(VehicleRego))
+            {
+                bool sameValue = false;
+                string[] strings = { Trailer1Rego, Trailer2Rego, Trailer3Rego, Trailer4Rego, VehicleRego };
+
+                // Loop through each string and compare it with the others
+                for (int i = 0; i < strings.Length; i++)
+                {
+                    for (int j = i + 1; j < strings.Length; j++)
+                    {
+                        if (!string.IsNullOrEmpty((strings[i])) && !string.IsNullOrEmpty((strings[j])))
+                        {
+                            if (strings[i] == strings[j])
+                            {
+
+                                errors.Add(new ValidationResult("The same Trailer Rego or Vehicle Rego (" + strings[i] + ") not allowed. "));
+                                sameValue = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+            }
+
+            if (RegoStatus)
             {
                 if (!string.IsNullOrEmpty(Trailer1Rego))
                 {
@@ -234,7 +263,7 @@ namespace CityWatch.Data.Models
 
                 }
 
-                if(TrailerType==null || TrailerType==0)
+                if (TrailerType == null || TrailerType == 0)
                 {
                     errors.Add(new ValidationResult("Please select Trailer Type"));
 
@@ -265,7 +294,7 @@ namespace CityWatch.Data.Models
                 {
                     //KV wont accept email - bug
                     //It will NOT accept group@swcsecurity.com.au   
-                    errors.Add(new ValidationResult("Email is invalid")); 
+                    errors.Add(new ValidationResult("Email is invalid"));
                 }
                 //if (!Regex.IsMatch(Email, regex))
                 //{
