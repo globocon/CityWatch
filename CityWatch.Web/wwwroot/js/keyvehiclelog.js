@@ -369,17 +369,26 @@ $(function () {
 
     $('#vehicle_key_daily_log tbody').on('click', '#btnEditVkl', function () {
         var data = keyVehicleLog.row($(this).parents('tr')).data();
-        loadVklPopup(data.detail.id);
+        loadVklPopup(data.detail.id,false);
 
     });
 
     $('#vehicle_key_daily_log tbody').on('click', '.btn-exit-quick', function () {
         var data = keyVehicleLog.row($(this).parents('tr')).data();
+        var tmdata = {
+            'EventDateTimeLocal': null,
+            'EventDateTimeLocalWithOffset': null,
+            'EventDateTimeZone': null,
+            'EventDateTimeZoneShort': null,
+            'EventDateTimeUtcOffsetMinute': null,
+        };
+        fillRefreshLocalTimeZoneDetails(tmdata, "", false)
         $.ajax({
             url: '/Guard/KeyVehicleLog?handler=KeyVehicleLogQuickExit',
             type: 'POST',
             data: {
-                id: data.detail.id
+                id: data.detail.id,
+                tmdata: tmdata
             },
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function () {
@@ -1132,6 +1141,19 @@ $(function () {
 
             });
             /* to load the selected items in BDM-end*/
+            /*p1 - 115 docket output issues - start*/
+            let isDocket = $('#IsDocketNo').val().toLowerCase() === 'true';
+
+            $('#cbIsDocketNo').prop('checked', isDocket);
+            if (isDocket == true) {
+                $('#txtLoaderName').prop('disabled', false);
+                $('#txtDispatchName').prop('disabled', false);
+            }
+            else {
+                $('#txtLoaderName').prop('disabled', 'disabled');
+                $('#txtDispatchName').prop('disabled', 'disabled');
+            }
+            /*p1 - 115 docket output issues - end*/
         }
 
         $('#cbIsTimeSlotNo').on('change', function () {
@@ -1139,7 +1161,28 @@ $(function () {
             $('#lblIsTimeSlotNo').text(isChecked ? 'Time Slot No.' : 'T.No. (Load)');
             $('#IsTimeSlotNo').val(isChecked);
         });
+        /*p7-115 docket output issues-start*/
+        $('#cbIsDocketNo').on('change', function () {
 
+            const isChecked = $(this).is(':checked');
+            $('#IsDocketNo').val(isChecked);
+            if (isChecked == true) {
+                $('#addCompliancesDocumentsModal').modal('show');
+                $('#txtLoaderName').prop('disabled', false);
+                $('#txtDispatchName').prop('disabled', false);
+                
+                GetComplianceDocumentsAttachmentLists();
+            }
+
+        });
+        $('#btnkeyComplianceDocumentsclose').on('click', function () {
+
+
+            $('#addCompliancesDocumentsModal').modal('hide');
+            // $('#client-site-key-modal-new').appendTo("body").modal('show');
+
+        });
+/*p7 - 115 docket output issues - end*/
         $('#cbIsSender').on('change', function () {
             const isChecked = $(this).is(':checked');
             $('#lblIsSender').text(isChecked ? 'Sender Address' : 'Reciever Address');
@@ -2450,7 +2493,195 @@ $(function () {
 
         }
         /*to upload the person image-end*/
+        /*p7-115 Docket Output issues-start*/
+        $('#kvl_attachment_compliance_documents_upload').on("change", function (e) {
+            var vehicleRego = $('#VehicleRego').val();
+            /*to check whether  the vehicle number is entered*/
+            if (vehicleRego !== "") {
+                const fileUpload = this;
+                if (fileUpload.files.length > 0) {
 
+                    let arIndex = [];
+                    const attachmentList = document.getElementById('kvl-attachment_compliance_documents-list').getElementsByTagName('li');
+                    for (let i = 0; i < attachmentList.length; i++)
+                        arIndex.push(parseInt(attachmentList[i].getAttribute('data-index')));
+                    let attachIndex = arIndex.length > 0 ? Math.max(...arIndex) + 1 : 0;
+
+
+                    /*Maximum allowed size in bytes*/
+                    const maxAllowedSize = 30 * 1024 * 1024;
+                    var fileSizeCheck = true;
+                    var FileName = "";
+                    for (let i = 0; i < fileUpload.files.length; i++, attachIndex++) {
+                        const filecheck = fileUpload.files.item(i);
+                        if (filecheck.size > maxAllowedSize) {
+                            fileSizeCheck = false;
+                            FileName = FileName + filecheck.name + ','
+                        }
+                    }
+
+
+                    //for (var i = $('#gridIsPersonOrVehicle  tr').length; i > 1; i--) {
+                    //    $('#gridIsPersonOrVehicle  tr:last').remove();
+                    //}
+
+                    if (fileSizeCheck) {
+                        for (let i = 0; i < fileUpload.files.length; i++) {
+                            var rowCount = $('#gridIsPersonOrVehicle  tr').length;
+                            const fileExtn = fileUpload.files[i].name.split('.').pop();
+                            /*if only  one jpg file is uploaded -start*/
+
+
+                            if (fileSizeCheck) {
+                                /* for (let i = 0; i < fileUpload.files.length; i++) {*/
+
+
+                                const file = fileUpload.files.item(i);
+                                const attachment_id = 'attach_' + attachIndex;
+                                const li = document.createElement('li');
+                                li.id = attachment_id;
+                                li.className = 'list-group-item';
+                                li.dataset.index = attachIndex;
+                                let liText = document.createTextNode(file.name);
+
+                                const icon = document.createElement("i");
+                                icon.className = 'fa fa-circle-o-notch fa-spin ml-2 text-success';
+                                icon.title = 'Uploading...';
+                                icon.style = 'cursor:pointer';
+
+                                li.appendChild(liText);
+                                li.appendChild(icon);
+                                document.getElementById('kvl-attachment_compliance_documents-list').append(li);
+
+                                // upload file to server
+                                const fileForm = new FormData();
+                                fileForm.append('attachments', fileUpload.files.item(i))
+                                fileForm.append('attach_id', attachment_id);
+                                fileForm.append('report_reference', $('#ReportReference').val());
+                                fileForm.append('id', $('#Id').val())
+
+
+                                fileForm.append('vehicle_rego', $('#VehicleRego').val());
+
+                                $.ajax({
+                                    url: '/Guard/KeyVehiclelog?handler=ComplianceDocumensUpload',
+                                    type: 'POST',
+                                    data: fileForm,
+                                    dataType: 'json',
+                                    processData: false,
+                                    contentType: false,
+                                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                                }).done(function (result) {
+                                    const icon = document.getElementById(result.attachmentId).getElementsByTagName('i').item(0);
+                                    if (result.success) {
+                                        //icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-kvl-attachment';
+                                        //icon.title = 'Delete';
+                                        GetComplianceDocumentsAttachmentLists()
+                                    } else {
+                                        icon.className = 'fa fa-exclamation-triangle ml-2 text-warning';
+                                        icon.title = 'Error';
+                                    }
+
+                                    adjustKvlAttachmentCount(true);
+                                });
+                                /*}*/
+
+                            }
+
+                        }
+
+                        /*$('#vkl-image-modal').modal('show');*/
+                    }
+
+                    else {
+                        alert("Maximum allowed size (30Mb) exceeded for the file '" + FileName + "'")
+                    }
+                }
+            }
+            else {
+                alert("Please enter the ID/Truck Registration Number");
+            }
+
+        }); 
+        function GetComplianceDocumentsAttachmentLists() {
+            $.ajax({
+                url: '/Guard/KeyVehicleLog?handler=ComplianceDocumentsAttachments',
+                dataType: 'json',
+                data:
+                {
+                    truck: $('#VehicleRego').val(),
+                    id: $('#Id').val()
+                },
+                type: 'GET',
+                dataType: 'json',
+            }).done(function (result) {
+                $("#kvl-attachment_compliance_documents-list").empty();
+                for (var attachIndex = 0; attachIndex < result.length; attachIndex++) {
+                    const file = result[attachIndex];
+                    const attachment_id = 'attach_' + attachIndex;
+                    const li = document.createElement('li');
+                    li.id = attachment_id;
+                    li.className = 'list-group-item';
+                    li.dataset.index = attachIndex;
+                    let liText = document.createTextNode(file);
+                    const icon = document.createElement("i");
+                    icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-kvl-attachment_compliance_documents';
+                    icon.title = 'Delete';
+                    icon.style = 'cursor:pointer';
+                    li.appendChild(liText);
+                    li.appendChild(icon);
+                    const anchorTag = document.createElement("a");
+                    var id = $('#Id').val();
+                    if (id == 0) {
+                        anchorTag.href = '/KvlUploads/' + $('#VehicleRego').val() + "/ComplianceDocuments/" + file;
+                    }
+                    else {
+                        anchorTag.href = '/KvlUploads/' + id + "/ComplianceDocuments/" + file;
+                    }
+                    anchorTag.target = "_blank";
+                    const icon2 = document.createElement("i");
+                    icon2.className = 'fa fa-download ml-2 text-primary';
+                    icon2.title = 'Download';
+                    icon2.style = 'cursor:pointer';
+                    anchorTag.appendChild(icon2);
+                    li.appendChild(anchorTag);
+                    document.getElementById('kvl-attachment_compliance_documents-list').append(li);
+
+
+
+                }
+
+                $('#kvl_attachments_count').html(result.length);
+            });
+        }
+        $('#kvl-attachment_compliance_documents-list').on('click', '.btn-delete-kvl-attachment_compliance_documents', function (event) {
+            if (confirm('Are you sure want to remove this attachment?')) {
+                var target = event.target;
+                const fileName = target.parentNode.innerText.trim();
+                const vehicleRego = $('#VehicleRego').val()
+                $.ajax({
+                    url: '/Guard/KeyVehiclelog?handler=DeleteComplianceDocumentsAttachment',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        reportReference: $('#ReportReference').val(),
+                        fileName: fileName,
+                        vehicleRego: vehicleRego,
+                        id: $('#Id').val()
+                    },
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (result) {
+                    if (result) {
+                        target.parentNode.parentNode.removeChild(target.parentNode);
+                        GetComplianceDocumentsAttachmentLists()
+                    }
+                });
+            }
+        });
+        $('#btn_save_guard_compliancedocuments').on('click', function (event) {
+            $('#addCompliancesDocumentsModal').modal('hide');
+        })
+        /*p7 - 115 Docket Output issues - end*/
         /*to upload the other image-start*/
         function OtherImageUpload() {
             const fileUpload = $('#kvl_attachment_upload').prop('files');
@@ -4070,6 +4301,7 @@ $('#chkAllBatchDocketSelect').on('change', function () {
 });
 
 /*to add poi binder - end*/
+
 /*for manifest options-start*/
 function GetToggles(siteId, toggleId) {
     const token = $('input[name="__RequestVerificationToken"]').val();
@@ -4140,3 +4372,4 @@ function GetToggles(siteId, toggleId) {
 }
 
 /*for manifest options-start*/
+

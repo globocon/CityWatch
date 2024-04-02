@@ -804,6 +804,68 @@
         </div>
     </div>
 </div>
+<div class="modal" id="addCompliancesDocumentsModal" data-backdrop="static" data-keyboard="false" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Compliance Documents</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="btnkeyComplianceDocumentsclose">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="frm_add_compliance_documents">
+                 @*   <input type="hidden" asp-for="@Model.ClientSiteLogBookId" />
+                    <input type="hidden" asp-for="@Model.GuardLoginId" />
+                    <input type="hidden" asp-for="@Model.Id" />
+                    <input type="hidden" asp-for="@Model.ReportReference" />
+                    <input type="hidden" asp-for="@Model.ActiveGuardLoginId" />
+                    <input type="hidden" asp-for="@Model.IsPreviousDayEntry" />*@
+                    @{
+                        var kvlComplianceDocumentsAttachments = ViewData["KeyVehicleLog_Attachments"] as List<string>;
+                        var kvlComplianceDocumentsAttachmentsCount = kvlComplianceDocumentsAttachments != null ? kvlComplianceDocumentsAttachments.Count : 0;
+
+                        var kvlComplianceDocumentsAttachmentRootPath = ViewData["KeyVehicleLog_FilesPathRoot"] as string;
+                    }
+                    <div class="row mt-5 mt-md-3">
+                        <div class="col">
+                            <i class="text-muted" style="font-size:12px">Click Browse and select one or more files (.jpg, .jpeg, .png, .bmp, .pdf)</i>
+                            <div class="custom-file mt-3">
+
+                                <input type="file" id="kvl_attachment_compliance_documents_upload" name="media" class="custom-file-input" accept=".jpg, .jpeg, .png, .bmp, .pdf, .mp3, .mp4, .avi" multiple>
+
+                                <label class="custom-file-label" for="kvl_attachment_compliance_documents_upload">Choose file(s) to upload</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-12">
+
+                            <ul id="kvl-attachment_compliance_documents-list" class="list-group d-block w-auto pt-2">
+                                @if (kvlComplianceDocumentsAttachments != null)
+                                {
+                                    var index = 0;
+                                    foreach (var fileName in kvlComplianceDocumentsAttachments)
+                                    {
+                                        <li class="list-group-item" id="attach_@index" data-index="@index">
+                                            @fileName
+                                            <i class="fa fa-trash-o ml-2 text-danger btn-delete-kvl-attachment_compliance_documents" title="Delete" style="cursor: pointer;"></i>
+                                            <a href="@kvlComplianceDocumentsAttachmentRootPath/@fileName" target="_blank"><i class="fa fa-download ml-2 text-primary" title="Download" style="cursor: pointer;"></i></a>
+                                        </li>
+                                        index++;
+                                    }
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-start">
+                <button type="button" class="btn btn-primary" id="btn_save_guard_compliancedocuments">Save Compliance</button>
+            </div>
+        </div>
+    </div>
+</div>
 @section scripts {
     <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&callback=initialize&libraries=places"></script>
 

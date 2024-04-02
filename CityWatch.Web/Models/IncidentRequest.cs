@@ -252,11 +252,7 @@ namespace CityWatch.Web.Models
         [HiddenInput]
         public string ClientSiteLiveGps { get; set; }
 
-        [Display(Name = "Client Type")]
-        public string ClientTypePosition { get; set; }
-
-        [Display(Name = "Client Site")]
-        public string ClientSitePosition { get; set; }
+       
 
         public string ClientSiteLiveGpsInDegrees 
         {
