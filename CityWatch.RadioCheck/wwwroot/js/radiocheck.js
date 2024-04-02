@@ -1699,7 +1699,6 @@ function renderSwDateTime(value, record) {
     }
 }
 
-
 let clientSiteActiveGuardsSmartWandHistory = $('#clientSiteActiveGuardsSwHistory').DataTable({
     ordering: false,
     info: false,
