@@ -2864,7 +2864,7 @@ $(function () {
                             $('#driver_name').val('Unknown');
                             $('#duplicate_profile_status').text('');
                             $('#kvl-profiles-modal').find('#kvl-profile-title-rego').html(item);
-                            $('#kvl-profiles-modal').modal('show');
+                            $('#kvl-profiles-modal').modal('show')new;
                         }
                     });
                 }
