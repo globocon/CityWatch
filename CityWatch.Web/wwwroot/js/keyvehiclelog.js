@@ -1060,6 +1060,7 @@ $(function () {
             /*for manifest options-end*/
             /*for initializing the BDM to true-start*/
             $('#cbIsBDMOrSales').prop('checked', true);
+            $('#cbIsBDMOrSalesDisabled').prop('checked', false);
             $('#IsBDM').val(true);
             /*for initializing the BDM to true-end*/
         }
@@ -1093,6 +1094,7 @@ $(function () {
             }
 
             $('#cbIsBDMOrSales').prop('checked', isBDM);
+            $('#cbIsBDMOrSalesDisabled').prop('checked', isBDM);
 
             /*for cheking  the BDM is true-end*/
 
@@ -1203,7 +1205,31 @@ $(function () {
 
         });
         /*for changing the BDM-end*/
+        /*p7-110  crm issues-start*/
+        $('#cbIsBDMOrSalesDisabled').on('change', function () {
+            const isChecked = $(this).is(':checked');
+            if (isChecked == true) {
+                $('#cbIsBDMOrSales').attr('disabled', false);
+                $("#list_BDM  input[type=checkbox]:disabled").each(function () {
+                    var isChecked1 = $(this).is(':disabled');
+                    if (isChecked1 == true) {
+                        $(this).attr('disabled', false);
+                    }
 
+                });
+            }
+            else {
+                $('#cbIsBDMOrSales').attr('disabled', 'disabled')
+                $("#list_BDM  input[type=checkbox]").each(function () {
+                    var isChecked1 = $(this).is(':disabled');
+                    if (isChecked1 == false) {
+                        $(this).attr('disabled', 'disabled');
+                    }
+
+                });
+            }
+        });
+        /*p7-110  crm issues-end*/
         //to check whether the person of interest is selected or not 
         $('#PersonOfInterest').on('change', function () {
             const value = $(this).val();
