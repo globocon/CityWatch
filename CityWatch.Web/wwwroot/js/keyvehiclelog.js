@@ -1094,7 +1094,7 @@ $(function () {
             }
 
             $('#cbIsBDMOrSales').prop('checked', isBDM);
-            $('#cbIsBDMOrSalesDisabled').prop('checked', isBDM);
+            
 
             /*for cheking  the BDM is true-end*/
 
@@ -1123,6 +1123,9 @@ $(function () {
                 crmindivid = $(this).closest('li').find('#IsCRMIndividualId').val();
                 if (checkedornot.indexOf(crmindivid) != -1) {
                     $(this).prop('checked', true);
+                    $('#cbIsBDMOrSalesDisabled').prop('checked', true);
+                    $('#cbIsBDMOrSales').attr('disabled', false);
+                    $(this).attr('disabled', false);
                 }
 
             });
@@ -1166,6 +1169,8 @@ $(function () {
                     }
 
                 });
+                $('#PersonType').val(166);
+                
             }
             else {
                 $('#lblIsBDMOrSales').text('Supplier/Partner');
@@ -1180,6 +1185,8 @@ $(function () {
                 });
                 $('#IsCRMId').val('');
                 //to uncheck the ticked options-end
+                $('#PersonType').val(195);
+                
             }
             $('#IsBDM').val(isChecked);
         });
@@ -1217,9 +1224,19 @@ $(function () {
                     }
 
                 });
+                $('#PersonType').val(166);
             }
             else {
                 $('#cbIsBDMOrSales').attr('disabled', 'disabled')
+                $('#cbIsBDMOrSales').prop('checked', true);
+                $('#cbIsBDMOrSales').change();
+                $("#list_BDM  input[type=checkbox]:checked").each(function () {
+                    var isChecked1 = $(this).is(':checked');
+                    if (isChecked1 == true) {
+                        $(this).prop('checked', false);
+                    }
+
+                });
                 $("#list_BDM  input[type=checkbox]").each(function () {
                     var isChecked1 = $(this).is(':disabled');
                     if (isChecked1 == false) {
