@@ -3255,6 +3255,28 @@ $(function () {
 
     /****** Print manual docket *******/
     $('#vehicle_key_daily_log tbody').on('click', '#btnPrintVkl', function () {
+        var clientsiteid = $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val();
+        $('#clientsiteIDNew').val(clientsiteid);
+
+
+        const clientSiteControlKeyvehicle = $('#multiselectVehiclelogDocket');
+
+
+        clientSiteControlKeyvehicle.html('');
+        $.ajax({
+            url: '/Guard/KeyVehicleLog?handler=POCSDropdown',
+            type: 'GET',
+            data: { 'clientsiteID': clientsiteid },
+            dataType: 'json',
+            success: function (data) {
+                data.map(function (site) {
+                    clientSiteControlKeyvehicle.append('<option value="' + site.value + '">' + site.text + '</option>');
+                });
+                clientSiteControlKeyvehicle.multiselect('rebuild');
+            }
+        });
+
+
         $('#printDocketForKvlId').val('');
         $('#generate_kvl_docket_status').hide();
         $('#download_kvl_docket').hide();
