@@ -1076,6 +1076,7 @@ $(function () {
             /*for manifest options-end*/
             /*for initializing the BDM to true-start*/
             $('#cbIsBDMOrSales').prop('checked', true);
+            $('#cbIsBDMOrSalesDisabled').prop('checked', false);
             $('#IsBDM').val(true);
             /*for initializing the BDM to true-end*/
         }
@@ -1109,6 +1110,7 @@ $(function () {
             }
 
             $('#cbIsBDMOrSales').prop('checked', isBDM);
+            
 
             /*for cheking  the BDM is true-end*/
 
@@ -1137,6 +1139,9 @@ $(function () {
                 crmindivid = $(this).closest('li').find('#IsCRMIndividualId').val();
                 if (checkedornot.indexOf(crmindivid) != -1) {
                     $(this).prop('checked', true);
+                    $('#cbIsBDMOrSalesDisabled').prop('checked', true);
+                    $('#cbIsBDMOrSales').attr('disabled', false);
+                    $(this).attr('disabled', false);
                 }
 
             });
@@ -1214,6 +1219,13 @@ $(function () {
                     }
 
                 });
+                if ($('#PersonType').find('option[value=' + 166 + ']').length == 1) {
+                    $('#PersonType').val(166);
+                }
+                else {
+                    $('#PersonType').val('');
+                }
+                
             }
             else {
                 $('#lblIsBDMOrSales').text('Supplier/Partner');
@@ -1228,6 +1240,13 @@ $(function () {
                 });
                 $('#IsCRMId').val('');
                 //to uncheck the ticked options-end
+                if ($('#PersonType').find('option[value=' + 195 + ']').length == 1) {
+                    $('#PersonType').val(195);
+                }
+                else {
+                    $('#PersonType').val('');
+                }
+                
             }
             $('#IsBDM').val(isChecked);
         });
@@ -1253,7 +1272,44 @@ $(function () {
 
         });
         /*for changing the BDM-end*/
+        /*p7-110  crm issues-start*/
+        $('#cbIsBDMOrSalesDisabled').on('change', function () {
+            const isChecked = $(this).is(':checked');
+            if (isChecked == true) {
+                $('#cbIsBDMOrSales').attr('disabled', false);
+                $("#list_BDM  input[type=checkbox]:disabled").each(function () {
+                    var isChecked1 = $(this).is(':disabled');
+                    if (isChecked1 == true) {
+                        $(this).attr('disabled', false);
+                    }
 
+                });
+                if ($('#PersonType').find('option[value=' + 166 + ']').length == 1) {
+                    $('#PersonType').val(166);
+                }
+            }
+            else {
+                $('#cbIsBDMOrSales').attr('disabled', 'disabled')
+                $('#cbIsBDMOrSales').prop('checked', true);
+                $('#cbIsBDMOrSales').change();
+                $("#list_BDM  input[type=checkbox]:checked").each(function () {
+                    var isChecked1 = $(this).is(':checked');
+                    if (isChecked1 == true) {
+                        $(this).prop('checked', false);
+                    }
+
+                });
+                $("#list_BDM  input[type=checkbox]").each(function () {
+                    var isChecked1 = $(this).is(':disabled');
+                    if (isChecked1 == false) {
+                        $(this).attr('disabled', 'disabled');
+                    }
+
+                });
+                $('#PersonType').val('');
+            }
+        });
+        /*p7-110  crm issues-end*/
         //to check whether the person of interest is selected or not 
         $('#PersonOfInterest').on('change', function () {
             const value = $(this).val();
