@@ -3654,7 +3654,7 @@ $(function () {
     
     $('#multiselectVehiclelogDocket').multiselect({
         maxHeight: 400,
-        buttonWidth: '210%',
+        buttonWidth: '364px',
         nonSelectedText: 'Select',
         buttonTextAlignment: 'left',
         includeSelectAllOption: true,
