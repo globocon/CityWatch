@@ -399,7 +399,17 @@
                     <input type="text" class="form-control" asp-for="@Model.Sender">
                 </div>
             </div>
-            <div class="form-row">
+             <div class="form-row">
+                <div class=" form-group col-md-6">
+                    <label>Email(individual)</label>
+                    <input class="form-control" type="text" asp-for="@Model.Emailindividual" />
+                </div>
+                <div class=" form-group col-md-6">
+                    <label>Email(company)</label>
+                    <input class="form-control" type="text" asp-for="@Model.EmailCompany" />
+                </div>
+                 </div>
+            <div class="form-row" style="height:79px">
                 <div class=" form-group col-md-4">
                     <label>Site POC</label>
                     <select class="form-control" asp-for="@Model.ClientSitePocId" asp-items="@clientViewDataService.GetClientSitePocs(new int[] { Model.ClientSiteLogBook.ClientSiteId })">

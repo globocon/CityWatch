@@ -1177,7 +1177,13 @@ namespace CityWatch.Web.Pages.Guard
 
             return new JsonResult(new { success = false, message = exMessage.ToString() });
         }
-
+        public async Task<JsonResult> OnPostGetKeyvehicleemails(int id)
+        {
+           
+                    var poc = _guardDataProvider.GetEmailPOCVehiclelog(id);
+                    
+            return new JsonResult(new { poc });
+        }
         private KeyVehicleLog GetKeyVehicleLog()
         {
             int? logBookId = HttpContext.Session.GetInt32("LogBookId");
