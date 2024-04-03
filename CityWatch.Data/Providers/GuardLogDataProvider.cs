@@ -509,6 +509,7 @@ namespace CityWatch.Data.Providers
                 .ThenInclude(x => x.ClientSite)
                 .Load();
 
+
             return results.ToList();
         }
 

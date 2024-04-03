@@ -1169,7 +1169,12 @@ $(function () {
                     }
 
                 });
-                $('#PersonType').val(166);
+                if ($('#PersonType').find('option[value=' + 166 + ']').length == 1) {
+                    $('#PersonType').val(166);
+                }
+                else {
+                    $('#PersonType').val('');
+                }
                 
             }
             else {
@@ -1185,7 +1190,12 @@ $(function () {
                 });
                 $('#IsCRMId').val('');
                 //to uncheck the ticked options-end
-                $('#PersonType').val(195);
+                if ($('#PersonType').find('option[value=' + 195 + ']').length == 1) {
+                    $('#PersonType').val(195);
+                }
+                else {
+                    $('#PersonType').val('');
+                }
                 
             }
             $('#IsBDM').val(isChecked);
@@ -1224,7 +1234,9 @@ $(function () {
                     }
 
                 });
-                $('#PersonType').val(166);
+                if ($('#PersonType').find('option[value=' + 166 + ']').length == 1) {
+                    $('#PersonType').val(166);
+                }
             }
             else {
                 $('#cbIsBDMOrSales').attr('disabled', 'disabled')
@@ -1244,6 +1256,7 @@ $(function () {
                     }
 
                 });
+                $('#PersonType').val('');
             }
         });
         /*p7-110  crm issues-end*/
