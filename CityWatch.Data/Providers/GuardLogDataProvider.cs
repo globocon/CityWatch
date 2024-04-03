@@ -689,6 +689,7 @@ namespace CityWatch.Data.Providers
 
                     keyVehicleLogToUpdate.IsReels = keyVehicleLog.IsReels;
                     keyVehicleLogToUpdate.IsVWI = keyVehicleLog.IsVWI;
+                    keyVehicleLogToUpdate.ClientSitePocIdsVehicleLog = keyVehicleLog.ClientSitePocIdsVehicleLog;
 
                     keyVehicleLogToUpdate.EmailCompany = keyVehicleLog.EmailCompany;
                     keyVehicleLogToUpdate.Emailindividual = keyVehicleLog.Emailindividual;
