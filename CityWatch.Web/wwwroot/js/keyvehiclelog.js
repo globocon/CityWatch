@@ -3311,6 +3311,37 @@ $(function () {
 
     /****** Print manual docket *******/
     $('#vehicle_key_daily_log tbody').on('click', '#btnPrintVkl', function () {
+        var data = keyVehicleLog.row($(this).parents('tr')).data();
+        $('#stakeholderEmail').val(''); 
+        $.ajax({
+            url: '/Guard/KeyVehicleLog?handler=GetKeyvehicleemails',
+            data: {
+
+                id: data.detail.id
+            },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (response) {
+            var emailCompany = response.poc.emailindividual;
+            var emailIndividual = response.poc.emailCompany;
+            if (emailCompany) {
+                var concatenatedEmails = emailCompany;
+
+                if (emailIndividual) {
+                    concatenatedEmails += ", " + emailIndividual;
+                }
+
+                $('#stakeholderEmail').val(concatenatedEmails);
+            } else {
+                
+                $('#stakeholderEmail').val(emailIndividual);
+            }
+           
+
+        });
+    
+   
+
         $('#printDocketForKvlId').val('');
         $('#generate_kvl_docket_status').hide();
         $('#download_kvl_docket').hide();
