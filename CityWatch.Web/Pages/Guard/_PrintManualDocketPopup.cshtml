@@ -1,4 +1,16 @@
 ﻿<!-- Print Manual Docket Modal -->
+@using CityWatch.Web.Services;
+@inject IClientSiteViewDataService clientViewDataService
+<!-- Include jQuery -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<!-- Include multiselect CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css" rel="stylesheet">
+
+<input type="hidden" id="clientsiteIDNew" />
+@{
+    var kvlAttachments = ""; // Initialize as empty string
+}
 <div class="modal" tabindex="-1" role="dialog" id="print-manual-docket-modal" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -58,6 +70,22 @@
                                     <label class="form-check-label" for="cbxPOIList">POI List</label>
                                 </div>
                             </li>
+                            <li class="py-2">
+                                <div class="form-check form-check-inline">
+                                 
+                                    <label class="form-check-label" for="cbxPOIList">Site POC</label>
+                                    @* <select id="multiselectVehiclelogDocket" class="form-control js-example-basic-multiple"  multiple>
+                                        @foreach (var item in clientViewDataService.GetClientSitePocsVehicleLog(new int[] { 189}))
+                                        {
+                                            <option value="@item.Value">@item.Text</option>
+                                        }
+                                    </select> *@
+                                    <select id="multiselectVehiclelogDocket" class="form-control js-example-basic-multiple" multiple>
+                                       
+                                    </select>
+                                    
+                                </div>
+                            </li>
                         
                             <li class="pt-3">
                                 <div class="form-group">
@@ -108,3 +136,4 @@
         </div>
     </div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/js/bootstrap-multiselect.min.js"></script>

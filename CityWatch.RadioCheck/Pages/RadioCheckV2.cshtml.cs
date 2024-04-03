@@ -171,7 +171,6 @@ namespace CityWatch.Web.Pages.Radio
         //for getting Incident Report Details of Guards-start
         public IActionResult OnGetClientSiteIncidentReportActivityStatus(int clientSiteId, int guardId)
         {
-
             return new JsonResult(_guardLogDataProvider.GetActiveGuardIncidentReportDetails(clientSiteId, guardId));
         }
 
@@ -467,26 +466,48 @@ namespace CityWatch.Web.Pages.Radio
 
         //Send Text Notifications-end
 
+        #region history
+        //for getting logBook History of Guards-start
+        public IActionResult OnGetClientSitelogBookHistory(int clientSiteId, int guardId)
+        {
+            var jsresult = _guardLogDataProvider.GetActiveGuardlogBookHistory(clientSiteId, guardId);
+            return new JsonResult(jsresult);
+        }
+        //for getting logBook History of Guards-end
 
-        //to check whthere there is any siteemail or smartwand or guards exists
-        //for getting guards not available -end
+        //for getting Key Vehicle History of Guards-start
+        public IActionResult OnGetClientSiteKeyVehicleHistory(int clientSiteId, int guardId)
+        {
+            var jsresult = _guardLogDataProvider.GetActiveGuardKeyVehicleHistory(clientSiteId, guardId);
+            return new JsonResult(jsresult);
+        }
+        //for getting Key Vehicle History of Guards-end
 
-        //public JsonResult OnGetCompanyTextMessageData(int id)
-        //{
-        //    var clientsite = _guardLogDataProvider.GetClientSites(id).FirstOrDefault() ;
-        //    var clientsitesmartwands = _guardLogDataProvider.GetClientSiteSmartWands(id);
-        //    return new JsonResult(_guardLogDataProvider.GetGuards(id));
-        //}
+        //for getting Incident Report History of Guards-start
+        public IActionResult OnGetClientSiteIncidentReportHistory(int clientSiteId, int guardId)
+        {
+            var jsresult = _guardLogDataProvider.GetActiveGuardIncidentReportHistory(clientSiteId, guardId);
+            return new JsonResult(jsresult);
+        }
+        //for getting Incident Report History of Guards-end
+          
+        //for getting SW Details of Guards-start
+        public IActionResult OnGetClientSiteSWHistory(int clientSiteId, int guardId)
+        {
+            var jsresult = _guardLogDataProvider.GetActiveGuardSwHistory(clientSiteId, guardId);  // GetActiveGuardSwHistory
+            return new JsonResult(jsresult);
+        }
+        //for getting SW details of Guards-end
 
+        #endregion history
 
-        //for getting logBookDetails of Guards-start
+        //for getting ClientSiteRadiocheckStatus of Guards-start
         public IActionResult OnGetClientSiteRadiocheckStatus(int clientSiteId, int guardId, int ColorId)
         {
 
             return new JsonResult(_guardLogDataProvider.GetClientSiteRadiocheckStatus(clientSiteId, guardId));
         }
-
-        //for getting logBookDetails of Guards-end
+        //for getting ClientSiteRadiocheckStatus of Guards-end
 
         // Save Global Text Alert Start
         public JsonResult OnPostSaveGlobalNotificationTestMessages(bool checkedState, string state, string Notifications, string Subject,

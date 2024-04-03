@@ -90,9 +90,25 @@ namespace CityWatch.Data.Providers
         //logBookId entry for radio checklist-end
 
         //for getting logBook details of the  guard-start
-
         List<RadioCheckListGuardLoginData> GetActiveGuardlogBookDetails(int clientSiteId, int guardId);
         //for getting logBook details of the  guard-end
+
+        //for getting logBook history of the  guard-start
+        List<GuardLog> GetActiveGuardlogBookHistory(int clientSiteId, int guardId);
+        //for getting logBook history of the  guard-end
+
+        //for getting incident report history of the  guard-start
+        List<IncidentReport> GetActiveGuardIncidentReportHistory(int clientSiteId, int guardId);
+        //for getting incident report history of the  guard-end
+
+        //for getting Key Vehicle history of the  guard-start
+        List<KeyVehicleLog> GetActiveGuardKeyVehicleHistory(int clientSiteId, int guardId);
+        //for getting Key Vehicle history of the  guard-end
+
+        //for getting smartwand history of the  guard-start
+        List<RadioChecksSmartWandScanResults> GetActiveGuardSwHistory(int clientSiteId, int guardId);
+        //for getting smartwand history of the  guard-end
+
 
         //for getting list of guards not available-start
         List<RadioCheckListNotAvailableGuardData> GetNotAvailableGuardDetails();
@@ -216,6 +232,7 @@ namespace CityWatch.Data.Providers
         RadioCheckLogbookSiteDetails GetRadiocheckLogbookDetails();
         
         List<GuardLog> GetLastLoginNew(int GuradId);
+        ClientSitePoc GetEmailPOC(int id);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -509,6 +526,7 @@ namespace CityWatch.Data.Providers
                 .ThenInclude(x => x.ClientSite)
                 .Load();
 
+
             return results.ToList();
         }
 
@@ -565,6 +583,11 @@ namespace CityWatch.Data.Providers
                 .Include(z => z.ClientSitePoc)
                 .Include(z => z.ClientSiteLocation)
                 .SingleOrDefault(z => z.Id == id);
+        }
+        public ClientSitePoc GetEmailPOC(int id)
+        {
+            return _context.ClientSitePocs
+                .Where(x => x.Id == id).SingleOrDefault();
         }
         public KeyVehcileLogField GetIndividualType(int PersonType)
         {
@@ -659,10 +682,18 @@ namespace CityWatch.Data.Providers
                         keyVehicleLogToUpdate.BDMList = keyVehicleLog.BDMList;
 
                     }
+
+                    keyVehicleLogToUpdate.IsDocketNo = keyVehicleLog.IsDocketNo;
+                    keyVehicleLogToUpdate.LoaderName = keyVehicleLog.LoaderName;
+                    keyVehicleLogToUpdate.DispatchName = keyVehicleLog.DispatchName;
+
                     keyVehicleLogToUpdate.IsReels = keyVehicleLog.IsReels;
                     keyVehicleLogToUpdate.IsVWI = keyVehicleLog.IsVWI;
+
                     keyVehicleLogToUpdate.EmailCompany = keyVehicleLog.EmailCompany;
                     keyVehicleLogToUpdate.Emailindividual = keyVehicleLog.Emailindividual;
+
+
                     _context.SaveChanges();
                 }
 
@@ -1500,6 +1531,90 @@ namespace CityWatch.Data.Providers
             return allvalues;
         }
         //for getting logbookdetails of the guard-end
+
+        //for getting logbook history of the guard-start
+        public List<GuardLog> GetActiveGuardlogBookHistory(int clientSiteId, int guardId)
+        {
+            List<GuardLog> gl = new List<GuardLog>();
+            if (clientSiteId == 0 || guardId == 0)
+            {                
+                return gl;
+            }
+            var logins = _context.GuardLogins.Where(x => x.GuardId == guardId && x.ClientSiteId == clientSiteId)
+                .Include(y=> y.ClientSiteLogBook).Where(t=> t.ClientSiteLogBook.Type == LogBookType.DailyGuardLog)
+                .OrderByDescending(d=> d.LoginDate)
+                .Take(1).FirstOrDefault();
+            if(logins == null)
+            {
+                return gl;
+            }
+
+            var guardhistory = _context.GuardLogs.Where(x => x.GuardLoginId == logins.Id && x.ClientSiteLogBookId == logins.ClientSiteLogBookId)
+                .OrderByDescending(x => x.EventDateTime)
+                .Take(1).ToList(); 
+
+            return guardhistory;
+        }
+        //for getting logbook history of the guard-end
+
+        //for getting Incident Report history of the guard-start
+        public List<IncidentReport> GetActiveGuardIncidentReportHistory(int clientSiteId, int guardId)
+        {
+            List<IncidentReport> irl = new List<IncidentReport>();
+            if (clientSiteId == 0 || guardId == 0)
+            {
+                return irl;
+            }
+
+            var irh = _context.IncidentReports.Where(x=> x.GuardId == guardId && x.ClientSiteId == clientSiteId)
+                .OrderByDescending(x=> x.CreatedOn)
+                .Take(1).ToList();
+            return irh;
+        }
+        //for getting Incident Report history of the guard-end
+
+        //for getting Key Vehicle history of the guard-start
+        public List<KeyVehicleLog> GetActiveGuardKeyVehicleHistory(int clientSiteId, int guardId)
+        {
+            List<KeyVehicleLog> gl = new List<KeyVehicleLog>();
+            if (clientSiteId == 0 || guardId == 0)
+            {
+                return gl;
+            }
+            var logins = _context.GuardLogins.Where(x => x.GuardId == guardId && x.ClientSiteId == clientSiteId)
+                .Include(y => y.ClientSiteLogBook).Where(t => t.ClientSiteLogBook.Type == LogBookType.VehicleAndKeyLog)
+                .OrderByDescending(d => d.LoginDate)
+                .Take(1).FirstOrDefault();
+            if (logins == null)
+            {
+                return gl;
+            }
+
+            var guardhistory = _context.KeyVehicleLogs.Where(x => x.GuardLoginId == logins.Id && x.ClientSiteLogBookId == logins.ClientSiteLogBookId 
+            && x.EntryCreatedDateTimeLocal != null)
+                .OrderByDescending(x => x.EntryCreatedDateTimeLocal)
+                .Take(1).ToList();
+
+            return guardhistory;
+        }
+        //for getting Key Vehicle history of the guard-end
+
+
+        //for getting SmartWand history of the guard-start
+        public List<RadioChecksSmartWandScanResults> GetActiveGuardSwHistory(int clientSiteId, int guardId)
+        {
+            List<RadioChecksSmartWandScanResults> swl = new List<RadioChecksSmartWandScanResults>();
+            if (clientSiteId == 0 || guardId == 0)
+            {
+                return swl;
+            }
+
+            var swh = _context.RadioChecksSmartWandScanResults.Where(x => x.GuardId == guardId && x.ClientSiteId == clientSiteId)
+                .OrderByDescending(x => x.InspectionStartDatetimeLocal)
+                .Take(1).ToList();
+            return swh;
+        }
+        //for getting SmartWand history of the guard-end
 
         //for getting the details of guards not available-start
         public List<RadioCheckListNotAvailableGuardData> GetNotAvailableGuardDetails()

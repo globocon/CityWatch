@@ -95,7 +95,8 @@ namespace CityWatch.Data.Models
         public int? ClientSiteLocationId { get; set; }
 
         public int? ClientSitePocId { get; set; }
-
+        
+        public string ClientSitePocIdsVehicleLog { get; set; }
         public decimal? Reels { get; set; }
 
         public string CustomerRef { get; set; }
@@ -163,7 +164,10 @@ namespace CityWatch.Data.Models
         public string EntryCreatedDateTimeZone { get; set; }
         public string EntryCreatedDateTimeZoneShort { get; set; }
         public int? EntryCreatedDateTimeUtcOffsetMinute { get; set; }
-
+        [HiddenInput]
+        public bool IsDocketNo { get; set; }
+        public string LoaderName { get; set; }
+        public string DispatchName { get; set; }
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             var errors = new List<ValidationResult>();

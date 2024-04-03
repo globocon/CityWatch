@@ -48,7 +48,7 @@ $(function () {
             summaryDiv.querySelector('ul').appendChild(li);
         });
     }
-
+    
     function displayProfileValidationSummary(errors) {
         const summaryDiv = document.getElementById('kvl-profiles-validation-summary');
         summaryDiv.className = "validation-summary-errors";
@@ -369,7 +369,7 @@ $(function () {
 
     $('#vehicle_key_daily_log tbody').on('click', '#btnEditVkl', function () {
         var data = keyVehicleLog.row($(this).parents('tr')).data();
-        loadVklPopup(data.detail.id);
+        loadVklPopup(data.detail.id,false);
 
     });
 
@@ -453,7 +453,7 @@ $(function () {
             onYes: function () { GetPOINumber(); }
         });
     }
-
+    
     $('.save_new_vehicle_and_key_log').on('click', function () {
         if ($('#kvlActionIsEdit').val() === 'true') {
             saveKeyVehicleLogEntry();
@@ -478,8 +478,10 @@ $(function () {
             });
         }
     });
-
+    
     function saveKeyVehicleLogEntry() {
+        var SitePOCIds = $('#ClientSitePocId').val();
+        //$('#ClientSitePocId').val(SitePOCIds);
         $('#validation-summary ul').html('');
 
         const mobileNo = $('#MobileNumber').val();
@@ -508,6 +510,7 @@ $(function () {
         // Task p6#73_TimeZone issue -- added by Binoy -- Start
         var form = document.getElementById('form_new_vehicle_and_key_log');
         var jsformData = new FormData(form);
+   
         fillRefreshLocalTimeZoneDetails(jsformData, "", true);
         // Task p6#73_TimeZone issue -- added by Binoy -- End
         $.ajax({
@@ -909,6 +912,8 @@ $(function () {
 
 
     function loadVklPopup(id, isNewEntry) {
+       
+
         if (isLogbookExpired($('#KeyVehicleLog_ClientSiteLogBook_Date').val())) {
             alert('A new day started and this logbook expired. Please logout and login again');
             return false;
@@ -927,7 +932,18 @@ $(function () {
                 $('#loader').show();
             }
         }).done(function (response) {
+           
             $('#vkl-modal').find(".modal-body").html(response);
+            var siteidd = $('#ClientSitePocIdsVehicleLog').val();
+            var selectedValues = siteidd.split(',');
+            selectedValues.forEach(function (value) {
+                
+                $('#multiselectVehiclelog option[value="' + value + '"]').prop('selected', true);
+                
+            });
+
+           
+            
             $('#vkl-modal').modal('show', { isNewEntry: isNewEntry });
             $('#kvl_status_pd').hide();
 
@@ -1060,6 +1076,7 @@ $(function () {
             /*for manifest options-end*/
             /*for initializing the BDM to true-start*/
             $('#cbIsBDMOrSales').prop('checked', true);
+            $('#cbIsBDMOrSalesDisabled').prop('checked', false);
             $('#IsBDM').val(true);
             /*for initializing the BDM to true-end*/
         }
@@ -1093,6 +1110,7 @@ $(function () {
             }
 
             $('#cbIsBDMOrSales').prop('checked', isBDM);
+            
 
             /*for cheking  the BDM is true-end*/
 
@@ -1121,10 +1139,26 @@ $(function () {
                 crmindivid = $(this).closest('li').find('#IsCRMIndividualId').val();
                 if (checkedornot.indexOf(crmindivid) != -1) {
                     $(this).prop('checked', true);
+                    $('#cbIsBDMOrSalesDisabled').prop('checked', true);
+                    $('#cbIsBDMOrSales').attr('disabled', false);
+                    $(this).attr('disabled', false);
                 }
 
             });
             /* to load the selected items in BDM-end*/
+            /*p1 - 115 docket output issues - start*/
+            let isDocket = $('#IsDocketNo').val().toLowerCase() === 'true';
+
+            $('#cbIsDocketNo').prop('checked', isDocket);
+            if (isDocket == true) {
+                $('#txtLoaderName').prop('disabled', false);
+                $('#txtDispatchName').prop('disabled', false);
+            }
+            else {
+                $('#txtLoaderName').prop('disabled', 'disabled');
+                $('#txtDispatchName').prop('disabled', 'disabled');
+            }
+            /*p1 - 115 docket output issues - end*/
         }
 
         $('#cbIsTimeSlotNo').on('change', function () {
@@ -1132,7 +1166,28 @@ $(function () {
             $('#lblIsTimeSlotNo').text(isChecked ? 'Time Slot No.' : 'T.No. (Load)');
             $('#IsTimeSlotNo').val(isChecked);
         });
+        /*p7-115 docket output issues-start*/
+        $('#cbIsDocketNo').on('change', function () {
 
+            const isChecked = $(this).is(':checked');
+            $('#IsDocketNo').val(isChecked);
+            if (isChecked == true) {
+                $('#addCompliancesDocumentsModal').modal('show');
+                $('#txtLoaderName').prop('disabled', false);
+                $('#txtDispatchName').prop('disabled', false);
+                
+                GetComplianceDocumentsAttachmentLists();
+            }
+
+        });
+        $('#btnkeyComplianceDocumentsclose').on('click', function () {
+
+
+            $('#addCompliancesDocumentsModal').modal('hide');
+            // $('#client-site-key-modal-new').appendTo("body").modal('show');
+
+        });
+/*p7 - 115 docket output issues - end*/
         $('#cbIsSender').on('change', function () {
             const isChecked = $(this).is(':checked');
             $('#lblIsSender').text(isChecked ? 'Sender Address' : 'Reciever Address');
@@ -1164,6 +1219,13 @@ $(function () {
                     }
 
                 });
+                if ($('#PersonType').find('option[value=' + 166 + ']').length == 1) {
+                    $('#PersonType').val(166);
+                }
+                else {
+                    $('#PersonType').val('');
+                }
+                
             }
             else {
                 $('#lblIsBDMOrSales').text('Supplier/Partner');
@@ -1178,6 +1240,13 @@ $(function () {
                 });
                 $('#IsCRMId').val('');
                 //to uncheck the ticked options-end
+                if ($('#PersonType').find('option[value=' + 195 + ']').length == 1) {
+                    $('#PersonType').val(195);
+                }
+                else {
+                    $('#PersonType').val('');
+                }
+                
             }
             $('#IsBDM').val(isChecked);
         });
@@ -1203,7 +1272,44 @@ $(function () {
 
         });
         /*for changing the BDM-end*/
+        /*p7-110  crm issues-start*/
+        $('#cbIsBDMOrSalesDisabled').on('change', function () {
+            const isChecked = $(this).is(':checked');
+            if (isChecked == true) {
+                $('#cbIsBDMOrSales').attr('disabled', false);
+                $("#list_BDM  input[type=checkbox]:disabled").each(function () {
+                    var isChecked1 = $(this).is(':disabled');
+                    if (isChecked1 == true) {
+                        $(this).attr('disabled', false);
+                    }
 
+                });
+                if ($('#PersonType').find('option[value=' + 166 + ']').length == 1) {
+                    $('#PersonType').val(166);
+                }
+            }
+            else {
+                $('#cbIsBDMOrSales').attr('disabled', 'disabled')
+                $('#cbIsBDMOrSales').prop('checked', true);
+                $('#cbIsBDMOrSales').change();
+                $("#list_BDM  input[type=checkbox]:checked").each(function () {
+                    var isChecked1 = $(this).is(':checked');
+                    if (isChecked1 == true) {
+                        $(this).prop('checked', false);
+                    }
+
+                });
+                $("#list_BDM  input[type=checkbox]").each(function () {
+                    var isChecked1 = $(this).is(':disabled');
+                    if (isChecked1 == false) {
+                        $(this).attr('disabled', 'disabled');
+                    }
+
+                });
+                $('#PersonType').val('');
+            }
+        });
+        /*p7-110  crm issues-end*/
         //to check whether the person of interest is selected or not 
         $('#PersonOfInterest').on('change', function () {
             const value = $(this).val();
@@ -1475,7 +1581,14 @@ $(function () {
         });
 
 
-       
+        $('#multiselectVehiclelog').multiselect({
+            maxHeight: 400,
+            buttonWidth: '100%',
+            nonSelectedText: 'Select',
+            buttonTextAlignment: 'left',
+            includeSelectAllOption: true,
+        });
+        
 
 
         $('#VehicleRego').on('blur', function () {
@@ -1504,6 +1617,13 @@ $(function () {
             $('#VehicleRego').val($('#crmVehicleRego').val());
             GetVehicleImage();
 
+        });
+        $('#multiselectVehiclelog').on('change', function () {
+          
+            var selectedValues = $(this).val();
+            $('#ClientSitePocIdsVehicleLog').val(selectedValues);
+
+            
         });
         /*same changes in vehicle rego-start*/
 
@@ -2429,7 +2549,195 @@ $(function () {
 
         }
         /*to upload the person image-end*/
+        /*p7-115 Docket Output issues-start*/
+        $('#kvl_attachment_compliance_documents_upload').on("change", function (e) {
+            var vehicleRego = $('#VehicleRego').val();
+            /*to check whether  the vehicle number is entered*/
+            if (vehicleRego !== "") {
+                const fileUpload = this;
+                if (fileUpload.files.length > 0) {
 
+                    let arIndex = [];
+                    const attachmentList = document.getElementById('kvl-attachment_compliance_documents-list').getElementsByTagName('li');
+                    for (let i = 0; i < attachmentList.length; i++)
+                        arIndex.push(parseInt(attachmentList[i].getAttribute('data-index')));
+                    let attachIndex = arIndex.length > 0 ? Math.max(...arIndex) + 1 : 0;
+
+
+                    /*Maximum allowed size in bytes*/
+                    const maxAllowedSize = 30 * 1024 * 1024;
+                    var fileSizeCheck = true;
+                    var FileName = "";
+                    for (let i = 0; i < fileUpload.files.length; i++, attachIndex++) {
+                        const filecheck = fileUpload.files.item(i);
+                        if (filecheck.size > maxAllowedSize) {
+                            fileSizeCheck = false;
+                            FileName = FileName + filecheck.name + ','
+                        }
+                    }
+
+
+                    //for (var i = $('#gridIsPersonOrVehicle  tr').length; i > 1; i--) {
+                    //    $('#gridIsPersonOrVehicle  tr:last').remove();
+                    //}
+
+                    if (fileSizeCheck) {
+                        for (let i = 0; i < fileUpload.files.length; i++) {
+                            var rowCount = $('#gridIsPersonOrVehicle  tr').length;
+                            const fileExtn = fileUpload.files[i].name.split('.').pop();
+                            /*if only  one jpg file is uploaded -start*/
+
+
+                            if (fileSizeCheck) {
+                                /* for (let i = 0; i < fileUpload.files.length; i++) {*/
+
+
+                                const file = fileUpload.files.item(i);
+                                const attachment_id = 'attach_' + attachIndex;
+                                const li = document.createElement('li');
+                                li.id = attachment_id;
+                                li.className = 'list-group-item';
+                                li.dataset.index = attachIndex;
+                                let liText = document.createTextNode(file.name);
+
+                                const icon = document.createElement("i");
+                                icon.className = 'fa fa-circle-o-notch fa-spin ml-2 text-success';
+                                icon.title = 'Uploading...';
+                                icon.style = 'cursor:pointer';
+
+                                li.appendChild(liText);
+                                li.appendChild(icon);
+                                document.getElementById('kvl-attachment_compliance_documents-list').append(li);
+
+                                // upload file to server
+                                const fileForm = new FormData();
+                                fileForm.append('attachments', fileUpload.files.item(i))
+                                fileForm.append('attach_id', attachment_id);
+                                fileForm.append('report_reference', $('#ReportReference').val());
+                                fileForm.append('id', $('#Id').val())
+
+
+                                fileForm.append('vehicle_rego', $('#VehicleRego').val());
+
+                                $.ajax({
+                                    url: '/Guard/KeyVehiclelog?handler=ComplianceDocumensUpload',
+                                    type: 'POST',
+                                    data: fileForm,
+                                    dataType: 'json',
+                                    processData: false,
+                                    contentType: false,
+                                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                                }).done(function (result) {
+                                    const icon = document.getElementById(result.attachmentId).getElementsByTagName('i').item(0);
+                                    if (result.success) {
+                                        //icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-kvl-attachment';
+                                        //icon.title = 'Delete';
+                                        GetComplianceDocumentsAttachmentLists()
+                                    } else {
+                                        icon.className = 'fa fa-exclamation-triangle ml-2 text-warning';
+                                        icon.title = 'Error';
+                                    }
+
+                                    adjustKvlAttachmentCount(true);
+                                });
+                                /*}*/
+
+                            }
+
+                        }
+
+                        /*$('#vkl-image-modal').modal('show');*/
+                    }
+
+                    else {
+                        alert("Maximum allowed size (30Mb) exceeded for the file '" + FileName + "'")
+                    }
+                }
+            }
+            else {
+                alert("Please enter the ID/Truck Registration Number");
+            }
+
+        }); 
+        function GetComplianceDocumentsAttachmentLists() {
+            $.ajax({
+                url: '/Guard/KeyVehicleLog?handler=ComplianceDocumentsAttachments',
+                dataType: 'json',
+                data:
+                {
+                    truck: $('#VehicleRego').val(),
+                    id: $('#Id').val()
+                },
+                type: 'GET',
+                dataType: 'json',
+            }).done(function (result) {
+                $("#kvl-attachment_compliance_documents-list").empty();
+                for (var attachIndex = 0; attachIndex < result.length; attachIndex++) {
+                    const file = result[attachIndex];
+                    const attachment_id = 'attach_' + attachIndex;
+                    const li = document.createElement('li');
+                    li.id = attachment_id;
+                    li.className = 'list-group-item';
+                    li.dataset.index = attachIndex;
+                    let liText = document.createTextNode(file);
+                    const icon = document.createElement("i");
+                    icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-kvl-attachment_compliance_documents';
+                    icon.title = 'Delete';
+                    icon.style = 'cursor:pointer';
+                    li.appendChild(liText);
+                    li.appendChild(icon);
+                    const anchorTag = document.createElement("a");
+                    var id = $('#Id').val();
+                    if (id == 0) {
+                        anchorTag.href = '/KvlUploads/' + $('#VehicleRego').val() + "/ComplianceDocuments/" + file;
+                    }
+                    else {
+                        anchorTag.href = '/KvlUploads/' + id + "/ComplianceDocuments/" + file;
+                    }
+                    anchorTag.target = "_blank";
+                    const icon2 = document.createElement("i");
+                    icon2.className = 'fa fa-download ml-2 text-primary';
+                    icon2.title = 'Download';
+                    icon2.style = 'cursor:pointer';
+                    anchorTag.appendChild(icon2);
+                    li.appendChild(anchorTag);
+                    document.getElementById('kvl-attachment_compliance_documents-list').append(li);
+
+
+
+                }
+
+                $('#kvl_attachments_count').html(result.length);
+            });
+        }
+        $('#kvl-attachment_compliance_documents-list').on('click', '.btn-delete-kvl-attachment_compliance_documents', function (event) {
+            if (confirm('Are you sure want to remove this attachment?')) {
+                var target = event.target;
+                const fileName = target.parentNode.innerText.trim();
+                const vehicleRego = $('#VehicleRego').val()
+                $.ajax({
+                    url: '/Guard/KeyVehiclelog?handler=DeleteComplianceDocumentsAttachment',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        reportReference: $('#ReportReference').val(),
+                        fileName: fileName,
+                        vehicleRego: vehicleRego,
+                        id: $('#Id').val()
+                    },
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (result) {
+                    if (result) {
+                        target.parentNode.parentNode.removeChild(target.parentNode);
+                        GetComplianceDocumentsAttachmentLists()
+                    }
+                });
+            }
+        });
+        $('#btn_save_guard_compliancedocuments').on('click', function (event) {
+            $('#addCompliancesDocumentsModal').modal('hide');
+        })
+        /*p7 - 115 Docket Output issues - end*/
         /*to upload the other image-start*/
         function OtherImageUpload() {
             const fileUpload = $('#kvl_attachment_upload').prop('files');
@@ -3100,6 +3408,7 @@ $(function () {
 
     $('#generate_kvl_docket').on('click', function () {
         $('#generate_kvl_docket_status').hide();
+      
         var checkboxIdsArray = $('#printDocketForKvlId').val().split(',');
         const checkedReason = $('.print-docket-reason:checkbox:checked');
         if (checkedReason.length === 0) {
@@ -3273,6 +3582,28 @@ $(function () {
     });
     //To Generate All PO List start
     $('#btn_kvl_pdf_POIList').on('click', function () {
+        var clientsiteid = $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val();
+        $('#clientsiteIDNew').val(clientsiteid);
+
+   
+        const clientSiteControlKeyvehicle = $('#multiselectVehiclelogDocket');
+        
+
+        clientSiteControlKeyvehicle.html('');
+        $.ajax({
+            url: '/Guard/KeyVehicleLog?handler=POCSDropdown',
+            type: 'GET',
+            data: { 'clientsiteID': clientsiteid },
+            dataType: 'json',
+            success: function (data) {
+                data.map(function (site) {
+                    clientSiteControlKeyvehicle.append('<option value="' + site.value + '">' + site.text + '</option>');
+                });
+                clientSiteControlKeyvehicle.multiselect('rebuild');
+            }
+        });
+
+
         $('#generate_kvl_docket_status').hide();
         $('#download_kvl_docket').hide();
         $('.print-docket-reason').prop('checked', false);
@@ -3296,9 +3627,49 @@ $(function () {
         //    $('#imagesirenprint').attr('hidden', true);
         //}
     });
+
+    
+    $('#multiselectVehiclelogDocket').multiselect({
+        maxHeight: 400,
+        buttonWidth: '210%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
+    $('#multiselectVehiclelogDocket').on('change', function () {
+        var Emaillen = $('#multiselectVehiclelogDocket').val();
+        if (Emaillen.length > 0) {
+            $('#stakeholderEmail').val(''); 
+            $.ajax({
+                url: '/Guard/KeyVehicleLog?handler=GetPOCEmails',
+                data: {
+
+                    Emails: $('#multiselectVehiclelogDocket').val()
+                },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (response) {
+                if (response.pocEmails != null) {
+                    var emails = response.pocEmails.filter(function (email) {
+                        return email !== null;
+                    }).join(', ');
+                    $('#stakeholderEmail').val(function (_, val) {
+                        return val + emails;
+                    });
+                }
+
+            });
+        }
+        else {
+            $('#stakeholderEmail').val(''); 
+                
+        }
+       
+        
+    });
     $('#generate_kvl_AlldocketList').on('click', function () {
         $('#generate_kvl_docket_status').hide();
-
+        var SitePOCIds = $('#multiselectVehiclelogDocket').val();
         const checkedReason = $('.print-docket-reason:checkbox:checked');
         if (checkedReason.length === 0) {
             $('#generate_kvl_docket_status').html('<i class="fa fa-times-circle text-danger"></i> Please select a reason').show();
@@ -4017,6 +4388,7 @@ $('#chkAllBatchDocketSelect').on('change', function () {
 });
 
 /*to add poi binder - end*/
+
 /*for manifest options-start*/
 function GetToggles(siteId, toggleId) {
     const token = $('input[name="__RequestVerificationToken"]').val();
@@ -4087,3 +4459,4 @@ function GetToggles(siteId, toggleId) {
 }
 
 /*for manifest options-start*/
+
