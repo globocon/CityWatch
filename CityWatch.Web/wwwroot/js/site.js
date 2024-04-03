@@ -2265,161 +2265,160 @@ $('#cr_reportlogo_upload').on('change', function () {
 /*for adding a reportlogo-end*/
 /*p1-191 hr files task 3-start*/
 let gridHrSettings;
-if ($('#tbl_hr_settings').length === 1) {
-    gridHrSettings = new DataTable('#tbl_hr_settings', {
-        paging: false,
-        searching: true,
-        ordering: false,
-        info: false,
-        scrollX: true,
-        ajax: {
-            url: '/Guard/KeyVehicleLog?handler=KeyVehicleLogs',
-            data: function (d) {
-                d.logbookId = $('#KeyVehicleLog_ClientSiteLogBookId').val();
-                d.kvlStatusFilter = $('#kvl_status_filter').val();
-            },
-            dataSrc: ''
-        },
-        columns: [
-            { data: 'detail.id', visible: false },
+//if ($('#tbl_hr_settings').length === 1) {
+//    gridHrSettings = new DataTable('#tbl_hr_settings', {
+//        paging: false,
+//        searching: true,
+//        ordering: false,
+//        info: false,
+//        scrollX: true,
+//        ajax: {
+//            url: '/Guard/KeyVehicleLog?handler=KeyVehicleLogs',
+//            data: function (d) {
+//                d.logbookId = $('#KeyVehicleLog_ClientSiteLogBookId').val();
+//                d.kvlStatusFilter = $('#kvl_status_filter').val();
+//            },
+//            dataSrc: ''
+//        },
+//        columns: [
+//            { data: 'detail.id', visible: false },
 
-            { data: 'detail.initialCallTime', width: '5%', title:'HR Group' },
-            { data: 'detail.entryTime', width: '5%' },
-            { data: 'detail.sentInTime', width: '5%' },
-            { data: 'detail.exitTime', width: '5%' },
+//            { data: 'detail.initialCallTime', width: '5%', title:'HR Group' },
+//            { data: 'detail.entryTime', width: '5%' },
+//            { data: 'detail.sentInTime', width: '5%' },
            
-            {
-                targets: -1,
-                data: 'detail.id',
-                width: '12%',
-                defaultContent: '',
+//            {
+//                targets: -1,
+//                data: 'detail.id',
+//                width: '12%',
+//                defaultContent: '',
 
-                render: function (value, type, data) {
-                    return '<button id="btnEditHRSettings" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil"></i></button>' +
-                        '<button id="btnDeleteHRSettings" class="btn btn-outline-danger mr-2 mt-1"><i class="fa fa-trash"></i></button>' +
-                        '</div>'
+//                render: function (value, type, data) {
+//                    return '<button id="btnEditHRSettings" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil"></i></button>' +
+//                        '<button id="btnDeleteHRSettings" class="btn btn-outline-danger mr-2 mt-1"><i class="fa fa-trash"></i></button>' +
+//                        '</div>'
 
 
-                        ;
-                    // if (value === null) return 'N/A';
-                    // return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardLogBookInfoModal" id="btnLogBookDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + value + '"><input type="hidden" id="GuardId" value="' + value + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" text="' + value + '"><input type="hidden" id="GuardId" text="' + value + '"> ';
-                }
-                //render: function (data, type, row) {
-                //    return '<input type="checkbox" id=' + data.detail.keyNo+'/>';
-                //}
-                //defaultContent: '<button id="btnEditVkl" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil"></i></button>' +
-                //   '<button id="btnPrintVkl" class="btn btn-outline-primary mr-1 "><i class="fa fa-print"></i></button>' +
-                //    '<button id="btnDeleteVkl" class="btn btn-outline-danger mr-2 mt-1"><i class="fa fa-trash mr-2"></i>Delete</button>',
-            }],
-        'createdRow': function (row, data, index) {
-            if (data.detail.initialCallTime !== null) {
-                $('td', row).eq(1).html(convertDateTimeString(data.detail.initialCallTime));
-                /*to display the color yellow-start*/
-                if (data.detail.entryTime == null && data.detail.sentInTime == null && data.detail.exitTime == null) {
-                    $('td', row).eq(1).addClass('initial-call-colour');
-                    $('td', row).eq(2).addClass('initial-call-colour');
-                    $('td', row).eq(3).addClass('initial-call-colour');
-                    $('td', row).eq(4).addClass('initial-call-colour');
-                    $('td', row).eq(5).addClass('initial-call-colour');
-                    $('td', row).eq(6).addClass('initial-call-colour');
-                    $('td', row).eq(7).addClass('initial-call-colour');
-                    $('td', row).eq(8).addClass('initial-call-colour');
-                    $('td', row).eq(9).addClass('initial-call-colour');
-                    $('td', row).eq(10).addClass('initial-call-colour');
-                    $('td', row).eq(11).addClass('initial-call-colour');
-                }
-                /*to display the color yellow-end*/
-            }
-            if (data.detail.entryTime !== null) {
-                $('td', row).eq(2).html(convertDateTimeString(data.detail.entryTime));
-                /*to display the color green for entry time-start*/
-                if (data.detail.sentInTime == null && data.detail.exitTime == null) {
-                    $('td', row).eq(1).addClass('entry-time-colour');
-                    $('td', row).eq(2).addClass('entry-time-colour');
-                    $('td', row).eq(3).addClass('entry-time-colour');
-                    $('td', row).eq(4).addClass('entry-time-colour');
-                    $('td', row).eq(5).addClass('entry-time-colour');
-                    $('td', row).eq(6).addClass('entry-time-colour');
-                    $('td', row).eq(7).addClass('entry-time-colour');
-                    $('td', row).eq(8).addClass('entry-time-colour');
-                    $('td', row).eq(9).addClass('entry-time-colour');
-                    $('td', row).eq(10).addClass('entry-time-colour');
-                    $('td', row).eq(11).addClass('entry-time-colour');
-                }
-                /*to display the color green for entry time-end*/
-            }
-            if (data.detail.sentInTime !== null) {
-                $('td', row).eq(3).html(convertDateTimeString(data.detail.sentInTime));
-                /*to display the color green for sent in time-start*/
-                if (data.detail.exitTime == null) {
-                    $('td', row).eq(1).addClass('entry-time-colour');
-                    $('td', row).eq(2).addClass('entry-time-colour');
-                    $('td', row).eq(3).addClass('entry-time-colour');
-                    $('td', row).eq(4).addClass('entry-time-colour');
-                    $('td', row).eq(5).addClass('entry-time-colour');
-                    $('td', row).eq(6).addClass('entry-time-colour');
-                    $('td', row).eq(7).addClass('entry-time-colour');
-                    $('td', row).eq(8).addClass('entry-time-colour');
-                    $('td', row).eq(9).addClass('entry-time-colour');
-                    $('td', row).eq(10).addClass('entry-time-colour');
-                    $('td', row).eq(11).addClass('entry-time-colour');
-                }
-                /*to display the color green for sent in time-end*/
-            }
-            if (data.detail.exitTime !== null) {
-                $('td', row).eq(4).html(convertDateTimeString(data.detail.exitTime));
-                /*to display the color green for exit  time-start*/
+//                        ;
+//                    // if (value === null) return 'N/A';
+//                    // return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardLogBookInfoModal" id="btnLogBookDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + value + '"><input type="hidden" id="GuardId" value="' + value + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" text="' + value + '"><input type="hidden" id="GuardId" text="' + value + '"> ';
+//                }
+//                //render: function (data, type, row) {
+//                //    return '<input type="checkbox" id=' + data.detail.keyNo+'/>';
+//                //}
+//                //defaultContent: '<button id="btnEditVkl" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil"></i></button>' +
+//                //   '<button id="btnPrintVkl" class="btn btn-outline-primary mr-1 "><i class="fa fa-print"></i></button>' +
+//                //    '<button id="btnDeleteVkl" class="btn btn-outline-danger mr-2 mt-1"><i class="fa fa-trash mr-2"></i>Delete</button>',
+//            }],
+//        'createdRow': function (row, data, index) {
+//            if (data.detail.initialCallTime !== null) {
+//                $('td', row).eq(1).html(convertDateTimeString(data.detail.initialCallTime));
+//                /*to display the color yellow-start*/
+//                if (data.detail.entryTime == null && data.detail.sentInTime == null && data.detail.exitTime == null) {
+//                    $('td', row).eq(1).addClass('initial-call-colour');
+//                    $('td', row).eq(2).addClass('initial-call-colour');
+//                    $('td', row).eq(3).addClass('initial-call-colour');
+//                    $('td', row).eq(4).addClass('initial-call-colour');
+//                    $('td', row).eq(5).addClass('initial-call-colour');
+//                    $('td', row).eq(6).addClass('initial-call-colour');
+//                    $('td', row).eq(7).addClass('initial-call-colour');
+//                    $('td', row).eq(8).addClass('initial-call-colour');
+//                    $('td', row).eq(9).addClass('initial-call-colour');
+//                    $('td', row).eq(10).addClass('initial-call-colour');
+//                    $('td', row).eq(11).addClass('initial-call-colour');
+//                }
+//                /*to display the color yellow-end*/
+//            }
+//            if (data.detail.entryTime !== null) {
+//                $('td', row).eq(2).html(convertDateTimeString(data.detail.entryTime));
+//                /*to display the color green for entry time-start*/
+//                if (data.detail.sentInTime == null && data.detail.exitTime == null) {
+//                    $('td', row).eq(1).addClass('entry-time-colour');
+//                    $('td', row).eq(2).addClass('entry-time-colour');
+//                    $('td', row).eq(3).addClass('entry-time-colour');
+//                    $('td', row).eq(4).addClass('entry-time-colour');
+//                    $('td', row).eq(5).addClass('entry-time-colour');
+//                    $('td', row).eq(6).addClass('entry-time-colour');
+//                    $('td', row).eq(7).addClass('entry-time-colour');
+//                    $('td', row).eq(8).addClass('entry-time-colour');
+//                    $('td', row).eq(9).addClass('entry-time-colour');
+//                    $('td', row).eq(10).addClass('entry-time-colour');
+//                    $('td', row).eq(11).addClass('entry-time-colour');
+//                }
+//                /*to display the color green for entry time-end*/
+//            }
+//            if (data.detail.sentInTime !== null) {
+//                $('td', row).eq(3).html(convertDateTimeString(data.detail.sentInTime));
+//                /*to display the color green for sent in time-start*/
+//                if (data.detail.exitTime == null) {
+//                    $('td', row).eq(1).addClass('entry-time-colour');
+//                    $('td', row).eq(2).addClass('entry-time-colour');
+//                    $('td', row).eq(3).addClass('entry-time-colour');
+//                    $('td', row).eq(4).addClass('entry-time-colour');
+//                    $('td', row).eq(5).addClass('entry-time-colour');
+//                    $('td', row).eq(6).addClass('entry-time-colour');
+//                    $('td', row).eq(7).addClass('entry-time-colour');
+//                    $('td', row).eq(8).addClass('entry-time-colour');
+//                    $('td', row).eq(9).addClass('entry-time-colour');
+//                    $('td', row).eq(10).addClass('entry-time-colour');
+//                    $('td', row).eq(11).addClass('entry-time-colour');
+//                }
+//                /*to display the color green for sent in time-end*/
+//            }
+//            if (data.detail.exitTime !== null) {
+//                $('td', row).eq(4).html(convertDateTimeString(data.detail.exitTime));
+//                /*to display the color green for exit  time-start*/
 
-                $('td', row).eq(1).addClass('exit-time-colour');
-                $('td', row).eq(2).addClass('exit-time-colour');
-                $('td', row).eq(3).addClass('exit-time-colour');
-                $('td', row).eq(4).addClass('exit-time-colour');
-                $('td', row).eq(5).addClass('exit-time-colour');
-                $('td', row).eq(6).addClass('exit-time-colour');
-                $('td', row).eq(7).addClass('exit-time-colour');
-                $('td', row).eq(8).addClass('exit-time-colour');
-                $('td', row).eq(9).addClass('exit-time-colour');
-                $('td', row).eq(10).addClass('exit-time-colour');
-                $('td', row).eq(11).addClass('exit-time-colour');
+//                $('td', row).eq(1).addClass('exit-time-colour');
+//                $('td', row).eq(2).addClass('exit-time-colour');
+//                $('td', row).eq(3).addClass('exit-time-colour');
+//                $('td', row).eq(4).addClass('exit-time-colour');
+//                $('td', row).eq(5).addClass('exit-time-colour');
+//                $('td', row).eq(6).addClass('exit-time-colour');
+//                $('td', row).eq(7).addClass('exit-time-colour');
+//                $('td', row).eq(8).addClass('exit-time-colour');
+//                $('td', row).eq(9).addClass('exit-time-colour');
+//                $('td', row).eq(10).addClass('exit-time-colour');
+//                $('td', row).eq(11).addClass('exit-time-colour');
 
-                /*to display the color green for exit  time-end*/
-            }
-            if (data.detail.exitTime == null) {
-                $('td', row).eq(4).html('<button type="button" class="btn btn-success btn-exit-quick">E</button> ');
-            }
-        },
-        'drawCallback': function () {
-            $('#total_events').html(this.fnSettings().fnRecordsTotal());
-        }
-    });
+//                /*to display the color green for exit  time-end*/
+//            }
+//            if (data.detail.exitTime == null) {
+//                $('td', row).eq(4).html('<button type="button" class="btn btn-success btn-exit-quick">E</button> ');
+//            }
+//        },
+//        'drawCallback': function () {
+//            $('#total_events').html(this.fnSettings().fnRecordsTotal());
+//        }
+//    });
 
-    var dataTable = $('#vehicle_key_daily_log').DataTable();
-    var ids = [];
-    dataTable.rows().data().each(function (index, rowData) {
+//    var dataTable = $('#vehicle_key_daily_log').DataTable();
+//    var ids = [];
+//    dataTable.rows().data().each(function (index, rowData) {
 
-        ids.push(index.detail.id);
-    });
-}
-//gridHrSettings = $('#tbl_hr_settings ').grid({
-//    dataSource: '/Admin/Settings?handler=ClientSites',
-//    uiLibrary: 'bootstrap4',
-//    iconsLibrary: 'fontawesome',
-//    primaryKey: 'id',
-//    inlineEditing: { mode: 'command' },
-//    columns: [
-//        { field: 'id', hidden: true },
-//        { field: 'hrGroup', title: 'HR Group', width: '5%', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
+//        ids.push(index.detail.id);
+//    });
+//}
+gridHrSettings = $('#tbl_hr_settings ').grid({
+    dataSource: '/Admin/Settings?handler=ClientSites',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    inlineEditing: { mode: 'command' },
+    columns: [
+        { field: 'id', hidden: true },
+        { field: 'hrGroup', title: 'HR Group', width: '100%', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
 
-//        { field: 'referenceNoNumberId',  width: '5%', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
-//        { field: 'referenceNoAlphabet', width: '5%', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
+        { field: 'referenceNo', width: '100%', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' }, type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
+        //{ field: 'referenceNoAlphabet', width: '5%', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
 
-//        { field: 'description', width: '5%', editor: true },
+        { field: 'description', width: '100%', editor: true },
  
-//    ],
-//    initialized: function (e) {
-//        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
-//    }
-//});
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
 //let isHrSettingsAdding=false
 //if (gridHrSettings) {
 //    gridHrSettings.on('rowDataChanged', function (e, id, record) {
