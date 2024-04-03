@@ -782,8 +782,8 @@ namespace CityWatch.Web.Services
 
 
                 items.Add(new SelectListItem("POI", "POI"));
-                items.Add(new SelectListItem("BDM", "BDM"));
-                items.Add(new SelectListItem("Supplier", "Supplier"));
+                items.Add(new SelectListItem("CRM BDM", "BDM"));
+                items.Add(new SelectListItem("CRM Supplier", "Supplier"));
 
 
                 return items;

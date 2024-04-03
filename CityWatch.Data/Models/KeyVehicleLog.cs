@@ -214,5 +214,7 @@ namespace CityWatch.Data.Models
         public bool IsReels { get; set; }
         [HiddenInput]
         public bool IsVWI { get; set; }
+        public string EmailCompany { get; set; }
+        public string Emailindividual { get; set; }
     }
 }

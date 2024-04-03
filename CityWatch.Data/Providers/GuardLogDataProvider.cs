@@ -526,6 +526,7 @@ namespace CityWatch.Data.Providers
                 .ThenInclude(x => x.ClientSite)
                 .Load();
 
+
             return results.ToList();
         }
 
@@ -689,6 +690,10 @@ namespace CityWatch.Data.Providers
                     keyVehicleLogToUpdate.IsReels = keyVehicleLog.IsReels;
                     keyVehicleLogToUpdate.IsVWI = keyVehicleLog.IsVWI;
                     keyVehicleLogToUpdate.ClientSitePocIdsVehicleLog = keyVehicleLog.ClientSitePocIdsVehicleLog;
+
+                    keyVehicleLogToUpdate.EmailCompany = keyVehicleLog.EmailCompany;
+                    keyVehicleLogToUpdate.Emailindividual = keyVehicleLog.Emailindividual;
+
 
                     _context.SaveChanges();
                 }
