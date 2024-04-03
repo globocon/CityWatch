@@ -2282,8 +2282,8 @@ if ($('#tbl_hr_settings').length === 1) {
         },
         columns: [
             { data: 'detail.id', visible: false },
-            
-            { data: 'detail.initialCallTime', width: '5%' },
+
+            { data: 'detail.initialCallTime', width: '5%', title:'HR Group' },
             { data: 'detail.entryTime', width: '5%' },
             { data: 'detail.sentInTime', width: '5%' },
             { data: 'detail.exitTime', width: '5%' },
