@@ -106,7 +106,7 @@ namespace CityWatch.Data.Providers
         //for getting Key Vehicle history of the  guard-end
 
         //for getting smartwand history of the  guard-start
-        List<RadioChecksSmartWandScanResults> GetActiveGuardSwHistory(int clientSiteId, int guardId);
+        List<SmartWandScanGuardHistory> GetActiveGuardSwHistory(int clientSiteId, int guardId);
         //for getting smartwand history of the  guard-end
 
 
@@ -1637,15 +1637,15 @@ namespace CityWatch.Data.Providers
 
 
         //for getting SmartWand history of the guard-start
-        public List<RadioChecksSmartWandScanResults> GetActiveGuardSwHistory(int clientSiteId, int guardId)
+        public List<SmartWandScanGuardHistory> GetActiveGuardSwHistory(int clientSiteId, int guardId)
         {
-            List<RadioChecksSmartWandScanResults> swl = new List<RadioChecksSmartWandScanResults>();
+            List<SmartWandScanGuardHistory> swl = new List<SmartWandScanGuardHistory>();
             if (clientSiteId == 0 || guardId == 0)
             {
                 return swl;
             }
 
-            var swh = _context.RadioChecksSmartWandScanResults.Where(x => x.GuardId == guardId) // && x.ClientSiteId == clientSiteId
+            var swh = _context.SmartWandScanGuardHistory.Where(x => x.GuardId == guardId) // && x.ClientSiteId == clientSiteId
                 .OrderByDescending(x => x.InspectionStartDatetimeLocal)
                 .Take(1).ToList();
             return swh;
