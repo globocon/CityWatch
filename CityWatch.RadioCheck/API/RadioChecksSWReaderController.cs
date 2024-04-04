@@ -8,12 +8,9 @@ using Microsoft.Extensions.Logging;
 using System;
 using CityWatch.Data;
 using Microsoft.EntityFrameworkCore;
-
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Net.Http;
 using Microsoft.Extensions.Options;
-using System.Threading.Tasks;
 using System.Text;
 using System.Text.Json;
 using CityWatch.RadioCheck.Helpers;
@@ -21,7 +18,7 @@ using CityWatch.RadioCheck.Models;
 using System.Linq;
 using iText.Commons.Actions.Contexts;
 using static Dropbox.Api.Files.SearchMatchType;
-using Microsoft.Identity.Client;
+
 
 namespace CityWatch.RadioCheck.API
 {
