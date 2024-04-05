@@ -417,6 +417,23 @@ namespace CityWatch.Web.Services
         public string GeneratePdfReport(int keyVehicleLogId, string docketReason, string blankNoteOnOrOff, string serialNo)
         {
             var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(keyVehicleLogId);
+            //To Get the SitePocNames start
+            if (keyVehicleLog.ClientSitePocIdsVehicleLog!=null)
+            {
+                var POCIds = keyVehicleLog.ClientSitePocIdsVehicleLog.Split(',');
+                var pocNamesList = new List<string>();
+                pocNamesList.Clear();
+                foreach (var item in POCIds)
+                {
+                    var PocName = _guardLogDataProvider.GetClientSitePOCName(Convert.ToInt32(item));
+                    pocNamesList.Add(PocName.Name);
+                }
+
+                var pocNames = string.Join(", ", pocNamesList);
+                keyVehicleLog.SitePocNames = pocNames;
+            }
+            
+            //To Get the SitePocNames stop
 
             _guardLogDataProvider.SaveDocketSerialNo(keyVehicleLogId, serialNo);
 
@@ -426,6 +443,8 @@ namespace CityWatch.Web.Services
             var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
             var keyVehicleLogViewModel = new KeyVehicleLogViewModel(keyVehicleLog, kvlFields);
             var reportPdfPath = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{keyVehicleLog.GuardLogin.ClientSite.Name}_SN{serialNo}.pdf");
+
+           
 
             if (IO.File.Exists(reportPdfPath))
                 IO.File.Delete(reportPdfPath);
@@ -1113,7 +1132,7 @@ namespace CityWatch.Web.Services
             return clockDetails;
         }
 
-        private static Table GetCompanyDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        private  Table GetCompanyDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
         {
             var companyDetails = new Table(UnitValue.CreatePercentArray(new float[] { 23, 10, 12, 10, 10, 12, 23 })).UseAllAvailableWidth();
 
@@ -1133,11 +1152,36 @@ namespace CityWatch.Web.Services
             companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.PersonName));
             companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.MobileNumber));
             companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.PersonTypeText));
-            companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.ClientSitePoc?.Name));
+            companyDetails.AddCell(GetSitePocNameDetails(keyVehicleLogViewModel));
+            
             companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.ClientSiteLocation?.Name));
             companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.PurposeOfEntry));
 
             return companyDetails;
+        }
+        
+        private Table GetSitePocNameDetails(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        {
+            var deductionDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 45, 25, 35 })).UseAllAvailableWidth();
+
+            var PocName = keyVehicleLogViewModel.Detail.SitePocNames;
+            if (PocName!=null)
+            {
+                var sitePocNamesArray = PocName.Split(',');
+
+                var iconChecked = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "icons", "checked.png"))).SetHeight(8);
+
+                foreach (var sitePocName in sitePocNamesArray)
+                {
+                    deductionDetailsTable.AddCell(GetDataCell(sitePocName, textAlignment: TextAlignment.RIGHT, 0).SetBorder(Border.NO_BORDER));
+
+                    deductionDetailsTable.AddCell(new Cell().Add(iconChecked).SetBorder(Border.NO_BORDER));
+                    deductionDetailsTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+                }
+
+            }
+
+            return deductionDetailsTable;
         }
 
         private static Table GetNotesTable(KeyVehicleLogViewModel keyVehicleLogViewModel, string blankNoteOnOrOff)
@@ -1586,6 +1630,23 @@ namespace CityWatch.Web.Services
             foreach (var i in keyVehicleLogId)
             {
                 var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(i);
+                //To Get the SitePocNames start
+                if (keyVehicleLog.ClientSitePocIdsVehicleLog!=null)
+                {
+                    var POCIds = keyVehicleLog.ClientSitePocIdsVehicleLog.Split(',');
+                    var pocNamesList = new List<string>();
+                    pocNamesList.Clear();
+                    foreach (var item in POCIds)
+                    {
+                        var PocName = _guardLogDataProvider.GetClientSitePOCName(Convert.ToInt32(item));
+                        pocNamesList.Add(PocName.Name);
+                    }
+
+                    var pocNames = string.Join(", ", pocNamesList);
+                    keyVehicleLog.SitePocNames = pocNames;
+                }
+                
+                //To Get the SitePocNames stop
                 var reportPdfPath1 = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{keyVehicleLog.GuardLogin.ClientSite.Name}_SN{serialNo}.pdf");
 
                 var pdfDocList = new PdfDocument(new PdfWriter(reportPdfPath1));

@@ -3311,7 +3311,7 @@ $(function () {
 
     /****** Print manual docket *******/
     $('#vehicle_key_daily_log tbody').on('click', '#btnPrintVkl', function () {
-
+        
         var clientsiteid = $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val();
         $('#clientsiteIDNew').val(clientsiteid);
 
@@ -3336,34 +3336,41 @@ $(function () {
 
         var data = keyVehicleLog.row($(this).parents('tr')).data();
         $('#stakeholderEmail').val(''); 
-        $.ajax({
-            url: '/Guard/KeyVehicleLog?handler=GetKeyvehicleemails',
-            data: {
+       
+        var checkedCount = $('.custom-control-input:checked').length;
+        if (checkedCount > 1) {
 
-                id: data.detail.id
-            },
-            type: 'POST',
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (response) {
-            var emailCompany = response.poc.emailindividual;
-            var emailIndividual = response.poc.emailCompany;
-            if (emailCompany) {
-                var concatenatedEmails = emailCompany;
 
-                if (emailIndividual) {
-                    concatenatedEmails += ", " + emailIndividual;
+            $('#stakeholderEmail').val('');
+        }
+        else {
+            $.ajax({
+                url: '/Guard/KeyVehicleLog?handler=GetKeyvehicleemails',
+                data: {
+
+                    id: data.detail.id
+                },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (response) {
+                var emailCompany = response.poc.emailindividual;
+                var emailIndividual = response.poc.emailCompany;
+                if (emailCompany) {
+                    var concatenatedEmails = emailCompany;
+
+                    if (emailIndividual) {
+                        concatenatedEmails += ", " + emailIndividual;
+                    }
+
+                    $('#stakeholderEmail').val(concatenatedEmails);
+                } else {
+
+                    $('#stakeholderEmail').val(emailIndividual);
                 }
 
-                $('#stakeholderEmail').val(concatenatedEmails);
-            } else {
-                
-                $('#stakeholderEmail').val(emailIndividual);
-            }
-           
 
-        });
-    
-
+            });
+        }
 
         $('#printDocketForKvlId').val('');
         $('#generate_kvl_docket_status').hide();
