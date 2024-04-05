@@ -610,7 +610,7 @@ namespace CityWatch.Web.Pages.Guard
                    .FirstOrDefault();
 
                     if (keyVehicleLogFromOtherSite2 != null)
-                        return new JsonResult(new { status = 2, clientSite = keyVehicleLogFromOtherSite.ClientSiteLogBook.ClientSite.Name });
+                        return new JsonResult(new { status = 2, clientSite = keyVehicleLogFromOtherSite2.ClientSiteLogBook.ClientSite.Name });
 
                 }
 
