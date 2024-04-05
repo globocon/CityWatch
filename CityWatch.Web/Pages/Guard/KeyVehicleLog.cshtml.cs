@@ -370,24 +370,27 @@ namespace CityWatch.Web.Pages.Guard
                     }
                 }
                 //_guardLogDataProvider.EditRadioChecklistEntry(ClientSiteRadioChecksActivity)
-                var keyVehicleLogDetails = _viewDataService.GetKeyVehicleLogAttachments(
-                 IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", KeyVehicleLog.VehicleRego)  ,"ComplianceDocuments")
-                 .ToList();
-                int KeyVehicleLogId = KeyVehicleLog.Id;
-                string KeyVehicleLogVehicleRego = KeyVehicleLog.VehicleRego;
-                if (keyVehicleLogDetails.Count > 0)
+                if (!string.IsNullOrEmpty(KeyVehicleLog.VehicleRego))
                 {
-                    var toFolderPath = Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", KeyVehicleLogId.ToString() , "ComplianceDocuments");
-                    var fromFolderPath = IO.Path.Combine(IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), KeyVehicleLogVehicleRego ,"ComplianceDocuments");
-                    if (!Directory.Exists(toFolderPath))
-                        Directory.CreateDirectory(toFolderPath);
-                    for (int i = 0; i < keyVehicleLogDetails.Count; i++)
+                    var keyVehicleLogDetails = _viewDataService.GetKeyVehicleLogAttachments(
+                 IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", KeyVehicleLog.VehicleRego), "ComplianceDocuments")
+                 .ToList();
+                    int KeyVehicleLogId = KeyVehicleLog.Id;
+                    string KeyVehicleLogVehicleRego = KeyVehicleLog.VehicleRego;
+                    if (keyVehicleLogDetails.Count > 0)
                     {
-                        string newid = keyVehicleLogDetails[i];
-                        System.IO.File.Move(Path.Combine(fromFolderPath, newid), Path.Combine(toFolderPath, newid), true);
-                       
+                        var toFolderPath = Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", KeyVehicleLogId.ToString(), "ComplianceDocuments");
+                        var fromFolderPath = IO.Path.Combine(IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), KeyVehicleLogVehicleRego, "ComplianceDocuments");
+                        if (!Directory.Exists(toFolderPath))
+                            Directory.CreateDirectory(toFolderPath);
+                        for (int i = 0; i < keyVehicleLogDetails.Count; i++)
+                        {
+                            string newid = keyVehicleLogDetails[i];
+                            System.IO.File.Move(Path.Combine(fromFolderPath, newid), Path.Combine(toFolderPath, newid), true);
+
+                        }
+                        Directory.Delete(fromFolderPath, true);
                     }
-                    Directory.Delete(fromFolderPath, true);
                 }
             }
 
