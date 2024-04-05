@@ -233,6 +233,7 @@ namespace CityWatch.Data.Providers
         
         List<GuardLog> GetLastLoginNew(int GuradId);
         ClientSitePoc GetEmailPOC(int id);
+        ClientSitePoc GetClientSitePOCName(int id);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -584,7 +585,11 @@ namespace CityWatch.Data.Providers
                 .Include(z => z.ClientSiteLocation)
                 .SingleOrDefault(z => z.Id == id);
         }
-        public ClientSitePoc GetEmailPOC(int id)
+        public ClientSitePoc GetClientSitePOCName(int id)
+        {
+            return _context.ClientSitePocs.Where(x => x.Id == id).SingleOrDefault();
+        }
+            public ClientSitePoc GetEmailPOC(int id)
         {
             return _context.ClientSitePocs
                 .Where(x => x.Id == id).SingleOrDefault();

@@ -216,5 +216,7 @@ namespace CityWatch.Data.Models
         public bool IsVWI { get; set; }
         public string EmailCompany { get; set; }
         public string Emailindividual { get; set; }
+        [NotMapped]
+        public string SitePocNames { get; set; }
     }
 }
