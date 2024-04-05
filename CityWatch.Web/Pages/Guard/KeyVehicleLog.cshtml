@@ -18,7 +18,7 @@
     <input type="hidden" id="hid_duressEnabledGpsCoordinates">
     <input type="hidden" id="hid_duressEnabledAddress">
 }
-<input type="hidden" id="ClientSiteID" asp-for="@Model.KeyVehicleLog.ClientSiteLogBook.ClientSite.Id"/>
+<input type="hidden" id="ClientSiteID" asp-for="@Model.KeyVehicleLog.ClientSiteLogBook.ClientSite.Id" />
 <input type="hidden" asp-for="@Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId" />
 <input type="hidden" asp-for="@Model.KeyVehicleLog.GuardLogin.Id" />
 <input type="hidden" asp-for="@Model.KeyVehicleLog.GuardLogin.GuardId" />
@@ -76,7 +76,7 @@
                                 Status: <span id="kv_duress_status" class="@(isDuressActive ? "font-weight-bold" : "")">@duressStatus</span>
                             </p>
                         </div>
-                    </div>                    
+                    </div>
                     <hr />
                     <p class="mb-2">
                         <b>Guard Name: </b>@Model.KeyVehicleLog.GuardLogin.Guard.Name ; <b>Initials: </b>@Model.KeyVehicleLog.GuardLogin.Guard.Initial ; <b>Smart WAND: </b>@(Model.KeyVehicleLog.GuardLogin.SmartWand?.SmartWandId ?? "N/A") ;  <b>Position: </b>@(Model.KeyVehicleLog.GuardLogin.Position?.Name ?? "N/A")
@@ -121,7 +121,7 @@
                     <label class="col-form-label" width="100%">Search</label>
                     <input type="hidden" value="0" id="kvl_status_filter" />
                     <input type="hidden" asp-for="@Model.KeyVehicleLog.GuardLogin.GuardId" id="GuardLog_GuardLogin_GuardId" />
-                    
+
                     <div class="ml-2">
                         <input type="text" class="form-control" width="100%" id="search_kvl_log" />
                     </div>
@@ -156,9 +156,9 @@
         <button type="button" class="btn btn-primary " id="add_new_vehicle_and_key_log_one"><i class="fa fa-plus mr-2"></i>Add Entry</button>
     </div>
     <div class="col-md-7 text-left">
-       
+
         <div class="d-flex flex-row">
-            
+
             <div>
                 <div class="dropdown kvl-rec-filter  mr-4">
                     <button class="btn btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
@@ -170,13 +170,13 @@
                         <a class="dropdown-item" href="#" data-val="3"><i class="fa fa-circle text-warning mr-2"></i>Pending (Bookings / Request)</a>
                         <a class="dropdown-item" href="#" data-val="2"><i class="fa fa-circle text-danger mr-2"></i>Closed (Exit Site / Key In)</a>
                     </div>
-                    
+
                 </div>
             </div>
-           
+
             <select class="form-control mr-4" asp-for="@Model.KeyVehicleLog.ClientSitePocId" asp-items="@clientViewDataService.GetClientSitePocs(new int[] { Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId })">
             </select>
-            
+
             <select class="form-control mr-2" asp-for="@Model.KeyVehicleLog.ClientSiteLocationId" asp-items="@clientViewDataService.GetClientSiteLocations(new int[] { Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId })">
             </select>
             <input type="hidden" value="0" id="kvl_status_filter" />
@@ -186,10 +186,10 @@
                 <input type="text" class="form-control" style="width: 140px" id="search_kvl_log" />
             </div>
         </div>
-       
-        
+
+
     </div>
-  
+
     <div class="col-md-3 text-right">
         <input type="hidden" asp-for="@Model.KeyVehicleLog.ClientSiteLogBookId" />
         <label class="col-form-label mx-2">Total Events: <span id="total_events"></span></label>
@@ -231,7 +231,7 @@
                 </select>
             </div>
 
-            
+
             <input type="hidden" value="0" id="kvl_status_filter" />
             <input type="hidden" asp-for="@Model.KeyVehicleLog.GuardLogin.GuardId" id="GuardLog_GuardLogin_GuardId" />
             <div>
@@ -240,7 +240,7 @@
                     <input type="text" class="form-control" width="100%" id="search_kvl_log" />
                 </div>
             </div>
-           
+
         </div>
 
 
@@ -269,14 +269,14 @@
                     <th rowspan="2" hidden></th>
                     @*  for searching site location-start*@
                     <th rowspan="2" hidden></th>
-                     @*for searching site location-end*@
+                    @*for searching site location-end*@
                     @*  for searching site poc-start*@
                     <th rowspan="2" hidden></th>
                     @*for searching site poc-end*@
                     <th rowspan="2">
                         <center>
                             <div class="custom-control custom-switch custom-control-inline ml-2 mt-1" title="Toggle Print Docket">
-                            
+
                                 <input type="checkbox" class="custom-control-input" id="chkAllBatchDocketSelect" name="toggleDarkMode">
                                 <label class="custom-control-label" for="chkAllBatchDocketSelect"></label>
                             </div>
@@ -302,10 +302,12 @@
     <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header col-md-12">
+
                 
                 <h6 class="modal-title col-md-5">Add a new log book entry</h6>
+
                 <h5 style="color:red; text-align:right" class="col-md-6 ml-5" id="titlePOIWarning" hidden>POI Warning</h5>
-                <i id="imagesiren" hidden><img  id="img1" src="~/images/ziren.png" height="25px;" /></i>
+                <i id="imagesiren" hidden><img id="img1" src="~/images/ziren.png" height="25px;" /></i>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -339,7 +341,7 @@
                         <small class="form-text text-primary mb-1">
                             <i class="fa fa-info-circle mr-1"></i>Click any row below to copy Company Name and Person Type. Then click Add Record.
                         </small>
-                        <div class="form-inline">                            
+                        <div class="form-inline">
                             <label>Create a new record with Person Name:</label>
                             <input class="form-control mx-2" type="text" id="driver_name" value="Unknown" />
                             <button class="btn btn-success" id="btn_duplicate_profile">Add Record</button>
@@ -387,6 +389,51 @@
         </div>
     </div>
 </div>
+
+
+<div class="modal" tabindex="-1" role="dialog" id="kvl-trailer_profiles-modal" data-backdrop="static" data-keyboard="false">
+   
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-gear mr-2" aria-hidden="true"></i>Vehicle Rego/Trailer Rego : <span id="kvl-profile-title-rego"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+               
+                <div class="row m-0">
+                    <div class="col-md-12">
+                        <input type="hidden" id="textBoxname" />
+                        <input class="form-control mx-2 d-none" type="text" id="driver_name" value="Unknown" />
+                        <table class="table table-bordered" width="100%" id="key_vehicle_log_trailerprofiles">
+                            <thead>
+
+                                <tr>
+                                    <th rowspan="2" hidden></th>
+                                    <th rowspan="2"><center>ID / Plate</center></th>
+                                    <th rowspan="2"><center>Company Name</center></th>
+                                    <th colspan="2"><center>Individual</center></th>
+                                    <th rowspan="2"><center>Trailer1 Rego</center></th>
+                                    <th rowspan="2"><center>Trailer2 Rego</center></th>
+                                    <th rowspan="2"><center>Trailer3 Rego</center></th>
+                                    <th rowspan="2"><center>Trailer4 Rego</center></th>
+                                    <th rowspan="2"><center>Trailer Type</center></th>
+                                    <th rowspan="2"></th>
+                                </tr>
+                                <tr>
+                                    <th>Person Name</th>
+                                    <th>Person Type</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <partial name="_MessagePopup" />
 @Html.AntiForgeryToken()
 @section PageHeader {
@@ -423,22 +470,22 @@
                         <input type="hidden" id="IsNone" />
                     </div>
 
-                   @* temporarily commented*@
-                       @* <div class="col-md-12">
-                            <table class="table table-bordered table-sm" width="100%" id="gridIsPersonOrVehicle">
-                                <thead>
-                                    <tr>
-                                        <th>SlNo</th>
-                                        <th>file</th>
-                                        <th hidden>Hidden</th>
-                                        <th>Is Person Or Vehicle</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
-                        <input type="text" id="kvl_attachment_upload2"  hidden>*@
-                  @*  temporarily commented*@
+                    @* temporarily commented*@
+                    @* <div class="col-md-12">
+                    <table class="table table-bordered table-sm" width="100%" id="gridIsPersonOrVehicle">
+                    <thead>
+                    <tr>
+                    <th>SlNo</th>
+                    <th>file</th>
+                    <th hidden>Hidden</th>
+                    <th>Is Person Or Vehicle</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                    </table>
+                    </div>
+                    <input type="text" id="kvl_attachment_upload2"  hidden>*@
+                    @*  temporarily commented*@
                 </div>
                 <div class="form-row">
                     <div class="col-md-12">
@@ -450,7 +497,7 @@
             </div>
             <div class="modal-footer justify-content-between">
                 <button class="btn btn-success " id="btnIsPersonOrVehicle">Ok</button>
-                
+
             </div>
         </div>
     </div>
@@ -476,9 +523,9 @@
                     <div class="col-md-8">
                         <button class="btn btn-link" id="btnReplace"><i class="fa fa-copy"></i> Replace the files in the Destination</button>
                     </div>
-                   
 
-                   
+
+
                 </div>
                 <div class="form-row">
                     <div class="col-md-8">
@@ -497,7 +544,7 @@
 
                 </div>
             </div>
-            
+
         </div>
     </div>
 </div>

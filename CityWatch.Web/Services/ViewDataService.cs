@@ -8,6 +8,7 @@ using DocumentFormat.OpenXml.Office2010.CustomUI;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
 using Org.BouncyCastle.Asn1.Pkcs;
 using SMSGlobal.api;
@@ -16,6 +17,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using static iText.Kernel.Pdf.Colorspace.PdfSpecialCs;
 
 namespace CityWatch.Web.Services
 {
@@ -107,6 +109,9 @@ namespace CityWatch.Web.Services
         string GetFeedbackTemplatesByTypeByColor(int type, int id);
         List<FeedbackTemplate> GetFeedbackTemplateListByType(int type);
         public IncidentReportPosition GetLoogbookdata(string IncidentName);
+
+        List<TrailerDeatilsViewModel> GetKeyVehicleTrailerNew(string truckRego);
+
 
         List<SelectListItem> GetClientSitePocsVehicleLog(int[] clientSiteIds);
 
@@ -751,6 +756,14 @@ namespace CityWatch.Web.Services
 
             return profiles.Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
         }
+
+
+        public List<TrailerDeatilsViewModel> GetKeyVehicleTrailerNew(string truckRego)
+        {
+            return _guardLogDataProvider.GetKeyVehicleLogProfileDetails(truckRego);
+
+        }
+
 
 
         public List<SelectListItem> VehicleRegos

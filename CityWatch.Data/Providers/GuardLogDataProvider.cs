@@ -2,6 +2,7 @@
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using Dropbox.Api.Users;
+using iText.Commons.Actions.Contexts;
 using iText.Layout.Element;
 using iText.StyledXmlParser.Css.Resolve.Shorthand.Impl;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -232,8 +233,29 @@ namespace CityWatch.Data.Providers
         RadioCheckLogbookSiteDetails GetRadiocheckLogbookDetails();
 
         List<GuardLog> GetLastLoginNew(int GuradId);
+
+
+        List<string> GetTrailerRegosForKVL(string regoStart = null);
+
+        List<TrailerDeatilsViewModel> GetKeyVehicleLogProfileDetails(string pattern);
+        public KeyVehicleLogProfile GetKeyVehicleLogVisitorProfileUsingTrailerRigo(string TrailerRigo1, string TrailerRigo2,
+            string TrailerRigo3, string TrailerRigo4, int? TrailerRigo1Id, int? TrailerRigo2Id, int? TrailerRigo3Id, int? TrailerRigo4Id);
+        public List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetailsUsingTrailerRego(
+          string trailerRego1, string trailerRego2, string trailerRego3, string trailerRego4, int? trailerRego1Id, int? trailerRego2Id,
+          int? trailerRego3Id, int? trailerRego4Id
+          );
+
+        public void SaveKeyVehicleLogProfileNotesByTrailerRiog(string Trailer1Rego, string Trailer2Rego, string Trailer3Rego,
+            string Trailer4Rego, int? Trailer1PlateId, int? Trailer2PlateId, int? Trailer3PlateId, int? Trailer4PlateId, string notes);
+        public int SaveKeyVehicleLogProfileWithPersonalDetailForTrailer(KeyVehicleLogVisitorPersonalDetail kvlVisitorPersonalDetail);
+
+
+        public List<KeyVehicleLog> GetOpenKeyVehicleLogsByVehicleRegoForTrailer(string trailer1Rego, string trailer2Rego, string trailer3Rego, string trailer4Rego);
+
+
         ClientSitePoc GetEmailPOC(int id);
         ClientSitePoc GetClientSitePOCName(int id);
+
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -531,6 +553,24 @@ namespace CityWatch.Data.Providers
             return results.ToList();
         }
 
+        public List<KeyVehicleLog> GetOpenKeyVehicleLogsByVehicleRegoForTrailer(string trailer1Rego, string trailer2Rego, string trailer3Rego, string trailer4Rego)
+        {
+            var results = _context.KeyVehicleLogs.Where(x => 
+            ((x.Trailer1Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Trailer2Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Trailer3Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Trailer4Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) ||
+                    (x.Trailer1Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Trailer2Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Trailer3Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Trailer4Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) ||
+                    (x.Trailer1Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Trailer2Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Trailer3Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Trailer4Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) ||
+                    (x.Trailer1Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Trailer2Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Trailer3Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Trailer4Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)))
+            && !x.ExitTime.HasValue && x.EntryTime >= DateTime.Today);
+
+            results.Include(x => x.ClientSiteLogBook)
+                .ThenInclude(x => x.ClientSite)
+                .Load();
+
+            return results.ToList();
+        }
+
+
+
         public List<KeyVehicleLog> GetKeyVehicleLogs(int logBookId)
         {
             var results = _context.KeyVehicleLogs.Where(z => z.ClientSiteLogBookId == logBookId);
@@ -694,10 +734,17 @@ namespace CityWatch.Data.Providers
 
                     keyVehicleLogToUpdate.IsReels = keyVehicleLog.IsReels;
                     keyVehicleLogToUpdate.IsVWI = keyVehicleLog.IsVWI;
+
+                    keyVehicleLogToUpdate.Trailer1PlateId = keyVehicleLog.Trailer1PlateId;
+                    keyVehicleLogToUpdate.Trailer2PlateId = keyVehicleLog.Trailer2PlateId;
+                    keyVehicleLogToUpdate.Trailer3PlateId = keyVehicleLog.Trailer3PlateId;
+                    keyVehicleLogToUpdate.Trailer4PlateId = keyVehicleLog.Trailer4PlateId;
+
                     keyVehicleLogToUpdate.ClientSitePocIdsVehicleLog = keyVehicleLog.ClientSitePocIdsVehicleLog;
 
                     keyVehicleLogToUpdate.EmailCompany = keyVehicleLog.EmailCompany;
                     keyVehicleLogToUpdate.Emailindividual = keyVehicleLog.Emailindividual;
+
 
 
                     _context.SaveChanges();
@@ -1034,7 +1081,61 @@ namespace CityWatch.Data.Providers
                 .OrderBy(z => z)
                 .ToList();
         }
+        ////trailer changes New change for Add rigo without plate number 21032024 dileep start*//
+        public List<string> GetTrailerRegosForKVL(string regoStart = null)
+        {
+            var newList = new List<string>();
+            var trailerRego = _context.KeyVehicleLogVisitorProfiles
+                .Where(z => string.IsNullOrEmpty(regoStart) ||
+                            (!string.IsNullOrEmpty(z.VehicleRego) &&
+                                z.VehicleRego.Contains(regoStart)))
+                .Select(z => z.VehicleRego)
+                .Distinct()
+                .OrderBy(z => z)
+                .ToList();
 
+
+            var trailer1Rego = _context.KeyVehicleLogVisitorProfiles
+                .Where(z => string.IsNullOrEmpty(regoStart) ||
+                            (!string.IsNullOrEmpty(z.Trailer1Rego) &&
+                                z.Trailer1Rego.Contains(regoStart)))
+                .Select(z => z.Trailer1Rego)
+                .Distinct()
+                .OrderBy(z => z)
+                .ToList();
+            var trailer2Rego = _context.KeyVehicleLogVisitorProfiles
+                .Where(z => string.IsNullOrEmpty(regoStart) ||
+                            (!string.IsNullOrEmpty(z.Trailer2Rego) &&
+                                z.Trailer2Rego.Contains(regoStart)))
+                .Select(z => z.Trailer2Rego)
+                .Distinct()
+                .OrderBy(z => z)
+                .ToList();
+            var trailer3Rego = _context.KeyVehicleLogVisitorProfiles
+                .Where(z => string.IsNullOrEmpty(regoStart) ||
+                            (!string.IsNullOrEmpty(z.Trailer3Rego) &&
+                                z.Trailer3Rego.Contains(regoStart)))
+                .Select(z => z.Trailer3Rego)
+                .Distinct()
+                .OrderBy(z => z)
+                .ToList();
+            var trailer4Rego = _context.KeyVehicleLogVisitorProfiles
+               .Where(z => string.IsNullOrEmpty(regoStart) ||
+                           (!string.IsNullOrEmpty(z.Trailer4Rego) &&
+                               z.Trailer4Rego.Contains(regoStart)))
+               .Select(z => z.Trailer4Rego)
+               .Distinct()
+               .OrderBy(z => z)
+               .ToList();
+            
+            newList.AddRange(trailerRego);
+            newList.AddRange(trailer1Rego);
+            newList.AddRange(trailer2Rego);
+            newList.AddRange(trailer3Rego);
+            newList.AddRange(trailer3Rego);
+            return newList.Distinct().OrderBy(s => s.FirstOrDefault()).ToList();
+        }
+        ////taliler changes New change for Add rigo without plate number 21032024 dileep end*//
         public List<string> GetCompanyNames(string companyNameStart)
         {
             return _context.KeyVehicleLogVisitorPersonalDetails
@@ -1067,12 +1168,45 @@ namespace CityWatch.Data.Providers
             return _context.KeyVehicleLogVisitorProfiles
                             .SingleOrDefault(z => z.VehicleRego == truckRego);
         }
+        public KeyVehicleLogProfile GetKeyVehicleLogVisitorProfileUsingTrailerRigo(string TrailerRigo1, string TrailerRigo2,
+            string TrailerRigo3, string TrailerRigo4, int? TrailerRigo1Id, int? TrailerRigo2Id, int? TrailerRigo3Id, int? TrailerRigo4Id)
+        {
+            return _context.KeyVehicleLogVisitorProfiles
+            .SingleOrDefault(z => z.Trailer1Rego == TrailerRigo1
+            && z.Trailer2Rego == TrailerRigo2
+            && z.Trailer3Rego == TrailerRigo3
+            && z.Trailer4Rego == TrailerRigo4
+            && z.Trailer1PlateId == TrailerRigo1Id
+            && z.Trailer2PlateId == TrailerRigo2Id
+            && z.Trailer3PlateId == TrailerRigo3Id
+            && z.Trailer4PlateId == TrailerRigo4Id
+            );
+        }
 
         public List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetails(string truckRego)
         {
             return _context.KeyVehicleLogVisitorPersonalDetails
                 .Include(z => z.KeyVehicleLogProfile)
                 .Where(z => string.IsNullOrEmpty(truckRego) || string.Equals(z.KeyVehicleLogProfile.VehicleRego, truckRego))
+                .ToList();
+        }
+
+        public List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetailsUsingTrailerRego(
+            string trailerRego1, string trailerRego2, string trailerRego3, string trailerRego4, int? trailerRego1Id, int? trailerRego2Id,
+            int? trailerRego3Id, int? trailerRego4Id
+            )
+        {
+            return _context.KeyVehicleLogVisitorPersonalDetails
+                .Include(z => z.KeyVehicleLogProfile)
+                .Where(z => z.KeyVehicleLogProfile.Trailer1Rego ==trailerRego1
+                  && (z.KeyVehicleLogProfile.Trailer2Rego == trailerRego2)
+                  &&(z.KeyVehicleLogProfile.Trailer3Rego == trailerRego3) 
+                  &&(z.KeyVehicleLogProfile.Trailer4Rego == trailerRego4)
+                  && z.KeyVehicleLogProfile.Trailer1PlateId == trailerRego1Id
+                  && z.KeyVehicleLogProfile.Trailer2PlateId == trailerRego2Id
+                  && z.KeyVehicleLogProfile.Trailer3PlateId == trailerRego3Id
+                  && z.KeyVehicleLogProfile.Trailer4PlateId == trailerRego4Id
+                )
                 .ToList();
         }
 
@@ -1100,6 +1234,13 @@ namespace CityWatch.Data.Providers
         public int SaveKeyVehicleLogProfileWithPersonalDetail(KeyVehicleLogVisitorPersonalDetail kvlVisitorPersonalDetail)
         {
             kvlVisitorPersonalDetail.ProfileId = SaveKeyVehicleLogProfile(kvlVisitorPersonalDetail.KeyVehicleLogProfile);
+            SaveKeyVehicleLogVisitorPersonalDetail(kvlVisitorPersonalDetail);
+            return kvlVisitorPersonalDetail.ProfileId;
+        }
+
+        public int SaveKeyVehicleLogProfileWithPersonalDetailForTrailer(KeyVehicleLogVisitorPersonalDetail kvlVisitorPersonalDetail)
+        {
+            kvlVisitorPersonalDetail.ProfileId = SaveKeyVehicleLogProfileForTrailer(kvlVisitorPersonalDetail.KeyVehicleLogProfile);
             SaveKeyVehicleLogVisitorPersonalDetail(kvlVisitorPersonalDetail);
             return kvlVisitorPersonalDetail.ProfileId;
         }
@@ -1156,6 +1297,21 @@ namespace CityWatch.Data.Providers
             }
         }
 
+        public void SaveKeyVehicleLogProfileNotesByTrailerRiog(string Trailer1Rego, string Trailer2Rego, string Trailer3Rego,
+            string Trailer4Rego, int? Trailer1PlateId, int? Trailer2PlateId, int? Trailer3PlateId, int? Trailer4PlateId, string notes)
+        {
+            var profileDetailsInDb = _context.KeyVehicleLogVisitorProfiles.SingleOrDefault(z => z.Trailer1Rego == Trailer1Rego
+            && z.Trailer2Rego == Trailer2Rego && z.Trailer3Rego == Trailer3Rego && z.Trailer4Rego == Trailer4Rego
+            && z.Trailer1PlateId == Trailer1PlateId && z.Trailer2PlateId == Trailer2PlateId && z.Trailer3PlateId == Trailer3PlateId
+            && z.Trailer4PlateId == Trailer4PlateId
+            );
+            if (profileDetailsInDb != null && !string.Equals(profileDetailsInDb.Notes, notes))
+            {
+                profileDetailsInDb.Notes = notes;
+                _context.SaveChanges();
+            }
+        }
+
         public void DeleteKeyVehicleLogPersonalDetails(int id)
         {
             var kvlPersonalDetailsToDelete = _context.KeyVehicleLogVisitorPersonalDetails.SingleOrDefault(x => x.Id == id);
@@ -1184,6 +1340,15 @@ namespace CityWatch.Data.Providers
                 .OrderBy(x => x.TypeId)
                 .ThenBy(x => x.Name)
                 .ToList();
+        }
+
+        public List<TrailerDeatilsViewModel> GetKeyVehicleLogProfileDetails(string pattern)
+        {
+            var param1 = new SqlParameter();
+            param1.ParameterName = "@pattern";
+            param1.SqlDbType = SqlDbType.VarChar;
+            param1.SqlValue = pattern;
+            return _context.TrailerDeatilsViewModel.FromSqlRaw($"EXEC sp_GetTrailerDetailsUsingSearchQuery @pattern", param1).ToList();
         }
 
         public List<KeyVehcileLogField> GetKeyVehicleLogFieldsByType(KvlFieldType type)
@@ -1259,6 +1424,52 @@ namespace CityWatch.Data.Providers
             kvlProfileToDb.Sender = keyVehicleLogProfile.Sender;
             kvlProfileToDb.IsSender = keyVehicleLogProfile.IsSender;
             kvlProfileToDb.Notes = keyVehicleLogProfile.Notes;
+            kvlProfileToDb.Trailer1PlateId = keyVehicleLogProfile.Trailer1PlateId;
+            kvlProfileToDb.Trailer2PlateId = keyVehicleLogProfile.Trailer2PlateId;
+            kvlProfileToDb.Trailer3PlateId = keyVehicleLogProfile.Trailer3PlateId;
+            kvlProfileToDb.Trailer4PlateId = keyVehicleLogProfile.Trailer3PlateId;
+
+            if (kvlProfileToDb.Id == 0)
+            {
+                _context.KeyVehicleLogVisitorProfiles.Add(kvlProfileToDb);
+            }
+
+            _context.SaveChanges();
+
+            return kvlProfileToDb.Id;
+        }
+
+        private int SaveKeyVehicleLogProfileForTrailer(KeyVehicleLogProfile keyVehicleLogProfile)
+        {
+            var kvlProfileToDb = _context.KeyVehicleLogVisitorProfiles.SingleOrDefault(z => (z.Trailer1Rego == keyVehicleLogProfile.Trailer1Rego)
+            && (z.Trailer2Rego == keyVehicleLogProfile.Trailer2Rego)
+            && (z.Trailer3Rego == keyVehicleLogProfile.Trailer3Rego)
+            && (z.Trailer4Rego == keyVehicleLogProfile.Trailer4Rego)
+            && (z.Trailer1PlateId == keyVehicleLogProfile.Trailer1PlateId)
+            && (z.Trailer2PlateId == keyVehicleLogProfile.Trailer2PlateId)
+            && (z.Trailer3PlateId == keyVehicleLogProfile.Trailer3PlateId)
+            && (z.Trailer4PlateId == keyVehicleLogProfile.Trailer4PlateId)
+            ) ?? new KeyVehicleLogProfile();
+            kvlProfileToDb.VehicleRego = keyVehicleLogProfile.VehicleRego;
+            kvlProfileToDb.Trailer1Rego = keyVehicleLogProfile.Trailer1Rego;
+            kvlProfileToDb.Trailer2Rego = keyVehicleLogProfile.Trailer2Rego;
+            kvlProfileToDb.Trailer3Rego = keyVehicleLogProfile.Trailer3Rego;
+            kvlProfileToDb.Trailer4Rego = keyVehicleLogProfile.Trailer4Rego;
+            kvlProfileToDb.TruckConfig = keyVehicleLogProfile.TruckConfig;
+            kvlProfileToDb.TrailerType = keyVehicleLogProfile.TrailerType;
+            kvlProfileToDb.MaxWeight = keyVehicleLogProfile.MaxWeight;
+            kvlProfileToDb.MobileNumber = keyVehicleLogProfile.MobileNumber;
+            kvlProfileToDb.Product = keyVehicleLogProfile.Product;
+            kvlProfileToDb.EntryReason = keyVehicleLogProfile.EntryReason;
+            kvlProfileToDb.CreatedLogId = keyVehicleLogProfile.CreatedLogId;
+            kvlProfileToDb.PlateId = keyVehicleLogProfile.PlateId;
+            kvlProfileToDb.Sender = keyVehicleLogProfile.Sender;
+            kvlProfileToDb.IsSender = keyVehicleLogProfile.IsSender;
+            kvlProfileToDb.Notes = keyVehicleLogProfile.Notes;
+            kvlProfileToDb.Trailer1PlateId = keyVehicleLogProfile.Trailer1PlateId;
+            kvlProfileToDb.Trailer2PlateId = keyVehicleLogProfile.Trailer2PlateId;
+            kvlProfileToDb.Trailer3PlateId = keyVehicleLogProfile.Trailer3PlateId;
+            kvlProfileToDb.Trailer4PlateId = keyVehicleLogProfile.Trailer4PlateId;
 
             if (kvlProfileToDb.Id == 0)
             {
