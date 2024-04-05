@@ -534,10 +534,10 @@ namespace CityWatch.Data.Providers
         public List<KeyVehicleLog> GetOpenKeyVehicleLogsByVehicleRegoForTrailer(string trailer1Rego, string trailer2Rego, string trailer3Rego, string trailer4Rego)
         {
             var results = _context.KeyVehicleLogs.Where(x => 
-            ((x.Trailer1Rego == trailer1Rego) || (x.Trailer2Rego == trailer1Rego) || (x.Trailer3Rego == trailer1Rego) || (x.Trailer4Rego == trailer1Rego) ||
-                    (x.Trailer1Rego == trailer2Rego) || (x.Trailer2Rego == trailer2Rego) || (x.Trailer3Rego == trailer2Rego) || (x.Trailer4Rego == trailer2Rego) ||
-                    (x.Trailer1Rego == trailer3Rego) || (x.Trailer2Rego == trailer3Rego) || (x.Trailer3Rego == trailer3Rego) || (x.Trailer4Rego == trailer3Rego) ||
-                    (x.Trailer1Rego == trailer4Rego) || (x.Trailer2Rego == trailer4Rego) || (x.Trailer3Rego == trailer4Rego) || (x.Trailer4Rego == trailer4Rego))
+            ((x.Trailer1Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Trailer2Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Trailer3Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Trailer4Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) ||
+                    (x.Trailer1Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Trailer2Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Trailer3Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Trailer4Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) ||
+                    (x.Trailer1Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Trailer2Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Trailer3Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Trailer4Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) ||
+                    (x.Trailer1Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Trailer2Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Trailer3Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Trailer4Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)))
             && !x.ExitTime.HasValue && x.EntryTime >= DateTime.Today);
 
             results.Include(x => x.ClientSiteLogBook)

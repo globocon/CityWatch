@@ -545,12 +545,14 @@ namespace CityWatch.Web.Pages.Guard
                         || (trailer3Rego != string.Empty) ||
                         (trailer4Rego != string.Empty))
                 {
+
+                    var temp= _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open);
                     var isOpenInThisSite = _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open)
                     .Any(x => 
-                    (x.Detail.Trailer1Rego == trailer1Rego) || (x.Detail.Trailer2Rego == trailer1Rego) || (x.Detail.Trailer3Rego == trailer1Rego) || (x.Detail.Trailer4Rego == trailer1Rego) ||
-                    (x.Detail.Trailer1Rego == trailer2Rego) || (x.Detail.Trailer2Rego == trailer2Rego) || (x.Detail.Trailer3Rego == trailer2Rego) || (x.Detail.Trailer4Rego == trailer2Rego) ||
-                    (x.Detail.Trailer1Rego == trailer3Rego) || (x.Detail.Trailer2Rego == trailer3Rego) || (x.Detail.Trailer3Rego == trailer3Rego) || (x.Detail.Trailer4Rego == trailer3Rego) ||
-                    (x.Detail.Trailer1Rego == trailer4Rego) || (x.Detail.Trailer2Rego == trailer4Rego) || (x.Detail.Trailer3Rego == trailer4Rego) || (x.Detail.Trailer4Rego == trailer4Rego)) ;
+                    (x.Detail.Trailer1Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer2Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer3Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer4Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) ||
+                    (x.Detail.Trailer1Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer2Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer3Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer4Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) ||
+                    (x.Detail.Trailer1Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer2Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer3Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer4Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) ||
+                    (x.Detail.Trailer1Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer2Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer3Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer4Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego))) ;
 
                     if (isOpenInThisSite)
                         return new JsonResult(new { status = 1 });
