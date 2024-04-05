@@ -77,7 +77,7 @@ namespace CityWatch.Data.Providers
         void DeleteKeyVehicleLogField(int id);
         List<KeyVehicleLogAuditHistory> GetAuditHistory(int id);
         void SaveKeyVehicleLogAuditHistory(KeyVehicleLogAuditHistory keyVehicleLogAuditHistory);
-        void SaveClientSiteDuress(int clientSiteId, int guardId, string gpsCoordinates, string enabledAddress,GuardLog tmzdata);
+        void SaveClientSiteDuress(int clientSiteId, int guardId, string gpsCoordinates, string enabledAddress, GuardLog tmzdata);
         ClientSiteDuress GetClientSiteDuress(int clientSiteId);
         List<CompanyDetails> GetCompanyDetails();
         //logBookId entry for radio checklist-start
@@ -106,7 +106,7 @@ namespace CityWatch.Data.Providers
         //for getting Key Vehicle history of the  guard-end
 
         //for getting smartwand history of the  guard-start
-        List<RadioChecksSmartWandScanResults> GetActiveGuardSwHistory(int clientSiteId, int guardId);
+        List<SmartWandScanGuardHistory> GetActiveGuardSwHistory(int clientSiteId, int guardId);
         //for getting smartwand history of the  guard-end
 
 
@@ -183,8 +183,8 @@ namespace CityWatch.Data.Providers
 
         List<GuardLog> GetGuardLogswithKvLogData(int logBookId, DateTime logDate);
 
-        void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications, 
-                                                    IrEntryType entryType, int type,int clientSiteId, GuardLog tmzdata);
+        void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications,
+                                                    IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata);
         void LogBookEntryFromRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications,
                                                     IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata);
         //do's and donts-start
@@ -202,7 +202,7 @@ namespace CityWatch.Data.Providers
         /* Save push messages*/
         int SavePushMessage(RadioCheckPushMessages radioCheckPushMessages);
 
-        
+
         void UpdateIsAcknowledged(int rcPushMessageId);
 
         void CopyPreviousDaysPushMessageToLogBook(List<RadioCheckPushMessages> previousDayPushmessageList, int logBookId, int guardLoginId, GuardLog tmzdata);
@@ -212,7 +212,7 @@ namespace CityWatch.Data.Providers
 
 
         // Project 4 , Task 48, Audio notification, Added By Binoy
-        void UpdateNotificationSoundPlayedStatusForGuardLogs(int logBookId,bool isControlRoomLogBook);
+        void UpdateNotificationSoundPlayedStatusForGuardLogs(int logBookId, bool isControlRoomLogBook);
 
         List<int> GetGuardLogsNotAcknowledgedForNotificationSound();
 
@@ -230,7 +230,7 @@ namespace CityWatch.Data.Providers
 
         List<KeyVehicleLogVisitorPersonalDetail> GetPOIListFromVisitorPersonalDetails();
         RadioCheckLogbookSiteDetails GetRadiocheckLogbookDetails();
-        
+
         List<GuardLog> GetLastLoginNew(int GuradId);
         ClientSitePoc GetEmailPOC(int id);
         ClientSitePoc GetClientSitePOCName(int id);
@@ -313,8 +313,8 @@ namespace CityWatch.Data.Providers
 
 
         // Project 4 , Task 48, Audio notification, By Binoy -- Start
-        public void UpdateNotificationSoundPlayedStatusForGuardLogs(int logBookId,bool isControlRoomLogBook)
-        {            
+        public void UpdateNotificationSoundPlayedStatusForGuardLogs(int logBookId, bool isControlRoomLogBook)
+        {
             if (isControlRoomLogBook)
             {
                 var ControlRoomLog = _context.RadioCheckPushMessages.Where(x => x.Id == logBookId).SingleOrDefault();
@@ -418,8 +418,8 @@ namespace CityWatch.Data.Providers
                 IsEnabled = true,
                 EnabledBy = guardId,
                 EnabledDate = localDateTime, //DateTime.Today,
-                GpsCoordinates=gpsCoordinates,
-                EnabledAddress= enabledAddress,
+                GpsCoordinates = gpsCoordinates,
+                EnabledAddress = enabledAddress,
                 PlayDuressAlarm = true,
                 EnabledDateTimeLocal = tmzdata.EventDateTimeLocal,
                 EnabledDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
@@ -436,7 +436,7 @@ namespace CityWatch.Data.Providers
         public void SaveActionList(ActionListNotification ActionList)
         {
             var ActionListToUpdate = _context.ActionListNotification.SingleOrDefault(x => x.ClientSiteID == ActionList.ClientSiteID);
-            if (ActionListToUpdate==null)
+            if (ActionListToUpdate == null)
             {
                 _context.ActionListNotification.Add(new ActionListNotification()
                 {
@@ -451,7 +451,7 @@ namespace CityWatch.Data.Providers
                     Action5 = ActionList.Action5,
                     CommentsForControlRoomOperator = ActionList.CommentsForControlRoomOperator,
                     Message = ActionList.Message
-                }) ; 
+                });
             }
             else
             {
@@ -466,7 +466,7 @@ namespace CityWatch.Data.Providers
                 ActionListToUpdate.CommentsForControlRoomOperator = ActionList.CommentsForControlRoomOperator;
                 ActionListToUpdate.Message = ActionList.Message;
             }
-            
+
             _context.SaveChanges();
 
 
@@ -484,7 +484,7 @@ namespace CityWatch.Data.Providers
                     GuardLoginId = guardLog.GuardLoginId,
                     IsSystemEntry = guardLog.IsSystemEntry,
                     IrEntryType = guardLog.IrEntryType,
-                    RcPushMessageId= guardLog.RcPushMessageId,
+                    RcPushMessageId = guardLog.RcPushMessageId,
                     EventDateTimeLocal = guardLog.EventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
                     EventDateTimeLocalWithOffset = guardLog.EventDateTimeLocalWithOffset,
                     EventDateTimeZone = guardLog.EventDateTimeZone,
@@ -492,8 +492,8 @@ namespace CityWatch.Data.Providers
                     EventDateTimeUtcOffsetMinute = guardLog.EventDateTimeUtcOffsetMinute, // Task p6#73_TimeZone issue -- added by Binoy - End
 
                     PlayNotificationSound = guardLog.PlayNotificationSound,
-                    GpsCoordinates=guardLog.GpsCoordinates,
-                    IsIRReportTypeEntry=guardLog.IsIRReportTypeEntry
+                    GpsCoordinates = guardLog.GpsCoordinates,
+                    IsIRReportTypeEntry = guardLog.IsIRReportTypeEntry
 
 
                 });
@@ -600,7 +600,7 @@ namespace CityWatch.Data.Providers
         }
         public List<KeyVehicleLog> GetKeyVehicleLogByIds(int[] ids)
         {
-            return _context.KeyVehicleLogs.Where(z => ids.Contains(z.Id) && z.ClientSiteLogBook.ClientSite.IsActive==true)
+            return _context.KeyVehicleLogs.Where(z => ids.Contains(z.Id) && z.ClientSiteLogBook.ClientSite.IsActive == true)
                 .Include(z => z.ClientSiteLogBook)
                 .ThenInclude(z => z.ClientSite)
                 .ToList();
@@ -1087,7 +1087,7 @@ namespace CityWatch.Data.Providers
         {
             return _context.KeyVehicleLogVisitorPersonalDetails
                  .Include(z => z.KeyVehicleLogProfile)
-                .Where(z =>z.PersonOfInterest!=null).ToList();
+                .Where(z => z.PersonOfInterest != null).ToList();
         }
 
         public List<KeyVehicleLogVisitorPersonalDetail> GetKeyVehicleLogVisitorPersonalDetailsWithIndividualType(int individualtype)
@@ -1384,12 +1384,12 @@ namespace CityWatch.Data.Providers
                .Select(x => x.PhoneNumber)
                .ToList();
                 var phoneNumbersString = string.Join("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", phoneNumbers);
-                if(phoneNumbers.Count!=0)
+                if (phoneNumbers.Count != 0)
                 {
                     item.hasmartwand = 1;
 
                 }
-                                
+
                 item.SiteName = item.SiteName + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp <i class=\"fa fa-mobile\" aria-hidden=\"true\"></i> " + string.Join(",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp", _context.ClientSiteSmartWands.Where(x => x.ClientSiteId == item.ClientSiteId).Select(x => x.PhoneNumber).ToList()) + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp<span class=\"icon-satellite-3 satellite-3-fontsize\" aria-hidden=\"true\" id=\"btnUpArrow\"></span> ";
                 item.Address = " <a id=\"btnActiveGuardsMap\" href=\"https://www.google.com/maps?q=" + item.GPS + "\"target=\"_blank\"><i class=\"fa fa-map-marker\" aria-hidden=\"true\"></i> </a>" + item.Address + " <input type=\"hidden\" class=\"form-control\" value=\"" + item.GPS + "\" id=\"txtGPSActiveguards\" />";
             }
@@ -1543,21 +1543,21 @@ namespace CityWatch.Data.Providers
         {
             List<GuardLog> gl = new List<GuardLog>();
             if (clientSiteId == 0 || guardId == 0)
-            {                
+            {
                 return gl;
             }
-            var logins = _context.GuardLogins.Where(x => x.GuardId == guardId && x.ClientSiteId == clientSiteId)
-                .Include(y=> y.ClientSiteLogBook).Where(t=> t.ClientSiteLogBook.Type == LogBookType.DailyGuardLog)
-                .OrderByDescending(d=> d.LoginDate)
+            var logins = _context.GuardLogins.Where(x => x.GuardId == guardId) // && x.ClientSiteId == clientSiteId
+                .Include(y => y.ClientSiteLogBook).Where(t => t.ClientSiteLogBook.Type == LogBookType.DailyGuardLog)
+                .OrderByDescending(d => d.LoginDate)
                 .Take(1).FirstOrDefault();
-            if(logins == null)
+            if (logins == null)
             {
                 return gl;
             }
 
             var guardhistory = _context.GuardLogs.Where(x => x.GuardLoginId == logins.Id && x.ClientSiteLogBookId == logins.ClientSiteLogBookId)
                 .OrderByDescending(x => x.EventDateTime)
-                .Take(1).ToList(); 
+                .Take(1).ToList();
 
             return guardhistory;
         }
@@ -1572,8 +1572,8 @@ namespace CityWatch.Data.Providers
                 return irl;
             }
 
-            var irh = _context.IncidentReports.Where(x=> x.GuardId == guardId && x.ClientSiteId == clientSiteId)
-                .OrderByDescending(x=> x.CreatedOn)
+            var irh = _context.IncidentReports.Where(x => x.GuardId == guardId) // && x.ClientSiteId == clientSiteId
+                .OrderByDescending(x => x.CreatedOn)
                 .Take(1).ToList();
             return irh;
         }
@@ -1587,7 +1587,7 @@ namespace CityWatch.Data.Providers
             {
                 return gl;
             }
-            var logins = _context.GuardLogins.Where(x => x.GuardId == guardId && x.ClientSiteId == clientSiteId)
+            var logins = _context.GuardLogins.Where(x => x.GuardId == guardId) // && x.ClientSiteId == clientSiteId
                 .Include(y => y.ClientSiteLogBook).Where(t => t.ClientSiteLogBook.Type == LogBookType.VehicleAndKeyLog)
                 .OrderByDescending(d => d.LoginDate)
                 .Take(1).FirstOrDefault();
@@ -1595,27 +1595,62 @@ namespace CityWatch.Data.Providers
             {
                 return gl;
             }
-
-            var guardhistory = _context.KeyVehicleLogs.Where(x => x.GuardLoginId == logins.Id && x.ClientSiteLogBookId == logins.ClientSiteLogBookId 
-            && x.EntryCreatedDateTimeLocal != null)
+            try
+            {
+                var guardhistory = _context.KeyVehicleLogs.Where(x => x.GuardLoginId == logins.Id && x.ClientSiteLogBookId == logins.ClientSiteLogBookId
+                && x.EntryCreatedDateTimeLocal != null)
                 .OrderByDescending(x => x.EntryCreatedDateTimeLocal)
-                .Take(1).ToList();
+                .Take(1).ToList();               
 
-            return guardhistory;
+                if(guardhistory.Count > 0)
+                {
+                    gl = guardhistory;
+                    gl.ForEach(x =>
+                    {
+                        x.IndividualTitle = "KV Log";
+                        x.RubbishDeduction = true;
+                    });
+                }
+                else
+                {
+                    var guardloghistory = _context.GuardLogs.Where(x => x.GuardLoginId == logins.Id && x.ClientSiteLogBookId == logins.ClientSiteLogBookId)
+                        .OrderByDescending(x => x.EventDateTime)
+                        .Take(1).ToList();
+                    if (guardloghistory.Count > 0)
+                    {
+                        KeyVehicleLog glh = new KeyVehicleLog();
+                        glh.Id = guardloghistory.First().Id;
+                        glh.IndividualTitle = guardloghistory.First().Notes;
+                        glh.RubbishDeduction = false;
+                        glh.EntryCreatedDateTimeLocal = guardloghistory.First().EventDateTimeLocal;
+                        glh.EntryCreatedDateTimeZoneShort = guardloghistory.First().EventDateTimeZoneShort;
+                        gl.Add(glh);
+                    }
+
+                }
+
+            }
+            catch (Exception)
+            {               
+                // throw;
+            }
+
+
+            return gl;
         }
         //for getting Key Vehicle history of the guard-end
 
 
         //for getting SmartWand history of the guard-start
-        public List<RadioChecksSmartWandScanResults> GetActiveGuardSwHistory(int clientSiteId, int guardId)
+        public List<SmartWandScanGuardHistory> GetActiveGuardSwHistory(int clientSiteId, int guardId)
         {
-            List<RadioChecksSmartWandScanResults> swl = new List<RadioChecksSmartWandScanResults>();
+            List<SmartWandScanGuardHistory> swl = new List<SmartWandScanGuardHistory>();
             if (clientSiteId == 0 || guardId == 0)
             {
                 return swl;
             }
 
-            var swh = _context.RadioChecksSmartWandScanResults.Where(x => x.GuardId == guardId && x.ClientSiteId == clientSiteId)
+            var swh = _context.SmartWandScanGuardHistory.Where(x => x.GuardId == guardId) // && x.ClientSiteId == clientSiteId
                 .OrderByDescending(x => x.InspectionStartDatetimeLocal)
                 .Take(1).ToList();
             return swh;
@@ -2295,7 +2330,7 @@ namespace CityWatch.Data.Providers
                     // Task p6#73_TimeZone_Midnight_Perth_CreateEntryAfterMidnight issue -- Start -- added by Binoy - 02-02-2024
                     // To Log the entry to the last logbook id of the client.
                     var logbookdate = DateTime.Today;
-                    var logbooktype = LogBookType.DailyGuardLog;      
+                    var logbooktype = LogBookType.DailyGuardLog;
                     var logBookId = GetClientSiteLogBookIdByLogBookMaxID(clientSiteRadioCheck.ClientSiteId, logbooktype, out logbookdate); // Get Last Logbookid and logbook Date by latest logbookid  of the client site
                     var logbook = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == logBookId);
                     // Task p6#73_TimeZone_Midnight_Perth_CreateEntryAfterMidnight issue -- End -- added by Binoy - 02-02-2024
@@ -2463,7 +2498,7 @@ namespace CityWatch.Data.Providers
 
                                 }
 
-                               
+
 
 
                             }
@@ -3308,8 +3343,8 @@ namespace CityWatch.Data.Providers
             return results.ToList();
         }
 
-        public void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications, 
-                                                         IrEntryType entryType, int type,int clientSiteId, GuardLog tmzdata)
+        public void LogBookEntryForRcControlRoomMessages(int loginGuardId, int selectedGuardId, string subject, string notifications,
+                                                         IrEntryType entryType, int type, int clientSiteId, GuardLog tmzdata)
         {
 
             var guardInitials = string.Empty;
@@ -3327,18 +3362,18 @@ namespace CityWatch.Data.Providers
             {
                 if (clientSiteForLogbook.Count() > 0)
                 {
-                   
+
                     var clientsitename = GetClientSites(clientSiteId).FirstOrDefault().Name;
                     notifications = "Control Room Alert for " + guardInitials + " - " + clientsitename + ": " + notifications;
                 }
-                
+
 
             }
-           
+
             if (clientSiteForLogbook.Count != 0)
             {
                 // p6#73 timezone bug - Modified by binoy 24-01-2024 changed DateTime.Today to localDateTime.Date
-                var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int) tmzdata.EventDateTimeUtcOffsetMinute);
+                var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)tmzdata.EventDateTimeUtcOffsetMinute);
                 var logBookId = GetClientSiteLogBookIdGloablmessage(clientSiteForLogbook.FirstOrDefault().Id, LogBookType.DailyGuardLog, localDateTime.Date);
 
                 if (loginGuardId != 0)
@@ -3589,7 +3624,7 @@ namespace CityWatch.Data.Providers
 
         public void UpdateDuressButtonAcknowledged(int ClientSiteId)
         {
-            var duressButtonList = _context.RadioCheckPushMessages.Where(x => x.ClientSiteId == ClientSiteId &&x.IsDuress==1 && x.IsAcknowledged == 0).ToList();
+            var duressButtonList = _context.RadioCheckPushMessages.Where(x => x.ClientSiteId == ClientSiteId && x.IsDuress == 1 && x.IsAcknowledged == 0).ToList();
             if (duressButtonList == null)
                 throw new InvalidOperationException();
             foreach (var row in duressButtonList)
@@ -3600,7 +3635,7 @@ namespace CityWatch.Data.Providers
             }
 
         }
-        public void CopyPreviousDaysPushMessageToLogBook(List<RadioCheckPushMessages> previousDayPushmessageList, int logBookId, int guardLoginId,GuardLog tmzdata)
+        public void CopyPreviousDaysPushMessageToLogBook(List<RadioCheckPushMessages> previousDayPushmessageList, int logBookId, int guardLoginId, GuardLog tmzdata)
         {
             foreach (var pushMessage in previousDayPushmessageList)
             {
@@ -3713,7 +3748,7 @@ namespace CityWatch.Data.Providers
         {
             return _context.RadioCheckLogbookSiteDetails.SingleOrDefault();
         }
-       
+
         //To get the Details of RadiocheckLogbookDetails stop
     }
 
