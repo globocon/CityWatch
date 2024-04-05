@@ -535,7 +535,28 @@ namespace CityWatch.Web.Pages.Guard
                 var isOpenInThisSite = _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open).Any(x => x.Detail.VehicleRego == vehicleRego);
                 if (isOpenInThisSite)
                     return new JsonResult(new { status = 1 });
+                // New code 
 
+                //Old code 21032024 dileep New Start
+                if ((trailer1Rego != string.Empty)
+                        || (trailer2Rego != string.Empty)
+                        || (trailer3Rego != string.Empty) ||
+                        (trailer4Rego != string.Empty))
+                {
+
+                    var temp = _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open);
+                    var isOpenInThisSite2 = _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open)
+                    .Any(x =>
+                    (x.Detail.Trailer1Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer2Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer3Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer4Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) ||
+                    (x.Detail.Trailer1Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer2Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer3Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer4Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) ||
+                    (x.Detail.Trailer1Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer2Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer3Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer4Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) ||
+                    (x.Detail.Trailer1Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer2Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer3Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer4Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)));
+
+                    if (isOpenInThisSite2)
+                        return new JsonResult(new { status = 1 });
+
+
+                }
             }
             else
             {
@@ -556,17 +577,7 @@ namespace CityWatch.Web.Pages.Guard
 
                     if (isOpenInThisSite)
                         return new JsonResult(new { status = 1 });
-                    //if (isOpenInThisSite)
-                    //    return new JsonResult(new { status = 1 });
-                    //isOpenInThisSite = _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open).Any(x => x.Detail.Trailer2Rego == trailer2Rego);
-                    //if (isOpenInThisSite)
-                    //    return new JsonResult(new { status = 1 });
-                    //isOpenInThisSite = _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open).Any(x => x.Detail.Trailer3Rego == trailer3Rego);
-                    //if (isOpenInThisSite)
-                    //    return new JsonResult(new { status = 1 });
-                    //isOpenInThisSite = _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open).Any(x => x.Detail.Trailer4Rego == trailer4Rego);
-                    //if (isOpenInThisSite)
-                    //    return new JsonResult(new { status = 1 });
+                   
 
                 }
 
@@ -586,6 +597,22 @@ namespace CityWatch.Web.Pages.Guard
 
                 if (keyVehicleLogFromOtherSite != null)
                     return new JsonResult(new { status = 2, clientSite = keyVehicleLogFromOtherSite.ClientSiteLogBook.ClientSite.Name });
+
+                // new Code 
+
+                if ((trailer1Rego != string.Empty)
+                      || (trailer2Rego != string.Empty)
+                      || (trailer3Rego != string.Empty) ||
+                      (trailer4Rego != string.Empty))
+                {
+                    var keyVehicleLogFromOtherSite2 = _guardLogDataProvider.GetOpenKeyVehicleLogsByVehicleRegoForTrailer(trailer1Rego, trailer2Rego, trailer3Rego, trailer4Rego)
+                   .Where(z => z.ClientSiteLogBookId != logbookId)
+                   .FirstOrDefault();
+
+                    if (keyVehicleLogFromOtherSite2 != null)
+                        return new JsonResult(new { status = 2, clientSite = keyVehicleLogFromOtherSite.ClientSiteLogBook.ClientSite.Name });
+
+                }
 
             }
             else
