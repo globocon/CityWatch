@@ -455,6 +455,10 @@ $(function () {
                 data: {
                     logbookId: $('#KeyVehicleLog_ClientSiteLogBookId').val(),
                     vehicleRego: $('#VehicleRego').val(),
+                    trailer1Rego: $('#Trailer1Rego').val(),
+                    trailer2Rego: $('#Trailer2Rego').val(),
+                    trailer3Rego: $('#Trailer3Rego').val(),
+                    trailer4Rego: $('#Trailer4Rego').val(),
                 }
             }).done(function (vehicleIsOnsite) {
                 if (vehicleIsOnsite.status === 2) {

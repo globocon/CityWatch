@@ -46,6 +46,7 @@ using static Dropbox.Api.Paper.PaperDocPermissionLevel;
 using System.Web;
 using System.Reflection;
 using Microsoft.Extensions.Hosting;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace CityWatch.Web.Pages.Guard
 {
@@ -321,8 +322,8 @@ namespace CityWatch.Web.Pages.Guard
                 if (!string.IsNullOrEmpty(KeyVehicleLog.VehicleRego))
                     _guardLogDataProvider.SaveKeyVehicleLogProfileNotes(KeyVehicleLog.VehicleRego, KeyVehicleLog.Notes);
                 else
-                _guardLogDataProvider.SaveKeyVehicleLogProfileNotesByTrailerRiog(KeyVehicleLog.Trailer1Rego, KeyVehicleLog.Trailer2Rego, KeyVehicleLog.Trailer3Rego, KeyVehicleLog.Trailer4Rego, KeyVehicleLog.Trailer1PlateId,
-                    KeyVehicleLog.Trailer2PlateId, KeyVehicleLog.Trailer3PlateId, KeyVehicleLog.Trailer4PlateId, KeyVehicleLog.Notes);
+                    _guardLogDataProvider.SaveKeyVehicleLogProfileNotesByTrailerRiog(KeyVehicleLog.Trailer1Rego, KeyVehicleLog.Trailer2Rego, KeyVehicleLog.Trailer3Rego, KeyVehicleLog.Trailer4Rego, KeyVehicleLog.Trailer1PlateId,
+                        KeyVehicleLog.Trailer2PlateId, KeyVehicleLog.Trailer3PlateId, KeyVehicleLog.Trailer4PlateId, KeyVehicleLog.Notes);
                 //Dileep change 21032024  for trailer end
                 var guardlogins = _guardLogDataProvider.GetGuardLogins(Convert.ToInt32(KeyVehicleLog.GuardLoginId));
                 foreach (var item in guardlogins)
@@ -409,10 +410,10 @@ namespace CityWatch.Web.Pages.Guard
                 keyVehicleLogAuditHistory = GetKvlAuditHistory(keyVehicleLogInExitTime);
                 keyVehicleLogAuditHistory.AuditMessage = "Exit entry";
                 /*21022024 modification for trailer dileep Start*/
-                var profileId=0;
+                var profileId = 0;
                 if (!string.IsNullOrEmpty(keyVehicleLogInExitTime.VehicleRego))
                     profileId = GetKvlProfileId(keyVehicleLogInExitTime);
-                 else
+                else
                     profileId = GetKvlProfileIdWithOutVehicleRego(keyVehicleLogInExitTime);
                 /*21022024 modification for trailer dileep end*/
                 keyVehicleLogAuditHistory.ProfileId = profileId;
@@ -525,18 +526,83 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(_viewDataService.GetClientSiteKeyNo(keyId, clientSiteId));
         }
 
-        public JsonResult OnGetIsVehicleOnsite(int logbookId, string vehicleRego)
+        public JsonResult OnGetIsVehicleOnsite(int logbookId, string vehicleRego, string trailer1Rego, string trailer2Rego, string trailer3Rego, string trailer4Rego)
         {
-            var isOpenInThisSite = _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open).Any(x => x.Detail.VehicleRego == vehicleRego);
-            if (isOpenInThisSite)
-                return new JsonResult(new { status = 1 });
 
-            var keyVehicleLogFromOtherSite = _guardLogDataProvider.GetOpenKeyVehicleLogsByVehicleRego(vehicleRego)
+            if (!string.IsNullOrEmpty(vehicleRego))
+            {
+                //Old code 21032024 dileep
+                var isOpenInThisSite = _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open).Any(x => x.Detail.VehicleRego == vehicleRego);
+                if (isOpenInThisSite)
+                    return new JsonResult(new { status = 1 });
+
+            }
+            else
+            {
+                //Old code 21032024 dileep New Start
+                if ((trailer1Rego != string.Empty)
+                        || (trailer2Rego != string.Empty)
+                        || (trailer3Rego != string.Empty) ||
+                        (trailer4Rego != string.Empty))
+                {
+                    var isOpenInThisSite = _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open)
+                    .Any(x => 
+                    (x.Detail.Trailer1Rego == trailer1Rego) || (x.Detail.Trailer2Rego == trailer1Rego) || (x.Detail.Trailer3Rego == trailer1Rego) || (x.Detail.Trailer4Rego == trailer1Rego) ||
+                    (x.Detail.Trailer1Rego == trailer2Rego) || (x.Detail.Trailer2Rego == trailer2Rego) || (x.Detail.Trailer3Rego == trailer2Rego) || (x.Detail.Trailer4Rego == trailer2Rego) ||
+                    (x.Detail.Trailer1Rego == trailer3Rego) || (x.Detail.Trailer2Rego == trailer3Rego) || (x.Detail.Trailer3Rego == trailer3Rego) || (x.Detail.Trailer4Rego == trailer3Rego) ||
+                    (x.Detail.Trailer1Rego == trailer4Rego) || (x.Detail.Trailer2Rego == trailer4Rego) || (x.Detail.Trailer3Rego == trailer4Rego) || (x.Detail.Trailer4Rego == trailer4Rego)) ;
+
+                    if (isOpenInThisSite)
+                        return new JsonResult(new { status = 1 });
+                    //if (isOpenInThisSite)
+                    //    return new JsonResult(new { status = 1 });
+                    //isOpenInThisSite = _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open).Any(x => x.Detail.Trailer2Rego == trailer2Rego);
+                    //if (isOpenInThisSite)
+                    //    return new JsonResult(new { status = 1 });
+                    //isOpenInThisSite = _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open).Any(x => x.Detail.Trailer3Rego == trailer3Rego);
+                    //if (isOpenInThisSite)
+                    //    return new JsonResult(new { status = 1 });
+                    //isOpenInThisSite = _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open).Any(x => x.Detail.Trailer4Rego == trailer4Rego);
+                    //if (isOpenInThisSite)
+                    //    return new JsonResult(new { status = 1 });
+
+                }
+
+
+
+
+            }
+
+            //GetOpenKeyVehicleLogsByVehicleRegoForTrailer
+
+            if (!string.IsNullOrEmpty(vehicleRego))
+            {
+                //Old code 21032024 dileep
+                var keyVehicleLogFromOtherSite = _guardLogDataProvider.GetOpenKeyVehicleLogsByVehicleRego(vehicleRego)
                     .Where(z => z.ClientSiteLogBookId != logbookId)
                     .FirstOrDefault();
 
-            if (keyVehicleLogFromOtherSite != null)
-                return new JsonResult(new { status = 2, clientSite = keyVehicleLogFromOtherSite.ClientSiteLogBook.ClientSite.Name });
+                if (keyVehicleLogFromOtherSite != null)
+                    return new JsonResult(new { status = 2, clientSite = keyVehicleLogFromOtherSite.ClientSiteLogBook.ClientSite.Name });
+
+            }
+            else
+            {  //Old code 21032024 dileep New Start
+                if ((trailer1Rego != string.Empty)
+                       || (trailer2Rego != string.Empty)
+                       || (trailer3Rego != string.Empty) ||
+                       (trailer4Rego != string.Empty))
+                {
+                    var keyVehicleLogFromOtherSite = _guardLogDataProvider.GetOpenKeyVehicleLogsByVehicleRegoForTrailer(trailer1Rego, trailer2Rego, trailer3Rego, trailer4Rego)
+                   .Where(z => z.ClientSiteLogBookId != logbookId)
+                   .FirstOrDefault();
+
+                    if (keyVehicleLogFromOtherSite != null)
+                        return new JsonResult(new { status = 2, clientSite = keyVehicleLogFromOtherSite.ClientSiteLogBook.ClientSite.Name });
+
+                }
+
+            }
 
 
             return new JsonResult(new { status = 0 });
@@ -1611,7 +1677,7 @@ namespace CityWatch.Web.Pages.Guard
             var kvlPersonalDetail = new KeyVehicleLogVisitorPersonalDetail(keyVehicleLog);
             var personalDetails = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetailsUsingTrailerRego
                 (keyVehicleLog.Trailer1Rego, keyVehicleLog.Trailer2Rego, keyVehicleLog.Trailer3Rego, keyVehicleLog.Trailer4Rego,
-                keyVehicleLog.Trailer1PlateId, keyVehicleLog.Trailer2PlateId, keyVehicleLog.Trailer3PlateId, keyVehicleLog.Trailer4PlateId );
+                keyVehicleLog.Trailer1PlateId, keyVehicleLog.Trailer2PlateId, keyVehicleLog.Trailer3PlateId, keyVehicleLog.Trailer4PlateId);
             if (!personalDetails.Any() || !personalDetails.Any(z => z.EqualsTrailer(kvlPersonalDetail)))
             {
                 kvlPersonalDetail.KeyVehicleLogProfile.CreatedLogId = keyVehicleLog.Id;
@@ -1620,7 +1686,7 @@ namespace CityWatch.Web.Pages.Guard
             else
             {
                 var kvlVisitorProfile = _guardLogDataProvider.GetKeyVehicleLogVisitorProfileUsingTrailerRigo(kvlPersonalDetail.KeyVehicleLogProfile.Trailer1Rego, kvlPersonalDetail.KeyVehicleLogProfile.Trailer2Rego,
-                    kvlPersonalDetail.KeyVehicleLogProfile.Trailer3Rego, kvlPersonalDetail.KeyVehicleLogProfile.Trailer4Rego, kvlPersonalDetail.KeyVehicleLogProfile.Trailer1PlateId, 
+                    kvlPersonalDetail.KeyVehicleLogProfile.Trailer3Rego, kvlPersonalDetail.KeyVehicleLogProfile.Trailer4Rego, kvlPersonalDetail.KeyVehicleLogProfile.Trailer1PlateId,
                     kvlPersonalDetail.KeyVehicleLogProfile.Trailer2PlateId, kvlPersonalDetail.KeyVehicleLogProfile.Trailer3PlateId, kvlPersonalDetail.KeyVehicleLogProfile.Trailer4PlateId);
                 if (personalDetails.Any(z => z.EqualsTrailer(kvlPersonalDetail)))
                 {

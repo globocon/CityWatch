@@ -233,7 +233,7 @@ namespace CityWatch.Data.Providers
         public int SaveKeyVehicleLogProfileWithPersonalDetailForTrailer(KeyVehicleLogVisitorPersonalDetail kvlVisitorPersonalDetail);
 
 
-
+        public List<KeyVehicleLog> GetOpenKeyVehicleLogsByVehicleRegoForTrailer(string trailer1Rego, string trailer2Rego, string trailer3Rego, string trailer4Rego);
 
     }
 
@@ -530,6 +530,24 @@ namespace CityWatch.Data.Providers
 
             return results.ToList();
         }
+
+        public List<KeyVehicleLog> GetOpenKeyVehicleLogsByVehicleRegoForTrailer(string trailer1Rego, string trailer2Rego, string trailer3Rego, string trailer4Rego)
+        {
+            var results = _context.KeyVehicleLogs.Where(x => 
+            ((x.Trailer1Rego == trailer1Rego) || (x.Trailer2Rego == trailer1Rego) || (x.Trailer3Rego == trailer1Rego) || (x.Trailer4Rego == trailer1Rego) ||
+                    (x.Trailer1Rego == trailer2Rego) || (x.Trailer2Rego == trailer2Rego) || (x.Trailer3Rego == trailer2Rego) || (x.Trailer4Rego == trailer2Rego) ||
+                    (x.Trailer1Rego == trailer3Rego) || (x.Trailer2Rego == trailer3Rego) || (x.Trailer3Rego == trailer3Rego) || (x.Trailer4Rego == trailer3Rego) ||
+                    (x.Trailer1Rego == trailer4Rego) || (x.Trailer2Rego == trailer4Rego) || (x.Trailer3Rego == trailer4Rego) || (x.Trailer4Rego == trailer4Rego))
+            && !x.ExitTime.HasValue && x.EntryTime >= DateTime.Today);
+
+            results.Include(x => x.ClientSiteLogBook)
+                .ThenInclude(x => x.ClientSite)
+                .Load();
+
+            return results.ToList();
+        }
+
+
 
         public List<KeyVehicleLog> GetKeyVehicleLogs(int logBookId)
         {
