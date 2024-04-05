@@ -9,5 +9,6 @@
         public int ClientSiteId { get; set; }
 
         public bool IsDeleted { get; set; }
+        public string Email { get; set; }
     }
 }

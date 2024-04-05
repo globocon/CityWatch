@@ -335,19 +335,31 @@ namespace CityWatch.Web.Pages.Guard
 
         private int GetGuardLoginId(int logBookId)
         {
-            GuardLogin guardLogin;
+            GuardLogin guardLogin= new GuardLogin();
 
-            GuardLogin existingGuardLogin = _guardDataProvider.GetGuardLoginsByLogBookId(logBookId).SingleOrDefault(x => x.GuardId == GuardLogin.Guard.Id && x.OnDuty == GuardLogin.OnDuty);
+            //GuardLogin existingGuardLogin = _guardDataProvider.GetGuardLoginsByLogBookId(logBookId).SingleOrDefault(x => x.GuardId == GuardLogin.Guard.Id && x.OnDuty == GuardLogin.OnDuty);
+
+           
+            GuardLogin existingGuardLogin = new GuardLogin();
+            //GuardLogin existingGuardLogin = _guardDataProvider.GetGuardLoginsByLogBookId(logBookId).SingleOrDefault(x => x.GuardId == GuardLogin.Guard.Id && x.OnDuty == GuardLogin.OnDuty);
+            var GuardLoginList = _guardDataProvider.GetGuardLoginsByLogBookId(logBookId).ToList();
+            if (GuardLoginList != null)
+            {
+                existingGuardLogin = GuardLoginList.FirstOrDefault(x => x.GuardId == GuardLogin.Guard.Id && x.OnDuty == GuardLogin.OnDuty);
+            }
 
             if (existingGuardLogin != null)
             {
-                guardLogin = existingGuardLogin;
-                guardLogin.ClientSiteId = GuardLogin.ClientSite.Id;
-                guardLogin.PositionId = GuardLogin.IsPosition ? GuardLogin.SmartWandOrPositionId : null;
-                guardLogin.SmartWandId = !GuardLogin.IsPosition ? GuardLogin.SmartWandOrPositionId : null;
-                guardLogin.OnDuty = GuardLogin.OnDuty;
-                guardLogin.OffDuty = GuardLogin.OffDuty;
-                guardLogin.UserId = AuthUserHelper.LoggedInUserId.GetValueOrDefault();
+                if (existingGuardLogin.ClientSiteLogBookId != 0)
+                {
+                    guardLogin = existingGuardLogin;
+                    guardLogin.ClientSiteId = GuardLogin.ClientSite.Id;
+                    guardLogin.PositionId = GuardLogin.IsPosition ? GuardLogin.SmartWandOrPositionId : null;
+                    guardLogin.SmartWandId = !GuardLogin.IsPosition ? GuardLogin.SmartWandOrPositionId : null;
+                    guardLogin.OnDuty = GuardLogin.OnDuty;
+                    guardLogin.OffDuty = GuardLogin.OffDuty;
+                    guardLogin.UserId = AuthUserHelper.LoggedInUserId.GetValueOrDefault();
+                }
             }
             else
             {

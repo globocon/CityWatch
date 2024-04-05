@@ -4,6 +4,7 @@ using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
+using DocumentFormat.OpenXml.Bibliography;
 using iText.IO.Font.Constants;
 using iText.IO.Image;
 using iText.Kernel.Colors;
@@ -13,10 +14,12 @@ using iText.Layout;
 using iText.Layout.Borders;
 using iText.Layout.Element;
 using iText.Layout.Properties;
+using iText.Pdfa;
 using iText.StyledXmlParser.Jsoup.Helper;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
+using Org.BouncyCastle.Crypto.Paddings;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -56,6 +59,7 @@ namespace CityWatch.Web.Services
         private readonly IGuardSettingsDataProvider _guardSettingsDataProvider;
         private readonly IWebHostEnvironment _WebHostEnvironment;
         private readonly IAppConfigurationProvider _appConfigurationProvider;
+        private readonly IViewDataService _viewDataService;
         private readonly string _reportRootDir;
         private readonly string _imageRootDir;
         private readonly string _PersonimageRootDir;
@@ -73,7 +77,8 @@ namespace CityWatch.Web.Services
            IGuardLogDataProvider guardLogDataProvider,
            IClientDataProvider clientDataProvider,
            IGuardSettingsDataProvider guardSettingsDataProvider,
-           IOptions<Settings> settings, IAppConfigurationProvider appConfigurationProvider)
+           IOptions<Settings> settings, IAppConfigurationProvider appConfigurationProvider,
+            IViewDataService viewDataService)
         {
             _clientDataProvider = clientDataProvider;
             _guardLogDataProvider = guardLogDataProvider;
@@ -86,6 +91,8 @@ namespace CityWatch.Web.Services
             _settings = settings.Value;
             _appConfigurationProvider= appConfigurationProvider;
             _downloadsFolderPath = IO.Path.Combine(webHostEnvironment.WebRootPath, "Pdf", "FromDropbox");
+            _viewDataService = viewDataService;
+            _WebHostEnvironment = webHostEnvironment;
         }
         //To Generate the Pdf In List start
         public string GeneratePdfReportList(int keyVehicleLogId1, string docketReason, string blankNoteOnOrOff, string serialNo, List<int> ids, int clientsiteid)
@@ -159,6 +166,64 @@ namespace CityWatch.Web.Services
                                         docList.Add(CreateWeightandOtherDetailsTablePOI(keyVehicleLogViewModel, docketReason));
                                         docList.Add(CreateImageDetailsTable(keyVehicleLogViewModel, docketReason));
 
+                                        var path = keyVehicleLog.Id + "/ComplianceDocuments";
+                                        int countpagebreak = 0;
+                                        var keyVehicleLogDetails = _viewDataService.GetKeyVehicleLogAttachments(
+                                             IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path)
+                                             .ToList();
+                                        if (keyVehicleLogDetails.Count > 0)
+                                        {
+                                            for (int j = 0; j < keyVehicleLogDetails.Count; j++)
+                                            {
+                                                string filename = IO.Path.Combine(IO.Path.Combine(IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path), keyVehicleLogDetails[j]);
+                                                int pagecount = 0;
+
+                                                if (IO.Path.GetExtension(filename) == ".pdf")
+                                                {
+                                                    using (StreamReader sr = new StreamReader(File.OpenRead(filename)))
+                                                    {
+                                                        Regex regex = new Regex(@"/Type\s*/Page[^s]");
+                                                        MatchCollection matches = regex.Matches(sr.ReadToEnd());
+
+                                                        pagecount = matches.Count;
+                                                    }
+                                                    PdfReader reader = new PdfReader(filename);
+                                                    PdfDocument docfile = new PdfDocument(reader);
+                                                    int pagecountnew = docfile.GetNumberOfPages();
+                                                    docfile.CopyPagesTo(1, pagecountnew, pdfDocList);
+                                                    for (int countpage = 0; countpage < pagecountnew; countpage++)
+                                                    {
+                                                        docList.Add(new AreaBreak(AreaBreakType.NEXT_AREA));
+                                                        
+                                                    }
+
+                                                }
+                                                if (IO.Path.GetExtension(filename) == ".jpg")
+                                                {
+                                                    //var pdfDocneew = new PdfDocument(new PdfReader(filename));
+                                                    //pdfDocneew.SetDefaultPageSize(PageSize.A4);
+                                                    //var docnew = new Document(pdfDocneew);
+
+                                                    //docnew.SetMargins(15f, 30f, 40f, 30f);
+                                                    //var pageSize = new PageSize(pdfDoc.GetLastPage().GetPageSize());
+                                                    //pdfDoc.AddNewPage(1, pageSize);
+                                                    //doc.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                                                  
+                                                    docList.Add(new AreaBreak(AreaBreakType.NEXT_AREA));
+                                                    docList.Add(GetImageFileTable(filename, keyVehicleLog.Id));
+
+                                                    //var countpage = pdfDoc.GetNumberOfPages();
+                                                    //var page = pdfDoc.GetFirstPage();
+                                                    //pdfDoc.MovePage(page, countpage + 1);
+                                                    //docnew.Close();
+                                                    //pdfDocneew.Close();
+                                                    ////PdfReader reader = new PdfReader(pdfDocneew);
+                                                    ////PdfDocument docfile = new PdfDocument(reader);
+                                                    //int pagecountnew = pdfDocneew.GetNumberOfPages();
+                                                    //pdfDocneew.CopyPagesTo(1, pagecountnew, pdfDoc);
+                                                }
+                                            }
+                                        }
 
 
 
@@ -260,7 +325,65 @@ namespace CityWatch.Web.Services
                                     docList.Add(CreateWeightandOtherDetailsTablePOI(keyVehicleLogViewModel, docketReason));
                                     docList.Add(CreateImageDetailsTable(keyVehicleLogViewModel, docketReason));
 
+                                    var path = keyVehicleLog.Id + "/ComplianceDocuments";
+                                    int countpagebreak = 0;
+                                    var keyVehicleLogDetails = _viewDataService.GetKeyVehicleLogAttachments(
+                                         IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path)
+                                         .ToList();
+                                    if (keyVehicleLogDetails.Count > 0)
+                                    {
+                                        for (int j = 0; j < keyVehicleLogDetails.Count; j++)
+                                        {
+                                            string filename = IO.Path.Combine(IO.Path.Combine(IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path), keyVehicleLogDetails[j]);
+                                            int pagecount = 0;
 
+                                            if (IO.Path.GetExtension(filename) == ".pdf")
+                                            {
+                                                using (StreamReader sr = new StreamReader(File.OpenRead(filename)))
+                                                {
+                                                    Regex regex = new Regex(@"/Type\s*/Page[^s]");
+                                                    MatchCollection matches = regex.Matches(sr.ReadToEnd());
+
+                                                    pagecount = matches.Count;
+                                                }
+                                                PdfReader reader = new PdfReader(filename);
+                                                PdfDocument docfile = new PdfDocument(reader);
+                                                int pagecountnew = docfile.GetNumberOfPages();
+                                                docfile.CopyPagesTo(1, pagecountnew, pdfDocList);
+                                                for (int countpage = 0; countpage < pagecountnew; countpage++)
+                                                {
+                                                    docList.Add(new AreaBreak(AreaBreakType.NEXT_AREA));
+                                                   
+                                                }
+                                            }
+                                            if (IO.Path.GetExtension(filename) == ".jpg")
+                                            {
+                                                //var pdfDocneew = new PdfDocument(new PdfReader(filename));
+                                                //pdfDocneew.SetDefaultPageSize(PageSize.A4);
+                                                //var docnew = new Document(pdfDocneew);
+
+                                                //docnew.SetMargins(15f, 30f, 40f, 30f);
+                                                //var pageSize = new PageSize(pdfDoc.GetLastPage().GetPageSize());
+                                                //pdfDoc.AddNewPage(1, pageSize);
+                                                //doc.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                                                int pagecount1 = pdfDocList.GetNumberOfPages();
+                                                
+                                                    docList.Add(new AreaBreak(AreaBreakType.NEXT_AREA));
+                                                
+                                                docList.Add(GetImageFileTable(filename, keyVehicleLog.Id));
+
+                                                //var countpage = pdfDoc.GetNumberOfPages();
+                                                //var page = pdfDoc.GetFirstPage();
+                                                //pdfDoc.MovePage(page, countpage + 1);
+                                                //docnew.Close();
+                                                //pdfDocneew.Close();
+                                                ////PdfReader reader = new PdfReader(pdfDocneew);
+                                                ////PdfDocument docfile = new PdfDocument(reader);
+                                                //int pagecountnew = pdfDocneew.GetNumberOfPages();
+                                                //pdfDocneew.CopyPagesTo(1, pagecountnew, pdfDoc);
+                                            }
+                                        }
+                                    }
 
 
                                     if (i != last)
@@ -294,6 +417,23 @@ namespace CityWatch.Web.Services
         public string GeneratePdfReport(int keyVehicleLogId, string docketReason, string blankNoteOnOrOff, string serialNo)
         {
             var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(keyVehicleLogId);
+            //To Get the SitePocNames start
+            if (keyVehicleLog.ClientSitePocIdsVehicleLog!=null)
+            {
+                var POCIds = keyVehicleLog.ClientSitePocIdsVehicleLog.Split(',');
+                var pocNamesList = new List<string>();
+                pocNamesList.Clear();
+                foreach (var item in POCIds)
+                {
+                    var PocName = _guardLogDataProvider.GetClientSitePOCName(Convert.ToInt32(item));
+                    pocNamesList.Add(PocName.Name);
+                }
+
+                var pocNames = string.Join(", ", pocNamesList);
+                keyVehicleLog.SitePocNames = pocNames;
+            }
+            
+            //To Get the SitePocNames stop
 
             _guardLogDataProvider.SaveDocketSerialNo(keyVehicleLogId, serialNo);
 
@@ -303,6 +443,8 @@ namespace CityWatch.Web.Services
             var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
             var keyVehicleLogViewModel = new KeyVehicleLogViewModel(keyVehicleLog, kvlFields);
             var reportPdfPath = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{keyVehicleLog.GuardLogin.ClientSite.Name}_SN{serialNo}.pdf");
+
+           
 
             if (IO.File.Exists(reportPdfPath))
                 IO.File.Delete(reportPdfPath);
@@ -322,12 +464,109 @@ namespace CityWatch.Web.Services
             doc.Add(CreateImageDetailsTable(keyVehicleLogViewModel, docketReason));
 
 
+            
+            //p7-115 docket output issues-start
+            //pdfDocument.AddNewPage();
+            var path = keyVehicleLog.Id + "/ComplianceDocuments";
+            int countpagebreak = 0;
+        var keyVehicleLogDetails = _viewDataService.GetKeyVehicleLogAttachments(
+             IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path)
+             .ToList();
+            if(keyVehicleLogDetails.Count>0)
+            {
+                for(int i=0;i<keyVehicleLogDetails.Count;i++)
+                {
+                    string filename = IO.Path.Combine(IO.Path.Combine(IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path), keyVehicleLogDetails[i]);
+                    int pagecount = 0;
+                    
+                    if (IO.Path.GetExtension(filename) == ".pdf")
+                    {
+                        using (StreamReader sr = new StreamReader(File.OpenRead(filename)))
+                        {
+                            Regex regex = new Regex(@"/Type\s*/Page[^s]");
+                            MatchCollection matches = regex.Matches(sr.ReadToEnd());
+
+                            pagecount = matches.Count;
+                        }
+                        PdfReader reader = new PdfReader(filename);
+                        PdfDocument docfile = new PdfDocument(reader);
+                        int pagecountnew=docfile.GetNumberOfPages();
+                        docfile.CopyPagesTo(1, pagecountnew, pdfDoc);
+                       
+                    }
+                    if(IO.Path.GetExtension(filename) == ".jpg")
+                    {
+                        //var pdfDocneew = new PdfDocument(new PdfReader(filename));
+                        //pdfDocneew.SetDefaultPageSize(PageSize.A4);
+                        //var docnew = new Document(pdfDocneew);
+
+                        //docnew.SetMargins(15f, 30f, 40f, 30f);
+                        //var pageSize = new PageSize(pdfDoc.GetLastPage().GetPageSize());
+                        //pdfDoc.AddNewPage(1, pageSize);
+                        //doc.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                        int pagecount1 = pdfDoc.GetNumberOfPages();
+                        if (countpagebreak == 0)
+                        {
+                            for (int countpage = 0; countpage < pagecount1; countpage++)
+                            {
+                                doc.Add(new AreaBreak(AreaBreakType.NEXT_AREA));
+                                countpagebreak = countpagebreak + 1;
+                            }
+                        }
+                        else
+                        {
+                            doc.Add(new AreaBreak(AreaBreakType.NEXT_AREA));
+                        }
+                        doc.Add(GetImageFileTable(filename,keyVehicleLog.Id));
+                       
+                        //var countpage = pdfDoc.GetNumberOfPages();
+                        //var page = pdfDoc.GetFirstPage();
+                        //pdfDoc.MovePage(page, countpage + 1);
+                        //docnew.Close();
+                        //pdfDocneew.Close();
+                        ////PdfReader reader = new PdfReader(pdfDocneew);
+                        ////PdfDocument docfile = new PdfDocument(reader);
+                        //int pagecountnew = pdfDocneew.GetNumberOfPages();
+                        //pdfDocneew.CopyPagesTo(1, pagecountnew, pdfDoc);
+                    }
+                }
+            }
+
+            //p7 - 115 docket output issues - end
             doc.Close();
             pdfDoc.Close();
 
             return IO.Path.GetFileName(reportPdfPath);
         }
+        //p7 - 115 docket output issues - start
+        private Table GetImageFileTable(string filename,int id)
+        {
+            string originalfile= IO.Path.GetFileName(filename);
+            var ImageTable = new Table(1).UseAllAvailableWidth();
+            //var path = id + "/c";
+            var fromFolderPath = IO.Path.Combine(IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), id.ToString(), "ComplianceDocuments");
+            //var toFolderPath= IO.Path.Combine(IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path +"/Images");
+            //if (!Directory.Exists(toFolderPath))
+            //    Directory.CreateDirectory(toFolderPath);
+           
+            //    System.IO.File.Copy(IO.Path.Combine(fromFolderPath, originalfile), IO.Path.Combine(toFolderPath, originalfile), true);
+             
+            ImageData imagedata = ImageDataFactory.Create(IO.Path.Combine(fromFolderPath, IO.Path.GetFileNameWithoutExtension(filename) + ".jpg"));
+            iText.Layout.Element.Image coverImage = new iText.Layout.Element.Image(imagedata);
 
+            var Imagepath = new Image(ImageDataFactory.Create(IO.Path.Combine(fromFolderPath, originalfile)))
+             .SetHeight(160);
+
+           
+                ImageTable.AddCell(new Cell().Add(Imagepath).SetBorder(Border.NO_BORDER));
+          
+
+
+
+
+            return ImageTable;
+        }
+        //p7 - 115 docket output issues - end
         /* bulk docket generate Start*/
         public string GenerateBulkPdfReport(List<int> keyVehicleLogId, string docketReason, string blankNoteOnOrOff, string serialNo)
         {
@@ -341,6 +580,7 @@ namespace CityWatch.Web.Services
             var reportPdfPath = "";
 
             var last = keyVehicleLogId.Last();
+            int countpagebreak = 0;
             foreach (var i in keyVehicleLogId)
             {
 
@@ -385,7 +625,70 @@ namespace CityWatch.Web.Services
                         docList.Add(CreateWeightandOtherDetailsTable(keyVehicleLogViewModel, docketReason));
                         docList.Add(CreateImageDetailsTable(keyVehicleLogViewModel, docketReason));
 
+                        //p7-115 docket output issues-start
+                        //pdfDocument.AddNewPage();
+                        var path = keyVehicleLog.Id + "/ComplianceDocuments";
 
+                        var keyVehicleLogDetails = _viewDataService.GetKeyVehicleLogAttachments(
+                             IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path)
+                             .ToList();
+                        
+                        if (keyVehicleLogDetails.Count > 0)
+                        {
+                            for (int j = 0; j < keyVehicleLogDetails.Count; j++)
+                            {
+                                string filename = IO.Path.Combine(IO.Path.Combine(IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path), keyVehicleLogDetails[j]);
+                                int pagecount = 0;
+                                if (IO.Path.GetExtension(filename) == ".pdf")
+                                {
+                                    using (StreamReader sr = new StreamReader(File.OpenRead(filename)))
+                                    {
+                                        Regex regex = new Regex(@"/Type\s*/Page[^s]");
+                                        MatchCollection matches = regex.Matches(sr.ReadToEnd());
+
+                                        pagecount = matches.Count;
+                                    }
+                                    PdfReader reader = new PdfReader(filename);
+                                    PdfDocument docfile = new PdfDocument(reader);
+                                    int pagecountnew = docfile.GetNumberOfPages();
+                                    docfile.CopyPagesTo(1, pagecountnew, pdfDocList);
+                                   
+                                        for (int countpage = 0; countpage < pagecountnew; countpage++)
+                                        {
+                                            docList.Add(new AreaBreak(AreaBreakType.NEXT_AREA));
+                                            //countpagebreak = countpagebreak + 1;
+                                        }
+                                   
+                                }
+                                if (IO.Path.GetExtension(filename) == ".jpg")
+                                {
+                                    //var pdfDocneew = new PdfDocument(new PdfReader(filename));
+                                    //pdfDocneew.SetDefaultPageSize(PageSize.A4);
+                                    //var docnew = new Document(pdfDocneew);
+
+                                    //docnew.SetMargins(15f, 30f, 40f, 30f);
+                                    //var pageSize = new PageSize(pdfDocList.GetLastPage().GetPageSize());
+                                    //pdfDocList.AddNewPage(1, pageSize);
+                                    //int pagecount1 = pdfDocList.GetNumberOfPages();
+
+                                    docList.Add(new AreaBreak(AreaBreakType.NEXT_AREA));
+
+                                    docList.Add(GetImageFileTable(filename, keyVehicleLog.Id));
+
+                                    //var countpage = pdfDocList.GetNumberOfPages();
+                                    //var page = pdfDocList.GetFirstPage();
+                                    //pdfDocList.MovePage(page, countpage + 1);
+                                    //docnew.Close();
+                                    //pdfDocneew.Close();
+                                    ////PdfReader reader = new PdfReader(pdfDocneew);
+                                    ////PdfDocument docfile = new PdfDocument(reader);
+                                    //int pagecountnew = pdfDocneew.GetNumberOfPages();
+                                    //pdfDocneew.CopyPagesTo(1, pagecountnew, pdfDoc);
+                                }
+                            }
+                        }
+
+                        //p7 - 115 docket output issues - end
 
 
                         if (i != last)
@@ -622,10 +925,14 @@ namespace CityWatch.Web.Services
                 .SetTextAlignment(TextAlignment.CENTER)
                 .SetHorizontalAlignment(HorizontalAlignment.CENTER);
             siteDataTable.AddCell(siteName);
+            //docket output issues- start
+            string date = keyVehicleLog.ClientSiteLogBook.Date.ToString("yyyy-MMM-dd").ToUpper();
+            string day = keyVehicleLog.ClientSiteLogBook.Date.ToString("dddd");
 
             siteDataTable.AddCell(GetSiteHeaderCell("Date of Log:"));
-            siteDataTable.AddCell(GetSiteValueCell(keyVehicleLog.ClientSiteLogBook.Date.ToString("yyyy-MMM-dd-dddd")));
-
+            siteDataTable.AddCell(GetSiteValueCell(date + "-" + day));
+            //siteDataTable.AddCell(GetSiteValueCell(keyVehicleLog.ClientSiteLogBook.Date.ToString("yyyy-MMM-dd-dddd").ToUpper()));
+            //docket output issues- end
             siteDataTable.AddCell(GetSiteHeaderCell("Guard Intials"));
             siteDataTable.AddCell(GetSiteValueCell(keyVehicleLog.GuardLogin.Guard.Initial ?? string.Empty));
 
@@ -695,7 +1002,10 @@ namespace CityWatch.Web.Services
                                         .SetPaddingLeft(0)
                                         .SetPaddingTop(7)
                                         .SetBorder(Border.NO_BORDER)
-                                        .Add(GetOtherDetailsTable(docketReason));
+                                        //.Add(GetOtherDetailsTable(docketReason));
+                                        //p7 - 115 docket output issues-start
+                                        .Add(GetOtherDetailsTable(docketReason, keyVehicleLogViewModel));
+                                        //p7 - 115 docket output issues-end
             innerTable2.AddCell(otherDetailsTable);
 
             var cellInnerTable2 = new Cell()
@@ -709,7 +1019,10 @@ namespace CityWatch.Web.Services
                                     .SetPaddingRight(0)
                                     .SetPaddingTop(0)
                                     .SetBorder(Border.NO_BORDER)
-                                    .Add(GetSignDetailsTable());
+                                    //p7-115 docket output issues-start
+                                    //.Add(GetSignDetailsTable());
+                                    .Add(GetSignDetailsTable(keyVehicleLogViewModel));
+                                    //p7-115 docket output issues-end
             outerTable2.AddCell(cellSignDetails);
 
             return outerTable2;
@@ -742,11 +1055,19 @@ namespace CityWatch.Web.Services
                                     .Add(innerTable2);
             outerTable2.AddCell(cellInnerTable2);
 
+            //p7-115 Docket output issues-start
+            //var cellSignDetails = new Cell()
+            //                        .SetPaddingRight(0)
+            //                        .SetPaddingTop(0)
+            //                        .SetBorder(Border.NO_BORDER)
+            //                        .Add(GetSignDetailsTable());
             var cellSignDetails = new Cell()
                                     .SetPaddingRight(0)
                                     .SetPaddingTop(0)
                                     .SetBorder(Border.NO_BORDER)
-                                    .Add(GetSignDetailsTable());
+                                    .Add(GetSignDetailsTable( keyVehicleLogViewModel));
+            //p7 - 115 Docket output issues - end
+            
             outerTable2.AddCell(cellSignDetails);
 
             return outerTable2;
@@ -811,7 +1132,7 @@ namespace CityWatch.Web.Services
             return clockDetails;
         }
 
-        private static Table GetCompanyDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        private  Table GetCompanyDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
         {
             var companyDetails = new Table(UnitValue.CreatePercentArray(new float[] { 23, 10, 12, 10, 10, 12, 23 })).UseAllAvailableWidth();
 
@@ -831,11 +1152,36 @@ namespace CityWatch.Web.Services
             companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.PersonName));
             companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.MobileNumber));
             companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.PersonTypeText));
-            companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.ClientSitePoc?.Name));
+            companyDetails.AddCell(GetSitePocNameDetails(keyVehicleLogViewModel));
+            
             companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.ClientSiteLocation?.Name));
             companyDetails.AddCell(GetDataCell(keyVehicleLogViewModel.PurposeOfEntry));
 
             return companyDetails;
+        }
+        
+        private Table GetSitePocNameDetails(KeyVehicleLogViewModel keyVehicleLogViewModel)
+        {
+            var deductionDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 45, 25, 35 })).UseAllAvailableWidth();
+
+            var PocName = keyVehicleLogViewModel.Detail.SitePocNames;
+            if (PocName!=null)
+            {
+                var sitePocNamesArray = PocName.Split(',');
+
+                var iconChecked = new Image(ImageDataFactory.Create(IO.Path.Combine(_imageRootDir, "icons", "checked.png"))).SetHeight(8);
+
+                foreach (var sitePocName in sitePocNamesArray)
+                {
+                    deductionDetailsTable.AddCell(GetDataCell(sitePocName, textAlignment: TextAlignment.RIGHT, 0).SetBorder(Border.NO_BORDER));
+
+                    deductionDetailsTable.AddCell(new Cell().Add(iconChecked).SetBorder(Border.NO_BORDER));
+                    deductionDetailsTable.AddCell(new Cell().SetBorder(Border.NO_BORDER));
+                }
+
+            }
+
+            return deductionDetailsTable;
         }
 
         private static Table GetNotesTable(KeyVehicleLogViewModel keyVehicleLogViewModel, string blankNoteOnOrOff)
@@ -1054,12 +1400,16 @@ namespace CityWatch.Web.Services
         private static Table GetOtherDetailsTable(string docketReason)
         {
             var otherDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 40, 60 })).UseAllAvailableWidth().SetMarginTop(12);
-
-            otherDetailsTable.AddCell(GetHeaderCell("STMS Form \n(Outbound / pickup only)", textAlignment: TextAlignment.LEFT));
+            //p7-115 docket output issues-start
+                //otherDetailsTable.AddCell(GetHeaderCell("STMS Form \n(Outbound / pickup only)", textAlignment: TextAlignment.LEFT));
+                otherDetailsTable.AddCell(GetHeaderCell("Compliance Documents \n(NHVR HML / STMS / HACCP / etc)", textAlignment: TextAlignment.LEFT));
+            //p7 - 115 docket output issues - end
             otherDetailsTable.AddCell(GetHeaderCell("Why was MANUAL Docket Created?", textAlignment: TextAlignment.LEFT));
-
-            otherDetailsTable.AddCell(GetDataCell("Y / NA", textAlignment: TextAlignment.CENTER, cellFontSize: CELL_FONT_SIZE_BIG)
-                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+            //p7-115 docket output issues-start
+                //otherDetailsTable.AddCell(GetDataCell("Y / NA", textAlignment: TextAlignment.CENTER, cellFontSize: CELL_FONT_SIZE_BIG)
+                otherDetailsTable.AddCell(GetDataCell("NA", textAlignment: TextAlignment.CENTER, cellFontSize: CELL_FONT_SIZE_BIG)
+            //p7 - 115 docket output issues - end
+               .SetHorizontalAlignment(HorizontalAlignment.CENTER)
                 .SetVerticalAlignment(VerticalAlignment.MIDDLE));
             otherDetailsTable.AddCell(GetDataCell(docketReason, textAlignment: TextAlignment.LEFT)
                  .SetVerticalAlignment(VerticalAlignment.MIDDLE)
@@ -1067,6 +1417,41 @@ namespace CityWatch.Web.Services
 
             return otherDetailsTable;
         }
+        //p7-115 docket output issues-start
+        private static Table GetOtherDetailsTable(string docketReason, KeyVehicleLogViewModel keyVehicleLogViewModel)
+        {
+            var otherDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 40, 60 })).UseAllAvailableWidth().SetMarginTop(12);
+            
+            //otherDetailsTable.AddCell(GetHeaderCell("STMS Form \n(Outbound / pickup only)", textAlignment: TextAlignment.LEFT));
+            otherDetailsTable.AddCell(GetHeaderCell("Compliance Documents \n(NHVR HML / STMS / HACCP / etc)", textAlignment: TextAlignment.LEFT));
+           
+            otherDetailsTable.AddCell(GetHeaderCell("Why was MANUAL Docket Created?", textAlignment: TextAlignment.LEFT));
+            //p7-115 docket output issues-start
+            if (keyVehicleLogViewModel.Detail.IsDocketNo == true)
+            {
+                otherDetailsTable.AddCell(GetDataCell("Y", textAlignment: TextAlignment.CENTER, cellFontSize: CELL_FONT_SIZE_BIG)
+                //otherDetailsTable.AddCell(GetDataCell("NA", textAlignment: TextAlignment.CENTER, cellFontSize: CELL_FONT_SIZE_BIG)
+               //p7 - 115 docket output issues - end
+               .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE));
+                otherDetailsTable.AddCell(GetDataCell(docketReason, textAlignment: TextAlignment.LEFT)
+                     .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                    .SetHeight(10));
+            }
+            else
+            {
+                otherDetailsTable.AddCell(GetDataCell("NA", textAlignment: TextAlignment.CENTER, cellFontSize: CELL_FONT_SIZE_BIG)
+               //otherDetailsTable.AddCell(GetDataCell("NA", textAlignment: TextAlignment.CENTER, cellFontSize: CELL_FONT_SIZE_BIG)
+               //p7 - 115 docket output issues - end
+               .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE));
+                otherDetailsTable.AddCell(GetDataCell(docketReason, textAlignment: TextAlignment.LEFT)
+                     .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                    .SetHeight(10));
+            }
+            return otherDetailsTable;
+        }
+        //p7 - 115 docket output issues - end
         //PO List 
         private static Table GetOtherDetailsTablePOList(string docketReason)
         {
@@ -1084,21 +1469,41 @@ namespace CityWatch.Web.Services
 
             return otherDetailsTable;
         }
-        private static Table GetSignDetailsTable()
+        //p7-115 docket output issues-start 
+        //private static Table GetSignDetailsTable()
+        //{
+        //    var signDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 25, 75 })).UseAllAvailableWidth();
+
+        //    signDetailsTable.AddCell(GetHeaderCell("Loader"));
+        //    signDetailsTable.AddCell(GetDataCell("Name: \n\nSign:\n\n", textAlignment: TextAlignment.LEFT));
+
+        //    signDetailsTable.AddCell(GetHeaderCell("Dispatch"));
+        //    signDetailsTable.AddCell(GetDataCell("Name: \n\nSign:\n\n", textAlignment: TextAlignment.LEFT));
+
+        //    signDetailsTable.AddCell(GetHeaderCell("Driver"));
+        //    signDetailsTable.AddCell(GetDataCell("Name: \n\nSign:\n\n", textAlignment: TextAlignment.LEFT));
+
+        //    return signDetailsTable;
+        //}
+        private static Table GetSignDetailsTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
         {
             var signDetailsTable = new Table(UnitValue.CreatePercentArray(new float[] { 25, 75 })).UseAllAvailableWidth();
 
             signDetailsTable.AddCell(GetHeaderCell("Loader"));
-            signDetailsTable.AddCell(GetDataCell("Name: \n\nSign:\n\n", textAlignment: TextAlignment.LEFT));
+            signDetailsTable.AddCell(GetDataCell("Name: "+ keyVehicleLogViewModel.Detail.LoaderName + "\n\nSign:\n\n", textAlignment: TextAlignment.LEFT));
 
             signDetailsTable.AddCell(GetHeaderCell("Dispatch"));
-            signDetailsTable.AddCell(GetDataCell("Name: \n\nSign:\n\n", textAlignment: TextAlignment.LEFT));
+            signDetailsTable.AddCell(GetDataCell("Name: " + keyVehicleLogViewModel.Detail.DispatchName + "\n\nSign:\n\n", textAlignment: TextAlignment.LEFT));
 
             signDetailsTable.AddCell(GetHeaderCell("Driver"));
-            signDetailsTable.AddCell(GetDataCell("Name: \n\nSign:\n\n", textAlignment: TextAlignment.LEFT));
-
+            //p7-115 docket output issues-start
+            signDetailsTable.AddCell(GetDataCell("Name: " + keyVehicleLogViewModel.Detail.PersonName + "\n\nSign:\n\n", textAlignment: TextAlignment.LEFT));
+            //signDetailsTable.AddCell(GetDataCell("Name:\n\nSign:\n\n", textAlignment: TextAlignment.LEFT));
+            //p7 - 115 docket output issues - end
             return signDetailsTable;
         }
+        
+            //p7-115 docket output issues-end
         // added to display the image
         private Table GetImageTable(KeyVehicleLogViewModel keyVehicleLogViewModel)
         {
@@ -1225,6 +1630,23 @@ namespace CityWatch.Web.Services
             foreach (var i in keyVehicleLogId)
             {
                 var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(i);
+                //To Get the SitePocNames start
+                if (keyVehicleLog.ClientSitePocIdsVehicleLog!=null)
+                {
+                    var POCIds = keyVehicleLog.ClientSitePocIdsVehicleLog.Split(',');
+                    var pocNamesList = new List<string>();
+                    pocNamesList.Clear();
+                    foreach (var item in POCIds)
+                    {
+                        var PocName = _guardLogDataProvider.GetClientSitePOCName(Convert.ToInt32(item));
+                        pocNamesList.Add(PocName.Name);
+                    }
+
+                    var pocNames = string.Join(", ", pocNamesList);
+                    keyVehicleLog.SitePocNames = pocNames;
+                }
+                
+                //To Get the SitePocNames stop
                 var reportPdfPath1 = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{DateTime.Today:yyyyMMdd}_KVManualDocket_{keyVehicleLog.GuardLogin.ClientSite.Name}_SN{serialNo}.pdf");
 
                 var pdfDocList = new PdfDocument(new PdfWriter(reportPdfPath1));
@@ -1279,7 +1701,76 @@ namespace CityWatch.Web.Services
                         docList.Add(CreateWeightandOtherDetailsTable(keyVehicleLogViewModel, docketReason));
                         docList.Add(CreateImageDetailsTable(keyVehicleLogViewModel, docketReason));
 
+                        //p7-115 docket output issues-start
+                        //pdfDocument.AddNewPage();
+                        var path = keyVehicleLog.Id + "/ComplianceDocuments";
 
+                        var keyVehicleLogDetails = _viewDataService.GetKeyVehicleLogAttachments(
+                             IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path)
+                             .ToList();
+                        int countpagebreak = 0;
+                        if (keyVehicleLogDetails.Count > 0)
+                        {
+                            for (int j = 0; j < keyVehicleLogDetails.Count; j++)
+                            {
+                                string filename = IO.Path.Combine(IO.Path.Combine(IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path), keyVehicleLogDetails[j]);
+                                int pagecount = 0;
+                                if (IO.Path.GetExtension(filename) == ".pdf")
+                                {
+                                    using (StreamReader sr = new StreamReader(File.OpenRead(filename)))
+                                    {
+                                        Regex regex = new Regex(@"/Type\s*/Page[^s]");
+                                        MatchCollection matches = regex.Matches(sr.ReadToEnd());
+
+                                        pagecount = matches.Count;
+                                    }
+                                    PdfReader reader = new PdfReader(filename);
+                                    PdfDocument docfile = new PdfDocument(reader);
+                                    int pagecountnew = docfile.GetNumberOfPages();
+                                    docfile.CopyPagesTo(1, pagecountnew, pdfDocList);
+
+                                }
+                                if (IO.Path.GetExtension(filename) == ".jpg")
+                                {
+                                    //var pdfDocneew = new PdfDocument(new PdfReader(filename));
+                                    //pdfDocneew.SetDefaultPageSize(PageSize.A4);
+                                    //var docnew = new Document(pdfDocneew);
+
+                                    //docnew.SetMargins(15f, 30f, 40f, 30f);
+                                    //var pageSize = new PageSize(pdfDocList.GetLastPage().GetPageSize());
+                                    //pdfDocList.AddNewPage(1, pageSize);
+                                    int pagecount1 = pdfDocList.GetNumberOfPages();
+                                    if (countpagebreak == 0)
+                                    {
+                                        for (int countpage = 0; countpage < pagecount1; countpage++)
+                                        {
+                                            docList.Add(new AreaBreak(AreaBreakType.NEXT_AREA));
+                                            countpagebreak = countpagebreak + 1;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        docList.Add(new AreaBreak(AreaBreakType.NEXT_AREA));
+                                    }
+
+
+
+                                    docList.Add(GetImageFileTable(filename, keyVehicleLog.Id));
+
+                                    //var countpage = pdfDocList.GetNumberOfPages();
+                                    //var page = pdfDocList.GetFirstPage();
+                                    //pdfDocList.MovePage(page, countpage + 1);
+                                    ////docnew.Close();
+                                    //pdfDocneew.Close();
+                                    ////PdfReader reader = new PdfReader(pdfDocneew);
+                                    ////PdfDocument docfile = new PdfDocument(reader);
+                                    //int pagecountnew = pdfDocneew.GetNumberOfPages();
+                                    //pdfDocneew.CopyPagesTo(1, pagecountnew, pdfDoc);
+                                }
+                            }
+                        }
+
+                        //p7 - 115 docket output issues - end
 
 
                         //if (i != last)

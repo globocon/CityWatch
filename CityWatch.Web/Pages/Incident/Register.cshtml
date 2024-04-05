@@ -63,7 +63,13 @@
                                 <span>Site COLOUR Code Alert <em class="text-muted">(Code Blue, Code Grey, Code Yellow, etc)</em></span>
                                 @*<select asp-for="@Model.Report.SiteColourCodeId" class="form-control form-control-sm ml-0 ml-lg-2 w-75" disabled asp-items="@Model.ViewDataService.GetFeedbackTemplatesByType(FeedbackType.ColourCodes)"></select>*@
                                 @*Template type is directly taken from database -jisha-start *@
-                                <select asp-for="@Model.Report.SiteColourCodeId" class="form-control form-control-sm ml-0 ml-lg-2 w-75" disabled asp-items="@Model.ViewDataService.GetFeedbackTemplatesByType(Convert.ToInt16(colourcode))"></select>
+                                <select asp-for="@Model.Report.SiteColourCodeId" class="form-control form-control-sm ml-0 ml-lg-2 w-75" disabled>
+                                    <option style="background-color:white; color:black" value="" selected>Select Template</option>
+                                    @foreach (var item in @Model.ViewDataService.GetFeedbackTemplateListByType(Convert.ToInt16(colourcode)))
+                                    {
+                                        <option style="background-color:@item.BackgroundColour; color:@item.TextColor" value="@item.Id">@item.Name</option>
+                                    }
+                                </select>
                                 @*Template type is directly taken from database -jisha-end *@
                                 <input type="hidden" asp-for="@Model.Report.SiteColourCode" />
                             </div>
@@ -526,40 +532,7 @@
             </div>
         </div>
     </div>
-    <!-- The Modal -->
-    <div class="modal fade bd-example-modal-sm" id="PositionModel" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="logbook" aria-hidden="true">
-        <div class="modal-dialog modal-sm">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        Client Type & Client Site
-                    </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div id="scrollableDiv">
-                                <div class="pt-2">
-                                    <label asp-for="@Model.Report.DateLocation.ClientTypePosition" class="font-weight-normal"></label>
-                                    <select asp-for="@Model.Report.DateLocation.ClientTypePosition" asp-items="@Model.ViewDataService.GetUserClientTypes(AuthUserHelper.LoggedInUserId)" class="form-control"></select>
-                                    <span asp-validation-for="@Model.Report.DateLocation.ClientTypePosition"></span>
-                                </div>
-                                <div class="pt-2">
-                                    <label asp-for="@Model.Report.DateLocation.ClientSitePosition" class="font-weight-normal"></label>
-                                    <select asp-for="@Model.Report.DateLocation.ClientSitePosition" class="form-control" asp-items="@Model.ClientSitesPosition"></select>
-                                    <span asp-validation-for="@Model.Report.DateLocation.ClientSitePosition"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    
 </form>
 <form method="post" id="cwsir-form-attachments">
     <!-- Attachments -->
@@ -702,6 +675,7 @@
 </div>
 <!-- logbook model popup end-->
 
+@* ####### Refer site.js for further js scripts ###### *@
 <script>
 
     window.addEventListener('load', onWindowLoad);
@@ -727,7 +701,6 @@
     document.getElementById("Report_PlateLoadedNo").addEventListener('change', onPlateLoadedChange);
     document.getElementById("Report_PlateLoadedYes").addEventListener('change', onPlateLoadedChange);
     document.getElementById("Report_VehicleRego").addEventListener('change', onPlateLoadedChange);
-
 
     function onWindowLoad(event) {
         setAllControlsForIrFromPreviousIR();
@@ -844,15 +817,19 @@
         }
     }
 
-    function onEventTypeSiteColourChange(event) {
-        document.getElementById("Report_SiteColourCodeId").disabled = !this.checked;
-        document.getElementById("Report_SiteColourCodeId").value = '';
+    function onEventTypeSiteColourChange(event) {        
+        var ddlSiteColourCodeId = document.getElementById("Report_SiteColourCodeId");
+        ddlSiteColourCodeId.value = '';
+        ddlSiteColourCodeId.disabled = !this.checked;            
+        ddlSiteColourCodeId.style.backgroundColor = "#EBEBE4"; // rgb(235, 235, 228);
+        ddlSiteColourCodeId.style.color = "black";
         document.getElementById("Report_SiteColourCode").value = '';
         document.getElementById("Report_Feedback").value = '';
         document.getElementById("ddFeedbackTemplateType").value = 1;
-        document.getElementById("ddFeedbackTemplateType").dispatchEvent(new Event('change'));
+        document.getElementById("ddFeedbackTemplateType").dispatchEvent(new Event('change'));       
     }
 
+   
     function onReimbursementChange(event) {
         const yesCheckId = "Report_DateLocation_ReimbursementYes";
         const noCheckId = "Report_DateLocation_ReimbursementNo";
@@ -1543,41 +1520,41 @@
                     if (data.clientSite.gps) toggleClientGpsLink(true, data.clientSite.gps);
                     else toggleClientGpsLink(false);
                     setSelectedClientStatus(data.clientSite);
+                    if (data.isSiteColorChecked) {                        
+                        var ddlSiteColourCodeId = document.getElementById("Report_SiteColourCodeId");
+                        var selectedOption = ddlSiteColourCodeId.options[ddlSiteColourCodeId.selectedIndex];
+                        var backgroundColor = selectedOption.style.backgroundColor;
+                        var fontColor = selectedOption.style.color;
+                        ddlSiteColourCodeId.disabled = false;
+                        ddlSiteColourCodeId.style.backgroundColor = backgroundColor;
+                        ddlSiteColourCodeId.style.color = fontColor;
+                    }
+                        
                     $('#Report_DateLocation_ShowIncidentLocationAddress').prop('checked', false);
                     $('#clientSiteAddress').val(data.clientSite.address);
                     $('#clientSiteGps').val(data.clientSite.gps);
                     if (data.bodyCameraYes) {
-
                         document.getElementById('Report_BodyCameraYes').checked = true;
                         document.getElementById('Report_BodyCameraNo').checked = false;
-
                     }
                     else {
                         document.getElementById('Report_BodyCameraNo').checked = true;
                         document.getElementById('Report_BodyCameraYes').checked = false;
                     }
                     if (data.reimbursementYes) {
-
                         document.getElementById('Report_DateLocation_ReimbursementYes').checked = true;
                         document.getElementById('Report_DateLocation_ReimbursementNo').checked = false;
-
                     }
                     else {
                         document.getElementById('Report_DateLocation_ReimbursementNo').checked = true;
                         document.getElementById('Report_DateLocation_ReimbursementYes').checked = false;
                     }
                     if (data.isPositionPatrolCar) {
-
                         document.getElementById('positionfilter').checked = true;
-
                     }
                     else {
                         document.getElementById('positionfilter').checked = false;
                     }
-
-                    if (data.isSiteColorChecked)
-                        document.getElementById("Report_SiteColourCodeId").disabled = false
-                 
 
                 }
             }).fail(function () {
@@ -1591,6 +1568,9 @@
 
 </script>
 <partial name="_MessagePopup" />
+
+@* ####### Refer site.js for further js scripts ###### *@
+
 @section scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&libraries=places"></script>

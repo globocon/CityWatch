@@ -44,7 +44,8 @@ namespace CityWatch.Data.Providers
         List<ClientSiteToggle> GetClientSiteToggle();
         List<ClientSiteToggle> GetClientSiteToggle(int siteId);
         List<ClientSiteToggle> GetClientSiteToggle(int siteId,int toggleId);
-        
+         KeyVehicleLog GetEmailPOCVehiclelog(int id);
+
         //for toggle areas - end 
     }
 
@@ -268,7 +269,11 @@ namespace CityWatch.Data.Providers
                 .Include(z => z.Position)
                 .SingleOrDefault(z => z.Id == id);
         }
-
+        public KeyVehicleLog GetEmailPOCVehiclelog(int id)
+        {
+            return _context.KeyVehicleLogs
+                .Where(x => x.Id == id).SingleOrDefault();
+        }
         public GuardLogin GetGuardLastLogin(int guardId)
         {
             return _context.GuardLogins

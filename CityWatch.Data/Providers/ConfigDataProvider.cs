@@ -102,7 +102,9 @@ namespace CityWatch.Data.Providers
                 {
                     Name = template.Name,
                     Text = template.Text,
-                    Type = template.Type
+                    Type = template.Type,
+                    BackgroundColour = template.BackgroundColour,
+                    TextColor = template.TextColor
                 });
             }
             else
@@ -113,6 +115,8 @@ namespace CityWatch.Data.Providers
 
                 templateToUpdate.Text = template.Text;
                 templateToUpdate.Type = template.Type;
+                templateToUpdate.BackgroundColour = template.BackgroundColour;
+                templateToUpdate.TextColor = template.TextColor;
             }
             _context.SaveChanges();
         }
@@ -323,6 +327,8 @@ namespace CityWatch.Data.Providers
         //To get the Logbbok Data-p6-101 stop
         public void SavePostion(IncidentReportPosition incidentReportPosition)
         {
+            var ClientSiteName = _context.ClientSites.Where(x => x.Id == incidentReportPosition.ClientsiteId).FirstOrDefault();
+           
             if (incidentReportPosition.Id == -1)
             {
                 _context.IncidentReportPositions.Add(new IncidentReportPosition()
@@ -331,7 +337,9 @@ namespace CityWatch.Data.Providers
                     EmailTo = incidentReportPosition.EmailTo,
                     IsPatrolCar = incidentReportPosition.IsPatrolCar,
                     DropboxDir = incidentReportPosition.DropboxDir,
-                    IsLogbook= incidentReportPosition.IsLogbook
+                    IsLogbook= incidentReportPosition.IsLogbook,
+                    ClientsiteId= incidentReportPosition.ClientsiteId,
+                    ClientsiteName= ClientSiteName.Name
                 });
             }
             else
@@ -344,6 +352,16 @@ namespace CityWatch.Data.Providers
                     positionToUpdate.IsPatrolCar = incidentReportPosition.IsPatrolCar;
                     positionToUpdate.DropboxDir = incidentReportPosition.DropboxDir;
                     positionToUpdate.IsLogbook = incidentReportPosition.IsLogbook;
+                    positionToUpdate.ClientsiteId = incidentReportPosition.ClientsiteId;
+                    if (ClientSiteName!=null)
+                    {
+                        positionToUpdate.ClientsiteName = ClientSiteName.Name;
+                    }
+                    else
+                    {
+                        positionToUpdate.ClientsiteName = null;
+                    }
+                    
                 }
             }
             _context.SaveChanges();

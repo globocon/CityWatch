@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Drawing;
 using System.Reflection;
 
 namespace CityWatch.Data.Helpers
@@ -134,5 +135,21 @@ namespace CityWatch.Data.Helpers
 
        
 
+    }
+
+    public static class ColorConvertorHelper
+    {
+        public static string GetHexToRGBConvertedColorCode(string HexColorCode)
+        {
+            var color = ColorTranslator.FromHtml(HexColorCode); // System.Drawing.Color.FromString(HexColorCode);
+            // Convert HEX to RGB 
+            int r = Convert.ToInt16(color.R);
+            int g = Convert.ToInt16(color.G);
+            int b = Convert.ToInt16(color.B);
+
+            string rgbColor = string.Format("rgba({0}, {1}, {2});", r, g, b);
+
+            return rgbColor;
+        }
     }
 }

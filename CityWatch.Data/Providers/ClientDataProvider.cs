@@ -169,6 +169,7 @@ namespace CityWatch.Data.Providers
         //for toggle areas - start 
         void SaveClientSiteToggle(int siteId, int toggleTypeId, bool IsActive);
         //for toggle areas - end
+        IncidentReportPosition GetClientSitePosition(string Name);
 
     }
 
@@ -256,7 +257,10 @@ namespace CityWatch.Data.Providers
                 .ThenBy(x => x.Name)
                 .ToList();
         }
-
+        public IncidentReportPosition GetClientSitePosition(string Name)
+        {
+            return _context.IncidentReportPositions.Where(x => x.Name == Name).FirstOrDefault();
+        }
         public ClientSite GetClientSitesUsingName(string name)
         {
             return _context.ClientSites

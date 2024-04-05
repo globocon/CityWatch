@@ -147,10 +147,14 @@ namespace CityWatch.Web.Pages.Guard
                 ViewData = new ViewDataDictionary<KeyVehicleLog>(ViewData, keyVehicleLog)
             };
         }
-
+        
         public JsonResult OnGetAuditHistory(string vehicleRego)
         {
             return new JsonResult(_viewDataService.GetKeyVehicleLogAuditHistory(vehicleRego).ToList());
+        }
+        public JsonResult OnGetPOCSDropdown(int[] clientsiteid)
+        {
+            return new JsonResult(_viewDataService.GetClientSitePocsVehicleLog(clientsiteid).ToList());
         }
 
         public JsonResult OnGetAuditHistoryUsingProfileId(int profileId)
@@ -366,6 +370,25 @@ namespace CityWatch.Web.Pages.Guard
                     }
                 }
                 //_guardLogDataProvider.EditRadioChecklistEntry(ClientSiteRadioChecksActivity)
+                var keyVehicleLogDetails = _viewDataService.GetKeyVehicleLogAttachments(
+                 IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", KeyVehicleLog.VehicleRego)  ,"ComplianceDocuments")
+                 .ToList();
+                int KeyVehicleLogId = KeyVehicleLog.Id;
+                string KeyVehicleLogVehicleRego = KeyVehicleLog.VehicleRego;
+                if (keyVehicleLogDetails.Count > 0)
+                {
+                    var toFolderPath = Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", KeyVehicleLogId.ToString() , "ComplianceDocuments");
+                    var fromFolderPath = IO.Path.Combine(IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), KeyVehicleLogVehicleRego ,"ComplianceDocuments");
+                    if (!Directory.Exists(toFolderPath))
+                        Directory.CreateDirectory(toFolderPath);
+                    for (int i = 0; i < keyVehicleLogDetails.Count; i++)
+                    {
+                        string newid = keyVehicleLogDetails[i];
+                        System.IO.File.Move(Path.Combine(fromFolderPath, newid), Path.Combine(toFolderPath, newid), true);
+                       
+                    }
+                    Directory.Delete(fromFolderPath, true);
+                }
             }
 
             catch (Exception ex)
@@ -396,7 +419,7 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { status, message });
         }
 
-        public JsonResult OnPostKeyVehicleLogQuickExit(int Id)
+        public JsonResult OnPostKeyVehicleLogQuickExit(int Id, GuardLog tmdata)
         {
             var status = true;
             var message = "Success";
@@ -406,7 +429,7 @@ namespace CityWatch.Web.Pages.Guard
                 KeyVehicleLogAuditHistory keyVehicleLogAuditHistory = null;
                 var keyVehicleLogInExitTime = _guardLogDataProvider.GetKeyVehicleLogById(Id);
                 keyVehicleLogInExitTime.ActiveGuardLoginId = HttpContext.Session.GetInt32("GuardLoginId");
-                keyVehicleLogInExitTime.ExitTime = DateTime.Now;
+                keyVehicleLogInExitTime.ExitTime = tmdata.EventDateTimeLocal; // DateTime.Now;
                 keyVehicleLogAuditHistory = GetKvlAuditHistory(keyVehicleLogInExitTime);
                 keyVehicleLogAuditHistory.AuditMessage = "Exit entry";
                 /*21022024 modification for trailer dileep Start*/
@@ -420,7 +443,7 @@ namespace CityWatch.Web.Pages.Guard
                 keyVehicleLogAuditHistory.KeyVehicleLogId = KeyVehicleLog.Id;
                 _guardLogDataProvider.SaveKeyVehicleLogAuditHistory(keyVehicleLogAuditHistory);
                 //for entering the audit history of the person who exit the entry-end
-                _guardLogDataProvider.KeyVehicleLogQuickExit(Id);
+                _guardLogDataProvider.KeyVehicleLogQuickExit(Id, tmdata.EventDateTimeLocal);
 
                 //for rc entry-start
                 //if (KeyVehicleLog.GuardLoginId != HttpContext.Session.GetInt32("GuardLoginId"))
@@ -1068,6 +1091,23 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(_guardLogDataProvider.GetVehicleRegosForKVL(regoPart).ToList());
 
         }
+        //To Get the Emails Related to POC start
+        public async Task<JsonResult> OnPostGetPOCEmails(List<int> Emails)
+        {
+            List<string> pocEmails = new List<string>();
+            if (Emails.Count > 0)
+            {
+                foreach (var item in Emails)
+                {
+                    var poc = _guardLogDataProvider.GetEmailPOC(item);
+                    var email = poc.Email;
+                    pocEmails.Add(email);
+                }
+
+            }
+            return new JsonResult(new { pocEmails });
+        }
+        //To Get the Emails Related to POC stop
 
         public JsonResult OnGetTrailerRegos(string regoPart)
         {
@@ -1175,7 +1215,7 @@ namespace CityWatch.Web.Pages.Guard
                     _logger.LogError(ex.StackTrace);
                 }
             }
-
+           
             //try
             //{
             //    var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(id);
@@ -1313,7 +1353,13 @@ namespace CityWatch.Web.Pages.Guard
 
             return new JsonResult(new { success = false, message = exMessage.ToString() });
         }
-
+        public async Task<JsonResult> OnPostGetKeyvehicleemails(int id)
+        {
+           
+                    var poc = _guardDataProvider.GetEmailPOCVehiclelog(id);
+                    
+            return new JsonResult(new { poc });
+        }
         private KeyVehicleLog GetKeyVehicleLog()
         {
             int? logBookId = HttpContext.Session.GetInt32("LogBookId");
@@ -1462,7 +1508,7 @@ namespace CityWatch.Web.Pages.Guard
                     }
                     SiteEventLog svl = new SiteEventLog();
                     svl.ProjectName = "ClientPortal";
-                    svl.ActivityType = "C41 Duress Enable - Global Duress SMS Alert";
+                    svl.ActivityType = "C4i Duress Enable - Global Duress SMS Alert";
                     svl.Module = "Guard";
                     svl.SubModule = "Key Vehicle";
                     svl.GoogleMapCoordinates = gpsCoordinates;
@@ -1481,7 +1527,7 @@ namespace CityWatch.Web.Pages.Guard
                           GuardName = GuradDetails.Name,
                           SiteName = ClientsiteDetails.Name,
                           ProjectName = "ClientPortal",
-                          ActivityType = "C41 Duress Enable - Global Duress SMS Alert",
+                          ActivityType = "C4i Duress Enable - Global Duress SMS Alert",
                           Module = "Guard",
                           SubModule = "Key Vehicle",
                           GoogleMapCoordinates = gpsCoordinates,
@@ -1864,8 +1910,144 @@ namespace CityWatch.Web.Pages.Guard
         }
 
         //to get next crm number-end
-        public IActionResult OnGetClientSiteToggle(int siteId, int toggleId)
+
+
+        //P7-115 DOCKET OUTPUT ISSUES-start
+        public JsonResult OnPostComplianceDocumensUpload()
+
+
         {
+            var success = false;
+            var files = Request.Form.Files;
+            var vehicle_rego = Request.Form["vehicle_rego"].ToString();
+            var foundit = Request.Form["foundit"].ToString();
+            int Id= Convert.ToInt32(Request.Form["id"].ToString());
+            if (files.Count == 1)
+            {
+                var file = files[0];
+                if (file.Length > 0)
+                {
+                    try
+                    {
+                        var uploadFileName = file.FileName;
+                        var folderPath = string.Empty;
+                        if (Id == 0)
+                        {
+                            folderPath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", vehicle_rego ,"ComplianceDocuments");
+                        }
+                        else
+                        {
+                            folderPath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", Id.ToString() ,"ComplianceDocuments");
+                        }
+                        if (!IO.Directory.Exists(folderPath))
+                            IO.Directory.CreateDirectory(folderPath);
+                        if (foundit == "yes")
+                        {
+                            var fulePath = Path.Combine(folderPath, uploadFileName);
+                            if (IO.File.Exists(fulePath))
+                            {
+                                for (int i = 1; i <= 1000; i++)
+                                {
+                                    var newfilename = vehicle_rego + "_" + i + Path.GetExtension(file.FileName);
+                                    var fulePath1 = Path.Combine(folderPath, newfilename);
+                                    if (!IO.File.Exists(fulePath1))
+                                    {
+                                        FileInfo fileInfo = new FileInfo(IO.Path.GetFullPath(Path.Combine(folderPath, uploadFileName)));
+
+                                        fileInfo.Name.Replace(uploadFileName, newfilename);
+                                        using (var stream1 = System.IO.File.OpenRead(fileInfo.FullName))
+                                        {
+
+
+                                            var file2 = new FormFile(stream1, 0, stream1.Length, null, Path.GetFileName(stream1.Name));
+
+                                            using (var stream = IO.File.Create(IO.Path.Combine(folderPath, newfilename)))
+                                            {
+                                                file2.CopyTo(stream);
+                                            }
+                                        }
+
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        using (var stream = IO.File.Create(IO.Path.Combine(folderPath, uploadFileName)))
+                        {
+                            file.CopyTo(stream);
+                        }
+                        success = true;
+
+
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                }
+            }
+
+            return new JsonResult(new { attachmentId = Request.Form["attach_id"], success });
+        }
+        public JsonResult OnGetComplianceDocumentsAttachments(string truck,int id)
+        {
+            var path = string.Empty;
+            if(id==0)
+            {
+                path = truck + "/ComplianceDocuments/";
+            }
+            else
+            {
+                path=id + "/ComplianceDocuments/";
+            }
+            var keyVehicleLogDetails = _viewDataService.GetKeyVehicleLogAttachments(
+                 IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path)
+                 .ToList();
+            //var keyVehicleLogDetails = _viewDataService.GetKeyVehicleLogAttachments(
+            //     IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), truck + "/ComplianceDocuments")
+            //     .ToList();
+
+
+
+
+
+
+            return new JsonResult(keyVehicleLogDetails);
+        }
+        public JsonResult OnPostDeleteComplianceDocumentsAttachment(string reportReference, string fileName, string vehicleRego,int id)
+
+        {
+            var success = false;
+            var filepath = string.Empty;
+            if(id==0)
+            {
+                filepath= IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", vehicleRego,"ComplianceDocuments", fileName);
+            }
+            else
+            {
+                filepath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", id.ToString(), "ComplianceDocuments", fileName) ;
+            }
+               
+                if (IO.File.Exists(filepath))
+                {
+                    try
+                    {
+                        IO.File.Delete(filepath);
+                        success = true;
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            
+            return new JsonResult(success);
+        }
+        //P7-115 DOCKET OUTPUT ISSUES-start
+
+        public IActionResult OnGetClientSiteToggle(int siteId,int toggleId)
+        {
+
 
             return new JsonResult(_guardDataProvider.GetClientSiteToggle(siteId, toggleId));
         }

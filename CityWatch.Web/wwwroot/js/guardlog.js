@@ -1564,6 +1564,7 @@
             alert('Date Range is  greater than 6 months');
             return false;
         }
+
         //calculate month difference-end
         $('#KeyVehicleLogAuditLogRequest_ClientSiteId').val($('#vklClientSiteId').val());
         $('#KeyVehicleLogAuditLogRequest_LogFromDate').val($('#vklAudtitFromDate').val());

@@ -95,7 +95,8 @@ namespace CityWatch.Data.Models
         public int? ClientSiteLocationId { get; set; }
 
         public int? ClientSitePocId { get; set; }
-
+        
+        public string ClientSitePocIdsVehicleLog { get; set; }
         public decimal? Reels { get; set; }
 
         public string CustomerRef { get; set; }
@@ -165,6 +166,7 @@ namespace CityWatch.Data.Models
         public int? EntryCreatedDateTimeUtcOffsetMinute { get; set; }
 
 
+
         public int? Trailer1PlateId { get; set; }
 
         public int? Trailer2PlateId { get; set; }
@@ -172,6 +174,12 @@ namespace CityWatch.Data.Models
         public int? Trailer3PlateId { get; set; }
 
         public int? Trailer4PlateId { get; set; }
+
+
+        [HiddenInput]
+        public bool IsDocketNo { get; set; }
+        public string LoaderName { get; set; }
+        public string DispatchName { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
@@ -309,5 +317,9 @@ namespace CityWatch.Data.Models
         public bool IsReels { get; set; }
         [HiddenInput]
         public bool IsVWI { get; set; }
+        public string EmailCompany { get; set; }
+        public string Emailindividual { get; set; }
+        [NotMapped]
+        public string SitePocNames { get; set; }
     }
 }
