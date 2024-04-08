@@ -1217,7 +1217,7 @@ $(function () {
             $('#lblISO_One').text(isISOVIN ? 'ISO/VIN + Seal' : 'Trailer 1 Rego.');
             $('#lblISO_Two').text(isISOVIN ? 'ISO/VIN + Seal' : 'Trailer 2 Rego.');
             $('#lblISO_Three').text(isISOVIN ? 'ISO/VIN + Seal' : 'Trailer 3 Rego.');
-            $('#lblISO_Four').text(isISOVIN ? 'ISO/VIN + Seal' : 'Trailer 3 Rego.');
+            $('#lblISO_Four').text(isISOVIN ? 'ISO/VIN + Seal' : 'Trailer 4 Rego.');
             $('#cbIsISOVIN').prop('checked', isISOVIN);
 
 
@@ -1340,7 +1340,7 @@ $(function () {
             $('#lblISO_One').text(isChecked ? 'ISO/VIN + Seal' : 'Trailer 1 Rego.');
             $('#lblISO_Two').text(isChecked ? 'ISO/VIN + Seal' : 'Trailer 2 Rego.');
             $('#lblISO_Three').text(isChecked ? 'ISO/VIN + Seal' : 'Trailer 3 Rego.');
-            $('#lblISO_Four').text(isChecked ? 'ISO/VIN + Seal' : 'Trailer 3 Rego.');
+            $('#lblISO_Four').text(isChecked ? 'ISO/VIN + Seal' : 'Trailer 4 Rego.');
             $('#IsISOVIN').val(isChecked);
         });
         /*for manifest options-end*/
@@ -5501,7 +5501,7 @@ function GetToggles(siteId, toggleId) {
                     $('#lblISO_One').text(response[0].isActive ? 'ISO/VIN + Seal' : 'Trailer 1 Rego.');
                     $('#lblISO_Two').text(response[0].isActive ? 'ISO/VIN + Seal' : 'Trailer 2 Rego.');
                     $('#lblISO_Three').text(response[0].isActive ? 'ISO/VIN + Seal' : 'Trailer 3 Rego.');
-                    $('#lblISO_Four').text(response[0].isActive ? 'ISO/VIN + Seal' : 'Trailer 3 Rego.');
+                    $('#lblISO_Four').text(response[0].isActive ? 'ISO/VIN + Seal' : 'Trailer 4 Rego.');
                 }
                 else {
                     $('#IsISOVIN').val(false);
@@ -5509,7 +5509,7 @@ function GetToggles(siteId, toggleId) {
                     $('#lblISO_One').text(response[0].isActive ? 'ISO/VIN + Seal' : 'Trailer 1 Rego.');
                     $('#lblISO_Two').text(response[0].isActive ? 'ISO/VIN + Seal' : 'Trailer 2 Rego.');
                     $('#lblISO_Three').text(response[0].isActive ? 'ISO/VIN + Seal' : 'Trailer 3 Rego.');
-                    $('#lblISO_Four').text(response[0].isActive ? 'ISO/VIN + Seal' : 'Trailer 3 Rego.');
+                    $('#lblISO_Four').text(response[0].isActive ? 'ISO/VIN + Seal' : 'Trailer 4 Rego.');
                 }
             }
             return response[0].isActive;
