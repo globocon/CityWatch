@@ -1178,6 +1178,8 @@ $(function () {
             $('#cbIsSender').prop('checked', true);
             $('#IsReels').val(true);
             $('#cbIsReels').prop('checked', true);
+            $('#cbIsISOVIN').prop('checked', true);
+
             GetToggles($('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(), 1);
 
 
@@ -1190,6 +1192,7 @@ $(function () {
             //$('#cbIsSender').prop('checked', true);
             GetToggles($('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(), 2);
             GetToggles($('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(), 4);
+            GetToggles($('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(), 5);
             /*for manifest options-end*/
             /*for initializing the BDM to true-start*/
             $('#cbIsBDMOrSales').prop('checked', true);
@@ -1209,6 +1212,14 @@ $(function () {
             let isReels = $('#IsReels').val().toLowerCase() === 'true';
             $('#lblIsReels').text(isReels ? 'Reels' : 'QTY');
             $('#cbIsReels').prop('checked', isReels);
+
+            let isISOVIN = $('#IsISOVIN').val().toLowerCase() === 'true';
+            $('#lblISO_One').text(isISOVIN ? 'ISO/VIN + Seal' : 'Trailer 1 Rego.');
+            $('#lblISO_Two').text(isISOVIN ? 'ISO/VIN + Seal' : 'Trailer 2 Rego.');
+            $('#lblISO_Three').text(isISOVIN ? 'ISO/VIN + Seal' : 'Trailer 3 Rego.');
+            $('#lblISO_Four').text(isISOVIN ? 'ISO/VIN + Seal' : 'Trailer 3 Rego.');
+            $('#cbIsISOVIN').prop('checked', isISOVIN);
+
 
             let isVWI = $('#IsVWI').val().toLowerCase() === 'true';
             $('#lblIsVWI').text(isVWI ? 'VWI' : 'Manifest');
@@ -1322,6 +1333,15 @@ $(function () {
             const isChecked = $(this).is(':checked');
             $('#lblIsVXI').text(isChecked ? 'VWI' : 'Manifest');
             $('#IsVWI').val(isChecked);
+        });
+
+        $('#cbIsISOVIN').on('change', function () {
+            const isChecked = $(this).is(':checked');
+            $('#lblISO_One').text(isChecked ? 'ISO/VIN + Seal' : 'Trailer 1 Rego.');
+            $('#lblISO_Two').text(isChecked ? 'ISO/VIN + Seal' : 'Trailer 2 Rego.');
+            $('#lblISO_Three').text(isChecked ? 'ISO/VIN + Seal' : 'Trailer 3 Rego.');
+            $('#lblISO_Four').text(isChecked ? 'ISO/VIN + Seal' : 'Trailer 3 Rego.');
+            $('#IsISOVIN').val(isChecked);
         });
         /*for manifest options-end*/
         /*for changing the BDM-start*/
@@ -5471,6 +5491,25 @@ function GetToggles(siteId, toggleId) {
                     $('#IsReels').val(false);
                     $('#cbIsReels').prop('checked', false);
                     $('#lblIsReels').text(response[0].isActive ? 'Reels' : 'QTY');
+                }
+            }
+
+            if (response[0].toggleTypeId == 5) {
+                if (response[0].isActive == true) {
+                    $('#IsISOVIN').val(true);
+                    $('#cbIsISOVIN').prop('checked', true);
+                    $('#lblISO_One').text(response[0].isActive ? 'ISO/VIN + Seal' : 'Trailer 1 Rego.');
+                    $('#lblISO_Two').text(response[0].isActive ? 'ISO/VIN + Seal' : 'Trailer 2 Rego.');
+                    $('#lblISO_Three').text(response[0].isActive ? 'ISO/VIN + Seal' : 'Trailer 3 Rego.');
+                    $('#lblISO_Four').text(response[0].isActive ? 'ISO/VIN + Seal' : 'Trailer 3 Rego.');
+                }
+                else {
+                    $('#IsISOVIN').val(false);
+                    $('#cbIsISOVIN').prop('checked', false);
+                    $('#lblISO_One').text(response[0].isActive ? 'ISO/VIN + Seal' : 'Trailer 1 Rego.');
+                    $('#lblISO_Two').text(response[0].isActive ? 'ISO/VIN + Seal' : 'Trailer 2 Rego.');
+                    $('#lblISO_Three').text(response[0].isActive ? 'ISO/VIN + Seal' : 'Trailer 3 Rego.');
+                    $('#lblISO_Four').text(response[0].isActive ? 'ISO/VIN + Seal' : 'Trailer 3 Rego.');
                 }
             }
             return response[0].isActive;

@@ -734,6 +734,7 @@ namespace CityWatch.Data.Providers
 
                     keyVehicleLogToUpdate.IsReels = keyVehicleLog.IsReels;
                     keyVehicleLogToUpdate.IsVWI = keyVehicleLog.IsVWI;
+                    keyVehicleLogToUpdate.IsISOVIN = keyVehicleLog.IsISOVIN;
 
                     keyVehicleLogToUpdate.Trailer1PlateId = keyVehicleLog.Trailer1PlateId;
                     keyVehicleLogToUpdate.Trailer2PlateId = keyVehicleLog.Trailer2PlateId;

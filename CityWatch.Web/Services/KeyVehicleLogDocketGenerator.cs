@@ -17,8 +17,10 @@ using iText.Layout.Properties;
 using iText.Pdfa;
 using iText.StyledXmlParser.Jsoup.Helper;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
+using Org.BouncyCastle.Asn1.Cmp;
 using Org.BouncyCastle.Crypto.Paddings;
 using System;
 using System.Collections.Generic;
@@ -1220,10 +1222,14 @@ namespace CityWatch.Web.Services
             vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate));
             vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.TruckConfigText));
             vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.TrailerTypeText));
-            vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Trailer1Rego));
-            vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Trailer2Rego));
-            vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Trailer3Rego));
-            vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Detail.Trailer4Rego));
+
+          
+           
+
+            vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate1+"\n"+ keyVehicleLogViewModel.Detail.Trailer1Rego));
+            vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate2 + "\n" + keyVehicleLogViewModel.Detail.Trailer2Rego));
+            vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate3 + "\n" + keyVehicleLogViewModel.Detail.Trailer3Rego));
+            vehicleDetailsTable.AddCell(GetDataCell(keyVehicleLogViewModel.Plate4 + "\n" + keyVehicleLogViewModel.Detail.Trailer4Rego));
 
             return vehicleDetailsTable;
         }
@@ -1613,6 +1619,7 @@ namespace CityWatch.Web.Services
             return string.Empty;
         }
 
+       
         private string GetKeyDetailsCommaSeparated(KeyVehicleLog keyVehicleLog)
         {
             var clientSiteKeys = _guardSettingsDataProvider.GetClientSiteKeys(keyVehicleLog.ClientSiteLogBook.ClientSiteId);
