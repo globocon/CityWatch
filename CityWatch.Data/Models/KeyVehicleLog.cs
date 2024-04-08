@@ -321,5 +321,7 @@ namespace CityWatch.Data.Models
         public string Emailindividual { get; set; }
         [NotMapped]
         public string SitePocNames { get; set; }
+        [HiddenInput]
+        public bool IsISOVIN { get; set; }
     }
 }
