@@ -782,13 +782,14 @@ $(function () {
             if (!$('#CompanyName').val()) {
                 $('#CompanyName').val(result.companyName);
             }
-            if (!$('#PersonName').val()) {
+            if (!$('#PersonName').val() || $('#PersonName').val() ==='Unknown') {
                 $('#PersonName').val(personName);
             }
             if (!$('#PersonType').val()) {
                 $('#PersonType').val(result.personType);
             }
-            if (!$('#MobileNumber').val()) {
+          
+            if (!$('#MobileNumber').val() || $('#MobileNumber').val() === '+61 (0) ') {
                 $('#MobileNumber').val(result.keyVehicleLogProfile.mobileNumber);
             }
             if (!$('#EntryReason').val()) {
@@ -3487,13 +3488,13 @@ $(function () {
                 if (!$('#CompanyName').val()) {
                     $('#CompanyName').val(result.companyName);
                 }
-                if (!$('#PersonName').val()) {
+                if (!$('#PersonName').val() || $('#PersonName').val() === 'Unknown') {
                     $('#PersonName').val(personName);
                 }
                 if (!$('#PersonType').val()) {
                     $('#PersonType').val(result.personType);
                 }
-                if (!$('#MobileNumber').val()) {
+                if (!$('#MobileNumber').val() || $('#MobileNumber').val() === '+61 (0) ') {
                     $('#MobileNumber').val(result.keyVehicleLogProfile.mobileNumber);
                 }
                 if (!$('#EntryReason').val()) {
