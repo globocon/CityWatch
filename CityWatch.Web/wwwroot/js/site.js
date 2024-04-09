@@ -2273,7 +2273,7 @@ let gridHrSettings;
 //        info: false,
 //        scrollX: true,
 //        ajax: {
-//            url: '/Guard/KeyVehicleLog?handler=KeyVehicleLogs',
+//            url: '/Admin/Settings?handler=ClientSites',
 //            data: function (d) {
 //                d.logbookId = $('#KeyVehicleLog_ClientSiteLogBookId').val();
 //                d.kvlStatusFilter = $('#kvl_status_filter').val();
@@ -2283,14 +2283,13 @@ let gridHrSettings;
 //        columns: [
 //            { data: 'detail.id', visible: false },
 
-//            { data: 'detail.initialCallTime', width: '5%', title:'HR Group' },
-//            { data: 'detail.entryTime', width: '5%' },
-//            { data: 'detail.sentInTime', width: '5%' },
-           
+//            { data: 'detail.initialCallTime', width: '100%', title:'HR Group' },
+//            { data: 'detail.entryTime', width: '100%', type: 'dropdown', title: 'Reference No' },
+//            { data: 'detail.initialCallTime', width: '100%', title: 'Description' },
 //            {
 //                targets: -1,
 //                data: 'detail.id',
-//                width: '12%',
+//                width: '20%',
 //                defaultContent: '',
 
 //                render: function (value, type, data) {
@@ -2310,86 +2309,7 @@ let gridHrSettings;
 //                //   '<button id="btnPrintVkl" class="btn btn-outline-primary mr-1 "><i class="fa fa-print"></i></button>' +
 //                //    '<button id="btnDeleteVkl" class="btn btn-outline-danger mr-2 mt-1"><i class="fa fa-trash mr-2"></i>Delete</button>',
 //            }],
-//        'createdRow': function (row, data, index) {
-//            if (data.detail.initialCallTime !== null) {
-//                $('td', row).eq(1).html(convertDateTimeString(data.detail.initialCallTime));
-//                /*to display the color yellow-start*/
-//                if (data.detail.entryTime == null && data.detail.sentInTime == null && data.detail.exitTime == null) {
-//                    $('td', row).eq(1).addClass('initial-call-colour');
-//                    $('td', row).eq(2).addClass('initial-call-colour');
-//                    $('td', row).eq(3).addClass('initial-call-colour');
-//                    $('td', row).eq(4).addClass('initial-call-colour');
-//                    $('td', row).eq(5).addClass('initial-call-colour');
-//                    $('td', row).eq(6).addClass('initial-call-colour');
-//                    $('td', row).eq(7).addClass('initial-call-colour');
-//                    $('td', row).eq(8).addClass('initial-call-colour');
-//                    $('td', row).eq(9).addClass('initial-call-colour');
-//                    $('td', row).eq(10).addClass('initial-call-colour');
-//                    $('td', row).eq(11).addClass('initial-call-colour');
-//                }
-//                /*to display the color yellow-end*/
-//            }
-//            if (data.detail.entryTime !== null) {
-//                $('td', row).eq(2).html(convertDateTimeString(data.detail.entryTime));
-//                /*to display the color green for entry time-start*/
-//                if (data.detail.sentInTime == null && data.detail.exitTime == null) {
-//                    $('td', row).eq(1).addClass('entry-time-colour');
-//                    $('td', row).eq(2).addClass('entry-time-colour');
-//                    $('td', row).eq(3).addClass('entry-time-colour');
-//                    $('td', row).eq(4).addClass('entry-time-colour');
-//                    $('td', row).eq(5).addClass('entry-time-colour');
-//                    $('td', row).eq(6).addClass('entry-time-colour');
-//                    $('td', row).eq(7).addClass('entry-time-colour');
-//                    $('td', row).eq(8).addClass('entry-time-colour');
-//                    $('td', row).eq(9).addClass('entry-time-colour');
-//                    $('td', row).eq(10).addClass('entry-time-colour');
-//                    $('td', row).eq(11).addClass('entry-time-colour');
-//                }
-//                /*to display the color green for entry time-end*/
-//            }
-//            if (data.detail.sentInTime !== null) {
-//                $('td', row).eq(3).html(convertDateTimeString(data.detail.sentInTime));
-//                /*to display the color green for sent in time-start*/
-//                if (data.detail.exitTime == null) {
-//                    $('td', row).eq(1).addClass('entry-time-colour');
-//                    $('td', row).eq(2).addClass('entry-time-colour');
-//                    $('td', row).eq(3).addClass('entry-time-colour');
-//                    $('td', row).eq(4).addClass('entry-time-colour');
-//                    $('td', row).eq(5).addClass('entry-time-colour');
-//                    $('td', row).eq(6).addClass('entry-time-colour');
-//                    $('td', row).eq(7).addClass('entry-time-colour');
-//                    $('td', row).eq(8).addClass('entry-time-colour');
-//                    $('td', row).eq(9).addClass('entry-time-colour');
-//                    $('td', row).eq(10).addClass('entry-time-colour');
-//                    $('td', row).eq(11).addClass('entry-time-colour');
-//                }
-//                /*to display the color green for sent in time-end*/
-//            }
-//            if (data.detail.exitTime !== null) {
-//                $('td', row).eq(4).html(convertDateTimeString(data.detail.exitTime));
-//                /*to display the color green for exit  time-start*/
 
-//                $('td', row).eq(1).addClass('exit-time-colour');
-//                $('td', row).eq(2).addClass('exit-time-colour');
-//                $('td', row).eq(3).addClass('exit-time-colour');
-//                $('td', row).eq(4).addClass('exit-time-colour');
-//                $('td', row).eq(5).addClass('exit-time-colour');
-//                $('td', row).eq(6).addClass('exit-time-colour');
-//                $('td', row).eq(7).addClass('exit-time-colour');
-//                $('td', row).eq(8).addClass('exit-time-colour');
-//                $('td', row).eq(9).addClass('exit-time-colour');
-//                $('td', row).eq(10).addClass('exit-time-colour');
-//                $('td', row).eq(11).addClass('exit-time-colour');
-
-//                /*to display the color green for exit  time-end*/
-//            }
-//            if (data.detail.exitTime == null) {
-//                $('td', row).eq(4).html('<button type="button" class="btn btn-success btn-exit-quick">E</button> ');
-//            }
-//        },
-//        'drawCallback': function () {
-//            $('#total_events').html(this.fnSettings().fnRecordsTotal());
-//        }
 //    });
 
 //    var dataTable = $('#vehicle_key_daily_log').DataTable();
@@ -2399,75 +2319,213 @@ let gridHrSettings;
 //        ids.push(index.detail.id);
 //    });
 //}
-gridHrSettings = $('#tbl_hr_settings ').grid({
-    dataSource: '/Admin/Settings?handler=ClientSites',
+gridHrSettings = $('#tbl_hr_settings').grid({
+    dataSource: '/Admin/GuardSettings?handler=HRSettings',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    //inlineEditing: { mode: 'command' },
+    columns: [
+        { field: 'id', hidden: true },
+        { field: 'groupName', title: 'HR Group', width: '100%' },
+        { field: 'referenceNo', title: 'Reference No', width: '100%' },
+
+
+
+        { field: 'description', width: '100%', title: 'Description' },
+
+        { width: '100%', renderer: hrgroupButtonRenderer },
+
+    ],
+
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    },
+
+});
+function hrgroupButtonRenderer(value, record) {
+    return '<button id="btnEditHrGroup" data-doc-id="' + record.id + '" data-doc-hrgroupid="' + record.hrGroupId + '" data-doc-refnonumberid="' + record.referenceNoNumberId + '" data-doc-refalphnumberid="' + record.referenceNoAlphabetId + '" data-doc-description="' + record.description + '" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
+        '<button id="btnDeleteHrGroup" data-doc-id="' + record.id + '" class="btn btn-outline-danger"><i class="fa fa-trash mr-2"></i>Delete</button>' +
+
+        '</div>'
+}
+let isHrSettingsAdding = false
+//$('#user_settings').on('click', '.deleteuser', function () {
+//    if (confirm('Are you sure want to delete this user?')) {
+//        toggleUserStatus($(this).attr('data-user-id'), true);
+//    }
+//});
+$('#tbl_hr_settings tbody').on('click', '#btnEditHrGroup', function () {
+
+    $('#HrSettings_Id').val($(this).attr('data-doc-id'))
+    $('#list_hrGroups').val($(this).attr('data-doc-hrgroupid'));
+    $('#list_ReferenceNoNumber').val($(this).attr('data-doc-refnonumberid'));
+    $('#list_ReferenceNoAlphabet').val($(this).attr('data-doc-refalphnumberid'));
+    $('#txtHrSettingsDescription').val($(this).attr('data-doc-description'));
+    $('#hrSettingsModal').modal('show');
+
+});
+$('#tbl_hr_settings tbody').on('click', '#btnDeleteHrGroup', function () {
+    // var data = keyVehicleLog.row($(this).parents('tr')).data();
+    if (confirm('Are you sure want to delete this  entry?')) {
+        $.ajax({
+            type: 'POST',
+            url: '/Admin/GuardSettings?handler=DeleteHRSettings',
+            data: { 'id': $(this).attr('data-doc-id') },
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            beforeSend: function () {
+                $('#loader').show();
+            }
+        }).done(function () {
+            gridHrSettings.reload();
+        }).always(function () {
+            $('#loader').hide();
+        });
+    }
+});
+let gridLicenseTypes
+gridLicenseTypes = $('#tbl_license_type').grid({
+    dataSource: '/Admin/GuardSettings?handler=LicensesTypes',
     uiLibrary: 'bootstrap4',
     iconsLibrary: 'fontawesome',
     primaryKey: 'id',
     inlineEditing: { mode: 'command' },
     columns: [
         { field: 'id', hidden: true },
-        { field: 'hrGroup', title: 'HR Group', width: '100%', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
+        { field: 'name', title: 'Description', width: '100%', editor: true },
 
-        { field: 'referenceNo', width: '100%', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' }, type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
-        //{ field: 'referenceNoAlphabet', width: '5%', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
 
-        { field: 'description', width: '100%', editor: true },
- 
     ],
+
     initialized: function (e) {
         $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
-    }
+    },
+
 });
-//let isHrSettingsAdding=false
-//if (gridHrSettings) {
-//    gridHrSettings.on('rowDataChanged', function (e, id, record) {
-//        const data = $.extend(true, {}, record);
-//        data.status = !Number.isInteger(data.status) ? clientSiteStatuses.getValue(data.status) : data.status;
-//        const token = $('input[name="__RequestVerificationToken"]').val();
-//        $.ajax({
-//            url: '/Admin/Settings?handler=ClientSites',
-//            data: { record: data },
-//            type: 'POST',
-//            headers: { 'RequestVerificationToken': token },
-//        }).done(function () {
-//            gridHrSettings.clear();
-//            gridHrSettings.reload({ typeId: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val() });
-//        }).fail(function () {
-//            console.log('error');
-//        }).always(function () {
-//            if (isHrSettingsAdding)
-//                isHrSettingsAdding = false;
-//        });
-//    });
+if (gridLicenseTypes) {
+    gridLicenseTypes.on('rowDataChanged', function (e, id, record) {
+        const data = $.extend(true, {}, record);
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=SaveLicensesTypes',
+            data: { record: data },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.success) gridLicenseTypes.reload();
+            else alert(result.message);
+        }).fail(function () {
+            console.log('error');
+        }).always(function () {
+            if (isHrSettingsAdding)
+                isHrSettingsAdding = false;
+        });
+    });
 
-//    gridHrSettings.on('rowRemoving', function (e, id, record) {
-//        const isAdminLoggedIn = $('#hdnIsAdminLoggedIn').val();
-//        if (isAdminLoggedIn === 'False') {
-//            showModal('Insufficient permission to perform this operation');
-//            return;
-//        }
-
-//        if (confirm('Are you sure want to delete this client site?')) {
-//            const token = $('input[name="__RequestVerificationToken"]').val();
-//            $.ajax({
-//                url: '/Admin/Settings?handler=DeleteClientSite',
-//                data: { id: record },
-//                type: 'POST',
-//                headers: { 'RequestVerificationToken': token },
-//            }).done(function () {
-//                gridHrSettings.reload();
-//            }).fail(function () {
-//                console.log('error');
-//            }).always(function () {
-//                if (isHrSettingsAdding)
-//                    isHrSettingsAdding = false;
-//            });
-//        }
-//    });
-//}
+    gridLicenseTypes.on('rowRemoving', function (e, id, record) {
+        if (confirm('Are you sure want to delete this field?')) {
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=DeleteLicensesTypes',
+                data: { id: record },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.success) gridLicenseTypes.reload();
+                else alert(result.message);
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isHrSettingsAdding)
+                    isHrSettingsAdding = false;
+            });
+        }
+    });
+}
+gridHrSettings.hide();
+gridLicenseTypes.hide();
 $('#hr_settings_fields_types').on('change', function () {
     const selHTSettingsFieldTypeId = $('#hr_settings_fields_types').val();
-    gridHrSettings.clear();
-    gridHrSettings.reload({ typeId: selHTSettingsFieldTypeId });
+    if ($('#hr_settings_fields_types').val() == 1) {
+        gridHrSettings.show();
+        gridHrSettings.clear();
+        gridHrSettings.reload();
+        gridLicenseTypes.hide();
+    }
+
+    if ($('#hr_settings_fields_types').val() == 2) {
+        gridHrSettings.hide();
+        gridLicenseTypes.show();
+        gridLicenseTypes.clear();
+        gridLicenseTypes.reload();
+    }
 });
+$('#add_hr_settings').on('click', function () {
+    var selFieldTypeId = $('#hr_settings_fields_types').val();
+    if (!selFieldTypeId) {
+        alert('Please select a field type to update');
+        return;
+    }
+    if (selFieldTypeId == 1) {
+        $('#list_hrGroups').val('');
+        $('#list_ReferenceNoNumber').val('');
+        $('#list_ReferenceNoAlphabet').val('');
+        $('#txtHrSettingsDescription').val('');
+        $('#hrSettingsModal').modal('show');
+    }
+    if ($('#hr_settings_fields_types').val() == 2) { 
+        if (isHrSettingsAdding) {
+            alert('Unsaved changes in the grid. Refresh the page');
+        } else {
+            isHrSettingsAdding = true;
+            gridLicenseTypes.addRow({
+                'id': -1,
+                'name': '',
+            }).edit(-1);
+     }  }
+
+});
+
+$('#btn_save_hr_settings').on('click', function () {
+    var form = document.getElementById('form_new_hr_settings');
+    var jsformData = new FormData(form);
+    var data = $('#list_hrGroups').val();
+    $.ajax({
+        url: '/Admin/GuardSettings?handler=SaveHRSettings',
+        type: 'POST',
+        //data: jsformData,
+        data: {
+            'Id': $('#HrSettings_Id').val(),
+            'hrGroupId': $('#list_hrGroups').val(),
+            'refNoNumberId': $('#list_ReferenceNoNumber').val(),
+            'refNoAlphabetId': $('#list_ReferenceNoAlphabet').val(),
+            'description': $('#txtHrSettingsDescription').val()
+        },
+        //processData: false,
+        //contentType: false,
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        beforeSend: function () {
+            $('#loader').show();
+        }
+    }).done(function (result) {
+        if (result.status) {
+
+            $('#hrSettingsModal').modal('hide');
+            gridHrSettings.clear();
+            gridHrSettings.reload();
+        } else {
+            displayValidationSummary(result.errors);
+        }
+    }).always(function () {
+        $('#loader').hide();
+    });
+});
+function displayValidationSummary(errors) {
+    const summaryDiv = document.getElementById('hrsettings-field-validation');
+    summaryDiv.className = "validation-summary-errors";
+    summaryDiv.querySelector('ul').innerHTML = '';
+    errors.forEach(function (item) {
+        const li = document.createElement('li');
+        li.appendChild(document.createTextNode(item));
+        summaryDiv.querySelector('ul').appendChild(li);
+    });
+}

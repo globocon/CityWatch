@@ -109,24 +109,30 @@
                     </div>
                 </div>
                 <div class="col-md-12">
-                    <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings">
-                      @*  <thead>
+                    <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings" >
+                      @*<thead>
                             <tr>
-                                <th rowspan ="2"></th>
+                                <th rowspan="2" style="display:none"></th>
                                 <th rowspan="2">HR Group</th>
-                                <th colspan="2">Reference No</th>
+                                @*<th colspan="2">Reference No</th>
+                                
                                 <th rowspan="2">Description</th>
+                                <th rowspan="2"></th>
                                 
                             </tr>
                             <tr>
+                                <th style="display:none"></th>
                                 <th></th>
                                 <th></th>
                                 <th></th>
                                 <th></th>
                                 <th></th>
+
                             </tr>
+                            
                         </thead>*@
                     </table>
+                    <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
                 </div>
             </div>
         </div>
@@ -374,8 +380,62 @@
         </div>
     </div>
 </div>
+<div class="modal" tabindex="-1" role="dialog" id="hrSettingsModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8">HR Settings</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="form_new_hr_settings">
+                <div class="form-row">
+                    <div class="col-md-4">
+                        <label>HR Groups</label>
+                            <select class="form-control" id="list_hrGroups" asp-for="@Model.HrSettings.HRGroupId" asp-items="@viewDataService.GetHRGroups( true)"></select>
+                            <input type="hidden" asp-for="@Model.HrSettings.Id" id="HrSettings_Id" />
+                    </div>
+                    <div class="col-md-8">
+                        <label>Reference No</label>
+                        <div class="form-row">
+                            <div class="col-md-4">
+                                    <select class="form-control" id="list_ReferenceNoNumber" asp-for="@Model.HrSettings.ReferenceNoNumberId" asp-items=" @viewDataService.GetReferenceNoNumbers( true)"></select>
+
+                            </div>
+                            <div class="col-md-4">
+                                    <select class="form-control" id="list_ReferenceNoAlphabet" asp-for="@Model.HrSettings.ReferenceNoAlphabetId" asp-items="@viewDataService.GetReferenceNoAlphabets( true)"></select>
+
+                            </div>
+                            </div>
+                        
+                      
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <label>Descriptions</label>
+                        <textarea class="form-control" id="txtHrSettingsDescription" asp-for="@Model.HrSettings.Description"></textarea>
+                    </div>
+
+
+                </div>
+                    <div asp-validation-summary="All" id="hrsettings-field-validation"></div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-start">
+                <button type="button" class="btn btn-primary" id="btn_save_hr_settings">Save</button>
+            </div>
+        </div>
+
+
+    </div>
+</div>
 <partial name="_GuardAddLicensePopup" />
 <partial name="_GuardAddCompliancePopup" />
 <partial name="_KeySiteSettingsPopup" />
 <partial name="_GuardSiteSettings" />
+@*<partial name="﻿_HRSettingsPopup" />*@
 @Html.AntiForgeryToken()
