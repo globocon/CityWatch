@@ -750,22 +750,22 @@ $(function () {
                 }
 
             }
-            if ($('#VehicleRego').val() === '') {
+           /* if ($('#VehicleRego').val() === '') {*/
                 $('#VehicleRego').val(result.keyVehicleLogProfile.vehicleRego);
-            }
+            /*}*/
 
-            if (!$('#kvl_list_plates').val()) {
+           /* if (!$('#kvl_list_plates').val()) {*/
                 $('#kvl_list_plates').val(result.keyVehicleLogProfile.plateId);
-            }
-            if (!$('#TruckConfig').val()) {
+           /* }*/
+           /* if (!$('#TruckConfig').val()) {*/
                 $('#TruckConfig').val(result.keyVehicleLogProfile.truckConfig);
-            }
-            if (!$('#TrailerType').val()) {
+           /* }*/
+           /* if (!$('#TrailerType').val()) {*/
                 $('#TrailerType').val(result.keyVehicleLogProfile.trailerType);
-            }
-            if (!$('#MaxWeight').val()) {
+           /* }*/
+            /*if (!$('#MaxWeight').val()) {*/
                 $('#MaxWeight').val(result.keyVehicleLogProfile.maxWeight);
-            }
+            /*}*/
             if (!$('#Trailer1Rego').val()) {
                 // $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer1Rego);
             }
@@ -779,28 +779,28 @@ $(function () {
                 //$('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer4Rego);
 
             }
-            if (!$('#CompanyName').val()) {
+           /* if (!$('#CompanyName').val()) {*/
                 $('#CompanyName').val(result.companyName);
-            }
-            if (!$('#PersonName').val() || $('#PersonName').val() ==='Unknown') {
+           /* }*/
+            /*if (!$('#PersonName').val() || $('#PersonName').val() ==='Unknown') {*/
                 $('#PersonName').val(personName);
-            }
-            if (!$('#PersonType').val()) {
+            /*}*/
+           /* if (!$('#PersonType').val()) {*/
                 $('#PersonType').val(result.personType);
-            }
+            /*}*/
           
-            if (!$('#MobileNumber').val() || $('#MobileNumber').val() === '+61 (0) ') {
+            /*if (!$('#MobileNumber').val() || $('#MobileNumber').val() === '+61 (0) ') {*/
                 $('#MobileNumber').val(result.keyVehicleLogProfile.mobileNumber);
-            }
-            if (!$('#EntryReason').val()) {
+           /* }*/
+          /*  if (!$('#EntryReason').val()) {*/
                 $('#EntryReason').val(result.keyVehicleLogProfile.entryReason);
-            }
-            if (!$('#Product').val()) {
+           /* }*/
+            /*if (!$('#Product').val()) {*/
                 $('#Product').val(result.keyVehicleLogProfile.product);
-            }
-            if (!$('#Notes').val()) {
+            /*}*/
+            /*if (!$('#Notes').val()) {*/
                 $('#Notes').val(result.keyVehicleLogProfile.notes);
-            }
+           /* }*/
             //=========================================
             $("#list_product").val(result.keyVehicleLogProfile.product);
             $("#list_product").trigger('change');
@@ -3488,13 +3488,13 @@ $(function () {
                 if (!$('#CompanyName').val()) {
                     $('#CompanyName').val(result.companyName);
                 }
-                if (!$('#PersonName').val() || $('#PersonName').val() === 'Unknown') {
+                if (!$('#PersonName').val() ) {
                     $('#PersonName').val(personName);
                 }
                 if (!$('#PersonType').val()) {
                     $('#PersonType').val(result.personType);
                 }
-                if (!$('#MobileNumber').val() || $('#MobileNumber').val() === '+61 (0) ') {
+                if (!$('#MobileNumber').val() ) {
                     $('#MobileNumber').val(result.keyVehicleLogProfile.mobileNumber);
                 }
                 if (!$('#EntryReason').val()) {
