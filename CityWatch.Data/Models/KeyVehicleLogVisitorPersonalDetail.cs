@@ -42,7 +42,7 @@ namespace CityWatch.Data.Models
 
         public string PersonName { get; set; }
         public int? PersonOfInterest { get; set; }
-      
+
         public string POIImage { get; set; }
         [NotMapped]
         public string POIImageDisplay { get; set; }
@@ -75,6 +75,18 @@ namespace CityWatch.Data.Models
                     (PersonType == other.PersonType);
         }
 
+        public bool EqualsTrailer(KeyVehicleLogVisitorPersonalDetail other)
+        {
+            return (KeyVehicleLogProfile.Trailer1Rego == other.KeyVehicleLogProfile.Trailer1Rego) &&
+                 (KeyVehicleLogProfile.Trailer2Rego == other.KeyVehicleLogProfile.Trailer2Rego) &&
+                  (KeyVehicleLogProfile.Trailer3Rego == other.KeyVehicleLogProfile.Trailer3Rego) &&
+                  (KeyVehicleLogProfile.Trailer4Rego == other.KeyVehicleLogProfile.Trailer4Rego) &&
+                  (KeyVehicleLogProfile.Trailer1PlateId == other.KeyVehicleLogProfile.Trailer1PlateId) &&
+                  (KeyVehicleLogProfile.Trailer2PlateId == other.KeyVehicleLogProfile.Trailer2PlateId) &&
+                  (KeyVehicleLogProfile.Trailer3PlateId == other.KeyVehicleLogProfile.Trailer3PlateId) &&
+                   (KeyVehicleLogProfile.Trailer4PlateId == other.KeyVehicleLogProfile.Trailer4PlateId)
+                   ;
+        }
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             var errors = new List<ValidationResult>();

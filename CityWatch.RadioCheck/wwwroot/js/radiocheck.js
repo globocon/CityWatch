@@ -256,7 +256,10 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
-                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardLogBookInfoModal" id="btnLogBookDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" text="' + data.clientSiteId + '"><input type="hidden" id="GuardId" text="' + data.guardId + '"> ';
+                if (value != 0)
+                    return '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardLogBookInfoModal" id="btnLogBookDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                else
+                    return '<button type="button" class="btn" id="btnLogBookHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
             }
         },
         {
@@ -264,8 +267,11 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             width: '6%',
             className: "text-center",
             render: function (value, type, data) {
-                if (value === null) return 'N/A';
-                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardKeyVehicleInfoModal" id="btnKeyVehicleDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                if (value === null) return 'N/A';                
+                if (value != 0)
+                    return '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardKeyVehicleInfoModal" id="btnKeyVehicleDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                else
+                    return '<button type="button" class="btn" id="btnKvHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
             }
         },
         {
@@ -274,9 +280,11 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
-                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardIncidentReportsInfoModal" id="btnIncidentReportdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '"> ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                if (value != 0)
+                    return '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardIncidentReportsInfoModal" id="btnIncidentReportdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                else
+                    return '<button type="button" class="btn" id="btnIrHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
             }
-
         },
         {
             data: 'smartWands',
@@ -285,11 +293,13 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
                 if (data.hasmartwand !== 0) {
-                    return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardSWInfoModal" id="btnSWdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '"> ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                    if (value != 0)
+                        return '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardSWInfoModal" id="btnSWdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                    else
+                        return '<button type="button" class="btn" id="btnSwHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
                 }
-                else
-                {
-                    return '<i class="fa fa-times-circle text-text-muted rc-client-status" style="color:#B8B8B8"></i>'
+                else {
+                    return '<button type="button" class="btn" id="btnSwHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
                 }
             }
         },
@@ -1366,10 +1376,6 @@ let clientSiteActiveGuardsSWDetails = $('#clientSiteActiveGuardsSWDetails').Data
 
 
         },
-
-
-
-
     ],
 
 });
@@ -1417,6 +1423,349 @@ $('#clientSiteActiveGuards tbody').on('click', '#btnIncidentReportdetails', func
 
 });
 /*for incident report details of the guard - end*/
+
+/* for logbook history of the guard start*/
+function renderLogbookDateTime(value, record) {  
+    if (record.eventDateTimeLocal != null && record.eventDateTimeLocal != '') {
+        const date = new Date(record.eventDateTimeLocal);
+        var DateTime = luxon.DateTime;
+        var dt1 = DateTime.fromJSDate(date);
+        var dt = dt1.toFormat('dd LLL yyyy @ HH:mm') + ' (' + record.eventDateTimeZoneShort + ')';
+        return dt;
+    }
+    else if (value !== '') {
+        const date = new Date(value);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        let day = date.getDate();
+
+        if (day < 10) {
+            day = '0' + day;
+        }
+        return day + ' ' + months[date.getMonth()] + ' ' + date.getFullYear() + ' @ ' + date.toLocaleString('en-Au', { hourCycle: 'h23', timeStyle: 'short' }) + ' Hrs';
+    }
+}
+
+
+let clientSiteActiveGuardsLogBookHistory = $('#clientSiteActiveGuardsLogBookHistory').DataTable({
+    ordering: false,
+    info: false,
+    searching: false,
+    autoWidth: false,
+    fixedHeader: true,
+    deferLoading: 57,
+    "scrollY": "300px", // Set the desired height for the scrollable area
+    "paging": false,
+    "footer": true,
+    "processing": true,
+    'language': {
+        'loadingRecords': '&nbsp;',
+        'processing': 'Loading...Please wait...'
+    },     
+    ajax: {
+        url: '/RadioCheckV2?handler=ClientSitelogBookHistory',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteId = $('#txtClientSiteId').val();
+            d.guardId = $('#txtGuardId').val();
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'id', title: 'Id', visible: false },        
+        {
+            data: 'clientSiteLogBookId',
+            width: '20%',
+            title: 'LogBook Id',
+            visible: false,
+        },
+        {
+            data: 'notes',
+            width: '9%',
+            title: 'Notes',
+            className: "text-center",
+        },
+        {
+            data: 'eventDateTime',
+            width: '9%',
+            title: 'Created Time',
+            className: "text-center",
+            render: function (value, type, data) {
+                return renderLogbookDateTime(value, data);
+            }
+        }
+    ]   
+});
+
+$('#clientSiteActiveGuards tbody').on('dblclick', '#btnLogBookHistoryByGuard', function (value, record) {
+    $('#guardLogBookHistoryModal').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).attr("data-guardid");
+    var ClientSiteId = $(this).attr('data-clientsiteid');  
+    var ClientSiteName = $(this).attr('data-clientsitename');
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    $('#lbl_GuardLogBookHistoryModalHeader').text(GuardName);
+    $('#lbl_lb_History_SitenameInfo').text('Last log book log');
+    clientSiteActiveGuardsLogBookHistory.clear().draw();
+    clientSiteActiveGuardsLogBookHistory.ajax.reload();
+});
+/* for logbook history of the guard end*/
+
+
+/* for Key Vehcile history of the guard start*/
+function renderKvDateTime(value, record) {
+    if (record.entryCreatedDateTimeLocal != null && record.entryCreatedDateTimeLocal != '') {
+        const date = new Date(record.entryCreatedDateTimeLocal);
+        var DateTime = luxon.DateTime;
+        var dt1 = DateTime.fromJSDate(date);
+        var dt = dt1.toFormat('dd LLL yyyy @ HH:mm') + ' (' + record.entryCreatedDateTimeZoneShort + ')';
+        return dt;
+    }
+    else if (value !== '') {
+        const date = new Date(value);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        let day = date.getDate();
+
+        if (day < 10) {
+            day = '0' + day;
+        }
+        return day + ' ' + months[date.getMonth()] + ' ' + date.getFullYear() + ' @ ' + date.toLocaleString('en-Au', { hourCycle: 'h23', timeStyle: 'short' }) + ' Hrs';
+    }
+}
+
+
+let clientSiteActiveGuardsKeyVehicleHistory = $('#clientSiteActiveGuardsKeyVehicleHistory').DataTable({
+    ordering: false,
+    info: false,
+    searching: false,
+    autoWidth: false,
+    fixedHeader: false,
+    deferLoading: 57,
+    "scrollY": "300px", // Set the desired height for the scrollable area
+    "paging": false,
+    "footer": true,
+    "processing": true,
+    'language': {
+        'loadingRecords': '&nbsp;',
+        'processing': 'Loading...Please wait...'
+    },
+    ajax: {
+        url: '/RadioCheckV2?handler=ClientSiteKeyVehicleHistory',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteId = $('#txtClientSiteId').val();
+            d.guardId = $('#txtGuardId').val();
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'id', title: 'Id', visible: false },
+        { data: 'id', title: 'KeyVehicleLog Id', visible: false, width: '20%' },
+        { data: 'vehicleRego', title: 'License No', width: '20%', visible: true },
+        { data: 'personName',width: '20%',title: 'Individual',className: "text-center", visible: true },
+        { data: 'companyName', width: '20%', title: 'Company', className: "text-center", visible: true },
+        { data: 'individualTitle',width: '20%',title: 'Activity',className: "text-center"},
+        { data: 'entryCreatedDateTimeLocal',width: '20%',title: 'Created Time',className: "text-center",
+            render: function (value, type, data) {
+                return renderKvDateTime(value, data);
+            }
+        },
+        { data: 'rubbishDeduction', visible: false }
+    ],
+    drawCallback() {
+        var api = this.api();
+        var rowslength = api.rows().data().length;
+        if (rowslength > 0) {
+            var r = api.rows(0).column(7).data()[0];
+            if (r == true) {
+                api.columns([2]).visible(true);
+                api.columns([3]).visible(true);
+                api.columns([4]).visible(true);
+            } else {
+                api.columns([2]).visible(false);
+                api.columns([3]).visible(false);
+                api.columns([4]).visible(false);
+            }
+        } else {
+            api.columns([2]).visible(true);
+            api.columns([3]).visible(true);
+            api.columns([4]).visible(true);
+        }
+    }
+});
+
+$('#clientSiteActiveGuards tbody').on('dblclick', '#btnKvHistoryByGuard', function (value, record) {
+    $('#guardKeyVehicleHistoryModal').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).attr("data-guardid");
+    var ClientSiteId = $(this).attr('data-clientsiteid');
+    var ClientSiteName = $(this).attr('data-clientsitename');
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    $('#lbl_KvGuardActivityHistoryHeader').text(GuardName);
+    $('#lbl_kv_History_SitenameInfo').text('Last key vehicle log');
+    clientSiteActiveGuardsKeyVehicleHistory.clear().draw();
+    clientSiteActiveGuardsKeyVehicleHistory.ajax.reload();
+});
+/* for Key Vehcile history of the guard end*/
+
+
+/* for Incident Reports history of the guard start*/
+function renderIrDateTime(value, record) {
+    if (record.createdOnDateTimeLocal != null && record.createdOnDateTimeLocal != '') {
+        const date = new Date(record.createdOnDateTimeLocal);
+        var DateTime = luxon.DateTime;
+        var dt1 = DateTime.fromJSDate(date);
+        var dt = dt1.toFormat('dd LLL yyyy @ HH:mm') + ' (' + record.createdOnDateTimeZoneShort + ')';
+        return dt;
+    }
+    else if (value !== '') {
+        const date = new Date(value);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        let day = date.getDate();
+
+        if (day < 10) {
+            day = '0' + day;
+        }
+        return day + ' ' + months[date.getMonth()] + ' ' + date.getFullYear() + ' @ ' + date.toLocaleString('en-Au', { hourCycle: 'h23', timeStyle: 'short' }) + ' Hrs';
+    }
+}
+
+
+let clientSiteActiveGuardsIncidentReportHistory = $('#clientSiteActiveGuardsIncidentReportsHistory').DataTable({
+    ordering: false,
+    info: false,
+    searching: false,
+    autoWidth: false,
+    fixedHeader: false,
+    deferLoading: 57,
+    "scrollY": "300px", // Set the desired height for the scrollable area
+    "paging": false,
+    "footer": true,
+    "processing": true,
+    'language': {
+        'loadingRecords': '&nbsp;',
+        'processing': 'Loading...Please wait...'
+    },
+    ajax: {
+        url: '/RadioCheckV2?handler=ClientSiteIncidentReportHistory',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteId = $('#txtClientSiteId').val();
+            d.guardId = $('#txtGuardId').val();
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'id', title: 'Id', visible: false },      
+        { data: 'id', title: 'IncidentReport Id', visible: true, width: '20%'},
+        {
+            data: 'fileName',
+            width: '60%',
+            title: 'File Name',
+            className: "text-center",
+        },
+        {
+            data: 'createdOn',
+            width: '20%',
+            title: 'Created Time',
+            className: "text-center",
+            render: function (value, type, data) {
+                return renderIrDateTime(value, data);
+            }
+        }
+    ]
+});
+
+$('#clientSiteActiveGuards tbody').on('dblclick', '#btnIrHistoryByGuard', function (value, record) {
+    $('#guardIncidentReportsHistoryModal').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).attr("data-guardid");
+    var ClientSiteId = $(this).attr('data-clientsiteid');
+    var ClientSiteName = $(this).attr('data-clientsitename');
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    $('#lbl_IrGuardActivityHistoryHeader').text(GuardName);
+    $('#lbl_Ir_History_SitenameInfo').text('Last IR log');
+    clientSiteActiveGuardsIncidentReportHistory.clear().draw();
+    clientSiteActiveGuardsIncidentReportHistory.ajax.reload();
+});
+/* for Incident Reports history of the guard end*/
+
+
+/* for SmartWand history of the guard start*/
+function renderSwDateTime(value, record) {
+    if (value !== '' && value != null) {
+        const date = new Date(value);
+        var DateTime = luxon.DateTime;
+        var dt1 = DateTime.fromJSDate(date);
+        var dt = dt1.toFormat('dd LLL yyyy @ HH:mm');
+        return dt;
+    }
+    else {
+        return '';
+    }
+}
+
+let clientSiteActiveGuardsSmartWandHistory = $('#clientSiteActiveGuardsSwHistory').DataTable({
+    ordering: false,
+    info: false,
+    searching: false,
+    autoWidth: false,
+    fixedHeader: false,
+    deferLoading: 57,
+    "scrollY": "300px", // Set the desired height for the scrollable area
+    "paging": false,
+    "footer": true,
+    "processing": true,
+    'language': {
+        'loadingRecords': '&nbsp;',
+        'processing': 'Loading...Please wait...'
+    },
+    ajax: {
+        url: '/RadioCheckV2?handler=ClientSiteSWHistory',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteId = $('#txtClientSiteId').val();
+            d.guardId = $('#txtGuardId').val();
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'id', title: 'Id', visible: false },
+        { data: 'templateName',width: '20%',title: 'Template Name'},
+        { data: 'smartWandId',width: '15%',title: 'Smart Wand'},
+        { data: 'employeePhone', width: '22%', title: 'Smart Wand Number' },
+        {
+            data: 'inspectionStartDatetimeLocal', width: '25%', title: 'Inspection Start', className: "text-center",
+            render: function (value, type, data) {
+                return renderSwDateTime(value, data);
+            }
+        },
+        { data: 'locationScan', width: '30%', title: 'Location' }
+    ]
+});
+
+$('#clientSiteActiveGuards tbody').on('dblclick', '#btnSwHistoryByGuard', function (value, record) {
+    $('#guardSWHistoryModal').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).attr("data-guardid");
+    var ClientSiteId = $(this).attr('data-clientsiteid');
+    var ClientSiteName = $(this).attr('data-clientsitename');
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    $('#lbl_SwGuardActivityHistoryHeader').text(GuardName);
+    $('#lbl_Sw_History_SitenameInfo').text('Last smart wand log');
+    clientSiteActiveGuardsSmartWandHistory.clear().draw();
+    clientSiteActiveGuardsSmartWandHistory.ajax.reload();
+});
+
+/* for SmartWand history of the guard end*/
+
 
 /*For radio check dropdown start*/
 
@@ -2813,7 +3162,10 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
-                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardLogBookInfoModal" id="btnLogBookDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" text="' + data.clientSiteId + '"><input type="hidden" id="GuardId" text="' + data.guardId + '"> ';
+                if (value != 0)
+                    return '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardLogBookInfoModal" id="btnLogBookDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                else
+                    return '<button type="button" class="btn" id="btnLogBookHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
             }
         },
         {
@@ -2822,7 +3174,10 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
-                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardKeyVehicleInfoModal" id="btnKeyVehicleDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                if (value != 0)
+                    return '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardKeyVehicleInfoModal" id="btnKeyVehicleDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                else
+                    return '<button type="button" class="btn" id="btnKvHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
             }
         },
         {
@@ -2831,7 +3186,10 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
-                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardIncidentReportsInfoModal" id="btnIncidentReportdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '"> ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                if (value != 0)
+                    return '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardIncidentReportsInfoModal" id="btnIncidentReportdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                else
+                    return '<button type="button" class="btn" id="btnIrHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
             }
 
         },
@@ -2842,10 +3200,13 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
                 if (data.hasmartwand !== 0) {
-                    return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardSWInfoModal" id="btnSWdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '"> ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                    if (value != 0)
+                        return '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardSWInfoModal" id="btnSWdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                    else
+                        return '<button type="button" class="btn" id="btnSwHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
                 }
                 else {
-                    return '<i class="fa fa-times-circle text-text-muted rc-client-status" style="color:#B8B8B8"></i>'
+                    return '<button type="button" class="btn" id="btnSwHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
                 }
             }
         },
@@ -3023,6 +3384,21 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnLogBookDetailsByGu
 
 });
 
+$('#clientSiteActiveGuardsSinglePage tbody').on('dblclick', '#btnLogBookHistoryByGuard', function (value, record) {
+    $('#guardLogBookHistoryModal').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).attr("data-guardid");
+    var ClientSiteId = $(this).attr('data-clientsiteid');
+    var ClientSiteName = $(this).attr('data-clientsitename');
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    $('#lbl_GuardLogBookHistoryModalHeader').text(GuardName);
+    $('#lbl_lb_History_SitenameInfo').text('Last log book log');
+    clientSiteActiveGuardsLogBookHistory.clear().draw();
+    clientSiteActiveGuardsLogBookHistory.ajax.reload();
+});
+
 $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnKeyVehicleDetailsByGuard', function (value, record) {
     $('#guardKeyVehicleInfoModal').modal('show');
     isPaused = true;
@@ -3041,6 +3417,21 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnKeyVehicleDetailsB
     $('#lbl_GuardActivityHeader1').text(GuardName + '-' + 'Key Vehicle Log Details');
     clientSiteActiveGuardsKeyVehicleDetails.ajax.reload();
 
+});
+
+$('#clientSiteActiveGuardsSinglePage tbody').on('dblclick', '#btnKvHistoryByGuard', function (value, record) {
+    $('#guardKeyVehicleHistoryModal').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).attr("data-guardid");
+    var ClientSiteId = $(this).attr('data-clientsiteid');
+    var ClientSiteName = $(this).attr('data-clientsitename');
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    $('#lbl_KvGuardActivityHistoryHeader').text(GuardName);
+    $('#lbl_kv_History_SitenameInfo').text('Last key vehicle log');
+    clientSiteActiveGuardsKeyVehicleHistory.clear().draw();
+    clientSiteActiveGuardsKeyVehicleHistory.ajax.reload();
 });
 
 
@@ -3065,6 +3456,21 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnIncidentReportdeta
 
 });
 
+$('#clientSiteActiveGuardsSinglePage tbody').on('dblclick', '#btnIrHistoryByGuard', function (value, record) {
+    $('#guardIncidentReportsHistoryModal').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).attr("data-guardid");
+    var ClientSiteId = $(this).attr('data-clientsiteid');
+    var ClientSiteName = $(this).attr('data-clientsitename');
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    $('#lbl_IrGuardActivityHistoryHeader').text(GuardName);
+    $('#lbl_Ir_History_SitenameInfo').text('Last IR log');
+    clientSiteActiveGuardsIncidentReportHistory.clear().draw();
+    clientSiteActiveGuardsIncidentReportHistory.ajax.reload();
+});
+
 $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnSWdetails', function (value, record) {
     $('#guardSWInfoModal').modal('show');
     isPaused = true;
@@ -3084,6 +3490,21 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnSWdetails', functi
     $('#lbl_GuardActivityHeader4').text(GuardName + '-' + 'Smart Wand Scan Details');
     clientSiteActiveGuardsSWDetails.ajax.reload();
 
+});
+
+$('#clientSiteActiveGuardsSinglePage tbody').on('dblclick', '#btnSwHistoryByGuard', function (value, record) {
+    $('#guardSWHistoryModal').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).attr("data-guardid");
+    var ClientSiteId = $(this).attr('data-clientsiteid');
+    var ClientSiteName = $(this).attr('data-clientsitename');
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    $('#lbl_SwGuardActivityHistoryHeader').text(GuardName);
+    $('#lbl_Sw_History_SitenameInfo').text('Last smart wand log');
+    clientSiteActiveGuardsSmartWandHistory.clear().draw();
+    clientSiteActiveGuardsSmartWandHistory.ajax.reload();
 });
 
 let isActive = true;
@@ -3395,8 +3816,18 @@ $("#hoverModal").on("hidden.bs.modal", function () {
 $("#guardInfoModal").on("hidden.bs.modal", function () {
     isPaused = false;
 });
-
-
+$("#guardLogBookHistoryModal").on("hidden.bs.modal", function () {
+    isPaused = false;
+});
+$("#guardKeyVehicleHistoryModal").on("hidden.bs.modal", function () {
+    isPaused = false;
+});
+$("#guardIncidentReportsHistoryModal").on("hidden.bs.modal", function () {
+    isPaused = false;
+});
+$("#guardSWHistoryModal").on("hidden.bs.modal", function () {
+    isPaused = false;
+});
 
 //hover display tooltip-end
 

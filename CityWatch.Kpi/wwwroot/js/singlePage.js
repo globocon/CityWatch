@@ -347,7 +347,8 @@
         primaryKey: 'id',
         inlineEditing: { mode: 'command' },
         columns: [
-            { width: 120, field: 'name', title: 'Name', editor: true }
+            { width: 120, field: 'name', title: 'Name', editor: true },
+            { width: 120, field: 'email', title: 'Email', editor: true }
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -738,6 +739,30 @@
         }
         $('#chk_cs_Is_Reels').val(isChecked);
     });
+
+    $('#chk_cs_ISOVIN').on('change', function () {
+
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_TrailerRego').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_TrailerRego').prop('checked', true);
+        }
+        $('#chk_cs_ISOVIN').val(isChecked);
+    });
+
+    $('#chk_cs_TrailerRego').on('change', function () {
+
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_ISOVIN').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_ISOVIN').prop('checked', true);
+        }
+        $('#chk_cs_TrailerRego').val(isChecked);
+    });
     //for Reels - start
     $('#btnSaveToggleKeys').on('click', function () {
         var toggleType;
@@ -775,6 +800,15 @@
             $('#chk_cs_Is_Reels').val(false);
 
         }
+
+        if ($('#chk_cs_ISOVIN').is(":checked")) {
+            $('#chk_cs_IsISOVIN').val(true);
+
+        }
+        else {
+            $('#chk_cs_IsISOVIN').val(false);
+
+        }
         const token = $('input[name="__RequestVerificationToken"]').val();
         $.ajax({
             url: '/Admin/Settings?handler=SaveToggleType',
@@ -787,8 +821,10 @@
                 vwiIsActive: $('#chk_cs_Is_VWI').val(),
                 sendertoggleTypeId: 3,
                 senderIsActive: $('#chk_cs_Is_Sender').val(),
-                reelstoggleTypeId: 3,
+                reelstoggleTypeId: 4,
                 reelsIsActive: $('#chk_cs_Is_Reels').val(),
+                trailerRegoTypeId: 5,
+                isISOVINAcive: $('#chk_cs_IsISOVIN').val(),
             },
             headers: { 'RequestVerificationToken': token }
         }).done(function () {
@@ -856,6 +892,19 @@
                     else {
                         $('#chk_cs_Reels').prop('checked', false);
                         $('#chk_cs_QTY').prop('checked', true);
+                    }
+
+                }
+
+                if (response[i].toggleTypeId == 5) {
+                    $('#chk_cs_IsISOVIN').val(response[i].isActive);
+                    if (response[i].isActive == true) {
+                        $('#chk_cs_ISOVIN').prop('checked', true);
+                        $('#chk_cs_TrailerRego').prop('checked', false);
+                    }
+                    else {
+                        $('#chk_cs_ISOVIN').prop('checked', false);
+                        $('#chk_cs_TrailerRego').prop('checked', true);
                     }
 
                 }
