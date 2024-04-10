@@ -115,7 +115,7 @@ namespace CityWatch.Web.Helpers
                 }
                     menuHtml.AppendLine("</div>");
             }
-            //p4#71 Hyperlink Remove settings and add Rc - Manju - 10-04-2024 --start
+            //p4#71 Hyperlink Remove settings and add Rc - Manju - 10-04-2024 -start
             if ( pageName == PageNameHelper.Settings)
             {
                 menuHtml.AppendLine("<div>");
