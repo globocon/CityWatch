@@ -1278,7 +1278,7 @@ namespace CityWatch.Web.Services
         //p1-191 HR Files Task 3-end
         public List<SelectListItem> GetLicenseTypes(bool withoutSelect = true)
         {
-            var hrGroups = _guardDataProvider.GetLicenseTypes();
+            var hrGroups = _guardDataProvider.GetLicenseTypes().Where(x=>x.IsDeleted==false);
             var items = new List<SelectListItem>();
 
             //if (!withoutSelect)
