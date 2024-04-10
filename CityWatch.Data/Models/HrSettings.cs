@@ -7,8 +7,8 @@ namespace CityWatch.Data.Models
     {
         [Display(Name = "HR Groups")]
         HRGroups = 1,
-        [Display(Name = "Licence Types")]
-        LicenceTypes = 2,
+        //[Display(Name = "Licence Types")]
+        //LicenceTypes = 2,
     }
     public class HRGroups
     {
