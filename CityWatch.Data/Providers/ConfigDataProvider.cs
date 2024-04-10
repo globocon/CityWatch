@@ -1,6 +1,7 @@
 ﻿using CityWatch.Data.Models;
 using Dropbox.Api.Users;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -63,6 +64,10 @@ namespace CityWatch.Data.Providers
         //General Feeds-end
         public List<SmsChannel> GetSmsChannels();
         public IncidentReportPosition GetIsLogbookData(string Name);
+        List<HrSettings> GetHRSettings();
+        List<LicenseTypes> GetLicensesTypes();
+
+        //p1-191 hr files task 3-end
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -493,5 +498,21 @@ namespace CityWatch.Data.Providers
         {
             return _context.SmsChannel.OrderBy(x => x.Id).ToList();
         }
+        //p1-191 hr files task 3-start
+        public List<HrSettings> GetHRSettings()
+        {
+            var res= _context.HrSettings.Include(z => z.HRGroups)
+                .Include(z => z.ReferenceNoNumbers).Include(z => z.ReferenceNoAlphabets).OrderBy(x => x.Id).ToList();
+            return _context.HrSettings.Include(z => z.HRGroups)
+                .Include(z => z.ReferenceNoNumbers)
+                .Include(z => z.ReferenceNoAlphabets)
+                .OrderBy(x => x.Id).ToList();
+        }
+        public List<LicenseTypes> GetLicensesTypes()
+        {
+            return _context.LicenseTypes
+                .OrderBy(x => x.Id).ToList();
+        }
+        //p1-191 hr files task 3-end
     }
 }

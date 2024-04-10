@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 
 namespace CityWatch.Data.Providers
@@ -44,9 +45,18 @@ namespace CityWatch.Data.Providers
         List<ClientSiteToggle> GetClientSiteToggle();
         List<ClientSiteToggle> GetClientSiteToggle(int siteId);
         List<ClientSiteToggle> GetClientSiteToggle(int siteId,int toggleId);
+
          KeyVehicleLog GetEmailPOCVehiclelog(int id);
 
+
         //for toggle areas - end 
+        //p1-191 hr files task 3-start
+        List<HRGroups> GetHRGroups();
+        List<ReferenceNoNumbers> GetReferenceNoNumbers();
+
+        List<ReferenceNoAlphabets> GetReferenceNoAlphabets();
+
+        //p1-191 hr files task 3-end
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -526,6 +536,19 @@ namespace CityWatch.Data.Providers
             return toggles;
         }
         //for toggle areas - end 
-
+        //p1-191 hr files task 3-start
+        public List<HRGroups> GetHRGroups()
+        {
+            return _context.HRGroups.ToList();
+        }
+        public List<ReferenceNoNumbers> GetReferenceNoNumbers()
+        {
+            return _context.ReferenceNoNumbers.ToList();
+        }
+        public List<ReferenceNoAlphabets> GetReferenceNoAlphabets()
+        {
+            return _context.ReferenceNoAlphabets.ToList();
+        }
+        //p1-191 hr files task 3-end
     }
 }

@@ -62,6 +62,7 @@ namespace CityWatch.Web.Pages.Admin
         }
 
         public IViewDataService ViewDataService { get { return _viewDataService; } }
+        public HrSettings HrSettings;
 
         public ActionResult OnGet()
         {
@@ -1090,7 +1091,99 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(_guardDataProvider.GetClientSiteToggle().Where(x => x.ClientSiteId == siteId));
         }
         //for toggle areas - end
+        // p1-191 hr files task 3-start
+        public JsonResult OnPostSaveHRSettings(int Id,int hrGroupId,int refNoNumberId,int refNoAlphabetId,string description)
+        {
+            var status = true;
+            var message = "Success";
+            var id = -1;
+            try
+            {
+                //if (!ModelState.IsValid)
+                //{
+                //    return new JsonResult(new { status = false, message = ModelState.Where(x => x.Value.Errors.Count > 0).Select(x => string.Join(',', x.Value.Errors.Select(y => y.ErrorMessage))) });
+                //}
+                HrSettings hrSettingsnew = new HrSettings()
+                {
+                    Id=Id,
+                    HRGroupId =hrGroupId,
+                    ReferenceNoNumberId=refNoNumberId,
+                    ReferenceNoAlphabetId=refNoAlphabetId,
+                    Description=description,
+
+                };
+
+
+                _guardLogDataProvider.SaveHRSettings(hrSettingsnew);
+                    
+
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message = new[] { message }, id });
+        }
+        public JsonResult OnPostDeleteHRSettings(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _guardLogDataProvider.DeleteHRSettings(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnGetHRSettings()
+        {
+            return new JsonResult(_configDataProvider.GetHRSettings());
+        }
+        public JsonResult OnPostSaveLicensesTypes(LicenseTypes record)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                
+                    _guardLogDataProvider.SaveLicensesTypes(record);
+                
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnPostDeleteLicensesTypes(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _guardLogDataProvider.DeleteLicensesTypes(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnGetLicensesTypes()
+        {
+            return new JsonResult(_configDataProvider.GetLicensesTypes());
+        }
+        // p1-191 hr files task 3-end
     }
-    
-    
+
+
 }
