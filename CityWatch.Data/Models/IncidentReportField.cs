@@ -13,6 +13,7 @@ namespace CityWatch.Data.Models
         NotifiedBy = 2,
         CallSign = 3,
         ClientArea = 4, 
+        Reimburse=6,
     }
 
     public class IncidentReportField

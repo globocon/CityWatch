@@ -28,6 +28,7 @@ namespace CityWatch.Data.Providers
         List<IncidentReportPosition> GetPositions();
         List<IncidentReportPSPF> GetPSPF();
         int GetLastValue();
+        int OnGetMaxIdIR();
         void SavePostion(IncidentReportPosition incidentReportPosition);
         void SavePSPF(IncidentReportPSPF incidentReportPSPF);
         void DeletePSPF(int id);
@@ -153,6 +154,7 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
 
+    
         public List<State> GetStates()
         {
             return new List<State>()
@@ -278,6 +280,13 @@ namespace CityWatch.Data.Providers
         public int GetLastValue()
         {
             return _context.IncidentReportPSPF.Count();
+        }
+        
+        public int OnGetMaxIdIR()
+        {
+            var incidentReportid = _context.IncidentReportFields.Max(x => (int?)x.Id);
+            return Convert.ToInt32(incidentReportid);
+            
         }
         public void SavePSPF(IncidentReportPSPF incidentReportPSPF)
         {
