@@ -162,6 +162,10 @@
         if (option == '')
             return false;
 
+        //For setting background and font colour in the selected dropdown (refer setAllControlsForIrFromPreviousIR() in the Register.cshtml.cs file also.)
+        $(this).attr('style', $(this).find('option:selected').attr('style')); 
+        //$(this).attr('style', 'background-color:white;');
+
         // Set feedback Template Type to 3 = 'Colour Codes'
         /*to get the colour code and its id into feedbacktype dropdown-start*/
         $.ajax({

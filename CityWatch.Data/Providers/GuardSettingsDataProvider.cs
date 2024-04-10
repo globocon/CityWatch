@@ -67,6 +67,7 @@ namespace CityWatch.Data.Providers
                 if (dataToUpdate != null)
                 {
                     dataToUpdate.Name = clientSitePoc.Name;
+                    dataToUpdate.Email = clientSitePoc.Email;
                 }
             }
 

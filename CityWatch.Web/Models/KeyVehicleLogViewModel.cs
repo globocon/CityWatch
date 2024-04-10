@@ -128,5 +128,34 @@ namespace CityWatch.Web.Models
                 return _keyVehicleLogFields.SingleOrDefault(z => z.Id == _keyVehicleLog.PlateId)?.Name;
             }
         }
+
+        public string Plate1
+        {
+            get
+            {
+                return _keyVehicleLogFields.SingleOrDefault(z => z.Id == _keyVehicleLog.Trailer1PlateId)?.Name;
+            }
+        }
+        public string Plate2
+        {
+            get
+            {
+                return _keyVehicleLogFields.SingleOrDefault(z => z.Id == _keyVehicleLog.Trailer2PlateId)?.Name;
+            }
+        }
+        public string Plate3
+        {
+            get
+            {
+                return _keyVehicleLogFields.SingleOrDefault(z => z.Id == _keyVehicleLog.Trailer3PlateId)?.Name;
+            }
+        }
+        public string Plate4
+        {
+            get
+            {
+                return _keyVehicleLogFields.SingleOrDefault(z => z.Id == _keyVehicleLog.Trailer4PlateId)?.Name;
+            }
+        }
     }
 }
