@@ -1654,8 +1654,8 @@ function resetGuardLicenseAddLogDailyModal() {
     $('#GuardLicense_Id1').val('');
     $('#GuardLicense_LicenseNo1').val('');
     $('#GuardLicense_LicenseType1').val('');
-    $('#GuardLicense_Reminder11').val('');
-    $('#GuardLicense_Reminder21').val('');
+    $('#GuardLicense_Reminder11').val('45');
+    $('#GuardLicense_Reminder21').val('7');
     $('#GuardLicense_ExpiryDate1').val('');
     $('#GuardLicense_FileName1').val('');
     $('#guardLicense_fileName1').text('None');
@@ -1771,8 +1771,8 @@ function resetGuardLicenseAddModal() {
     $('#GuardLicense_Id1').val('');
     $('#GuardLicense_LicenseNo1').val('');
     $('#GuardLicense_LicenseType1').val('');
-    $('#GuardLicense_Reminder11').val('');
-    $('#GuardLicense_Reminder21').val('');
+    $('#GuardLicense_Reminder11').val('45');
+    $('#GuardLicense_Reminder21').val('7');
     $('#GuardLicense_ExpiryDate1').val('');
     $('#GuardLicense_FileName1').val('');
     $('#guardLicense_fileName1').text('None');
@@ -1821,8 +1821,8 @@ function resetGuardComplianceAddModal() {
     $('#GuardCompliance_Id1').val('');
     $('#GuardCompliance_ReferenceNo1').val('');
     $('#GuardCompliance_Description1').val('');
-    $('#GuardCompliance_Reminder11').val('');
-    $('#GuardCompliance_Reminder21').val('');
+    $('#GuardCompliance_Reminder11').val('45');
+    $('#GuardCompliance_Reminder21').val('7');
     $('#GuardCompliance_ExpiryDate1').val('');
     $('#GuardCompliance_FileName1').val('');
     $('#guardCompliance_fileName1').text('None');
