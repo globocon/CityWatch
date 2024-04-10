@@ -128,6 +128,7 @@ namespace CityWatch.Web.Helpers
                     menuHtml.AppendLine(@"<a href=""http://rc.cws-ir.com/RadioCheckV2"" class=""nav-link py-0"" target=""_blank"" ><i class=""fa fa-user mr-2""></i>Radio Checklist (RC)</a>");
                 }
                 menuHtml.AppendLine("</div>");
+
             }
             //p4#71 Hyperlink Remove settings and add Rc - Manju - 10-04-2024 --end
             if (pageName == PageNameHelper.Index)
