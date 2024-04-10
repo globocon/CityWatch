@@ -2452,11 +2452,15 @@ $('#hr_settings_fields_types').on('change', function () {
         gridLicenseTypes.hide();
     }
 
-    if ($('#hr_settings_fields_types').val() == 2) {
+    else if ($('#hr_settings_fields_types').val() == 2) {
         gridHrSettings.hide();
         gridLicenseTypes.show();
         gridLicenseTypes.clear();
         gridLicenseTypes.reload();
+    }
+    else {
+        gridLicenseTypes.hide();
+        gridHrSettings.hide();
     }
 });
 $('#add_hr_settings').on('click', function () {
