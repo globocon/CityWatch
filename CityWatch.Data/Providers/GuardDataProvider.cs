@@ -57,6 +57,7 @@ namespace CityWatch.Data.Providers
         List<ReferenceNoAlphabets> GetReferenceNoAlphabets();
 
         //p1-191 hr files task 3-end
+        List<LicenseTypes> GetLicenseTypes();
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -550,5 +551,9 @@ namespace CityWatch.Data.Providers
             return _context.ReferenceNoAlphabets.ToList();
         }
         //p1-191 hr files task 3-end
+        public List<LicenseTypes> GetLicenseTypes()
+        {
+            return _context.LicenseTypes.ToList();
+        }
     }
 }

@@ -125,6 +125,7 @@ namespace CityWatch.Web.Services
         List<SelectListItem> GetReferenceNoNumbers(bool withoutSelect = false);
         List<SelectListItem> GetReferenceNoAlphabets(bool withoutSelect = false);
         //p1-191 HR Files Task3-end
+        List<SelectListItem> GetLicenseTypes(bool withoutSelect = false);
 
     }
 
@@ -1275,5 +1276,22 @@ namespace CityWatch.Web.Services
             return items;
         }
         //p1-191 HR Files Task 3-end
+        public List<SelectListItem> GetLicenseTypes(bool withoutSelect = true)
+        {
+            var hrGroups = _guardDataProvider.GetLicenseTypes();
+            var items = new List<SelectListItem>();
+
+            //if (!withoutSelect)
+            //{
+            items.Add(new SelectListItem("Select", "", true));
+            //}
+
+            foreach (var item in hrGroups)
+            {
+                items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+            }
+
+            return items;
+        }
     }
 }

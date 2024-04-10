@@ -626,7 +626,17 @@ namespace CityWatch.Web.Pages.Admin
                 dbxUploaded = UploadGuardLicenseToDropbox(guardLicense);
                 if (guardLicense.LicenseType==null && guardLicense.Id!=null && guardLicense.LicenseTypeName!=null)
                 {
-                    int intValueToCompare = -1;
+                    //int intValueToCompare = -1;
+                    int intValueToCompare=0;
+                    var licensetypeCount = _guardDataProvider.GetLicenseTypes().Where(x => x.Name == guardLicense.LicenseTypeName);
+                    if(licensetypeCount.Count()>0)
+                    {
+                        intValueToCompare = _guardDataProvider.GetLicenseTypes().Where(x => x.Name == guardLicense.LicenseTypeName).FirstOrDefault().Id;
+                    }
+                    else
+                    {
+                        intValueToCompare = -1;
+                    }
                     guardLicense.LicenseType = (GuardLicenseType)intValueToCompare;
                     guardLicense.LicenseTypeName = guardLicense.LicenseTypeName;
 
@@ -641,7 +651,7 @@ namespace CityWatch.Web.Pages.Admin
                         message = "LicenseType Required"
                     });
                 }
-
+         
                 _guardDataProvider.SaveGuardLicense(guardLicense);
             }
             catch (Exception ex)
