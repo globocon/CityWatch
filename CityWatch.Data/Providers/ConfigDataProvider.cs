@@ -510,7 +510,7 @@ namespace CityWatch.Data.Providers
         }
         public List<LicenseTypes> GetLicensesTypes()
         {
-            return _context.LicenseTypes
+            return _context.LicenseTypes.Where(x=>x.IsDeleted==false)
                 .OrderBy(x => x.Id).ToList();
         }
         //p1-191 hr files task 3-end
