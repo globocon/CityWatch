@@ -553,7 +553,11 @@ namespace CityWatch.Web.Pages.Incident
                  emailAddress = incidentReportField.Name;
                                                                  
             }
-            var ccAddress = emailAddress.Split(',');
+            string[] ccAddress = new string[] { };
+            if (!string.IsNullOrEmpty(emailAddress))
+            {
+                ccAddress = emailAddress.Split(',');
+            }
             var subject = _EmailOptions.Subject;
             var messageHtml = _EmailOptions.Message;
 
