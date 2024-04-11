@@ -2526,8 +2526,12 @@ if (gridLicenseTypes) {
         }
     });
 }
+
+if ($('#hr_settings_fields_types').val() == '') {
 gridHrSettings.hide();
 gridLicenseTypes.hide();
+}
+
 $('#hr_settings_fields_types').on('change', function () {
     const selHTSettingsFieldTypeId = $('#hr_settings_fields_types').val();
     if ($('#hr_settings_fields_types').val() == 1) {
