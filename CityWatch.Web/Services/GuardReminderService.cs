@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using static MailKit.Net.Imap.ImapEvent;
 
 namespace CityWatch.Web.Services
 {
@@ -20,19 +21,22 @@ namespace CityWatch.Web.Services
     {
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly EmailOptions _emailOptions;
+        public readonly IClientDataProvider _clientDataProvider;
 
         public GuardReminderService(IGuardDataProvider guardDataProvider,
-            IOptions<EmailOptions> emailOptions)
+            IOptions<EmailOptions> emailOptions,
+            IClientDataProvider clientDataProvider)
         {
             _guardDataProvider = guardDataProvider;
             _emailOptions = emailOptions.Value;
+            _clientDataProvider = clientDataProvider;
         }
 
         public void Process()
         {
             var guardLicenses = _guardDataProvider.GetAllGuardLicenses().Where(z => z.ExpiryDate.HasValue).ToList();
             var guardcompliances = _guardDataProvider.GetAllGuardCompliances().Where(z => z.ExpiryDate.HasValue).ToList();
-            
+
             var messages = new List<KeyValuePair<DateTime, string>>();
             messages.AddRange(GetLicenseMessages(guardLicenses));
             messages.AddRange(GetComplianceMessages(guardcompliances));
@@ -58,7 +62,7 @@ namespace CityWatch.Web.Services
         private void SendEmail(string mailBodyHtml)
         {
             var fromAddress = _emailOptions.FromAddress.Split('|');
-    
+
             //To get the Default Email start
             var ToAddreddAppset = _emailOptions.ToAddress.Split('|');
             var toAddressData = _guardDataProvider.GetDefaultEmailAddress() + '|' + ToAddreddAppset[1];
@@ -71,13 +75,27 @@ namespace CityWatch.Web.Services
 
             //To get the Default Email stop
             //to avoid duplicate emails sending-start
+            //New Email Message To Address Start
+            
+            var Emails = _clientDataProvider.GetGlobalComplianceAlertEmail().ToList();
+            var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
+          
+            //New Email Message To Address end
             bool flag = false;
             if (!flag)
             {
                 //to avoid duplicate emails sending-end
                 var message = new MimeMessage();
                 message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
-                message.To.Add(new MailboxAddress(toAddress[1], toAddress[0]));
+
+                // message.To.Add(new MailboxAddress(toAddress[1], toAddress[0]));
+                if (emailAddresses != null)
+                {
+                   var toAddressNew = emailAddresses.Split(',');
+                    foreach (var address in GetToEmailAddressList(toAddressNew))
+                        message.To.Add(address);
+                }
+              
                 /* Mail Id added Bcc globoconsoftware for checking Ir Mail not getting Issue Start(date 11,01,2024) */
                 message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
                 message.Bcc.Add(new MailboxAddress("globoconsoftware2", "jishakallani@gmail.com"));
@@ -101,11 +119,22 @@ namespace CityWatch.Web.Services
             }
         }
 
+
+        private List<MailboxAddress> GetToEmailAddressList(string[] toAddress)
+        {
+            var emailAddressList = new List<MailboxAddress>();
+            foreach (var item in toAddress)
+            {
+                emailAddressList.Add(new MailboxAddress(string.Empty, item));
+            }
+            return emailAddressList;
+        }
+
         private static IEnumerable<KeyValuePair<DateTime, string>> GetComplianceMessages(List<GuardCompliance> guardCompliances)
         {
             foreach (var compliance in guardCompliances)
             {
-                if ((DateTime.Today.AddDays(compliance.Reminder1.GetValueOrDefault()) == compliance.ExpiryDate) || 
+                if ((DateTime.Today.AddDays(compliance.Reminder1.GetValueOrDefault()) == compliance.ExpiryDate) ||
                     (DateTime.Today.AddDays(compliance.Reminder2.GetValueOrDefault()) == compliance.ExpiryDate))
                 {
                     var message = $"<tr><td>Compliance</td><td>{compliance.ReferenceNo}</td><td>{compliance.Guard.Name}</td><td>{compliance.ExpiryDate?.ToString("dd-MMM-yyyy")}</td>";
@@ -123,7 +152,7 @@ namespace CityWatch.Web.Services
                 {
                     var message = $"<tr><td>License</td><td>{license.LicenseNo}</td><td>{license.Guard.Name}</td><td>{license.ExpiryDate?.ToString("dd-MMM-yyyy")}</td>";
                     yield return new KeyValuePair<DateTime, string>(license.ExpiryDate.Value, message);
-                }                
+                }
             }
         }
     }

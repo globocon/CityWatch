@@ -211,6 +211,28 @@ namespace CityWatch.RadioCheck.Pages.Admin
             return new JsonResult(new { status = Email, message = message });
         }
         //To save the Gloabl Duress Email Stop
+        public JsonResult OnGetGlobalComplianceAlertEmail()
+        {
+            var Emails = _clientDataProvider.GetGlobalComplianceAlertEmail();
+            var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
+            return new JsonResult(new { Emails = emailAddresses });
+        }
+        public JsonResult OnPostSaveGlobalComplianceAlertEmail(string Email)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.GlobalComplianceAlertEmail(Email);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = Email, message = message });
+        }
 
         //To save the Clobal Duress SMS numbers start
         public JsonResult OnGetGetGlobalSmsNumberList()

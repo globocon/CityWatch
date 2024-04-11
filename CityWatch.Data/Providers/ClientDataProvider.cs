@@ -170,6 +170,8 @@ namespace CityWatch.Data.Providers
         void SaveClientSiteToggle(int siteId, int toggleTypeId, bool IsActive);
         //for toggle areas - end
         IncidentReportPosition GetClientSitePosition(string Name);
+        List<GlobalComplianceAlertEmail> GetGlobalComplianceAlertEmail();
+        public void GlobalComplianceAlertEmail(string Email);
 
     }
 
@@ -570,6 +572,10 @@ namespace CityWatch.Data.Providers
         public List<GlobalDuressEmail> GetGlobalDuressEmail()
         {
             return _context.GlobalDuressEmail.ToList();
+        }
+        public List<GlobalComplianceAlertEmail> GetGlobalComplianceAlertEmail()
+        {
+            return _context.GlobalComplianceAlertEmail.ToList();
         }
         public List<ClientSiteLogBook> GetClientSiteLogBookWithOutType(int clientSiteId, DateTime date)
         {
@@ -1405,6 +1411,38 @@ namespace CityWatch.Data.Providers
 
             _context.SaveChanges();
         }
+
+        public void GlobalComplianceAlertEmail(string Email)
+        {
+            if (!string.IsNullOrEmpty(Email))
+            {
+
+                string[] emailIds = Email.Split(',');
+                var EmailUpdate = _context.GlobalComplianceAlertEmail.Where(x => x.Id != 0).ToList();
+                if (EmailUpdate != null)
+                {
+                    if (EmailUpdate.Count != 0)
+                    {
+                        _context.GlobalComplianceAlertEmail.RemoveRange(EmailUpdate);
+                        _context.SaveChanges();
+                    }
+                }
+                /*Remove all the rows */
+
+                foreach (string part in emailIds)
+                {
+                    var Emailnew = new GlobalComplianceAlertEmail()
+                    {
+                        Email = part
+                    };
+                    _context.GlobalComplianceAlertEmail.Add(Emailnew);
+                }
+
+                _context.SaveChanges();
+            }
+
+        }
+
         public List<GlobalDuressEmail> GetDuressEmails()
         {
             return _context.GlobalDuressEmail.ToList();
@@ -1769,19 +1807,19 @@ namespace CityWatch.Data.Providers
             //if (clientSitetoggle == null)
             //    throw new ArgumentNullException();
 
-           
+
 
             if (clientSitetoggle == null)
             {
                 _context.ClientSiteToggle.Add(new ClientSiteToggle()
                 {
-                     ToggleTypeId= toggleTypeId,
+                    ToggleTypeId = toggleTypeId,
                     ClientSiteId = siteId,
-              
+
                     IsActive = IsActive
                 });
 
-              
+
             }
             else
             {
@@ -1794,18 +1832,18 @@ namespace CityWatch.Data.Providers
                 clientSiteToggleToUpdate.ToggleTypeId = toggleTypeId;
                 clientSiteToggleToUpdate.ClientSiteId = siteId;
                 clientSiteToggleToUpdate.IsActive = IsActive;
-                
+
             }
             _context.SaveChanges();
 
-            
+
         }
 
         //for toggle areas - end
-          public List<ClientSite> GetNewClientSites(int siteId)
+        public List<ClientSite> GetNewClientSites(int siteId)
         {
             return _context.ClientSites
-                .Where(x => x.IsActive == true && x.Id==siteId)
+                .Where(x => x.IsActive == true && x.Id == siteId)
                 .Include(x => x.ClientType)
                 .OrderBy(x => x.ClientType.Name)
                 .ThenBy(x => x.Name)

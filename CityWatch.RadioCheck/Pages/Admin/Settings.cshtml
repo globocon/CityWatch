@@ -24,7 +24,7 @@
         </li>
 
         <li class="nav-item">
-            <a class="nav-link " id="logbook-tab" data-toggle="tab" href="#logbook" role="tab" aria-controls="logbook" aria-selected="false">Log Book & Duress</a>
+            <a class="nav-link " id="logbook-tab" data-toggle="tab" href="#logbook" role="tab" aria-controls="logbook" aria-selected="false">Log Book & Alerts</a>
         </li>
         <li class="nav-item">
             <a class="nav-link " id="apicalls-tab" data-toggle="tab" href="#apicalls" role="tab" aria-controls="apicalls" aria-selected="false">API Calls</a>
@@ -130,6 +130,9 @@
 
                     </div>
 
+
+                </div>
+                <div class="col-md-12">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between">
                             <b><u>Duress Assignment(Global)</u></b>
@@ -156,6 +159,31 @@
                                     </div>
                                     <div class="col-md-3">
                                         <button class="btn btn-success" id="add_GlobalSms">SMS Numbers</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between">
+                            <b><u>Hr Compliance(Global)</u></b>
+                            @* <div class="col text-right">
+
+                            </div> *@
+                        </div>
+
+                        <div class="card-body row m-0">
+                            <div class="col-md-12">
+                                <div class="form-group row">
+                                    <label for="hr_compliance_email" class="col-md-2 col-form-label">Email alert</label>
+                                    <div class="col-md-3">
+                                        <input type="email" class="form-control" id="hr_compliance_email">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button class="btn btn-success" id="add_ComplianceEmail">Save</button>
                                     </div>
                                 </div>
                             </div>

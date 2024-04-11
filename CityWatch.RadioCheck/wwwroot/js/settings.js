@@ -9,6 +9,14 @@
         $('#du_duress_email').val(Emails.emails);
     });
 
+    $.ajax({
+        url: '/Admin/Settings?handler=GlobalComplianceAlertEmail',
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (Emails) {
+        $('#hr_compliance_email').val(Emails.emails);
+    });
+
      //To get the Duress Emails in pageload stop
 
 };
@@ -568,6 +576,54 @@ $('#add_GloblEmail').on('click', function () {
         
     } 
     
+    function isValidEmail(email) {
+        // Regular expression for basic email validation
+        var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailPattern.test(email);
+    }
+})
+
+$('#add_ComplianceEmail').on('click', function () {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    var Email = $('#hr_compliance_email').val();
+    var emailsArray = Email.split(',');
+    isValidEmailIds = true;
+    for (var i = 0; i < emailsArray.length; i++) {
+        var emailAddress = emailsArray[i].trim();
+        if (isValidEmail(emailAddress)) {
+           
+        }
+        else {
+            isValidEmailIds = false;
+            $.notify("Invalid email address." + emailAddress,
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#D44950",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );
+
+        }
+        
+
+
+    }
+
+    if (isValidEmailIds) {
+        $.ajax({
+            url: '/Admin/Settings?handler=SaveGlobalComplianceAlertEmail',
+            data: { Email: Email },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function () {
+            alert("The Compliance Alert Email was saved successfully");
+        })
+
+    }
+
     function isValidEmail(email) {
         // Regular expression for basic email validation
         var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

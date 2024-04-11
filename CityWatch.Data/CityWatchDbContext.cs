@@ -110,7 +110,9 @@ namespace CityWatch.Data
 
         public DbSet<SmartWandScanGuardHistory> SmartWandScanGuardHistory { get; set; }
 
+        public DbSet<GlobalComplianceAlertEmail> GlobalComplianceAlertEmail { get; set; }
 
+        
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
