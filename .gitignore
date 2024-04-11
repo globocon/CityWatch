@@ -376,3 +376,5 @@ FodyWeavers.xsd
 /CityWatch.Web/wwwroot/Pdf/ToDropbox
 /CityWatch.Web/appsettings.json
 /CityWatch.Web/wwwroot/Uploads
+/CityWatch.Kpi/appsettings.json
+/CityWatch.RadioCheck/appsettings.json
