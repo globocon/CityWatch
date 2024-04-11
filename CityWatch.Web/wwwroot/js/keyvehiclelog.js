@@ -4322,15 +4322,15 @@ $(function () {
 
     /****** Print manual docket *******/
     $('#vehicle_key_daily_log tbody').on('click', '#btnPrintVkl', function () {
+        var data1 = keyVehicleLog.row($(this).parents('tr')).data();
         
         var clientsiteid = $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val();
         $('#clientsiteIDNew').val(clientsiteid);
 
-
         const clientSiteControlKeyvehicle = $('#multiselectVehiclelogDocket');
-
-
         clientSiteControlKeyvehicle.html('');
+        var siteidd = "";
+        //To get the Drodown values start
         $.ajax({
             url: '/Guard/KeyVehicleLog?handler=POCSDropdown',
             type: 'GET',
@@ -4338,18 +4338,50 @@ $(function () {
             dataType: 'json',
             success: function (data) {
                 data.map(function (site) {
-                    clientSiteControlKeyvehicle.append('<option value="' + site.value + '">' + site.text + '</option>');
+                    var option = '<option value="' + site.value + '">' + site.text + '</option>';
+
+                    $.ajax({
+                        url: '/Guard/KeyVehicleLog?handler=GetKeyvehicleemails',
+                        data: {
+                            id: data1.detail.id
+                        },
+                        type: 'POST',
+                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                    }).done(function (response) {
+                         siteidd = response.poc.clientSitePocIdsVehicleLog;
+                        var selectedValues = siteidd.split(',');
+                        $('#EmailPopup').val(siteidd); 
+                       
+                        selectedValues.forEach(function (value) {
+                            if (value === site.value) {
+                                option = '<option value="' + value + '" selected>' + site.text + '</option>';
+                            }
+                        });
+
+                        // Append the option after the inner AJAX call is done
+                        clientSiteControlKeyvehicle.append(option);
+                        clientSiteControlKeyvehicle.multiselect('rebuild');
+                    });
                 });
-                clientSiteControlKeyvehicle.multiselect('rebuild');
             }
         });
-
+         //To get the Drodown values stop
 
         var data = keyVehicleLog.row($(this).parents('tr')).data();
         $('#stakeholderEmail').val(''); 
-       
+        var uncheckedCount = 0;
+        $("#vehicle_key_daily_log  input[type=checkbox]").each(function () {
+            var isChecked1 = $(this).is(':checked');
+            if (isChecked1 == true) {
+                uncheckedCount++;
+            }
+
+            
+           
+        });
+
         var checkedCount = $('.custom-control-input:checked').length;
-        if (checkedCount > 1) {
+        if (uncheckedCount > 1) {
 
 
             $('#stakeholderEmail').val('');
@@ -4379,7 +4411,7 @@ $(function () {
                     $('#stakeholderEmail').val(emailIndividual);
                 }
 
-
+                GetEmails(siteidd);
             });
         }
 
@@ -4393,6 +4425,8 @@ $(function () {
         $('#stakeholderEmail').val('');
         $('#generate_kvl_docket').show();
         $('#generate_kvl_AlldocketList').hide();
+       
+
         /* Save the check box values to hidden field to print Start*/
         var data2 = keyVehicleLog.rows().nodes();
         var Ids = '';
@@ -4423,9 +4457,9 @@ $(function () {
             $('#titlePOIWarningPrint').attr('hidden', true);
             $('#imagesirenprint').attr('hidden', true);
         }
-
+        
     });
-
+    
     $('.print-docket-reason').on('change', function () {
 
         $('#otherReason').val('');
@@ -4439,6 +4473,48 @@ $(function () {
         if ($(this).val() === '0')
             $('#otherReason').attr('disabled', false);
     });
+    function GetEmails(id) {
+        $.ajax({
+            url: '/Guard/KeyVehicleLog?handler=GetKeyvehicleemails',
+            data: {
+                id: id.detail.id
+            },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (response) {
+          var siteidd = response.poc.clientSitePocIdsVehicleLog;
+            var selectedValues = siteidd.split(',');
+            $.ajax({
+                url: '/Guard/KeyVehicleLog?handler=GetPOCEmailsSelected',
+                data: {
+
+                    Emails: siteidd
+                },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (response) {
+                if (response.pocEmails != null) {
+                    var emails = response.pocEmails.filter(function (email) {
+                        return email !== null;
+                    }).join(', ');
+                    $('#stakeholderEmail').val(function (_, val) {
+                        if (val && val.trim() !== '') {
+                            return val + ', ' + emails;
+                        } else {
+
+                            return emails;
+                        }
+                    });
+                }
+
+            });
+
+        });
+
+
+       
+    }
+
 
 
     $('#otherReason').attr('placeholder', 'Select Or Edit').editableSelect({
