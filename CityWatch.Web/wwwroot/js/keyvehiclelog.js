@@ -4411,7 +4411,7 @@ $(function () {
                     $('#stakeholderEmail').val(emailIndividual);
                 }
 
-                GetEmails(siteidd);
+                GetEmails(response.poc.clientSitePocIdsVehicleLog);
             });
         }
 
@@ -4474,45 +4474,35 @@ $(function () {
             $('#otherReason').attr('disabled', false);
     });
     function GetEmails(id) {
+
+
         $.ajax({
-            url: '/Guard/KeyVehicleLog?handler=GetKeyvehicleemails',
+            url: '/Guard/KeyVehicleLog?handler=GetPOCEmailsSelected',
             data: {
-                id: id.detail.id
+
+                Emails: id
             },
             type: 'POST',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (response) {
-          var siteidd = response.poc.clientSitePocIdsVehicleLog;
-            var selectedValues = siteidd.split(',');
-            $.ajax({
-                url: '/Guard/KeyVehicleLog?handler=GetPOCEmailsSelected',
-                data: {
+            if (response.pocEmails != null) {
+                var emails = response.pocEmails.filter(function (email) {
+                    return email !== null;
+                }).join(', ');
+                $('#stakeholderEmail').val(function (_, val) {
+                    if (val && val.trim() !== '') {
+                        return val + ', ' + emails;
+                    } else {
 
-                    Emails: siteidd
-                },
-                type: 'POST',
-                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-            }).done(function (response) {
-                if (response.pocEmails != null) {
-                    var emails = response.pocEmails.filter(function (email) {
-                        return email !== null;
-                    }).join(', ');
-                    $('#stakeholderEmail').val(function (_, val) {
-                        if (val && val.trim() !== '') {
-                            return val + ', ' + emails;
-                        } else {
-
-                            return emails;
-                        }
-                    });
-                }
-
-            });
+                        return emails;
+                    }
+                });
+            }
 
         });
 
 
-       
+
     }
 
 
