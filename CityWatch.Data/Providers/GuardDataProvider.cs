@@ -413,7 +413,7 @@ namespace CityWatch.Data.Providers
 
 
         }
-.
+
 
         public void SaveGuardLicense(GuardLicense guardLicense)
         {
