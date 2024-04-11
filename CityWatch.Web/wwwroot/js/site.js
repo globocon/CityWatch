@@ -2527,7 +2527,7 @@ if (gridLicenseTypes) {
     });
 }
 
-if ($('#hr_settings_fields_types').value() == '') {
+if ($('#hr_settings_fields_types').val() == '') {
 gridHrSettings.hide();
 gridLicenseTypes.hide();
 }
