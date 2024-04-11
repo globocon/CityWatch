@@ -35,7 +35,7 @@ namespace CityWatch.Data.Providers
         Guard GetGuardDetailsbySecurityLicenseNo(string securityLicenseNo);
 
         public string GetDefaultEmailAddress();
-        DateTime? GetLogbookDateFromLogbook(int logbookId);      
+        DateTime? GetLogbookDateFromLogbook(int logbookId);
 
         List<GuardCompliance> GetGuardCompliancesList(int[] guardIds);
 
@@ -44,9 +44,9 @@ namespace CityWatch.Data.Providers
         //for toggle areas - start 
         List<ClientSiteToggle> GetClientSiteToggle();
         List<ClientSiteToggle> GetClientSiteToggle(int siteId);
-        List<ClientSiteToggle> GetClientSiteToggle(int siteId,int toggleId);
+        List<ClientSiteToggle> GetClientSiteToggle(int siteId, int toggleId);
 
-         KeyVehicleLog GetEmailPOCVehiclelog(int id);
+        KeyVehicleLog GetEmailPOCVehiclelog(int id);
 
 
         //for toggle areas - end 
@@ -78,7 +78,7 @@ namespace CityWatch.Data.Providers
         //    var guards = _context.Guards.ToList();
         //    foreach (var guard in guards)
         //    {
-              
+
         //        guard.IsActiveCount = CalculateIsActiveCountForGuard(guard.Id); 
         //    }
 
@@ -101,8 +101,8 @@ namespace CityWatch.Data.Providers
         {
             return _context.Guards.SingleOrDefault(x => x.SecurityNo.Trim() == securityLicenseNo.Trim());
         }
-        
-            
+
+
 
         public int SaveGuard(Guard guard, out string initalsUsed)
         {
@@ -132,15 +132,15 @@ namespace CityWatch.Data.Providers
                 {
                     updateGuard.Initial = guard.Initial;
                 }
-                    updateGuard.State = guard.State;
-                    updateGuard.Provider = guard.Provider;               
+                updateGuard.State = guard.State;
+                updateGuard.Provider = guard.Provider;
                 updateGuard.Mobile = guard.Mobile;
                 updateGuard.Email = guard.Email;
                 updateGuard.IsKPIAccess = guard.IsKPIAccess;
                 updateGuard.IsRCAccess = guard.IsRCAccess;
-                    updateGuard.IsSTATS = guard.IsSTATS;
-                    updateGuard.IsLB_KV_IR = guard.IsLB_KV_IR;
-                
+                updateGuard.IsSTATS = guard.IsSTATS;
+                updateGuard.IsLB_KV_IR = guard.IsLB_KV_IR;
+
             }
 
             _context.SaveChanges();
@@ -178,12 +178,12 @@ namespace CityWatch.Data.Providers
             else
             {
                 var updateGuard = _context.Guards.SingleOrDefault(x => x.Id == guard.Id);
-                
+
 
                 updateGuard.Mobile = guard.Mobile;
                 updateGuard.Email = guard.Email;
                 updateGuard.State = state;
-                
+
 
             }
 
@@ -298,14 +298,14 @@ namespace CityWatch.Data.Providers
         }
 
         //to get the details of the guard which is logined with a specific user id
-        public GuardLogin GetGuardLastLogin(int guardId,int? userId)
+        public GuardLogin GetGuardLastLogin(int guardId, int? userId)
         {
             return _context.GuardLogins
                 .Include(z => z.ClientSite)
                 .Include(z => z.SmartWand)
                 .Include(z => z.Position)
                 .Include(z => z.ClientSite.ClientType)
-                .Where(z => z.GuardId == guardId && z.UserId==userId)
+                .Where(z => z.GuardId == guardId && z.UserId == userId)
                 .OrderByDescending(z => z.LoginDate)
                 .FirstOrDefault();
         }
@@ -374,34 +374,34 @@ namespace CityWatch.Data.Providers
 
         public List<GuardLicense> GetGuardLicenses(int guardId)
         {
-           // var LicenceType= _context.GuardLicenses.Where(x => x.GuardId == guardId).Select(x=>x.LicenseType).F
-           var result= _context.GuardLicenses
-                .Where(x => x.GuardId == guardId)
-                .Include(z => z.Guard).ToList();
+            // var LicenceType= _context.GuardLicenses.Where(x => x.GuardId == guardId).Select(x=>x.LicenseType).F
+            var result = _context.GuardLicenses
+                 .Where(x => x.GuardId == guardId)
+                 .Include(z => z.Guard).ToList();
             //GuardLicenseType? licenseType = null;
-           // int intValueToCompare = 3;
-            
+            // int intValueToCompare = 3;
+
             foreach (var item in result)
             {
                 //GuardLicenseType? licenseType = null;
                 int intValueToCompare = -1;
-                if ((int)item.LicenseType== intValueToCompare)
+                if ((int)item.LicenseType == intValueToCompare)
                 {
 
                     result = _context.GuardLicenses
                     .Where(x => x.GuardId == guardId)
                     .Include(z => z.Guard)
                     .Select(x => new GuardLicense
-                    {  
-                        Id=x.Id,
-                       LicenseNo=x.LicenseNo,
+                    {
+                        Id = x.Id,
+                        LicenseNo = x.LicenseNo,
                         LicenseType = x.LicenseType,
-                      ExpiryDate =x.ExpiryDate,
-                      Reminder1=x.Reminder1,
-                      Reminder2=x.Reminder2,
-                      FileName=x.FileName,
-                      LicenseTypeName=x.LicenseTypeName,
-                      GuardId=x.GuardId
+                        ExpiryDate = x.ExpiryDate,
+                        Reminder1 = x.Reminder1,
+                        Reminder2 = x.Reminder2,
+                        FileName = x.FileName,
+                        LicenseTypeName = x.LicenseTypeName,
+                        GuardId = x.GuardId
                     })
                     .ToList();
 
@@ -419,6 +419,8 @@ namespace CityWatch.Data.Providers
         {
             if (guardLicense.Id == 0)
             {
+                guardLicense.Reminder1 = guardLicense.Reminder1 == null ? 45 : guardLicense.Reminder1;
+                guardLicense.Reminder2 = guardLicense.Reminder2 == null ? 7 : guardLicense.Reminder2;
                 _context.GuardLicenses.Add(guardLicense);
             }
             else
@@ -426,11 +428,11 @@ namespace CityWatch.Data.Providers
                 var guardLicenseToUpdate = _context.GuardLicenses.SingleOrDefault(x => x.Id == guardLicense.Id);
                 if (guardLicenseToUpdate != null)
                 {
-                    
+
                     guardLicenseToUpdate.LicenseNo = guardLicense.LicenseNo;
                     guardLicenseToUpdate.LicenseType = guardLicense.LicenseType;
-                    guardLicenseToUpdate.Reminder1 = guardLicense.Reminder1;
-                    guardLicenseToUpdate.Reminder2 = guardLicense.Reminder2;
+                    guardLicenseToUpdate.Reminder1 = guardLicense.Reminder1 == null ? 45 : guardLicense.Reminder1;
+                    guardLicenseToUpdate.Reminder2 = guardLicense.Reminder2 == null ? 7 : guardLicense.Reminder2;
                     guardLicenseToUpdate.ExpiryDate = guardLicense.ExpiryDate;
                     guardLicenseToUpdate.FileName = guardLicense.FileName;
                     guardLicenseToUpdate.LicenseTypeName = guardLicense.LicenseTypeName;
@@ -453,6 +455,8 @@ namespace CityWatch.Data.Providers
         {
             if (guardCompliance.Id == 0)
             {
+                guardCompliance.Reminder1 = guardCompliance.Reminder1 == null ? 45 : guardCompliance.Reminder1;
+                guardCompliance.Reminder2 = guardCompliance.Reminder2 == null ? 7 : guardCompliance.Reminder2;
                 _context.GuardCompliances.Add(guardCompliance);
             }
             else
@@ -462,8 +466,8 @@ namespace CityWatch.Data.Providers
                 {
                     guardComplianceToUpdate.ReferenceNo = guardCompliance.ReferenceNo;
                     guardComplianceToUpdate.Description = guardCompliance.Description;
-                    guardComplianceToUpdate.Reminder1 = guardCompliance.Reminder1;
-                    guardComplianceToUpdate.Reminder2 = guardCompliance.Reminder2;
+                    guardComplianceToUpdate.Reminder1 = guardCompliance.Reminder1 == null ? 45 : guardCompliance.Reminder1;
+                    guardComplianceToUpdate.Reminder2 = guardCompliance.Reminder2 == null ? 7 : guardCompliance.Reminder2;
                     guardComplianceToUpdate.ExpiryDate = guardCompliance.ExpiryDate;
                     guardComplianceToUpdate.FileName = guardCompliance.FileName;
                     guardComplianceToUpdate.HrGroup = guardCompliance.HrGroup;
@@ -481,7 +485,7 @@ namespace CityWatch.Data.Providers
         {
             return _context.GuardCompliances
                 .Include(z => z.Guard)
-                .Where(x => x.GuardId == guardId && x.ExpiryDate!=null)
+                .Where(x => x.GuardId == guardId && x.ExpiryDate != null)
                 .OrderBy(x => x.ReferenceNo).ToList();
         }
 
@@ -529,7 +533,7 @@ namespace CityWatch.Data.Providers
         }
         public List<ClientSiteToggle> GetClientSiteToggle(int siteId)
         {
-            var toggles= _context.ClientSiteToggle.Where(x=> x.ClientSiteId==siteId ).ToList();
+            var toggles = _context.ClientSiteToggle.Where(x => x.ClientSiteId == siteId).ToList();
             return toggles;
         }
         public List<ClientSiteToggle> GetClientSiteToggle(int siteId, int toggleId)

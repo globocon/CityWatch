@@ -2781,8 +2781,8 @@
         $('#GuardLicense_Id').val('');
         $('#GuardLicense_LicenseNo').val('');
         $('#GuardLicense_LicenseType').val('');
-        $('#GuardLicense_Reminder1').val('');
-        $('#GuardLicense_Reminder2').val('');
+        $('#GuardLicense_Reminder1').val('45');
+        $('#GuardLicense_Reminder2').val('7');
         $('#GuardLicense_ExpiryDate').val('');
         $('#GuardLicense_FileName').val('');
         $('#guardLicense_fileName').text('None');
@@ -2996,8 +2996,8 @@
         $('#GuardCompliance_Id').val('');
         $('#GuardCompliance_ReferenceNo').val('');
         $('#GuardCompliance_Description').val('');
-        $('#GuardCompliance_Reminder1').val('');
-        $('#GuardCompliance_Reminder2').val('');
+        $('#GuardCompliance_Reminder1').val('45');
+        $('#GuardCompliance_Reminder2').val('7');
         $('#GuardCompliance_ExpiryDate').val('');
         $('#GuardCompliance_FileName').val('');
         $('#guardCompliance_fileName').text('None');
