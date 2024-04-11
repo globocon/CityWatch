@@ -1744,9 +1744,13 @@ function displayGuardValidationDailyLogSummary(validationControl, errors) {
 $('#btn_save_guard_license1').on('click', function () {
     clearGuardValidationLogDailySummary('licenseValidationSummary1');
     /*To get the text inside the product dropdown*/
-    var inputElement = document.querySelector(".es-input");
+    var inputElement = document.querySelector("#GuardLicense_LicenseType1");
+    var dropdown = document.getElementById("GuardLicense_LicenseType1");
+    var selText = dropdown.options[dropdown.selectedIndex].text;
+
+    var ser = $('#frm_add_license').serialize();
     // Get the value of the input element
-    if (inputElement) { var inputValue = inputElement.value; $('#LicenseTypeOther1').val(inputValue); }
+    if (inputElement) { var inputValue = selText; $('#LicenseTypeOther1').val(inputValue); }
     $('#loader').show();
     $.ajax({
         url: '/Admin/GuardSettings?handler=SaveGuardLicense',

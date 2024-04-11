@@ -9,26 +9,26 @@ namespace CityWatch.Data.Models
 {
     public enum GuardLicenseType
     {
-        Other = 0,
+        Other = 7,
 
-        Investigator,
+        Investigator = 6,
 
         [Display(Name = "Crowd Controller")]
-        CrowdController,
+        CrowdController = 2,
 
         [Display(Name = "Security Guard")]
-        SecurityGuard,
+        SecurityGuard = 8,
 
         [Display(Name = "Bodyguard")]
-        BodyGuard,
+        BodyGuard = 1,
 
         [Display(Name = "Driver (Car)")]
-        CarDriver,
+        CarDriver = 4,
 
         [Display(Name = "Driver (Boat)")]
-        BoatDriver,
+        BoatDriver = 3,
 
-        Firearm
+        Firearm = 5
     }
 
     public class GuardLicense
@@ -73,5 +73,15 @@ namespace CityWatch.Data.Models
         [ForeignKey("GuardId")]
         public Guard Guard { get; set; }
         public string LicenseTypeName { get; set; }
+        //public int LicenseTypeId { get; set; }
+        //[ForeignKey("LicenseTypeId")]
+        //public LicenseTypes LicenseTypes { get; set; }
+    }
+    public class LicenseTypes
+    {
+        [Key]
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public bool IsDeleted { get; set; }
     }
 }

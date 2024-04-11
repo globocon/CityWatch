@@ -1,4 +1,6 @@
 ﻿﻿@using CityWatch.Data.Models;
+@using CityWatch.Web.Services;
+@inject IViewDataService viewDataServices
 <div class="modal fade" id="addGuardLicenseModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="addLicenceModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -19,8 +21,11 @@
                         </div>
                         <div class="form-group col-md-6">
                             <label class="form-label">License Type</label>
-                            <select class="form-control" id="GuardLicense_LicenseType" name="GuardLicense.LicenseType" asp-items="@Html.GetEnumSelectList<GuardLicenseType>().OrderBy(z => z.Text)">
+                            @*<select class="form-control" id="GuardLicense_LicenseType" name="GuardLicense.LicenseType" asp-items="@Html.GetEnumSelectList<GuardLicenseType>().OrderBy(z => z.Text)">
                                 <option value="">Select</option>
+                            </select>*@
+                            <select class="form-control" id="GuardLicense_LicenseType" name="GuardLicense.LicenseType" asp-items="@viewDataServices.GetLicenseTypes(true)">
+                                
                             </select>
                             <input type="hidden" id="GuardLicense_License" name="GuardLicense.LicenseType" />
                             <input type="hidden" id="LicenseTypeOther" name="GuardLicense.LicenseTypeName" />

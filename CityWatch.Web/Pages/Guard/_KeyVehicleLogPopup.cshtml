@@ -6,8 +6,6 @@
 @inject IClientSiteViewDataService clientViewDataService
 @inject IGuardDataProvider _guardDataProvider;
 <!-- Include jQuery -->
-
-
 <!-- Include multiselect CSS -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css" rel="stylesheet">
 <input type="hidden" asp-for="@Model.ClientSiteLogBook.ClientSiteId" />
@@ -115,8 +113,8 @@
                                     <input type="checkbox" class="custom-control-input" id="cbIsTimeSlotNo">
                                     <label class="custom-control-label" for="cbIsTimeSlotNo"></label>
 
-                                   
-                                    
+
+
                                     <input hidden asp-for="@Model.IsTimeSlotNo" />
                                 </div>
                             </div>
@@ -138,8 +136,8 @@
                         </div>
                         <div class="form-group col-md-2">
                             <div class="d-flex flex-row justify-content-between">
-                            <label id="lblIsReels">Reels</label>
-                            @*for manifest options-start*@
+                                <label id="lblIsReels">Reels</label>
+                                @*for manifest options-start*@
                                 <div class="custom-control custom-switch duty-day-switch">
                                     <input type="checkbox" class="custom-control-input" id="cbIsReels">
                                     <label class="custom-control-label" for="cbIsReels"></label>
@@ -151,25 +149,44 @@
                             </div>
                             @*for manifest options-end*@
                             <input class="form-control" type="number" asp-for="@Model.Reels" />
-                            
+
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group col-md-3">
-                            <label>Trailer 1 Rego. <br />or ISO + Seals</label>
-                            <input class="form-control" type="text" asp-for="@Model.Trailer1Rego" />
+                            <label id="lblISO_One">ISO/VIN + Seal</label>
+                            <select class="form-control mb-2" asp-for="@Model.Trailer1PlateId" disabled id="Trailer1Rego_Vehicle_type" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.Plate)">
+                            </select>
+                            @*<input type="hidden" asp-for="@Model.Trailer1PlateId" />*@
+                            <input class="form-control" type="text" asp-for="@Model.Trailer1Rego" id="Trailer1Rego" autocomplete="off" />
                         </div>
                         <div class="form-group col-md-3">
-                            <label>Trailer 2 Rego. <br />or ISO + Seals</label>
-                            <input class="form-control" type="text" asp-for="@Model.Trailer2Rego" />
+                            <label id="lblISO_Two">ISO/VIN + Seal</label>
+                            <select class="form-control  mb-2" asp-for="@Model.Trailer2PlateId" disabled id="Trailer2Rego_Vehicle_type" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.Plate)">
+                            </select>
+                            @* <input type="hidden" asp-for="@Model.Trailer2PlateId" />*@
+                            <input class="form-control" type="text" asp-for="@Model.Trailer2Rego" id="Trailer2Rego" autocomplete="off" />
                         </div>
                         <div class="form-group col-md-3">
-                            <label>Trailer 3 Rego. <br />or ISO + Seals</label>
-                            <input class="form-control" type="text" asp-for="@Model.Trailer3Rego" />
+                            <label id="lblISO_Three">ISO/VIN + Seal</label>
+                            <select class="form-control  mb-2" asp-for="@Model.Trailer3PlateId" disabled id="Trailer3Rego_Vehicle_type" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.Plate)">
+                            </select>
+                            @* <input type="hidden" asp-for="@Model.Trailer3PlateId" />*@
+                            <input class="form-control" type="text" asp-for="@Model.Trailer3Rego" id="Trailer3Rego" autocomplete="off" />
                         </div>
                         <div class="form-group col-md-3">
-                            <label>Trailer 4 Rego. <br />or ISO + Seals</label>
-                            <input class="form-control" type="text" asp-for="@Model.Trailer4Rego" />
+                            <div class="d-flex flex-row justify-content-between">
+                                <label id="lblISO_Four">ISO/VIN + Seal</label>
+                                <div class="custom-control custom-switch duty-day-switch">
+                                    <input type="checkbox" class="custom-control-input" id="cbIsISOVIN">
+                                    <label class="custom-control-label" for="cbIsISOVIN"></label>
+                                    <input hidden asp-for="@Model.IsISOVIN" />
+                                </div>
+                            </div>
+                            <select class="form-control  mb-2" asp-for="@Model.Trailer4PlateId" disabled id="Trailer4Rego_Vehicle_type" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.Plate)">
+                            </select>
+                            @* <input type="hidden" asp-for="@Model.Trailer4PlateId" />*@
+                            <input class="form-control" type="text" asp-for="@Model.Trailer4Rego" id="Trailer4Rego" autocomplete="off" />
                         </div>
                     </div>
                     <div class="form-row">
@@ -207,7 +224,8 @@
                     @*p7-115 docket output issues-start*@
                     <div class="form-row">
                         <fieldset>
-                            <legend style="font-size:small;"><b>DOCKETS</b>
+                            <legend style="font-size:small;">
+                                <b>DOCKETS</b>
                             </legend>
                             <div class="d-flex flex-row justify-content-between">
                                 <label id="lblIsDocket">
@@ -220,8 +238,8 @@
                                     <input hidden asp-for="@Model.IsDocketNo" />
                                 </div>
                             </div>
-                           
-                         </fieldset>
+
+                        </fieldset>
                         <div class="form-group col-md-3">
                             <label>Loader Name</label>
                             <input type="text" id="txtLoaderName" class="form-control" asp-for="@Model.LoaderName" disabled />
@@ -231,7 +249,7 @@
                             <input type="text" id="txtDispatchName" class="form-control" asp-for="@Model.DispatchName" disabled />
                         </div>
                     </div>
-                   @* p7-115 docket output issues-end*@
+                    @* p7-115 docket output issues-end*@
                 </div>
                 <div class="tab-pane fade p-2" id="key-details" role="tabpanel" aria-labelledby="key-details-tab">
                     <div class="form-row">
@@ -342,7 +360,7 @@
                                     <input hidden asp-for="@Model.IsBDM" />
                                 </div>
                             </div>
-                            <ul role="listbox" tabindex="0" aria-label="emails list" style="list-style:none" id="list_BDM" >
+                            <ul role="listbox" tabindex="0" aria-label="emails list" style="list-style:none" id="list_BDM">
                                 @foreach (var item in @viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.CRMActivity))
                                 {
                                     if (@item.Text != "Select")
@@ -408,17 +426,17 @@
                 </div>
                 <div class="form-group col-md-4">
                     <div class="d-flex flex-row justify-content-between">
-                    <label id="lblIsVXI">VWI</label>
-                    
+                        <label id="lblIsVXI">VWI</label>
+
                         @*for manifest options-start*@
-                            <div class="custom-control custom-switch duty-day-switch">
-                                <input type="checkbox" class="custom-control-input" id="cbIsVWI">
-                                <label class="custom-control-label" for="cbIsVWI"></label>
+                        <div class="custom-control custom-switch duty-day-switch">
+                            <input type="checkbox" class="custom-control-input" id="cbIsVWI">
+                            <label class="custom-control-label" for="cbIsVWI"></label>
 
 
 
-                                <input hidden asp-for="@Model.IsVWI" />
-                            </div>
+                            <input hidden asp-for="@Model.IsVWI" />
+                        </div>
                     </div>
                     <input class="form-control" type="text" asp-for="@Model.Vwi" />
                 </div>
@@ -434,21 +452,21 @@
                     <input type="text" class="form-control" asp-for="@Model.Sender">
                 </div>
             </div>
-             <div class="form-row">
+            <div class="form-row">
                 <div class=" form-group col-md-6">
-                    <label>Email(individual)</label>
+                    <label>Email (individual)</label>
                     <input class="form-control" type="text" asp-for="@Model.Emailindividual" />
                 </div>
                 <div class=" form-group col-md-6">
-                    <label>Email(company)</label>
+                    <label>Email (company)</label>
                     <input class="form-control" type="text" asp-for="@Model.EmailCompany" />
                 </div>
-                 </div>
+            </div>
             <div class="form-row" style="height:79px">
                 <div class=" form-group col-md-4">
                     <label>Site POC</label>
-                   
-                  @*   <select class="form-control" asp-for="@Model.ClientSitePocId" asp-items="@clientViewDataService.GetClientSitePocs(new int[] { Model.ClientSiteLogBook.ClientSiteId })">
+
+                    @*   <select class="form-control" asp-for="@Model.ClientSitePocId" asp-items="@clientViewDataService.GetClientSitePocs(new int[] { Model.ClientSiteLogBook.ClientSiteId })">
                     </select> *@
                     <select id="multiselectVehiclelog" class="form-control js-example-basic-multiple" asp-for="@Model.ClientSitePocId" multiple>
                         @foreach (var item in clientViewDataService.GetClientSitePocsVehicleLog(new int[] { Model.ClientSiteLogBook.ClientSiteId }))
@@ -621,7 +639,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="row">
         <div class="col-md-12">
             <div asp-validation-summary="All" id="validation-summary"></div>

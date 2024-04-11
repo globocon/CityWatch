@@ -8,6 +8,7 @@ using DocumentFormat.OpenXml.Office2010.CustomUI;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
 using Org.BouncyCastle.Asn1.Pkcs;
 using SMSGlobal.api;
@@ -16,6 +17,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using static iText.Kernel.Pdf.Colorspace.PdfSpecialCs;
 
 namespace CityWatch.Web.Services
 {
@@ -108,12 +110,22 @@ namespace CityWatch.Web.Services
         List<FeedbackTemplate> GetFeedbackTemplateListByType(int type);
         public IncidentReportPosition GetLoogbookdata(string IncidentName);
 
+        List<TrailerDeatilsViewModel> GetKeyVehicleTrailerNew(string truckRego);
+
+
         List<SelectListItem> GetClientSitePocsVehicleLog(int[] clientSiteIds);
 
 
         //p2-192 client email search-start
         List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm, string searchTermtwo);
         //p2-192 client email search-end
+
+        //p1-191 HR Files Task3-start
+        List<SelectListItem> GetHRGroups(bool withoutSelect = false);
+        List<SelectListItem> GetReferenceNoNumbers(bool withoutSelect = false);
+        List<SelectListItem> GetReferenceNoAlphabets(bool withoutSelect = false);
+        //p1-191 HR Files Task3-end
+        List<SelectListItem> GetLicenseTypes(bool withoutSelect = false);
 
     }
 
@@ -754,6 +766,14 @@ namespace CityWatch.Web.Services
         }
 
 
+        public List<TrailerDeatilsViewModel> GetKeyVehicleTrailerNew(string truckRego)
+        {
+            return _guardLogDataProvider.GetKeyVehicleLogProfileDetails(truckRego);
+
+        }
+
+
+
         public List<SelectListItem> VehicleRegos
         {
             get
@@ -1203,5 +1223,76 @@ namespace CityWatch.Web.Services
             return results;
         }
         //p2-192 client email search-end
+        //p1-191 HR Files Task 3-start
+        
+        public List<SelectListItem> GetHRGroups( bool withoutSelect = true)
+        {
+            var hrGroups = _guardDataProvider.GetHRGroups();
+            var items = new List<SelectListItem>();
+
+            //if (!withoutSelect)
+            //{
+                items.Add(new SelectListItem("Select", "", true));
+            //}
+
+            foreach (var item in hrGroups)
+            {
+                items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+            }
+
+            return items;
+        }
+        public List<SelectListItem> GetReferenceNoNumbers(bool withoutSelect = true)
+        {
+            var hrGroups = _guardDataProvider.GetReferenceNoNumbers();
+            var items = new List<SelectListItem>();
+
+            //if (!withoutSelect)
+            //{
+                items.Add(new SelectListItem("Select", "", true));
+            //}
+
+            foreach (var item in hrGroups)
+            {
+                items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+            }
+
+            return items;
+        }
+        public List<SelectListItem> GetReferenceNoAlphabets(bool withoutSelect = true)
+        {
+            var hrGroups = _guardDataProvider.GetReferenceNoAlphabets();
+            var items = new List<SelectListItem>();
+
+            //if (!withoutSelect)
+            //{
+                items.Add(new SelectListItem("Select", "", true));
+           // }
+
+            foreach (var item in hrGroups)
+            {
+                items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+            }
+
+            return items;
+        }
+        //p1-191 HR Files Task 3-end
+        public List<SelectListItem> GetLicenseTypes(bool withoutSelect = true)
+        {
+            var hrGroups = _guardDataProvider.GetLicenseTypes().Where(x=>x.IsDeleted==false);
+            var items = new List<SelectListItem>();
+
+            //if (!withoutSelect)
+            //{
+            items.Add(new SelectListItem("Select", "", true));
+            //}
+
+            foreach (var item in hrGroups)
+            {
+                items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+            }
+
+            return items;
+        }
     }
 }

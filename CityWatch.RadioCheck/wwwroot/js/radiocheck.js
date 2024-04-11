@@ -1506,7 +1506,8 @@ $('#clientSiteActiveGuards tbody').on('dblclick', '#btnLogBookHistoryByGuard', f
     $('#txtClientSiteId').val(ClientSiteId);
     $('#txtGuardId').val(GuardId);
     $('#lbl_GuardLogBookHistoryModalHeader').text(GuardName);
-    $('#lbl_lb_History_SitenameInfo').text('Last log book activity on site ' + ClientSiteName);
+    $('#lbl_lb_History_SitenameInfo').text('Last log book log');
+    clientSiteActiveGuardsLogBookHistory.clear().draw();
     clientSiteActiveGuardsLogBookHistory.ajax.reload();
 });
 /* for logbook history of the guard end*/
@@ -1560,30 +1561,38 @@ let clientSiteActiveGuardsKeyVehicleHistory = $('#clientSiteActiveGuardsKeyVehic
     },
     columns: [
         { data: 'id', title: 'Id', visible: false },
-        { data: 'id', title: 'KeyVehicleLog Id', visible: true, width: '20%' },
-        { data: 'vehicleRego', title: 'License No', visible: true, width: '20%' },
-        {
-            data: 'personName',
-            width: '20%',
-            title: 'Individual',
-            className: "text-center",
-        },
-        {
-            data: 'companyName',
-            width: '20%',
-            title: 'Company',
-            className: "text-center",
-        },
-        {
-            data: 'entryCreatedDateTimeLocal',
-            width: '20%',
-            title: 'Created Time',
-            className: "text-center",
+        { data: 'id', title: 'KeyVehicleLog Id', visible: false, width: '20%' },
+        { data: 'vehicleRego', title: 'License No', width: '20%', visible: true },
+        { data: 'personName',width: '20%',title: 'Individual',className: "text-center", visible: true },
+        { data: 'companyName', width: '20%', title: 'Company', className: "text-center", visible: true },
+        { data: 'individualTitle',width: '20%',title: 'Activity',className: "text-center"},
+        { data: 'entryCreatedDateTimeLocal',width: '20%',title: 'Created Time',className: "text-center",
             render: function (value, type, data) {
                 return renderKvDateTime(value, data);
             }
+        },
+        { data: 'rubbishDeduction', visible: false }
+    ],
+    drawCallback() {
+        var api = this.api();
+        var rowslength = api.rows().data().length;
+        if (rowslength > 0) {
+            var r = api.rows(0).column(7).data()[0];
+            if (r == true) {
+                api.columns([2]).visible(true);
+                api.columns([3]).visible(true);
+                api.columns([4]).visible(true);
+            } else {
+                api.columns([2]).visible(false);
+                api.columns([3]).visible(false);
+                api.columns([4]).visible(false);
+            }
+        } else {
+            api.columns([2]).visible(true);
+            api.columns([3]).visible(true);
+            api.columns([4]).visible(true);
         }
-    ]
+    }
 });
 
 $('#clientSiteActiveGuards tbody').on('dblclick', '#btnKvHistoryByGuard', function (value, record) {
@@ -1596,7 +1605,8 @@ $('#clientSiteActiveGuards tbody').on('dblclick', '#btnKvHistoryByGuard', functi
     $('#txtClientSiteId').val(ClientSiteId);
     $('#txtGuardId').val(GuardId);
     $('#lbl_KvGuardActivityHistoryHeader').text(GuardName);
-    $('#lbl_kv_History_SitenameInfo').text('Last key vehicle activity on site ' + ClientSiteName);
+    $('#lbl_kv_History_SitenameInfo').text('Last key vehicle log');
+    clientSiteActiveGuardsKeyVehicleHistory.clear().draw();
     clientSiteActiveGuardsKeyVehicleHistory.ajax.reload();
 });
 /* for Key Vehcile history of the guard end*/
@@ -1679,7 +1689,8 @@ $('#clientSiteActiveGuards tbody').on('dblclick', '#btnIrHistoryByGuard', functi
     $('#txtClientSiteId').val(ClientSiteId);
     $('#txtGuardId').val(GuardId);
     $('#lbl_IrGuardActivityHistoryHeader').text(GuardName);
-    $('#lbl_Ir_History_SitenameInfo').text('Last IR activity on site ' + ClientSiteName);
+    $('#lbl_Ir_History_SitenameInfo').text('Last IR log');
+    clientSiteActiveGuardsIncidentReportHistory.clear().draw();
     clientSiteActiveGuardsIncidentReportHistory.ajax.reload();
 });
 /* for Incident Reports history of the guard end*/
@@ -1748,7 +1759,8 @@ $('#clientSiteActiveGuards tbody').on('dblclick', '#btnSwHistoryByGuard', functi
     $('#txtClientSiteId').val(ClientSiteId);
     $('#txtGuardId').val(GuardId);
     $('#lbl_SwGuardActivityHistoryHeader').text(GuardName);
-    $('#lbl_Sw_History_SitenameInfo').text('Last smart wand activity on site ' + ClientSiteName);
+    $('#lbl_Sw_History_SitenameInfo').text('Last smart wand log');
+    clientSiteActiveGuardsSmartWandHistory.clear().draw();
     clientSiteActiveGuardsSmartWandHistory.ajax.reload();
 });
 
@@ -3382,7 +3394,8 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('dblclick', '#btnLogBookHistoryB
     $('#txtClientSiteId').val(ClientSiteId);
     $('#txtGuardId').val(GuardId);
     $('#lbl_GuardLogBookHistoryModalHeader').text(GuardName);
-    $('#lbl_lb_History_SitenameInfo').text('Last log book activity on site ' + ClientSiteName);
+    $('#lbl_lb_History_SitenameInfo').text('Last log book log');
+    clientSiteActiveGuardsLogBookHistory.clear().draw();
     clientSiteActiveGuardsLogBookHistory.ajax.reload();
 });
 
@@ -3416,7 +3429,8 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('dblclick', '#btnKvHistoryByGuar
     $('#txtClientSiteId').val(ClientSiteId);
     $('#txtGuardId').val(GuardId);
     $('#lbl_KvGuardActivityHistoryHeader').text(GuardName);
-    $('#lbl_kv_History_SitenameInfo').text('Last key vehicle activity on site ' + ClientSiteName);
+    $('#lbl_kv_History_SitenameInfo').text('Last key vehicle log');
+    clientSiteActiveGuardsKeyVehicleHistory.clear().draw();
     clientSiteActiveGuardsKeyVehicleHistory.ajax.reload();
 });
 
@@ -3452,7 +3466,8 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('dblclick', '#btnIrHistoryByGuar
     $('#txtClientSiteId').val(ClientSiteId);
     $('#txtGuardId').val(GuardId);
     $('#lbl_IrGuardActivityHistoryHeader').text(GuardName);
-    $('#lbl_Ir_History_SitenameInfo').text('Last IR activity on site ' + ClientSiteName);
+    $('#lbl_Ir_History_SitenameInfo').text('Last IR log');
+    clientSiteActiveGuardsIncidentReportHistory.clear().draw();
     clientSiteActiveGuardsIncidentReportHistory.ajax.reload();
 });
 
@@ -3487,7 +3502,8 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('dblclick', '#btnSwHistoryByGuar
     $('#txtClientSiteId').val(ClientSiteId);
     $('#txtGuardId').val(GuardId);
     $('#lbl_SwGuardActivityHistoryHeader').text(GuardName);
-    $('#lbl_Sw_History_SitenameInfo').text('Last smart wand activity on site ' + ClientSiteName);
+    $('#lbl_Sw_History_SitenameInfo').text('Last smart wand log');
+    clientSiteActiveGuardsSmartWandHistory.clear().draw();
     clientSiteActiveGuardsSmartWandHistory.ajax.reload();
 });
 

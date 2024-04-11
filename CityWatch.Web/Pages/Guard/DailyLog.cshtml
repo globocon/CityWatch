@@ -525,9 +525,12 @@
                             </div>
                             <div class="form-group col-md-6">
                                 <label class="form-label">License Type</label>
-                                <select class="form-control" id="GuardLicense_LicenseType1" name="GuardLicense.LicenseType" asp-items="@Html.GetEnumSelectList<GuardLicenseType>().OrderBy(z => z.Text)">
+                               @* <select class="form-control" id="GuardLicense_LicenseType1" name="GuardLicense.LicenseType" asp-items="@Html.GetEnumSelectList<GuardLicenseType>().OrderBy(z => z.Text)">
                                     <option value="">Select</option>
-                                </select>
+                                </select>*@
+                            <select class="form-control" id="GuardLicense_LicenseType1" name="GuardLicense.LicenseType" asp-items="@viewDataService.GetLicenseTypes(true)">
+                                @*<option value="">Select</option>*@
+                            </select>
                                 <input type="hidden" id="GuardLicense_License1" name="GuardLicense.LicenseType" />
                                 <input type="hidden" id="LicenseTypeOther1" name="GuardLicense.LicenseTypeName" />
                             </div>

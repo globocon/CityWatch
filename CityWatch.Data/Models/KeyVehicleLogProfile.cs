@@ -28,6 +28,10 @@ namespace CityWatch.Data.Models
             EntryReason = keyVehicleLog.EntryReason;
             IsSender = keyVehicleLog.IsSender;
             Sender = keyVehicleLog.Sender;
+            Trailer1PlateId = keyVehicleLog.Trailer1PlateId;
+            Trailer2PlateId = keyVehicleLog.Trailer2PlateId;
+            Trailer3PlateId = keyVehicleLog.Trailer3PlateId;
+            Trailer4PlateId = keyVehicleLog.Trailer4PlateId;
         }
 
         [Key]
@@ -68,5 +72,13 @@ namespace CityWatch.Data.Models
         public KeyVehicleLog KeyVehicleLog { get; set; }
 
         public string Notes { get; set; }
+
+        public int? Trailer1PlateId { get; set; }
+
+        public int? Trailer2PlateId { get; set; }
+
+        public int? Trailer3PlateId { get; set; }
+
+        public int? Trailer4PlateId { get; set; }
     }
 }
