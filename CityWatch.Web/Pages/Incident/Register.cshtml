@@ -103,6 +103,15 @@
                     <div class="form-check event-type-check">
                         <label class="form-check-label">Other Categories, including Feedback, Suggestions, Compliments, and Complaints</label>
                         <input asp-for="@Model.Report.EventType.Other" class="form-check-input event-type">
+                     </div>
+
+                    <div class="col-md-12">
+                        <div class="d-flex flex-row">
+                            <i class="fa fa-exclamation-triangle mr-2" style="color:burlywood;font-size: large;"></i>
+                            <span style="font-size:0.8rem;font-weight: 500;" class="d-block">
+                                NOTE: Multi-selections are encouraged; Try and avoid selectiong OTHER, and always consider COLOUR codes when applicable
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -269,12 +278,13 @@
                             <label> Do you seek financial reimbursement?</label>
                             <div class="d-flex p-2">
                                 <div class="form-check form-check-inline mr-4">
-                                    <label class="form-check-label font-weight-normal mr-2 ml-3">NO (n/a)</label>
+                                    <label class="form-check-label font-weight-normal mr-2 ml-3">NO<span style="font-size:0.75rem;"> (n/a)</span></label>
                                     <input asp-for="@Model.Report.DateLocation.ReimbursementNo" class="form-check-input" checked="checked">
                                 </div>
+                          
                                 <div class="form-check form-check-inline">
                                     <input asp-for="@Model.Report.DateLocation.ReimbursementYes" class="form-check-input">
-                                    <label class="form-check-label font-weight-normal">YES (& Receipt Attached)</label>
+                                    <label class="form-check-label font-weight-normal" >&nbsp;YES(<span style="font-size:0.72rem;">&nbsp;& Receipt Attached + PayID/BSB</span>)</label>
                                 </div>
                             </div>
                         </div>

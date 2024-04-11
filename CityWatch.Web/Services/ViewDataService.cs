@@ -425,6 +425,7 @@ namespace CityWatch.Web.Services
             return _configDataProvider.GetFeedbackTemplates().SingleOrDefault(x => x.Id == id)?.Text;
         }
 
+       
         public List<object> GetAllUsersClientSiteAccess()
         {
             var results = new List<object>();

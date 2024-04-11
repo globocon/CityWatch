@@ -607,7 +607,7 @@
         if (!selFieldTypeId) { // None
             $('#fieldSettings').show();
             $('#positionSettings').hide();
-
+            $('#FinancialReimbursementSettings').hide();
             gridReportFields.clear();
             gridPositions.clear();
             gridReportFields.reload({ typeId: selFieldTypeId });
@@ -616,6 +616,7 @@
             $('#fieldSettings').hide();
             $('#positionSettings').show();
             $('#PSPFSettings').hide();
+            $('#FinancialReimbursementSettings').hide();
 
             gridReportFields.clear();
             gridPositions.reload();
@@ -625,15 +626,29 @@
             $('#PSPFSettings').show();
             $('#fieldSettings').hide();
             $('#positionSettings').hide();
+            $('#FinancialReimbursementSettings').hide();
 
             gridPositions.clear();
             gridReportFields.clear();
             gridPSPF.reload();
         }
+        else if (selFieldTypeId === '6') {
+
+            getIrEmailCCforReimbursement();
+            $('#FinancialReimbursementSettings').show();
+            $('#PSPFSettings').hide();
+            $('#fieldSettings').hide();
+            $('#positionSettings').hide();
+
+            gridPositions.clear();
+            gridReportFields.clear();
+            gridPSPF.clear();
+        }
         else {
             $('#fieldSettings').show();
             $('#positionSettings').hide();
             $('#PSPFSettings').hide();
+            $('#FinancialReimbursementSettings').hide();
 
             gridPSPF.clear();
             gridPositions.clear();
@@ -1905,6 +1920,72 @@
         $('#msg-modal .modal-body p').html(message);
         $('#msg-modal').modal();
     }
+
+    /*****IR Email CC for Reimbursement  *****/
+
+
+
+    function getIrEmailCCforReimbursement() {
+
+        
+        $.ajax({
+            url: '/Admin/Settings?handler=IREmailCCForReimbursements',
+            type: 'GET',
+            dataType: 'json'
+        }).done(function (data) {
+
+            for (var i = 0; i < data.length; i++) {
+                $('#txt_IrEmailCCForReimbursements').val(data[i].name);
+               
+            }
+
+        });
+    }
+
+    //save btn IR Email-Click -start 
+
+        $('#btn_add_FR_settings').on('click', function () {
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            var Email = $('#txt_IrEmailCCForReimbursements').val();
+            //var emailsArray = Email.split(',');
+            //for (var i = 0; i < emailsArray.length; i++) {
+                //var emailAddress = emailsArray[i].trim();
+                var emailAddress=Email
+                if (isValidEmail(emailAddress)) {
+                    $.ajax({
+                        url: '/Admin/Settings?handler=SaveIREmail',
+                        data: { Email: emailAddress },
+                        type: 'POST',
+                        headers: { 'RequestVerificationToken': token },
+                    }).done(function () {
+                    })
+                }
+                else {
+                    $.notify("Invalid email address.",
+                        {
+                            align: "center",
+                            verticalAlign: "top",
+                            color: "#fff",
+                            background: "#D44950",
+                            blur: 0.4,
+                            delay: 0
+                        }
+                    );
+
+                }
+
+            //}
+
+            function isValidEmail(email) {
+                // Regular expression for basic email validation
+                var emailPattern = /^(?:[^,\s@]+@[^,\s@]+\.[^,\s@]+(?:,\s*)?)+$/;
+                return emailPattern.test(email);
+            }
+        })
+
+    //save btn IR Email-Click -end 
+    
+
     /*****C4i Core Settings *****/
 
     getC4Settings();

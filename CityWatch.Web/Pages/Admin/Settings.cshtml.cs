@@ -799,7 +799,28 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { success, message });
         }
+        //To save the IR Emaill CC start
+        public JsonResult OnPostSaveIREmail(string Email)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                int maxId = _configDataProvider.OnGetMaxIdIR();
+                var info = new IncidentReportField { Id = maxId, Name = Email, TypeId=ReportFieldType.Reimburse, EmailTo="" };
+                _configDataProvider.SaveReportField(info);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
 
+            return new JsonResult(new { status = status, message = message });
+            
+        }
+       
+        //To save the IR Emaill CC End
         public JsonResult OnPostDeletePSPF(int id)
         {
             var success = false;
@@ -858,6 +879,11 @@ namespace CityWatch.Web.Pages.Admin
         {
             var template = _viewDataService.GetAllCoreSettings(companyId);
             return new JsonResult(template);
+        }
+        public JsonResult OnGetIREmailCCForReimbursements()
+        {
+            var fields = _configDataProvider.GetReportFieldsByType(ReportFieldType.Reimburse);
+            return new JsonResult(fields);
         }
 
 
