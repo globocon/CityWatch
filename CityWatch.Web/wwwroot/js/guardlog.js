@@ -2415,7 +2415,7 @@
         { data: 'securityNo', width: "10%" },
         { data: 'initial', orderable: false, width: "5%" },
         { data: 'state', width: "5%" },
-        { data: 'provider', width: "10%" },
+        { data: 'provider', width: "13%" },
         { data: 'clientSites', orderable: false, width: "15%" },
         {
             data: 'isActive', className: "text-center", width: "10%", 'render': function (value, type, data) {
