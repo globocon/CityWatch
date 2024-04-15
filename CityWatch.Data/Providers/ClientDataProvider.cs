@@ -172,6 +172,9 @@ namespace CityWatch.Data.Providers
         IncidentReportPosition GetClientSitePosition(string Name);
         List<GlobalComplianceAlertEmail> GetGlobalComplianceAlertEmail();
         public void GlobalComplianceAlertEmail(string Email);
+        //p1-191 hr files task 8-start
+        List<KeyVehicleLog> GetKeyVehiclogWithProviders(string[] providers);
+        //p1-191 hr files task 8-end
 
     }
 
@@ -1850,7 +1853,19 @@ namespace CityWatch.Data.Providers
                 .ToList();
 
         }
-        //
+        //p1-191 hr files task 8-start
+        public List<KeyVehicleLog> GetKeyVehiclogWithProviders(string[] providers)
+        {
+
+            return _context.KeyVehicleLogs.Where(z => providers.Contains(z.CompanyName) && !string.IsNullOrEmpty(z.Email) && z.PersonType==195)
+                  .Include(z => z.ClientSiteLogBook)
+                .ThenInclude(z => z.ClientSite)
+
+                .ToList();
+
+
+        }
+        //p1-191 hr files task 8-end
 
     }
 
