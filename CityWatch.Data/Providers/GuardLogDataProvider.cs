@@ -256,6 +256,8 @@ namespace CityWatch.Data.Providers
         ClientSitePoc GetEmailPOC(int id);
         ClientSitePoc GetClientSitePOCName(int id);
 
+        int GetClientTypeByClientSiteId(int ClientSiteId);
+
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -3962,6 +3964,12 @@ namespace CityWatch.Data.Providers
         }
 
         //To get the Details of RadiocheckLogbookDetails stop
+
+        public int GetClientTypeByClientSiteId(int ClientSiteId)
+        {
+            var typeid = _context.ClientSites.Where(x => x.Id == ClientSiteId).FirstOrDefault().TypeId;
+            return typeid;
+        }
     }
 
 

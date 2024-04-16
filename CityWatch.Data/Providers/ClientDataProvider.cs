@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Org.BouncyCastle.Asn1.Esf;
 using Org.BouncyCastle.Utilities;
 using System;
 using System.Collections;
@@ -128,6 +129,7 @@ namespace CityWatch.Data.Providers
         void SaveClientSiteForRcLogBook(int clientSiteId);
         List<ClientSite> GetClientSiteForRcLogBook();
         void RemoveRCList(int rcListId);
+        void SaveUpdateRCListFile(int Id, string fileName, DateTime dtm);
         List<RadioCheckPushMessages> GetPushMessagesNotAcknowledged(int clientSiteId, DateTime date);
 
         List<RadioCheckPushMessages> GetDuressMessageNotAcknowledged(int clientSiteId, DateTime date);
@@ -502,15 +504,24 @@ namespace CityWatch.Data.Providers
 
         public void RemoveRCList(int rcListId)
         {
-
             var RCToUpdate = _context.RCActionList.SingleOrDefault(z => z.Id == rcListId);
             if (RCToUpdate != null)
             {
                 _context.Remove(RCToUpdate);
                 _context.SaveChanges();
             }
+        }
 
-
+        public void SaveUpdateRCListFile(int Id, string fileName, DateTime dtm)
+        {
+            var RCToUpdate = _context.RCActionList.SingleOrDefault(z => z.Id == Id);
+            if (RCToUpdate != null)
+            {
+                string sdtm = dtm.Year.ToString() + "-" + dtm.Month.ToString("00") + "-" + dtm.Day.ToString("00") + " " + dtm.Hour.ToString("00") + ":" + dtm.Minute.ToString("00") + ":" + dtm.Second.ToString("00");
+                RCToUpdate.Imagepath = fileName;
+                RCToUpdate.DateandTimeUpdated = sdtm;
+                _context.SaveChanges();
+            }
 
         }
 
