@@ -32,6 +32,8 @@ using System.Security.Cryptography;
 using DocumentFormat.OpenXml.Vml.Spreadsheet;
 using Dropbox.Api.Files;
 
+
+
 namespace CityWatch.Web.Pages.Incident
 {
     public class RegisterModel : PageModel
@@ -479,7 +481,15 @@ namespace CityWatch.Web.Pages.Incident
 
             //To get the Default Email stop
 
-            var ccAddress = _EmailOptions.CcAddress.Split('|');
+            //var ccAddress = _EmailOptions.CcAddress.Split('|');
+            List<IncidentReportField> incidentReportFields = _configDataProvider.GetReportFieldsByType(ReportFieldType.Reimburse);
+            string emailAddress = null;
+            foreach (var incidentReportField in incidentReportFields)
+            {
+                emailAddress = incidentReportField.Name;
+
+            }
+            var ccAddress = emailAddress.Split(',');     
             var subject = _EmailOptions.Subject;
             var messageHtml = _EmailOptions.Message;
 
@@ -490,7 +500,8 @@ namespace CityWatch.Web.Pages.Incident
 
             if (Report.DateLocation.ReimbursementYes)
             {
-                message.Cc.Add(new MailboxAddress(ccAddress[1], ccAddress[0]));
+                foreach (var address in ccAddress)                 
+                message.Cc.Add(new MimeKit.MailboxAddress(String.Empty,address));
             }
             ///* Mail Id added Bcc globoconsoftware for checking Ir Mail not getting Issue Start(date 13,09,2023) */
             //message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
@@ -534,7 +545,19 @@ namespace CityWatch.Web.Pages.Incident
         {
             var fromAddress = _EmailOptions.FromAddress.Split('|');
             var toAddress = _EmailOptions.ToAddress.Split('|');
-            var ccAddress = _EmailOptions.CcAddress.Split('|');
+            // var ccAddress = _EmailOptions.CcAddress.Split('|');
+            List<IncidentReportField> incidentReportFields = _configDataProvider.GetReportFieldsByType(ReportFieldType.Reimburse);
+            string emailAddress = null;
+            foreach (var incidentReportField in incidentReportFields)
+            {
+                 emailAddress = incidentReportField.Name;
+                                                                 
+            }
+            string[] ccAddress = new string[] { };
+            if (!string.IsNullOrEmpty(emailAddress))
+            {
+                ccAddress = emailAddress.Split(',');
+            }
             var subject = _EmailOptions.Subject;
             var messageHtml = _EmailOptions.Message;
 
@@ -544,9 +567,11 @@ namespace CityWatch.Web.Pages.Incident
                 message.To.Add(address);
 
             if (Report.DateLocation.ReimbursementYes)
-            {
-                message.Cc.Add(new MailboxAddress(ccAddress[1], ccAddress[0]));
-            }
+                {
+                    foreach (var address in ccAddress)
+                    message.Cc.Add(new MimeKit.MailboxAddress(String.Empty, address));
+                }
+            
             /* Mail Id added Bcc globoconsoftware for checking Ir Mail not getting Issue Start(date 13,09,2023) */
             message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
             message.Bcc.Add(new MailboxAddress("globoconsoftware", "jishakallani@gmail.com"));

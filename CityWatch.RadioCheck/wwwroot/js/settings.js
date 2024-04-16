@@ -9,6 +9,14 @@
         $('#du_duress_email').val(Emails.emails);
     });
 
+    $.ajax({
+        url: '/Admin/Settings?handler=GlobalComplianceAlertEmail',
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (Emails) {
+        $('#hr_compliance_email').val(Emails.emails);
+    });
+
      //To get the Duress Emails in pageload stop
 
 };
@@ -235,9 +243,9 @@ $('#add_calendar_events').on('click', function () {
         columns: [
             { width: 130, field: 'id', title: 'Id', hidden: true },
             { width: 100, field: 'referenceNo', title: 'Reference No', editor: true },
-            { width: 700, field: 'textMessage', title: 'Text Message', editor: true },
-            { width: 120, field: 'formattedStartDate', title: 'Start', type: 'date', format: 'dd-mmm-yyyy', editor: true },
-            { width: 120, field: 'formattedExpiryDate', title: 'Expiry', type: 'date', format: 'dd-mmm-yyyy', editor: true },
+            { width: 600, field: 'textMessage', title: 'Text Message', editor: true },
+            { width: 160, field: 'formattedStartDate', title: 'Start', type: 'date', format: 'dd-mmm-yyyy', editor: true },
+            { width: 160, field: 'formattedExpiryDate', title: 'Expiry', type: 'date', format: 'dd-mmm-yyyy', editor: true },
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -247,6 +255,49 @@ $('#add_calendar_events').on('click', function () {
 if (gridBroadCastBannerCalendarEvents) {
     gridBroadCastBannerCalendarEvents.on('rowDataChanged', function (e, id, record) {
         const data = $.extend(true, {}, record);
+
+        if (isNaN(data.referenceNo)) {
+            $.notify('Reference number should only contains numbers. !!!',
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#D44950",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );
+            gridBroadCastBannerCalendarEvents.edit(id);
+            return;
+        }        
+        if ((data.formattedStartDate == '') || (data.formattedExpiryDate == '') || (data.formattedStartDate == undefined) || (data.formattedExpiryDate == undefined)) {
+            $.notify('Please check start date and expiry date. !!!',
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#D44950",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );
+            gridBroadCastBannerCalendarEvents.edit(id);
+            return;
+        }
+        if ((data.textMessage == '') || (data.textMessage == undefined)) {
+            $.notify('Event message cannot be empty. !!!',
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#D44950",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );
+            gridBroadCastBannerCalendarEvents.edit(id);
+            return;
+        }
         data.textMessage = data.textMessage.replace(/\s{2,}/g, ' ').trim();
         data.startDate = data.formattedStartDate;
         data.expiryDate = data.formattedExpiryDate;
@@ -258,13 +309,34 @@ if (gridBroadCastBannerCalendarEvents) {
             type: 'POST',
             headers: { 'RequestVerificationToken': token },
         }).done(function (result) {
-            if (result.message == 'Another Event Exists') {
-
-
-                $('#alert-wand-in-use-modal').modal('show');
-            }
-            gridBroadCastBannerCalendarEvents.clear();
-            gridBroadCastBannerCalendarEvents.reload();
+            if (result.status) {
+                //Success
+                $.notify(result.message,
+                    {
+                        align: "center",
+                        verticalAlign: "top",
+                        color: "#fff",
+                        background: "#20D67B",
+                        blur: 0.4,
+                        delay: 0
+                    }
+                );
+                gridBroadCastBannerCalendarEvents.clear();
+                gridBroadCastBannerCalendarEvents.reload();
+            } else {
+                //Failed
+                $.notify(result.message,
+                    {
+                        align: "center",
+                        verticalAlign: "top",
+                        color: "#fff",
+                        background: "#D44950",
+                        blur: 0.4,
+                        delay: 0
+                    }
+                );
+                gridBroadCastBannerCalendarEvents.edit(id);
+            }           
         }).fail(function () {
             console.log('error');
         }).always(function () {
@@ -504,6 +576,54 @@ $('#add_GloblEmail').on('click', function () {
         
     } 
     
+    function isValidEmail(email) {
+        // Regular expression for basic email validation
+        var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailPattern.test(email);
+    }
+})
+
+$('#add_ComplianceEmail').on('click', function () {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    var Email = $('#hr_compliance_email').val();
+    var emailsArray = Email.split(',');
+    isValidEmailIds = true;
+    for (var i = 0; i < emailsArray.length; i++) {
+        var emailAddress = emailsArray[i].trim();
+        if (isValidEmail(emailAddress)) {
+           
+        }
+        else {
+            isValidEmailIds = false;
+            $.notify("Invalid email address." + emailAddress,
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#D44950",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );
+
+        }
+        
+
+
+    }
+
+    if (isValidEmailIds) {
+        $.ajax({
+            url: '/Admin/Settings?handler=SaveGlobalComplianceAlertEmail',
+            data: { Email: Email },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function () {
+            alert("The Compliance Alert Email was saved successfully");
+        })
+
+    }
+
     function isValidEmail(email) {
         // Regular expression for basic email validation
         var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

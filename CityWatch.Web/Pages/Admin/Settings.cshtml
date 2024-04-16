@@ -269,14 +269,25 @@
             <div class="form-group row">
                 <label class="col-form-label col-md-3">Select a field type</label>
                 <div class="col-md-4">
-                    <select class="form-control" id="report_field_types">
+            @*         <select class="form-control" id="report_field_types"  onchange="sortSelect()">
                         <option value="">None</option>
                         <option value="1">Position</option>
                         <option value="2">Notified By</option>
                         <option value="3">Callsign</option>
                         <option value="4">Area/Ward</option>
                         <option value="5">PSPF</option>
-                    </select>
+                        <option value="6">Financial Reimbursement</option>
+                    </select> *@
+                          <select class="form-control" id="report_field_types">
+                        <option value="">None</option>
+                        <option value="4">Area/Ward</option>
+                        <option value="3">Callsign</option>
+                        <option value="6">Financial Reimbursement</option>
+                        <option value="2">Notified By</option>
+                        <option value="1">Position</option> 
+                        <option value="5">PSPF</option>
+                      
+                    </select> 
                 </div>
             </div>
             <div class="row" id="fieldSettings">
@@ -301,6 +312,21 @@
                         <button class="btn btn-success mb-3" id="add_PSPF_settings"><i class="fa fa-plus mr-2"></i>Add New PSPF</button>
                     </div>
                     <table class="table" id="PSPF_settings"></table>
+                </div>
+            </div>
+            <div class="row" style="display:none" id="FinancialReimbursementSettings">
+                <div class="col-md-12">
+                          
+                    <div class="form-group row">
+                        <label class="col-form-label col-md-3">IR Email CC for Reimbursements</label>
+                        <div class="col-md-4">
+                            <input type="text" id="txt_IrEmailCCForReimbursements" class="form-control" name="txt_IrEmailCCForReimbursements" />
+                        </div>
+                        <div class="text-right">
+                            <button class="btn btn-success mb-3" id="btn_add_FR_settings"><i class="fa fa-plus mr-2"></i>Add New Email</button>
+                        </div>
+                    </div>
+                   
                 </div>
             </div>
         </div>

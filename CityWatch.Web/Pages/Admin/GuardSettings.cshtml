@@ -21,6 +21,9 @@
             <a class="nav-link" id="gs-settings-tab" data-toggle="tab" href="#gsSettings" role="tab" aria-controls="gsSettings" aria-selected="false">Site Settings</a>
         </li>*@
         <li class="nav-item">
+            <a class="nav-link" id="kvl-fields-tab" data-toggle="tab" href="#hrSettings" role="tab" aria-controls="hrSettings" aria-selected="false">HR Settings</a>
+        </li>
+        <li class="nav-item">
             <a class="nav-link" id="kvl-fields-tab" data-toggle="tab" href="#kvlFields" role="tab" aria-controls="kvlFields" aria-selected="false">KV Fields</a>
         </li>
         <li class="nav-item">
@@ -83,6 +86,53 @@
             <div class="row">
                 <div class="col-md-12">
                     <table class="table" id="gl_site_settings"></table>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade py-3" id="hrSettings" role="tabpanel" aria-labelledby="hr-settings-tab">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group row">
+                        <label class="col-form-label col-md-2">Select a Field Type</label>
+                        <div class="col-md-5">
+                            <select class="form-control" id="hr_settings_fields_types" asp-items="@Html.GetEnumSelectList<HrSettingsType>()">
+                                <option value="">None</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="text-right">
+                        <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings" >
+                      @*<thead>
+                            <tr>
+                                <th rowspan="2" style="display:none"></th>
+                                <th rowspan="2">HR Group</th>
+                                @*<th colspan="2">Reference No</th>
+                                
+                                <th rowspan="2">Description</th>
+                                <th rowspan="2"></th>
+                                
+                            </tr>
+                            <tr>
+                                <th style="display:none"></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                            </tr>
+                            
+                        </thead>*@
+                    </table>
+                    <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
                 </div>
             </div>
         </div>
@@ -331,8 +381,62 @@
         </div>
     </div>
 </div>
+<div class="modal" tabindex="-1" role="dialog" id="hrSettingsModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8">HR Settings</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="form_new_hr_settings">
+                <div class="form-row">
+                    <div class="col-md-4">
+                        <label>HR Groups</label>
+                            <select class="form-control" id="list_hrGroups" asp-for="@Model.HrSettings.HRGroupId" asp-items="@viewDataService.GetHRGroups( true)"></select>
+                            <input type="hidden" asp-for="@Model.HrSettings.Id" id="HrSettings_Id" />
+                    </div>
+                    <div class="col-md-8">
+                        <label>Reference No</label>
+                        <div class="form-row">
+                            <div class="col-md-4">
+                                    <select class="form-control" id="list_ReferenceNoNumber" asp-for="@Model.HrSettings.ReferenceNoNumberId" asp-items=" @viewDataService.GetReferenceNoNumbers( true)"></select>
+
+                            </div>
+                            <div class="col-md-4">
+                                    <select class="form-control" id="list_ReferenceNoAlphabet" asp-for="@Model.HrSettings.ReferenceNoAlphabetId" asp-items="@viewDataService.GetReferenceNoAlphabets( true)"></select>
+
+                            </div>
+                            </div>
+                        
+                      
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <label>Descriptions</label>
+                        <textarea class="form-control" id="txtHrSettingsDescription" asp-for="@Model.HrSettings.Description"></textarea>
+                    </div>
+
+
+                </div>
+                    <div asp-validation-summary="All" id="hrsettings-field-validation"></div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-start">
+                <button type="button" class="btn btn-primary" id="btn_save_hr_settings">Save</button>
+            </div>
+        </div>
+
+
+    </div>
+</div>
 <partial name="_GuardAddLicensePopup" />
 <partial name="_GuardAddCompliancePopup" />
 <partial name="_KeySiteSettingsPopup" />
 <partial name="_GuardSiteSettings" />
+@*<partial name="﻿_HRSettingsPopup" />*@
 @Html.AntiForgeryToken()

@@ -211,6 +211,28 @@ namespace CityWatch.RadioCheck.Pages.Admin
             return new JsonResult(new { status = Email, message = message });
         }
         //To save the Gloabl Duress Email Stop
+        public JsonResult OnGetGlobalComplianceAlertEmail()
+        {
+            var Emails = _clientDataProvider.GetGlobalComplianceAlertEmail();
+            var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
+            return new JsonResult(new { Emails = emailAddresses });
+        }
+        public JsonResult OnPostSaveGlobalComplianceAlertEmail(string Email)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.GlobalComplianceAlertEmail(Email);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = Email, message = message });
+        }
 
         //To save the Clobal Duress SMS numbers start
         public JsonResult OnGetGetGlobalSmsNumberList()
@@ -256,36 +278,81 @@ namespace CityWatch.RadioCheck.Pages.Admin
         public JsonResult OnPostCalendarEvents(BroadcastBannerCalendarEvents record)
         {
             var status = true;
-            var message = "Success";
+            var message = "";
             try
             {
+                if((record.StartDate == null) || ( record.ExpiryDate == null))
+                {
+                    return new JsonResult(new { status = false, message = "Please check the dates. !!!" });
+                }
+                if (record.StartDate > record.ExpiryDate)
+                {
+                    return new JsonResult(new { status = false, message = "Please check the dates. !!!" });
+                }
+                if (record.TextMessage == null)
+                {
+                    return new JsonResult(new { status = false, message = "Event message cannot be empty. !!!" });
+                }
 
                 if (record.id == -1)
                 {
-
-                    int LastOne = _configDataProvider.GetCalendarEventsCount();
-                    if (LastOne != null)
-                    {
-                        LastOne++;
-                        string numberAsString = LastOne.ToString();
-                        if (numberAsString.Length == 1)
-                        {
-
-                            record.ReferenceNo = "0" + LastOne;
-                        }
-                        else
-                        {
-                            record.ReferenceNo = LastOne.ToString();
-                        }
-
-
-                    }
+                    message = "Event added successfully.";
                     var existsevents = _configDataProvider.GetBroadcastCalendarEvents().Where(x => x.ExpiryDate == record.ExpiryDate && x.StartDate == record.StartDate);
                     if (existsevents.Count() > 0)
                     {
-
-                        return new JsonResult(new { status = false, message = "Another Event Exists" });
+                        return new JsonResult(new { status = false, message = "Another event with similar dates exists !!!" });
                     }
+
+                    if(record.ReferenceNo != null)
+                    {
+                        record.ReferenceNo = record.ReferenceNo.Trim();
+                        int refno;
+                        if (int.TryParse(record.ReferenceNo,out refno) == false)
+                        {
+                            return new JsonResult(new { status = false, message = "Reference number should only contains numbers. !!!" });
+                        }
+
+                        //var eventReferenceExists = _configDataProvider.GetBroadcastCalendarEvents().Where(x => x.ReferenceNo.Equals(record.ReferenceNo));
+                        //if (eventReferenceExists.Count() > 0)
+                        //{
+                        //    return new JsonResult(new { status = false, message = "Similar reference number already exists !!!" });
+                        //}
+                    }
+                    else
+                    {
+                        // Set Referenece number.
+                        int LastOne = _configDataProvider.GetCalendarEventsCount();
+                        string newrefnumb = "";
+                        bool refok = false;
+                        do
+                        {
+                          
+                                LastOne++;
+                                newrefnumb = LastOne.ToString("00");
+                                var eventReferenceExists = _configDataProvider.GetBroadcastCalendarEvents().Where(x => x.ReferenceNo.Equals(newrefnumb));
+                                if (eventReferenceExists.Count() < 1)
+                                {
+                                    refok = true;
+                                }                               
+                                                   
+
+                        } while (refok == false);
+                        record.ReferenceNo = newrefnumb;
+                    }                   
+
+                }
+                else
+                {
+                    if (record.ReferenceNo != null)
+                    {
+                        record.ReferenceNo = record.ReferenceNo.Trim();
+                        int refno;
+                        if (int.TryParse(record.ReferenceNo, out refno) == false)
+                        {
+                            return new JsonResult(new { status = false, message = "Reference number should only contains numbers. !!!" });
+                        }                        
+                    }
+                    message = "Event updated successfully.";
                 }
                 _clientDataProvider.SaveCalendarEvents(record);
             }

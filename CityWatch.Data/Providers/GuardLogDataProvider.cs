@@ -234,6 +234,14 @@ namespace CityWatch.Data.Providers
 
         List<GuardLog> GetLastLoginNew(int GuradId);
 
+        //p1-191 hr files task 3-start
+        void SaveHRSettings(HrSettings hrSettings);
+        void DeleteHRSettings(int id);
+        void SaveLicensesTypes(LicenseTypes licenseTypes);
+        void DeleteLicensesTypes(int id);
+        //p1-191 hr files task 3-end
+
+
 
         List<string> GetTrailerRegosForKVL(string regoStart = null);
 
@@ -255,7 +263,6 @@ namespace CityWatch.Data.Providers
 
         ClientSitePoc GetEmailPOC(int id);
         ClientSitePoc GetClientSitePOCName(int id);
-
         int GetClientTypeByClientSiteId(int ClientSiteId);
 
     }
@@ -3970,8 +3977,63 @@ namespace CityWatch.Data.Providers
             var typeid = _context.ClientSites.Where(x => x.Id == ClientSiteId).FirstOrDefault().TypeId;
             return typeid;
         }
+
+        //p1-191 hr files task 3-start
+        public void SaveHRSettings(HrSettings hrSettings)
+        {
+            if (hrSettings.Id == 0)
+            {
+                _context.HrSettings.Add(hrSettings);
+            }
+            else
+            {
+                var hrSettingsToUpdate = _context.HrSettings.SingleOrDefault(x => x.Id == hrSettings.Id);
+                if (hrSettingsToUpdate != null)
+                {
+                    hrSettingsToUpdate.HRGroupId = hrSettings.HRGroupId;
+                    hrSettingsToUpdate.ReferenceNoAlphabetId = hrSettings.ReferenceNoAlphabetId;
+                    hrSettingsToUpdate.ReferenceNoNumberId = hrSettings.ReferenceNoNumberId;
+                    hrSettingsToUpdate.Description = hrSettings.Description;
+                }
+            }
+            _context.SaveChanges();
+        }
+        public void DeleteHRSettings(int id)
+        {
+            var deleteHrSettings = _context.HrSettings.SingleOrDefault(x => x.Id == id);
+            if (deleteHrSettings != null)
+                _context.HrSettings.Remove(deleteHrSettings);
+
+            _context.SaveChanges();
+        }
+        public void SaveLicensesTypes(LicenseTypes licenseTypes)
+        {
+            if (licenseTypes.Id == -1)
+            {
+                licenseTypes.Id = 0;
+                _context.LicenseTypes.Add(licenseTypes);
+            }
+            else
+            {
+                var licenseTypesToUpdate = _context.LicenseTypes.SingleOrDefault(x => x.Id == licenseTypes.Id);
+                if (licenseTypesToUpdate != null)
+                {
+                    licenseTypesToUpdate.Name = licenseTypes.Name;
+                    licenseTypesToUpdate.IsDeleted = false;
+                   
+                }
+            }
+            _context.SaveChanges();
+        }
+        public void DeleteLicensesTypes(int id)
+        {
+            var licenseTypeToDelete = _context.LicenseTypes.SingleOrDefault(x => x.Id == id);
+            if (licenseTypeToDelete != null)
+                licenseTypeToDelete.IsDeleted = true;
+            _context.SaveChanges();
+        }
+        //p1-191 hr files task 3-end
+
     }
-
-
 
 }

@@ -1,6 +1,7 @@
 ﻿using CityWatch.Data.Models;
 using Dropbox.Api.Users;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,6 +29,7 @@ namespace CityWatch.Data.Providers
         List<IncidentReportPosition> GetPositions();
         List<IncidentReportPSPF> GetPSPF();
         int GetLastValue();
+        int OnGetMaxIdIR();
         void SavePostion(IncidentReportPosition incidentReportPosition);
         void SavePSPF(IncidentReportPSPF incidentReportPSPF);
         void DeletePSPF(int id);
@@ -63,6 +65,10 @@ namespace CityWatch.Data.Providers
         //General Feeds-end
         public List<SmsChannel> GetSmsChannels();
         public IncidentReportPosition GetIsLogbookData(string Name);
+        List<HrSettings> GetHRSettings();
+        List<LicenseTypes> GetLicensesTypes();
+
+        //p1-191 hr files task 3-end
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -153,6 +159,7 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
 
+    
         public List<State> GetStates()
         {
             return new List<State>()
@@ -278,6 +285,13 @@ namespace CityWatch.Data.Providers
         public int GetLastValue()
         {
             return _context.IncidentReportPSPF.Count();
+        }
+        
+        public int OnGetMaxIdIR()
+        {
+            var incidentReportid = _context.IncidentReportFields.Max(x => (int?)x.Id);
+            return Convert.ToInt32(incidentReportid);
+            
         }
         public void SavePSPF(IncidentReportPSPF incidentReportPSPF)
         {
@@ -493,5 +507,21 @@ namespace CityWatch.Data.Providers
         {
             return _context.SmsChannel.OrderBy(x => x.Id).ToList();
         }
+        //p1-191 hr files task 3-start
+        public List<HrSettings> GetHRSettings()
+        {
+            var res= _context.HrSettings.Include(z => z.HRGroups)
+                .Include(z => z.ReferenceNoNumbers).Include(z => z.ReferenceNoAlphabets).OrderBy(x => x.Id).ToList();
+            return _context.HrSettings.Include(z => z.HRGroups)
+                .Include(z => z.ReferenceNoNumbers)
+                .Include(z => z.ReferenceNoAlphabets)
+                .OrderBy(x => x.Id).ToList();
+        }
+        public List<LicenseTypes> GetLicensesTypes()
+        {
+            return _context.LicenseTypes.Where(x=>x.IsDeleted==false)
+                .OrderBy(x => x.Id).ToList();
+        }
+        //p1-191 hr files task 3-end
     }
 }

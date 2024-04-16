@@ -120,6 +120,13 @@ namespace CityWatch.Web.Services
         List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm, string searchTermtwo);
         //p2-192 client email search-end
 
+        //p1-191 HR Files Task3-start
+        List<SelectListItem> GetHRGroups(bool withoutSelect = false);
+        List<SelectListItem> GetReferenceNoNumbers(bool withoutSelect = false);
+        List<SelectListItem> GetReferenceNoAlphabets(bool withoutSelect = false);
+        //p1-191 HR Files Task3-end
+        List<SelectListItem> GetLicenseTypes(bool withoutSelect = false);
+
     }
 
     public class ViewDataService : IViewDataService
@@ -418,6 +425,7 @@ namespace CityWatch.Web.Services
             return _configDataProvider.GetFeedbackTemplates().SingleOrDefault(x => x.Id == id)?.Text;
         }
 
+       
         public List<object> GetAllUsersClientSiteAccess()
         {
             var results = new List<object>();
@@ -1215,5 +1223,76 @@ namespace CityWatch.Web.Services
             return results;
         }
         //p2-192 client email search-end
+        //p1-191 HR Files Task 3-start
+        
+        public List<SelectListItem> GetHRGroups( bool withoutSelect = true)
+        {
+            var hrGroups = _guardDataProvider.GetHRGroups();
+            var items = new List<SelectListItem>();
+
+            //if (!withoutSelect)
+            //{
+                items.Add(new SelectListItem("Select", "", true));
+            //}
+
+            foreach (var item in hrGroups)
+            {
+                items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+            }
+
+            return items;
+        }
+        public List<SelectListItem> GetReferenceNoNumbers(bool withoutSelect = true)
+        {
+            var hrGroups = _guardDataProvider.GetReferenceNoNumbers();
+            var items = new List<SelectListItem>();
+
+            //if (!withoutSelect)
+            //{
+                items.Add(new SelectListItem("Select", "", true));
+            //}
+
+            foreach (var item in hrGroups)
+            {
+                items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+            }
+
+            return items;
+        }
+        public List<SelectListItem> GetReferenceNoAlphabets(bool withoutSelect = true)
+        {
+            var hrGroups = _guardDataProvider.GetReferenceNoAlphabets();
+            var items = new List<SelectListItem>();
+
+            //if (!withoutSelect)
+            //{
+                items.Add(new SelectListItem("Select", "", true));
+           // }
+
+            foreach (var item in hrGroups)
+            {
+                items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+            }
+
+            return items;
+        }
+        //p1-191 HR Files Task 3-end
+        public List<SelectListItem> GetLicenseTypes(bool withoutSelect = true)
+        {
+            var hrGroups = _guardDataProvider.GetLicenseTypes().Where(x=>x.IsDeleted==false);
+            var items = new List<SelectListItem>();
+
+            //if (!withoutSelect)
+            //{
+            items.Add(new SelectListItem("Select", "", true));
+            //}
+
+            foreach (var item in hrGroups)
+            {
+                items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+            }
+
+            return items;
+        }
     }
 }

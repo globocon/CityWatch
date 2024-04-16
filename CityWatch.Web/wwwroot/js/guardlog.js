@@ -270,6 +270,8 @@
         $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
     });
 
+    //Pr-7-Task-120 Warning-Position Checkbox-Below line is commented-Manju -Start
+
     $('#GuardLogin_IsPosition').on('change', function () {
         const isPosition = $('#GuardLogin_IsPosition').is(':checked');
         if (isPosition)
@@ -277,7 +279,7 @@
         getSmartWandOrOfficerPosition(isPosition);
         $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
     });
-
+    //Pr-7-Task-120 Warning-Position Checkbox-Below line is commented-Manju -End
     $('#GuardLogin_IsNewGuard').on('change', function () {
         resetGuardLoginDetails();
         const isChecked = $('#GuardLogin_IsNewGuard').is(':checked');
@@ -314,6 +316,8 @@
     });
 
     $('#btnGuardLogin').on('click', function () {
+
+       
         const validateSmartWand = $('#GuardLogin_IsPosition').is(':not(:checked)') && $('#GuardLogin_SmartWandOrPosition').val() !== '';
 
         if (!validateSmartWand) {
@@ -2771,8 +2775,8 @@
         $('#GuardLicense_Id').val('');
         $('#GuardLicense_LicenseNo').val('');
         $('#GuardLicense_LicenseType').val('');
-        $('#GuardLicense_Reminder1').val('');
-        $('#GuardLicense_Reminder2').val('');
+        $('#GuardLicense_Reminder1').val('45');
+        $('#GuardLicense_Reminder2').val('7');
         $('#GuardLicense_ExpiryDate').val('');
         $('#GuardLicense_FileName').val('');
         $('#guardLicense_fileName').text('None');
@@ -2986,8 +2990,8 @@
         $('#GuardCompliance_Id').val('');
         $('#GuardCompliance_ReferenceNo').val('');
         $('#GuardCompliance_Description').val('');
-        $('#GuardCompliance_Reminder1').val('');
-        $('#GuardCompliance_Reminder2').val('');
+        $('#GuardCompliance_Reminder1').val('45');
+        $('#GuardCompliance_Reminder2').val('7');
         $('#GuardCompliance_ExpiryDate').val('');
         $('#GuardCompliance_FileName').val('');
         $('#guardCompliance_fileName').text('None');
@@ -4191,4 +4195,5 @@ function GetClientSiteToggle() {
     });
 }
 //for toggle areas - start 
+
 

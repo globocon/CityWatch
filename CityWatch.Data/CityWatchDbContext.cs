@@ -99,10 +99,20 @@ namespace CityWatch.Data
 
         public DbSet<SiteEventLog> SiteEventLog { get; set; }
 
+        public DbSet<HRGroups> HRGroups { get; set; }
+        public DbSet<ReferenceNoNumbers> ReferenceNoNumbers { get; set; }
+        public DbSet<ReferenceNoAlphabets> ReferenceNoAlphabets { get; set; }
+        public DbSet<HrSettings> HrSettings { get; set; }
+        public DbSet<LicenseTypes> LicenseTypes { get; set; }
+
+
         public DbSet<TrailerDeatilsViewModel> TrailerDeatilsViewModel { get; set; }
 
         public DbSet<SmartWandScanGuardHistory> SmartWandScanGuardHistory { get; set; }
 
+        public DbSet<GlobalComplianceAlertEmail> GlobalComplianceAlertEmail { get; set; }
+
+        
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -525,9 +525,12 @@
                             </div>
                             <div class="form-group col-md-6">
                                 <label class="form-label">License Type</label>
-                                <select class="form-control" id="GuardLicense_LicenseType1" name="GuardLicense.LicenseType" asp-items="@Html.GetEnumSelectList<GuardLicenseType>().OrderBy(z => z.Text)">
+                               @* <select class="form-control" id="GuardLicense_LicenseType1" name="GuardLicense.LicenseType" asp-items="@Html.GetEnumSelectList<GuardLicenseType>().OrderBy(z => z.Text)">
                                     <option value="">Select</option>
-                                </select>
+                                </select>*@
+                            <select class="form-control" id="GuardLicense_LicenseType1" name="GuardLicense.LicenseType" asp-items="@viewDataService.GetLicenseTypes(true)">
+                                @*<option value="">Select</option>*@
+                            </select>
                                 <input type="hidden" id="GuardLicense_License1" name="GuardLicense.LicenseType" />
                                 <input type="hidden" id="LicenseTypeOther1" name="GuardLicense.LicenseTypeName" />
                             </div>
@@ -535,16 +538,16 @@
                         <div class="form-row">
                             <div class="form-group col-md-6">
                                 <label class="form-label">Expiry Date</label>
-                                <input type="date" class="form-control" id="GuardLicense_ExpiryDate1" name="GuardLicense.ExpiryDate" min="@DateTime.Today.ToString("yyyy-MM-dd")">
+                                <input type="date" class="form-control" id="GuardLicense_ExpiryDate1" name="GuardLicense.ExpiryDate" min="@DateTime.Today.ToString("yyyy-MM-dd")" >
                             </div>
                             <div class="form-group col-md-3">
                                 <label class="form-label">Reminder 1</label>
-                                <input type="number" class="form-control" id="GuardLicense_Reminder11" name="GuardLicense.Reminder1" min="1" max="365">
+                            <input type="number" class="form-control" id="GuardLicense_Reminder11" value="45" name="GuardLicense.Reminder1" min="1" max="365" disabled>
 
                             </div>
                             <div class="form-group col-md-3">
                                 <label class="form-label">Reminder 2</label>
-                                <input type="number" class="form-control" id="GuardLicense_Reminder21" name="GuardLicense.Reminder2" min="1" max="365">
+                            <input type="number" class="form-control" id="GuardLicense_Reminder21" value="7" name="GuardLicense.Reminder2" min="1" max="365" disabled>
                             </div>
                         </div>
                         <hr />
@@ -605,11 +608,11 @@
                         </div>
                         <div class="form-group col-md-3">
                             <label class="form-label">Reminder 1</label>
-                            <input type="number" class="form-control" id="GuardCompliance_Reminder11" name="GuardCompliance.Reminder1" min="1" max="365">
+                            <input type="number" class="form-control" id="GuardCompliance_Reminder11" value="45" name="GuardCompliance.Reminder1" min="1" max="365" disabled>
                         </div>
                         <div class="form-group col-md-3">
                             <label class="form-label">Reminder 2</label>
-                            <input type="number" class="form-control" id="GuardCompliance_Reminder21" name="GuardCompliance.Reminder2" min="1" max="365">
+                            <input type="number" class="form-control" id="GuardCompliance_Reminder21" value="7" name="GuardCompliance.Reminder2" min="1" max="365" disabled>
                         </div>
                         <div class="form-group col-md-3">
                             <label class="form-label">HR Group</label>

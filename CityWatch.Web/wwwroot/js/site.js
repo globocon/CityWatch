@@ -607,7 +607,7 @@
         if (!selFieldTypeId) { // None
             $('#fieldSettings').show();
             $('#positionSettings').hide();
-
+            $('#FinancialReimbursementSettings').hide();
             gridReportFields.clear();
             gridPositions.clear();
             gridReportFields.reload({ typeId: selFieldTypeId });
@@ -616,6 +616,7 @@
             $('#fieldSettings').hide();
             $('#positionSettings').show();
             $('#PSPFSettings').hide();
+            $('#FinancialReimbursementSettings').hide();
 
             gridReportFields.clear();
             gridPositions.reload();
@@ -625,15 +626,29 @@
             $('#PSPFSettings').show();
             $('#fieldSettings').hide();
             $('#positionSettings').hide();
+            $('#FinancialReimbursementSettings').hide();
 
             gridPositions.clear();
             gridReportFields.clear();
             gridPSPF.reload();
         }
+        else if (selFieldTypeId === '6') {
+
+            getIrEmailCCforReimbursement();
+            $('#FinancialReimbursementSettings').show();
+            $('#PSPFSettings').hide();
+            $('#fieldSettings').hide();
+            $('#positionSettings').hide();
+
+            gridPositions.clear();
+            gridReportFields.clear();
+            gridPSPF.clear();
+        }
         else {
             $('#fieldSettings').show();
             $('#positionSettings').hide();
             $('#PSPFSettings').hide();
+            $('#FinancialReimbursementSettings').hide();
 
             gridPSPF.clear();
             gridPositions.clear();
@@ -1905,6 +1920,72 @@
         $('#msg-modal .modal-body p').html(message);
         $('#msg-modal').modal();
     }
+
+    /*****IR Email CC for Reimbursement  *****/
+
+
+
+    function getIrEmailCCforReimbursement() {
+
+        
+        $.ajax({
+            url: '/Admin/Settings?handler=IREmailCCForReimbursements',
+            type: 'GET',
+            dataType: 'json'
+        }).done(function (data) {
+
+            for (var i = 0; i < data.length; i++) {
+                $('#txt_IrEmailCCForReimbursements').val(data[i].name);
+               
+            }
+
+        });
+    }
+
+    //save btn IR Email-Click -start 
+
+        $('#btn_add_FR_settings').on('click', function () {
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            var Email = $('#txt_IrEmailCCForReimbursements').val();
+            //var emailsArray = Email.split(',');
+            //for (var i = 0; i < emailsArray.length; i++) {
+                //var emailAddress = emailsArray[i].trim();
+                var emailAddress=Email
+                if (isValidEmail(emailAddress)) {
+                    $.ajax({
+                        url: '/Admin/Settings?handler=SaveIREmail',
+                        data: { Email: emailAddress },
+                        type: 'POST',
+                        headers: { 'RequestVerificationToken': token },
+                    }).done(function () {
+                    })
+                }
+                else {
+                    $.notify("Invalid email address.",
+                        {
+                            align: "center",
+                            verticalAlign: "top",
+                            color: "#fff",
+                            background: "#D44950",
+                            blur: 0.4,
+                            delay: 0
+                        }
+                    );
+
+                }
+
+            //}
+
+            function isValidEmail(email) {
+                // Regular expression for basic email validation
+                var emailPattern = /^(?:[^,\s@]+@[^,\s@]+\.[^,\s@]+(?:,\s*)?)+$/;
+                return emailPattern.test(email);
+            }
+        })
+
+    //save btn IR Email-Click -end 
+    
+
     /*****C4i Core Settings *****/
 
     getC4Settings();
@@ -2267,3 +2348,277 @@ $('#cr_reportlogo_upload').on('change', function () {
     });
 });
 /*for adding a reportlogo-end*/
+/*p1-191 hr files task 3-start*/
+let gridHrSettings;
+//if ($('#tbl_hr_settings').length === 1) {
+//    gridHrSettings = new DataTable('#tbl_hr_settings', {
+//        paging: false,
+//        searching: true,
+//        ordering: false,
+//        info: false,
+//        scrollX: true,
+//        ajax: {
+//            url: '/Admin/Settings?handler=ClientSites',
+//            data: function (d) {
+//                d.logbookId = $('#KeyVehicleLog_ClientSiteLogBookId').val();
+//                d.kvlStatusFilter = $('#kvl_status_filter').val();
+//            },
+//            dataSrc: ''
+//        },
+//        columns: [
+//            { data: 'detail.id', visible: false },
+
+//            { data: 'detail.initialCallTime', width: '100%', title:'HR Group' },
+//            { data: 'detail.entryTime', width: '100%', type: 'dropdown', title: 'Reference No' },
+//            { data: 'detail.initialCallTime', width: '100%', title: 'Description' },
+//            {
+//                targets: -1,
+//                data: 'detail.id',
+//                width: '20%',
+//                defaultContent: '',
+
+//                render: function (value, type, data) {
+//                    return '<button id="btnEditHRSettings" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil"></i></button>' +
+//                        '<button id="btnDeleteHRSettings" class="btn btn-outline-danger mr-2 mt-1"><i class="fa fa-trash"></i></button>' +
+//                        '</div>'
+
+
+//                        ;
+//                    // if (value === null) return 'N/A';
+//                    // return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardLogBookInfoModal" id="btnLogBookDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + value + '"><input type="hidden" id="GuardId" value="' + value + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" text="' + value + '"><input type="hidden" id="GuardId" text="' + value + '"> ';
+//                }
+//                //render: function (data, type, row) {
+//                //    return '<input type="checkbox" id=' + data.detail.keyNo+'/>';
+//                //}
+//                //defaultContent: '<button id="btnEditVkl" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil"></i></button>' +
+//                //   '<button id="btnPrintVkl" class="btn btn-outline-primary mr-1 "><i class="fa fa-print"></i></button>' +
+//                //    '<button id="btnDeleteVkl" class="btn btn-outline-danger mr-2 mt-1"><i class="fa fa-trash mr-2"></i>Delete</button>',
+//            }],
+
+//    });
+
+//    var dataTable = $('#vehicle_key_daily_log').DataTable();
+//    var ids = [];
+//    dataTable.rows().data().each(function (index, rowData) {
+
+//        ids.push(index.detail.id);
+//    });
+//}
+gridHrSettings = $('#tbl_hr_settings').grid({
+    dataSource: '/Admin/GuardSettings?handler=HRSettings',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    //inlineEditing: { mode: 'command' },
+    columns: [
+        { field: 'id', hidden: true },
+        { field: 'groupName', title: 'HR Group', width: '100%' },
+        { field: 'referenceNo', title: 'Reference No', width: '100%' },
+
+
+
+        { field: 'description', width: '100%', title: 'Description' },
+
+        { width: '100%', renderer: hrgroupButtonRenderer },
+
+    ],
+
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    },
+
+});
+function hrgroupButtonRenderer(value, record) {
+    return '<button id="btnEditHrGroup" data-doc-id="' + record.id + '" data-doc-hrgroupid="' + record.hrGroupId + '" data-doc-refnonumberid="' + record.referenceNoNumberId + '" data-doc-refalphnumberid="' + record.referenceNoAlphabetId + '" data-doc-description="' + record.description + '" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
+        '<button id="btnDeleteHrGroup" data-doc-id="' + record.id + '" class="btn btn-outline-danger"><i class="fa fa-trash mr-2"></i>Delete</button>' +
+
+        '</div>'
+}
+let isHrSettingsAdding = false
+//$('#user_settings').on('click', '.deleteuser', function () {
+//    if (confirm('Are you sure want to delete this user?')) {
+//        toggleUserStatus($(this).attr('data-user-id'), true);
+//    }
+//});
+$('#tbl_hr_settings tbody').on('click', '#btnEditHrGroup', function () {
+
+    $('#HrSettings_Id').val($(this).attr('data-doc-id'))
+    $('#list_hrGroups').val($(this).attr('data-doc-hrgroupid'));
+    $('#list_ReferenceNoNumber').val($(this).attr('data-doc-refnonumberid'));
+    $('#list_ReferenceNoAlphabet').val($(this).attr('data-doc-refalphnumberid'));
+    $('#txtHrSettingsDescription').val($(this).attr('data-doc-description'));
+    $('#hrSettingsModal').modal('show');
+
+});
+$('#tbl_hr_settings tbody').on('click', '#btnDeleteHrGroup', function () {
+    // var data = keyVehicleLog.row($(this).parents('tr')).data();
+    if (confirm('Are you sure want to delete this  entry?')) {
+        $.ajax({
+            type: 'POST',
+            url: '/Admin/GuardSettings?handler=DeleteHRSettings',
+            data: { 'id': $(this).attr('data-doc-id') },
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            beforeSend: function () {
+                $('#loader').show();
+            }
+        }).done(function () {
+            gridHrSettings.reload();
+        }).always(function () {
+            $('#loader').hide();
+        });
+    }
+});
+let gridLicenseTypes
+gridLicenseTypes = $('#tbl_license_type').grid({
+    dataSource: '/Admin/GuardSettings?handler=LicensesTypes',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    inlineEditing: { mode: 'command' },
+    columns: [
+        { field: 'id', hidden: true },
+        { field: 'name', title: 'Description', width: '100%', editor: true },
+
+
+    ],
+
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    },
+
+});
+if (gridLicenseTypes) {
+    gridLicenseTypes.on('rowDataChanged', function (e, id, record) {
+        const data = $.extend(true, {}, record);
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=SaveLicensesTypes',
+            data: { record: data },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.success) gridLicenseTypes.reload();
+            else alert(result.message);
+        }).fail(function () {
+            console.log('error');
+        }).always(function () {
+            if (isHrSettingsAdding)
+                isHrSettingsAdding = false;
+        });
+    });
+
+    gridLicenseTypes.on('rowRemoving', function (e, id, record) {
+        if (confirm('Are you sure want to delete this field?')) {
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=DeleteLicensesTypes',
+                data: { id: record },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.success) gridLicenseTypes.reload();
+                else alert(result.message);
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isHrSettingsAdding)
+                    isHrSettingsAdding = false;
+            });
+        }
+    });
+}
+
+if ($('#hr_settings_fields_types').val() == '') {
+gridHrSettings.hide();
+gridLicenseTypes.hide();
+}
+
+$('#hr_settings_fields_types').on('change', function () {
+    const selHTSettingsFieldTypeId = $('#hr_settings_fields_types').val();
+    if ($('#hr_settings_fields_types').val() == 1) {
+        gridHrSettings.show();
+        gridHrSettings.clear();
+        gridHrSettings.reload();
+        gridLicenseTypes.hide();
+    }
+
+    else if ($('#hr_settings_fields_types').val() == 2) {
+        gridHrSettings.hide();
+        gridLicenseTypes.show();
+        gridLicenseTypes.clear();
+        gridLicenseTypes.reload();
+    }
+    else {
+        gridLicenseTypes.hide();
+        gridHrSettings.hide();
+    }
+});
+$('#add_hr_settings').on('click', function () {
+    var selFieldTypeId = $('#hr_settings_fields_types').val();
+    if (!selFieldTypeId) {
+        alert('Please select a field type to update');
+        return;
+    }
+    if (selFieldTypeId == 1) {
+        $('#list_hrGroups').val('');
+        $('#list_ReferenceNoNumber').val('');
+        $('#list_ReferenceNoAlphabet').val('');
+        $('#txtHrSettingsDescription').val('');
+        $('#hrSettingsModal').modal('show');
+    }
+    if ($('#hr_settings_fields_types').val() == 2) { 
+        if (isHrSettingsAdding) {
+            alert('Unsaved changes in the grid. Refresh the page');
+        } else {
+            isHrSettingsAdding = true;
+            gridLicenseTypes.addRow({
+                'id': -1,
+                'name': '',
+            }).edit(-1);
+     }  }
+
+});
+
+$('#btn_save_hr_settings').on('click', function () {
+    var form = document.getElementById('form_new_hr_settings');
+    var jsformData = new FormData(form);
+    var data = $('#list_hrGroups').val();
+    $.ajax({
+        url: '/Admin/GuardSettings?handler=SaveHRSettings',
+        type: 'POST',
+        //data: jsformData,
+        data: {
+            'Id': $('#HrSettings_Id').val(),
+            'hrGroupId': $('#list_hrGroups').val(),
+            'refNoNumberId': $('#list_ReferenceNoNumber').val(),
+            'refNoAlphabetId': $('#list_ReferenceNoAlphabet').val(),
+            'description': $('#txtHrSettingsDescription').val()
+        },
+        //processData: false,
+        //contentType: false,
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        beforeSend: function () {
+            $('#loader').show();
+        }
+    }).done(function (result) {
+        if (result.status) {
+
+            $('#hrSettingsModal').modal('hide');
+            gridHrSettings.clear();
+            gridHrSettings.reload();
+        } else {
+            displayValidationSummary(result.errors);
+        }
+    }).always(function () {
+        $('#loader').hide();
+    });
+});
+function displayValidationSummary(errors) {
+    const summaryDiv = document.getElementById('hrsettings-field-validation');
+    summaryDiv.className = "validation-summary-errors";
+    summaryDiv.querySelector('ul').innerHTML = '';
+    errors.forEach(function (item) {
+        const li = document.createElement('li');
+        li.appendChild(document.createTextNode(item));
+        summaryDiv.querySelector('ul').appendChild(li);
+    });
+}
