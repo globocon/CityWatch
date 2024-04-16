@@ -124,7 +124,7 @@ namespace CityWatch.Web.Services
                 {
                     guardEmailAddress = string.Empty;
                 }
-                if (guardEmailAddress != null)
+                if (guardEmailAddress != null && guardEmailAddress!="")
                 {
                     var toAddressNew = guardEmailAddress.Split(',');
                     foreach (var address in GetToEmailAddressList(toAddressNew))
@@ -163,7 +163,7 @@ namespace CityWatch.Web.Services
                 }
 
 
-                if (providerEmailAddress != null)
+                if (providerEmailAddress != null && providerEmailAddress!="")
                 {
                     var toAddressNew = providerEmailAddress.Split(',');
                     foreach (var address in GetToEmailAddressList(toAddressNew))
