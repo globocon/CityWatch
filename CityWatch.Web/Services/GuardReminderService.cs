@@ -90,7 +90,7 @@ namespace CityWatch.Web.Services
                 message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
 
                 // message.To.Add(new MailboxAddress(toAddress[1], toAddress[0]));
-                if (emailAddresses != null)
+                if (emailAddresses != null && emailAddresses!="" )
                 {
                    var toAddressNew = emailAddresses.Split(',');
                     foreach (var address in GetToEmailAddressList(toAddressNew))
