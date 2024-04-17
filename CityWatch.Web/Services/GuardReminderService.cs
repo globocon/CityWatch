@@ -1,6 +1,7 @@
 ﻿using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
+using Dropbox.Api.Team;
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.Options;
 using MimeKit;
@@ -89,13 +90,93 @@ namespace CityWatch.Web.Services
                 message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
 
                 // message.To.Add(new MailboxAddress(toAddress[1], toAddress[0]));
-                if (emailAddresses != null)
+                if (emailAddresses != null && emailAddresses!="" )
                 {
                    var toAddressNew = emailAddresses.Split(',');
                     foreach (var address in GetToEmailAddressList(toAddressNew))
                         message.To.Add(address);
                 }
-              
+                //p1-191 hr files task 8-start
+                //to get the emails of the guard-start
+                var guardIdsforlicenses = _guardDataProvider.GetAllGuardLicenses().Where(z => z.ExpiryDate.HasValue).ToList();
+                var guardIdsNewforLicenses = GetLicenseMessagesId(guardIdsforlicenses).Select(x=>x.GuardId).ToList();
+                var guardIdsforcompliances = _guardDataProvider.GetAllGuardCompliances().Where(z => z.ExpiryDate.HasValue && !guardIdsNewforLicenses.Contains(z.GuardId)).ToList();
+                var guardIdsNewforCompliances = GetComplianceMessagesId(guardIdsforcompliances).Select(x => x.GuardId).ToList();
+                var guardlicenseemail = _guardDataProvider.GetGuards().Where(z => guardIdsNewforLicenses.Contains(z.Id)).ToList();
+                var guardcomplianceemail = _guardDataProvider.GetGuards().Where(z => guardIdsNewforCompliances.Contains(z.Id)).ToList();
+                var guardEmailAddress = string.Empty;
+                if (guardlicenseemail.Count>0 && guardcomplianceemail.Count>0)
+                {
+                    guardEmailAddress = string.Join(",", guardlicenseemail.Select(email => email.Email)) + ',' + string.Join(",", guardcomplianceemail.Select(email => email.Email));
+
+                }
+                else if (guardlicenseemail.Count == 0 && guardcomplianceemail.Count > 0)
+                {
+                    guardEmailAddress =  string.Join(",", guardcomplianceemail.Select(email => email.Email));
+
+                }
+                else if(guardlicenseemail.Count > 0 && guardcomplianceemail.Count == 0)
+                {
+                    guardEmailAddress = string.Join(",", guardlicenseemail.Select(email => email.Email));
+
+                }
+                else
+                {
+                    guardEmailAddress = string.Empty;
+                }
+                if (guardEmailAddress != null && guardEmailAddress!="")
+                {
+                    var toAddressNew = guardEmailAddress.Split(',');
+                    foreach (var address in GetToEmailAddressList(toAddressNew))
+                        if (!message.To.Contains(address))
+                        {
+                            message.To.Add(address);
+                        }
+                }
+
+                //to get the emails of the guard - end
+                //to get the emails of the provider -start
+                var guardlicenseprovider = _guardDataProvider.GetGuards().Where(z => guardIdsNewforLicenses.Contains(z.Id)).Select(x=>x.Provider).ToList();
+                var guardcomplianceprovider = _guardDataProvider.GetGuards().Where(z => guardIdsNewforCompliances.Contains(z.Id) && !guardlicenseprovider.Contains(z.Provider)).Select(x => x.Provider).ToList();
+                var guardlicenseprovideremail = _clientDataProvider.GetKeyVehiclogWithProviders(guardlicenseprovider.ToArray());
+                var guardcomplianceprovideremail = _clientDataProvider.GetKeyVehiclogWithProviders(guardcomplianceprovider.ToArray());
+
+                var providerEmailAddress = string.Empty;
+                if (guardlicenseprovideremail.Count > 0 && guardcomplianceprovideremail.Count > 0)
+                {
+                    providerEmailAddress = string.Join(",", guardlicenseprovideremail.Select(email => email.Email)) + ',' + string.Join(",", guardcomplianceprovideremail.Select(email => email.Email));
+
+                }
+                else if (guardlicenseprovideremail.Count == 0 && guardcomplianceprovideremail.Count > 0)
+                {
+                    providerEmailAddress = string.Join(",", guardcomplianceprovideremail.Select(email => email.Email));
+
+                }
+                else if (guardlicenseprovideremail.Count > 0 && guardcomplianceprovideremail.Count == 0)
+                {
+                    providerEmailAddress = string.Join(",", guardlicenseprovideremail.Select(email => email.Email));
+
+                }
+                else
+                {
+                    providerEmailAddress = string.Empty;
+                }
+
+
+                if (providerEmailAddress != null && providerEmailAddress!="")
+                {
+                    var toAddressNew = providerEmailAddress.Split(',');
+                    foreach (var address in GetToEmailAddressList(toAddressNew))
+                        
+                            if (!message.To.Contains(address))
+                            {
+                                message.To.Add(address);
+                            }
+                        
+                }
+
+                //to get the emails of the provider -end
+                //p1-191 hr files task 8-end
                 /* Mail Id added Bcc globoconsoftware for checking Ir Mail not getting Issue Start(date 11,01,2024) */
                 message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
                 message.Bcc.Add(new MailboxAddress("globoconsoftware2", "jishakallani@gmail.com"));
@@ -155,5 +236,32 @@ namespace CityWatch.Web.Services
                 }
             }
         }
+        private List<GuardLicense> GetLicenseMessagesId(List<GuardLicense> guardLicenses)
+        {
+            var guardListList = new List<GuardLicense>();
+            foreach (var license in guardLicenses)
+            {
+                if ((DateTime.Today.AddDays(license.Reminder1.GetValueOrDefault()) == license.ExpiryDate) ||
+                    (DateTime.Today.AddDays(license.Reminder2.GetValueOrDefault()) == license.ExpiryDate))
+                {
+                    guardListList.Add(license);
+                }
+            }
+            return guardListList;
+        }
+        private List<GuardCompliance> GetComplianceMessagesId(List<GuardCompliance> guardCompliances)
+        {
+            var guardListList = new List<GuardCompliance>();
+            foreach (var compliance in guardCompliances)
+            {
+                if ((DateTime.Today.AddDays(compliance.Reminder1.GetValueOrDefault()) == compliance.ExpiryDate) ||
+                    (DateTime.Today.AddDays(compliance.Reminder2.GetValueOrDefault()) == compliance.ExpiryDate))
+                {
+                    guardListList.Add(compliance);
+                }
+            }
+            return guardListList;
+        }
+        
     }
 }
