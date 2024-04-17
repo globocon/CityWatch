@@ -1,15 +1,39 @@
-﻿using CityWatch.Common.Helpers;
-using CityWatch.Data.Enums;
+﻿using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
-using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace CityWatch.Data.Models
 {
-   
-    public class GuardCompliance
+    public enum GuardLicenseType2
+    {
+        Other = 0,
+
+        Investigator,
+
+        [Display(Name = "Crowd Controller")]
+        CrowdController,
+
+        [Display(Name = "Security Guard")]
+        SecurityGuard,
+
+        [Display(Name = "Bodyguard")]
+        BodyGuard,
+
+        [Display(Name = "Driver (Car)")]
+        CarDriver,
+
+        [Display(Name = "Driver (Boat)")]
+        BoatDriver,
+
+        Firearm
+    }
+    public class GuradComplianceAndLicense
     {
         [Key]
         public int Id { get; set; }
@@ -50,5 +74,14 @@ namespace CityWatch.Data.Models
 
         [ForeignKey("GuardId")]
         public Guard Guard { get; set; }
+        
+        public string LicenseNo { get; set; }
+
+       
+        public GuardLicenseType2? LicenseType { get; set; }
+
+        [NotMapped]
+        public string LicenseTypeText { get { return LicenseType?.ToDisplayName(); } }
+        public string LicenseTypeName { get; set; }
     }
 }

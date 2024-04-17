@@ -3007,13 +3007,30 @@
         paging: false,
         info: false,
         ajax: {
-            url: '/Admin/GuardSettings?handler=GuardCompliances',
+            url: '/Admin/GuardSettings?handler=GuardCompliancesAndLicense',
             data: function (d) {
                 d.guardId = $('#GuardCompliance_GuardId').val();
             },
             dataSrc: ''
         },
         columns: [
+            { data: 'licenseNo', width: "6%" },
+            {
+
+                data: 'licenseTypeText',
+                width: '6%',
+                render: function (data, type, row) {
+                    if (type === 'display') {
+                        if (data === null) {
+                            return row.licenseTypeName;
+                        } else {
+                            return data;
+                        }
+                    } else {
+                        return data;
+                    }
+                }
+            },
             { data: 'referenceNo', width: "6%" },
             { data: 'hrGroupText', width: "6%" },
             { data: 'description', width: "7%" },
@@ -3056,6 +3073,21 @@
         },
     });
 
+    /*code added for Licence Type Dropdown Textbox start*/
+    $('#GuardCompliance_LicenseType').attr('placeholder', 'Select Or Edit').editableSelect({
+        effects: 'slide'
+    }).on('select.editable-select', function (e, li) {
+        $('#GuardLicense_License').val(li.text());
+    });
+
+    if ($('#GuardLicense_License').val() !== '') {
+        let itemToSelect = $('#GuardCompliance_LicenseType').siblings('.es-list').find('li:contains("' + $('#GuardLicense_License').val() + '")')[0];
+        if (itemToSelect) {
+            $('#GuardCompliance_LicenseType').editableSelect('select', $(itemToSelect));
+
+        }
+    }
+/*code added for Licence Type Dropdown Textbox stop*/
     $('#tbl_guard_compliances tbody').on('click', 'button[name=btn_edit_guard_compliance]', function () {
         resetGuardComplianceAddModal();
         var data = gridGuardCompliances.row($(this).parents('tr')).data();
@@ -3070,6 +3102,13 @@
         $('#GuardCompliance_FileName').val(data.fileName);
         $('#guardCompliance_fileName').text(data.fileName ? data.fileName : 'None');
         $('#GuardCompliance_HrGroup').val(data.hrGroup);
+        $('#GuardCompliance_LicenseNo').val(data.licenseNo);
+        if (data.licenseTypeText == null) {
+            $('#GuardCompliance_LicenseType').val(data.licenseTypeName);
+        }
+        else {
+            $('#GuardCompliance_LicenseType').val(data.licenseTypeText);
+        }
         $('#addGuardCompliancesModal').modal('show');
     });
 
@@ -3093,7 +3132,7 @@
         clearGuardValidationSummary('complianceValidationSummary');
         $('#loader').show();
         $.ajax({
-            url: '/Admin/GuardSettings?handler=SaveGuardCompliance',
+            url: '/Admin/GuardSettings?handler=SaveGuardComplianceandLicense',
             data: $('#frm_add_compliance').serialize(),
             type: 'POST',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -3111,7 +3150,29 @@
             $('#loader').hide();
         });
     });
-
+    $('#LicanseTypeFilter').on('change', function () {
+        const isChecked = $(this).is(':checked');
+       
+        const filter = isChecked ? 1 : 2;
+        if (filter==1) {
+            $("#LicenseTypedv").show();
+            $("#RefernceNodv").hide();
+            $("#LicenseLabel").show();
+            $("#GuardCompliance_LicenseType").show();
+            $("#DescLabel").hide();
+            $("#GuardCompliance_Description").hide();
+        }
+        if (filter == 2) {
+            $("#LicenseTypedv").hide();
+            $("#RefernceNodv").show();
+            $("#LicenseLabel").hide();
+            $("#GuardCompliance_LicenseType").hide();
+            $("#DescLabel").show();
+            $("#GuardCompliance_Description").show();
+       
+        }
+        
+    });
     $('#upload_compliance_file').on('change', function () {
         const file = $(this).get(0).files.item(0);
         const fileExtn = file.name.split('.').pop();

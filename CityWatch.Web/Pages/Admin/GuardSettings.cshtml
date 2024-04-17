@@ -17,9 +17,9 @@
         <li class="nav-item">
             <a class="nav-link active" id="guard_tab" data-toggle="tab" href="#guard" role="tab" aria-controls="guard" aria-selected="true">HR</a>
         </li>
-       @* <li class="nav-item">
+       <li class="nav-item">
             <a class="nav-link" id="gs-settings-tab" data-toggle="tab" href="#gsSettings" role="tab" aria-controls="gsSettings" aria-selected="false">Site Settings</a>
-        </li>*@
+        </li>
         <li class="nav-item">
             <a class="nav-link" id="kvl-fields-tab" data-toggle="tab" href="#kvlFields" role="tab" aria-controls="kvlFields" aria-selected="false">KV Fields</a>
         </li>
@@ -230,15 +230,15 @@
                 <div class="row m-0">
                     <div class="col-md-12">
                         <ul class="nav nav-tabs" id="guardComplianceTab" role="tablist">
+                           @*  <li class="nav-item">
+                                <a class="nav-link" id="licenses-tab" data-toggle="tab" href="#guardLicenses" role="tab" aria-controls="guardLicenses" aria-selected="true">Licenses</a>
+                            </li> *@
                             <li class="nav-item">
-                                <a class="nav-link active" id="licenses-tab" data-toggle="tab" href="#guardLicenses" role="tab" aria-controls="guardLicenses" aria-selected="true">Licenses</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" id="compliances-tab" data-toggle="tab" href="#guardCompliances" role="tab" aria-controls="guardCompliances" aria-selected="false">Compliances</a>
+                                <a class="nav-link active" id="compliances-tab" data-toggle="tab" href="#guardCompliances" role="tab" aria-controls="guardCompliances" aria-selected="false">Compliances/License</a>
                             </li>
                         </ul>
                         <div class="tab-content" id="guardDataTabContent">
-                            <div class="tab-pane fade show active py-3" id="guardLicenses" role="tabpanel" aria-labelledby="licenses_tab">
+                           @*  <div class="tab-pane fade show active py-3" id="guardLicenses" role="tabpanel" aria-labelledby="licenses_tab">
                                 <div class="form-row mb-2 btn-add-guard-addl-details">
                                     <div class="col-md-2 offset-md-10 text-right">
                                         <button class="btn btn-success" id="btnAddGuardLicense"><i class="fa fa-plus mr-2"></i>Add License</button>
@@ -261,11 +261,11 @@
                                         </table>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="tab-pane fade py-3" id="guardCompliances" role="tabpanel" aria-labelledby="compliances-tab">
+                            </div> *@
+                            <div class="tab-pane fade show active py-3" id="guardCompliances" role="tabpanel" aria-labelledby="compliances-tab">
                                 <div class="form-row mb-2 btn-add-guard-addl-details">
                                     <div class="col-md-2 offset-md-10 text-right">
-                                        <button class="btn btn-success" id="btnAddGuardCompliance"><i class="fa fa-plus mr-2"></i>Add Compliance</button>
+                                        <button class="btn btn-success" id="btnAddGuardCompliance"><i class="fa fa-plus mr-2"></i>Add Compliance/License</button>
                                     </div>
                                 </div>
                                 <div class="form-row">
@@ -273,6 +273,8 @@
                                         <table id="tbl_guard_compliances" class="table table-bordered table-sm" width="100%">
                                             <thead>
                                                 <tr>
+                                                    <th>License No</th>
+                                                    <th>Type</th>
                                                     <th>Reference No</th>
                                                     <th>HR Group</th>
                                                     <th>Description</th>

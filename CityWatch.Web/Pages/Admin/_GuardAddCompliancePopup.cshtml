@@ -15,13 +15,29 @@
                     <input type="hidden" id="GuardCompliance_Id" name="GuardCompliance.Id" />
                     <input type="hidden" id="GuardCompliance_GuardId" name="GuardCompliance.GuardId" />
                     <div class="form-row">
-                        <div class="form-group col-md-6">
+                        <div class="form-group col-md-6" id="RefernceNodv">
                             <label class="form-label">Reference No</label>
-                            <input type="text" class="form-control" id="GuardCompliance_ReferenceNo" name="GuardCompliance.ReferenceNo">
+                            <input type="text" class="form-control" id="GuardCompliance_ReferenceNo" name="GuradComplianceAndLicense.ReferenceNo">
+                            
                         </div>
+                        <div class="form-group col-md-6" id="LicenseTypedv" style="display:none">
+                            <label class="form-label">License No</label>
+                            <input type="text" class="form-control" id="GuardCompliance_LicenseNo" name="GuradComplianceAndLicense.LicenseNo">
+                           
+                        </div>
+                        
                         <div class="form-group col-md-6">
-                            <label class="form-label">Description</label>
+                            <label class="form-label" id="DescLabel">Description</label>
+                            <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
+                                <input type="checkbox" class="custom-control-input" id="LicanseTypeFilter" name="positionfilterPatrolCar">
+                                <label class="custom-control-label" for="LicanseTypeFilter">License Type</label>
+                            </div>
                             <input type="text" class="form-control" id="GuardCompliance_Description" name="GuardCompliance.Description">
+                            <label class="form-label" id="LicenseLabel" style="display:none">License Type</label>
+                            <select class="form-control" id="GuardCompliance_LicenseType" style="display:none;" name="GuardCompliance.LicenseType" asp-items="@Html.GetEnumSelectList<GuardLicenseType>().OrderBy(z => z.Text)">
+                                <option value="">Select</option>
+                            </select>
+
                         </div>
                     </div>
                     <div class="form-row">
