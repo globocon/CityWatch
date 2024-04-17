@@ -42,6 +42,20 @@ gridRadioCheckStatusTypeSettings = $('#radiocheck_status_type_settings').grid({
 if (gridRadioCheckStatusTypeSettings) {
     gridRadioCheckStatusTypeSettings.on('rowDataChanged', function (e, id, record) {
         const data = $.extend(true, {}, record);
+        if (isNaN(data.referenceNo)) {
+            $.notify('Reference number should only contains numbers. !!!',
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#D44950",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );
+            gridRadioCheckStatusTypeSettings.edit(id);
+            return;
+        }        
         //data.radioCheckStatusColorId = !Number.isInteger(data.radioCheckStatusColorId) ? data.radioCheckStatusColorId.getValue() : data.radioCheckStatusColorId;
         const token = $('input[name="__RequestVerificationToken"]').val();
         $.ajax({
@@ -49,9 +63,37 @@ if (gridRadioCheckStatusTypeSettings) {
             data: { record: data },
             type: 'POST',
             headers: { 'RequestVerificationToken': token },
-        }).done(function () {
-            gridRadioCheckStatusTypeSettings.clear();
-            gridRadioCheckStatusTypeSettings.reload();
+        }).done(function (result) {
+            //gridRadioCheckStatusTypeSettings.clear();
+            //gridRadioCheckStatusTypeSettings.reload();
+            if (result.status) {
+                //Success
+                $.notify(result.message,
+                    {
+                        align: "center",
+                        verticalAlign: "top",
+                        color: "#fff",
+                        background: "#20D67B",
+                        blur: 0.4,
+                        delay: 0
+                    }
+                );
+                gridRadioCheckStatusTypeSettings.clear();
+                gridRadioCheckStatusTypeSettings.reload();
+            } else {
+                //Failed
+                $.notify(result.message,
+                    {
+                        align: "center",
+                        verticalAlign: "top",
+                        color: "#fff",
+                        background: "#D44950",
+                        blur: 0.4,
+                        delay: 0
+                    }
+                );
+                gridRadioCheckStatusTypeSettings.edit(id);
+            }           
         }).fail(function () {
             console.log('error');
         }).always(function () {

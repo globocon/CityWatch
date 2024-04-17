@@ -104,24 +104,82 @@ namespace CityWatch.RadioCheck.Pages.Admin
                 }
                 if (record.Id == -1)
                 {
-
-                    int LastOne = _configDataProvider.GetRadioCheckStatusCount();
-                    if (LastOne != null)
+                    if (record.ReferenceNo != null)
                     {
-                        LastOne++;
-                        string numberAsString = LastOne.ToString();
-                        if (numberAsString.Length == 1)
+                        record.ReferenceNo = record.ReferenceNo.Trim();
+                        int refno;
+                        if (int.TryParse(record.ReferenceNo, out refno) == false)
                         {
-
-                            record.ReferenceNo = "0" + LastOne;
-                        }
-                        else
-                        {
-                            record.ReferenceNo = LastOne.ToString();
+                            return new JsonResult(new { status = false, message = "Reference number should only contains numbers. !!!" });
                         }
 
-
+                        var eventReferenceExists = _configDataProvider.GetRadioCheckStatusWithOutcome().Where(x => x.ReferenceNo.Equals(record.ReferenceNo));
+                        if (eventReferenceExists.Count() > 0)
+                        {
+                            return new JsonResult(new { status = false, message = "Similar reference number already exists !!!" });
+                        }
                     }
+                    else
+                    {
+                        // Set Referenece number.
+                        int LastOne = _configDataProvider.GetRadioCheckStatusCount();
+                        string newrefnumb = "";
+                        bool refok = false;
+                        do
+                        {
+
+                            LastOne++;
+                            newrefnumb = LastOne.ToString("00");
+                            var eventReferenceExists = _configDataProvider.GetRadioCheckStatusWithOutcome().Where(x => x.ReferenceNo.Equals(newrefnumb));
+                            if (eventReferenceExists.Count() < 1)
+                            {
+                                refok = true;
+                            }
+
+
+                        } while (refok == false);
+                        record.ReferenceNo = newrefnumb;
+                    }
+                    //int LastOne = _configDataProvider.GetRadioCheckStatusCount();
+                    //if (LastOne != null)
+                    //{
+                    //    LastOne++;
+                    //    string numberAsString = LastOne.ToString();
+                    //    if (numberAsString.Length == 1)
+                    //    {
+
+                    //        record.ReferenceNo = "0" + LastOne;
+                    //    }
+                    //    else
+                    //    {
+                    //        record.ReferenceNo = LastOne.ToString();
+                    //    }
+
+
+                    //}
+                }
+                else
+                {
+                    if(record.ReferenceNo != null)
+                    {
+                        record.ReferenceNo = record.ReferenceNo.Trim();
+                        int refno;
+                        if (int.TryParse(record.ReferenceNo,out refno) == false)
+                        {
+                            return new JsonResult(new { status = false, message = "Reference number should only contains numbers. !!!" });
+                        }
+
+                        var oldrefNo = _configDataProvider.GetRadioCheckStatusWithOutcome().Where(x => x.Id == record.Id).FirstOrDefault().ReferenceNo;
+                        if (!oldrefNo.Equals(record.ReferenceNo))
+                        {
+                            var eventReferenceExists = _configDataProvider.GetRadioCheckStatusWithOutcome().Where(x => x.ReferenceNo.Equals(record.ReferenceNo));
+                            if (eventReferenceExists.Count() > 0)
+                            {
+                                return new JsonResult(new { status = false, message = "Similar reference number already exists !!!" });
+                            }
+                        }
+                    }
+                    
                 }
                 _clientDataProvider.SaveRadioCheckStatus(record);
             }
