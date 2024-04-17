@@ -165,10 +165,12 @@
             $('#count_by_site1').html(response.chartData.sitePercentage.length);
             $('#count_by_area_ward1').html(response.chartData.areaWardPercentage.length);
             $('#count_color_code1').html(response.chartData.colorCodePercentage.length);
-            $('#txtDownloadfilename').val(response.fileName2)
+            $('#txtDownloadfilename').val(response.fileName2);
+
+            
 
             drawPieChartUsingChartJsChart(response.chartData.areaWardPercentage);
-            drawPieChartUsingChartJsChartColorCode(response.chartData.colorCodePercentage);
+            drawPieChartUsingChartJsChartColorCode(response.chartData.colorCodePercentage, response.chartData.feedbackTemplatesColour);
             /* expanding grapph - start*/
         }).fail(function () {
         }).always(function () {
@@ -850,7 +852,7 @@ function drawPieChartUsingChartJsChart(dataValue) {
 
 
 
-function drawPieChartUsingChartJsChartColorCode(dataValue) {
+function drawPieChartUsingChartJsChartColorCode(dataValue, colors) {
 
     var labels = dataValue.map(function (e) {
         return e.key;
@@ -884,16 +886,11 @@ function drawPieChartUsingChartJsChartColorCode(dataValue) {
                 datasets: [{
                     label: '# of Votes',
                     data: data2,
-                    backgroundColor: getColors(15),
+                    backgroundColor: colors,
                     borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)'
+                        'rgba(0, 0, 0, 1)'
                     ],
-                    borderWidth: 0
+                    borderWidth: 0.1
                 }]
             },
             options: {
@@ -986,16 +983,11 @@ function drawPieChartUsingChartJsChartColorCode(dataValue) {
                 datasets: [{
                     label: '# of Votes',
                     data: data2,
-                    backgroundColor: getColors(15),
+                    backgroundColor: colors,
                     borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)'
+                        'rgba(0, 0, 0, 1)'
                     ],
-                    borderWidth: 0
+                    borderWidth: 0.1
                 }]
             },
             options: {
@@ -1076,6 +1068,10 @@ function drawPieChartUsingChartJsChartColorCode(dataValue) {
         });
     }
     function getColors(length) {
+
+       
+        
+
         let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
             "#7f7f7f", "#bcbd22", "#17becf",
             "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
