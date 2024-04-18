@@ -44,6 +44,7 @@ builder.Services.AddScoped<ISmsService, SmsService>();
 builder.Services.AddScoped<ISmsSenderProvider, SmsSenderProvider>();
 builder.Services.AddScoped<ISiteEventLogDataProvider, SiteEventLogDataProvider>();
 builder.Services.AddScoped<ISmsGlobalService, SmsGlobalService>();
+builder.Services.AddScoped<IViewDataService, ViewDataService>();
 builder.Services.AddSession();
 builder.Services.AddRazorPages(options =>
 {

@@ -18,25 +18,29 @@ using static Dropbox.Api.TeamLog.EventCategory;
 using MailKit.Net.Smtp;
 using static iText.Kernel.Pdf.Function.PdfFunction;
 using Dropbox.Api.Users;
+using Microsoft.AspNetCore.Hosting;
+using CityWatch.RadioCheck.Helpers;
 
 namespace CityWatch.Web.Pages.Radio
 {
     public class RadioCheckNewModel : PageModel
     {
-
-
-
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly EmailOptions _EmailOptions;
         private readonly IConfiguration _configuration;
         private readonly ISmsSenderProvider _smsSenderProvider;
+        private readonly IClientDataProvider _clientDataProvider;
+        private readonly Settings _settings;
         public RadioCheckNewModel(IGuardLogDataProvider guardLogDataProvider, IOptions<EmailOptions> emailOptions,
-            IConfiguration configuration, ISmsSenderProvider smsSenderProvider)
+            IConfiguration configuration, ISmsSenderProvider smsSenderProvider, IClientDataProvider clientDataProvider,
+            IOptions<Settings> settings)
         {
             _guardLogDataProvider = guardLogDataProvider;
             _EmailOptions = emailOptions.Value;
             _configuration = configuration;
             _smsSenderProvider = smsSenderProvider;
+            _clientDataProvider = clientDataProvider;
+            _settings = settings.Value;
         }
         public int UserId { get; set; }
         public int GuardId { get; set; }
@@ -1149,7 +1153,18 @@ namespace CityWatch.Web.Pages.Radio
         }
         public JsonResult OnPostActionList(int clientSiteId)
         {
-            return new JsonResult(_guardLogDataProvider.GetActionlist(clientSiteId));
+            var rtn = _guardLogDataProvider.GetActionlist(clientSiteId);
+
+            if (rtn.Imagepath != null)
+            {
+                rtn.Imagepath = rtn.Imagepath + ":-:" + ConvertFileToBase64(rtn.Imagepath);
+            }
+
+            return new JsonResult(rtn);
+        }
+        public JsonResult OnPostGetClientType(int clientSiteId)
+        {
+            return new JsonResult(_guardLogDataProvider.GetClientTypeByClientSiteId(clientSiteId));
         }
         public JsonResult OnPostSearchClientsite(string searchTerm)
         {
@@ -1173,6 +1188,145 @@ namespace CityWatch.Web.Pages.Radio
         }
         //code added for ActionListSend stop
 
+        #region RcActionListEdit
+        public PartialViewResult OnGetClientSiteKpiSettings(int siteId)
+        {
+            var clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
+            clientSiteKpiSetting ??= new ClientSiteKpiSetting() { ClientSiteId = siteId };
+            if (clientSiteKpiSetting.rclistKP.Imagepath != null)
+            {
+                clientSiteKpiSetting.rclistKP.Imagepath = clientSiteKpiSetting.rclistKP.Imagepath + ":-:" + ConvertFileToBase64(clientSiteKpiSetting.rclistKP.Imagepath);
+            }
+            return Partial("../admin/_ClientSiteKpiSetting", clientSiteKpiSetting);
+        }
 
+        //code added For RcAction List start
+        public JsonResult OnPostClientSiteRCActionList(RCActionList rcActionList)
+        {
+            var status = true;
+            var message = "Success";
+            var id = -1;
+            try
+            {
+
+                if (rcActionList.SettingsId != 0)
+                {
+
+                    id = _clientDataProvider.SaveRCList(rcActionList);
+
+                }
+                else
+                {
+                    status = false;
+                    message = "Please add site settings in KPI first to proceed with RCAction list.";
+                }
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message, id });
+        }
+
+        //code added For RcAction List stop
+
+        public JsonResult OnPostUploadRCImage()
+        {
+            var success = true;
+            var files = Request.Form.Files;
+            var fileName = string.Empty;
+            var dtm = DateTime.Now;
+            var Imagepath = "";
+            try
+            {
+                if (files.Count == 1)
+                {
+                    var file = files[0];
+                    fileName = file.FileName;
+                    var scheduleId = Convert.ToInt32(Request.Form["scheduleId"]);
+                    var Id = Convert.ToInt32(Request.Form["id"]);
+                    dtm = Convert.ToDateTime(Request.Form["updatetime"]);
+
+                    var summaryImageDir = _settings.RCActionListKpiImageFolder;  // Path.Combine(_webHostEnvironment.WebRootPath, "RCImage");
+                    if (!Directory.Exists(summaryImageDir))
+                        Directory.CreateDirectory(summaryImageDir);
+
+                    using (var stream = System.IO.File.Create(Path.Combine(summaryImageDir, fileName)))
+                    {
+                        file.CopyTo(stream);
+                    }                    
+                    _clientDataProvider.SaveUpdateRCListFile(Id,fileName,dtm);
+                    Imagepath = fileName + ":-:" + ConvertFileToBase64(fileName);
+                }
+            }
+            catch
+            {
+                success = false;
+            }
+
+            return new JsonResult(new { success, fileName, LastUpdated = dtm, Imagepath = Imagepath });
+        }
+
+        public JsonResult OnPostDeleteRCImage(string imageName)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                if (!string.IsNullOrEmpty(imageName))
+                {
+                    var fileToDelete = Path.Combine(_settings.RCActionListKpiImageFolder, imageName);
+                    if (System.IO.File.Exists(fileToDelete))
+                        System.IO.File.Delete(fileToDelete);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message });
+        }
+
+        //to delete RC
+        public JsonResult OnPostDeleteRC(int RCId)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.RemoveRCList(RCId);                
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message });
+        }
+
+        public string ConvertFileToBase64(string imageName)
+        {
+            string rtnstring = "";
+
+            if (!string.IsNullOrEmpty(imageName))
+            {
+                var fileToConvert = Path.Combine(_settings.RCActionListKpiImageFolder, imageName);
+                if (System.IO.File.Exists(fileToConvert))
+                {
+                    byte[] AsBytes = System.IO.File.ReadAllBytes(fileToConvert);
+                    rtnstring = "data:application/octet-stream;base64," +  Convert.ToBase64String(AsBytes);
+                }                   
+            }
+            
+            return rtnstring;
+        }
+
+        #endregion RcActionListEdit
     }
 }

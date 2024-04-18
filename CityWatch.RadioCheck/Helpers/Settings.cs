@@ -21,6 +21,7 @@
         public string DropboxAppSecret { get; set; }
 
         public bool GuardListOn { get; set; }
+        public string RCActionListKpiImageFolder { get; set; }
 
     }
 }

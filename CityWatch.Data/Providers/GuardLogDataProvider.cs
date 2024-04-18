@@ -263,7 +263,7 @@ namespace CityWatch.Data.Providers
 
         ClientSitePoc GetEmailPOC(int id);
         ClientSitePoc GetClientSitePOCName(int id);
-
+        int GetClientTypeByClientSiteId(int ClientSiteId);
 
     }
 
@@ -3971,6 +3971,13 @@ namespace CityWatch.Data.Providers
         }
 
         //To get the Details of RadiocheckLogbookDetails stop
+
+        public int GetClientTypeByClientSiteId(int ClientSiteId)
+        {
+            var typeid = _context.ClientSites.Where(x => x.Id == ClientSiteId).FirstOrDefault().TypeId;
+            return typeid;
+        }
+
         //p1-191 hr files task 3-start
         public void SaveHRSettings(HrSettings hrSettings)
         {
@@ -4026,8 +4033,7 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
         //p1-191 hr files task 3-end
+
     }
-
-
 
 }
