@@ -27,14 +27,17 @@
                         string[] myArray = { };
                         var filename = "";
                         var filebase64 = "";
-                        if (Model.rclistKP.Imagepath != null || Model.rclistKP.Imagepath != "")
+                        if (Model.rclistKP.Imagepath != null)
                         {
-                            myArray = Model.rclistKP.Imagepath.ToString().Split(":-:");
-                            filebase64 = myArray[1];
-                            filename = myArray[0];
+                            if (Model.rclistKP.Imagepath.Length > 0 && Model.rclistKP.Imagepath.Trim() != string.Empty)
+                            {
+                                myArray = Model.rclistKP.Imagepath.ToString().Split(":-:");
+                                filebase64 = myArray[1];
+                                filename = myArray[0];
+                            }                           
                         }
 
-                        if (Model.rclistKP.Imagepath != null || Model.rclistKP.Imagepath != "")
+                        if (filename != string.Empty)
                         {
                             <td class="align-middle" id="summary_imageRC">@filename</td>
                         }
@@ -43,9 +46,16 @@
                             <td class="align-middle" id="summary_imageRC"></td>
                         }
 
-                        if (Model.rclistKP.DateandTimeUpdated != null || Model.rclistKP.DateandTimeUpdated != "")
+                        if (Model.rclistKP.DateandTimeUpdated != null)
                         {
-                            <td class="align-middle" id="summary_image_updatedRC">@Model.rclistKP.DateandTimeUpdated</td>
+                            if (Model.rclistKP.DateandTimeUpdated.Length > 0 && Model.rclistKP.DateandTimeUpdated.Trim() != string.Empty)
+                            {
+                                <td class="align-middle" id="summary_image_updatedRC">@Model.rclistKP.DateandTimeUpdated</td>
+                            }
+                            else
+                            {
+                                <td class="align-middle" id="summary_image_updatedRC"></td>
+                            }
                         }
                         else
                         {
@@ -60,7 +70,7 @@
 
                         </label>
                         @{
-                            if (Model.rclistKP.Imagepath != string.Empty)
+                            if (filename != string.Empty)
                             {
 
                                 <a href="@filebase64" download="@filename" target="_blank" class="btn btn-outline-primary" id="download_summary_imageRCList"><i class="fa fa-download mr-2"></i>Download</a>
