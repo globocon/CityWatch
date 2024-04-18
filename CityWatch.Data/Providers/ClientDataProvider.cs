@@ -1516,6 +1516,7 @@ namespace CityWatch.Data.Providers
                     ExpiryDate = calendarEvents.ExpiryDate,
                     StartDate = calendarEvents.StartDate,
                     ReferenceNo = calendarEvents.ReferenceNo,
+                    RepeatYearly = calendarEvents.RepeatYearly,
                 };
                 _context.BroadcastBannerCalendarEvents.Add(calendarEventsnew);
             }
@@ -1529,6 +1530,7 @@ namespace CityWatch.Data.Providers
                 calendarEventsUpdate.ExpiryDate = calendarEvents.ExpiryDate;
                 calendarEventsUpdate.StartDate = calendarEvents.StartDate;
                 calendarEventsUpdate.ReferenceNo = calendarEvents.ReferenceNo;
+                calendarEventsUpdate.RepeatYearly = calendarEvents.RepeatYearly;
             }
             _context.SaveChanges();
         }

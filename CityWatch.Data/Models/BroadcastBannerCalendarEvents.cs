@@ -12,6 +12,7 @@ namespace CityWatch.Data.Models
         public string TextMessage { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime ExpiryDate { get; set; }
+        public bool RepeatYearly { get; set; }
 
         [NotMapped]
         public string FormattedStartDate { get { return StartDate.ToString("dd-MMM-yyyy"); } }
