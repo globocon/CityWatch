@@ -1155,11 +1155,12 @@ namespace CityWatch.Web.Pages.Radio
         {
             var rtn = _guardLogDataProvider.GetActionlist(clientSiteId);
 
-            if (rtn.Imagepath != null)
-            {
-                rtn.Imagepath = rtn.Imagepath + ":-:" + ConvertFileToBase64(rtn.Imagepath);
+            if(rtn != null) {
+                if (rtn.Imagepath != null)
+                {
+                    rtn.Imagepath = rtn.Imagepath + ":-:" + ConvertFileToBase64(rtn.Imagepath);
+                }
             }
-
             return new JsonResult(rtn);
         }
         public JsonResult OnPostGetClientType(int clientSiteId)
@@ -1193,9 +1194,13 @@ namespace CityWatch.Web.Pages.Radio
         {
             var clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
             clientSiteKpiSetting ??= new ClientSiteKpiSetting() { ClientSiteId = siteId };
-            if (clientSiteKpiSetting.rclistKP.Imagepath != null)
+            if (clientSiteKpiSetting.rclistKP.Imagepath != null )
             {
-                clientSiteKpiSetting.rclistKP.Imagepath = clientSiteKpiSetting.rclistKP.Imagepath + ":-:" + ConvertFileToBase64(clientSiteKpiSetting.rclistKP.Imagepath);
+                if (clientSiteKpiSetting.rclistKP.Imagepath.Length > 0 && clientSiteKpiSetting.rclistKP.Imagepath.Trim() != "")
+                {
+                    clientSiteKpiSetting.rclistKP.Imagepath = clientSiteKpiSetting.rclistKP.Imagepath + ":-:" + ConvertFileToBase64(clientSiteKpiSetting.rclistKP.Imagepath);
+                }
+                
             }
             return Partial("../admin/_ClientSiteKpiSetting", clientSiteKpiSetting);
         }
