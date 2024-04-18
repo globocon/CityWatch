@@ -231,7 +231,8 @@ $('#add_calendar_events').on('click', function () {
                 'id': -1
             }).edit(-1);
         }
-    });
+});
+
     let gridBroadCastBannerCalendarEvents;
     gridBroadCastBannerCalendarEvents = $('#BroadCastBannerCalendarEvents').grid({
         dataSource: '/Admin/Settings?handler=BroadcastCalendarEvents',
@@ -246,6 +247,7 @@ $('#add_calendar_events').on('click', function () {
             { width: 600, field: 'textMessage', title: 'Text Message', editor: true },
             { width: 160, field: 'formattedStartDate', title: 'Start', type: 'date', format: 'dd-mmm-yyyy', editor: true },
             { width: 160, field: 'formattedExpiryDate', title: 'Expiry', type: 'date', format: 'dd-mmm-yyyy', editor: true },
+            { width: 100, field: 'repeatYearly', title: 'Repeat', type: 'checkbox', align: 'center', editor: true},
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
