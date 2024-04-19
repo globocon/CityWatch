@@ -5117,8 +5117,14 @@ $(function () {
         return '<button class="btn btn-outline-success mt-2 del-schedule d-block" data-sch-id="' + ClientSiteName + '_' + ClientTypeName + '""><i class="fa fa-check mr-2" aria-hidden="true"></i>Select</button>';
     }
     $('#client_site_settingsSearch').on('click', '.del-schedule', function () {
+
+
         const ClientSiteName1 = $(this).attr('data-sch-id');
         const lastUnderscoreIndex = ClientSiteName1.lastIndexOf('_');
+
+       
+
+
 
         if (lastUnderscoreIndex !== -1) {
             const recordName = ClientSiteName1.slice(0, lastUnderscoreIndex);
@@ -5137,6 +5143,27 @@ $(function () {
             // Use recordName and ClientTypeName here
             console.log('record.name:', recordName);
             console.log('ClientTypeName:', ClientTypeName);
+
+
+            $.ajax({
+                url: '/Incident/Register?handler=ClientSiteByName',
+                type: 'GET',
+                data: { name: recordName }
+            }).done(function (data) {
+                if (data.success) {
+                    $('#Report_DateLocation_ClientAddress').val(data.clientSite.address);
+                    $('#Report_DateLocation_State').val(data.clientSite.state);
+                    $('#Report_Officer_Billing').val(data.clientSite.billing);
+                    if (data.clientSite.gps) toggleClientGpsLink(true, data.clientSite.gps);
+                    else toggleClientGpsLink(false);
+                    setSelectedClientStatus(data.clientSite);
+                    $('#Report_DateLocation_ShowIncidentLocationAddress').prop('checked', false);
+                    $('#clientSiteAddress').val(data.clientSite.address);
+                    $('#clientSiteGps').val(data.clientSite.gps);
+                }
+            }).fail(function () {
+            });
+
         } else {
             console.log('Invalid data-sch-id format');
         }
