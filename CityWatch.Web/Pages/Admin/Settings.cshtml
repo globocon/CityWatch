@@ -3,11 +3,13 @@
 @using CityWatch.Data.Models
 @using CityWatch.Data.Providers;
 @using CityWatch.Web.Helpers
+@using CityWatch.Web.Services;
 @using Microsoft.Extensions.Configuration
 @using System.Security.Claims
 @model CityWatch.Web.Pages.Admin.SettingsModel
 @inject IConfiguration Configuration
 @inject IUserDataProvider viewDataService
+@inject IViewDataService viewDataServiceNew
 @{
     ViewData["Title"] = "CityWatch Security | Settings";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.Settings;
@@ -43,6 +45,9 @@
         </li>
         <li class="nav-item" @hideTabStyle>
             <a class="nav-link" id="uca-tab" data-toggle="tab" href="#uca" role="tab" aria-controls="uca" aria-selected="false">C4i Access Control</a>
+        </li>
+        <li class="nav-item" @hideTabStyle>
+            <a class="nav-link" id="c4ihr-tab" data-toggle="tab" href="#c4ihr" role="tab" aria-controls="uca" aria-selected="false">C4i HR</a>
         </li>
         <li class="nav-item" @hideTabStyle>
             <a class="nav-link" id="c4isettings-tab" data-toggle="tab" href="#c4isettings" role="tab" aria-controls="c4isettings" aria-selected="false">C4i Core</a>
@@ -539,6 +544,101 @@
                 </div>
             </form>
         </div>
+        <div class="tab-pane fade py-3" id="c4ihr" role="tabpanel" aria-labelledby="c4ihr-tab" @hideTabStyle>
+            <ul class="nav nav-tabs" id="guardSettingsTab" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="guard_tab" data-toggle="tab" href="#guard" role="tab" aria-controls="guard" aria-selected="true">HR</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="kvl-fields-tab" data-toggle="tab" href="#hrSettings" role="tab" aria-controls="hrSettings" aria-selected="false">HR Settings</a>
+                </li>
+            </ul>
+            <div class="tab-content" id="guardSettingsTabContent">
+                <div class="tab-pane fade show active py-3" id="guard" role="tabpanel" aria-labelledby="guard-tab">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group row">
+                                <div class="col-md-2 offset-md-10 text-right">
+                                    <button class="btn btn-success mb-3" id="btn_add_guard_top"><i class="fa fa-plus mr-2"></i>Add Guard</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <table id="guard_settings" class="table table-bordered" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Name</th>
+                                        <th>License No</th>
+                                        <th>Initial</th>
+                                        <th>State</th>
+                                        <th>CRM (Supplier)</th>
+                                        <th>Sites</th>
+                                        <th>Active</th>
+                                        <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 mt-2 text-left">
+                            <button class="btn btn-success mb-3" id="btn_add_guard_bottom"><i class="fa fa-plus mr-2"></i>Add Guard</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade py-3" id="hrSettings" role="tabpanel" aria-labelledby="hr-settings-tab">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Select a Field Type</label>
+                                <div class="col-md-5">
+                                    <select class="form-control" id="hr_settings_fields_types" asp-items="@Html.GetEnumSelectList<HrSettingsType>()">
+                                        <option value="">None</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="text-right">
+                                <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings">
+                                @*<thead>
+                                <tr>
+                                <th rowspan="2" style="display:none"></th>
+                                <th rowspan="2">HR Group</th>
+                                @*<th colspan="2">Reference No</th>
+
+                                <th rowspan="2">Description</th>
+                                <th rowspan="2"></th>
+
+                                </tr>
+                                <tr>
+                                <th style="display:none"></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+
+                                </tr>
+
+                                </thead>*@
+                            </table>
+                            <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
         <div class="tab-pane fade py-3" id="uca" role="tabpanel" aria-labelledby="uca-tab" @hideTabStyle>
             <div class="row">
                 <div class="col-md-12 justify-content-center">
@@ -622,9 +722,224 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="addGuardModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="addGuardModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add/Edit Guard</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row m-0">
+                    <div class="col-md-12">
+                        <form id="frm_add_guard">
+                            <input type="hidden" id="Guard_Id" name="Guard.Id" />
+                            <div class="form-group row">
+                                <label class="col-md-2 col-form-label">Guard Name</label>
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control" id="Guard_Name" name="Guard.Name">
+                                </div>
+                                <label class="col-md-1 col-form-label text-left">Intial</label>
+                                <div class="col-md-2">
+                                    <input type="text" class="form-control" id="Guard_Initial" name="Guard.Initial">
+                                </div>
+                                <label class="col-md-1 col-form-label">Mobile</label>
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control" id="Guard_Mobile" name="Guard.Mobile" value="+61 4">
+                                </div>
+
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-md-2 col-form-label">License No (Primary)</label>
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control" id="Guard_SecurityNo" name="Guard.SecurityNo">
+                                </div>
+                                <label class="col-md-1 col-form-label">State</label>
+                                <div class="col-md-2">
+                                    <select id="Guard_State" name="Guard.State" asp-items="@Model.ViewDataService.LicenseStates" class="form-control"></select>
+                                </div>
+                                <label class="col-md-1 col-form-label">Email</label>
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control" id="Guard_Email" name="Guard.Email">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+
+                                <label class="col-md-2 form-check-label">Access</label>
+                                <div class="col-md-3">
+                                    <select class="form-control" multiple="multiple" id="Guard_Access" name="Guard.GuardAccess">
+                                        @foreach (var AccessType in viewDataServiceNew.GetAccessTypes(true))
+                                        {
+
+                                            <option value="@AccessType.Value">@AccessType.Text</option>
+                                        }
+                                    </select>
+
+
+                                </div>
+                                <label class="col-md-1 form-check-label">Is Active</label>
+                                <div class="col-md-1">
+                                    <input type="checkbox" class="form-check" id="cbIsActive">
+                                    <input type="hidden" id="Guard_IsActive" name="Guard.IsActive">
+                                </div>
+                                <label class="col-md-2 col-form-label text-right">CRM (Supplier)</label>
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control" id="Guard_Provider" name="Guard.Provider">
+                                </div>
+                            </div>
+
+
+                            @*    <div class="form-group row">
+                            <label class="col-md-2 form-check-label">Is Active</label>
+                            <div class="col-md-3">
+                            <input type="checkbox" class="form-check" id="cbIsActive">
+                            <input type="hidden" id="Guard_IsActive" name="Guard.IsActive">
+                            </div>
+                            </div> *@
+                            <div class="form-row">
+                                <div class="col-md-12">
+                                    <div class="alert alert-success" role="alert" style="display:none" id="guard_saved_status">
+                                        <i class="fa fa-check-circle-o mr-2"></i>Guard saved successfully
+                                    </div>
+                                    <div asp-validation-summary="All" id="glValidationSummary"></div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <hr />
+                <div class="row m-0">
+                    <div class="col-md-12">
+                        <ul class="nav nav-tabs" id="guardComplianceTab" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" id="licenses-tab" data-toggle="tab" href="#guardLicenses" role="tab" aria-controls="guardLicenses" aria-selected="true">Licenses</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="compliances-tab" data-toggle="tab" href="#guardCompliances" role="tab" aria-controls="guardCompliances" aria-selected="false">Compliances</a>
+                            </li>
+                        </ul>
+                        <div class="tab-content" id="guardDataTabContent">
+                            <div class="tab-pane fade show active py-3" id="guardLicenses" role="tabpanel" aria-labelledby="licenses_tab">
+                                <div class="form-row mb-2 btn-add-guard-addl-details">
+                                    <div class="col-md-2 offset-md-10 text-right">
+                                        <button class="btn btn-success" id="btnAddGuardLicense"><i class="fa fa-plus mr-2"></i>Add License</button>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="col-md-12">
+                                        <table id="tbl_guard_licenses" class="table table-bordered table-sm" width="100%">
+                                            <thead>
+                                                <tr>
+                                                    <th>License No</th>
+                                                    <th>Type</th>
+                                                    <th>Expiry Date</th>
+                                                    <th>Reminder 1</th>
+                                                    <th>Reminder 2</th>
+                                                    <th>File</th>
+                                                    <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade py-3" id="guardCompliances" role="tabpanel" aria-labelledby="compliances-tab">
+                                <div class="form-row mb-2 btn-add-guard-addl-details">
+                                    <div class="col-md-2 offset-md-10 text-right">
+                                        <button class="btn btn-success" id="btnAddGuardCompliance"><i class="fa fa-plus mr-2"></i>Add Compliance</button>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="col-md-12">
+                                        <table id="tbl_guard_compliances" class="table table-bordered table-sm" width="100%">
+                                            <thead>
+                                                <tr>
+                                                    <th>Reference No</th>
+                                                    <th>HR Group</th>
+                                                    <th>Description</th>
+                                                    <th>Expiry Date</th>
+                                                    <th>Reminder 1</th>
+                                                    <th>Reminder 2</th>
+                                                    <th>File</th>
+                                                    <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-start">
+                <button type="button" class="btn btn-primary" id="btn_save_guard">Save Guard</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<div class="modal" tabindex="-1" role="dialog" id="hrSettingsModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8">HR Settings</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="form_new_hr_settings">
+                    <div class="form-row">
+                        <div class="col-md-4">
+                            <label>HR Groups</label>
+                            <select class="form-control" id="list_hrGroups" asp-for="@Model.HrSettings.HRGroupId" asp-items="@viewDataServiceNew.GetHRGroups( true)"></select>
+                            <input type="hidden" asp-for="@Model.HrSettings.Id" id="HrSettings_Id" />
+                        </div>
+                        <div class="col-md-8">
+                            <label>Reference No</label>
+                            <div class="form-row">
+                                <div class="col-md-4">
+                                    <select class="form-control" id="list_ReferenceNoNumber" asp-for="@Model.HrSettings.ReferenceNoNumberId" asp-items=" @viewDataServiceNew.GetReferenceNoNumbers( true)"></select>
+
+                                </div>
+                                <div class="col-md-4">
+                                    <select class="form-control" id="list_ReferenceNoAlphabet" asp-for="@Model.HrSettings.ReferenceNoAlphabetId" asp-items="@viewDataServiceNew.GetReferenceNoAlphabets( true)"></select>
+
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-md-12">
+                            <label>Descriptions</label>
+                            <textarea class="form-control" id="txtHrSettingsDescription" asp-for="@Model.HrSettings.Description"></textarea>
+                        </div>
+
+
+                    </div>
+                    <div asp-validation-summary="All" id="hrsettings-field-validation"></div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-start">
+                <button type="button" class="btn btn-primary" id="btn_save_hr_settings">Save</button>
+            </div>
+        </div>
+
+
+    </div>
+</div>
 <partial name="_SettingsPopup" />
 @Html.AntiForgeryToken()
-
+<partial name="_GuardAddLicensePopup" />
+<partial name="_GuardAddCompliancePopup" />
+<partial name="_KeySiteSettingsPopup" />
+<partial name="_GuardSiteSettings" />
 @section scripts {
     <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&libraries=places"></script>
 }
