@@ -236,34 +236,42 @@ namespace CityWatch.Web.Services
                     doc.Add(image);
                 }
 
+                var pdfAttachmentCount = 0;
+
                 if (_IncidentReport.Attachments != null)
                 {
                     foreach (var fileName in _IncidentReport.Attachments)
                     {
-                        var paraName = new Paragraph($"File Name: {fileName}").SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLACK));
-                        if (GetAttachmentType(IO.Path.GetExtension(fileName)) == AttachmentType.Image)
-                        {
-                            var image = AttachImageToPdf(pdfDocument, ++index, IO.Path.Combine(_UploadRootDir, fileName));
-                            paraName.SetFixedPosition(index, 5, 0, 400);
-                            doc.Add(image).Add(paraName);
-                        }
-                        else if (GetAttachmentType(IO.Path.GetExtension(fileName)) == AttachmentType.Pdf)
+                        if (GetAttachmentType(IO.Path.GetExtension(fileName)) == AttachmentType.Pdf)
                         {
                             var uploadPdfName = IO.Path.Combine(_UploadRootDir, fileName);
                             var uploadDoc = new PdfDocument(new PdfReader(uploadPdfName));
                             uploadDoc.CopyPagesTo(1, uploadDoc.GetNumberOfPages(), pdfDocument, pdfDocument.GetNumberOfPages());
-                            for (int i = 0, pageIndex = pdfDocument.GetNumberOfPages() - 1; i < uploadDoc.GetNumberOfPages(); i++, pageIndex--)
-                            {
-                                paraName.SetFixedPosition(pageIndex, 5, 0, 400);
-                                doc.Add(paraName);
-                            }
+                            pdfAttachmentCount += uploadDoc.GetNumberOfPages();
                             uploadDoc.Close();
                         }
-                        
                     }
-                    // p1#160_MultimediaAttachments03012024 done by Binoy - Start 
+                }
 
-                    float currentX = 20;
+                // Reset index for images
+                index = pdfAttachmentCount + 1;
+
+                if (_IncidentReport.Attachments != null)
+                {
+                    foreach (var fileName in _IncidentReport.Attachments)
+                    {
+                        if (GetAttachmentType(IO.Path.GetExtension(fileName)) == AttachmentType.Image)
+                        {
+                            var image = AttachImageToPdf(pdfDocument, ++index, IO.Path.Combine(_UploadRootDir, fileName));
+                            doc.Add(image);
+                        }
+                    }
+                }
+                if (_IncidentReport.Attachments != null)
+                    {
+                        // p1#160_MultimediaAttachments03012024 done by Binoy - Start 
+
+                        float currentX = 20;
                     float currentY = 750;
                     float y = 0;
                     float x =0;
