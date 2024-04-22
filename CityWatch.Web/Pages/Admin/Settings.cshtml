@@ -23,34 +23,34 @@
     <input type="hidden" id="hdnIsAdminLoggedIn" value="@AuthUserHelper.IsAdminUserLoggedIn.ToString()" />
     <ul class="nav nav-tabs" id="settingsTab" role="tablist">
         <li class="nav-item">
-            <a class="nav-link active" id="ctype-tab" data-toggle="tab" href="#ctype" role="tab" aria-controls="ctype" aria-selected="true">IR Client Type</a>
+            <a class="nav-link active p-2" id="ctype-tab" data-toggle="tab" href="#ctype" role="tab" aria-controls="ctype" aria-selected="true">IR Client Type</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" id="csite-tab" data-toggle="tab" href="#csite" role="tab" aria-controls="csite" aria-selected="false">IR Client Site</a>
+            <a class="nav-link p-2" id="csite-tab" data-toggle="tab" href="#csite" role="tab" aria-controls="csite" aria-selected="false">IR Client Site</a>
         </li>
         <li class="nav-item" @hideTabStyle>
-            <a class="nav-link" id="fbktpl-tab" data-toggle="tab" href="#fbktpl" role="tab" aria-controls="fbktpl" aria-selected="false">IR Notes</a>
+            <a class="nav-link p-2" id="fbktpl-tab" data-toggle="tab" href="#fbktpl" role="tab" aria-controls="fbktpl" aria-selected="false">IR Notes</a>
         </li>
         <li class="nav-item" @hideTabStyle>
-            <a class="nav-link" id="irdocs-tab" data-toggle="tab" href="#irdocs" role="tab" aria-controls="irdocs" aria-selected="false">IR Template & Downloads</a>
+            <a class="nav-link p-2" id="irdocs-tab" data-toggle="tab" href="#irdocs" role="tab" aria-controls="irdocs" aria-selected="false">IR Template & Downloads</a>
         </li>
         <li class="nav-item" @hideTabStyle>
-            <a class="nav-link" id="fields-tab" data-toggle="tab" href="#fields" role="tab" aria-controls="fields" aria-selected="false">C4i Fields</a>
+            <a class="nav-link p-2" id="fields-tab" data-toggle="tab" href="#fields" role="tab" aria-controls="fields" aria-selected="false">C4i Fields</a>
         </li>
         <li class="nav-item" @hideTabStyle>
-            <a class="nav-link" id="tools-tab" data-toggle="tab" href="#tools" role="tab" aria-controls="tools" aria-selected="false">C4i Tools</a>
+            <a class="nav-link p-2" id="tools-tab" data-toggle="tab" href="#tools" role="tab" aria-controls="tools" aria-selected="false">C4i Tools</a>
         </li>
         <li class="nav-item" @hideTabStyle>
             <a class="nav-link" id="user-tab" data-toggle="tab" href="#user" role="tab" aria-controls="user" aria-selected="false">C4i Users</a>
         </li>
         <li class="nav-item" @hideTabStyle>
-            <a class="nav-link" id="uca-tab" data-toggle="tab" href="#uca" role="tab" aria-controls="uca" aria-selected="false">C4i Access Control</a>
+            <a class="nav-link p-2" id="uca-tab" data-toggle="tab" href="#uca" role="tab" aria-controls="uca" aria-selected="false">C4i Access Control</a>
         </li>
         <li class="nav-item" @hideTabStyle>
-            <a class="nav-link" id="c4ihr-tab" data-toggle="tab" href="#c4ihr" role="tab" aria-controls="uca" aria-selected="false">C4i HR</a>
+            <a class="nav-link p-2" id="c4ihr-tab" data-toggle="tab" href="#c4ihr" role="tab" aria-controls="uca" aria-selected="false">C4i HR</a>
         </li>
         <li class="nav-item" @hideTabStyle>
-            <a class="nav-link" id="c4isettings-tab" data-toggle="tab" href="#c4isettings" role="tab" aria-controls="c4isettings" aria-selected="false">C4i Core</a>
+            <a class="nav-link p-2" id="c4isettings-tab" data-toggle="tab" href="#c4isettings" role="tab" aria-controls="c4isettings" aria-selected="false">C4i Core</a>
         </li>
     </ul>
     <div class="tab-content" id="settingsTabContent">
@@ -932,6 +932,37 @@
         </div>
 
 
+    </div>
+</div>
+<div class="modal" tabindex="-1" role="dialog" id="guardLogBookInfoModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8">Last data guard signed in</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <table id="ActiveGuardsLogBookDetails" class="table table-bordered" style="width:100%;">
+                            <thead>
+                                <tr>
+
+                                    <th>Last Login Date</th>
+
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
     </div>
 </div>
 <partial name="_SettingsPopup" />
