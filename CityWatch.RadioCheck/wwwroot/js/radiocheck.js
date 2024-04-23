@@ -3910,3 +3910,29 @@ $('#div_site_settings').on('click', '#delete_site_RCList', function () {
 
 
 // ################## RC Action List Edit End ###################
+var guardSettings = $('#guard_settings_for_control_room').DataTable({
+    pageLength: 50,
+    autoWidth: false,
+    ajax: '/GuardDetails?handler=Guards',
+    columns: [
+    { data: 'name', width: "10%" },
+    { data: 'securityNo', width: "10%" },
+    { data: 'initial', orderable: false, width: "5%" },
+    { data: 'mobile', width: "5%" },
+    { data: 'email', width: "13%" },
+
+    //{
+    //    data: 'isActive', className: "text-center", width: "10%", 'render': function (value, type, data) {
+    //        return renderGuardActiveCell(value, type, data);
+    //    }
+    //},
+    //{
+    //    targets: -1,
+    //    data: null,
+    //    defaultContent: '<button  class="btn btn-outline-primary mr-2" name="btn_edit_guard"><i class="fa fa-pencil mr-2"></i>Edit</button>',
+    //    orderable: false,
+    //    className: "text-center",
+    //    width: "8%"
+    //},
+    ]
+});
