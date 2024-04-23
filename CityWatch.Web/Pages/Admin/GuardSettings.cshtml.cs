@@ -689,6 +689,40 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_guardDataProvider.GetGuardCompliances(guardId));
         }
+        public JsonResult OnGetGuardCompliancesAndLicense(int guardId)
+        {
+            return new JsonResult(_guardDataProvider.GetGuardCompliancesAndLicense(guardId));
+        }
+
+        public JsonResult OnPostSaveGuardComplianceandLicense(GuradComplianceAndLicense guardCompliance)
+        {
+            ModelState.Remove("guardCompliance.Id");
+            if (!ModelState.IsValid)
+            {
+                return new JsonResult(new
+                {
+                    status = false,
+                    message = ModelState.Where(x => x.Value.Errors.Count > 0)
+                                .Select(x => string.Join(',', x.Value.Errors.Select(y => y.ErrorMessage)))
+                });
+            }
+
+            var status = true;
+            var dbxUploaded = true;
+            var message = "Success";
+
+            try
+            {
+                //dbxUploaded = UploadGuardComplianceToDropbox(guardCompliance);
+                _guardDataProvider.SaveGuardComplianceandLicense(guardCompliance);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = ex.Message;
+            }
+            return new JsonResult(new { status, dbxUploaded, message });
+        }
 
         public JsonResult OnPostSaveGuardCompliance(GuardCompliance guardCompliance)
         {
