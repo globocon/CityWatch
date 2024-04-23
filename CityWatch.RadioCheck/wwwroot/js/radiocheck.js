@@ -1897,15 +1897,27 @@ $('#pushNoTificationsControlRoomModal').on('show.bs.modal', function (event) {
         $('#ActionListTab').addClass('active');
         $('#actionlist').addClass('show').addClass('active');
     } else {
+        const button = $(event.relatedTarget);
+        if (button.hasClass('clickbuilding')) {
+            $('#textMessageTab').removeClass('d-none').removeClass('active');
+            $('#textMessage').removeClass('d-none').removeClass('show').removeClass('active');
 
-        $('#textMessageTab').removeClass('d-none').addClass('active');
-        $('#textMessage').removeClass('d-none').addClass('show').addClass('active');
+            $('#globalalertTab').removeClass('active');
+            $('#globalalert').removeClass('show').removeClass('active');
 
-        $('#globalalertTab').removeClass('active');
-        $('#globalalert').removeClass('show').removeClass('active');
+            $('#ActionListTab').addClass('active');
+            $('#actionlist').addClass('show').addClass('active');
+        }
+        else if (button.hasClass('clickenvelope')) {
+            $('#textMessageTab').removeClass('d-none').addClass('active');
+            $('#textMessage').removeClass('d-none').addClass('show').addClass('active');
 
-        $('#ActionListTab').removeClass('active');
-        $('#actionlist').removeClass('show').removeClass('active');
+            $('#globalalertTab').removeClass('active');
+            $('#globalalert').removeClass('show').removeClass('active');
+
+            $('#ActionListTab').removeClass('active');
+            $('#actionlist').removeClass('show').removeClass('active');
+        }        
     }
 });
 $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
@@ -1923,7 +1935,7 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     $('#chkLB').prop('checked', true);
     $('#chkSiteEmail').prop('checked', true);
     $('#chkSMSPersonal').prop('checked', false);
-    $('#chkSMSSmartWand').prop('checked', false); $('#txtPushNotificationMessage').val('');
+    $('#chkSMSSmartWand').prop('checked', false);
     $('#chkNationality').prop('checked', false);
     $('#chkSiteState').prop('checked', false);
     $('#chkSiteState').prop('checked', false);
@@ -1979,30 +1991,7 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
                 $('#dglClientTypeActionList').val(sitebuttonSelectedClientTypeSiteId).trigger("change");
             }
         });
-
-        //$.ajax({
-        //    url: '/RadioCheckV2?handler=ActionList',
-        //    type: 'POST',
-        //    data: {
-        //        clientSiteId: clientSiteId
-        //    },
-        //    dataType: 'json',
-        //    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        //}).done(function (data) {
-        //    if (data != null) {
-        //        $('#Site_Alarm_Keypad_code').val(data.siteAlarmKeypadCode);
-        //        $('#Action1').val(data.action1);
-        //        $('#site_Physical_key').val(data.sitephysicalkey);
-        //        $('#Action2').val(data.action2);
-        //        $('#Action3').val(data.action3);
-        //        $('#Action4').val(data.action4);
-        //        $('#Action5').val(data.action5);
-        //        $('#Site_Combination_Look').val(data.siteCombinationLook);
-        //        $('#txtComments').html(data.controlRoomOperator);
-        //        $('#download_imageRCList').attr('href', '/RCImage/' + data.imagepath + '');
-        //    }
-
-        //});
+        
     } else {
 
         const clientSiteControl = $('#dglClientSiteIdActionList');
