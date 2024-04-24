@@ -179,7 +179,7 @@ namespace CityWatch.Web.Services
                 //p1-191 hr files task 8-end
                 /* Mail Id added Bcc globoconsoftware for checking Ir Mail not getting Issue Start(date 11,01,2024) */
                 message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
-                message.Bcc.Add(new MailboxAddress("globoconsoftware2", "jishakallani@gmail.com"));
+               // message.Bcc.Add(new MailboxAddress("globoconsoftware2", "jishakallani@gmail.com"));
                 /* Mail Id added Bcc globoconsoftware end */
                 message.Subject = "Reminder - Guard Documents Expiring";
                 var builder = new BodyBuilder()
