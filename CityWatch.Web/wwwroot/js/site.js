@@ -2266,6 +2266,7 @@
         }
     }
     /* dark mode end */
+    
     $('#register_plate_loaded').on('click', 'button[id=btn_delete_plate]', function () {
 
 
@@ -2304,6 +2305,262 @@
         //$(this).closest("tr").remove();
         return false;
     });
+    //p1 - 196 Rationalization Of Menu Changes - start
+    let gridKvlFields;
+    gridKvlFields = $('#tbl_kvl_fields').grid({
+        dataSource: '/Admin/GuardSettings?handler=KeyVehcileLogFields',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        inlineEditing: { mode: 'command' },
+        columns: [
+            { field: 'name', title: 'Name', width: 200, editor: true },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+    let isKvlFieldAdding = false;
+    $('#add_kvl_fields').on('click', function () {
+        const selFieldTypeId = $('#kvl_fields_types').val();
+        if (!selFieldTypeId) {
+            alert('Please select a field type to update');
+            return;
+        }
+        var rowCount = $('#tbl_kvl_fields tr').length;
+
+        if (selFieldTypeId == '9' && rowCount == 8) {
+            alert('Maximum number of CRM/BDM Activity exeeded');
+            return;
+        }
+
+        if (isKvlFieldAdding) {
+            alert('Unsaved changes in the grid. Refresh the page');
+        } else {
+            isKvlFieldAdding = true;
+            gridKvlFields.addRow({
+                'id': -1,
+                'typeId': selFieldTypeId,
+                'name': '',
+            }).edit(-1);
+        }
+    });
+
+    $('#kvl_fields_types').on('change', function () {
+        const selKvlFieldTypeId = $('#kvl_fields_types').val();
+        gridKvlFields.clear();
+        gridKvlFields.reload({ typeId: selKvlFieldTypeId });
+    });
+
+    if (gridKvlFields) {
+        gridKvlFields.on('rowDataChanged', function (e, id, record) {
+            const data = $.extend(true, {}, record);
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=SaveKeyVehicleLogField',
+                data: { record: data },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.success) gridKvlFields.reload({ typeId: $('#kvl_fields_types').val() });
+                else alert(result.message);
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isKvlFieldAdding)
+                    isKvlFieldAdding = false;
+            });
+        });
+
+        gridKvlFields.on('rowRemoving', function (e, id, record) {
+            if (confirm('Are you sure want to delete this field?')) {
+                $.ajax({
+                    url: '/Admin/GuardSettings?handler=DeleteKeyVehicleLogField',
+                    data: { id: record },
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (result) {
+                    if (result.success) gridKvlFields.reload({ typeId: $('#kvl_fields_types').val() });
+                    else alert(result.message);
+                }).fail(function () {
+                    console.log('error');
+                }).always(function () {
+                    if (isKvlFieldAdding)
+                        isKvlFieldAdding = false;
+                });
+            }
+        });
+    }
+    /*to add do's and donts -start*/
+
+    let gridDosAndDontsFields;
+    let isDosandDontsFieldAdding = false;
+    gridDosAndDontsFields = $('#tbl_dosanddonts_fields').grid({
+        dataSource: '/Admin/GuardSettings?handler=DosandDontsFields',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        inlineEditing: { mode: 'command' },
+        columns: [
+            { field: 'name', title: 'Name', width: 200, editor: true },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+    $('#doanddontfields_types').on('change', function () {
+        const selKvlFieldTypeId = $('#doanddontfields_types').val();
+        gridDosAndDontsFields.clear();
+        gridDosAndDontsFields.reload({ typeId: selKvlFieldTypeId });
+    });
+    $('#add_dosanddonts_fields').on('click', function () {
+        const selFieldTypeId = $('#doanddontfields_types').val();
+        if (!selFieldTypeId) {
+            alert('Please select a field type to update');
+            return;
+        }
+        var rowCount = $('#tbl_dosanddonts_fields tr').length;
+
+
+        if (isDosandDontsFieldAdding) {
+            alert('Unsaved changes in the grid. Refresh the page');
+        } else {
+            isKvlFieldAdding = true;
+            gridDosAndDontsFields.addRow({
+                'id': -1,
+                'typeId': selFieldTypeId,
+                'name': '',
+            }).edit(-1);
+        }
+    });
+    if (gridDosAndDontsFields) {
+        gridDosAndDontsFields.on('rowDataChanged', function (e, id, record) {
+            const data = $.extend(true, {}, record);
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=SaveDosandDontsField',
+                data: { record: data },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.success) gridDosAndDontsFields.reload({ typeId: $('#doanddontfields_types').val() });
+                else alert(result.message);
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isDosandDontsFieldAdding)
+                    isDosandDontsFieldAdding = false;
+            });
+        });
+
+        gridDosAndDontsFields.on('rowRemoving', function (e, id, record) {
+            if (confirm('Are you sure want to delete this field?')) {
+                $.ajax({
+                    url: '/Admin/GuardSettings?handler=DeleteDosandDontsField',
+                    data: { id: record },
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (result) {
+                    if (result.success) gridDosAndDontsFields.reload({ typeId: $('#doanddontfields_types').val() });
+                    else alert(result.message);
+                }).fail(function () {
+                    console.log('error');
+                }).always(function () {
+                    if (isKvlFieldAdding)
+                        isKvlFieldAdding = false;
+                });
+            }
+        });
+    }
+    /*to add do's and donts -end*/
+    if ($('#report_module_types').val() == '') {
+        $('#doanddontfields_types').hide();
+        $('#report_field_types').hide();
+        $('#kvl_fields_types').hide();
+
+        $('#lblFieldType').hide();
+
+        $('#add_field_settings').hide();
+        $('#add_dosanddonts_fields').hide();
+        $('#add_kvl_fields').hide();
+
+        gridReportFields.hide();
+        gridKvlFields.hide();
+        gridDosAndDontsFields.hide();
+    }
+    
+    $('#report_module_types').on('change', function () {
+        if ($('#report_module_types').val() == 1) {
+
+            $('#doanddontfields_types').show();
+            $('#report_field_types').hide();
+            $('#kvl_fields_types').hide();
+
+            $('#lblFieldType').show();
+
+            $('#add_field_settings').hide();
+            $('#add_dosanddonts_fields').show();
+            $('#add_kvl_fields').hide();
+
+            gridReportFields.hide();
+            gridKvlFields.hide();
+            gridDosAndDontsFields.show();
+
+            $('#doanddontfields_types').val('');
+            gridDosAndDontsFields.reload({ typeId: $('#doanddontfields_types').val() });
+        }
+        else if ($('#report_module_types').val() == 2) {
+            $('#doanddontfields_types').hide();
+            $('#report_field_types').hide();
+            $('#kvl_fields_types').show();
+
+            $('#lblFieldType').show();
+
+            $('#add_field_settings').hide();
+            $('#add_dosanddonts_fields').hide();
+            $('#add_kvl_fields').show();
+
+            $('#kvl_fields_types').val('');
+            gridKvlFields.reload({ typeId: $('#kvl_fields_types').val() });
+
+            gridReportFields.hide();
+            gridKvlFields.show();
+            gridDosAndDontsFields.hide();
+        }
+        else if ($('#report_module_types').val() == 3) {
+            $('#doanddontfields_types').hide();
+            $('#report_field_types').show();
+            $('#kvl_fields_types').hide();
+
+            $('#lblFieldType').show();
+
+            $('#add_field_settings').show();
+            $('#add_dosanddonts_fields').hide();
+            $('#add_kvl_fields').hide();
+
+            gridReportFields.show();
+            gridKvlFields.hide();
+            gridDosAndDontsFields.hide();
+
+            $('#report_field_types').val('');
+            gridReportFields.reload({ typeId: $('#report_field_types').val() });
+        }
+        else {
+            $('#doanddontfields_types').hide();
+            $('#report_field_types').hide();
+            $('#kvl_fields_types').hide();
+
+            $('#lblFieldType').hide();
+
+            $('#add_field_settings').hide();
+            $('#add_dosanddonts_fields').hide();
+            $('#add_kvl_fields').hide();
+
+
+            gridReportFields.hide();
+            gridKvlFields.hide();
+            gridDosAndDontsFields.hide();
+        }
+    });
+/*p1 - 196 Rationalization Of Menu Changes - end*/
 });
 /*for adding a reportlogo-start*/
 $('#cr_reportlogo_upload').on('change', function () {
@@ -2631,3 +2888,5 @@ function displayValidationSummary(errors) {
         summaryDiv.querySelector('ul').appendChild(li);
     });
 }
+
+

@@ -217,12 +217,12 @@ namespace CityWatch.Web.Helpers
             //p1#187 Hyperlink Missing Below lines are commented- Manju - 26-03-2024 --end
             if (AuthUserHelper.IsAdminUserLoggedIn)
             {
-                if (pageName == PageNameHelper.DailyGuardLog || pageName == PageNameHelper.AuditSiteLogs)
-                {
-                    menuHtml.AppendLine("<div>");
-                    menuHtml.AppendLine(@"<a href=""/Admin/GuardSettings"" class=""nav-link py-0""><i class=""fa fa-cog mr-2""></i>HR, LB & KV Settings</a>");
-                    menuHtml.AppendLine("</div>");
-                }
+                //if (pageName == PageNameHelper.DailyGuardLog || pageName == PageNameHelper.AuditSiteLogs)
+                //{
+                //    menuHtml.AppendLine("<div>");
+                //    menuHtml.AppendLine(@"<a href=""/Admin/GuardSettings"" class=""nav-link py-0""><i class=""fa fa-cog mr-2""></i>HR, LB & KV Settings</a>");
+                //    menuHtml.AppendLine("</div>");
+                //}
 
                 if (pageName == PageNameHelper.DailyGuardLog || pageName == PageNameHelper.GuardSettings)
                 {
