@@ -2305,6 +2305,23 @@
         //$(this).closest("tr").remove();
         return false;
     });
+
+    $('.marqueeurls').on('click', function () {
+        var urlstr = $('#inp_marqueeurls').val();
+        if (urlstr != '') {
+            var url_lst = urlstr.split('|');
+            var alnk = document.getElementById('a_marqueeurls');
+            url_lst.forEach(function (item) {
+                console.log(item);
+                if (item != '') {                     
+                    alnk.removeAttribute("href");
+                    alnk.setAttribute("href", item);
+                    alnk.click();
+                }
+            });            
+        }
+    });
+
     //p1 - 196 Rationalization Of Menu Changes - start
     let gridKvlFields;
     gridKvlFields = $('#tbl_kvl_fields').grid({
@@ -2561,7 +2578,11 @@
         }
     });
 /*p1 - 196 Rationalization Of Menu Changes - end*/
+
 });
+
+
+
 /*for adding a reportlogo-start*/
 $('#cr_reportlogo_upload').on('change', function () {
 
