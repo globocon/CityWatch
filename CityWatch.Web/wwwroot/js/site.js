@@ -2583,35 +2583,43 @@ $('#btn_save_hr_settings').on('click', function () {
     var form = document.getElementById('form_new_hr_settings');
     var jsformData = new FormData(form);
     var data = $('#list_hrGroups').val();
-    $.ajax({
-        url: '/Admin/GuardSettings?handler=SaveHRSettings',
-        type: 'POST',
-        //data: jsformData,
-        data: {
-            'Id': $('#HrSettings_Id').val(),
-            'hrGroupId': $('#list_hrGroups').val(),
-            'refNoNumberId': $('#list_ReferenceNoNumber').val(),
-            'refNoAlphabetId': $('#list_ReferenceNoAlphabet').val(),
-            'description': $('#txtHrSettingsDescription').val()
-        },
-        //processData: false,
-        //contentType: false,
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        beforeSend: function () {
-            $('#loader').show();
-        }
-    }).done(function (result) {
-        if (result.status) {
+    if ($('#list_hrGroups').val() == '') {
+        alert('Please Select HrGroups')
+    }
+    else if ($('#list_ReferenceNoNumber').val() == '' || $('#list_ReferenceNoAlphabet').val() == '') {
+        alert('Please Select  Reference Numbers')
+    }
+    else {
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=SaveHRSettings',
+            type: 'POST',
+            //data: jsformData,
+            data: {
+                'Id': $('#HrSettings_Id').val(),
+                'hrGroupId': $('#list_hrGroups').val(),
+                'refNoNumberId': $('#list_ReferenceNoNumber').val(),
+                'refNoAlphabetId': $('#list_ReferenceNoAlphabet').val(),
+                'description': $('#txtHrSettingsDescription').val()
+            },
+            //processData: false,
+            //contentType: false,
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            beforeSend: function () {
+                $('#loader').show();
+            }
+        }).done(function (result) {
+            if (result.status) {
 
-            $('#hrSettingsModal').modal('hide');
-            gridHrSettings.clear();
-            gridHrSettings.reload();
-        } else {
-            displayValidationSummary(result.errors);
-        }
-    }).always(function () {
-        $('#loader').hide();
-    });
+                $('#hrSettingsModal').modal('hide');
+                gridHrSettings.clear();
+                gridHrSettings.reload();
+            } else {
+                displayValidationSummary(result.errors);
+            }
+        }).always(function () {
+            $('#loader').hide();
+        });
+    }
 });
 function displayValidationSummary(errors) {
     const summaryDiv = document.getElementById('hrsettings-field-validation');
