@@ -42,6 +42,7 @@ namespace CityWatch.Web.Pages.Admin
             _webHostEnvironment = webHostEnvironment;
             _viewDataService = viewDataService;
         }
+        public HrSettings HrSettings;
 
         public IViewDataService ViewDataService { get { return _viewDataService; } }
 
