@@ -2473,6 +2473,7 @@
         $('#addGuardModal').modal('show');
         $('#GuardLicense_GuardId').val(data.id);
         $('#GuardCompliance_GuardId').val(data.id);
+        $('#GuardComplianceandlicense_GuardId').val(data.id);
 
         // ;
         var selectedValues = [];
@@ -2783,6 +2784,19 @@
         $('#guardLicense_fileName').text('None');
         clearGuardValidationSummary('licenseValidationSummary');
     }
+    function resetGuardLicenseandComplianceAddModal() {
+        $('#GuardCompliance_Id').val('');
+        $('#GuardComplianceAndLicense_ReferenceNo').val('');
+        $('#GuardComplianceAndLicense_Description1').val('');
+        $('#GuardCompliance_LicenseNo').val('');
+        $('#GuardCompliance_LicenseType').val('');
+        $('#GuardComplianceAndLicense_Reminder1').val('45');
+        $('#GuardComplianceAndLicense_Reminder2').val('7');
+        $('#GuardComplianceAndLicense_ExpiryDate').val('');
+        $('#GuardComplianceAndLicense_HrGroup').val('');
+        $('#guardComplianceandlicense_fileName').text('None');
+        clearGuardValidationSummary('compliancelicanseValidationSummary');
+    }
 
     let gridGuardLicenses = $('#tbl_guard_licenses').DataTable({
         autoWidth: false,
@@ -2845,8 +2859,8 @@
     });
 
     $('#btnAddGuardLicense').on('click', function () {
-        resetGuardLicenseAddModal();
-        $('#addGuardLicenseModal').modal('show');
+        resetGuardLicenseandComplianceAddModal();
+        $('#addGuardCompliancesLicenseModal').modal('show');
     });
     /*code added for Licence Type Dropdown Textbox start*/
     $('#GuardLicense_LicenseType').attr('placeholder', 'Select Or Edit').editableSelect({
@@ -3001,8 +3015,10 @@
     }
 
     $('#btnAddGuardCompliance').on('click', function () {
-        resetGuardComplianceAddModal();
-        $('#addGuardCompliancesModal').modal('show');
+        resetGuardLicenseandComplianceAddModal();
+
+        //$('#addGuardCompliancesModal').modal('show');
+        $('#addGuardCompliancesLicenseModal').modal('show');
     })
 
     let gridGuardCompliances = $('#tbl_guard_compliances').DataTable({
@@ -3093,6 +3109,29 @@
             })
         }
     });
+    $('#btn_save_guard_compliancelicense').on('click', function () {
+        clearGuardValidationSummary('compliancelicanseValidationSummary');
+        $('#loader').show();
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=SaveGuardComplianceandlicanse',
+            data: $('#frm_add_complianceandlicense').serialize(),
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.status) {
+                $('#addGuardCompliancesLicenseModal').modal('hide');
+                gridGuardCompliances.ajax.reload();
+                gridGuardLicenses.ajax.reload();
+                if (!result.dbxUploaded) {
+                    displayGuardValidationSummary('compliancelicanseValidationSummary', 'Compliance details saved successfully. However, upload to Dropbox failed.');
+                }
+            } else {
+                displayGuardValidationSummary('compliancelicanseValidationSummary', result.message);
+            }
+        }).always(function () {
+            $('#loader').hide();
+        });
+    });
 
     $('#btn_save_guard_compliance').on('click', function () {
         clearGuardValidationSummary('complianceValidationSummary');
@@ -3143,6 +3182,35 @@
         }).fail(function () {
         }).always(function () {
             $('#upload_compliance_file').val('');
+        });
+    });
+
+    $('#upload_complianceandlicanse_file').on('change', function () {
+        const file = $(this).get(0).files.item(0);
+        const fileExtn = file.name.split('.').pop();
+        if (!fileExtn || 'jpg,jpeg,png,bmp,pdf'.indexOf(fileExtn) < 0) {
+            alert('Please select a valid file type');
+            return false;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append('guardId', $('#GuardComplianceandlicense_GuardId').val());
+
+        $.ajax({
+            type: 'POST',
+            url: '/Admin/GuardSettings?handler=UploadGuardAttachment',
+            data: formData,
+            cache: false,
+            contentType: false,
+            processData: false,
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            $('#GuardComplianceandlicense_FileName').val(data.fileName);
+            $('#guardComplianceandlicense_fileName').text(data.fileName ? data.fileName : 'None');
+        }).fail(function () {
+        }).always(function () {
+            $('#upload_complianceandlicanse_file').val('');
         });
     });
 
@@ -3334,6 +3402,32 @@
                 }
                 else {
                     displayGuardValidationSummary('complianceValidationSummary', 'Delete failed.');
+                }
+            });
+        }
+    });
+    $('#delete_complianceandlicense_file').on('click', function () {
+        const guardComplianceandlicenseId = $('#GuardComplianceandlicense_GuardId').val();
+        if (!guardComplianceandlicenseId || parseInt(guardComplianceandlicenseId) <= 0)
+            return false;
+
+        if (confirm('Are you sure want to remove the attachment')) {
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=DeleteGuardAttachment',
+                type: 'POST',
+                data: {
+                    id: guardComplianceandlicenseId,
+                    type: 'c'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.status) {
+                    $('#guardComplianceandlicense_fileName').val('');
+                    $('#guardComplianceandlicense_fileName').text('None');
+                    gridGuardCompliances.ajax.reload();
+                }
+                else {
+                    displayGuardValidationSummary('compliancelicanseValidationSummary', 'Delete failed.');
                 }
             });
         }
@@ -4195,6 +4289,30 @@ function GetClientSiteToggle() {
         console.log("error");
     });
 }
+
+$('#LicanseTypeFilter').on('change', function () {
+    const isChecked = $(this).is(':checked');
+
+    const filter = isChecked ? 1 : 2;
+    if (filter == 1) {
+        $("#LicenseTypedv").show();
+        $("#RefernceNodv").hide();
+        $("#LicenseLabel").show();
+        $("#GuardCompliance_LicenseType").show();
+        $("#DescLabel").hide();
+        $("#GuardComplianceAndLicense_Description1").hide();
+    }
+    if (filter == 2) {
+        $("#LicenseTypedv").hide();
+        $("#RefernceNodv").show();
+        $("#LicenseLabel").hide();
+        $("#GuardCompliance_LicenseType").hide();
+        $("#DescLabel").show();
+        $("#GuardComplianceAndLicense_Description1").show();
+
+    }
+
+});
 //for toggle areas - start 
 
 
