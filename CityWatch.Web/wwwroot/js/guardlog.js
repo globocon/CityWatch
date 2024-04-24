@@ -270,16 +270,18 @@
         $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
     });
 
-    
+
 
     $('#GuardLogin_IsPosition').on('change', function () {
         const isPosition = $('#GuardLogin_IsPosition').is(':checked');
-        if (isPosition)
-           new MessageModal({ message: "Only click <b>Position</b> if you do not have a Smart WAND - are you sure you want to continue?" }).showWarning();
+        //Pr-7-Task-120 Warning-Position Checkbox-Below line is commented-Manju -Start
+        //if (isPosition)
+        //    new MessageModal({ message: "Only click <b>Position</b> if you do not have a Smart WAND - are you sure you want to continue?" }).showWarning();
+        //Pr-7-Task-120 Warning-Position Checkbox-Below line is commented-Manju -End
         getSmartWandOrOfficerPosition(isPosition);
         $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
     });
-    
+
     $('#GuardLogin_IsNewGuard').on('change', function () {
         resetGuardLoginDetails();
         const isChecked = $('#GuardLogin_IsNewGuard').is(':checked');
@@ -315,32 +317,54 @@
         submitGuardLogin();
     });
 
-    
-    $('#btnGuardLogin').on('click', function () {
 
-        
-        const validateSmartWand = $('#GuardLogin_IsPosition').is(':not(:checked)') && $('#GuardLogin_SmartWandOrPosition').val() !== '';
 
-        if (!validateSmartWand) {
-            submitGuardLogin();
-        } else {
-            $('#loader').show();
-            $.ajax({
-                url: '/Guard/Login?handler=CheckIsWandAvailable',
-                type: 'GET',
-                data: {
-                    clientSiteName: $('#GuardLogin_ClientSiteName').val(),
-                    smartWandNo: $('#GuardLogin_SmartWandOrPosition').val(),
-                    guardId: $('#GuardLogin_Guard_Id').val()
-                }
-            }).done(function (result) {
-                if (result) $('#alert-wand-in-use-modal').modal('show');
-                else submitGuardLogin();
-            }).always(function () {
-                $('#loader').hide();
-            });
+    //Pr-7-Task-120 Warning-Position Checkbox-Below lines are added-Manju -start-25-04-2024
+
+    let isPositionModal;
+    isPositionModal = new ConfirmationModal('PositionModal', {
+        message: 'Only click <b>Position</b> if you do not have a Smart WAND - are you sure you want to continue?',
+
+        onYes: function () {
+            const validateSmartWand = $('#GuardLogin_IsPosition').is(':not(:checked)') && $('#GuardLogin_SmartWandOrPosition').val() !== '';
+
+            if (!validateSmartWand) {
+                submitGuardLogin();
+            } 
         }
     });
+    $('#btnGuardLogin').on('click', function () {
+        const isPosition = $('#GuardLogin_IsPosition').is(':checked');
+        if (isPosition) {
+            isPositionModal.showConfirmation();
+        }
+        else {
+            const validateSmartWand = $('#GuardLogin_IsPosition').is(':not(:checked)') && $('#GuardLogin_SmartWandOrPosition').val() !== '';
+            if (validateSmartWand) {
+                $('#loader').show();
+                $.ajax({
+                    url: '/Guard/Login?handler=CheckIsWandAvailable',
+                    type: 'GET',
+                    data: {
+                        clientSiteName: $('#GuardLogin_ClientSiteName').val(),
+                        smartWandNo: $('#GuardLogin_SmartWandOrPosition').val(),
+                        guardId: $('#GuardLogin_Guard_Id').val()
+                    }
+                }).done(function (result) {
+                    if (result) $('#alert-wand-in-use-modal').modal('show');
+                    else submitGuardLogin();
+                }).always(function () {
+                    $('#loader').hide();
+                });
+            }
+            else if ($('#GuardLogin_IsPosition').is(':not(:checked)') && $('#GuardLogin_SmartWandOrPosition').val() == '') {
+                submitGuardLogin();
+            }
+        }
+    });
+        //Pr-7-Task-120 Warning-Position Checkbox-Manju -end-25-04-2024
+
+    
 
     function submitGuardLogin() {
         calculateDutyDateTime();
@@ -441,7 +465,7 @@
         $('#GuardLogin_OffDuty').val(parseDateInCsharpFormat(offDutyDate, $('#GuardLogin_OffDuty_Time').val()));
     }
 
-   
+
     function highlightDutyDay(ctrlId, selected = true) {
         if (selected) $('#' + ctrlId).removeClass('font-weight-light').addClass('font-weight-bold');
         else $('#' + ctrlId).removeClass('font-weight-bold').addClass('font-weight-light');
@@ -533,7 +557,7 @@
     const renderGuardInitialColumn = function (value, record, $cell, $displayEl) {
         if (record.guardId !== null) {
 
-            var googleMap=record.gpsCoordinates ? '<a href="https://www.google.com/maps?q='+record.gpsCoordinates+'" target="_blank" data-toggle="tooltip" title=""><i class="fa fa-map-marker" aria-hidden="true"></i></a>' : '';
+            var googleMap = record.gpsCoordinates ? '<a href="https://www.google.com/maps?q=' + record.gpsCoordinates + '" target="_blank" data-toggle="tooltip" title=""><i class="fa fa-map-marker" aria-hidden="true"></i></a>' : '';
             return value + '<a href="#" class="ml-2"><i class="fa fa-vcard-o text-info" data-toggle="modal" data-target="#guardInfoModal" data-id="' + record.guardId + '"></i></a>' + googleMap;
         }
         else return 'Admin'
@@ -627,7 +651,7 @@
                             return record.notes;
                         }
                     }
-                  },
+                },
                 {
                     field: 'guardInitials', title: 'Guard Initials', width: 70, renderer: function (value, record) {
                         //return record.guardLogin ? record.guardLogin.guard.initial : '';
@@ -1290,7 +1314,7 @@
     $('#vklAudtitFromDate').val(startDate.toISOString().substr(0, 10));
     //$('#vklAudtitToDate').val(new Date().toISOString().substr(0, 10));
     $('#vklAudtitToDate').val(systemDate);
-    
+
 
     // TODO: Duplicate function definition - take out
     function getTimeFromDateTime(value) {
@@ -1678,7 +1702,7 @@
 
     });
     //code addded  to download Excel start for auditsite key vehicle-end
-   
+
 
     //$('#btnDisableDataCollection').on('click', function () {
     //    $.ajax({
@@ -2395,7 +2419,7 @@
         }
         return value;
     }
-   
+
     function format_guards_child_row(d) {
         var val = d;
         return val;
@@ -2473,7 +2497,6 @@
         $('#addGuardModal').modal('show');
         $('#GuardLicense_GuardId').val(data.id);
         $('#GuardCompliance_GuardId').val(data.id);
-        $('#GuardComplianceandlicense_GuardId').val(data.id);
 
         // ;
         var selectedValues = [];
@@ -2500,14 +2523,14 @@
         $("#Guard_Access").multiselect("refresh");
     });
     $('#guard_settings tbody').on('click', '#btnLogBookDetailsByGuard', function () {
-       
+
         $('#guardLogBookInfoModal').modal('show');
         var GuardId = $(this).closest("td").find('#GuardId').val();
         $('#txtGuardId').val(GuardId);
         ActiveGuardsLogBookDetails.ajax.reload();
-       
+
     });
-    
+
 
 
 
@@ -2784,19 +2807,6 @@
         $('#guardLicense_fileName').text('None');
         clearGuardValidationSummary('licenseValidationSummary');
     }
-    function resetGuardLicenseandComplianceAddModal() {
-        $('#GuardCompliance_Id').val('');
-        $('#GuardComplianceAndLicense_ReferenceNo').val('');
-        $('#GuardComplianceAndLicense_Description1').val('');
-        $('#GuardCompliance_LicenseNo').val('');
-        $('#GuardCompliance_LicenseType').val('');
-        $('#GuardComplianceAndLicense_Reminder1').val('45');
-        $('#GuardComplianceAndLicense_Reminder2').val('7');
-        $('#GuardComplianceAndLicense_ExpiryDate').val('');
-        $('#GuardComplianceAndLicense_HrGroup').val('');
-        $('#guardComplianceandlicense_fileName').text('None');
-        clearGuardValidationSummary('compliancelicanseValidationSummary');
-    }
 
     let gridGuardLicenses = $('#tbl_guard_licenses').DataTable({
         autoWidth: false,
@@ -2807,7 +2817,7 @@
         ajax: {
             url: '/Admin/GuardSettings?handler=GuardLicense',
             data: function (d) {
-                d.guardId = $('#GuardComplianceandlicense_GuardId').val();
+                d.guardId = $('#GuardLicense_GuardId').val();
             },
             dataSrc: ''
         },
@@ -2859,8 +2869,8 @@
     });
 
     $('#btnAddGuardLicense').on('click', function () {
-        resetGuardLicenseandComplianceAddModal();
-        $('#addGuardCompliancesLicenseModal').modal('show');
+        resetGuardLicenseAddModal();
+        $('#addGuardLicenseModal').modal('show');
     });
     /*code added for Licence Type Dropdown Textbox start*/
     $('#GuardLicense_LicenseType').attr('placeholder', 'Select Or Edit').editableSelect({
@@ -3015,10 +3025,8 @@
     }
 
     $('#btnAddGuardCompliance').on('click', function () {
-        resetGuardLicenseandComplianceAddModal();
-
-        //$('#addGuardCompliancesModal').modal('show');
-        $('#addGuardCompliancesLicenseModal').modal('show');
+        resetGuardComplianceAddModal();
+        $('#addGuardCompliancesModal').modal('show');
     })
 
     let gridGuardCompliances = $('#tbl_guard_compliances').DataTable({
@@ -3030,7 +3038,7 @@
         ajax: {
             url: '/Admin/GuardSettings?handler=GuardCompliances',
             data: function (d) {
-                d.guardId = $('#GuardComplianceandlicense_GuardId').val();
+                d.guardId = $('#GuardCompliance_GuardId').val();
             },
             dataSrc: ''
         },
@@ -3046,7 +3054,7 @@
                 render: function (data, type, row, meta) {
                     if (data)
                         var guardid = row.guardId;
-                    return '<a href="/uploads/guards/' + guardid +'/' + data + '" target="_blank">' + data + '</a>';
+                    return '<a href="/uploads/guards/' + guardid + '/' + data + '" target="_blank">' + data + '</a>';
                     return '-';
                 },
                 width: "10%"
@@ -3109,29 +3117,6 @@
             })
         }
     });
-    $('#btn_save_guard_compliancelicense').on('click', function () {
-        clearGuardValidationSummary('compliancelicanseValidationSummary');
-        $('#loader').show();
-        $.ajax({
-            url: '/Admin/GuardSettings?handler=SaveGuardComplianceandlicanse',
-            data: $('#frm_add_complianceandlicense').serialize(),
-            type: 'POST',
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {
-            if (result.status) {
-                $('#addGuardCompliancesLicenseModal').modal('hide');
-                gridGuardCompliances.ajax.reload();
-                gridGuardLicenses.ajax.reload();
-                if (!result.dbxUploaded) {
-                    displayGuardValidationSummary('compliancelicanseValidationSummary', 'Compliance details saved successfully. However, upload to Dropbox failed.');
-                }
-            } else {
-                displayGuardValidationSummary('compliancelicanseValidationSummary', result.message);
-            }
-        }).always(function () {
-            $('#loader').hide();
-        });
-    });
 
     $('#btn_save_guard_compliance').on('click', function () {
         clearGuardValidationSummary('complianceValidationSummary');
@@ -3182,35 +3167,6 @@
         }).fail(function () {
         }).always(function () {
             $('#upload_compliance_file').val('');
-        });
-    });
-
-    $('#upload_complianceandlicanse_file').on('change', function () {
-        const file = $(this).get(0).files.item(0);
-        const fileExtn = file.name.split('.').pop();
-        if (!fileExtn || 'jpg,jpeg,png,bmp,pdf'.indexOf(fileExtn) < 0) {
-            alert('Please select a valid file type');
-            return false;
-        }
-
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append('guardId', $('#GuardComplianceandlicense_GuardId').val());
-
-        $.ajax({
-            type: 'POST',
-            url: '/Admin/GuardSettings?handler=UploadGuardAttachment',
-            data: formData,
-            cache: false,
-            contentType: false,
-            processData: false,
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (data) {
-            $('#GuardComplianceandlicense_FileName').val(data.fileName);
-            $('#guardComplianceandlicense_fileName').text(data.fileName ? data.fileName : 'None');
-        }).fail(function () {
-        }).always(function () {
-            $('#upload_complianceandlicanse_file').val('');
         });
     });
 
@@ -3406,32 +3362,6 @@
             });
         }
     });
-    $('#delete_complianceandlicense_file').on('click', function () {
-        const guardComplianceandlicenseId = $('#GuardComplianceandlicense_GuardId').val();
-        if (!guardComplianceandlicenseId || parseInt(guardComplianceandlicenseId) <= 0)
-            return false;
-
-        if (confirm('Are you sure want to remove the attachment')) {
-            $.ajax({
-                url: '/Admin/GuardSettings?handler=DeleteGuardAttachment',
-                type: 'POST',
-                data: {
-                    id: guardComplianceandlicenseId,
-                    type: 'c'
-                },
-                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-            }).done(function (result) {
-                if (result.status) {
-                    $('#guardComplianceandlicense_fileName').val('');
-                    $('#guardComplianceandlicense_fileName').text('None');
-                    gridGuardCompliances.ajax.reload();
-                }
-                else {
-                    displayGuardValidationSummary('compliancelicanseValidationSummary', 'Delete failed.');
-                }
-            });
-        }
-    });
 
     /* Check if Guard can access the patrol -start */
     /*used for accessing the SecurityLicenseNumber if a guard is entering the incident report*/
@@ -3609,7 +3539,7 @@
 
 
     /*for touch devices Start */
-    var touchTimer=0;
+    var touchTimer = 0;
     $('#duress_btn').on('touchstart', function (e) {
         // Prevent the default behavior
         e.preventDefault();
@@ -3628,10 +3558,10 @@
     });
 
     //$('#duress_btn').on('touchend', function () {
-        console.log('stoped');
-        // If there is any movement or the touch ends, clear the timer
-        //clearTimeout(touchTimer);
-        //isPaused = false;
+    console.log('stoped');
+    // If there is any movement or the touch ends, clear the timer
+    //clearTimeout(touchTimer);
+    //isPaused = false;
     //});
 
     $('#duress_btn').on('pointerup', function (event) {
@@ -3704,10 +3634,10 @@ function fillRefreshLocalTimeZoneDetails(formData, modelname, isform) {
     var DateTime = luxon.DateTime;
     var dt1 = DateTime.local();
     let tz = dt1.zoneName + ' ' + dt1.offsetNameShort;
-    let diffTZ = dt1.offset   
+    let diffTZ = dt1.offset
     //let tzshrtnm = dt1.offsetNameShort;
     let tzshrtnm = 'GMT' + dt1.toFormat('ZZ'); // Modified by binoy on 19-01-2024
-   
+
     const eventDateTimeLocal = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS');
     const eventDateTimeLocalWithOffset = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS Z');
     if (isform) {
@@ -3726,7 +3656,7 @@ function fillRefreshLocalTimeZoneDetails(formData, modelname, isform) {
     }
 }
 
-    // Task p6#73_TimeZone issue -- added by Binoy - End
+// Task p6#73_TimeZone issue -- added by Binoy - End
 
 
 function initialize() {
@@ -3845,40 +3775,40 @@ $('#generate_logbook_AlldocketList').on('click', function () {
     //        ids.push(item.detail.id);
 
     //    });
-        $.ajax({
-            url: '/Guard/KeyVehicleLog?handler=GenerateManualDocketList',
-            data: {
-                IsGlobal: false,
-                option: $(checkedReason).val(),
-                otherReason: $('#otherReason').val(),
-                stakeholderEmails: $('#stakeholderEmail').val(),
-                clientSiteId: $('#ClientSiteID').val(),
-                blankNoteOnOrOff: $('#IsBlankNoteOn').val(),
-                ids: ids,
-            },
-            type: 'POST',
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (response) {
+    $.ajax({
+        url: '/Guard/KeyVehicleLog?handler=GenerateManualDocketList',
+        data: {
+            IsGlobal: false,
+            option: $(checkedReason).val(),
+            otherReason: $('#otherReason').val(),
+            stakeholderEmails: $('#stakeholderEmail').val(),
+            clientSiteId: $('#ClientSiteID').val(),
+            blankNoteOnOrOff: $('#IsBlankNoteOn').val(),
+            ids: ids,
+        },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (response) {
 
-            if (response.statusCode === -1) {
-                $('#generate_kvl_docket_status').html('<i class="fa fa-times-circle text-danger mr-2"></i> Any POI not found for the login site').show();
+        if (response.statusCode === -1) {
+            $('#generate_kvl_docket_status').html('<i class="fa fa-times-circle text-danger mr-2"></i> Any POI not found for the login site').show();
+        }
+        else {
+
+            $('#generate_log_AlldocketList').attr('disabled', false);
+            $('#download_kvl_docket').show();
+            $('#download_kvl_docket').attr('href', response.fileName);
+
+            let statusClass = 'fa-check-circle-o text-success mr-2';
+            let statusMessage = 'A copy of the docket is on the Dropbox, and where applicable, has been emailed to relevant stakeholders';
+            if (response.statusCode !== 0) {
+                statusClass = 'fa-exclamation-triangle text-warning mr-2';
+                statusMessage = 'Docket created successfully. But sending the email or uploading to Dropbox failed.';
             }
-            else {
-
-                $('#generate_log_AlldocketList').attr('disabled', false);
-                $('#download_kvl_docket').show();
-                $('#download_kvl_docket').attr('href', response.fileName);
-
-                let statusClass = 'fa-check-circle-o text-success mr-2';
-                let statusMessage = 'A copy of the docket is on the Dropbox, and where applicable, has been emailed to relevant stakeholders';
-                if (response.statusCode !== 0) {
-                    statusClass = 'fa-exclamation-triangle text-warning mr-2';
-                    statusMessage = 'Docket created successfully. But sending the email or uploading to Dropbox failed.';
-                }
-                $('#generate_kvl_docket_status').html('<i class="fa ' + statusClass + '"></i>' + statusMessage).show();
-            }
-        });
+            $('#generate_kvl_docket_status').html('<i class="fa ' + statusClass + '"></i>' + statusMessage).show();
+        }
     });
+});
 
 
 
@@ -3957,7 +3887,7 @@ function monthDiff(d1, d2) {
     months += d2.getMonth();
     return months <= 0 ? 0 : months;
 }
- //calculate month difference-end
+//calculate month difference-end
 
 /*to view thw audit log report-start*/
 $('#vehicle_key_log_audit_history').DataTable({
@@ -3969,7 +3899,7 @@ $('#vehicle_key_log_audit_history').DataTable({
     pageLength: 10,
     data: [],
     columns: [
-      
+
         { data: 'auditTimeString', width: '32%' },
         { data: 'guardLogin.guard.initial', width: '15%' },
         { data: 'auditMessage' },
@@ -3990,10 +3920,10 @@ $('#btnGenerateVklAuditLogReport').on('click', function () {
     else if ((item != '') && (item2 != '') && (item3 != '')) {
         new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
     }
-    else if ((item != '') && (item2 != '') ) {
+    else if ((item != '') && (item2 != '')) {
         new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
     }
-    else if ((item != '') &&  (item3 != '')) {
+    else if ((item != '') && (item3 != '')) {
         new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
     }
     else if ((item2 != '') && (item3 != '')) {
@@ -4056,7 +3986,7 @@ let ActiveGuardsLogBookDetails = $('#ActiveGuardsLogBookDetails').DataTable({
                 else {
                     return formattedDate
                 }
-                
+
             }
         }
 
@@ -4166,38 +4096,38 @@ $('#chk_cs_QTY').on('change', function () {
 $('#btnSaveToggleKeys').on('click', function () {
     var toggleType;
     var IsActive;
-     
+
     if ($('#chk_cs_time_slot').is(":checked")) {
         $('#chk_cs_Is_Time_Slot').val(true);
-       
+
     }
     else {
         $('#chk_cs_Is_Time_Slot').val(false);
-        
+
     }
     if ($('#chk_cs_vwi').is(":checked")) {
         $('#chk_cs_Is_VWI').val(true);
-       
+
     }
     else {
         $('#chk_cs_Is_VWI').val(false);
-        
+
     }
     if ($('#chk_cs_Sender').is(":checked")) {
         $('#chk_cs_Is_Sender').val(true);
-       
+
     }
     else {
         $('#chk_cs_Is_Sender').val(false);
-        
+
     }
     if ($('#chk_cs_Reels').is(":checked")) {
         $('#chk_cs_Is_Reels').val(true);
-        
+
     }
     else {
         $('#chk_cs_Is_Reels').val(false);
-       
+
     }
     const token = $('input[name="__RequestVerificationToken"]').val();
     $.ajax({
@@ -4284,35 +4214,11 @@ function GetClientSiteToggle() {
             }
 
         }
-        
+
     }).fail(function () {
         console.log("error");
     });
 }
-
-$('#LicanseTypeFilter').on('change', function () {
-    const isChecked = $(this).is(':checked');
-
-    const filter = isChecked ? 1 : 2;
-    if (filter == 1) {
-        $("#LicenseTypedv").show();
-        $("#RefernceNodv").hide();
-        $("#LicenseLabel").show();
-        $("#GuardCompliance_LicenseType").show();
-        $("#DescLabel").hide();
-        $("#GuardComplianceAndLicense_Description1").hide();
-    }
-    if (filter == 2) {
-        $("#LicenseTypedv").hide();
-        $("#RefernceNodv").show();
-        $("#LicenseLabel").hide();
-        $("#GuardCompliance_LicenseType").hide();
-        $("#DescLabel").show();
-        $("#GuardComplianceAndLicense_Description1").show();
-
-    }
-
-});
-//for toggle areas - start 
+//for toggle areas - start
 
 
