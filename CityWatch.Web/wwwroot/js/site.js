@@ -2867,18 +2867,21 @@ $('#btn_save_hr_settings').on('click', function () {
         }).done(function (result) {
             if (result.status) {
 
-                $('#hrSettingsModal').modal('hide');
-                gridHrSettings.clear();
-                gridHrSettings.reload();
-            } else {
-                displayValidationSummary(result.errors);
-            }
-        }).always(function () {
-            $('#loader').hide();
-        });
+
+            $('#hrSettingsModal').modal('hide');
+            gridHrSettings.clear();
+            gridHrSettings.reload();
+        } else {
+            displayValidationSummaryHrSettings(result.errors);
+        }
+    }).always(function () {
+        $('#loader').hide();
+    });
+
     }
+
 });
-function displayValidationSummary(errors) {
+function displayValidationSummaryHrSettings(errors) {
     const summaryDiv = document.getElementById('hrsettings-field-validation');
     summaryDiv.className = "validation-summary-errors";
     summaryDiv.querySelector('ul').innerHTML = '';
