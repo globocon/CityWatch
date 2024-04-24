@@ -84,17 +84,20 @@
                 <div class="col-sm-12 col-md-6 d-flex justify-content-center">
                     <div>
                         <a href="https://www.cws-ir.com/" class="nav-link py-0"><i class="fa fa-home mr-2"></i>Home Page</a>
+                        
                     </div>
                      @if (User.Identity.IsAuthenticated)
                     {
                         <div>
                             <a href="@Url.Page("/Admin/Settings")" class="nav-link py-0"><i class="fa fa-cog mr-2"></i>Settings</a>
                         </div>
+                       
                     }
                     <div>
-                        <a href="@Url.Page("/GuardDetails")" class="nav-link py-0"><i class="fa fa-home mr-2"></i>Guard Details</a>
+                        <a href="@Url.Page("/GuardDetails")" class="nav-link py-0"><i class="fa fa-user mr-2"></i>Guard Details</a>
 
                     </div>
+                    
                 </div>
                 
             </div>
