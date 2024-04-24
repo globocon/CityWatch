@@ -511,11 +511,14 @@ namespace CityWatch.Data.Providers
         public List<HrSettings> GetHRSettings()
         {
             var res= _context.HrSettings.Include(z => z.HRGroups)
-                .Include(z => z.ReferenceNoNumbers).Include(z => z.ReferenceNoAlphabets).OrderBy(x => x.Id).ToList();
+                .Include(z => z.ReferenceNoNumbers).Include(z => z.ReferenceNoAlphabets)
+                .OrderBy(x => x.HRGroups.Name).ThenBy(x=> x.ReferenceNoNumbers.Name).
+                ThenBy(x => x.ReferenceNoAlphabets.Name).ToList();
             return _context.HrSettings.Include(z => z.HRGroups)
                 .Include(z => z.ReferenceNoNumbers)
                 .Include(z => z.ReferenceNoAlphabets)
-                .OrderBy(x => x.Id).ToList();
+                .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
+                ThenBy(x => x.ReferenceNoAlphabets.Name).ToList();
         }
         public List<LicenseTypes> GetLicensesTypes()
         {

@@ -261,7 +261,7 @@ namespace CityWatch.Kpi.Services
             /* Mail Id added Bcc globoconsoftware for checking KPI Mail not getting Issue Start(date 17,01,2024) */
             
             message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
-            message.Bcc.Add(new MailboxAddress("globoconsoftware2", "jishakallani@gmail.com"));
+           // message.Bcc.Add(new MailboxAddress("globoconsoftware2", "jishakallani@gmail.com"));
             /* Mail Id added Bcc globoconsoftware end */
             if (!ignoreRecipients)
             {
