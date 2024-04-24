@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using static Dropbox.Api.TeamLog.EventCategory;
 
 namespace CityWatch.Data.Providers
@@ -54,6 +55,10 @@ namespace CityWatch.Data.Providers
         int GetCalendarEventsCount();
         List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEvents();
         List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEventsByDate();
+        string GetBroadcastLiveEventsNotExpired();
+        string GetUrlsInsideBroadcastLiveEventsNotExpired();
+
+
          void SaveDefaultEmail(string DefaultEmail);
         //broadcast banner calendar events-end
         //broadcast banner calendar events-end
@@ -473,9 +478,48 @@ namespace CityWatch.Data.Providers
             return _context.BroadcastBannerLiveEvents.ToList();
         }
         public List<BroadcastBannerLiveEvents> GetBroadcastLiveEventsByDate()
-        {
-            return _context.BroadcastBannerLiveEvents.Where(x=> x.ExpiryDate>=DateTime.Now.Date).ToList();
+        {            
+			return _context.BroadcastBannerLiveEvents.Where(x=> x.ExpiryDate>=DateTime.Now.Date).ToList();
         }
+		public string GetBroadcastLiveEventsNotExpired()
+		{
+			var lv = _context.BroadcastBannerLiveEvents.Where(x => x.ExpiryDate >= DateTime.Now.Date).ToList();
+			var LiveEventstxtmsg = string.Empty;
+			if (lv != null)
+			{
+				foreach (var fileName in lv)
+				{
+					LiveEventstxtmsg = LiveEventstxtmsg + fileName.TextMessage.Replace("\n", "\t") + '\t' + '\t';
+				}   
+            }
+			return LiveEventstxtmsg;
+		}
+        public string GetUrlsInsideBroadcastLiveEventsNotExpired()
+        {
+            string urls = string.Empty;
+            var lv = _context.BroadcastBannerLiveEvents.Where(x => x.ExpiryDate >= DateTime.Now.Date).ToList();
+            var LiveEventstxtmsg = string.Empty;
+            if (lv != null)
+            {
+                foreach (var fileName in lv)
+                {
+                    LiveEventstxtmsg = LiveEventstxtmsg + fileName.TextMessage.Replace("\n", "\t") + '\t' + '\t';
+                }
+
+                var lvsplit = LiveEventstxtmsg.Split(" ");               
+
+                foreach (var line in lvsplit)
+                {                    
+                    if(line.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || 
+                        line.StartsWith("https://", StringComparison.OrdinalIgnoreCase) )
+                        urls = string.Concat(urls, line, "|");
+                }
+            }
+
+            return urls;
+
+        }
+
         public List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEventsByDate()
         {
             return _context.BroadcastBannerCalendarEvents.Where(x =>  DateTime.Now.Date >=x.StartDate && DateTime.Now.Date <= x.ExpiryDate).ToList();
