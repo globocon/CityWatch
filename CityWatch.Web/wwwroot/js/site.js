@@ -2563,6 +2563,7 @@ $('#add_hr_settings').on('click', function () {
         $('#list_ReferenceNoNumber').val('');
         $('#list_ReferenceNoAlphabet').val('');
         $('#txtHrSettingsDescription').val('');
+        $('#HrSettings_Id').val('');
         $('#hrSettingsModal').modal('show');
     }
     if ($('#hr_settings_fields_types').val() == 2) { 
