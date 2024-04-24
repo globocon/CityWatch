@@ -3910,6 +3910,7 @@ $('#div_site_settings').on('click', '#delete_site_RCList', function () {
 
 
 // ################## RC Action List Edit End ###################
+/*p4-16 Data dump task1-start*/
 var guardSettings = $('#guard_settings_for_control_room').DataTable({
     pageLength: 50,
     autoWidth: false,
@@ -3918,7 +3919,7 @@ var guardSettings = $('#guard_settings_for_control_room').DataTable({
     { data: 'name', width: "10%" },
     { data: 'securityNo', width: "10%" },
     { data: 'initial', orderable: false, width: "5%" },
-    { data: 'mobile', width: "5%" },
+    { data: 'mobile', width: "10%" },
     { data: 'email', width: "13%" },
 
     //{
@@ -3936,3 +3937,4 @@ var guardSettings = $('#guard_settings_for_control_room').DataTable({
     //},
     ]
 });
+/*p4-16 Data dump task1-end*/
