@@ -2807,7 +2807,7 @@
         ajax: {
             url: '/Admin/GuardSettings?handler=GuardLicense',
             data: function (d) {
-                d.guardId = $('#GuardLicense_GuardId').val();
+                d.guardId = $('#GuardComplianceandlicense_GuardId').val();
             },
             dataSrc: ''
         },
@@ -3030,7 +3030,7 @@
         ajax: {
             url: '/Admin/GuardSettings?handler=GuardCompliances',
             data: function (d) {
-                d.guardId = $('#GuardCompliance_GuardId').val();
+                d.guardId = $('#GuardComplianceandlicense_GuardId').val();
             },
             dataSrc: ''
         },
