@@ -67,6 +67,8 @@ namespace CityWatch.Data.Providers
         public IncidentReportPosition GetIsLogbookData(string Name);
         List<HrSettings> GetHRSettings();
         List<LicenseTypes> GetLicensesTypes();
+         KeyVehcileLogField GetKVLogField();
+        List<KeyVehicleLogVisitorPersonalDetail> GetProviderList(int ID);
 
         //p1-191 hr files task 3-end
     }
@@ -218,6 +220,14 @@ namespace CityWatch.Data.Providers
         public List<IncidentReportField> GetReportFields()
         {
             return _context.IncidentReportFields.OrderBy(x => x.TypeId).ThenBy(x => x.Name).ToList();
+        }
+        public List<KeyVehicleLogVisitorPersonalDetail> GetProviderList(int ID)
+        {
+            return _context.KeyVehicleLogVisitorPersonalDetails.Where(x => x.PersonType == ID).ToList();
+        }
+        public KeyVehcileLogField GetKVLogField()
+        {
+            return _context.KeyVehcileLogFields.Where(x => x.Name == "CRM (Supplier/Partner)").FirstOrDefault();
         }
 
         public List<IncidentReportField> GetReportFieldsByType(ReportFieldType type)

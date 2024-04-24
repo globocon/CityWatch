@@ -49,6 +49,7 @@ namespace CityWatch.Web.Services
         List<SelectListItem> PSPFType { get; }
         List<SelectListItem> States { get; }
         List<SelectListItem> LicenseStates { get; }
+         List<SelectListItem> ProviderList { get; }
         List<SelectListItem> NotifiedBy { get; }
         List<SelectListItem> CallSign { get; }
         List<SelectListItem> ClientArea { get; }
@@ -259,6 +260,24 @@ namespace CityWatch.Web.Services
                 foreach (var item in licenseStates)
                 {
                     items.Add(new SelectListItem(item.Name, item.Name));
+                }
+                return items;
+            }
+        }
+       
+        public List<SelectListItem> ProviderList
+        {
+            get
+            {
+                var items = new List<SelectListItem>()
+                {
+                    new SelectListItem("Select", "", true)
+                };
+                var KVID = _configDataProvider.GetKVLogField();
+                var providerlist = _configDataProvider.GetProviderList(KVID.Id);
+                foreach (var item in providerlist)
+                {
+                    items.Add(new SelectListItem(item.PersonName, item.PersonName));
                 }
                 return items;
             }
