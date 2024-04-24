@@ -1897,15 +1897,27 @@ $('#pushNoTificationsControlRoomModal').on('show.bs.modal', function (event) {
         $('#ActionListTab').addClass('active');
         $('#actionlist').addClass('show').addClass('active');
     } else {
+        const button = $(event.relatedTarget);
+        if (button.hasClass('clickbuilding')) {
+            $('#textMessageTab').removeClass('d-none').removeClass('active');
+            $('#textMessage').removeClass('d-none').removeClass('show').removeClass('active');
 
-        $('#textMessageTab').removeClass('d-none').addClass('active');
-        $('#textMessage').removeClass('d-none').addClass('show').addClass('active');
+            $('#globalalertTab').removeClass('active');
+            $('#globalalert').removeClass('show').removeClass('active');
 
-        $('#globalalertTab').removeClass('active');
-        $('#globalalert').removeClass('show').removeClass('active');
+            $('#ActionListTab').addClass('active');
+            $('#actionlist').addClass('show').addClass('active');
+        }
+        else if (button.hasClass('clickenvelope')) {
+            $('#textMessageTab').removeClass('d-none').addClass('active');
+            $('#textMessage').removeClass('d-none').addClass('show').addClass('active');
 
-        $('#ActionListTab').removeClass('active');
-        $('#actionlist').removeClass('show').removeClass('active');
+            $('#globalalertTab').removeClass('active');
+            $('#globalalert').removeClass('show').removeClass('active');
+
+            $('#ActionListTab').removeClass('active');
+            $('#actionlist').removeClass('show').removeClass('active');
+        }
     }
 });
 $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
@@ -1918,12 +1930,13 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
 
 
     const button = $(event.relatedTarget);
-    const id = button.data('id');
+    const id = button.data('id'); 
+
     $('#txtNotificationsCompanyId').val(id);
     $('#chkLB').prop('checked', true);
     $('#chkSiteEmail').prop('checked', true);
     $('#chkSMSPersonal').prop('checked', false);
-    $('#chkSMSSmartWand').prop('checked', false); $('#txtPushNotificationMessage').val('');
+    $('#chkSMSSmartWand').prop('checked', false); 
     $('#chkNationality').prop('checked', false);
     $('#chkSiteState').prop('checked', false);
     $('#chkSiteState').prop('checked', false);
@@ -1963,7 +1976,7 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
 
     var inpcallfun = $('#inpCallingFunction').val();
     if (inpcallfun != 'STEPBUTTON') {
-
+        
         $.ajax({
             url: '/RadioCheckV2?handler=GetClientType',
             type: 'POST',
@@ -1980,29 +1993,7 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
             }
         });
 
-        //$.ajax({
-        //    url: '/RadioCheckV2?handler=ActionList',
-        //    type: 'POST',
-        //    data: {
-        //        clientSiteId: clientSiteId
-        //    },
-        //    dataType: 'json',
-        //    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        //}).done(function (data) {
-        //    if (data != null) {
-        //        $('#Site_Alarm_Keypad_code').val(data.siteAlarmKeypadCode);
-        //        $('#Action1').val(data.action1);
-        //        $('#site_Physical_key').val(data.sitephysicalkey);
-        //        $('#Action2').val(data.action2);
-        //        $('#Action3').val(data.action3);
-        //        $('#Action4').val(data.action4);
-        //        $('#Action5').val(data.action5);
-        //        $('#Site_Combination_Look').val(data.siteCombinationLook);
-        //        $('#txtComments').html(data.controlRoomOperator);
-        //        $('#download_imageRCList').attr('href', '/RCImage/' + data.imagepath + '');
-        //    }
-
-        //});
+        
     } else {
 
         const clientSiteControl = $('#dglClientSiteIdActionList');
@@ -2012,22 +2003,7 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
 });
 
 
-//$('#chkLB').on('change', function () {
-//    const isChecked = $(this).is(':checked');
-//    $('#IsLB').val(isChecked);
-//});
-//$('#chkSiteEmail').on('change', function () {
-//    const isChecked = $(this).is(':checked');
-//    $('#IsSiteEmail').val(isChecked);
-//});
-//$('#chkSMSPersonal').on('change', function () {
-//    const isChecked = $(this).is(':checked');
-//    $('#IsSMSPersonal').val(isChecked);
-//});
-//$('#chkSMSSmartWand').on('change', function () {
-//    const isChecked = $(this).is(':checked');
-//    $('#IsSMSSmartWand').val(isChecked);
-//});
+
 function clearGuardValidationSummary(validationControl) {
     $('#' + validationControl).removeClass('validation-summary-errors').addClass('validation-summary-valid');
     $('#' + validationControl).html('');
@@ -3910,3 +3886,31 @@ $('#div_site_settings').on('click', '#delete_site_RCList', function () {
 
 
 // ################## RC Action List Edit End ###################
+/*p4-16 Data dump task1-start*/
+var guardSettings = $('#guard_settings_for_control_room').DataTable({
+    pageLength: 50,
+    autoWidth: false,
+    ajax: '/GuardDetails?handler=Guards',
+    columns: [
+    { data: 'name', width: "10%" },
+    { data: 'securityNo', width: "10%" },
+    { data: 'initial', orderable: false, width: "5%" },
+    { data: 'mobile', width: "10%" },
+    { data: 'email', width: "13%" },
+
+    //{
+    //    data: 'isActive', className: "text-center", width: "10%", 'render': function (value, type, data) {
+    //        return renderGuardActiveCell(value, type, data);
+    //    }
+    //},
+    //{
+    //    targets: -1,
+    //    data: null,
+    //    defaultContent: '<button  class="btn btn-outline-primary mr-2" name="btn_edit_guard"><i class="fa fa-pencil mr-2"></i>Edit</button>',
+    //    orderable: false,
+    //    className: "text-center",
+    //    width: "8%"
+    //},
+    ]
+});
+/*p4-16 Data dump task1-end*/
