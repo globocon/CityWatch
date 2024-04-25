@@ -242,11 +242,17 @@ namespace CityWatch.Web.Services
                 {
                     foreach (var fileName in _IncidentReport.Attachments)
                     {
+                        var paraName = new Paragraph($"File Name: {fileName}").SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLACK));
                         if (GetAttachmentType(IO.Path.GetExtension(fileName)) == AttachmentType.Pdf)
                         {
                             var uploadPdfName = IO.Path.Combine(_UploadRootDir, fileName);
                             var uploadDoc = new PdfDocument(new PdfReader(uploadPdfName));
                             uploadDoc.CopyPagesTo(1, uploadDoc.GetNumberOfPages(), pdfDocument, pdfDocument.GetNumberOfPages());
+                            for (int i = 0, pageIndex = pdfDocument.GetNumberOfPages() - 1; i < uploadDoc.GetNumberOfPages(); i++, pageIndex--)
+                            {
+                                paraName.SetFixedPosition(pageIndex, 5, 0, 400);
+                                doc.Add(paraName);
+                            }
                             pdfAttachmentCount += uploadDoc.GetNumberOfPages();
                             uploadDoc.Close();
                         }
@@ -255,16 +261,25 @@ namespace CityWatch.Web.Services
                 }
 
                 // Reset index for images
-                index = pdfAttachmentCount + 1;
+               
+                if (attachLiveGps) {
+                    index = pdfAttachmentCount + 2;
+                }
+                else
+                {
+                    index = pdfAttachmentCount + 1;
+                }
 
-                if (_IncidentReport.Attachments != null)
+                    if (_IncidentReport.Attachments != null)
                 {
                     foreach (var fileName in _IncidentReport.Attachments)
                     {
+                        var paraName = new Paragraph($"File Name: {fileName}").SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLACK));
                         if (GetAttachmentType(IO.Path.GetExtension(fileName)) == AttachmentType.Image)
                         {
                             var image = AttachImageToPdf(pdfDocument, ++index, IO.Path.Combine(_UploadRootDir, fileName));
-                            doc.Add(image);
+                            paraName.SetFixedPosition(index, 5, 0, 400);
+                            doc.Add(image).Add(paraName);
                         }
                     }
                 }
