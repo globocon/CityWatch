@@ -261,8 +261,9 @@ namespace CityWatch.Web.Services
                 }
 
                 // Reset index for images
-               
-                if (attachLiveGps) {
+
+                if (attachLiveGps || attachGpsMap)
+                {
                     index = pdfAttachmentCount + 2;
                 }
                 else
@@ -270,7 +271,7 @@ namespace CityWatch.Web.Services
                     index = pdfAttachmentCount + 1;
                 }
 
-                    if (_IncidentReport.Attachments != null)
+                if (_IncidentReport.Attachments != null)
                 {
                     foreach (var fileName in _IncidentReport.Attachments)
                     {
@@ -284,10 +285,10 @@ namespace CityWatch.Web.Services
                     }
                 }
                 if (_IncidentReport.Attachments != null)
-                    {
-                        // p1#160_MultimediaAttachments03012024 done by Binoy - Start 
+                {
+                    // p1#160_MultimediaAttachments03012024 done by Binoy - Start 
 
-                        float currentX = 20;
+                    float currentX = 20;
                     float currentY = 750;
                     float y = 0;
                     float x = 0;
@@ -384,7 +385,7 @@ namespace CityWatch.Web.Services
                 {
 
 
-                    AttachKvlDetails(attachLiveGps, pdfDocument, "3", incidentReport);
+                    AttachKvlDetails(attachLiveGps, attachGpsMap, pdfDocument, "3", incidentReport);
 
                 }
             }
@@ -629,7 +630,7 @@ namespace CityWatch.Web.Services
             SetImageObject(pdfDocument.GetLastPage().GetPdfObject(), IMG_REF_PAGE_2, siteImageUrl);
         }
 
-        private void AttachKvlDetails(bool attachLiveGps, PdfDocument pdfDocument, string data, IncidentRequest incidentReport)
+        private void AttachKvlDetails(bool attachLiveGps, bool attachGpsMap, PdfDocument pdfDocument, string data, IncidentRequest incidentReport)
         {
             //Pdf file New Code by Dileep 22042024
             var incidentreportdetails = _clientDataProvider.GetIncidentDetailsKvlReport(AuthUserHelper.LoggedInUserId.GetValueOrDefault());
@@ -657,7 +658,7 @@ namespace CityWatch.Web.Services
                 var uploadDoc = new PdfDocument(new PdfReader(reportPdf));
 
                 var check = pdfDocument.GetNumberOfPages();
-                if (attachLiveGps == true)
+                if (attachLiveGps || attachGpsMap)
                 {
                     uploadDoc.CopyPagesTo(1, uploadDoc.GetNumberOfPages(), pdfDocument, 3);
                 }
