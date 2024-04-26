@@ -572,7 +572,7 @@ namespace CityWatch.Web.Services
 
         public DataTable PatrolDataToDataTable(List<DailyPatrolData> dailyPatrolData)
         {
-            var dt = new DataTable("Patrol Report");
+            var dt = new DataTable("IR Statistics");
             dt.Columns.Add("Day");
             dt.Columns.Add("Date");
             dt.Columns.Add("Control Room Job No.");

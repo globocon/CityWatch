@@ -72,7 +72,7 @@ namespace CityWatch.Web.Pages.Reports
             var excelFileDir = Path.Combine(_webHostEnvironment.WebRootPath, "Excel", "Output");
             if (!Directory.Exists(excelFileDir))
                 Directory.CreateDirectory(excelFileDir);
-            var fileName = $"Alarm Responses {ReportRequest.FromDate:ddMMyyyy} - {ReportRequest.ToDate:ddMMyyyy}.xlsx";
+            var fileName = $"IR Statistics {ReportRequest.FromDate:ddMMyyyy} - {ReportRequest.ToDate:ddMMyyyy}.xlsx";
             PatrolReportGenerator.CreateExcelFile(dataTable, Path.Combine(excelFileDir, fileName));
 
             return new JsonResult(new { results, fileName, chartData = new { sitePercentage, areaWardPercentage, eventTypePercentage, eventTypeCount, colorCodePercentage, feedbackTemplatesColour }, recordCount });

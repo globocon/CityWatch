@@ -1115,7 +1115,7 @@ namespace CityWatch.Web.Services
         public string GeneratePdfReport(PatrolRequest patrolRequest)
         {
 
-            var reportFileName = $"{DateTime.Now.ToString("yyyyMMdd")} -  - Patrol Data Graph - {patrolRequest.FromDate.ToString("MMM")} {patrolRequest.FromDate.Year}_{new Random().Next()}.pdf";
+            var reportFileName = $"{DateTime.Now.ToString("yyyyMMdd")} -  - IR Statistics Report - {patrolRequest.FromDate.ToString("MMM")} {patrolRequest.FromDate.Year}_{new Random().Next()}.pdf";
             var reportPdf = IO.Path.Combine(_ReportRootDir, REPORT_DIR, reportFileName);
 
             var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
