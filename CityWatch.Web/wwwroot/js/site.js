@@ -570,16 +570,56 @@
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
+        selectionType: 'multiple',
+        button: true,
         inlineEditing: { mode: 'command' },
+      
         columns: [
-            { field: 'name', title: 'Name', width: 200, editor: true },
-            { field: 'emailTo', title: 'Special Email Condition', width: 350, editor: true }
+            { field: 'name', title: 'Name', width: '100%', editor: true },
+            { field: 'emailTo', title: 'Special Email Condition', width: '100%', editor: true },
+           // { field: 'emailTo', title: 'State', width: 80, type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
+            { field: 'emailTo', title: 'State',type:'dropdown', width: '100%', type: 'button', editor: select2editor },
+            
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
-
+    function select2editor($editorContainer, value, record) {
+       // var select = $('<button class="btn btn-primary" id="generate_kvl_docket">Generate Docket</button>');
+        var select = $('<select class="form-control mx-1" multiple="multiple" id="vklClientSiteIdforir"></select>');
+            $.ajax({
+                url: '/Admin/Settings?handler=ClientSites',
+                // data: { id: record },
+                //type: 'POST',
+                //headers: { 'RequestVerificationToken': token },
+            }).done(function (result) {
+                for (var i = 0; i < result.length; i++) {
+                    //select.valueField = result[i].name;
+                    //select.textField = result[i].name;
+                    var newoption = '<option val= " ' + result[i].id + ' " > ' + result[i].name + '</option >';
+                    select.append(newoption);
+                }
+                //$.each(item1 in result)
+                //{
+                //    '< option value = "' + item.name + '" >' + item.name +'</option >'
+                //}
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isReportFieldAdding)
+                    isReportFieldAdding = false;
+            }) 
+        $editorContainer.append(select);
+        select.select2();
+    }
+    $('#vklClientSiteIdforir').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
     let isReportFieldAdding = false;
     $('#add_field_settings').on('click', function () {
         const selFieldTypeId = $('#report_field_types').val();
