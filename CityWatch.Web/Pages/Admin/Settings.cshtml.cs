@@ -5,6 +5,7 @@ using CityWatch.Web.Helpers;
 using CityWatch.Web.Services;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Bibliography;
+using Dropbox.Api.Files;
 using MailKit.Search;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Hosting;
@@ -78,8 +79,8 @@ namespace CityWatch.Web.Pages.Admin
 
         public JsonResult OnGetClientSites(int? page, int? limit, int? typeId, string searchTerm,string searchTermtwo)
         {
-            return new JsonResult(_viewDataService.GetUserClientSitesHavingAccess(typeId, AuthUserHelper.LoggedInUserId, searchTerm, searchTermtwo));
-        }
+            return new JsonResult(_clientDataProvider.GetClientSites(null));
+                }
 
         public JsonResult OnGetClientStates()
         {
@@ -700,6 +701,36 @@ namespace CityWatch.Web.Pages.Admin
         public JsonResult OnGetReportFields(int typeId)
         {
             var fields = _configDataProvider.GetReportFieldsByType((ReportFieldType)typeId);
+            //p1 - 202 site allocation-start
+            foreach (var item in fields)
+            {
+                if(item.ClientSiteIds!=null)
+                {
+                    var values = item.ClientSiteIds.Split(';');
+                    int[] ids = new int[values.Length];
+                    for (int i=0;i<values.Length;i++)
+                    {
+                        ids[i] = Convert.ToInt32(values[i]);
+                        
+                    }
+                    string clientname = string.Empty;
+                    var clientdetails = _clientDataProvider.GetClientSites(null).Where(x => ids.Contains(x.Id)).ToList();
+                    foreach(var det in clientdetails)
+                    {
+                        if (clientname != "")
+                        {
+                            clientname = clientname + "," + det.Name;
+                        }
+                        else
+                        {
+                            clientname = det.Name;
+                        }
+                    }
+                    item.clientSites = clientname;
+                        
+                }
+            }
+            //p1 - 202 site allocation-end
             return new JsonResult(fields);
         }
 

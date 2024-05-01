@@ -1,4 +1,5 @@
 ﻿$(function () {
+    
     $('#Report_DateLocation_ClientType').on('change', function () {
         $('#Report_DateLocation_ClientSite').val('');
         $('#Report_DateLocation_ClientAddress').val('');
@@ -577,17 +578,19 @@
         columns: [
             { field: 'name', title: 'Name', width: '100%', editor: true },
             { field: 'emailTo', title: 'Special Email Condition', width: '100%', editor: true },
-           // { field: 'emailTo', title: 'State', width: 80, type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
-            { field: 'emailTo', title: 'State',type:'dropdown', width: '100%', type: 'button', editor: select2editor },
+            // { field: 'emailTo', title: 'State', width: 80, type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
+            { field: 'clientSiteIds', hidden: true },
+            { field: 'clientSites', title: 'Site Allocation', type: 'dropdown', width: '100%', type: 'button', editor: select2editor }
             
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
+    /*p1-202 site allocation-start*/
     function select2editor($editorContainer, value, record) {
        // var select = $('<button class="btn btn-primary" id="generate_kvl_docket">Generate Docket</button>');
-        var select = $('<select class="form-control mx-1" multiple="multiple" id="vklClientSiteIdforir"></select>');
+        var select = $('<select class="form-control mx-1 " multiple="multiple" id="vklClientSiteIdforir"></select>');
             $.ajax({
                 url: '/Admin/Settings?handler=ClientSites',
                 // data: { id: record },
@@ -597,9 +600,17 @@
                 for (var i = 0; i < result.length; i++) {
                     //select.valueField = result[i].name;
                     //select.textField = result[i].name;
-                    var newoption = '<option val= " ' + result[i].id + ' " > ' + result[i].name + '</option >';
+                    var newoption = '<option value= " ' + result[i].id + ' " > ' + result[i].name + '</option >';
                     select.append(newoption);
                 }
+                var selectedValues = record.clientSiteIds.split(';');
+                selectedValues.forEach(function (valuenew) {
+
+                    //select.valueField = valuenew;
+                    //select.val(valuenew);
+                    $('#vklClientSiteIdforir option[value="' + valuenew + '"]').prop('selected', true);
+
+                });
                 //$.each(item1 in result)
                 //{
                 //    '< option value = "' + item.name + '" >' + item.name +'</option >'
@@ -611,16 +622,28 @@
                     isReportFieldAdding = false;
             }) 
         $editorContainer.append(select);
+        //select.multiselect({
+        //    maxHeight: 400,
+        //    buttonWidth: '100%',
+        //    nonSelectedText: 'Select',
+        //    buttonTextAlignment: 'left',
+        //    includeSelectAllOption: true,
+        //});
         select.select2();
+
+        
     }
-    $('#vklClientSiteIdforir').multiselect({
-        maxHeight: 400,
-        buttonWidth: '100%',
-        nonSelectedText: 'Select',
-        buttonTextAlignment: 'left',
-        includeSelectAllOption: true,
+
+
+    var clientSitesforReportsnew ;
+    $('#field_settings tbody').on('change','#vklClientSiteIdforir', function () {
+
+        const clientSitesforReports = $(this).val().join(';');
+        clientSitesforReportsnew = clientSitesforReports;
     });
+    /*p1 - 202 site allocation - end*/
     let isReportFieldAdding = false;
+
     $('#add_field_settings').on('click', function () {
         const selFieldTypeId = $('#report_field_types').val();
         if (!selFieldTypeId) {
@@ -699,6 +722,7 @@
     if (gridReportFields) {
         gridReportFields.on('rowDataChanged', function (e, id, record) {
             const data = $.extend(true, {}, record);
+            data.clientSiteIds = clientSitesforReportsnew;
             const token = $('input[name="__RequestVerificationToken"]').val();
             $.ajax({
                 url: '/Admin/Settings?handler=ReportField',
