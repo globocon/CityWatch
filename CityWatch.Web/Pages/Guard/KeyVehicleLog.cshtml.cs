@@ -1413,7 +1413,7 @@ namespace CityWatch.Web.Pages.Guard
 
                 var vehicleKeyLogProfile = _guardLogDataProvider.GetKeyVehicleLogProfileWithPersonalDetails(id);
                 if (_guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetails(vehicleKeyLogProfile.KeyVehicleLogProfile.VehicleRego, personName).Any())
-                    throw new ApplicationException("Visitor profile with same detials already exists");
+                    throw new ApplicationException("Visitor profile with same detials already exists.Please select from the below list.");
 
                 kvlProfileId = _guardLogDataProvider.SaveKeyVehicleLogVisitorPersonalDetail(new KeyVehicleLogVisitorPersonalDetail()
                 {

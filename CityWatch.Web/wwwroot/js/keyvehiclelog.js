@@ -4979,16 +4979,18 @@ $(function () {
     $('#btn_duplicate_profile').on('click', function () {
 
         const personName = $('#driver_name').val();
-        const selectedRow = gridKeyVehicleLogProfile.rows('.selected').data();
+        let selectedRow = gridKeyVehicleLogProfile.rows('.selected').data();
 
         if (personName === '') {
             $('#duplicate_profile_status').text('Person Name is required.');
             return;
         }
 
-        if (selectedRow.length === 0) {
-            $('#duplicate_profile_status').text('Please click one row to copy.');
-            return;
+        if (selectedRow.length === 0) {           
+            selectedRow = gridKeyVehicleLogProfile.rows(0).data();
+            //console.log(selectedRow);
+            //$('#duplicate_profile_status').text('Please click one row to copy.');
+            //return;
         }
 
         $.ajax({

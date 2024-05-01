@@ -2526,7 +2526,7 @@ namespace CityWatch.Data.Providers
         public List<GuardLogin> GetGuardLoginsByClientSiteId(int? clientsiteId, DateTime date)
         {
             var guarlogins = _context.GuardLogins.Where(z => (!clientsiteId.HasValue || z.ClientSiteId == clientsiteId) && z.OnDuty.Date == date.Date).ToList();
-
+            
             foreach (var item in guarlogins)
             {
                 item.Guard = GetGuards(item.GuardId);
