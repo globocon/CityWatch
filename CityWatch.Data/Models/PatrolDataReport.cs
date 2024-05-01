@@ -77,9 +77,27 @@ namespace CityWatch.Data.Models
         {
             get
             {
-                return _dailyPatrolData.GroupBy(n => n.ColorCode)
-                .ToDictionary(z => z.Key.HasValue ? _feedbackTemplate.SingleOrDefault(x => x.Id == z.Key)?.Name : "N/A", 
-                                    z => Math.Round(z.Count() / _totalRecords * 100, 1));
+                /*New Code Code without N/A 26042024 Start dileep*/
+                var temp = _dailyPatrolData
+                .Where(z => z.ColorCode != null)
+                 .Select(z => new
+                 {
+                     ColorCode = z.ColorCode,
+                     Name = _feedbackTemplate.FirstOrDefault(x => x.Id == z.ColorCode)?.Name
+                 })
+                 .Where(item => item.Name != null) // Filter out entries with null names
+                 .ToList();
+
+                return temp.GroupBy(n => n.ColorCode)
+                .ToDictionary(z => z.Key.HasValue ? _feedbackTemplate.SingleOrDefault(x => x.Id == z.Key)?.Name : "N/A",
+                                    z => Math.Round((z.Count() /((double) temp.Count) * 100), 1));
+                /*New Code Code without N/A 26042024 end dileep*/
+                /*******************Old*****************************/
+                /*Old Code with N/A 26042024 Start*/
+                //return _dailyPatrolData.GroupBy(n => n.ColorCode)
+                //.ToDictionary(z => z.Key.HasValue ? _feedbackTemplate.SingleOrDefault(x => x.Id == z.Key)?.Name : "N/A", 
+                //                    z => Math.Round(z.Count() / _totalRecords * 100, 1));
+                /*Old Code with N/A 26042024 end*/
             }
         }
     }
