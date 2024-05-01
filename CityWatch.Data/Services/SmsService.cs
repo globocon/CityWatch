@@ -68,11 +68,13 @@ namespace CityWatch.Data.Services
                     svl.GuardName = sendtonumber.GuardName;
                     svl.SiteId = sendtonumber.SiteId;
                     svl.SiteName = sendtonumber.SiteName;
+
+                    string statusmsg = "Sending sms started: " + DateTime.Now.ToString("dd-MMM-yyyy HH:mm:ss");
+
                     var resp = await _smsGlobalService.SendSMSApi(SanitizedNumber, smsmsg, sendingFrom, _ApiKey, _ApiSecret);
                     // Write status to communication log table
                     var result = resp.messages;
-                    string status = "";
-                    string statusmsg = "";
+                    string status = "";                   
 
                     if (resp.statuscode != 200)
                     {
@@ -83,19 +85,34 @@ namespace CityWatch.Data.Services
                         status = result.Select(x => x.status).FirstOrDefault();
                     }
                                         
-                    statusmsg = "Api call status code: " + resp.statuscode.ToString();
-                    statusmsg += "\r\n" + "Api call status message: " + resp.statusmessage.ToString();
-                    if (result.Select(x => x.status).FirstOrDefault().ToLower().StartsWith("fail"))
+                    statusmsg += "\r\n Api call status code: " + resp.statuscode.ToString();
+                    statusmsg += "\r\n Api call status message: " + resp.statusmessage.ToString();
+                    if(result != null && result.Length > 0)
                     {
-                        string outgoingid = result.Select(x => x.outgoing_id).FirstOrDefault();
-                        statusmsg += "\r\n" + "Message sending failed. Outgoing Id: " + outgoingid;
-                        statusmsg += "\r\n" + JsonSerializer.Serialize(result);
+                        if (result.Select(x => x.status).FirstOrDefault().ToLower().StartsWith("fail"))
+                        {
+                            string outgoingid = result.Select(x => x.outgoing_id).FirstOrDefault();
+                            statusmsg += "\r\n" + "Message sending failed. Outgoing Id: " + outgoingid;
+                            statusmsg += "\r\n" + JsonSerializer.Serialize(result);
+                        }
+                        else
+                        {
+                            statusmsg += "\r\n" + JsonSerializer.Serialize(result);
+                        }
                     }
                     else
                     {
-                        statusmsg += "\r\n" + JsonSerializer.Serialize(result);
+                        try
+                        {
+                            statusmsg += "\r\n" + JsonSerializer.Serialize(resp.messages);
+                        }
+                        catch (Exception)
+                        {
+
+                           // throw;
+                        }                        
                     }
-                                       
+
                     svl.EventStatus = status;
                     svl.EventErrorMsg = statusmsg;
                     svl.EventTime = DateTime.Now;
