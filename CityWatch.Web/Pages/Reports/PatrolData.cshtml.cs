@@ -43,6 +43,7 @@ namespace CityWatch.Web.Pages.Reports
 
         public IViewDataService ViewDataService { get { return _viewDataService; } }
 
+        public IConfigDataProvider ConfigDataProiver { get { return _configDataProvider; } }
         public ActionResult OnGet()
         {
             //if (!AuthUserHelper.IsAdminUserLoggedIn)

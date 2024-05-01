@@ -6,6 +6,7 @@
 @{
     ViewData["Title"] = "CityWatch Security | Alarm Response";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.PatrolData;
+    var colourcode = @Model.ConfigDataProiver.GetFeedbackTypesId("Colour Codes");
 }
 <div id="loader-p"></div>
 <div class="full-width">
@@ -57,6 +58,17 @@
                     {
                         if (item.Text == "Select") item.Text = "All";
                         <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group col-md-2">
+                <label class="font-weight-normal" asp-for="@Model.ReportRequest.ColourCode">Colour Code</label>
+                <select asp-for="@Model.ReportRequest.ColourCode" class="form-control">
+                    <option style="background-color:white; color:black" value="" selected>All</option>
+                    @foreach (var item in @Model.ViewDataService.GetFeedbackTemplateListByType(Convert.ToInt16(colourcode)))
+                    {
+                        <option style="background-color:@item.BackgroundColour; color:@item.TextColor" value="@item.Id">@item.Name</option>
                     }
                 </select>
             </div>
