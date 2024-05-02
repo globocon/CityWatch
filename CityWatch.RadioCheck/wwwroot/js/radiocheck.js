@@ -34,7 +34,7 @@ $(document).ready(function () {
     });
 
     $(document).on('hidden.bs.modal', '.modal', () => $('.modal:visible').length && $(document.body).addClass('modal-open'));
-
+    
 });
 function startClock() {
     let timer = duration, minutes, seconds;
@@ -1966,12 +1966,13 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     $('#Site_Combination_Look').val('');
     $('#txtComments').html('');
 
-    $('#search_client_site').val('');
+    $('#search_client_siteSteps').val('');
     $('#searchResults').html('');
     $('#dglClientTypeActionList').val('');
     $('#dglClientTypeActionList2').val('');
     $('#dglClientSiteIdActionList').val('');
     $('#dglClientSiteIdActionList2').val('');
+    $('#search_client_site').val('');
         
 
     var inpcallfun = $('#inpCallingFunction').val();
@@ -2305,6 +2306,7 @@ $('#dglClientSiteIdActionList').on('change', function () {
     });
     sitebuttonSelectedClientSiteId = -1;
 });
+
 
 $('#search_client_site').keypress(function (e) {
     var searchInput = $('#search_client_site');
@@ -3914,3 +3916,98 @@ var guardSettings = $('#guard_settings_for_control_room').DataTable({
     ]
 });
 /*p4-16 Data dump task1-end*/
+
+$('#search_client_siteSteps').on('keyup', function (e) {
+
+    var inputValue = $(this).val();
+    if (inputValue.length >= 3 && inputValue.match(/[a-zA-Z]/)) {
+        e.preventDefault();
+
+        gridSiteSearchradio.reload({ typeId: $('#sel_client_type').val(), searchTerm: $(this).val() });
+        $('#logbook-modalRadio').modal('show');
+        //alert('Letter typed and Enter pressed: ' + inputValue);
+    }
+
+});
+let gridSiteSearchradio;
+gridSiteSearchradio = $('#client_site_RadioSearch').grid({
+    dataSource: '/RadioCheckV2?handler=ClientSitesRadioSearch',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    columns: [
+        { field: 'typeId', hidden: true },
+        { field: 'clientType', title: 'Client Type', width: 180, renderer: function (value, record) { return value ? value.name : ''; } },
+        { field: 'name', title: 'Client Site', width: 180, editor: false },
+        { width: 100, renderer: settingsButtonRenderer },
+
+
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
+
+
+function settingsButtonRenderer(value, record) {
+
+    var ClientTypeName = record.clientType.name;
+    var ClientSiteName = record.name;
+    var clientSiteId = record.id;
+
+    return '<button class="btn btn-outline-success mt-2 del-schedule d-block" data-sch-id="' + ClientSiteName + '_' + clientSiteId + '""><i class="fa fa-check mr-2" aria-hidden="true"></i>Select</button>';
+}
+$('#client_site_RadioSearch').on('click', '.del-schedule', function () {
+
+
+    const ClientSiteName1 = $(this).attr('data-sch-id');
+    const lastUnderscoreIndex = ClientSiteName1.lastIndexOf('_');
+
+
+
+
+
+    if (lastUnderscoreIndex !== -1) {
+        const recordName = ClientSiteName1.slice(0, lastUnderscoreIndex);
+        const clientsiteid = ClientSiteName1.slice(lastUnderscoreIndex + 1);
+
+        $('#logbook-modalRadio').modal('hide');
+        $('#search_client_siteSteps').val(recordName);
+        $.ajax({
+            url: '/RadioCheckV2?handler=ActionList',
+            type: 'POST',
+            data: {
+                clientSiteId: clientsiteid
+            },
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data != null) {
+                $('#Site_Alarm_Keypad_code').val(data.siteAlarmKeypadCode);
+                $('#Action1').val(data.action1);
+                $('#site_Physical_key').val(data.sitephysicalkey);
+                $('#Action2').val(data.action2);
+                $('#Action3').val(data.action3);
+                $('#Action4').val(data.action4);
+                $('#Action5').val(data.action5);
+                $('#Site_Combination_Look').val(data.siteCombinationLook);
+                $('#txtComments').html(data.controlRoomOperator);
+
+                if (data.imagepath != null) {
+                    const myArray = data.imagepath.split(":-:");
+                    $('#download_imageRCList').attr('href', myArray[1]);
+                    $('#download_imageRCList').attr('download', myArray[0]);
+                } else {
+                    $('#download_imageRCList').removeAttr('href');
+                    $('#download_imageRCList').removeAttr('download');
+                }
+
+            }
+        });
+
+    } else {
+        console.log('Invalid data-sch-id format');
+    }
+});
+
+

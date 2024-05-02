@@ -977,6 +977,10 @@ namespace CityWatch.Web.Pages.Radio
         {
             return new JsonResult(_guardLogDataProvider.GetUserClientSitesHavingAccess(typeId, AuthUserHelperRadio.LoggedInUserId, searchTerm));
         }
+        public JsonResult OnGetClientSitesRadioSearch(int? page, int? limit, int? typeId, string searchTerm)
+        {
+            return new JsonResult(_guardLogDataProvider.GetUserClientSitesHavingAccessRadio(typeId, AuthUserHelperRadio.LoggedInUserId, searchTerm));
+        }
         public JsonResult OnGetClientSitesNew(string typeId)
         {
             if (typeId != null)
