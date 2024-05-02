@@ -47,7 +47,7 @@ namespace CityWatch.Web.Services
                 var mailBodyHtml = new StringBuilder();
                 mailBodyHtml.Append("Hi, <br/><br/>Following guard documents are expiring soon. <br/><br/>");
                 mailBodyHtml.Append("<table border=\"1px solid black\">");
-                mailBodyHtml.Append("<thead><th>Document Type</th><th>Document No</th><th>Guard Name</th><th>Expiry Date</th></thead>");
+                mailBodyHtml.Append("<thead><th>Document Type</th><th>Document No</th><th>Guard Name</th><th>Expiry Date</th><th>Description</th></thead>");
                 mailBodyHtml.Append("<tbody>");
                 foreach (var item in messages.OrderBy(z => z.Key))
                 {
@@ -218,7 +218,7 @@ namespace CityWatch.Web.Services
                 if ((DateTime.Today.AddDays(compliance.Reminder1.GetValueOrDefault()) == compliance.ExpiryDate) ||
                     (DateTime.Today.AddDays(compliance.Reminder2.GetValueOrDefault()) == compliance.ExpiryDate))
                 {
-                    var message = $"<tr><td>Compliance</td><td>{compliance.ReferenceNo}</td><td>{compliance.Guard.Name}</td><td>{compliance.ExpiryDate?.ToString("dd-MMM-yyyy")}</td>";
+                    var message = $"<tr><td>Compliance</td><td>{compliance.ReferenceNo}</td><td>{compliance.Guard.Name}</td><td>{compliance.ExpiryDate?.ToString("dd-MMM-yyyy")}</td><td>{compliance.Description}</td>";
                     yield return new KeyValuePair<DateTime, string>(compliance.ExpiryDate.Value, message);
                 }
             }
