@@ -61,6 +61,7 @@ namespace CityWatch.Data.Providers
         void SaveCustomFieldLog(CustomFieldLog customFieldLog);
         List<string> GetVehicleRegos(string regoStart = null);
         List<string> GetVehicleRegosForKVL(string regoStart = null);
+        List<string> GetClientSiteSearch(string clientSiteNew = null);
         List<string> GetCompanyNames(string companyNameStart);
         List<string> GetSenderNames(string senderNameStart);
         KeyVehicleLogProfile GetKeyVehicleLogVisitorProfile(string truckRego);
@@ -160,6 +161,7 @@ namespace CityWatch.Data.Providers
         // for global push message- start
         List<ClientType> GetUserClientTypesHavingAccess(int? userId);
         List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm);
+        List<ClientSite> GetUserClientSitesHavingAccessRadio(int? typeId, int? userId, string searchTerm);
         List<State> GetStates();
         List<ClientSite> GetClientSitesForState(string State);
         int GetClientSiteLogBookIdGloablmessage(int clientsiteId, LogBookType type, DateTime date);
@@ -1087,6 +1089,17 @@ namespace CityWatch.Data.Providers
                             (!string.IsNullOrEmpty(z.VehicleRego) &&
                                 z.VehicleRego.Contains(regoStart)))
                 .Select(z => z.VehicleRego)
+                .Distinct()
+                .OrderBy(z => z)
+                .ToList();
+        }
+        public List<string> GetClientSiteSearch(string clientSiteNew = null)
+        {
+            return _context.ClientSites
+                .Where(z => string.IsNullOrEmpty(clientSiteNew) ||
+                            (!string.IsNullOrEmpty(z.Name) &&
+                                z.Name.Contains(clientSiteNew)))
+                .Select(z => z.Name)
                 .Distinct()
                 .OrderBy(z => z)
                 .ToList();
@@ -3515,6 +3528,35 @@ namespace CityWatch.Data.Providers
                 (!string.IsNullOrEmpty(x.Address) && x.Address.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))).ToList();
 
             return results;
+        }
+        public List<ClientSite> GetUserClientSitesHavingAccessRadio(int? typeId, int? userId, string searchTerm)
+        {
+            var results = new List<ClientSite>();
+            var clientSites = GetClientSitesRadio(typeId);
+            if (userId == null)
+                results = clientSites;
+            else
+            {
+                var allUserAccess = GetUserClientSiteAccess(userId);
+                var clientSiteIds = allUserAccess.Select(x => x.ClientSite.Id).Distinct().ToList();
+                results = clientSites.Where(x => clientSiteIds.Contains(x.Id)).ToList();
+            }
+
+            if (!string.IsNullOrEmpty(searchTerm))
+                results = results.Where(x => x.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                (!string.IsNullOrEmpty(x.Address) && x.Address.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))).ToList();
+         
+
+            return results;
+        }
+        public List<ClientSite> GetClientSitesRadio(int? typeId)
+        {
+            return _context.ClientSites
+                .Where(x => (!typeId.HasValue || (typeId.HasValue && x.TypeId == typeId.Value)) && x.IsActive == true)
+                .Include(x => x.ClientType)
+                .OrderBy(x => x.ClientType.Name)
+                .ThenBy(x => x.Name)
+                .ToList();
         }
         public List<State> GetStates()
         {

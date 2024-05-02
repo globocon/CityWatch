@@ -19,6 +19,7 @@
 @*----------------Hidden Inputs---------------------*@
 <input type="hidden" id="txtClientSiteId" />
 <input type="hidden" id="txtGuardId" />
+
 <!-----------------In Acive List -------------------->
 
 <div class="card">
@@ -784,7 +785,7 @@
                                                 </div>
                                                 <div class="col-md-2 m-0 p-0">
                                                     <label class="mt-3"></label>
-                                                    <input type="text" id="search_client_site" class="form-control mb-3" placeholder="Search Client Site">
+                                                    <input type="text" id="search_client_siteSteps" class="form-control mb-3" placeholder="Search Client Site">
                                                 </div>
                                                 <div class="col-md-2 m-0 p-0 text-center">
                                                     <label class="mt-3"></label>
@@ -994,6 +995,32 @@
         </div>
     </div>
 </div>
+<!-- logbook model popup start-->
+<div class="modal fade bd-example-modal-lg" id="logbook-modalRadio" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="logbook" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    Client Type & Client Site Select
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div id="scrollableDiv">
+                            <table class="table" id="client_site_RadioSearch"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- logbook model popup end-->
 
 @Html.AntiForgeryToken()
 @section PageHeader {
