@@ -117,7 +117,21 @@
                     <p class="mb-2">
                         <b>Guard Name: </b>@Model.GuardLog.GuardLogin.Guard.Name ;
                         <b>Initials: </b>@Model.GuardLog.GuardLogin.Guard.Initial ;
-                        <b>Smart WAND: </b>@(Model.GuardLog.GuardLogin.SmartWand?.SmartWandId ?? "N/A") ;
+                        @if (Model.GuardLog.GuardLogin.SmartWand?.SmartWandId != null)
+                        {
+                            <b>Smart WAND: </b>
+                            @Model.GuardLog.GuardLogin.SmartWand?.SmartWandId
+                            
+
+
+                        }
+                        else
+                        {
+                            <b>Smart WAND: <span style="color:red"> N/A</span></b>
+                            
+                        };
+
+                       
                         <b>Position: </b>@(Model.GuardLog.GuardLogin.Position?.Name ?? "N/A")
                     </p>
                 </div>
