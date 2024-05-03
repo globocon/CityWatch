@@ -13,7 +13,7 @@
             return false;
 
         $.ajax({
-            url: '/Incident/Register?handler=ClientSites&type=' + encodeURIComponent(option),
+            url: '/Incident/Register?handler=C&type=' + encodeURIComponent(option),
             type: 'GET',
             dataType: 'json',
             success: function (data) {
