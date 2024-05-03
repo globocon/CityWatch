@@ -657,7 +657,7 @@
 
             '</div>'
     }
-    $('#field_settings tbody').on('click', '#btnEditIrGroup', function () {
+    $('#field_settings_Area tbody').on('click', '#btnEditIrGroup', function () {
 
         $('#IrSettings_Id').val($(this).attr('data-irfield-id'));
         $('#Irfieldtype_Id').val($(this).attr('data-irfield_typeid'));
@@ -680,7 +680,7 @@
         $('#irSettingsModal').modal('show');
 
     });
-    $('#field_settings tbody').on('click', '#btnDeleteIrGroup', function () {
+    $('#field_settings_Area tbody').on('click', '#btnDeleteIrGroup', function () {
         // var data = keyVehicleLog.row($(this).parents('tr')).data();
         if (confirm('Are you sure want to delete this  entry?')) {
             $.ajax({
@@ -758,7 +758,7 @@
         const clientSitesforReports = $(this).val().join(';');
         clientSitesforReportsnew = clientSitesforReports;
     });
-});
+
 $('#list_IrClientSites').on('change', function () {
     const clientSitesforReports = $(this).val().join(';');
     clientSitesforReportsnew = clientSitesforReports;
