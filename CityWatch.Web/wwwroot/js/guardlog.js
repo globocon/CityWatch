@@ -275,8 +275,8 @@
 
     $('#GuardLogin_IsPosition').on('change', function () {
         const isPosition = $('#GuardLogin_IsPosition').is(':checked');
-        if (isPosition)
-            new MessageModal({ message: "Only click <b>Position</b> if you do not have a Smart WAND - are you sure you want to continue?" }).showWarning();
+        //if (isPosition)
+           // new MessageModal({ message: "Only click <b>Position</b> if you do not have a Smart WAND - are you sure you want to continue?" }).showWarning();
         getSmartWandOrOfficerPosition(isPosition);
         $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
     });
@@ -317,10 +317,73 @@
         submitGuardLogin();
     });
 
+    //Pr-7-Task-120 Warning-Position Checkbox-Below lines are added-Manju -start-25-04-2024
+    
+   /* let isPositionModal;
+    isPositionModal = new ConfirmationModal('PositionModal', {
+        message: 'Only click <b>Position</b> if you do not have a Smart WAND - are you sure you want to continue?',
+        onYes: function () {
+            const validateSmartWand = $('#GuardLogin_IsPosition').is(':not(:checked)') && $('#GuardLogin_SmartWandOrPosition').val() !== '';
 
+            if (!validateSmartWand) {
+                submitGuardLogin();
+            }
+        }
+    });*/
+
+
+    function confirmDialog(message, onConfirm) {
+        var fClose = function () {
+            modal.modal("hide");
+        };
+        var modal = $("#confirmModal");
+        modal.modal("show");
+        $("#confirmMessage").empty().append(message);
+        $("#confirmOk").unbind().one('click', onConfirm).one('click', fClose);
+        $("#confirmCancel").unbind().one("click", fClose);
+    }
   
     $('#btnGuardLogin').on('click', function () {
-        const validateSmartWand = $('#GuardLogin_IsPosition').is(':not(:checked)') && $('#GuardLogin_SmartWandOrPosition').val() !== '';
+
+       
+
+
+        const isPosition = $('#GuardLogin_IsPosition').is(':checked');
+        if (isPosition) {
+            confirmDialog('Only click <b>Position</b> if you do not have a Smart WAND - are you sure you want to continue?', function () {
+                const validateSmartWand = $('#GuardLogin_IsPosition').is(':not(:checked)') && $('#GuardLogin_SmartWandOrPosition').val() !== '';
+
+                if (!validateSmartWand) {
+                    submitGuardLogin();
+                }
+            });
+        }
+        else {
+            const validateSmartWand = $('#GuardLogin_IsPosition').is(':not(:checked)') && $('#GuardLogin_SmartWandOrPosition').val() !== '';
+            if (validateSmartWand) {
+                $('#loader').show();
+                $.ajax({
+                    url: '/Guard/Login?handler=CheckIsWandAvailable',
+                    type: 'GET',
+                    data: {
+                        clientSiteName: $('#GuardLogin_ClientSiteName').val(),
+                        smartWandNo: $('#GuardLogin_SmartWandOrPosition').val(),
+                        guardId: $('#GuardLogin_Guard_Id').val()
+                    }
+                }).done(function (result) {
+                    if (result) $('#alert-wand-in-use-modal').modal('show');
+                    else submitGuardLogin();
+                }).always(function () {
+                    $('#loader').hide();
+                });
+            }
+            else if ($('#GuardLogin_IsPosition').is(':not(:checked)') && $('#GuardLogin_SmartWandOrPosition').val() == '') {
+                submitGuardLogin();
+            }
+        }
+
+       
+        /*const validateSmartWand = $('#GuardLogin_IsPosition').is(':not(:checked)') && $('#GuardLogin_SmartWandOrPosition').val() !== '';
 
         if (!validateSmartWand) {
             submitGuardLogin();
@@ -340,7 +403,7 @@
             }).always(function () {
                 $('#loader').hide();
             });
-        }
+        }*/
     });
    
 
