@@ -189,15 +189,25 @@ namespace CityWatch.Kpi.Services
             {
                 var sites = new List<SelectListItem>();
                 //var mapping = _clientDataProvider.GetClientSites(null).Where(x => x.ClientType.Name == type);
+                // var mapping = _context.UserClientSiteAccess
+                //.Where(x => x.ClientSite.ClientType.Name.Trim() == type.Trim() && x.ClientSite.IsActive == true)
+                //.Include(x => x.ClientSite)
+                //.Include(x => x.ClientSite.ClientType)
+                //.OrderBy(x => x.ClientSite.Name)
+                //.ToList();
+                
                 var mapping = _context.UserClientSiteAccess
-               .Where(x => x.ClientSite.ClientType.Name.Trim() == type.Trim() && x.ClientSite.IsActive==true)
+               .Where(x => x.ClientSite.ClientType.Name.Trim() == type.Trim() && x.ClientSite.IsActive == true)
                .Include(x => x.ClientSite)
                .Include(x => x.ClientSite.ClientType)
-               .OrderBy(x => x.ClientSite.Name)
-               .ToList();
+               .Select(x => new { x.ClientSiteId, x.ClientSite.Name })
+            .Distinct().
+             OrderBy(x => x.Name).ToList();
+
+
                 foreach (var item in mapping)
                 {
-                    sites.Add(new SelectListItem(item.ClientSite.Name, item.ClientSite.Id.ToString()));
+                    sites.Add(new SelectListItem(item.Name, item.ClientSiteId.ToString()));
                 }
                 return sites;
 
