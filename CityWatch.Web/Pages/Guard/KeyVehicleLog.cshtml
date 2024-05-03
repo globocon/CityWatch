@@ -79,7 +79,7 @@
                     </div>
                     <hr />
                     <p class="mb-2">
-                        <b>Guard Name: </b>@Model.KeyVehicleLog.GuardLogin.Guard.Name ; <b>Initials: </b>@Model.KeyVehicleLog.GuardLogin.Guard.Initial ; <b>Smart WAND: </b>@(Model.KeyVehicleLog.GuardLogin.SmartWand?.SmartWandId ?? "N/A") ;  <b>Position: </b>@(Model.KeyVehicleLog.GuardLogin.Position?.Name ?? "N/A")
+                        <b>Guard Name: </b>@Model.KeyVehicleLog.GuardLogin.Guard.Name ; <b>Initials: </b>@Model.KeyVehicleLog.GuardLogin.Guard.Initial ; <b>Smart WAND: </b>@(Model.KeyVehicleLog.GuardLogin.SmartWand?.SmartWandId ?? "<span style='color:red;'><b>N/A</b></span>") ;  <b>Position: </b>@(Model.KeyVehicleLog.GuardLogin.Position?.Name ?? "<span style='color:red;'><b>N/A</b></span>")
                     </p>
                 </div>
             </div>
