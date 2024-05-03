@@ -668,8 +668,9 @@
         selectedValues.forEach(function (valuenew) {
 
             //select.valueField = valuenew;
+            var newvalue = parseInt(valuenew);
             //select.val(valuenew);
-            $('#list_IrClientSites option[value="' + valuenew + '"]').prop('selected', true);
+            $('#list_IrClientSites option[value="' + newvalue + '"]').prop('selected', true);
 
         });
 
@@ -804,8 +805,8 @@ $('#btn_save_ir_settings').on('click', function () {
                 isReportFieldAdding = false;
 
                 $('#irSettingsModal').modal('hide');
-                gridReportFields.clear();
-                gridReportFields.reload();
+                gridAreaReportFields.clear();
+                gridAreaReportFields.reload();
                 $('#IrSettings_Id').val('');
                 $('#Irfieldtype_Id').val('');
                 $('#IrSettings_fieldName').val('');

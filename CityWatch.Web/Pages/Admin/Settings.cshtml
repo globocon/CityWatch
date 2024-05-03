@@ -970,7 +970,7 @@
         </div>
     </div>
 </div>
-<div class="modal" tabindex="-1" role="dialog" id="irSettingsModal">
+@*<div class="modal" tabindex="-1" role="dialog" id="irSettingsModal">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header col-md-12">
@@ -982,6 +982,7 @@
             </div>
             <div class="modal-body">
                 <form id="form_new_ir_settings">
+                    <input type="hidden" asp-for="@Model.IncidentReportField.Id" id="IrSettings_Id" />
                     <div class="form-row">
                         <div class="col-md-4">
                             <label>Name</label>
@@ -1017,7 +1018,7 @@
 
 
     </div>
-</div>
+</div>*@
 @*<div class="modal" tabindex="-1" role="dialog" id="irSettingsModal">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
@@ -1078,6 +1079,7 @@
 <partial name="_GuradAddComplianceLicencePopup" />
 <partial name="_KeySiteSettingsPopup" />
 <partial name="_GuardSiteSettings" />
+<partial name="_irSettingsPopup" />
 @section scripts {
     <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&libraries=places"></script>
 }
