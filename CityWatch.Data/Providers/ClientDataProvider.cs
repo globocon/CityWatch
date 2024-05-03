@@ -1809,7 +1809,12 @@ namespace CityWatch.Data.Providers
         //To get the clientsites according to the clientType start
         public int GetClientSite(int? typeId)
         {
-            return _context.ClientSites.Where(x => x.TypeId == typeId).Select(x => x.Id).Count();
+            return  _context.UserClientSiteAccess
+    .Where(x => x.ClientSite.ClientType.Id == typeId && x.ClientSite.IsActive == true)
+    .Select(x => x.ClientSiteId)
+    .Distinct()
+    .Count();
+            //return _context.ClientSites.Where(x => x.TypeId == typeId).Select(x => x.Id).Count();
         }
         //To get the clientsites according to the clientType stop
 
