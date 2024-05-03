@@ -3,6 +3,7 @@ using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Models;
+using DocumentFormat.OpenXml.Drawing.Diagrams;
 using DocumentFormat.OpenXml.Office.CustomUI;
 using DocumentFormat.OpenXml.Office2010.CustomUI;
 using DocumentFormat.OpenXml.Spreadsheet;
@@ -17,6 +18,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Security.Policy;
 using static iText.Kernel.Pdf.Colorspace.PdfSpecialCs;
 
 namespace CityWatch.Web.Services
@@ -127,6 +129,10 @@ namespace CityWatch.Web.Services
         List<SelectListItem> GetReferenceNoAlphabets(bool withoutSelect = false);
         //p1-191 HR Files Task3-end
         List<SelectListItem> GetLicenseTypes(bool withoutSelect = false);
+        //p1-202 site allocation-start
+        List<SelectListItem> GetClientAreas(IncidentReportField ir);
+
+        //p1-202 site allocation-end
 
     }
 
@@ -1313,5 +1319,33 @@ namespace CityWatch.Web.Services
 
             return items;
         }
+        //p1-202 site allocation-start
+        public List<SelectListItem> GetClientAreas(IncidentReportField ir)
+        {
+
+            var items = new List<SelectListItem>() { new SelectListItem("Select", "", true) };
+            var clientArea = _configDataProvider.GetReportFieldsByType(ReportFieldType.ClientArea);
+            foreach (var item in clientArea)
+            {
+                if (!String.IsNullOrEmpty(item.ClientSiteIds))
+                {
+                    foreach (var clientsiteid in item.ClientSiteIdsNew)
+                    {
+                        if (clientsiteid.Equals(Convert.ToInt16(ir.ClientSiteIds)))
+                        {
+                            items.Add(new SelectListItem(item.Name, item.Name));
+                        }
+                    }
+                }
+                else
+                {
+                    items.Add(new SelectListItem(item.Name, item.Name));
+                }
+            }
+            return items.ToList();
+
+        }
+
+        //p1-202 site allocation-end
     }
 }

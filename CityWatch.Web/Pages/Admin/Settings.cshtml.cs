@@ -44,7 +44,7 @@ namespace CityWatch.Web.Pages.Admin
             _viewDataService = viewDataService;
         }
         public HrSettings HrSettings;
-
+        public IncidentReportField IncidentReportField;
         public IViewDataService ViewDataService { get { return _viewDataService; } }
 
         public IConfigDataProvider ConfigDataProiver { get { return _configDataProvider; } }
@@ -701,36 +701,7 @@ namespace CityWatch.Web.Pages.Admin
         public JsonResult OnGetReportFields(int typeId)
         {
             var fields = _configDataProvider.GetReportFieldsByType((ReportFieldType)typeId);
-            //p1 - 202 site allocation-start
-            foreach (var item in fields)
-            {
-                if(item.ClientSiteIds!=null)
-                {
-                    var values = item.ClientSiteIds.Split(';');
-                    int[] ids = new int[values.Length];
-                    for (int i=0;i<values.Length;i++)
-                    {
-                        ids[i] = Convert.ToInt32(values[i]);
-                        
-                    }
-                    string clientname = string.Empty;
-                    var clientdetails = _clientDataProvider.GetClientSites(null).Where(x => ids.Contains(x.Id)).ToList();
-                    foreach(var det in clientdetails)
-                    {
-                        if (clientname != "")
-                        {
-                            clientname = clientname + "," + det.Name;
-                        }
-                        else
-                        {
-                            clientname = det.Name;
-                        }
-                    }
-                    item.clientSites = clientname;
-                        
-                }
-            }
-            //p1 - 202 site allocation-end
+           
             return new JsonResult(fields);
         }
 
@@ -1083,5 +1054,42 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(_guardLogDataProvider.GetAllClientSites().Where(x => x.TypeId == 0).OrderBy(z => z.Name).ThenBy(z => z.TypeId));
         }
+        //p1 - 202 site allocation-start
+        public JsonResult OnGetAreaReportFields(int typeId)
+        {
+            var fields = _configDataProvider.GetReportFieldsByType((ReportFieldType)typeId);
+
+            foreach (var item in fields)
+            {
+                if (item.ClientSiteIds != null)
+                {
+                    var values = item.ClientSiteIds.Split(';');
+                    int[] ids = new int[values.Length];
+                    for (int i = 0; i < values.Length; i++)
+                    {
+                        ids[i] = Convert.ToInt32(values[i]);
+
+                    }
+                    string clientname = string.Empty;
+                    var clientdetails = _clientDataProvider.GetClientSites(null).Where(x => ids.Contains(x.Id)).ToList();
+                    foreach (var det in clientdetails)
+                    {
+                        if (clientname != "")
+                        {
+                            clientname = clientname + "," + det.Name;
+                        }
+                        else
+                        {
+                            clientname = det.Name;
+                        }
+                    }
+                    item.clientSites = clientname;
+
+                }
+            }
+
+            return new JsonResult(fields);
+        }
+        //p1 - 202 site allocation-end
     }
 }

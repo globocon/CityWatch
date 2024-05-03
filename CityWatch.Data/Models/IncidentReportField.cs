@@ -27,5 +27,12 @@ namespace CityWatch.Data.Models
         public string ClientSiteIds { get; set; }
         [NotMapped]
         public string clientSites { get; set; }
+        public int[] ClientSiteIdsNew
+        {
+            get
+            {
+                return ClientSiteIds?.Split(";").Select(z => int.Parse(z)).ToArray() ?? Array.Empty<int>();
+            }
+        }
     }
 }
