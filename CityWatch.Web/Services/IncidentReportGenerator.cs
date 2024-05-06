@@ -1276,7 +1276,7 @@ namespace CityWatch.Web.Services
                 var cellReportTitle = new Cell()
                 .SetBorder(Border.NO_BORDER)
                 .SetTextAlignment(TextAlignment.CENTER)
-                .Add(new Paragraph("Patrol Data Report\n").SetFont(PdfHelper.GetPdfFont()).SetFontSize(CELL_FONT_SIZE * 1.2f))
+                .Add(new Paragraph("IR Statistics Report\n").SetFont(PdfHelper.GetPdfFont()).SetFontSize(CELL_FONT_SIZE * 1.2f))
 
 
                 .Add(new Paragraph(patrolRequest.FromDate.ToString("dd-MMM-yyyy") + "  to  " + patrolRequest.ToDate.ToString("dd-MMM-yyyy"))).SetFontSize(CELL_FONT_SIZE)
@@ -1290,10 +1290,10 @@ namespace CityWatch.Web.Services
                 var cellReportTitle = new Cell()
                 .SetBorder(Border.NO_BORDER)
                 .SetTextAlignment(TextAlignment.CENTER)
-                .Add(new Paragraph("Patrol Data Report\n").SetFont(PdfHelper.GetPdfFont()).SetFontSize(CELL_FONT_SIZE * 1.2f))
+                .Add(new Paragraph("IR Statistics Report\n").SetFont(PdfHelper.GetPdfFont()).SetFontSize(CELL_FONT_SIZE * 1.2f))
 
 
-                .Add(new Paragraph(patrolRequest.FromDate.ToString("dd-MMM-yyyy") + "to" + patrolRequest.ToDate.ToString("dd-MMM-yyyy"))).SetFontSize(CELL_FONT_SIZE);
+                .Add(new Paragraph(patrolRequest.FromDate.ToString("dd-MMM-yyyy") + "  to  " + patrolRequest.ToDate.ToString("dd-MMM-yyyy"))).SetFontSize(CELL_FONT_SIZE);
 
 
 
