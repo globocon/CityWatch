@@ -921,7 +921,7 @@ $('#report_field_types').on('change', function () {
         $('#PSPFSettings').hide();
         $('#FinancialReimbursementSettings').hide();
         $('#field_settings').hide();
-        $('#field_settings_Area').show();
+        $('#field_settings_Area').attr('hidden',false);
         gridPSPF.clear();
         gridPositions.clear();
         gridReportFields.clear();
