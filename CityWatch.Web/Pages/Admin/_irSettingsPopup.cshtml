@@ -42,7 +42,7 @@
                                     <option value="@item.Value">@item.Text</option>
                                 }
                             </select>*@
-                            <select class="form-control js-example-basic-multiple" id="list_IrClientSites" name="IncidentReportField.ClientSiteIds" multiple>
+                            <select class="form-control" id="list_IrClientSites" name="IncidentReportField.ClientSiteIds" multiple="multiple">
                                 @foreach (var item in clientViewDataService.GetClientSites())
                                 {
                                     <option value="@item.Value">@item.Text</option>

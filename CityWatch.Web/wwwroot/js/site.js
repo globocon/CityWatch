@@ -665,20 +665,33 @@
         $('#IrSettings_fieldemailto').val($(this).attr('data-ir-emailto'));
         clientSitesforReportsnew = $(this).attr('data-ir-clientsiteids');
         var selectedValues = $(this).attr('data-ir-clientsiteids').split(';');
-        selectedValues.forEach(function (valuenew) {
+        var newselectedvalues = [];
 
-            //select.valueField = valuenew;
-            var newvalue = parseInt(valuenew);
-            //select.val(valuenew);
-            $('#list_IrClientSites option[value="' + newvalue + '"]').prop('selected', true);
-
+        selectedValues.forEach(function (value) {
+            var newvalue = parseInt(value);
+            newselectedvalues.push(newvalue);
         });
-
         //$('#list_hrGroups').val($(this).attr('data-doc-hrgroupid'));
         //$('#list_ReferenceNoNumber').val($(this).attr('data-doc-refnonumberid'));
         //$('#list_ReferenceNoAlphabet').val($(this).attr('data-doc-refalphnumberid'));
         //$('#txtHrSettingsDescription').val($(this).attr('data-doc-description'));
         $('#irSettingsModal').modal('show');
+        //selectedValues.forEach(function (valuenew) {
+
+        //    //select.valueField = valuenew;
+        //    var newvalue = parseInt(valuenew);
+        //    //select.val(valuenew);
+        //    $('#list_IrClientSites option[value="' + newvalue + '"]').prop('selected', true);
+
+        //});
+        newselectedvalues.forEach(function (value) {
+
+            $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+           
+        });
+       
+        $('#list_IrClientSites').val(newselectedvalues);
+        //("#list_IrClientSites").multiselect('refresh');
 
     });
     $('#field_settings_Area tbody').on('click', '#btnDeleteIrGroup', function () {
@@ -777,7 +790,7 @@ $('#btn_save_ir_settings').on('click', function () {
     }
     var data = {
         'Id': $('#IrSettings_Id').val(),
-        'TypeId': $('#Irfieldtype_Id').val(),
+        'TypeId': $('#report_field_types').val(),
         'Name': $('#IrSettings_fieldName').val(),
         'EmailTo': $('#IrSettings_fieldemailto').val(),
         'ClientSiteIds': clientSitesforReportsnew
@@ -857,12 +870,15 @@ $('#add_field_settings').on('click', function () {
         isReportFieldAdding = true;
 
         $('#irSettingsModal').modal('show');
+        ClearIrSettings();
         $('#Irfieldtype_Id').val($('#report_field_types').val());
         var type = $('#report_field_types').find("option:selected").text();
         $('#lblFieldType').html(type);
     }
 });
-
+    function ClearIrSettings() {
+        $('#IrSettings_fieldName').val('');
+    }
 $('#report_field_types').on('change', function () {
     const selFieldTypeId = $(this).val();
 
