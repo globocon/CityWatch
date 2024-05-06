@@ -199,7 +199,7 @@ namespace CityWatch.Web.Services
 
                     if (field.Name == "CC-List")
                     {
-                        var colorcode = _context.FeedbackTemplates.SingleOrDefault(x => x.Id == _IncidentReport.SiteColourCodeId);
+                        var colorcode = _context.FeedbackTemplates.SingleOrDefault(x => x.Id == _IncidentReport.SiteColourCodeId && x.DeleteStatus==0);
                         if (colorcode != null)
                         {
                             var bgcolor = colorcode.BackgroundColour;
