@@ -652,24 +652,30 @@
     });
     /*p1-202 site allocation-start*/
     function irButtonRenderer(value, record) {
-        return '<button id="btnEditIrGroup" data-irfield-id="' + record.id + '" data-irfield_typeid="' + record.typeId + '" data-irfield-name="' + record.name + '" data-ir-emailto="' + record.emailTo + '" data-ir-clientsiteids="' + record.clientSiteIds + '" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
-            '<button id="btnDeleteIrGroup" data-irfield-id="' + record.id + '" class="btn btn-outline-danger"><i class="fa fa-trash mr-2"></i>Delete</button>' +
+        return '<button id="btnEditIrGroup" data-irfield-id="' + record.id + '" data-irfield_typeid="' + record.typeId + '" data-irfield-name="' + record.name + '" data-ir-emailto="' + record.emailTo + '" data-ir-clientsiteids="' + record.clientSiteIds + '"data-ir-clientsites="' + record.clientSites + '" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
+            '<button id="btnDeleteIrGroup" data-irfield-id="' + record.id + '"  class="btn btn-outline-danger"><i class="fa fa-trash mr-2"></i>Delete</button>' +
 
             '</div>'
     }
     $('#field_settings_Area tbody').on('click', '#btnEditIrGroup', function () {
 
+        ClearIrSettings();
         $('#IrSettings_Id').val($(this).attr('data-irfield-id'));
         $('#Irfieldtype_Id').val($(this).attr('data-irfield_typeid'));
         $('#IrSettings_fieldName').val($(this).attr('data-irfield-name'));
         $('#IrSettings_fieldemailto').val($(this).attr('data-ir-emailto'));
+        var name = $(this).attr('data-ir-clientsites');
+        $('.multiselect [title="' + $(this).attr('data-ir-clientsites') + '"');
+       // $('.multiselect').text($(this).attr('data-ir-clientsites'));
         clientSitesforReportsnew = $(this).attr('data-ir-clientsiteids');
         var selectedValues = $(this).attr('data-ir-clientsiteids').split(';');
         var newselectedvalues = [];
 
         selectedValues.forEach(function (value) {
             var newvalue = parseInt(value);
+            var stringnewvalue = String(newvalue)
             newselectedvalues.push(newvalue);
+            $('#list_IrClientSites option[value="' + value + '"]').attr('selected', true);
         });
         //$('#list_hrGroups').val($(this).attr('data-doc-hrgroupid'));
         //$('#list_ReferenceNoNumber').val($(this).attr('data-doc-refnonumberid'));
@@ -687,6 +693,7 @@
         newselectedvalues.forEach(function (value) {
 
             $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+            $(".multiselect-option input[type=checkbox][value='" + value + "']").parent().parent().addClass('active');
            
         });
        
@@ -878,6 +885,11 @@ $('#add_field_settings').on('click', function () {
 });
     function ClearIrSettings() {
         $('#IrSettings_fieldName').val('');
+        $(".multiselect-option input[type=checkbox]").prop("checked", false);
+        $(".multiselect-option input[type=checkbox]").parent().parent().removeClass('active');
+        $('#list_IrClientSites').val('');
+        $('#IrSettings_fieldemailto').val('');
+
     }
 $('#report_field_types').on('change', function () {
     const selFieldTypeId = $(this).val();

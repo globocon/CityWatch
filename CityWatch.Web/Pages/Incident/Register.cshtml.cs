@@ -769,7 +769,7 @@ namespace CityWatch.Web.Pages.Incident
             var callSignEmailTo = GetFieldEmailAddress(fields, ReportFieldType.CallSign, Report.Officer.CallSign);
             if (!string.IsNullOrEmpty(callSignEmailTo))
                 emailAddressList.Add(new MailboxAddress(string.Empty, callSignEmailTo));
-            var areaEmailTo = GetFieldEmailAddress(fields, ReportFieldType.ClientArea, null);
+            var areaEmailTo = GetFieldEmailAddress(fields, ReportFieldType.ClientArea, Report.DateLocation.ClientArea);
             if (!string.IsNullOrEmpty(areaEmailTo))
                 emailAddressList.Add(new MailboxAddress(string.Empty, areaEmailTo));
 
