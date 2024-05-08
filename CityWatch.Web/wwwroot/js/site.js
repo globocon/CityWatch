@@ -3015,17 +3015,15 @@ gridHrSettings = $('#tbl_hr_settings').grid({
     //inlineEditing: { mode: 'command' },
     columns: [
         { field: 'id', hidden: true },
-        { field: 'groupName', title: 'HR Group', width: '100%' },
-        { field: 'referenceNo', title: 'Reference No', width: '100%' },
-
-
-
-        { field: 'description', width: '100%', title: 'Description' },
-
-        { width: '100%', renderer: hrgroupButtonRenderer },
-
+        { field: 'groupName', title: 'HR Group', width: '15%' },
+        { field: 'referenceNo', title: 'Reference No', width: '20%' },
+        { field: 'description', title: 'Description' },
+        { width: '20%', renderer: hrgroupButtonRenderer },
     ],
-
+    grouping: {
+        groupBy: 'groupName', // Group by the 'groupName' column
+        groupOrder: 'asc' // You can change this to 'asc' if needed
+    },
     initialized: function (e) {
         $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
     },
