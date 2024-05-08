@@ -1,4 +1,19 @@
-﻿$(function () {
+﻿/** 
+ *  Fix for issues while opening one BS modal over another
+ *  https://stackoverflow.com/questions/19305821/multiple-modals-overlay * 
+ **/
+$(document).ready(function () {
+    $(document).on('show.bs.modal', '.modal', function () {
+        const zIndex = 1040 + 10 * $('.modal:visible').length;
+        $(this).css('z-index', zIndex);
+        setTimeout(() => $('.modal-backdrop').not('.modal-stack').css('z-index', zIndex - 1).addClass('modal-stack'));
+    });
+
+    $(document).on('hidden.bs.modal', '.modal', () => $('.modal:visible').length && $(document.body).addClass('modal-open'));
+
+
+});
+$(function () {
     let gritdSmartWands;
     var clientSiteId = getUrlVars()["clientSiteId"];
     $("#gl_client_site_id").val(window.sharedVariable);
