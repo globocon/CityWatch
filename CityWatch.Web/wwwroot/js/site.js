@@ -3021,8 +3021,8 @@ gridHrSettings = $('#tbl_hr_settings').grid({
         { width: '20%', renderer: hrgroupButtonRenderer },
     ],
     grouping: {
-        groupBy: 'groupName', // Group by the 'groupName' column
-        groupOrder: 'asc' // You can change this to 'asc' if needed
+        groupBy: 'groupName',
+        groupOrder: 'asc' 
     },
     initialized: function (e) {
         $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
