@@ -177,6 +177,8 @@ namespace CityWatch.Data.Providers
         //p1-191 hr files task 8-start
         List<KeyVehicleLog> GetKeyVehiclogWithProviders(string[] providers);
         //p1-191 hr files task 8-end
+        public void DeafultMailBox(string Email);
+        List<KPIScheduleDeafultMailbox> GetKPIScheduleDeafultMailbox();
 
     }
 
@@ -590,6 +592,10 @@ namespace CityWatch.Data.Providers
         public List<GlobalComplianceAlertEmail> GetGlobalComplianceAlertEmail()
         {
             return _context.GlobalComplianceAlertEmail.ToList();
+        }
+        public List<KPIScheduleDeafultMailbox> GetKPIScheduleDeafultMailbox()
+        {
+            return _context.KPIScheduleDeafultMailbox.ToList();
         }
         public List<ClientSiteLogBook> GetClientSiteLogBookWithOutType(int clientSiteId, DateTime date)
         {
@@ -1453,6 +1459,39 @@ namespace CityWatch.Data.Providers
                 }
 
                 _context.SaveChanges();
+            }
+
+        }
+
+
+        public void DeafultMailBox(string Email)
+        {
+            if (!string.IsNullOrEmpty(Email))
+            {
+
+                string[] emailIds = Email.Split(',');
+                var EmailUpdate = _context.KPIScheduleDeafultMailbox.Where(x => x.Id != 0).ToList();
+                if (EmailUpdate != null)
+                {
+                    if (EmailUpdate.Count != 0)
+                    {
+                        _context.KPIScheduleDeafultMailbox.RemoveRange(EmailUpdate);
+                        _context.SaveChanges();
+                    }
+                }
+                /*Remove all the rows */
+
+                foreach (string part in emailIds)
+                {
+                    var Emailnew = new KPIScheduleDeafultMailbox()
+                    {
+                        Email = part
+                    };
+                    _context.KPIScheduleDeafultMailbox.Add(Emailnew);
+                   
+                }
+                _context.SaveChanges();
+
             }
 
         }

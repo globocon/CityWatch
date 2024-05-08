@@ -112,7 +112,7 @@ namespace CityWatch.Data
 
         public DbSet<GlobalComplianceAlertEmail> GlobalComplianceAlertEmail { get; set; }
 
-        
+        public DbSet<KPIScheduleDeafultMailbox> KPIScheduleDeafultMailbox { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -2,6 +2,19 @@
  *  Fix for issues while opening one BS modal over another
  *  https://stackoverflow.com/questions/19305821/multiple-modals-overlay * 
  **/
+
+window.onload = function () {
+    $.ajax({
+        url: '/Admin/Settings?handler=KPIScheduleDeafultMailbox',
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (Emails) {
+        $('#txt_defaultEmail').val(Emails.emails);
+    });
+
+    //To get the Duress Emails in pageload stop
+
+};
 $(document).ready(function () {
     $(document).on('show.bs.modal', '.modal', function () {
         const zIndex = 1040 + 10 * $('.modal:visible').length;
@@ -1635,6 +1648,45 @@ $(function () {
 
 
 });
+
+
+$('#save_default_email').on('click', function () {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    var Email = $('#txt_defaultEmail').val();
+    var emailsArray = Email.split(',');
+    isValidEmailIds = true;
+    for (var i = 0; i < emailsArray.length; i++) {
+        var emailAddress = emailsArray[i].trim();
+        if (isValidEmail(emailAddress)) {
+
+        }
+        else {
+            isValidEmailIds = false;
+            alert("Invalid email address.'" + emailAddress+"'");
+        }
+
+
+
+    }
+
+    if (isValidEmailIds) {
+        $.ajax({
+            url: '/Admin/Settings?handler=SaveDeafultMailBox',
+            data: { Email: Email },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function () {
+            alert("The Default Mailbox was saved successfully");
+        })
+
+    }
+
+    function isValidEmail(email) {
+        // Regular expression for basic email validation
+        var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailPattern.test(email);
+    }
+})
 
 
 $('#div_site_settings').on('click','#btnSaveGuardSiteSettingsnew', function () {
