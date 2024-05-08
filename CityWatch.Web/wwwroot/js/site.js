@@ -1,4 +1,5 @@
 ﻿$(function () {
+    
     $('#Report_DateLocation_ClientType').on('change', function () {
         $('#Report_DateLocation_ClientSite').val('');
         $('#Report_DateLocation_ClientAddress').val('');
@@ -53,6 +54,38 @@
         if ($(this).val() === '') {
             $('#Report_DateLocation_ClientAddress').val('');
             toggleClientGpsLink(false);
+        }
+        //p1 - 202 site allocation - start
+        else {
+            // $('#Report_DateLocation_ClientArea').val('');
+            const clientAreaControl = $('#Report_DateLocation_ClientArea');
+            clientAreaControl.html('');
+            toggleClientGpsLink(false);
+
+            //const ulClients = $('#Report_DateLocation_ClientArea').siblings('ul.es-list');
+            //ulClients.html('');
+
+            const option = $(this).val();
+            if (option == '')
+                return false;
+
+            $.ajax({
+                url: '/Incident/Register?handler=ClientAreas&Id=' + encodeURIComponent(option),
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+
+                    data.map(function (site) {
+                        // ulClients.append('<li class="es-visible" value="' + site.text + '">' + site.text + '</li>');
+                        clientAreaControl.append('<option value="' + site.text + '">' + site.text + '</option>');
+
+                    });
+
+                }
+            });
+
+
+            //p1 - 202 site allocation - end
         }
     });
 
@@ -570,28 +603,269 @@
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
+        selectionType: 'multiple',
+        button: true,
         inlineEditing: { mode: 'command' },
+      
         columns: [
-            { field: 'name', title: 'Name', width: 200, editor: true },
-            { field: 'emailTo', title: 'Special Email Condition', width: 350, editor: true }
+            { field: 'name', title: 'Name', width: '100%', editor: true },
+            { field: 'emailTo', title: 'Special Email Condition', width: '100%', editor: true },
+            // { field: 'emailTo', title: 'State', width: 80, type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
+            //{ field: 'clientSiteIds', hidden: true },
+            ///*{ field: 'clientSites', title: 'Site Allocation', type: 'dropdown', width: '100%', type: 'button', editor: select2editor }*/
+            //{ field: 'clientSites', title: 'Site Allocation', width: '100%' },
+            //{
+            //    width: '100%', renderer: irButtonRenderer
+            //}
+
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
+    let gridAreaReportFields;
 
-    let isReportFieldAdding = false;
-    $('#add_field_settings').on('click', function () {
-        const selFieldTypeId = $('#report_field_types').val();
-        if (!selFieldTypeId) {
-            alert('Please select a field type to update');
-            return;
+    gridAreaReportFields = $('#field_settings_Area').grid({
+        dataSource: '/Admin/Settings?handler=AreaReportFields',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        selectionType: 'multiple',
+        button: true,
+        //inlineEditing: { mode: 'command' },
+
+        columns: [
+            { field: 'name', title: 'Name', width: '100%' },
+            { field: 'emailTo', title: 'Special Email Condition', width: '100%' },
+            // { field: 'emailTo', title: 'State', width: 80, type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
+            { field: 'clientSiteIds', hidden: true },
+            /*{ field: 'clientSites', title: 'Site Allocation', type: 'dropdown', width: '100%', type: 'button', editor: select2editor }*/
+            { field: 'clientSites', title: 'Site Allocation', width: '100%' },
+            {
+                width: '100%', renderer: irButtonRenderer
+            }
+
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
+    });
+    /*p1-202 site allocation-start*/
+    function irButtonRenderer(value, record) {
+        return '<button id="btnEditIrGroup" data-irfield-id="' + record.id + '" data-irfield_typeid="' + record.typeId + '" data-irfield-name="' + record.name + '" data-ir-emailto="' + record.emailTo + '" data-ir-clientsiteids="' + record.clientSiteIds + '"data-ir-clientsites="' + record.clientSites + '" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
+            '<button id="btnDeleteIrGroup" data-irfield-id="' + record.id + '"  class="btn btn-outline-danger"><i class="fa fa-trash mr-2"></i>Delete</button>' +
 
+            '</div>'
+    }
+    $('#field_settings_Area tbody').on('click', '#btnEditIrGroup', function () {
+
+        ClearIrSettings();
+        $('#IrSettings_Id').val($(this).attr('data-irfield-id'));
+        $('#Irfieldtype_Id').val($(this).attr('data-irfield_typeid'));
+        $('#IrSettings_fieldName').val($(this).attr('data-irfield-name'));
+        $('#IrSettings_fieldemailto').val($(this).attr('data-ir-emailto'));
+        var name = $(this).attr('data-ir-clientsites');
+        $('.multiselect [title="' + $(this).attr('data-ir-clientsites') + '"');
+       // $('.multiselect').text($(this).attr('data-ir-clientsites'));
+        clientSitesforReportsnew = $(this).attr('data-ir-clientsiteids');
+        var selectedValues = $(this).attr('data-ir-clientsiteids').split(';');
+        var newselectedvalues = [];
+
+        selectedValues.forEach(function (value) {
+            var newvalue = parseInt(value);
+            var stringnewvalue = String(newvalue)
+            newselectedvalues.push(newvalue);
+            $('#list_IrClientSites option[value="' + value + '"]').attr('selected', true);
+        });
+        //$('#list_hrGroups').val($(this).attr('data-doc-hrgroupid'));
+        //$('#list_ReferenceNoNumber').val($(this).attr('data-doc-refnonumberid'));
+        //$('#list_ReferenceNoAlphabet').val($(this).attr('data-doc-refalphnumberid'));
+        //$('#txtHrSettingsDescription').val($(this).attr('data-doc-description'));
+        $('#irSettingsModal').modal('show');
+        //selectedValues.forEach(function (valuenew) {
+
+        //    //select.valueField = valuenew;
+        //    var newvalue = parseInt(valuenew);
+        //    //select.val(valuenew);
+        //    $('#list_IrClientSites option[value="' + newvalue + '"]').prop('selected', true);
+
+        //});
+        newselectedvalues.forEach(function (value) {
+
+            $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+            $(".multiselect-option input[type=checkbox][value='" + value + "']").parent().parent().addClass('active');
+           
+        });
+       
+        $('#list_IrClientSites').val(newselectedvalues);
+        //("#list_IrClientSites").multiselect('refresh');
+
+    });
+    $('#field_settings_Area tbody').on('click', '#btnDeleteIrGroup', function () {
+        // var data = keyVehicleLog.row($(this).parents('tr')).data();
+        if (confirm('Are you sure want to delete this  entry?')) {
+            $.ajax({
+                type: 'POST',
+                url: '/Admin/Settings?handler=DeleteReportField',
+                data: { 'id': $(this).attr('data-irfield-id') },
+                dataType: 'json',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                beforeSend: function () {
+                    $('#loader').show();
+                }
+            }).done(function () {
+                gridReportFields.reload();
+            }).always(function () {
+                $('#loader').hide();
+            });
+        }
+    });
+    function select2editor($editorContainer, value, record) {
+       // var select = $('<button class="btn btn-primary" id="generate_kvl_docket">Generate Docket</button>');
+        var select = $('<select class="form-control mx-1 " multiple="multiple" id="vklClientSiteIdforir"></select>');
+            $.ajax({
+                url: '/Admin/Settings?handler=ClientSites',
+                // data: { id: record },
+                //type: 'POST',
+                //headers: { 'RequestVerificationToken': token },
+            }).done(function (result) {
+                for (var i = 0; i < result.length; i++) {
+                    //select.valueField = result[i].name;
+                    //select.textField = result[i].name;
+                    var newoption = '<option value= " ' + result[i].id + ' " > ' + result[i].name + '</option >';
+                    select.append(newoption);
+                }
+                var selectedValues = record.clientSiteIds.split(';');
+                selectedValues.forEach(function (valuenew) {
+
+                    //select.valueField = valuenew;
+                    //select.val(valuenew);
+                    $('#vklClientSiteIdforir option[value="' + valuenew + '"]').prop('selected', true);
+
+                });
+                //$.each(item1 in result)
+                //{
+                //    '< option value = "' + item.name + '" >' + item.name +'</option >'
+                //}
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isReportFieldAdding)
+                    isReportFieldAdding = false;
+            }) 
+        $editorContainer.append(select);
+        //select.multiselect({
+        //    maxHeight: 400,
+        //    buttonWidth: '100%',
+        //    nonSelectedText: 'Select',
+        //    buttonTextAlignment: 'left',
+        //    includeSelectAllOption: true,
+        //});
+        select.select2();
+
+        
+    }
+    $('#list_IrClientSites').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
+
+    var clientSitesforReportsnew ;
+    $('#field_settings tbody').on('change','#vklClientSiteIdforir', function () {
+
+        const clientSitesforReports = $(this).val().join(';');
+        clientSitesforReportsnew = clientSitesforReports;
+    });
+
+$('#list_IrClientSites').on('change', function () {
+    const clientSitesforReports = $(this).val().join(';');
+    clientSitesforReportsnew = clientSitesforReports;
+    //var selectedValues = $(this).val();
+    //$('#ClientSitePocIdsVehicleLog').val(selectedValues);
+
+
+});
+$('#btn_save_ir_settings').on('click', function () {
+    var form = document.getElementById('form_new_hr_settings');
+    var jsformData = new FormData(form);
+    var id = $('#IrSettings_Id').val();
+    if (id == '') {
+        $('#IrSettings_Id').val(-1);
+    }
+    var data = {
+        'Id': $('#IrSettings_Id').val(),
+        'TypeId': $('#report_field_types').val(),
+        'Name': $('#IrSettings_fieldName').val(),
+        'EmailTo': $('#IrSettings_fieldemailto').val(),
+        'ClientSiteIds': clientSitesforReportsnew
+    };
+    if ($('#IrSettings_fieldName').val() == '') {
+        alert('Please Enter IR Field Name')
+    }
+
+    else {
+
+        $.ajax({
+            url: '/Admin/Settings?handler=ReportField',
+            data: { reportfield: data },
+            type: 'POST',
+            //data: jsformData,
+
+            //processData: false,
+            //contentType: false,
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            beforeSend: function () {
+                $('#loader').show();
+            }
+        }).done(function (result) {
+            if (result.status) {
+                isReportFieldAdding = false;
+
+                $('#irSettingsModal').modal('hide');
+                gridAreaReportFields.clear();
+                gridAreaReportFields.reload();
+                $('#IrSettings_Id').val('');
+                $('#Irfieldtype_Id').val('');
+                $('#IrSettings_fieldName').val('');
+                $('#IrSettings_fieldemailto').val('');
+            }
+            //else {
+            //    displayValidationSummaryIrSettings(result.errors);
+            //}
+        }).always(function () {
+            $('#loader').hide();
+        });
+
+    }
+
+});
+function displayValidationSummaryIrSettings(errors) {
+    const summaryDiv = document.getElementById('irsettings-field-validation');
+    summaryDiv.className = "validation-summary-errors";
+    summaryDiv.querySelector('ul').innerHTML = '';
+    errors.forEach(function (item) {
+        const li = document.createElement('li');
+        li.appendChild(document.createTextNode(item));
+        summaryDiv.querySelector('ul').appendChild(li);
+    });
+}
+    /*p1 - 202 site allocation - end*/
+    let isReportFieldAdding = false;
+
+$('#add_field_settings').on('click', function () {
+    const selFieldTypeId = $('#report_field_types').val();
+    if (!selFieldTypeId) {
+        alert('Please select a field type to update');
+        return;
+    }
+    if (selFieldTypeId != 4) {
         if (isReportFieldAdding) {
             alert('Unsaved changes in the grid. Refresh the page');
-        } else {
-            isReportFieldAdding = true;
+        }
+        else {
             gridReportFields.addRow({
                 'id': -1,
                 'typeId': selFieldTypeId,
@@ -599,66 +873,112 @@
                 'emailTo': ''
             }).edit(-1);
         }
-    });
+    } else {
+        isReportFieldAdding = true;
 
-    $('#report_field_types').on('change', function () {
-        const selFieldTypeId = $(this).val();
+        $('#irSettingsModal').modal('show');
+        ClearIrSettings();
+        $('#Irfieldtype_Id').val($('#report_field_types').val());
+        var type = $('#report_field_types').find("option:selected").text();
+        $('#lblFieldType').html(type);
+    }
+});
+    function ClearIrSettings() {
+        $('#IrSettings_fieldName').val('');
+        $(".multiselect-option input[type=checkbox]").prop("checked", false);
+        $(".multiselect-option input[type=checkbox]").parent().parent().removeClass('active');
+        $('#list_IrClientSites').val('');
+        $('#IrSettings_fieldemailto').val('');
 
-        if (!selFieldTypeId) { // None
-            $('#fieldSettings').show();
-            $('#positionSettings').hide();
-            $('#FinancialReimbursementSettings').hide();
-            gridReportFields.clear();
-            gridPositions.clear();
-            gridReportFields.reload({ typeId: selFieldTypeId });
+    }
+$('#report_field_types').on('change', function () {
+    const selFieldTypeId = $(this).val();
 
-        } else if (selFieldTypeId === '1') { // Position
-            $('#fieldSettings').hide();
-            $('#positionSettings').show();
-            $('#PSPFSettings').hide();
-            $('#FinancialReimbursementSettings').hide();
+    if (!selFieldTypeId) { // None
+        $('#fieldSettings').show();
+        $('#positionSettings').hide();
+        $('#FinancialReimbursementSettings').hide();
+        gridReportFields.clear();
+        gridPositions.clear();
+        gridAreaReportFields.clear();
+        gridReportFields.reload({ typeId: selFieldTypeId });
+        gridAreaReportFields.hide();
 
-            gridReportFields.clear();
-            gridPositions.reload();
-            gridPSPF.clear();
-        }
-        else if (selFieldTypeId === '5') {
-            $('#PSPFSettings').show();
-            $('#fieldSettings').hide();
-            $('#positionSettings').hide();
-            $('#FinancialReimbursementSettings').hide();
+    } else if (selFieldTypeId === '1') { // Position
+        $('#fieldSettings').hide();
+        $('#positionSettings').show();
+        $('#PSPFSettings').hide();
+        $('#FinancialReimbursementSettings').hide();
 
-            gridPositions.clear();
-            gridReportFields.clear();
-            gridPSPF.reload();
-        }
-        else if (selFieldTypeId === '6') {
+        gridReportFields.clear();
+        gridPositions.reload();
+        gridAreaReportFields.clear();
+        gridPSPF.clear();
+        gridAreaReportFields.hide();
+    }
+    else if (selFieldTypeId === '5') {
+        $('#PSPFSettings').show();
+        $('#fieldSettings').hide();
+        $('#positionSettings').hide();
+        $('#FinancialReimbursementSettings').hide();
 
-            getIrEmailCCforReimbursement();
-            $('#FinancialReimbursementSettings').show();
-            $('#PSPFSettings').hide();
-            $('#fieldSettings').hide();
-            $('#positionSettings').hide();
+        gridPositions.clear();
+        gridReportFields.clear();
+        gridAreaReportFields.clear();
+        gridPSPF.reload();
+        gridAreaReportFields.hide();
+    }
+    else if (selFieldTypeId === '6') {
 
-            gridPositions.clear();
-            gridReportFields.clear();
-            gridPSPF.clear();
-        }
-        else {
-            $('#fieldSettings').show();
-            $('#positionSettings').hide();
-            $('#PSPFSettings').hide();
-            $('#FinancialReimbursementSettings').hide();
+        getIrEmailCCforReimbursement();
+        $('#FinancialReimbursementSettings').show();
+        $('#PSPFSettings').hide();
+        $('#fieldSettings').hide();
+        $('#positionSettings').hide();
 
-            gridPSPF.clear();
-            gridPositions.clear();
-            gridReportFields.reload({ typeId: selFieldTypeId });
-        }
-    });
+
+        gridPositions.clear();
+        gridReportFields.clear();
+        gridAreaReportFields.clear();
+        gridPSPF.clear();
+        gridAreaReportFields.hide();
+    }
+    else if (selFieldTypeId === '4') {
+        $('#fieldSettings').show();
+        $('#positionSettings').hide();
+        $('#PSPFSettings').hide();
+        $('#FinancialReimbursementSettings').hide();
+        $('#field_settings').hide();
+        $('#field_settings_Area').attr('hidden',false);
+        gridPSPF.clear();
+        gridPositions.clear();
+        gridReportFields.clear();
+        gridAreaReportFields.show();
+        gridAreaReportFields.reload({ typeId: selFieldTypeId });
+
+
+    }
+    else {
+        $('#fieldSettings').show();
+        $('#positionSettings').hide();
+        $('#PSPFSettings').hide();
+        $('#FinancialReimbursementSettings').hide();
+        $('#field_settings').show();
+        $('#field_settings_Area').hide();
+
+        gridPSPF.clear();
+        gridPositions.clear();
+        gridAreaReportFields.clear();
+        gridAreaReportFields.hide();
+        gridReportFields.reload({ typeId: selFieldTypeId });
+
+    }
+});
 
     if (gridReportFields) {
         gridReportFields.on('rowDataChanged', function (e, id, record) {
             const data = $.extend(true, {}, record);
+            data.clientSiteIds = clientSitesforReportsnew;
             const token = $('input[name="__RequestVerificationToken"]').val();
             $.ajax({
                 url: '/Admin/Settings?handler=ReportField',
@@ -2502,81 +2822,86 @@
         gridReportFields.hide();
         gridKvlFields.hide();
         gridDosAndDontsFields.hide();
+        gridAreaReportFields.hide();
     }
     
-    $('#report_module_types').on('change', function () {
-        if ($('#report_module_types').val() == 1) {
+$('#report_module_types').on('change', function () {
+    if ($('#report_module_types').val() == 1) {
 
-            $('#doanddontfields_types').show();
-            $('#report_field_types').hide();
-            $('#kvl_fields_types').hide();
+        $('#doanddontfields_types').show();
+        $('#report_field_types').hide();
+        $('#kvl_fields_types').hide();
 
-            $('#lblFieldType').show();
+        $('#lblFieldType').show();
 
-            $('#add_field_settings').hide();
-            $('#add_dosanddonts_fields').show();
-            $('#add_kvl_fields').hide();
+        $('#add_field_settings').hide();
+        $('#add_dosanddonts_fields').show();
+        $('#add_kvl_fields').hide();
 
-            gridReportFields.hide();
-            gridKvlFields.hide();
-            gridDosAndDontsFields.show();
+        gridReportFields.hide();
+        gridKvlFields.hide();
+        gridAreaReportFields.hide();
+        gridDosAndDontsFields.show();
 
-            $('#doanddontfields_types').val('');
-            gridDosAndDontsFields.reload({ typeId: $('#doanddontfields_types').val() });
-        }
-        else if ($('#report_module_types').val() == 2) {
-            $('#doanddontfields_types').hide();
-            $('#report_field_types').hide();
-            $('#kvl_fields_types').show();
+        $('#doanddontfields_types').val('');
+        gridDosAndDontsFields.reload({ typeId: $('#doanddontfields_types').val() });
+    }
+    else if ($('#report_module_types').val() == 2) {
+        $('#doanddontfields_types').hide();
+        $('#report_field_types').hide();
 
-            $('#lblFieldType').show();
+        $('#kvl_fields_types').show();
 
-            $('#add_field_settings').hide();
-            $('#add_dosanddonts_fields').hide();
-            $('#add_kvl_fields').show();
+        $('#lblFieldType').show();
 
-            $('#kvl_fields_types').val('');
-            gridKvlFields.reload({ typeId: $('#kvl_fields_types').val() });
+        $('#add_field_settings').hide();
+        $('#add_dosanddonts_fields').hide();
+        $('#add_kvl_fields').show();
 
-            gridReportFields.hide();
-            gridKvlFields.show();
-            gridDosAndDontsFields.hide();
-        }
-        else if ($('#report_module_types').val() == 3) {
-            $('#doanddontfields_types').hide();
-            $('#report_field_types').show();
-            $('#kvl_fields_types').hide();
+        $('#kvl_fields_types').val('');
+        gridKvlFields.reload({ typeId: $('#kvl_fields_types').val() });
 
-            $('#lblFieldType').show();
+        gridReportFields.hide();
+        gridAreaReportFields.hide();
+        gridKvlFields.show();
+        gridDosAndDontsFields.hide();
+    }
+    else if ($('#report_module_types').val() == 3) {
+        $('#doanddontfields_types').hide();
+        $('#report_field_types').show();
+        $('#kvl_fields_types').hide();
 
-            $('#add_field_settings').show();
-            $('#add_dosanddonts_fields').hide();
-            $('#add_kvl_fields').hide();
+        $('#lblFieldType').show();
 
-            gridReportFields.show();
-            gridKvlFields.hide();
-            gridDosAndDontsFields.hide();
+        $('#add_field_settings').show();
+        $('#add_dosanddonts_fields').hide();
+        $('#add_kvl_fields').hide();
 
-            $('#report_field_types').val('');
-            gridReportFields.reload({ typeId: $('#report_field_types').val() });
-        }
-        else {
-            $('#doanddontfields_types').hide();
-            $('#report_field_types').hide();
-            $('#kvl_fields_types').hide();
+        gridReportFields.show();
+        gridKvlFields.hide();
+        gridDosAndDontsFields.hide();
+        gridAreaReportFields.hide();
 
-            $('#lblFieldType').hide();
+        $('#report_field_types').val('');
+        gridReportFields.reload({ typeId: $('#report_field_types').val() });
+    }
+    else {
+        $('#doanddontfields_types').hide();
+        $('#report_field_types').hide();
+        $('#kvl_fields_types').hide();
 
-            $('#add_field_settings').hide();
-            $('#add_dosanddonts_fields').hide();
-            $('#add_kvl_fields').hide();
+        $('#lblFieldType').hide();
 
+        $('#add_field_settings').hide();
+        $('#add_dosanddonts_fields').hide();
+        $('#add_kvl_fields').hide();
 
-            gridReportFields.hide();
-            gridKvlFields.hide();
-            gridDosAndDontsFields.hide();
-        }
-    });
+        gridAreaReportFields.hide();
+        gridReportFields.hide();
+        gridKvlFields.hide();
+        gridDosAndDontsFields.hide();
+    }
+});
 /*p1 - 196 Rationalization Of Menu Changes - end*/
 
 });

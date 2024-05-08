@@ -1,0 +1,73 @@
+﻿@page
+@using CityWatch.Data.Helpers
+@using CityWatch.Data.Models
+@using CityWatch.Data.Providers;
+@using CityWatch.Web.Helpers
+@using CityWatch.Web.Services;
+@using Microsoft.Extensions.Configuration
+@using System.Security.Claims
+@model CityWatch.Web.Pages.Admin.SettingsModel
+@inject IConfiguration Configuration
+@inject IUserDataProvider viewDataService
+@inject IViewDataService viewDataServiceNew
+@inject IClientDataProvider clientDataProvider
+@inject IClientSiteViewDataService clientViewDataService
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css" rel="stylesheet">
+<div class="modal" tabindex="-1" role="dialog" id="irSettingsModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8">Ir Settings - <label id="lblFieldType"></label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="form_new_ir_settings">
+                    @*<input type="hidden" asp-for="@Model.IncidentReportField.Id" id="IrSettings_Id" />*@
+                    <input type="hidden" name="IncidentReportField.Id" id="IrSettings_Id" />
+                    <div class="form-row">
+                        <div class="col-md-4">
+                            <label>Name</label>
+                            @*<input type="text" class="form-control" asp-for="@Model.IncidentReportField.Name" id="IrSettings_fieldName" />*@
+                            <input type="text" class="form-control" name="IncidentReportField.Name" id="IrSettings_fieldName" />
+                        </div>
+                        <div class="col-md-8">
+                            <label>Site Allocation</label>
+
+                            @*<select class="form-control js-example-basic-multiple" id="list_IrClientSites" asp-for="@Model.IncidentReportField.ClientSiteIds" multiple>
+                                @foreach (var item in clientViewDataService.GetClientSites())
+                                {
+                                    <option value="@item.Value">@item.Text</option>
+                                }
+                            </select>*@
+                            <select class="form-control js-example-basic-multiple" id="list_IrClientSites" name="IncidentReportField.ClientSiteIds" multiple="multiple">
+                                @foreach (var item in clientViewDataService.GetClientSites())
+                                {
+                                    <option value="@item.Value">@item.Text</option>
+                                }
+                            </select>
+
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-md-12">
+                            <label>Special Email Condition</label>
+                            @*<input type="text" asp-for="@Model.IncidentReportField.EmailTo" id="IrSettings_fieldemailto" />*@
+                            <input type="text" class="form-control" name="IncidentReportField.EmailTo" id="IrSettings_fieldemailto" />
+                        </div>
+
+
+                    </div>
+                    <div asp-validation-summary="All" id="irsettings-field-validation"></div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-start">
+                <button type="button" class="btn btn-primary" id="btn_save_ir_settings">Save</button>
+            </div>
+        </div>
+
+
+    </div>
+</div>

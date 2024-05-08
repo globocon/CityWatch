@@ -769,6 +769,10 @@ namespace CityWatch.Web.Pages.Incident
             var callSignEmailTo = GetFieldEmailAddress(fields, ReportFieldType.CallSign, Report.Officer.CallSign);
             if (!string.IsNullOrEmpty(callSignEmailTo))
                 emailAddressList.Add(new MailboxAddress(string.Empty, callSignEmailTo));
+            var areaEmailTo = GetFieldEmailAddress(fields, ReportFieldType.ClientArea, Report.DateLocation.ClientArea);
+            if (!string.IsNullOrEmpty(areaEmailTo))
+                emailAddressList.Add(new MailboxAddress(string.Empty, areaEmailTo));
+
 
             return emailAddressList;
         }
@@ -1339,7 +1343,12 @@ namespace CityWatch.Web.Pages.Incident
 
             return new JsonResult(new { TruckConfigText });
         }
-
+        public IActionResult OnGetClientAreas(string Id)
+        {
+            IncidentReportField ir = new IncidentReportField();
+            ir.ClientSiteIds = _clientDataProvider.GetClientSites(null).Where(x => x.Name == Id).FirstOrDefault().Id.ToString();
+            return new JsonResult(_ViewDataService.GetClientAreas(ir));
+        }
 
     }
 }
