@@ -3176,6 +3176,38 @@
             })
         }
     });
+    //To get the data in description dropdown start
+    
+    $('#Description').editableSelect({
+        //filter: false,
+        effects: 'slide'
+    }).on('select.editable-select', function (e, li) {
+       
+    });
+    $('#GuardComplianceAndLicense_HrGroup').on('change', function () {
+       
+        const ulClients = $('#Description').siblings('ul.es-list');
+        ulClients.html('');
+
+        var Descriptionval = $('#GuardComplianceAndLicense_HrGroup').val();
+        if (Descriptionval == 1) {
+            $('#Description').val('CV,LICENSES,C4i Training');
+
+        }
+        else if (Descriptionval == 2) {
+            $('#Description').val('Client Specific Sops');
+        }
+        else if (Descriptionval == 3) {
+            $('#Description').val('FLIR,WARDEN,COXSWAIN,etc');
+        }
+        else {
+            $('#Description').val('');
+        }
+        
+      /*  ulClients.append('<li class="es-visible" value="' + site.value + '">' + site.text + '</li>');*/
+    });
+
+     //To get the data in description dropdown stop
     $('#btn_save_guard_compliancelicense').on('click', function () {
         clearGuardValidationSummary('compliancelicanseValidationSummary');
         $('#loader').show();
