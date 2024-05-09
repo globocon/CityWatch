@@ -1048,7 +1048,7 @@ let clientSiteActiveGuardsLogBookDetails = $('#clientSiteActiveGuardsLogBookDeta
         { data: 'id', visible: false },
         {
             data: 'siteName',
-            width: '20%',
+            width: '100%',
             render: function (value, type, data) {
 
                 return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
@@ -1079,7 +1079,13 @@ let clientSiteActiveGuardsLogBookDetails = $('#clientSiteActiveGuardsLogBookDeta
             className: "text-center",
 
         },
-
+        {
+            data: 'gpsCoordinates', width: '9%',
+            className: "text-center", render: function (value, type, data) {
+                //return record.guardLogin ? record.guardLogin.guard.initial : '';
+                return `${data.gpsCoordinates ? `<a href="https://www.google.com/maps?q=${data.gpsCoordinates}" target="_blank" data-toggle="tooltip" title=""><i class="fa fa-map-marker" aria-hidden="true"></i></a>` : ''}`;
+            }
+        }
 
     ],
     drawCallback: function () {
