@@ -366,16 +366,33 @@ namespace CityWatch.Data.Providers
            
             if (incidentReportPosition.Id == -1)
             {
-                _context.IncidentReportPositions.Add(new IncidentReportPosition()
+                if (ClientSiteName != null)
                 {
-                    Name = incidentReportPosition.Name,
-                    EmailTo = incidentReportPosition.EmailTo,
-                    IsPatrolCar = incidentReportPosition.IsPatrolCar,
-                    DropboxDir = incidentReportPosition.DropboxDir,
-                    IsLogbook= incidentReportPosition.IsLogbook,
-                    ClientsiteId= incidentReportPosition.ClientsiteId,
-                    ClientsiteName= ClientSiteName.Name
-                });
+                    _context.IncidentReportPositions.Add(new IncidentReportPosition()
+                    {
+                        Name = incidentReportPosition.Name,
+                        EmailTo = incidentReportPosition.EmailTo,
+                        IsPatrolCar = incidentReportPosition.IsPatrolCar,
+                        DropboxDir = incidentReportPosition.DropboxDir,
+                        IsLogbook = incidentReportPosition.IsLogbook,
+                        ClientsiteId = incidentReportPosition.ClientsiteId,
+                        ClientsiteName = ClientSiteName.Name
+                    });
+                }
+                else
+                {
+                    _context.IncidentReportPositions.Add(new IncidentReportPosition()
+                    {
+                        Name = incidentReportPosition.Name,
+                        EmailTo = incidentReportPosition.EmailTo,
+                        IsPatrolCar = incidentReportPosition.IsPatrolCar,
+                        DropboxDir = incidentReportPosition.DropboxDir,
+                        IsLogbook = incidentReportPosition.IsLogbook,
+                        ClientsiteId = incidentReportPosition.ClientsiteId,
+                        ClientsiteName = null
+                    });
+
+                }
             }
             else
             {
