@@ -59,7 +59,7 @@ namespace CityWatch.Data.Providers
         string GetUrlsInsideBroadcastLiveEventsNotExpired();
 
 
-         void SaveDefaultEmail(string DefaultEmail);
+        void SaveDefaultEmail(string DefaultEmail);
         //broadcast banner calendar events-end
         //broadcast banner calendar events-end
         //SW Channels-start
@@ -72,7 +72,7 @@ namespace CityWatch.Data.Providers
         public IncidentReportPosition GetIsLogbookData(string Name);
         List<HrSettings> GetHRSettings();
         List<LicenseTypes> GetLicensesTypes();
-         KeyVehcileLogField GetKVLogField();
+        KeyVehcileLogField GetKVLogField();
         List<KeyVehicleLogVisitorPersonalDetail> GetProviderList(int ID);
 
         //p1-191 hr files task 3-end
@@ -89,7 +89,7 @@ namespace CityWatch.Data.Providers
 
         public List<FeedbackTemplate> GetFeedbackTemplates()
         {
-            return _context.FeedbackTemplates.Where(x=>x.DeleteStatus==0).OrderBy(x => x.Name).ToList();
+            return _context.FeedbackTemplates.Where(x => x.DeleteStatus == 0).OrderBy(x => x.Name).ToList();
         }
         //to retrieve the feedback type-start
         public List<FeedbackType> GetFeedbackTypes()
@@ -118,12 +118,12 @@ namespace CityWatch.Data.Providers
                     Type = template.Type,
                     BackgroundColour = template.BackgroundColour,
                     TextColor = template.TextColor,
-                    DeleteStatus=0
+                    DeleteStatus = 0
                 });
             }
             else
             {
-                var templateToUpdate = _context.FeedbackTemplates.SingleOrDefault(x => x.Id == template.Id && x.DeleteStatus==0);
+                var templateToUpdate = _context.FeedbackTemplates.SingleOrDefault(x => x.Id == template.Id && x.DeleteStatus == 0);
                 if (templateToUpdate == null)
                     throw new InvalidOperationException();
 
@@ -141,7 +141,7 @@ namespace CityWatch.Data.Providers
             if (id == -1)
                 return;
 
-            var templateToDelete = _context.FeedbackTemplates.SingleOrDefault(x => x.Id == id && x.DeleteStatus==0);
+            var templateToDelete = _context.FeedbackTemplates.SingleOrDefault(x => x.Id == id && x.DeleteStatus == 0);
             if (templateToDelete == null)
                 throw new InvalidOperationException();
             //Not Delete data just change Status 0 to 1 
@@ -170,7 +170,7 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
 
-    
+
         public List<State> GetStates()
         {
             return new List<State>()
@@ -195,7 +195,7 @@ namespace CityWatch.Data.Providers
 
         public List<StaffDocument> GetStaffDocumentsUsingType(int type)
         {
-            return _context.StaffDocuments.Where(x=>x.DocumentType== type).OrderBy(x => x.FileName).ToList();
+            return _context.StaffDocuments.Where(x => x.DocumentType == type).OrderBy(x => x.FileName).ToList();
         }
 
         public void SaveStaffDocument(StaffDocument staffdocument)
@@ -204,8 +204,8 @@ namespace CityWatch.Data.Providers
             {
                 _context.StaffDocuments.Add(staffdocument);
             }
-            else 
-            { 
+            else
+            {
                 var documentToUpdate = _context.StaffDocuments.SingleOrDefault(x => x.Id == staffdocument.Id);
                 if (documentToUpdate != null)
                 {
@@ -218,8 +218,8 @@ namespace CityWatch.Data.Providers
 
         public void DeleteStaffDocument(int id)
         {
-            var docToDelete = _context.StaffDocuments.SingleOrDefault(x=> x.Id == id);
-            if(docToDelete == null)
+            var docToDelete = _context.StaffDocuments.SingleOrDefault(x => x.Id == id);
+            if (docToDelete == null)
                 throw new InvalidOperationException();
 
             _context.StaffDocuments.Remove(docToDelete);
@@ -259,7 +259,7 @@ namespace CityWatch.Data.Providers
 
         public void SaveReportField(IncidentReportField incidentReportField)
         {
-            if(incidentReportField == null)
+            if (incidentReportField == null)
                 throw new ArgumentNullException();
             if (incidentReportField.Id == -1)
             {
@@ -274,7 +274,7 @@ namespace CityWatch.Data.Providers
             else
             {
                 var reportFieldToUpdate = _context.IncidentReportFields.SingleOrDefault(x => x.Id == incidentReportField.Id);
-                if(reportFieldToUpdate == null)
+                if (reportFieldToUpdate == null)
                     throw new InvalidOperationException();
                 reportFieldToUpdate.Name = incidentReportField.Name;
                 reportFieldToUpdate.TypeId = incidentReportField.TypeId;
@@ -296,7 +296,7 @@ namespace CityWatch.Data.Providers
         }
         public string GetPSPFName(string name)
         {
-         return _context.IncidentReportPSPF.Where(x => x.Name == name).Select(x => x.Name).FirstOrDefault();
+            return _context.IncidentReportPSPF.Where(x => x.Name == name).Select(x => x.Name).FirstOrDefault();
 
         }
         public List<IncidentReportPSPF> GetPSPF()
@@ -307,12 +307,12 @@ namespace CityWatch.Data.Providers
         {
             return _context.IncidentReportPSPF.Count();
         }
-        
+
         public int OnGetMaxIdIR()
         {
             var incidentReportid = _context.IncidentReportFields.Max(x => (int?)x.Id);
             return Convert.ToInt32(incidentReportid);
-            
+
         }
         public void SavePSPF(IncidentReportPSPF incidentReportPSPF)
         {
@@ -363,20 +363,39 @@ namespace CityWatch.Data.Providers
         public void SavePostion(IncidentReportPosition incidentReportPosition)
         {
             var ClientSiteName = _context.ClientSites.Where(x => x.Id == incidentReportPosition.ClientsiteId).FirstOrDefault();
-           
+
             if (incidentReportPosition.Id == -1)
             {
-                _context.IncidentReportPositions.Add(new IncidentReportPosition()
+                if (ClientSiteName == null)
                 {
-                    Name = incidentReportPosition.Name,
-                    EmailTo = incidentReportPosition.EmailTo,
-                    IsPatrolCar = incidentReportPosition.IsPatrolCar,
-                    DropboxDir = incidentReportPosition.DropboxDir,
-                    IsLogbook= incidentReportPosition.IsLogbook,
-                    ClientsiteId= incidentReportPosition.ClientsiteId,
-                    ClientsiteName= ClientSiteName.Name
-                });
-            }
+                    _context.IncidentReportPositions.Add(new IncidentReportPosition()
+                    {
+                        Name = incidentReportPosition.Name,
+                        EmailTo = incidentReportPosition.EmailTo,
+                        IsPatrolCar = incidentReportPosition.IsPatrolCar,
+                        DropboxDir = incidentReportPosition.DropboxDir,
+                        IsLogbook = incidentReportPosition.IsLogbook,
+                        ClientsiteId = incidentReportPosition.ClientsiteId,
+                        ClientsiteName = null,
+
+                    });
+                }
+                else
+                {
+                    _context.IncidentReportPositions.Add(new IncidentReportPosition()
+                    {
+                        Name = incidentReportPosition.Name,
+                        EmailTo = incidentReportPosition.EmailTo,
+                        IsPatrolCar = incidentReportPosition.IsPatrolCar,
+                        DropboxDir = incidentReportPosition.DropboxDir,
+                        IsLogbook = incidentReportPosition.IsLogbook,
+                        ClientsiteId = incidentReportPosition.ClientsiteId,
+                        ClientsiteName = ClientSiteName.Name,
+
+                    });
+
+                }
+        }
             else
             {
                 var positionToUpdate = _context.IncidentReportPositions.SingleOrDefault(x => x.Id == incidentReportPosition.Id);
@@ -403,188 +422,188 @@ namespace CityWatch.Data.Providers
         }
 
         public void DeletePosition(int id)
+{
+    if (id == -1)
+        return;
+
+    var positionToDelete = _context.IncidentReportPositions.SingleOrDefault(x => x.Id == id);
+    if (positionToDelete == null)
+        throw new InvalidOperationException();
+
+    _context.IncidentReportPositions.Remove(positionToDelete);
+    _context.SaveChanges();
+}
+
+public void CrPrimaryLogoUpload(DateTime dateTimeUploaded, string primaryLogoPath)
+{
+    var templateToUpdate = _context.CompanyDetails.Single();
+    templateToUpdate.PrimaryLogoUploadedOn = dateTimeUploaded;
+    templateToUpdate.PrimaryLogoPath = primaryLogoPath;
+    _context.SaveChanges();
+}
+public List<IncidentReportsPlatesLoaded> GetPlatesLoaded(int LogId)
+{
+    return _context.IncidentReportsPlatesLoaded.Where(z => z.LogId == LogId).OrderBy(z => z.Id).ToList();
+}
+//to get functions for settings in radio check-start
+public List<RadioCheckStatusColor> GetRadioCheckStatusColorCode(string name)
+{
+    //To get the Name in order
+    var filteredRecords = _context.RadioCheckStatusColor
+        .Where(x => string.IsNullOrEmpty(name) || x.Name == name)
+        .OrderBy(x => x.Name)
+        .ToList();
+
+    var redRecords = filteredRecords
+        .Where(x => x.Name.StartsWith("Red", StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    var greenRecords = filteredRecords
+        .Where(x => x.Name.StartsWith("Green", StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    var orderedRecords = new List<RadioCheckStatusColor>();
+    orderedRecords.AddRange(redRecords);
+    orderedRecords.AddRange(greenRecords);
+
+    return orderedRecords;
+}
+public List<RadioCheckStatus> GetRadioCheckStatusWithOutcome()
+{
+    var radiocheckstatus = _context.RadioCheckStatus.ToList();
+    foreach (var item in radiocheckstatus)
+    {
+        var radioCheckStatusColor = _context.RadioCheckStatusColor.Where(x => x.Id == item.RadioCheckStatusColorId).ToList();
+        foreach (var item1 in radioCheckStatusColor)
         {
-            if (id == -1)
-                return;
-
-            var positionToDelete = _context.IncidentReportPositions.SingleOrDefault(x => x.Id == id);
-            if (positionToDelete == null)
-                throw new InvalidOperationException();
-
-            _context.IncidentReportPositions.Remove(positionToDelete);
-            _context.SaveChanges();
-        }
-         
-        public void CrPrimaryLogoUpload(DateTime dateTimeUploaded, string primaryLogoPath)
-        {
-            var templateToUpdate = _context.CompanyDetails.Single();
-            templateToUpdate.PrimaryLogoUploadedOn = dateTimeUploaded;
-            templateToUpdate.PrimaryLogoPath= primaryLogoPath;
-            _context.SaveChanges();
-        }
-        public List<IncidentReportsPlatesLoaded> GetPlatesLoaded(int  LogId)
-        {
-            return _context.IncidentReportsPlatesLoaded.Where(z => z.LogId == LogId).OrderBy(z => z.Id).ToList();
-        }
-        //to get functions for settings in radio check-start
-        public List<RadioCheckStatusColor> GetRadioCheckStatusColorCode(string name)
-        {
-            //To get the Name in order
-             var filteredRecords = _context.RadioCheckStatusColor
-                 .Where(x => string.IsNullOrEmpty(name) || x.Name == name)
-                 .OrderBy(x => x.Name)
-                 .ToList();
-
-            var redRecords = filteredRecords
-                .Where(x => x.Name.StartsWith("Red", StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            var greenRecords = filteredRecords
-                .Where(x => x.Name.StartsWith("Green", StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            var orderedRecords = new List<RadioCheckStatusColor>();
-            orderedRecords.AddRange(redRecords);
-            orderedRecords.AddRange(greenRecords);
-
-            return orderedRecords;
-        }
-        public List<RadioCheckStatus> GetRadioCheckStatusWithOutcome()
-        {
-            var radiocheckstatus = _context.RadioCheckStatus.ToList();
-            foreach (var item in radiocheckstatus)
-            {
-                var radioCheckStatusColor = _context.RadioCheckStatusColor.Where(x => x.Id == item.RadioCheckStatusColorId).ToList();
-                foreach (var item1 in radioCheckStatusColor)
-                {
-                    item.RadioCheckStatusColor.Name = item1.Name;
-                }
-               
-            }
-                // return _context.RadioCheckStatus.ToList();
-            return radiocheckstatus.OrderBy(x=>Convert.ToInt32(x.ReferenceNo)).ToList();
-        }
-        public int GetRadioCheckStatusCount()
-        {
-            return _context.RadioCheckStatus.Count();
-        }
-        public List<SelectListItem> GetRadioCheckStatusForDropDown(bool withoutSelect = true)
-        {
-            var radioCheckStatuses = GetRadioCheckStatusWithOutcome();
-            var items = new List<SelectListItem>();
-
-            if (!withoutSelect)
-            {
-                items.Add(new SelectListItem("Select","", true));
-            }
-
-            foreach (var item in radioCheckStatuses)
-            {
-                //items.Add(new SelectListItem(item.Name, item.Id.ToString()));
-                items.Add(new SelectListItem(item.Name, item.Id.ToString()));
-            }
-
-            return items;
+            item.RadioCheckStatusColor.Name = item1.Name;
         }
 
-        //to get functions for settings in radio check-end
-        //broadcast banner live events-start
-        public List<BroadcastBannerLiveEvents> GetBroadcastLiveEvents()
-        {
-            return _context.BroadcastBannerLiveEvents.ToList();
-        }
-        public List<BroadcastBannerLiveEvents> GetBroadcastLiveEventsByDate()
-        {            
-			return _context.BroadcastBannerLiveEvents.Where(x=> x.ExpiryDate>=DateTime.Now.Date).ToList();
-        }
-		public string GetBroadcastLiveEventsNotExpired()
-		{
-			var lv = _context.BroadcastBannerLiveEvents.Where(x => x.ExpiryDate >= DateTime.Now.Date).ToList();
-			var LiveEventstxtmsg = string.Empty;
-			if (lv != null)
-			{
-				foreach (var fileName in lv)
-				{
-					LiveEventstxtmsg = LiveEventstxtmsg + fileName.TextMessage.Replace("\n", "\t") + '\t' + '\t';
-				}   
-            }
-			return LiveEventstxtmsg;
-		}
-        public string GetUrlsInsideBroadcastLiveEventsNotExpired()
-        {
-            string urls = string.Empty;
-            var lv = _context.BroadcastBannerLiveEvents.Where(x => x.ExpiryDate >= DateTime.Now.Date).ToList();
-            var LiveEventstxtmsg = string.Empty;
-            if (lv != null)
-            {
-                foreach (var fileName in lv)
-                {
-                    LiveEventstxtmsg = LiveEventstxtmsg + fileName.TextMessage.Replace("\n", "\t") + '\t' + '\t';
-                }
+    }
+    // return _context.RadioCheckStatus.ToList();
+    return radiocheckstatus.OrderBy(x => Convert.ToInt32(x.ReferenceNo)).ToList();
+}
+public int GetRadioCheckStatusCount()
+{
+    return _context.RadioCheckStatus.Count();
+}
+public List<SelectListItem> GetRadioCheckStatusForDropDown(bool withoutSelect = true)
+{
+    var radioCheckStatuses = GetRadioCheckStatusWithOutcome();
+    var items = new List<SelectListItem>();
 
-                var lvsplit = LiveEventstxtmsg.Split(" ");               
+    if (!withoutSelect)
+    {
+        items.Add(new SelectListItem("Select", "", true));
+    }
 
-                foreach (var line in lvsplit)
-                {                    
-                    if(line.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || 
-                        line.StartsWith("https://", StringComparison.OrdinalIgnoreCase) )
-                        urls = string.Concat(urls, line, "|");
-                }
-            }
+    foreach (var item in radioCheckStatuses)
+    {
+        //items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+        items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+    }
 
-            return urls;
+    return items;
+}
 
+//to get functions for settings in radio check-end
+//broadcast banner live events-start
+public List<BroadcastBannerLiveEvents> GetBroadcastLiveEvents()
+{
+    return _context.BroadcastBannerLiveEvents.ToList();
+}
+public List<BroadcastBannerLiveEvents> GetBroadcastLiveEventsByDate()
+{
+    return _context.BroadcastBannerLiveEvents.Where(x => x.ExpiryDate >= DateTime.Now.Date).ToList();
+}
+public string GetBroadcastLiveEventsNotExpired()
+{
+    var lv = _context.BroadcastBannerLiveEvents.Where(x => x.ExpiryDate >= DateTime.Now.Date).ToList();
+    var LiveEventstxtmsg = string.Empty;
+    if (lv != null)
+    {
+        foreach (var fileName in lv)
+        {
+            LiveEventstxtmsg = LiveEventstxtmsg + fileName.TextMessage.Replace("\n", "\t") + '\t' + '\t';
+        }
+    }
+    return LiveEventstxtmsg;
+}
+public string GetUrlsInsideBroadcastLiveEventsNotExpired()
+{
+    string urls = string.Empty;
+    var lv = _context.BroadcastBannerLiveEvents.Where(x => x.ExpiryDate >= DateTime.Now.Date).ToList();
+    var LiveEventstxtmsg = string.Empty;
+    if (lv != null)
+    {
+        foreach (var fileName in lv)
+        {
+            LiveEventstxtmsg = LiveEventstxtmsg + fileName.TextMessage.Replace("\n", "\t") + '\t' + '\t';
         }
 
-        public List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEventsByDate()
+        var lvsplit = LiveEventstxtmsg.Split(" ");
+
+        foreach (var line in lvsplit)
         {
-            return _context.BroadcastBannerCalendarEvents.Where(x =>  DateTime.Now.Date >=x.StartDate && DateTime.Now.Date <= x.ExpiryDate).ToList();
+            if (line.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                line.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                urls = string.Concat(urls, line, "|");
         }
-        //broadcast banner live events-end
-        //broadcast banner calendar events-start
-        public int GetCalendarEventsCount()
-        {
-            return _context.BroadcastBannerCalendarEvents.Count();
-        }
-        public List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEvents()
-        {
-            return _context.BroadcastBannerCalendarEvents.OrderBy(x=>Convert.ToInt32(x.ReferenceNo)).ToList();
-        }
-        //broadcast banner calendar events-end
-        //SW Channels-start
-        public List<SWChannels> GetSWChannels()
-        {
-            return _context.SWChannel.OrderBy(x=>x.Id).ToList();
-        }
-        //SW Channels-end
-        //General Feeds-start
-        public List<GeneralFeeds> GetGeneralFeeds()
-        {
-            return _context.GeneralFeeds.OrderBy(x => x.Id).ToList();
-        }
-        //General Feeds-end
-        public List<SmsChannel> GetSmsChannels()
-        {
-            return _context.SmsChannel.OrderBy(x => x.Id).ToList();
-        }
-        //p1-191 hr files task 3-start
-        public List<HrSettings> GetHRSettings()
-        {
-            var res= _context.HrSettings.Include(z => z.HRGroups)
-                .Include(z => z.ReferenceNoNumbers).Include(z => z.ReferenceNoAlphabets)
-                .OrderBy(x => x.HRGroups.Name).ThenBy(x=> x.ReferenceNoNumbers.Name).
-                ThenBy(x => x.ReferenceNoAlphabets.Name).ToList();
-            return _context.HrSettings.Include(z => z.HRGroups)
-                .Include(z => z.ReferenceNoNumbers)
-                .Include(z => z.ReferenceNoAlphabets)
-                .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
-                ThenBy(x => x.ReferenceNoAlphabets.Name).ToList();
-        }
-        public List<LicenseTypes> GetLicensesTypes()
-        {
-            return _context.LicenseTypes.Where(x=>x.IsDeleted==false)
-                .OrderBy(x => x.Id).ToList();
-        }
+    }
+
+    return urls;
+
+}
+
+public List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEventsByDate()
+{
+    return _context.BroadcastBannerCalendarEvents.Where(x => DateTime.Now.Date >= x.StartDate && DateTime.Now.Date <= x.ExpiryDate).ToList();
+}
+//broadcast banner live events-end
+//broadcast banner calendar events-start
+public int GetCalendarEventsCount()
+{
+    return _context.BroadcastBannerCalendarEvents.Count();
+}
+public List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEvents()
+{
+    return _context.BroadcastBannerCalendarEvents.OrderBy(x => Convert.ToInt32(x.ReferenceNo)).ToList();
+}
+//broadcast banner calendar events-end
+//SW Channels-start
+public List<SWChannels> GetSWChannels()
+{
+    return _context.SWChannel.OrderBy(x => x.Id).ToList();
+}
+//SW Channels-end
+//General Feeds-start
+public List<GeneralFeeds> GetGeneralFeeds()
+{
+    return _context.GeneralFeeds.OrderBy(x => x.Id).ToList();
+}
+//General Feeds-end
+public List<SmsChannel> GetSmsChannels()
+{
+    return _context.SmsChannel.OrderBy(x => x.Id).ToList();
+}
+//p1-191 hr files task 3-start
+public List<HrSettings> GetHRSettings()
+{
+    var res = _context.HrSettings.Include(z => z.HRGroups)
+        .Include(z => z.ReferenceNoNumbers).Include(z => z.ReferenceNoAlphabets)
+        .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
+        ThenBy(x => x.ReferenceNoAlphabets.Name).ToList();
+    return _context.HrSettings.Include(z => z.HRGroups)
+        .Include(z => z.ReferenceNoNumbers)
+        .Include(z => z.ReferenceNoAlphabets)
+        .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
+        ThenBy(x => x.ReferenceNoAlphabets.Name).ToList();
+}
+public List<LicenseTypes> GetLicensesTypes()
+{
+    return _context.LicenseTypes.Where(x => x.IsDeleted == false)
+        .OrderBy(x => x.Id).ToList();
+}
         //p1-191 hr files task 3-end
     }
 }
