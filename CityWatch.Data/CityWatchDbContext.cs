@@ -63,6 +63,7 @@ namespace CityWatch.Data
         public DbSet<KeyVehicleLogVisitorPersonalDetail> KeyVehicleLogVisitorPersonalDetails { get; set; }
         public DbSet<GuardLicense> GuardLicenses { get; set; }
         public DbSet<GuardCompliance> GuardCompliances { get; set; }
+        public DbSet<GuardComplianceAndLicense> GuardComplianceLicense { get; set; }
         public DbSet<ClientSiteActivityStatus> ClientSiteActivityStatus { get; set;}
         public DbSet<ClientSiteRadioCheck> ClientSiteRadioChecks { get; set; }
         public DbSet<CompanyDetails> CompanyDetails { get; set; }

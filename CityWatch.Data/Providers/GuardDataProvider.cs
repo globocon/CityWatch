@@ -24,6 +24,7 @@ namespace CityWatch.Data.Providers
         void UpdateGuardOffDuty(int guardLoginId, DateTime offDuty);
         List<GuardLicense> GetAllGuardLicenses();
         List<GuardLicense> GetGuardLicenses(int guardId);
+        List<GuardComplianceAndLicense> GetGuardLicensesandcompliance(int guardId);
         GuardLicense GetGuardLicense(int id);
         void SaveGuardLicense(GuardLicense guardLicense);
         void DeleteGuardLicense(int id);
@@ -31,6 +32,7 @@ namespace CityWatch.Data.Providers
         List<GuardCompliance> GetGuardCompliances(int guardId);
         GuardCompliance GetGuardCompliance(int id);
         void SaveGuardCompliance(GuardCompliance guardCompliance);
+        void SaveGuardComplianceandlicanse(GuardComplianceAndLicense guardComplianceandlicense);
         void DeleteGuardCompliance(int id);
         Guard GetGuardDetailsbySecurityLicenseNo(string securityLicenseNo);
 
@@ -413,6 +415,36 @@ namespace CityWatch.Data.Providers
 
 
         }
+        public List<GuardComplianceAndLicense> GetGuardLicensesandcompliance(int guardId)
+        {
+            // var LicenceType= _context.GuardLicenses.Where(x => x.GuardId == guardId).Select(x=>x.LicenseType).F
+            var result = _context.GuardComplianceLicense
+                 .Where(x => x.GuardId == guardId)
+                 .Include(z => z.Guard).ToList();
+            //GuardLicenseType? licenseType = null;
+            // int intValueToCompare = 3;
+
+            
+                    result = _context.GuardComplianceLicense
+                    .Where(x => x.GuardId == guardId)
+                    .Include(z => z.Guard)
+                    .Select(x => new GuardComplianceAndLicense
+                    {
+                        Id = x.Id,
+                        ExpiryDate = x.ExpiryDate,
+                        FileName = x.FileName,
+                        GuardId = x.GuardId,
+                        Description=x.Description,
+                        HrGroup=x.HrGroup
+                    })
+                    .ToList();
+
+               
+            return result;
+
+
+
+        }
 
 
         public void SaveGuardLicense(GuardLicense guardLicense)
@@ -443,7 +475,7 @@ namespace CityWatch.Data.Providers
 
         public void DeleteGuardLicense(int id)
         {
-            var guardLicenseToDelete = _context.GuardLicenses.SingleOrDefault(x => x.Id == id);
+            var guardLicenseToDelete = _context.GuardComplianceLicense.SingleOrDefault(x => x.Id == id);
             if (guardLicenseToDelete == null)
                 throw new InvalidOperationException();
 
@@ -475,7 +507,28 @@ namespace CityWatch.Data.Providers
             }
             _context.SaveChanges();
         }
-
+        public void SaveGuardComplianceandlicanse(GuardComplianceAndLicense guardComplianceandlicense)
+        {
+            if (guardComplianceandlicense.Id == 0)
+            {
+               
+                _context.GuardComplianceLicense.Add(guardComplianceandlicense);
+            }
+            else
+            {
+                var guardComplianceToUpdate = _context.GuardComplianceLicense.SingleOrDefault(x => x.Id == guardComplianceandlicense.Id);
+                if (guardComplianceToUpdate != null)
+                {
+                  
+                    guardComplianceToUpdate.Description = guardComplianceandlicense.Description;
+                    
+                    guardComplianceToUpdate.ExpiryDate = guardComplianceandlicense.ExpiryDate;
+                    guardComplianceToUpdate.FileName = guardComplianceandlicense.FileName;
+                    guardComplianceToUpdate.HrGroup = guardComplianceandlicense.HrGroup;
+                }
+            }
+            _context.SaveChanges();
+        }
         public List<GuardCompliance> GetAllGuardCompliances()
         {
             return _context.GuardCompliances.Include(z => z.Guard).ToList();
