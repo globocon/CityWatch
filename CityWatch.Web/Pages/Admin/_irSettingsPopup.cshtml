@@ -18,7 +18,7 @@
         <div class="modal-content">
             <div class="modal-header col-md-12">
 
-                <h5 class="modal-title col-md-8">Ir Settings - <label id="lblFieldType"></label></h5>
+                <h5 class="modal-title col-md-8">IR Settings - Area /Ward<label id="lblFieldType"></label></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -28,35 +28,52 @@
                     @*<input type="hidden" asp-for="@Model.IncidentReportField.Id" id="IrSettings_Id" />*@
                     <input type="hidden" name="IncidentReportField.Id" id="IrSettings_Id" />
                     <div class="form-row">
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label>Name</label>
                             @*<input type="text" class="form-control" asp-for="@Model.IncidentReportField.Name" id="IrSettings_fieldName" />*@
                             <input type="text" class="form-control" name="IncidentReportField.Name" id="IrSettings_fieldName" />
                         </div>
-                        <div class="col-md-8">
-                            <label>Site Allocation</label>
-
-                            @*<select class="form-control js-example-basic-multiple" id="list_IrClientSites" asp-for="@Model.IncidentReportField.ClientSiteIds" multiple>
-                                @foreach (var item in clientViewDataService.GetClientSites())
-                                {
-                                    <option value="@item.Value">@item.Text</option>
-                                }
-                            </select>*@
-                            <select class="form-control js-example-basic-multiple" id="list_IrClientSites" name="IncidentReportField.ClientSiteIds" multiple="multiple">
-                                @foreach (var item in clientViewDataService.GetClientSites())
-                                {
-                                    <option value="@item.Value">@item.Text</option>
-                                }
-                            </select>
+                        
+                        <div class="col-md-6">
+                            <label>Special Email Condition</label>
+                            @*<input type="text" asp-for="@Model.IncidentReportField.EmailTo" id="IrSettings_fieldemailto" />*@
+                            <input type="text" class="form-control" name="IncidentReportField.EmailTo" id="IrSettings_fieldemailto" />
 
                         </div>
                     </div>
                     <div class="form-row">
-                        <div class="col-md-12">
-                            <label>Special Email Condition</label>
-                            @*<input type="text" asp-for="@Model.IncidentReportField.EmailTo" id="IrSettings_fieldemailto" />*@
-                            <input type="text" class="form-control" name="IncidentReportField.EmailTo" id="IrSettings_fieldemailto" />
+                        <div class="col-md-6">
+                            <label>Client Type</label>
+
+                            <select class="form-control js-example-basic-multiple" id="list_IrClientTypes" name="IncidentReportField.ClientSiteIds" multiple="multiple">
+                                @{
+                                    var userClientTypes = viewDataServiceNew.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId);
+                                    var sortedClientTypes = userClientTypes.OrderByDescending(clientType => viewDataServiceNew.GetClientTypeCount(clientType.Id));
+                                    sortedClientTypes = userClientTypes.OrderBy(clientType => clientType.Name);
+                                    foreach (var clientType in sortedClientTypes)
+                                    {
+                                        var countClientType = viewDataServiceNew.GetClientTypeCount(clientType.Id);
+                                        <option value="@clientType.Id">@clientType.Name (@countClientType)</option>
+                                    }
+                                }
+                            </select>
+
                         </div>
+                        <div class="col-md-6">
+                            <label>Site Allocation</label>
+
+                            @*<select class="form-control js-example-basic-multiple" id="list_IrClientSites" asp-for="@Model.IncidentReportField.ClientSiteIds" multiple>
+                            @foreach (var item in clientViewDataService.GetClientSites())
+                            {
+                            <option value="@item.Value">@item.Text</option>
+                            }
+                            </select>*@
+                            <select class="form-control js-example-basic-multiple" id="list_IrClientSites" name="IncidentReportField.ClientSiteIds" multiple="multiple">
+                               
+                            </select>
+
+                        </div>
+                        
 
 
                     </div>

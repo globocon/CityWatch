@@ -639,6 +639,8 @@
             { field: 'emailTo', title: 'Special Email Condition', width: '100%' },
             // { field: 'emailTo', title: 'State', width: 80, type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
             { field: 'clientSiteIds', hidden: true },
+            { field: 'clientTypeIds', hidden: true },
+            { field: 'clientTypes', title: 'Client Types', hidden: true },
             /*{ field: 'clientSites', title: 'Site Allocation', type: 'dropdown', width: '100%', type: 'button', editor: select2editor }*/
             { field: 'clientSites', title: 'Site Allocation', width: '100%' },
             {
@@ -652,7 +654,7 @@
     });
     /*p1-202 site allocation-start*/
     function irButtonRenderer(value, record) {
-        return '<button id="btnEditIrGroup" data-irfield-id="' + record.id + '" data-irfield_typeid="' + record.typeId + '" data-irfield-name="' + record.name + '" data-ir-emailto="' + record.emailTo + '" data-ir-clientsiteids="' + record.clientSiteIds + '"data-ir-clientsites="' + record.clientSites + '" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
+        return '<button id="btnEditIrGroup" data-irfield-id="' + record.id + '" data-irfield_typeid="' + record.typeId + '" data-irfield-name="' + record.name + '" data-ir-emailto="' + record.emailTo + '" data-ir-clientsiteids="' + record.clientSiteIds + '"data-ir-clientsites="' + record.clientSites + '"data-ir-clienttypeids="' + record.clientTypeIds + '"data-ir-clienttypes="' + record.clientTypes + '" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
             '<button id="btnDeleteIrGroup" data-irfield-id="' + record.id + '"  class="btn btn-outline-danger"><i class="fa fa-trash mr-2"></i>Delete</button>' +
 
             '</div>'
@@ -670,13 +672,59 @@
         clientSitesforReportsnew = $(this).attr('data-ir-clientsiteids');
         var selectedValues = $(this).attr('data-ir-clientsiteids').split(';');
         var newselectedvalues = [];
-
-        selectedValues.forEach(function (value) {
+        var selectedValuesClientType = $(this).attr('data-ir-clienttypeids').split(';');
+        var newselectedvaluesClientType = [];
+        selectedValuesClientType.forEach(function (value) {
             var newvalue = parseInt(value);
             var stringnewvalue = String(newvalue)
-            newselectedvalues.push(newvalue);
-            $('#list_IrClientSites option[value="' + value + '"]').attr('selected', true);
+            newselectedvaluesClientType.push(newvalue);
+            $('#list_IrClientTypes option[value="' + value + '"]').attr('selected', true);
         });
+        newselectedvaluesClientType.forEach(function (value) {
+
+            $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+            $(".multiselect-option input[type=checkbox][value='" + value + "']").parent().parent().addClass('active');
+
+        });
+        $('#list_IrClientTypes').val(newselectedvaluesClientType);
+        //clientSiteChange();
+        const clientType = $('#list_IrClientTypes').val().join(';');
+        const clientSiteControl = $('#list_IrClientSites');
+        // keyVehicleLogReport.clear().draw();
+
+        clientSiteControl.html('');
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSitesWithTypeId&types=' + clientType,
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                data.map(function (site) {
+                    clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+                });
+                clientSiteControl.multiselect('rebuild');
+                selectedValues.forEach(function (value) {
+                    var newvalue = parseInt(value);
+                    var stringnewvalue = String(newvalue)
+                    newselectedvalues.push(newvalue);
+                    $('#list_IrClientSites option[value="' + value + '"]').attr('selected', true);
+                });
+                newselectedvalues.forEach(function (value) {
+
+                    $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+                    $(".multiselect-option input[type=checkbox][value='" + value + "']").parent().parent().addClass('active');
+
+                });
+            }
+        });
+        //selectedValues.forEach(function (value) {
+        //    var newvalue = parseInt(value);
+        //    var stringnewvalue = String(newvalue)
+        //    newselectedvalues.push(newvalue);
+        //    $('#list_IrClientSites option[value="' + value + '"]').attr('selected', true);
+        //});
+        
+
+    
         //$('#list_hrGroups').val($(this).attr('data-doc-hrgroupid'));
         //$('#list_ReferenceNoNumber').val($(this).attr('data-doc-refnonumberid'));
         //$('#list_ReferenceNoAlphabet').val($(this).attr('data-doc-refalphnumberid'));
@@ -690,18 +738,35 @@
         //    $('#list_IrClientSites option[value="' + newvalue + '"]').prop('selected', true);
 
         //});
-        newselectedvalues.forEach(function (value) {
-
-            $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
-            $(".multiselect-option input[type=checkbox][value='" + value + "']").parent().parent().addClass('active');
-           
-        });
+      
+        
        
         $('#list_IrClientSites').val(newselectedvalues);
+       
         //("#list_IrClientSites").multiselect('refresh');
 
     });
-    $('#field_settings_Area tbody').on('click', '#btnDeleteIrGroup', function () {
+    function clientSiteChange() {
+        const clientType = $('#list_IrClientTypes').val().join(';');
+        const clientSiteControl = $('#list_IrClientSites');
+        // keyVehicleLogReport.clear().draw();
+
+        clientSiteControl.html('');
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSitesWithTypeId&types=' + clientType,
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                data.map(function (site) {
+                    clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+                });
+                clientSiteControl.multiselect('rebuild');
+            }
+        });
+
+        clientTypesforReportsnew = clientType;
+    }
+                $('#field_settings_Area tbody').on('click', '#btnDeleteIrGroup', function () {
         // var data = keyVehicleLog.row($(this).parents('tr')).data();
         if (confirm('Are you sure want to delete this  entry?')) {
             $.ajax({
@@ -772,8 +837,16 @@
         buttonTextAlignment: 'left',
         includeSelectAllOption: true,
     });
+    $('#list_IrClientTypes').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
 
-    var clientSitesforReportsnew ;
+    var clientSitesforReportsnew;
+    var clientTypesforReportsnew;
     $('#field_settings tbody').on('change','#vklClientSiteIdforir', function () {
 
         const clientSitesforReports = $(this).val().join(';');
@@ -800,7 +873,8 @@ $('#btn_save_ir_settings').on('click', function () {
         'TypeId': $('#report_field_types').val(),
         'Name': $('#IrSettings_fieldName').val(),
         'EmailTo': $('#IrSettings_fieldemailto').val(),
-        'ClientSiteIds': clientSitesforReportsnew
+        'ClientSiteIds': clientSitesforReportsnew,
+        'ClientTypeIds':clientTypesforReportsnew
     };
     if ($('#IrSettings_fieldName').val() == '') {
         alert('Please Enter IR Field Name')
@@ -851,7 +925,29 @@ function displayValidationSummaryIrSettings(errors) {
         li.appendChild(document.createTextNode(item));
         summaryDiv.querySelector('ul').appendChild(li);
     });
-}
+    }
+    
+    $('#list_IrClientTypes').on('change', function () {
+
+        const clientType = $(this).val().join(';');
+        const clientSiteControl = $('#list_IrClientSites');
+       // keyVehicleLogReport.clear().draw();
+
+        clientSiteControl.html('');
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSitesWithTypeId&types=' +clientType,
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                data.map(function (site) {
+                    clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+                });
+                clientSiteControl.multiselect('rebuild');
+            }
+        });
+         
+        clientTypesforReportsnew = clientType;
+    });
     /*p1 - 202 site allocation - end*/
     let isReportFieldAdding = false;
 

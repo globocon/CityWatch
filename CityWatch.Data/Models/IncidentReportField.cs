@@ -34,5 +34,8 @@ namespace CityWatch.Data.Models
                 return ClientSiteIds?.Split(";").Select(z => int.Parse(z)).ToArray() ?? Array.Empty<int>();
             }
         }
+        public string ClientTypeIds { get; set; }
+        [NotMapped]
+        public string clientTypes { get; set; }
     }
 }
