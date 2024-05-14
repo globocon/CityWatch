@@ -1086,9 +1086,51 @@ namespace CityWatch.Web.Pages.Admin
                     item.clientSites = clientname;
 
                 }
+                if (item.ClientTypeIds != null)
+                {
+                    var values = item.ClientTypeIds.Split(';');
+                    int[] ids = new int[values.Length];
+                    for (int i = 0; i < values.Length; i++)
+                    {
+                        ids[i] = Convert.ToInt32(values[i]);
+
+                    }
+                    string clienttypename = string.Empty;
+                    var clientdetails = _clientDataProvider.GetClientTypes().Where(x => ids.Contains(x.Id)).ToList();
+                    foreach (var det in clientdetails)
+                    {
+                        if (clienttypename != "")
+                        {
+                            clienttypename = clienttypename + "," + det.Name;
+                        }
+                        else
+                        {
+                            clienttypename = det.Name;
+                        }
+                    }
+                    item.clientTypes = clienttypename;
+
+                }
             }
 
             return new JsonResult(fields);
+        }
+        public JsonResult OnGetClientSitesWithTypeId(string types)
+        {
+            if (!String.IsNullOrEmpty(types))
+            {
+                var values = types.Split(';');
+                int[] ids = new int[values.Length];
+                for (int i = 0; i < values.Length; i++)
+                {
+                    ids[i] = Convert.ToInt32(values[i]);
+
+                }
+                return new JsonResult(_clientDataProvider.GetClientSitesWithTypeId(ids).OrderBy(z => z.Name));
+            }
+            int[] idsn = new int[1];
+            idsn[0] = 0;
+            return new JsonResult(_clientDataProvider.GetClientSitesWithTypeId(idsn).OrderBy(z => z.Name));
         }
         //p1 - 202 site allocation-end
     }

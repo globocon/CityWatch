@@ -179,6 +179,7 @@ namespace CityWatch.Data.Providers
         //p1-191 hr files task 8-end
         public void DeafultMailBox(string Email);
         List<KPIScheduleDeafultMailbox> GetKPIScheduleDeafultMailbox();
+        List<ClientSite> GetClientSitesWithTypeId(int[] typeId);
 
     }
 
@@ -1923,7 +1924,15 @@ namespace CityWatch.Data.Providers
 
         }
         //p1-191 hr files task 8-end
-
+        public List<ClientSite> GetClientSitesWithTypeId(int[] typeId)
+        {
+            return _context.ClientSites
+                .Where(x => (typeId.Contains(x.TypeId)) && x.IsActive == true)
+                .Include(x => x.ClientType)
+                .OrderBy(x => x.ClientType.Name)
+                .ThenBy(x => x.Name)
+                .ToList();
+        }
     }
 
 
