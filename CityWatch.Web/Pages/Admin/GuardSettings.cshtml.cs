@@ -600,6 +600,10 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_guardDataProvider.GetGuardLicenses(guardId));
         }
+        public JsonResult OnGetGuardLicenseAndComplianceData(int guardId)
+        {
+            return new JsonResult(_guardDataProvider.GetGuardLicensesandcompliance(guardId));
+        }
 
         public JsonResult OnPostSaveGuardLicense(GuardLicense guardLicense)
         {
@@ -689,12 +693,99 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_guardDataProvider.GetGuardCompliances(guardId));
         }
+        //public JsonResult OnPostSaveGuardComplianceandlicanse(GuardComplianceAndLicense guardComplianceandlicense)
+        //{
+        //    ModelState.Remove("guardComplianceandlicense.Id");
+        //    ModelState.Remove("guardComplianceandlicense.LicenseTypeText");
+        //    ModelState.Remove("guardComplianceandlicense.LicenseType");
+
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return new JsonResult(new
+        //        {
+        //            status = false,
+        //            message = ModelState.Where(x => x.Value.Errors.Count > 0)
+        //                        .Select(x => string.Join(',', x.Value.Errors.Select(y => y.ErrorMessage)))
+        //        });
+        //    }
+
+        //    var status = true;
+        //    var dbxUploaded = true;
+        //    var message = "Success";
+        //    GuardCompliance guardCompliance = new GuardCompliance()
+        //    {
+        //       GuardId= guardComplianceandlicense.GuardId,
+        //       ReferenceNo= guardComplianceandlicense.ReferenceNo,
+        //       Description= guardComplianceandlicense.Description,
+        //       ExpiryDate= guardComplianceandlicense.ExpiryDate,
+        //       Reminder1= guardComplianceandlicense.Reminder1,
+        //       Reminder2= guardComplianceandlicense.Reminder2,
+        //       FileName= guardComplianceandlicense.FileName,
+        //       HrGroup= guardComplianceandlicense.HrGroup
+        //    };
+
+        //    GuardLicense guardLicenseNew = new GuardLicense()
+        //    {
+        //        GuardId = guardComplianceandlicense.GuardId,
+        //        LicenseNo = guardComplianceandlicense.LicenseNo,
+        //        LicenseType = (GuardLicenseType?)guardComplianceandlicense.LicenseType,
+        //        LicenseTypeName = guardComplianceandlicense.LicenseTypeName,
+        //        ExpiryDate = guardComplianceandlicense.ExpiryDate,
+        //        Reminder1 = guardComplianceandlicense.Reminder1,
+        //        Reminder2 = guardComplianceandlicense.Reminder2,
+        //        FileName = guardComplianceandlicense.FileName,
+            
+        //    };
+
+        //    try
+        //    {
+        //        dbxUploaded = UploadGuardComplianceToDropbox(guardCompliance);
+        //        _guardDataProvider.SaveGuardCompliance(guardCompliance);
+        //        //To Save License data start
+        //        dbxUploaded = UploadGuardLicenseToDropbox(guardLicenseNew);
+        //        if (guardLicenseNew.LicenseType == null && guardLicenseNew.Id != null && guardLicenseNew.LicenseTypeName != null)
+        //        {
+        //            //int intValueToCompare = -1;
+        //            int intValueToCompare = 0;
+        //            var licensetypeCount = _guardDataProvider.GetLicenseTypes().Where(x => x.Name == guardLicenseNew.LicenseTypeName);
+        //            if (licensetypeCount.Count() > 0)
+        //            {
+        //                intValueToCompare = _guardDataProvider.GetLicenseTypes().Where(x => x.Name == guardLicenseNew.LicenseTypeName).FirstOrDefault().Id;
+        //            }
+        //            else
+        //            {
+        //                intValueToCompare = -1;
+        //            }
+        //            guardLicenseNew.LicenseType = (GuardLicenseType)intValueToCompare;
+        //            guardLicenseNew.LicenseTypeName = guardLicenseNew.LicenseTypeName;
+
+        //        }
+        //        else if (guardLicenseNew.LicenseType == null)
+        //        {
+        //            //int intValueToCompare = -1;
+        //            //guardLicense.LicenseType = (GuardLicenseType)intValueToCompare;
+        //            return new JsonResult(new
+        //            {
+        //                status = false,
+        //                message = "LicenseType Required"
+        //            });
+        //        }
+
+        //        _guardDataProvider.SaveGuardLicense(guardLicenseNew);
+
+        //        //To Save License data stop
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        status = false;
+        //        message = ex.Message;
+        //    }
+        //    return new JsonResult(new { status, dbxUploaded, message });
+        //}
+
         public JsonResult OnPostSaveGuardComplianceandlicanse(GuardComplianceAndLicense guardComplianceandlicense)
         {
             ModelState.Remove("guardComplianceandlicense.Id");
-            ModelState.Remove("guardComplianceandlicense.LicenseTypeText");
-            ModelState.Remove("guardComplianceandlicense.LicenseType");
-
             if (!ModelState.IsValid)
             {
                 return new JsonResult(new
@@ -708,68 +799,11 @@ namespace CityWatch.Web.Pages.Admin
             var status = true;
             var dbxUploaded = true;
             var message = "Success";
-            GuardCompliance guardCompliance = new GuardCompliance()
-            {
-               GuardId= guardComplianceandlicense.GuardId,
-               ReferenceNo= guardComplianceandlicense.ReferenceNo,
-               Description= guardComplianceandlicense.Description,
-               ExpiryDate= guardComplianceandlicense.ExpiryDate,
-               Reminder1= guardComplianceandlicense.Reminder1,
-               Reminder2= guardComplianceandlicense.Reminder2,
-               FileName= guardComplianceandlicense.FileName,
-               HrGroup= guardComplianceandlicense.HrGroup
-            };
-
-            GuardLicense guardLicenseNew = new GuardLicense()
-            {
-                GuardId = guardComplianceandlicense.GuardId,
-                LicenseNo = guardComplianceandlicense.LicenseNo,
-                LicenseType = (GuardLicenseType?)guardComplianceandlicense.LicenseType,
-                LicenseTypeName = guardComplianceandlicense.LicenseTypeName,
-                ExpiryDate = guardComplianceandlicense.ExpiryDate,
-                Reminder1 = guardComplianceandlicense.Reminder1,
-                Reminder2 = guardComplianceandlicense.Reminder2,
-                FileName = guardComplianceandlicense.FileName,
-            
-            };
 
             try
             {
-                dbxUploaded = UploadGuardComplianceToDropbox(guardCompliance);
-                _guardDataProvider.SaveGuardCompliance(guardCompliance);
-                //To Save License data start
-                dbxUploaded = UploadGuardLicenseToDropbox(guardLicenseNew);
-                if (guardLicenseNew.LicenseType == null && guardLicenseNew.Id != null && guardLicenseNew.LicenseTypeName != null)
-                {
-                    //int intValueToCompare = -1;
-                    int intValueToCompare = 0;
-                    var licensetypeCount = _guardDataProvider.GetLicenseTypes().Where(x => x.Name == guardLicenseNew.LicenseTypeName);
-                    if (licensetypeCount.Count() > 0)
-                    {
-                        intValueToCompare = _guardDataProvider.GetLicenseTypes().Where(x => x.Name == guardLicenseNew.LicenseTypeName).FirstOrDefault().Id;
-                    }
-                    else
-                    {
-                        intValueToCompare = -1;
-                    }
-                    guardLicenseNew.LicenseType = (GuardLicenseType)intValueToCompare;
-                    guardLicenseNew.LicenseTypeName = guardLicenseNew.LicenseTypeName;
-
-                }
-                else if (guardLicenseNew.LicenseType == null)
-                {
-                    //int intValueToCompare = -1;
-                    //guardLicense.LicenseType = (GuardLicenseType)intValueToCompare;
-                    return new JsonResult(new
-                    {
-                        status = false,
-                        message = "LicenseType Required"
-                    });
-                }
-
-                _guardDataProvider.SaveGuardLicense(guardLicenseNew);
-
-                //To Save License data stop
+                dbxUploaded = UploadGuardComplianceandLicenseToDropbox(guardComplianceandlicense);
+                _guardDataProvider.SaveGuardComplianceandlicanse(guardComplianceandlicense);
             }
             catch (Exception ex)
             {
@@ -778,7 +812,6 @@ namespace CityWatch.Web.Pages.Admin
             }
             return new JsonResult(new { status, dbxUploaded, message });
         }
-
         public JsonResult OnPostSaveGuardCompliance(GuardCompliance guardCompliance)
         {
             ModelState.Remove("guardCompliance.Id");
@@ -1067,6 +1100,18 @@ namespace CityWatch.Web.Pages.Admin
 
             var fileToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards", guardCompliance.GuardId.ToString(), guardCompliance.FileName);
             var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardCompliance.Guard)}/{guardCompliance.ReferenceNo}/{guardCompliance.FileName}");
+            return UpoadDocumentToDropbox(fileToUpload, dbxFilePath);
+        }
+        private bool UploadGuardComplianceandLicenseToDropbox(GuardComplianceAndLicense guardComplianceandlicense)
+        {
+            guardComplianceandlicense.Guard = _guardDataProvider.GetGuards().SingleOrDefault(z => z.Id == guardComplianceandlicense.GuardId);
+            var existingGuardCompliance = _guardDataProvider.GetGuardCompliance(guardComplianceandlicense.Id);
+            if ((guardComplianceandlicense.Id == 0 && string.IsNullOrEmpty(guardComplianceandlicense.FileName)) ||
+                (guardComplianceandlicense.Id != 0 && existingGuardCompliance.FileName == guardComplianceandlicense.FileName))
+                return true;
+
+            var fileToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards", guardComplianceandlicense.GuardId.ToString(), guardComplianceandlicense.FileName);
+            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.GuardId}/{guardComplianceandlicense.FileName}");
             return UpoadDocumentToDropbox(fileToUpload, dbxFilePath);
         }
 
