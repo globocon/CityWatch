@@ -779,7 +779,7 @@
                     $('#loader').show();
                 }
             }).done(function () {
-                gridReportFields.reload();
+                gridAreaReportFields.reload();
             }).always(function () {
                 $('#loader').hide();
             });
