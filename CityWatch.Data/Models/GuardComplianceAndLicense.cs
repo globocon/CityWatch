@@ -20,7 +20,6 @@ namespace CityWatch.Data.Models
 
         [Required]
         public string Description { get; set; }
-        [Required]
         public DateTime? ExpiryDate { get; set; }
 
         
@@ -40,7 +39,7 @@ namespace CityWatch.Data.Models
                 return $"{GuardHelper.GetGuardDocumentDbxRootUrl(Guard)}/{GuardId}/{FileName}";
             }
         }
-
+        [Required]
         public HrGroup? HrGroup { get; set; }
 
         [NotMapped]
@@ -48,6 +47,7 @@ namespace CityWatch.Data.Models
 
         [ForeignKey("GuardId")]
         public Guard Guard { get; set; }
+        public string CurrentDateTime { get; set; }
 
     }
 }

@@ -283,7 +283,7 @@ namespace CityWatch.Web.Services
                 var providerlist = _configDataProvider.GetProviderList(KVID.Id);
                 foreach (var item in providerlist)
                 {
-                    items.Add(new SelectListItem(item.PersonName, item.PersonName));
+                    items.Add(new SelectListItem(item.CompanyName, item.CompanyName));
                 }
                 return items;
             }

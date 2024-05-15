@@ -2861,6 +2861,7 @@
         $('#HRGroup').val('');
         $('#guardComplianceandlicense_fileName1').text('None');
         $('#GuardComplianceandlicense_FileName1').text('None');
+        $('#GuardComplianceandlicense_CurrentDateTime').val('');
         clearGuardValidationSummary('compliancelicanseValidationSummary');
     }
 
@@ -2955,7 +2956,7 @@
             data: 'fileName',
             render: function (data, type, row, meta) {
                 if (data)
-                    return '<a href="' + row.fileUrl + '" target="_blank">' + data + '</a>';
+                    return '<a href="/Uploads/Guards/' + row.currentDateTime +'/' + row.fileUrl + '" target="_blank">' + data + '</a>';
                 return '-';
             }
         }],
@@ -2967,7 +2968,7 @@
     });
 
     //To get the data in description dropdown start
-
+    $('#Description').attr('placeholder', 'Select');
     $('#Description').editableSelect({
         //filter: false,
         effects: 'slide'
@@ -2981,14 +2982,23 @@
 
         var Descriptionval = $('#HRGroup').val();
         if (Descriptionval == 1) {
-            $('#Description').val('CV,LICENSES,C4i Training');
-
+            //$('#Description').val('CV,LICENSES,C4i Training');
+            var Desc1Val = 'CV,LICENSES,C4i Training';
+            var values = Desc1Val.split(',');
+            values.forEach(function (value) {
+                ulClients.append('<li class="es-visible" value="' + value + '">' + value + '</li>');
+            });
         }
         else if (Descriptionval == 2) {
-            $('#Description').val('Client Specific Sops');
+            var Desc2Val = 'Client soecialist SPOs';
+            ulClients.append('<li class="es-visible" value="' + Desc2Val + '">' + Desc2Val + '</li>');
         }
         else if (Descriptionval == 3) {
-            $('#Description').val('FLIR,WARDEN,COXSWAIN,etc');
+            var Desc3Val = 'LIR,WARDEN,COXSWAIN,etc';
+            var Desc3values = Desc3Val.split(',');
+            Desc3values.forEach(function (Desc3value) {
+                ulClients.append('<li class="es-visible" value="' + Desc3value + '">' + Desc3value + '</li>');
+            });
         }
         else {
             $('#Description').val('');
@@ -3287,6 +3297,10 @@
     });
     $('#btn_save_guard_compliancelicense').on('click', function () {
         clearGuardValidationSummary('compliancelicanseValidationSummary');
+        var ExpirayDateVal = $('#GuardComplianceAndLicense_ExpiryDate1').val();
+        if (ExpirayDateVal=='') {
+            confirm('Are you sure you not want to enter Expiray Date');
+        }
         $('#loader').show();
         $.ajax({
             url: '/Admin/GuardSettings?handler=SaveGuardComplianceandlicanse',
@@ -3384,6 +3398,7 @@
         }).done(function (data) {
             $('#GuardComplianceandlicense_FileName1').val(data.fileName);
             $('#guardComplianceandlicense_fileName1').text(data.fileName ? data.fileName : 'None');
+            $('#GuardComplianceandlicense_CurrentDateTime').val(data.currentDate);
         }).fail(function () {
         }).always(function () {
             $('#upload_complianceandlicanse_file').val('');
@@ -3598,8 +3613,8 @@
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function (result) {
                 if (result.status) {
-                    $('#guardComplianceandlicense_fileName').val('');
-                    $('#guardComplianceandlicense_fileName').text('None');
+                    $('#GuardComplianceandlicense_fileName1').val('');
+                    $('#guardComplianceandlicense_fileName1').text('None');
                     gridGuardCompliances.ajax.reload();
                 }
                 else {
