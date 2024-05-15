@@ -44,6 +44,35 @@
                 $('#Report_DateLocation_ShowIncidentLocationAddress').prop('checked', false);
                 $('#clientSiteAddress').val(data.clientSite.address);
                 $('#clientSiteGps').val(data.clientSite.gps);
+                //const clientAreaControl = $('#Report_DateLocation_ClientArea');
+                ////p1 - 202 site allocation - start
+                //clientAreaControl.html('');
+                //toggleClientGpsLink(false);
+
+                ////const ulClients = $('#Report_DateLocation_ClientArea').siblings('ul.es-list');
+                ////ulClients.html('');
+
+                //const option = $('#Report_DateLocation_ClientSite').val();
+                //if (option == '')
+                //    return false;
+
+                //$.ajax({
+                //    url: '/Incident/Register?handler=ClientAreas&Id=' + encodeURIComponent(option),
+                //    type: 'GET',
+                //    dataType: 'json',
+                //    success: function (data) {
+
+                //        data.map(function (site) {
+                //            // ulClients.append('<li class="es-visible" value="' + site.text + '">' + site.text + '</li>');
+                //            clientAreaControl.append('<option value="' + site.text + '">' + site.text + '</option>');
+
+                //        });
+
+                //    }
+                //});
+
+
+            //p1 - 202 site allocation - end
             }
         }).fail(function () {
         });
