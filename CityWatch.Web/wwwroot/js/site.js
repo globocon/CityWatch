@@ -3103,29 +3103,40 @@ let gridHrSettings;
 //        ids.push(index.detail.id);
 //    });
 //}
+
 gridHrSettings = $('#tbl_hr_settings').grid({
     dataSource: '/Admin/GuardSettings?handler=HRSettings',
     uiLibrary: 'bootstrap4',
     iconsLibrary: 'fontawesome',
     primaryKey: 'id',
-    //inlineEditing: { mode: 'command' },
     columns: [
         { field: 'id', hidden: true },
-        { field: 'groupName', title: 'HR Group', width: '100%' },
-        { field: 'referenceNo', title: 'Reference No', width: '100%' },
-
-
-
-        { field: 'description', width: '100%', title: 'Description' },
-
-        { width: '100%', renderer: hrgroupButtonRenderer },
-
+        { field: 'groupName', title: 'HR Group', width: '15%' }, // Show the HR Group column
+        { field: 'referenceNo', title: 'Reference No', width: '20%' },
+        { field: 'description', title: 'Description' },
+        { width: '20%', renderer: hrgroupButtonRenderer },
     ],
+    dataBound: function (e, records, totalRecords) {
+        var tbody = $(e.target).find('tbody');
+        var rows = tbody.find('tr');
 
-    initialized: function (e) {
-        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        var lastGroupValue = null;
+
+        rows.each(function (index, row) {
+            var currentGroupValue = $(row).find('td:eq(1)').text();
+
+            if (currentGroupValue !== lastGroupValue) {
+                lastGroupValue = currentGroupValue;
+
+                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 3).text(currentGroupValue));
+                $(row).before(headerRow);
+            }
+        });
     },
-
+    initialized: function (e) {
+        // Optionally, you can modify the appearance or behavior after the grid is initialized
+        $('#tbl_hr_settings thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
 });
 function hrgroupButtonRenderer(value, record) {
     return '<button id="btnEditHrGroup" data-doc-id="' + record.id + '" data-doc-hrgroupid="' + record.hrGroupId + '" data-doc-refnonumberid="' + record.referenceNoNumberId + '" data-doc-refalphnumberid="' + record.referenceNoAlphabetId + '" data-doc-description="' + record.description + '" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
