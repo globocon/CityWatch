@@ -2860,7 +2860,7 @@
         $('#GuardComplianceAndLicense_ExpiryDate1').val('');
         $('#HRGroup').val('');
         $('#guardComplianceandlicense_fileName1').text('None');
-        $('#GuardComplianceandlicense_FileName1').text('None');
+        $('#GuardComplianceandlicense_FileName1').val('');
         $('#GuardComplianceandlicense_CurrentDateTime').val('');
         clearGuardValidationSummary('compliancelicanseValidationSummary');
     }
@@ -3299,26 +3299,24 @@
     });
     $('#btn_save_guard_compliancelicense').on('click', function () {
         clearGuardValidationSummary('compliancelicanseValidationSummary');
-        if ($("#compliancelicanseValidationSummary ul li").length > 0) {
-            // If there are li elements, do something
-            console.log("The div contains li elements.");
-        } else {
-            // If there are no li elements, do something else
-            console.log("The div does not contain li elements.");
-        }
+       
         var ExpirayDateVal = $('#GuardComplianceAndLicense_ExpiryDate1').val();
         var HrVal = $('#HRGroup').val();
         var DescVal = $('#Description').val();
         var FileVa = $('#guardComplianceandlicense_fileName1').html();
-        if (HrVal != '' && DescVal != '' && FileVa!='') {
-            $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
+        const messageHtml = '';
+        $('#schRunStatusNew').html(messageHtml);
 
+        if (HrVal != '' && DescVal != '' && FileVa != 'None') {
+            $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
+            if (ExpirayDateVal == '') {
+                confirm('Are you sure you not want to enter Expiray Date');
+            }
         }
         
         
-        if (ExpirayDateVal=='') {
-            confirm('Are you sure you not want to enter Expiray Date');
-        }
+        
+ 
         $('#loader').show();
         $.ajax({
             url: '/Admin/GuardSettings?handler=SaveGuardComplianceandlicanse',
