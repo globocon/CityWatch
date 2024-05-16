@@ -787,6 +787,7 @@ namespace CityWatch.Web.Pages.Admin
         {
             ModelState.Remove("guardComplianceandlicense.Id");
             ModelState.Remove("guardComplianceandlicense.CurrentDateTime");
+       
             if (!ModelState.IsValid)
             {
                 return new JsonResult(new
@@ -807,6 +808,42 @@ namespace CityWatch.Web.Pages.Admin
             try
             {
                 dbxUploaded = UploadGuardComplianceandLicenseToDropbox(guardComplianceandlicense);
+                guardComplianceandlicense.CurrentDateTime = DateTime.Now.ToString();
+                _guardDataProvider.SaveGuardComplianceandlicanse(guardComplianceandlicense);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = ex.Message;
+            }
+            return new JsonResult(new { status, dbxUploaded, message });
+        }
+
+        public JsonResult OnPostSaveGuardComplianceandlicanseNew(GuardComplianceAndLicense guardComplianceandlicense)
+        {
+            ModelState.Remove("guardComplianceandlicense.Id");
+            ModelState.Remove("guardComplianceandlicense.CurrentDateTime");
+            ModelState.Remove("guardComplianceandlicense.GuardId");
+            if (!ModelState.IsValid)
+            {
+                return new JsonResult(new
+                {
+                    status = false,
+                    message = ModelState.Where(x => x.Value.Errors.Count > 0)
+                                .Select(x => string.Join(',', x.Value.Errors.Select(y => y.ErrorMessage)))
+                });
+            }
+
+            var status = true;
+            var dbxUploaded = true;
+            var message = "Success";
+            string extension = Path.GetExtension(guardComplianceandlicense.FileName);
+            string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(guardComplianceandlicense.FileName);
+            guardComplianceandlicense.FileName = fileNameWithoutExtension + "_" + guardComplianceandlicense.CurrentDateTime + extension;
+
+            try
+            {
+                dbxUploaded = UploadGuardComplianceandLicenseToDropboxNew(guardComplianceandlicense);
                 guardComplianceandlicense.CurrentDateTime = DateTime.Now.ToString();
                 _guardDataProvider.SaveGuardComplianceandlicanse(guardComplianceandlicense);
             }
@@ -1118,11 +1155,22 @@ namespace CityWatch.Web.Pages.Admin
                 (guardComplianceandlicense.Id != 0 && existingGuardCompliance.FileName == guardComplianceandlicense.FileName))
                 return true;
 
-            var fileToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards","License", guardComplianceandlicense.FileName); ;
+            var fileToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards","License", guardComplianceandlicense.FileName);
             var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.FileName}");
             return UpoadDocumentToDropbox(fileToUpload, dbxFilePath);
         }
+        private bool UploadGuardComplianceandLicenseToDropboxNew(GuardComplianceAndLicense guardComplianceandlicense)
+        {
+            guardComplianceandlicense.Guard = _guardDataProvider.GetGuards().SingleOrDefault(z => z.Id == guardComplianceandlicense.GuardId);
+            var existingGuardCompliance = _guardDataProvider.GetGuardComplianceFile(guardComplianceandlicense.Id);
+            if ((guardComplianceandlicense.Id == 0 && string.IsNullOrEmpty(guardComplianceandlicense.FileName)) ||
+                (guardComplianceandlicense.Id != 0 && existingGuardCompliance.FileName == guardComplianceandlicense.FileName))
+                return true;
 
+            var fileToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards", "License", guardComplianceandlicense.FileName);
+            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{guardComplianceandlicense.FileName}");
+            return UpoadDocumentToDropbox(fileToUpload, dbxFilePath);
+        }
         private bool UpoadDocumentToDropbox(string fileToUpload, string dbxFilePath)
         {
             var dropboxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken,
