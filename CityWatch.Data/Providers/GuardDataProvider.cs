@@ -23,8 +23,10 @@ namespace CityWatch.Data.Providers
         int SaveGuardLogin(GuardLogin guardLogin);
         void UpdateGuardOffDuty(int guardLoginId, DateTime offDuty);
         List<GuardLicense> GetAllGuardLicenses();
+        List<GuardComplianceAndLicense> GetAllGuardLicensesAndCompliances();
         List<GuardLicense> GetGuardLicenses(int guardId);
         List<GuardComplianceAndLicense> GetGuardLicensesandcompliance(int guardId);
+        GuardComplianceAndLicense GetGuardComplianceFile(int id);
         GuardLicense GetGuardLicense(int id);
         void SaveGuardLicense(GuardLicense guardLicense);
         void DeleteGuardLicense(int id);
@@ -368,10 +370,20 @@ namespace CityWatch.Data.Providers
                 .Include(z => z.Guard)
                 .SingleOrDefault(z => z.Id == id);
         }
+        public GuardComplianceAndLicense GetGuardComplianceFile(int id)
+        {
+            return _context.GuardComplianceLicense
+                .Include(z => z.Guard)
+                .SingleOrDefault(z => z.Id == id);
+        }
 
         public List<GuardLicense> GetAllGuardLicenses()
         {
             return _context.GuardLicenses.Include(z => z.Guard).ToList();
+        }
+        public List<GuardComplianceAndLicense> GetAllGuardLicensesAndCompliances()
+        {
+            return _context.GuardComplianceLicense.Include(z => z.Guard).ToList();
         }
 
         public List<GuardLicense> GetGuardLicenses(int guardId)
@@ -436,7 +448,8 @@ namespace CityWatch.Data.Providers
                 FileName = x.FileName,
                 GuardId = x.GuardId,
                 Description = x.Description,
-                HrGroup = x.HrGroup
+                HrGroup = x.HrGroup,
+                CurrentDateTime=x.CurrentDateTime
             })
             .ToList();
 
@@ -520,7 +533,7 @@ namespace CityWatch.Data.Providers
                 {
 
                     guardComplianceToUpdate.Description = guardComplianceandlicense.Description;
-
+                    guardComplianceToUpdate.CurrentDateTime = guardComplianceandlicense.CurrentDateTime;
                     guardComplianceToUpdate.ExpiryDate = guardComplianceandlicense.ExpiryDate;
                     guardComplianceToUpdate.FileName = guardComplianceandlicense.FileName;
                     guardComplianceToUpdate.HrGroup = guardComplianceandlicense.HrGroup;

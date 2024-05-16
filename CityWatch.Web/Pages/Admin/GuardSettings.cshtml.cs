@@ -786,6 +786,7 @@ namespace CityWatch.Web.Pages.Admin
         public JsonResult OnPostSaveGuardComplianceandlicanse(GuardComplianceAndLicense guardComplianceandlicense)
         {
             ModelState.Remove("guardComplianceandlicense.Id");
+            ModelState.Remove("guardComplianceandlicense.CurrentDateTime");
             if (!ModelState.IsValid)
             {
                 return new JsonResult(new
@@ -799,6 +800,7 @@ namespace CityWatch.Web.Pages.Admin
             var status = true;
             var dbxUploaded = true;
             var message = "Success";
+           
 
             try
             {
@@ -864,14 +866,15 @@ namespace CityWatch.Web.Pages.Admin
             var files = Request.Form.Files;
             var guardId = Request.Form["guardId"];
             var fileName = string.Empty;
-
+            var CurrentDate = DateTime.Now.Ticks / 1000;
+            
             try
             {
                 if (files.Count == 1)
                 {
                     var file = files[0];
                     fileName = file.FileName;
-                    var guardUploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "Guards", guardId);
+                    var guardUploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "Guards", CurrentDate.ToString());
                     if (!Directory.Exists(guardUploadDir))
                         Directory.CreateDirectory(guardUploadDir);
 
@@ -884,7 +887,7 @@ namespace CityWatch.Web.Pages.Admin
             {
                 success = false;
             }
-            return new JsonResult(new { success, fileName });
+            return new JsonResult(new { success, fileName, CurrentDate });
         }
 
 
@@ -908,17 +911,15 @@ namespace CityWatch.Web.Pages.Admin
 
             try
             {
-                if (type == 'l')
+                 if (type == 'c')
                 {
-                    var license = _guardDataProvider.GetGuardLicense(id);
-                    license.FileName = string.Empty;
-                    _guardDataProvider.SaveGuardLicense(license);
-                }
-                else if (type == 'c')
-                {
-                    var compliance = _guardDataProvider.GetGuardCompliance(id);
-                    compliance.FileName = string.Empty;
-                    _guardDataProvider.SaveGuardCompliance(compliance);
+                    var compliance = _guardDataProvider.GetGuardComplianceFile(id);
+                    if (compliance!=null)
+                    {
+                        compliance.FileName = string.Empty;
+                        _guardDataProvider.SaveGuardComplianceandlicanse(compliance);
+                    }
+                   
                 }
             }
             catch (Exception)
@@ -1105,13 +1106,13 @@ namespace CityWatch.Web.Pages.Admin
         private bool UploadGuardComplianceandLicenseToDropbox(GuardComplianceAndLicense guardComplianceandlicense)
         {
             guardComplianceandlicense.Guard = _guardDataProvider.GetGuards().SingleOrDefault(z => z.Id == guardComplianceandlicense.GuardId);
-            var existingGuardCompliance = _guardDataProvider.GetGuardCompliance(guardComplianceandlicense.Id);
+            var existingGuardCompliance = _guardDataProvider.GetGuardComplianceFile(guardComplianceandlicense.Id);
             if ((guardComplianceandlicense.Id == 0 && string.IsNullOrEmpty(guardComplianceandlicense.FileName)) ||
                 (guardComplianceandlicense.Id != 0 && existingGuardCompliance.FileName == guardComplianceandlicense.FileName))
                 return true;
 
-            var fileToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards", guardComplianceandlicense.GuardId.ToString(), guardComplianceandlicense.FileName);
-            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.GuardId}/{guardComplianceandlicense.FileName}");
+            var fileToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards", guardComplianceandlicense.CurrentDateTime.ToString(), guardComplianceandlicense.FileName); ;
+            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.CurrentDateTime}/{guardComplianceandlicense.FileName}");
             return UpoadDocumentToDropbox(fileToUpload, dbxFilePath);
         }
 
@@ -1124,8 +1125,8 @@ namespace CityWatch.Web.Pages.Admin
             try
             {
                 uploaded = Task.Run(() => _dropboxUploadService.Upload(dropboxSettings, fileToUpload, dbxFilePath)).Result;
-                if (uploaded && System.IO.File.Exists(fileToUpload))
-                    System.IO.File.Delete(fileToUpload);
+                //if (uploaded && System.IO.File.Exists(fileToUpload))
+                //    System.IO.File.Delete(fileToUpload);
             }
             catch
             {
