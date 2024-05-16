@@ -2956,7 +2956,7 @@
             data: 'fileName',
             render: function (data, type, row, meta) {
                 if (data)
-                    return '<a href="/Uploads/Guards/' + row.currentDateTime +'/' + row.fileUrl + '" target="_blank">' + data + '</a>';
+                    return '<a href="/Uploads/Guards/License/' + row.fileUrl + '" target="_blank">' + data + '</a>';
                 return '-';
             }
         }],
@@ -3297,6 +3297,8 @@
     });
     $('#btn_save_guard_compliancelicense').on('click', function () {
         clearGuardValidationSummary('compliancelicanseValidationSummary');
+        $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
+
         var ExpirayDateVal = $('#GuardComplianceAndLicense_ExpiryDate1').val();
         if (ExpirayDateVal=='') {
             confirm('Are you sure you not want to enter Expiray Date');
@@ -3310,6 +3312,8 @@
         }).done(function (result) {
             if (result.status) {
                 $('#addGuardCompliancesLicenseModal').modal('hide');
+                const messageHtml1 = '';
+                $('#schRunStatusNew').html(messageHtml1);
                 gridGuardLicensesAndLicence.ajax.reload();
  
                 if (!result.dbxUploaded) {
@@ -3325,6 +3329,7 @@
 
     $('#btn_save_guard_compliance').on('click', function () {
         clearGuardValidationSummary('complianceValidationSummary');
+       
         $('#loader').show();
         $.ajax({
             url: '/Admin/GuardSettings?handler=SaveGuardCompliance',

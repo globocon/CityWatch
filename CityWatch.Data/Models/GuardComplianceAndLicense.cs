@@ -48,6 +48,9 @@ namespace CityWatch.Data.Models
         [ForeignKey("GuardId")]
         public Guard Guard { get; set; }
         public string CurrentDateTime { get; set; }
+        public int Reminder1 { get; set; }
+
+        public int Reminder2 { get; set; }
 
     }
 }

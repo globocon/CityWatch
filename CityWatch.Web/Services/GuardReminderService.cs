@@ -240,10 +240,12 @@ namespace CityWatch.Web.Services
         {
             foreach (var license in guardComplianceAndLicense)
             {
-                
+                if ((DateTime.Today.AddDays(license.Reminder1) == license.ExpiryDate) ||
+                    (DateTime.Today.AddDays(license.Reminder2) == license.ExpiryDate))
+                {
                     var message = $"<tr><td>Compliance</td><td><td>{license.Guard.Name}</td><td>{license.ExpiryDate?.ToString("dd-MMM-yyyy")}</td><td>{license.Description}</td>";
                     yield return new KeyValuePair<DateTime, string>(license.ExpiryDate.Value, message);
-                
+                }
             }
         }
         private List<GuardLicense> GetLicenseMessagesId(List<GuardLicense> guardLicenses)
