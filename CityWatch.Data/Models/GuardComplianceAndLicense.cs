@@ -22,7 +22,7 @@ namespace CityWatch.Data.Models
         public string Description { get; set; }
         public DateTime? ExpiryDate { get; set; }
 
-        
+        [Required]
         public string FileName { get; set; }
 
         [NotMapped]

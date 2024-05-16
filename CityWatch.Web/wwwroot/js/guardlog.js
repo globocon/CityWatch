@@ -3012,6 +3012,8 @@
 
     $('#btnAddGuardLicense').on('click', function () {
         resetGuardLicenseandComplianceAddModal();
+        const messageHtml2 = '';
+        $('#schRunStatusNew').html(messageHtml2);
         $('#addGuardCompliancesLicenseModal').modal('show');
     });
     /*code added for Licence Type Dropdown Textbox start*/
@@ -3297,9 +3299,23 @@
     });
     $('#btn_save_guard_compliancelicense').on('click', function () {
         clearGuardValidationSummary('compliancelicanseValidationSummary');
-        $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
-
+        if ($("#compliancelicanseValidationSummary ul li").length > 0) {
+            // If there are li elements, do something
+            console.log("The div contains li elements.");
+        } else {
+            // If there are no li elements, do something else
+            console.log("The div does not contain li elements.");
+        }
         var ExpirayDateVal = $('#GuardComplianceAndLicense_ExpiryDate1').val();
+        var HrVal = $('#HRGroup').val();
+        var DescVal = $('#Description').val();
+        var FileVa = $('#guardComplianceandlicense_fileName1').html();
+        if (HrVal != '' && DescVal != '' && FileVa!='') {
+            $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
+
+        }
+        
+        
         if (ExpirayDateVal=='') {
             confirm('Are you sure you not want to enter Expiray Date');
         }
