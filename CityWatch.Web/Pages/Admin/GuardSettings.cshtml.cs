@@ -800,11 +800,14 @@ namespace CityWatch.Web.Pages.Admin
             var status = true;
             var dbxUploaded = true;
             var message = "Success";
+            string extension = Path.GetExtension(guardComplianceandlicense.FileName);
+            string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(guardComplianceandlicense.FileName);
+            guardComplianceandlicense.FileName = fileNameWithoutExtension + "_" + guardComplianceandlicense.CurrentDateTime+ extension;
            
-
             try
             {
                 dbxUploaded = UploadGuardComplianceandLicenseToDropbox(guardComplianceandlicense);
+                guardComplianceandlicense.CurrentDateTime = DateTime.Now.ToString();
                 _guardDataProvider.SaveGuardComplianceandlicanse(guardComplianceandlicense);
             }
             catch (Exception ex)
@@ -874,11 +877,15 @@ namespace CityWatch.Web.Pages.Admin
                 {
                     var file = files[0];
                     fileName = file.FileName;
-                    var guardUploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "Guards", CurrentDate.ToString());
+                    
+                    string extension = Path.GetExtension(fileName);
+                    string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
+                    var fileNameUpload = fileNameWithoutExtension + "_" + CurrentDate+ extension;
+                    var guardUploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "Guards","License");
                     if (!Directory.Exists(guardUploadDir))
                         Directory.CreateDirectory(guardUploadDir);
 
-                    using var stream = System.IO.File.Create(Path.Combine(guardUploadDir, fileName));
+                    using var stream = System.IO.File.Create(Path.Combine(guardUploadDir, fileNameUpload));
                     file.CopyTo(stream);
                 }
 
@@ -1111,8 +1118,8 @@ namespace CityWatch.Web.Pages.Admin
                 (guardComplianceandlicense.Id != 0 && existingGuardCompliance.FileName == guardComplianceandlicense.FileName))
                 return true;
 
-            var fileToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards", guardComplianceandlicense.CurrentDateTime.ToString(), guardComplianceandlicense.FileName); ;
-            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.CurrentDateTime}/{guardComplianceandlicense.FileName}");
+            var fileToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards","License", guardComplianceandlicense.FileName); ;
+            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.FileName}");
             return UpoadDocumentToDropbox(fileToUpload, dbxFilePath);
         }
 

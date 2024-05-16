@@ -44,7 +44,7 @@
     <Folder Include="wwwroot\Pdf\Output\" />
     <Folder Include="wwwroot\Pdf\ToDropbox\" />
     <Folder Include="wwwroot\StaffDocs\" />
-    <Folder Include="wwwroot\Uploads\" />
+    <Folder Include="wwwroot\Uploads\License\" />
   </ItemGroup>
 
   <ItemGroup>
