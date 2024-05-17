@@ -813,6 +813,8 @@ namespace CityWatch.Web.Pages.Admin
             {
                 dbxUploaded = UploadGuardComplianceandLicenseToDropbox(guardComplianceandlicense);
                 guardComplianceandlicense.CurrentDateTime = DateTime.Now.ToString();
+                guardComplianceandlicense.Reminder1 = 45;
+                guardComplianceandlicense.Reminder2 = 7;
                 _guardDataProvider.SaveGuardComplianceandlicanse(guardComplianceandlicense);
             }
             catch (Exception ex)
@@ -852,6 +854,8 @@ namespace CityWatch.Web.Pages.Admin
             {
                 dbxUploaded = UploadGuardComplianceandLicenseToDropboxNew(guardComplianceandlicense);
                 guardComplianceandlicense.CurrentDateTime = DateTime.Now.ToString();
+                guardComplianceandlicense.Reminder1 = 45;
+                guardComplianceandlicense.Reminder2 = 7;
                 _guardDataProvider.SaveGuardComplianceandlicanse(guardComplianceandlicense);
             }
             catch (Exception ex)
