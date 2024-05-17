@@ -2136,7 +2136,7 @@ $('#btn_save_guard_compliancelicenseKey').on('click', function () {
             gridGuardLicensesAndLicenceKey.ajax.reload();
 
             if (!result.dbxUploaded) {
-                displayGuardValidationSummary('compliancelicanseValidationSummary1', 'Compliance details saved successfully. However, upload to Dropbox failed.');
+               // displayGuardValidationSummary('compliancelicanseValidationSummary1', 'Compliance details saved successfully. However, upload to Dropbox failed.');
             }
         } else {
             displayGuardValidationSummary('compliancelicanseValidationSummary1', result.message);
