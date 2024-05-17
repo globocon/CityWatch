@@ -2089,7 +2089,7 @@ $('#HRGroup').on('change', function () {
         ulClients.append('<li class="es-visible" value="' + Desc2Val + '">' + Desc2Val + '</li>');
     }
     else if (Descriptionval == 3) {
-        var Desc3Val = 'LIR,WARDEN,COXSWAIN,etc';
+        var Desc3Val = 'LIR,WARDEN,COXSWAIN';
         var Desc3values = Desc3Val.split(',');
         Desc3values.forEach(function (Desc3value) {
             ulClients.append('<li class="es-visible" value="' + Desc3value + '">' + Desc3value + '</li>');
