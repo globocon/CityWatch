@@ -801,10 +801,14 @@ namespace CityWatch.Web.Pages.Admin
             var status = true;
             var dbxUploaded = true;
             var message = "Success";
+            if (guardComplianceandlicense.Id==0) { 
+
+            
             string extension = Path.GetExtension(guardComplianceandlicense.FileName);
             string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(guardComplianceandlicense.FileName);
             guardComplianceandlicense.FileName = fileNameWithoutExtension + "_" + guardComplianceandlicense.CurrentDateTime+ extension;
-           
+            }
+
             try
             {
                 dbxUploaded = UploadGuardComplianceandLicenseToDropbox(guardComplianceandlicense);
@@ -837,9 +841,12 @@ namespace CityWatch.Web.Pages.Admin
             var status = true;
             var dbxUploaded = true;
             var message = "Success";
-            string extension = Path.GetExtension(guardComplianceandlicense.FileName);
-            string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(guardComplianceandlicense.FileName);
-            guardComplianceandlicense.FileName = fileNameWithoutExtension + "_" + guardComplianceandlicense.CurrentDateTime + extension;
+            if (guardComplianceandlicense.Id == 0)
+            {
+                string extension = Path.GetExtension(guardComplianceandlicense.FileName);
+                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(guardComplianceandlicense.FileName);
+                guardComplianceandlicense.FileName = fileNameWithoutExtension + "_" + guardComplianceandlicense.CurrentDateTime + extension;
+            }
 
             try
             {
