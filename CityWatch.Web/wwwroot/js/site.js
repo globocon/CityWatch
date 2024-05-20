@@ -3127,8 +3127,9 @@ gridHrSettings = $('#tbl_hr_settings').grid({
 
             if (currentGroupValue !== lastGroupValue) {
                 lastGroupValue = currentGroupValue;
-
-                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 3).text(currentGroupValue));
+               
+                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 4).text(currentGroupValue));
+                headerRow.css('background-color', '#CCCCCC');
                 $(row).before(headerRow);
             }
         });
