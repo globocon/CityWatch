@@ -232,7 +232,7 @@ namespace CityWatch.Data.Providers
         }
         public List<KeyVehicleLogVisitorPersonalDetail> GetProviderList(int ID)
         {
-            return _context.KeyVehicleLogVisitorPersonalDetails.Where(x => x.PersonType == ID).ToList();
+            return _context.KeyVehicleLogVisitorPersonalDetails.Where(x => x.PersonType == ID).OrderBy(x => x.CompanyName).ToList();
         }
         public KeyVehcileLogField GetKVLogField()
         {
