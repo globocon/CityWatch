@@ -25,6 +25,7 @@
     });
 
     $('#Report_DateLocation_ClientSite').attr('placeholder', 'Select Site or Edit');
+    $('#Report_DateLocation_ClientArea').attr('placeholder', 'Select');
     $('#Report_DateLocation_ClientSite').editableSelect({
         //filter: false,
         effects: 'slide'

@@ -5166,12 +5166,12 @@ $(function () {
                     $('#clientSiteGps').val(data.clientSite.gps);
                     const clientAreaControl = $('#Report_DateLocation_ClientArea');
                     clientAreaControl.html('');
-                    toggleClientGpsLink(false);
+                   // toggleClientGpsLink(false);
 
                     //const ulClients = $('#Report_DateLocation_ClientArea').siblings('ul.es-list');
                     //ulClients.html('');
 
-                    const option = recordName;
+                   const option = recordName;
                     if (option == '')
                         return false;
 
@@ -5191,7 +5191,7 @@ $(function () {
                     });
 
 
-            //p1 - 202 site allocation - end
+            ////p1 - 202 site allocation - end
                 }
             }).fail(function () {
             });
