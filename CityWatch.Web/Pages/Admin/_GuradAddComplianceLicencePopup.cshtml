@@ -18,29 +18,33 @@
                     <div class="form-row" style="height:363px;">
                         <p style="color:black" class="mb-1">
                             The HR database allows uploads of compliance and license documents based on three groups.
-                            Please select the correct group first, before selecting the description of the file you are uploading.If a document you
+                            Please select the correct group first, before selecting the description of the file you are uploading. If a document you
                             are trying to upload is not listed in the dropdown description list, please contact admin
                         </p>
-                        <p class="col-sm-6 mb-1" style="color:black"><u>LEGEND</u></p>
+                        @* <p class="col-sm-6 mb-1" style="color:black"><u>LEGEND</u></p> *@
+                        <h8 class="col-sm-6" style="color:black"><u>LEGEND</u></h8>
                         <h8 style="color:black;font-size:11px">HR 1=C4i Onboarding    (CV,LICENSES,C4i Training)</h8>
                         <h8 style="color:black;font-size:11px">HR 2=Client inductions    (client specific SOPs)</h8>
-                        <h8 style="color:black;font-size:11px">HR 3=Special skills    (FLIR,WARDEN,COXSWAIN,etc)</h8>
-                        <div class="form-group col-md-6">
-                            <label class="form-label">HR Group</label>
-                            <select class="form-control" id="HRGroup" name="GuardComplianceAndLicense.HrGroup" asp-items="@Html.GetEnumSelectList<HrGroup>()">
-                                <option selected="selected" value="">Select</option>
-                            </select>
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label class="form-label" id="DescLabel">Description</label>
+                        <h8 style="color:black;font-size:11px">HR 3=Special skills    (FLIR,WARDEN,COXSWAIN,etc)</h8><br />
+                        <div class="row pt-2">
+                            <div class="form-group col-md-5">
+                                <label class="form-label">HR Group</label>
+                                <select class="form-control" id="HRGroup" name="GuardComplianceAndLicense.HrGroup" asp-items="@Html.GetEnumSelectList<HrGroup>()">
+                                    <option selected="selected" value="">Select</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-7">
+                                <label class="form-label" id="DescLabel">Description</label>
 
-                            <select name="GuardComplianceAndLicense.Description" id="Description" class="form-control"></select>
+                                <select name="GuardComplianceAndLicense.Description" id="Description" class="form-control" style="width:287px"></select>
+                            </div>
                         </div>
-                        <div class="form-group col-md-6">
+                        <div class="row">
+                        <div class="form-group col-md-4">
                             <label class="form-label">Expiry Date</label>
                             <input type="date" class="form-control" id="GuardComplianceAndLicense_ExpiryDate1" name="GuardComplianceAndLicense.ExpiryDate" min="@DateTime.Today.ToString("yyyy-MM-dd")">
                         </div>
-                        <div class="form-group col-md-6 mb-1">
+                        <div class="form-group col-md-8 mb-1">
                             <div class="container p-0" style="display:flex;font-size:11px;color:black">
                                 <p class="left-text">Note:</p>&nbsp;&nbsp;
                                 <p class="right-text">Licenses and inductions expire. Please ensure you add expiry so system can email you when your document needs to be updated</p>
@@ -48,6 +52,7 @@
                             @*   <div class="col-sm-4">Note:</div>
                             <div class="col-sm-4">Licenses and inductions expire. Please ensure you add expiry so system can email you when your document needs to be updated</div> *@
                             @*  <h6 style="color:red;font-size:11px">  </h6> *@
+                        </div>
                         </div>
 
                         @*  <div class="form-group col-md-6">
