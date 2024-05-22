@@ -41,6 +41,29 @@ namespace CityWatch.Data.Models
             return calculatedNextRunOn;
         }
 
+
+        public static DateTime GetNextRunOnUpdate(KpiSendSchedule sendSchedule)
+        {
+            DateTime calculatedNextRunOn;
+
+            // This a new schedule
+            if (sendSchedule.Id != 0 || sendSchedule.NextRunOn == DateTime.MinValue)
+            {
+                var firstRunOn = DateTime.Parse($"{sendSchedule.StartDate.ToShortDateString()} {sendSchedule.Time}");
+                calculatedNextRunOn = firstRunOn > DateTime.Now ? firstRunOn : GetFrequencyBasedNextRunOn(firstRunOn, sendSchedule.Frequency);
+            }
+            else
+                calculatedNextRunOn = GetFrequencyBasedNextRunOn(sendSchedule.NextRunOn, sendSchedule.Frequency);
+
+            if (calculatedNextRunOn <= DateTime.Now)
+                calculatedNextRunOn = GetFrequencyBasedNextRunOn(DateTime.Parse($"{DateTime.Today.ToShortDateString()} {sendSchedule.Time}"), sendSchedule.Frequency);
+
+            if (sendSchedule.EndDate.HasValue && calculatedNextRunOn > sendSchedule.EndDate.Value)
+                calculatedNextRunOn = DateTime.MaxValue;
+            return calculatedNextRunOn;
+        }
+
+
         private static DateTime GetFrequencyBasedNextRunOn(DateTime nextRunOn, SendSchdeuleFrequency frequency) => frequency switch
         {
             SendSchdeuleFrequency.Daily => nextRunOn.AddDays(1),
