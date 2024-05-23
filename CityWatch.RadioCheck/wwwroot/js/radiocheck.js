@@ -1,6 +1,8 @@
 let nIntervId;
 const duration = 60 * 3;
 var isPaused = false;
+var sitebuttonSelectedClientTypeSiteId = -1;
+var sitebuttonSelectedClientSiteId = -1;
 //p4#48 AudioNotification - Binoy - 12-01-2024 -- Start
 let playAlarm = 0;
 let audiourl = '/NotificationSound/duressAlarm01.mp3'
@@ -24,6 +26,15 @@ window.onload = function () {
 };
 $(document).ready(function () {
     $('[data-toggle="tooltip"]').tooltip();
+
+    $(document).on('show.bs.modal', '.modal', function () {
+        const zIndex = 1040 + 10 * $('.modal:visible').length;
+        $(this).css('z-index', zIndex);
+        setTimeout(() => $('.modal-backdrop').not('.modal-stack').css('z-index', zIndex - 1).addClass('modal-stack'));
+    });
+
+    $(document).on('hidden.bs.modal', '.modal', () => $('.modal:visible').length && $(document.body).addClass('modal-open'));
+    
 });
 function startClock() {
     let timer = duration, minutes, seconds;
@@ -256,7 +267,10 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
-                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardLogBookInfoModal" id="btnLogBookDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" text="' + data.clientSiteId + '"><input type="hidden" id="GuardId" text="' + data.guardId + '"> ';
+                if (value != 0)
+                    return '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardLogBookInfoModal" id="btnLogBookDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                else
+                    return '<button type="button" class="btn" id="btnLogBookHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
             }
         },
         {
@@ -264,8 +278,11 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             width: '6%',
             className: "text-center",
             render: function (value, type, data) {
-                if (value === null) return 'N/A';
-                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardKeyVehicleInfoModal" id="btnKeyVehicleDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                if (value === null) return 'N/A';                
+                if (value != 0)
+                    return '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardKeyVehicleInfoModal" id="btnKeyVehicleDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                else
+                    return '<button type="button" class="btn" id="btnKvHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
             }
         },
         {
@@ -274,9 +291,11 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
-                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardIncidentReportsInfoModal" id="btnIncidentReportdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '"> ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                if (value != 0)
+                    return '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardIncidentReportsInfoModal" id="btnIncidentReportdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                else
+                    return '<button type="button" class="btn" id="btnIrHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
             }
-
         },
         {
             data: 'smartWands',
@@ -284,7 +303,15 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
-                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardSWInfoModal" id="btnSWdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '"> ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                if (data.hasmartwand !== 0) {
+                    if (value != 0)
+                        return '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardSWInfoModal" id="btnSWdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                    else
+                        return '<button type="button" class="btn" id="btnSwHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
+                }
+                else {
+                    return '<button type="button" class="btn" id="btnSwHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
+                }
             }
         },
         {
@@ -292,11 +319,19 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             width: '2%',
             className: "text-center",
             render: function (value, type, data) {
-                if (value < 80)
-                    return '<div class="p-1 mb-1" style="background: #AFE1AF;">' + value + '</div>';
-                if (value >= 80)
-                    return '<div class="p-1 mb-1" style="background: #FFD580;">' + value + '</div>';
-                return value;
+               
+                if (data.rcColorId != 1) {
+                   
+                    if (value < 80)
+                        return '<div class="p-1 mb-1" style="background: #AFE1AF;">' + value + '</div>';
+                    if (value >= 80)
+                        return '<div class="p-1 mb-1" style="background: #FFD580;">' + value + '</div>';
+
+                }
+                else {
+                    return '<div class="p-1 mb-1" style="background:  #A9A9A9;">' + '00' + '</div>';
+                }
+                //return value;
             }
 
         },
@@ -515,26 +550,8 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             titleAttr: 'Custom',
             className: 'btn btn-md mr-2 btn-custom',
             action: function () {
-
-                $('#ActionListControlRoomModal').modal('show');
-                $('#btnSendActionListGlobal').prop('disabled', false);
-                isPaused = true;
-                $('#dglClientTypeActionListAll').val('');
-                $('#dglClientSiteIdActionListAll').val('');
-                $('#Site_Alarm_Keypad_codeAll').val('');
-                $('#Action1All').val('');
-                $('#Action2All').val('');
-                $('#Action3All').val('');
-                $('#Action4All').val('');
-                $('#Action5All').val('');
-                $('#Action5All').val('');
-                $('#Site_Combination_LookAll').val('');
-                $('#site_Physical_keyAll').val('');
-                $('#txtCommentsAll').val('');
-                $('#txtMessageActionListAll').val('');
-                $('#dglClientTypeActionList2All').val('');
-                $('#dglClientSiteIdActionList2All').val('');
-
+                $('#inpCallingFunction').val('STEPBUTTON'); // Setting calling function to step button
+                $('#pushNoTificationsControlRoomModal').modal('show');
 
             }
         }
@@ -779,11 +796,6 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
     },
 
 
-});
-
-$("#ActionListControlRoomModal").on("hidden.bs.modal", function () {
-    isPaused = false;
-    $('#btnSendActionListGlobal').prop('disabled', false);
 });
 
 
@@ -1036,7 +1048,7 @@ let clientSiteActiveGuardsLogBookDetails = $('#clientSiteActiveGuardsLogBookDeta
         { data: 'id', visible: false },
         {
             data: 'siteName',
-            width: '20%',
+            width: '100%',
             render: function (value, type, data) {
 
                 return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
@@ -1067,7 +1079,13 @@ let clientSiteActiveGuardsLogBookDetails = $('#clientSiteActiveGuardsLogBookDeta
             className: "text-center",
 
         },
-
+        {
+            data: 'gpsCoordinates', width: '9%',
+            className: "text-center", render: function (value, type, data) {
+                //return record.guardLogin ? record.guardLogin.guard.initial : '';
+                return `${data.gpsCoordinates ? `<a href="https://www.google.com/maps?q=${data.gpsCoordinates}" target="_blank" data-toggle="tooltip" title=""><i class="fa fa-map-marker" aria-hidden="true"></i></a>` : ''}`;
+            }
+        }
 
     ],
     drawCallback: function () {
@@ -1352,10 +1370,6 @@ let clientSiteActiveGuardsSWDetails = $('#clientSiteActiveGuardsSWDetails').Data
 
 
         },
-
-
-
-
     ],
 
 });
@@ -1403,6 +1417,349 @@ $('#clientSiteActiveGuards tbody').on('click', '#btnIncidentReportdetails', func
 
 });
 /*for incident report details of the guard - end*/
+
+/* for logbook history of the guard start*/
+function renderLogbookDateTime(value, record) {  
+    if (record.eventDateTimeLocal != null && record.eventDateTimeLocal != '') {
+        const date = new Date(record.eventDateTimeLocal);
+        var DateTime = luxon.DateTime;
+        var dt1 = DateTime.fromJSDate(date);
+        var dt = dt1.toFormat('dd LLL yyyy @ HH:mm') + ' (' + record.eventDateTimeZoneShort + ')';
+        return dt;
+    }
+    else if (value !== '') {
+        const date = new Date(value);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        let day = date.getDate();
+
+        if (day < 10) {
+            day = '0' + day;
+        }
+        return day + ' ' + months[date.getMonth()] + ' ' + date.getFullYear() + ' @ ' + date.toLocaleString('en-Au', { hourCycle: 'h23', timeStyle: 'short' }) + ' Hrs';
+    }
+}
+
+
+let clientSiteActiveGuardsLogBookHistory = $('#clientSiteActiveGuardsLogBookHistory').DataTable({
+    ordering: false,
+    info: false,
+    searching: false,
+    autoWidth: false,
+    fixedHeader: true,
+    deferLoading: 57,
+    "scrollY": "300px", // Set the desired height for the scrollable area
+    "paging": false,
+    "footer": true,
+    "processing": true,
+    'language': {
+        'loadingRecords': '&nbsp;',
+        'processing': 'Loading...Please wait...'
+    },     
+    ajax: {
+        url: '/RadioCheckV2?handler=ClientSitelogBookHistory',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteId = $('#txtClientSiteId').val();
+            d.guardId = $('#txtGuardId').val();
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'id', title: 'Id', visible: false },        
+        {
+            data: 'clientSiteLogBookId',
+            width: '20%',
+            title: 'LogBook Id',
+            visible: false,
+        },
+        {
+            data: 'notes',
+            width: '9%',
+            title: 'Notes',
+            className: "text-center",
+        },
+        {
+            data: 'eventDateTime',
+            width: '9%',
+            title: 'Created Time',
+            className: "text-center",
+            render: function (value, type, data) {
+                return renderLogbookDateTime(value, data);
+            }
+        }
+    ]   
+});
+
+$('#clientSiteActiveGuards tbody').on('dblclick', '#btnLogBookHistoryByGuard', function (value, record) {
+    $('#guardLogBookHistoryModal').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).attr("data-guardid");
+    var ClientSiteId = $(this).attr('data-clientsiteid');  
+    var ClientSiteName = $(this).attr('data-clientsitename');
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    $('#lbl_GuardLogBookHistoryModalHeader').text(GuardName);
+    $('#lbl_lb_History_SitenameInfo').text('Last log book log');
+    clientSiteActiveGuardsLogBookHistory.clear().draw();
+    clientSiteActiveGuardsLogBookHistory.ajax.reload();
+});
+/* for logbook history of the guard end*/
+
+
+/* for Key Vehcile history of the guard start*/
+function renderKvDateTime(value, record) {
+    if (record.entryCreatedDateTimeLocal != null && record.entryCreatedDateTimeLocal != '') {
+        const date = new Date(record.entryCreatedDateTimeLocal);
+        var DateTime = luxon.DateTime;
+        var dt1 = DateTime.fromJSDate(date);
+        var dt = dt1.toFormat('dd LLL yyyy @ HH:mm') + ' (' + record.entryCreatedDateTimeZoneShort + ')';
+        return dt;
+    }
+    else if (value !== '') {
+        const date = new Date(value);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        let day = date.getDate();
+
+        if (day < 10) {
+            day = '0' + day;
+        }
+        return day + ' ' + months[date.getMonth()] + ' ' + date.getFullYear() + ' @ ' + date.toLocaleString('en-Au', { hourCycle: 'h23', timeStyle: 'short' }) + ' Hrs';
+    }
+}
+
+
+let clientSiteActiveGuardsKeyVehicleHistory = $('#clientSiteActiveGuardsKeyVehicleHistory').DataTable({
+    ordering: false,
+    info: false,
+    searching: false,
+    autoWidth: false,
+    fixedHeader: false,
+    deferLoading: 57,
+    "scrollY": "300px", // Set the desired height for the scrollable area
+    "paging": false,
+    "footer": true,
+    "processing": true,
+    'language': {
+        'loadingRecords': '&nbsp;',
+        'processing': 'Loading...Please wait...'
+    },
+    ajax: {
+        url: '/RadioCheckV2?handler=ClientSiteKeyVehicleHistory',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteId = $('#txtClientSiteId').val();
+            d.guardId = $('#txtGuardId').val();
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'id', title: 'Id', visible: false },
+        { data: 'id', title: 'KeyVehicleLog Id', visible: false, width: '20%' },
+        { data: 'vehicleRego', title: 'License No', width: '20%', visible: true },
+        { data: 'personName',width: '20%',title: 'Individual',className: "text-center", visible: true },
+        { data: 'companyName', width: '20%', title: 'Company', className: "text-center", visible: true },
+        { data: 'individualTitle',width: '20%',title: 'Activity',className: "text-center"},
+        { data: 'entryCreatedDateTimeLocal',width: '20%',title: 'Created Time',className: "text-center",
+            render: function (value, type, data) {
+                return renderKvDateTime(value, data);
+            }
+        },
+        { data: 'rubbishDeduction', visible: false }
+    ],
+    drawCallback() {
+        var api = this.api();
+        var rowslength = api.rows().data().length;
+        if (rowslength > 0) {
+            var r = api.rows(0).column(7).data()[0];
+            if (r == true) {
+                api.columns([2]).visible(true);
+                api.columns([3]).visible(true);
+                api.columns([4]).visible(true);
+            } else {
+                api.columns([2]).visible(false);
+                api.columns([3]).visible(false);
+                api.columns([4]).visible(false);
+            }
+        } else {
+            api.columns([2]).visible(true);
+            api.columns([3]).visible(true);
+            api.columns([4]).visible(true);
+        }
+    }
+});
+
+$('#clientSiteActiveGuards tbody').on('dblclick', '#btnKvHistoryByGuard', function (value, record) {
+    $('#guardKeyVehicleHistoryModal').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).attr("data-guardid");
+    var ClientSiteId = $(this).attr('data-clientsiteid');
+    var ClientSiteName = $(this).attr('data-clientsitename');
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    $('#lbl_KvGuardActivityHistoryHeader').text(GuardName);
+    $('#lbl_kv_History_SitenameInfo').text('Last key vehicle log');
+    clientSiteActiveGuardsKeyVehicleHistory.clear().draw();
+    clientSiteActiveGuardsKeyVehicleHistory.ajax.reload();
+});
+/* for Key Vehcile history of the guard end*/
+
+
+/* for Incident Reports history of the guard start*/
+function renderIrDateTime(value, record) {
+    if (record.createdOnDateTimeLocal != null && record.createdOnDateTimeLocal != '') {
+        const date = new Date(record.createdOnDateTimeLocal);
+        var DateTime = luxon.DateTime;
+        var dt1 = DateTime.fromJSDate(date);
+        var dt = dt1.toFormat('dd LLL yyyy @ HH:mm') + ' (' + record.createdOnDateTimeZoneShort + ')';
+        return dt;
+    }
+    else if (value !== '') {
+        const date = new Date(value);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        let day = date.getDate();
+
+        if (day < 10) {
+            day = '0' + day;
+        }
+        return day + ' ' + months[date.getMonth()] + ' ' + date.getFullYear() + ' @ ' + date.toLocaleString('en-Au', { hourCycle: 'h23', timeStyle: 'short' }) + ' Hrs';
+    }
+}
+
+
+let clientSiteActiveGuardsIncidentReportHistory = $('#clientSiteActiveGuardsIncidentReportsHistory').DataTable({
+    ordering: false,
+    info: false,
+    searching: false,
+    autoWidth: false,
+    fixedHeader: false,
+    deferLoading: 57,
+    "scrollY": "300px", // Set the desired height for the scrollable area
+    "paging": false,
+    "footer": true,
+    "processing": true,
+    'language': {
+        'loadingRecords': '&nbsp;',
+        'processing': 'Loading...Please wait...'
+    },
+    ajax: {
+        url: '/RadioCheckV2?handler=ClientSiteIncidentReportHistory',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteId = $('#txtClientSiteId').val();
+            d.guardId = $('#txtGuardId').val();
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'id', title: 'Id', visible: false },      
+        { data: 'id', title: 'IncidentReport Id', visible: true, width: '20%'},
+        {
+            data: 'fileName',
+            width: '60%',
+            title: 'File Name',
+            className: "text-center",
+        },
+        {
+            data: 'createdOn',
+            width: '20%',
+            title: 'Created Time',
+            className: "text-center",
+            render: function (value, type, data) {
+                return renderIrDateTime(value, data);
+            }
+        }
+    ]
+});
+
+$('#clientSiteActiveGuards tbody').on('dblclick', '#btnIrHistoryByGuard', function (value, record) {
+    $('#guardIncidentReportsHistoryModal').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).attr("data-guardid");
+    var ClientSiteId = $(this).attr('data-clientsiteid');
+    var ClientSiteName = $(this).attr('data-clientsitename');
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    $('#lbl_IrGuardActivityHistoryHeader').text(GuardName);
+    $('#lbl_Ir_History_SitenameInfo').text('Last IR log');
+    clientSiteActiveGuardsIncidentReportHistory.clear().draw();
+    clientSiteActiveGuardsIncidentReportHistory.ajax.reload();
+});
+/* for Incident Reports history of the guard end*/
+
+
+/* for SmartWand history of the guard start*/
+function renderSwDateTime(value, record) {
+    if (value !== '' && value != null) {
+        const date = new Date(value);
+        var DateTime = luxon.DateTime;
+        var dt1 = DateTime.fromJSDate(date);
+        var dt = dt1.toFormat('dd LLL yyyy @ HH:mm');
+        return dt;
+    }
+    else {
+        return '';
+    }
+}
+
+let clientSiteActiveGuardsSmartWandHistory = $('#clientSiteActiveGuardsSwHistory').DataTable({
+    ordering: false,
+    info: false,
+    searching: false,
+    autoWidth: false,
+    fixedHeader: false,
+    deferLoading: 57,
+    "scrollY": "300px", // Set the desired height for the scrollable area
+    "paging": false,
+    "footer": true,
+    "processing": true,
+    'language': {
+        'loadingRecords': '&nbsp;',
+        'processing': 'Loading...Please wait...'
+    },
+    ajax: {
+        url: '/RadioCheckV2?handler=ClientSiteSWHistory',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteId = $('#txtClientSiteId').val();
+            d.guardId = $('#txtGuardId').val();
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'id', title: 'Id', visible: false },
+        { data: 'templateName',width: '20%',title: 'Template Name'},
+        { data: 'smartWandId',width: '15%',title: 'Smart Wand'},
+        { data: 'employeePhone', width: '22%', title: 'Smart Wand Number' },
+        {
+            data: 'inspectionStartDatetimeLocal', width: '25%', title: 'Inspection Start', className: "text-center",
+            render: function (value, type, data) {
+                return renderSwDateTime(value, data);
+            }
+        },
+        { data: 'locationScan', width: '30%', title: 'Location' }
+    ]
+});
+
+$('#clientSiteActiveGuards tbody').on('dblclick', '#btnSwHistoryByGuard', function (value, record) {
+    $('#guardSWHistoryModal').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).attr("data-guardid");
+    var ClientSiteId = $(this).attr('data-clientsiteid');
+    var ClientSiteName = $(this).attr('data-clientsitename');
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    $('#lbl_SwGuardActivityHistoryHeader').text(GuardName);
+    $('#lbl_Sw_History_SitenameInfo').text('Last smart wand log');
+    clientSiteActiveGuardsSmartWandHistory.clear().draw();
+    clientSiteActiveGuardsSmartWandHistory.ajax.reload();
+});
+
+/* for SmartWand history of the guard end*/
+
 
 /*For radio check dropdown start*/
 
@@ -1534,6 +1891,41 @@ $('#btnSaveRadioStatusActive').on('click', function () {
 /*For radio check dropdown  end - end*/
 
 /*for pushing notifications from the control room - start*/
+$('#pushNoTificationsControlRoomModal').on('show.bs.modal', function (event) {
+    var inpcallfun = $('#inpCallingFunction').val();
+    if (inpcallfun == 'STEPBUTTON') {
+        $('#textMessageTab').addClass('d-none').removeClass('active');
+        $('#textMessage').addClass('d-none').removeClass('show').removeClass('active');
+
+        $('#globalalertTab').removeClass('active');
+        $('#globalalert').removeClass('show').removeClass('active');
+
+        $('#ActionListTab').addClass('active');
+        $('#actionlist').addClass('show').addClass('active');
+    } else {
+        const button = $(event.relatedTarget);
+        if (button.hasClass('clickbuilding')) {
+            $('#textMessageTab').removeClass('d-none').removeClass('active');
+            $('#textMessage').removeClass('d-none').removeClass('show').removeClass('active');
+
+            $('#globalalertTab').removeClass('active');
+            $('#globalalert').removeClass('show').removeClass('active');
+
+            $('#ActionListTab').addClass('active');
+            $('#actionlist').addClass('show').addClass('active');
+        }
+        else if (button.hasClass('clickenvelope')) {
+            $('#textMessageTab').removeClass('d-none').addClass('active');
+            $('#textMessage').removeClass('d-none').addClass('show').addClass('active');
+
+            $('#globalalertTab').removeClass('active');
+            $('#globalalert').removeClass('show').removeClass('active');
+
+            $('#ActionListTab').removeClass('active');
+            $('#actionlist').removeClass('show').removeClass('active');
+        }
+    }
+});
 $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
 
     isPaused = true;
@@ -1544,18 +1936,20 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
 
 
     const button = $(event.relatedTarget);
-    const id = button.data('id');
+    const id = button.data('id'); 
+
     $('#txtNotificationsCompanyId').val(id);
     $('#chkLB').prop('checked', true);
-    $('#chkSiteEmail').prop('checked', true);
+    $('#chkSiteEmail').prop('checked', false);
     $('#chkSMSPersonal').prop('checked', false);
-    $('#chkSMSSmartWand').prop('checked', false); $('#txtPushNotificationMessage').val('');
+    $('#chkSMSSmartWand').prop('checked', false); 
     $('#chkNationality').prop('checked', false);
     $('#chkSiteState').prop('checked', false);
     $('#chkSiteState').prop('checked', false);
     $('#chkClientType').prop('checked', false);
     $('#chkSMSPersonalGlobal').prop('checked', false);
     $('#chkSMSSmartWandGlobal').prop('checked', false);
+    $('#chkGlobalPersonalEmail').prop('checked', false);
     $('#txtGlobalNotificationMessage').val('');
     $('#State1').prop('disabled', 'disabled');
     $('#State1').val('ACT');
@@ -1569,9 +1963,9 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     $('#txtPushNotificationMessage').val('');
     clearGuardValidationSummary('PushNotificationsValidationSummary');
     var clientSiteId = $('#txtNotificationsCompanyId').val();
-    $('#Site_Alarm_Keypad_code').val('');
-    $('#Action1').val('');
+    $('#Site_Alarm_Keypad_code').val('');    
     $('#site_Physical_key').val('');
+    $('#Action1').val('');
     $('#Action2').val('');
     $('#Action3').val('');
     $('#Action4').val('');
@@ -1579,61 +1973,48 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     $('#Site_Combination_Look').val('');
     $('#txtComments').html('');
 
-    $('#search_client_site').val('');
+    $('#search_client_siteSteps').val('');
     $('#searchResults').html('');
     $('#dglClientTypeActionList').val('');
     $('#dglClientTypeActionList2').val('');
     $('#dglClientSiteIdActionList').val('');
     $('#dglClientSiteIdActionList2').val('');
+    $('#search_client_site').val('');
+        
 
+    var inpcallfun = $('#inpCallingFunction').val();
+    if (inpcallfun != 'STEPBUTTON') {
+        
+        $.ajax({
+            url: '/RadioCheckV2?handler=GetClientType',
+            type: 'POST',
+            data: {
+                clientSiteId: clientSiteId
+            },
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data != null) {
+                sitebuttonSelectedClientTypeSiteId = data;
+                sitebuttonSelectedClientSiteId = clientSiteId;
+                $('#dglClientTypeActionList').val(sitebuttonSelectedClientTypeSiteId).trigger("change");
+            }
+        });
 
+        
+    } else {
 
-    //var clientSiteId = $('#dglClientSiteIdActionList').val();
-
-    $.ajax({
-        url: '/RadioCheckV2?handler=ActionList',
-        type: 'POST',
-        data: {
-            clientSiteId: clientSiteId
-        },
-        dataType: 'json',
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (data) {
-        if (data != null) {
-            $('#Site_Alarm_Keypad_code').val(data.siteAlarmKeypadCode);
-            $('#Action1').val(data.action1);
-            $('#site_Physical_key').val(data.sitephysicalkey);
-            $('#Action2').val(data.action2);
-            $('#Action3').val(data.action3);
-            $('#Action4').val(data.action4);
-            $('#Action5').val(data.action5);
-            $('#Site_Combination_Look').val(data.siteCombinationLook);
-            $('#txtComments').html(data.controlRoomOperator);
-            $('#download_imageRCList').attr('href', '/RCImage/' + data.imagepath + '');
-        }
-
-    });
-
+        const clientSiteControl = $('#dglClientSiteIdActionList');
+        clientSiteControl.html('');
+    }
+    /*p4-79 menu corrections-start*/
+    $('#chkPersonalEmail').prop('checked', false);
+    /*p4-79 menu corrections-end*/
 
 });
 
 
-//$('#chkLB').on('change', function () {
-//    const isChecked = $(this).is(':checked');
-//    $('#IsLB').val(isChecked);
-//});
-//$('#chkSiteEmail').on('change', function () {
-//    const isChecked = $(this).is(':checked');
-//    $('#IsSiteEmail').val(isChecked);
-//});
-//$('#chkSMSPersonal').on('change', function () {
-//    const isChecked = $(this).is(':checked');
-//    $('#IsSMSPersonal').val(isChecked);
-//});
-//$('#chkSMSSmartWand').on('change', function () {
-//    const isChecked = $(this).is(':checked');
-//    $('#IsSMSSmartWand').val(isChecked);
-//});
+
 function clearGuardValidationSummary(validationControl) {
     $('#' + validationControl).removeClass('validation-summary-errors').addClass('validation-summary-valid');
     $('#' + validationControl).html('');
@@ -1641,20 +2022,11 @@ function clearGuardValidationSummary(validationControl) {
 
 
 
-
-
-
-
-
-
-
-
-
-
 $('#btnSendPushLotificationMessage').on('click', function () {
     $(this).prop('disabled', true);
     const checkedLB = $('#chkLB').is(':checked');
     const checkedSiteEmail = $('#chkSiteEmail').is(':checked');
+    const checkedPersonalEmail = $('#chkPersonalEmail').is(':checked');
     const checkedSMSPersonal = $('#chkSMSPersonal').is(':checked');
     const checkedSMSSmartWand = $('#chkSMSSmartWand').is(':checked');
     var clientSiteId = $('#txtNotificationsCompanyId').val();
@@ -1665,7 +2037,7 @@ $('#btnSendPushLotificationMessage').on('click', function () {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
         $(this).prop('disabled', false);
     }
-    else if (checkedLB == false && checkedSiteEmail == false && checkedSMSPersonal == false && checkedSMSSmartWand == false) {
+    else if (checkedLB == false && checkedSiteEmail == false && checkedSMSPersonal == false && checkedSMSSmartWand == false && checkedPersonalEmail == false) {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select any one of the transfer options ');
         $(this).prop('disabled', false);
     }
@@ -1687,7 +2059,8 @@ $('#btnSendPushLotificationMessage').on('click', function () {
                 checkedSMSSmartWand: checkedSMSSmartWand,
                 Notifications: Notifications,
                 Subject: Subject,
-                tmzdata: tmzdata
+                tmzdata: tmzdata,
+                checkedPersonalEmail: checkedPersonalEmail
             },
             dataType: 'json',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -1760,12 +2133,12 @@ $('#btnSendGlabalNotificationMessage').on('click', function () {
     var ClientType = $('#dglClientType').val();
     const chkClientType = $('#chkClientType').is(':checked');
     const chkNationality = $('#chkNationality').is(':checked');
-
+    const chkGlobalPersonalEmail = $('#chkGlobalPersonalEmail').is(':checked');
     if (Notifications === '') {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
         $(this).prop('disabled', false);
     }
-    else if (checkedState == false && chkClientType == false && chkClientType == false && checkedSMSPersonal == false && checkedSMSSmartWand == false && chkNationality == false) {
+    else if (checkedState == false && chkClientType == false && chkClientType == false && checkedSMSPersonal == false && checkedSMSSmartWand == false && chkNationality == false && chkGlobalPersonalEmail == false) {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select any one of the transfer options ');
         $(this).prop('disabled', false);
     }
@@ -1793,6 +2166,7 @@ $('#btnSendGlabalNotificationMessage').on('click', function () {
                 chkNationality: chkNationality,
                 checkedSMSPersonal: checkedSMSPersonal,
                 checkedSMSSmartWand: checkedSMSSmartWand,
+                chkGlobalPersonalEmail: chkGlobalPersonalEmail,
                 clientSiteId: clientSiteId,
                 tmzdata: tmzdata
             },
@@ -1900,86 +2274,6 @@ $('#btnSendActionList').on('click', function () {
     }
 });
 
-$('#btnSendActionListGlobal').on('click', function () {
-    $(this).prop('disabled', true);
-    var clientSiteId = $('#dglClientSiteIdActionList2All').val();
-    var Notifications = $('#txtMessageActionListAll').val();
-    var Subject = $('#txtGlobalNotificationSubjectAll').val();
-
-    var ClientType = $('#dglClientTypeActionList2All').val();
-    var ClientSite = $('#dglClientSiteIdActionList2All').val();
-    var AlarmKeypadCode = $('#Site_Alarm_Keypad_codeAll').val();
-    var Action1 = $('#Action1All').val();
-    var Physicalkey = $('#site_Physical_keyAll').val();
-    var Action2 = $('#Action2All').val();
-    var SiteCombinationLook = $('#Site_Combination_LookAll').val();
-    var Action3 = $('#Action3All').val();
-    var Action4 = $('#Action4All').val();
-    var Action5 = $('#Action5All').val();
-    var CommentsForControlRoomOperator = $('#txtCommentsAll').val();
-    // Task p6#73_TimeZone issue -- added by Binoy - Start   
-    fillRefreshLocalTimeZoneDetails(tmzdata, "", false);
-    // Task p6#73_TimeZone issue -- added by Binoy - End
-    if (Notifications === '') {
-        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
-        $(this).prop('disabled', false);
-    }
-
-    else if (chkClientType == true && ClientType == null) {
-        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
-        $(this).prop('disabled', false);
-    }
-    else if (ClientType == '') {
-        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client type ');
-        $(this).prop('disabled', false);
-    }
-    else if (ClientSite == '') {
-        displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select the client site ');
-        $(this).prop('disabled', false);
-    }
-    else {
-
-        $('#Access_permission_RC_statusAll').hide();
-        $('#Access_permission_RC_statusAll').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Sending Email. Please wait...').show();
-        $.ajax({
-            url: '/RadioCheckV2?handler=SaveActionListGlobal',
-            type: 'POST',
-            data: {
-                Notifications: Notifications,
-                Subject: Subject,
-                ClientType: ClientType,
-                clientSiteId: clientSiteId,
-                AlarmKeypadCode: AlarmKeypadCode,
-                Action1: Action1,
-                Physicalkey: Physicalkey,
-                Action2: Action2,
-                SiteCombinationLook: SiteCombinationLook,
-                Action3: Action3,
-                Action4: Action4,
-                Action5: Action5,
-                CommentsForControlRoomOperator: CommentsForControlRoomOperator,
-                tmzdata: tmzdata
-
-            },
-            dataType: 'json',
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (data) {
-            if (data.success == true) {
-                $(this).prop('disabled', false);
-                $('#ActionListControlRoomModal').modal('hide');
-                $('#Access_permission_RC_statusAll').hide();
-            }
-            else {
-                displayGuardValidationSummary('PushNotificationsValidationSummary', data.message);
-                $(this).prop('disabled', false);
-            }
-            //$('#selectRadioStatus').val('');
-            //$('#btnRefreshActivityStatus').trigger('click');
-        });
-    }
-});
-
-
 $('#dglClientSiteIdActionList').on('change', function () {
     $('#Site_Alarm_Keypad_code').val('');
     $('#Action1').val('');
@@ -2001,51 +2295,32 @@ $('#dglClientSiteIdActionList').on('change', function () {
         dataType: 'json',
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (data) {
-        $('#Site_Alarm_Keypad_code').val(data.siteAlarmKeypadCode);
-        $('#Action1').val(data.action1);
-        $('#site_Physical_key').val(data.sitephysicalkey);
-        $('#Action2').val(data.action2);
-        $('#Action3').val(data.action3);
-        $('#Action4').val(data.action4);
-        $('#Action5').val(data.action5);
-        $('#Site_Combination_Look').val(data.siteCombinationLook);
-        $('#txtComments').html(data.controlRoomOperator);
+        if (data != null) {
+            $('#Site_Alarm_Keypad_code').val(data.siteAlarmKeypadCode);
+            $('#Action1').val(data.action1);
+            $('#site_Physical_key').val(data.sitephysicalkey);
+            $('#Action2').val(data.action2);
+            $('#Action3').val(data.action3);
+            $('#Action4').val(data.action4);
+            $('#Action5').val(data.action5);
+            $('#Site_Combination_Look').val(data.siteCombinationLook);
+            $('#txtComments').html(data.controlRoomOperator);
+
+            if (data.imagepath != null) {
+                const myArray = data.imagepath.split(":-:");
+                $('#download_imageRCList').attr('href', myArray[1]);
+                $('#download_imageRCList').attr('download', myArray[0]);
+            } else {
+                $('#download_imageRCList').removeAttr('href');
+                $('#download_imageRCList').removeAttr('download');
+            }      
+            
+        }       
     });
-
+    sitebuttonSelectedClientSiteId = -1;
 });
-$('#dglClientSiteIdActionListAll').on('change', function () {
-    $('#Site_Alarm_Keypad_codeAll').val('');
-    $('#Action1All').val('');
-    $('#site_Physical_keyAll').val('');
-    $('#Action2All').val('');
-    $('#Action3All').val('');
-    $('#Action4All').val('');
-    $('#Action5All').val('');
-    $('#Site_Combination_LookAll').val('');
-    $('#txtCommentsAll').html('');
-    var clientSiteId = $('#dglClientSiteIdActionListAll').val();
 
-    $.ajax({
-        url: '/RadioCheckV2?handler=ActionList',
-        type: 'POST',
-        data: {
-            clientSiteId: clientSiteId
-        },
-        dataType: 'json',
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (data) {
-        $('#Site_Alarm_Keypad_codeAll').val(data.siteAlarmKeypadCode);
-        $('#Action1All').val(data.action1);
-        $('#site_Physical_keyAll').val(data.sitephysicalkey);
-        $('#Action2All').val(data.action2);
-        $('#Action3All').val(data.action3);
-        $('#Action4All').val(data.action4);
-        $('#Action5All').val(data.action5);
-        $('#Site_Combination_LookAll').val(data.siteCombinationLook);
-        $('#txtCommentsAll').html(data.controlRoomOperator);
-    });
 
-});
 $('#search_client_site').keypress(function (e) {
     var searchInput = $('#search_client_site');
     var minSearchLength = 4;
@@ -2080,71 +2355,13 @@ function performSearch() {
 
 
 }
-$('#search_client_siteAll').keypress(function (e) {
-    var searchInput = $('#search_client_siteAll');
-    var minSearchLength = 1;
 
-    searchInput.keypress(function (e) {
-        if (searchInput.val().length >= minSearchLength && e.which === 13) {
-            performSearchClientSite();
-        }
-    });
-});
-function performSearchClientSite() {
-    $('#Site_Alarm_Keypad_codeAll').val('');
-    $('#Action1All').val('');
-    $('#site_Physical_keyAll').val('');
-    $('#Action2All').val('');
-    $('#Action3All').val('');
-    $('#Action4All').val('');
-    $('#Action5All').val('');
-    $('#Site_Combination_LookAll').val('');
-    $('#txtCommentsAll').html('');
-    $('#searchResultsNew').html('');
-    var searchTerm = $('#search_client_siteAll').val();
-    $.ajax({
-        url: '/RadioCheckV2?handler=SearchClientsiteRCList',
-        type: 'POST',
-        data: {
-            searchTerm: searchTerm
-        },
-        dataType: 'json',
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (data) {
-        var html = '';
-        if (data == null) {
-            html = '<p style="color:brown">No Matching Records</p>';
-            $('#searchResultsNew').html(html);
-        }
-        else {
-            $('#Site_Alarm_Keypad_codeAll').val(data.siteAlarmKeypadCode);
-            $('#Action1All').val(data.action1);
-            $('#site_Physical_keyAll').val(data.sitephysicalkey);
-            $('#Action2All').val(data.action2);
-            $('#Action3All').val(data.action3);
-            $('#Action4All').val(data.action4);
-            $('#Action5All').val(data.action5);
-            $('#Site_Combination_LookAll').val(data.siteCombinationLook);
-            $('#txtCommentsAll').html(data.controlRoomOperator);
-        }
-
-
-    });
-
-
-}
 /*code added for RCActionList stop*/
-
-
-
 
 $('#dglClientSiteId').on('change', function () {
     const clientTypeId = $(this).val();
     $("#vklClientSiteId").val(clientTypeId);
     $("#vklClientSiteId").multiselect("refresh");
-
-
-
 
 });
 $('.GlobalAlert-checkbox').on('change', function () {
@@ -2207,6 +2424,7 @@ $('#chkNationality').on('change', function () {
         $('#chkClientType').prop('checked', false);
         $('#chkSMSPersonalGlobal').prop('checked', false);
         $('#chkSMSSmartWandGlobal').prop('checked', false);
+        $('#chkGlobalPersonalEmail').prop('checked', false);
         $('#State1').prop('disabled', 'disabled');
         $('#State1').val('ACT');
         $('#dglClientType').val('');
@@ -2223,6 +2441,7 @@ $('#chkSiteState').change(function () {
         $('#chkClientType').prop('checked', false);
         $('#chkSMSPersonalGlobal').prop('checked', false);
         $('#chkSMSSmartWandGlobal').prop('checked', false);
+        $('#chkGlobalPersonalEmail').prop('checked', false);
         $('#State1').val('ACT');
         $('#dglClientType').val('');
         $('#dglClientSiteId').val('');
@@ -2280,10 +2499,16 @@ $('#dglClientTypeActionList').on('change', function () {
             data.map(function (site) {
                 $('#dglClientSiteIdActionList').append(new Option(site.name, site.id, false, false));
             });
-
+            if (sitebuttonSelectedClientSiteId > 0) {
+                let siteByid = [];
+                siteByid.push(sitebuttonSelectedClientSiteId);
+                $('#dglClientSiteIdActionList').val(siteByid).trigger('change');
+            }
         }
     });
 
+    sitebuttonSelectedClientTypeSiteId = -1;
+    // sitebuttonSelectedClientSiteId = -1;
 
 });
 $('#dglClientTypeActionList2').on('change', function () {
@@ -2309,60 +2534,8 @@ $('#dglClientTypeActionList2').on('change', function () {
 
 
 });
-$('#dglClientTypeActionListAll').on('change', function () {
-    const clientTypeId = $(this).val();
-    const clientSiteControl = $('#dglClientSiteIdActionListAll');
-    clientSiteControl.html('');
-    $.ajax({
-        url: '/RadioCheckV2?handler=ClientSitesNew',
-        type: 'GET',
-        data: {
-            typeId: clientTypeId
-
-        },
-        dataType: 'json',
-        success: function (data) {
-            $('#dglClientSiteIdActionListAll').append(new Option('Select', '', true, true));
-            data.map(function (site) {
-                $('#dglClientSiteIdActionListAll').append(new Option(site.name, site.id, false, false));
-            });
-
-        }
-    });
 
 
-});
-$('#dglClientTypeActionList2All').on('change', function () {
-    const clientTypeId = $(this).val();
-    const clientSiteControl = $('#dglClientSiteIdActionList2All');
-    clientSiteControl.html('');
-    $.ajax({
-        url: '/RadioCheckV2?handler=ClientSitesNew',
-        type: 'GET',
-        data: {
-            typeId: clientTypeId
-
-        },
-        dataType: 'json',
-        success: function (data) {
-            $('#dglClientSiteIdActionList2All').append(new Option('Select', '', true, true));
-            data.map(function (site) {
-                $('#dglClientSiteIdActionList2All').append(new Option(site.name, site.id, false, false));
-            });
-
-        }
-    });
-
-
-});
-$('#dglClientSiteIdActionList2All').select({
-    placeholder: 'Select',
-    theme: 'bootstrap4'
-});
-$('#dglClientSiteIdActionListAll').select({
-    placeholder: 'Select',
-    theme: 'bootstrap4'
-});
 $('#dglClientSiteIdActionList2').select({
     placeholder: 'Select',
     theme: 'bootstrap4'
@@ -2379,6 +2552,7 @@ $('#chkClientType').change(function () {
         $('#chkSiteState').prop('checked', false);
         $('#chkSMSPersonalGlobal').prop('checked', false);
         $('#chkSMSSmartWandGlobal').prop('checked', false);
+        $('#chkGlobalPersonalEmail').prop('checked', false);
         //$('#dglClientType option').removeAttr('disabled');
         $('#dglClientType').val('');
         $('#dglClientType').multiselect("enable");
@@ -2799,7 +2973,10 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
-                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardLogBookInfoModal" id="btnLogBookDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" text="' + data.clientSiteId + '"><input type="hidden" id="GuardId" text="' + data.guardId + '"> ';
+                if (value != 0)
+                    return '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardLogBookInfoModal" id="btnLogBookDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                else
+                    return '<button type="button" class="btn" id="btnLogBookHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
             }
         },
         {
@@ -2808,7 +2985,10 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
-                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardKeyVehicleInfoModal" id="btnKeyVehicleDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                if (value != 0)
+                    return '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardKeyVehicleInfoModal" id="btnKeyVehicleDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                else
+                    return '<button type="button" class="btn" id="btnKvHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
             }
         },
         {
@@ -2817,7 +2997,10 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
-                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardIncidentReportsInfoModal" id="btnIncidentReportdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '"> ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                if (value != 0)
+                    return '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardIncidentReportsInfoModal" id="btnIncidentReportdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                else
+                    return '<button type="button" class="btn" id="btnIrHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
             }
 
         },
@@ -2827,7 +3010,15 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             className: "text-center",
             render: function (value, type, data) {
                 if (value === null) return 'N/A';
-                return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardSWInfoModal" id="btnSWdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '"> ' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                if (data.hasmartwand !== 0) {
+                    if (value != 0)
+                        return '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardSWInfoModal" id="btnSWdetails">' + value + '</a>' + ']<input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
+                    else
+                        return '<button type="button" class="btn" id="btnSwHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
+                }
+                else {
+                    return '<button type="button" class="btn" id="btnSwHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
+                }
             }
         },
         {
@@ -2835,11 +3026,19 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             width: '2%',
             className: "text-center",
             render: function (value, type, data) {
-                if (value < 80)
-                    return '<div class="p-1 mb-1" style="background: #AFE1AF;">' + value + '</div>';
-                if (value >= 80)
-                    return '<div class="p-1 mb-1" style="background: #FFD580;">' + value + '</div>';
-                return value;
+
+                if (data.rcColorId != 1) {
+
+                    if (value < 80)
+                        return '<div class="p-1 mb-1" style="background: #AFE1AF;">' + value + '</div>';
+                    if (value >= 80)
+                        return '<div class="p-1 mb-1" style="background: #FFD580;">' + value + '</div>';
+
+                }
+                else {
+                    return '<div class="p-1 mb-1" style="background:  #A9A9A9;">' + '00' + '</div>';
+                }
+                //return value;
             }
 
         },
@@ -2996,6 +3195,21 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnLogBookDetailsByGu
 
 });
 
+$('#clientSiteActiveGuardsSinglePage tbody').on('dblclick', '#btnLogBookHistoryByGuard', function (value, record) {
+    $('#guardLogBookHistoryModal').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).attr("data-guardid");
+    var ClientSiteId = $(this).attr('data-clientsiteid');
+    var ClientSiteName = $(this).attr('data-clientsitename');
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    $('#lbl_GuardLogBookHistoryModalHeader').text(GuardName);
+    $('#lbl_lb_History_SitenameInfo').text('Last log book log');
+    clientSiteActiveGuardsLogBookHistory.clear().draw();
+    clientSiteActiveGuardsLogBookHistory.ajax.reload();
+});
+
 $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnKeyVehicleDetailsByGuard', function (value, record) {
     $('#guardKeyVehicleInfoModal').modal('show');
     isPaused = true;
@@ -3014,6 +3228,21 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnKeyVehicleDetailsB
     $('#lbl_GuardActivityHeader1').text(GuardName + '-' + 'Key Vehicle Log Details');
     clientSiteActiveGuardsKeyVehicleDetails.ajax.reload();
 
+});
+
+$('#clientSiteActiveGuardsSinglePage tbody').on('dblclick', '#btnKvHistoryByGuard', function (value, record) {
+    $('#guardKeyVehicleHistoryModal').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).attr("data-guardid");
+    var ClientSiteId = $(this).attr('data-clientsiteid');
+    var ClientSiteName = $(this).attr('data-clientsitename');
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    $('#lbl_KvGuardActivityHistoryHeader').text(GuardName);
+    $('#lbl_kv_History_SitenameInfo').text('Last key vehicle log');
+    clientSiteActiveGuardsKeyVehicleHistory.clear().draw();
+    clientSiteActiveGuardsKeyVehicleHistory.ajax.reload();
 });
 
 
@@ -3038,6 +3267,21 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnIncidentReportdeta
 
 });
 
+$('#clientSiteActiveGuardsSinglePage tbody').on('dblclick', '#btnIrHistoryByGuard', function (value, record) {
+    $('#guardIncidentReportsHistoryModal').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).attr("data-guardid");
+    var ClientSiteId = $(this).attr('data-clientsiteid');
+    var ClientSiteName = $(this).attr('data-clientsitename');
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    $('#lbl_IrGuardActivityHistoryHeader').text(GuardName);
+    $('#lbl_Ir_History_SitenameInfo').text('Last IR log');
+    clientSiteActiveGuardsIncidentReportHistory.clear().draw();
+    clientSiteActiveGuardsIncidentReportHistory.ajax.reload();
+});
+
 $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnSWdetails', function (value, record) {
     $('#guardSWInfoModal').modal('show');
     isPaused = true;
@@ -3057,6 +3301,21 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnSWdetails', functi
     $('#lbl_GuardActivityHeader4').text(GuardName + '-' + 'Smart Wand Scan Details');
     clientSiteActiveGuardsSWDetails.ajax.reload();
 
+});
+
+$('#clientSiteActiveGuardsSinglePage tbody').on('dblclick', '#btnSwHistoryByGuard', function (value, record) {
+    $('#guardSWHistoryModal').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).attr("data-guardid");
+    var ClientSiteId = $(this).attr('data-clientsiteid');
+    var ClientSiteName = $(this).attr('data-clientsitename');
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    $('#lbl_SwGuardActivityHistoryHeader').text(GuardName);
+    $('#lbl_Sw_History_SitenameInfo').text('Last smart wand log');
+    clientSiteActiveGuardsSmartWandHistory.clear().draw();
+    clientSiteActiveGuardsSmartWandHistory.ajax.reload();
 });
 
 let isActive = true;
@@ -3361,6 +3620,7 @@ $("#selectRadioCheckStatusActive").on("hidden.bs.modal", function () {
 });
 $("#pushNoTificationsControlRoomModal").on("hidden.bs.modal", function () {
     isPaused = false;
+    $('#inpCallingFunction').val('SITEBUTTON'); // ReSetting call function button to SITEBUTTON.
 });
 $("#hoverModal").on("hidden.bs.modal", function () {
     isPaused = false;
@@ -3368,8 +3628,18 @@ $("#hoverModal").on("hidden.bs.modal", function () {
 $("#guardInfoModal").on("hidden.bs.modal", function () {
     isPaused = false;
 });
-
-
+$("#guardLogBookHistoryModal").on("hidden.bs.modal", function () {
+    isPaused = false;
+});
+$("#guardKeyVehicleHistoryModal").on("hidden.bs.modal", function () {
+    isPaused = false;
+});
+$("#guardIncidentReportsHistoryModal").on("hidden.bs.modal", function () {
+    isPaused = false;
+});
+$("#guardSWHistoryModal").on("hidden.bs.modal", function () {
+    isPaused = false;
+});
 
 //hover display tooltip-end
 
@@ -3443,5 +3713,317 @@ $('#itemList,#itemList2').on('click', '.btn-select-radio-status', function (even
 
 });
 
+
+// ################## RC Action List Edit Start ###################
+// ---> Need to refer Kpi settings screen also
+
+
+function getFormattedDate(value, withTime) {
+    if (value !== '') {
+        const date = new Date(value);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        if (withTime)
+            return date.getDate() + ' ' + months[date.getMonth()] + ' ' + date.getFullYear() + ' @ ' + date.toLocaleString('en-Au', { hourCycle: 'h23', timeStyle: 'short' }) + ' Hrs';
+        else
+            return date.getDate() + ' ' + months[date.getMonth()] + ' ' + date.getFullYear();
+    }
+}
+
+$('#btn_Edit_ActionList').on('click', function (event) {       
+    var csnme = $('#dglClientSiteIdActionList option:selected').text();
+    var csid = $('#dglClientSiteIdActionList option:selected').val();
+    if (csnme == '' || csid == '') {
+        console.log('Nothing selected...')
+        alert('Please select a site to edit.');
+        return;
+    }      
+   
+    $('#kpi-settings-modal').modal('show');
+
+});
+
+
+$('#kpi-settings-modal').on('shown.bs.modal', function (event) {
+    $('#div_site_settings').html('');    
+    var csnme = $('#dglClientSiteIdActionList option:selected').text();
+    var csid = $('#dglClientSiteIdActionList option:selected').val();
+    $('#client_site_name').text(csnme)
+
+    $('#div_site_settings').load('/RadioCheckV2?handler=ClientSiteKpiSettings&siteId=' + csid, function () {
+        // This function will be executed after the content is loaded
+        // window.sharedVariable = button.data('cs-id');
+        // console.log('Load operation completed!');
+        // You can add your additional code or actions here
+        // console.log(csnme);    
+    });
+
+});
+
+/*Rc Action List Image Upload start*/
+$('#div_site_settings').on('change', '#upload_summary_imageRcList', function () {
+
+    const file = $('#upload_summary_imageRcList').prop("files")[0];
+    if (file) {
+        const scheduleId = $("#scheduleId").val();
+        const rcListId = $("#Mdl_Settings_RCList_Id").val();
+        var DateTime = luxon.DateTime;
+        var dt1 = DateTime.local();
+        const updatetime = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS');
+        const formData = new FormData();
+        formData.append("SummaryImage", file);
+        formData.append("ScheduleId", scheduleId);
+        formData.append("id", rcListId);
+        formData.append("updatetime", updatetime);
+
+        $.ajax({
+            type: 'POST',
+            url: '/RadioCheckV2?handler=UploadRCImage',
+            data: formData,
+            cache: false,
+            contentType: false,
+            processData: false,
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data.success) {
+                setSummaryImageRCList(data);
+                $('#dglClientSiteIdActionList').trigger('change');
+            }
+        }).always(function () {
+            $('#upload_summary_imageRcList').val('');
+        });
+    }
+});
+function setSummaryImageRCList(summaryImage) {
+    if (summaryImage) {
+        $('#summary_imageRC').html(summaryImage.fileName);
+        var imagePath = $('#summary_imageRC').text().trim();
+        $('#Mdl_Settings_RCImagepath').val(imagePath);
+        $('#summary_image_updatedRC').html(getFormattedDate(summaryImage.lastUpdated, true));
+        var imagePathdate = $('#summary_image_updatedRC').text().trim();
+        $('#Mdl_Settings_RCImageDateandTime').val(imagePathdate);
+
+        const myArray = summaryImage.imagepath.split(":-:");
+        $('#download_summary_imageRCList').attr('href', myArray[1]);
+        $('#download_summary_imageRCList').attr('download', myArray[0]);
+        $("#download_summary_imageRCList").attr("target", "_blank");
+
+        $('#download_summary_imageRCList').show();
+        $('#delete_summary_image').show();
+    }
+}
+$('#div_site_settings').on('click', '#delete_summary_imageRC', function () {
+    if (confirm('Are you sure want to delete this file?')) {
+        var check = $('#Mdl_Settings_RCImagepath').val();
+        $.ajax({
+            url: '/RadioCheckV2?handler=DeleteRCImage&imageName=' + $('#Mdl_Settings_RCImagepath').val(),
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data.status) {
+                clearSummaryImageRC();
+                $('#dglClientSiteIdActionList').trigger('change');
+            }
+        }).fail(function () {
+            console.log('error')
+        });
+    }
+});
+function clearSummaryImageRC() {
+    $('#Mdl_Settings_RCImagepath').val('');
+    $('#Mdl_Settings_RCImageDateandTime').val('');
+    $('#summary_imageRC').html('');
+    $('#summary_image_updatedRC').html('');
+    $("#download_summary_imageRCList").removeAttr("href");
+    $('#download_summary_imageRCList').removeAttr('download');
+    $('#download_summary_imageRCList').show();
+    $('#delete_summary_image').hide();
+}
+/*Rc Action List Image Upload stop*/
+
+//RC Action List Save start
+
+$('#div_site_settings').on('click', '#save_site_RC', function () {
+    //var List = $('#frm_Kpi_ActionList').serialize();
+    //console.log(List);
+    $.ajax({
+        url: '/RadioCheckV2?handler=ClientSiteRCActionList',
+        type: 'POST',
+        data: $('#frm_Kpi_ActionList').serialize(),
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        if (result.status) {
+            alert('Saved successfully');
+            // refresh calling model
+            $('#dglClientSiteIdActionList').trigger('change');
+            $('#kpi-settings-modal').modal('hide');
+        }
+        else {
+            alert(result.message);            
+        }       
+    }).fail(function () { });
+});
+//RC Action List Save stop
+
+
+$('#div_site_settings').on('click', '#delete_site_RCList', function () {
+    if (confirm('Are you sure you want to delete?')) {
+        $.ajax({
+            url: '/RadioCheckV2?handler=DeleteRC',
+            type: 'POST',
+            data: { RCId: $("#Mdl_Settings_RCList_Id").val() },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.status) {
+                $('#Mdl_Settings_Site_Alarm_Keypad_code').val('');
+                $('#Mdl_Settings_site_Physical_key').val('');
+                $('#Mdl_Settings_Site_Combination_Look').val('');
+                $('#Mdl_Settings_Action1').val('');
+                $('#Mdl_Settings_Action2').val('');
+                $('#Mdl_Settings_Action3').val('');
+                $('#Mdl_Settings_Action4').val('');
+                $('#Mdl_Settings_Action5').val('');
+                $('#Mdl_Settings_userInput').val('');
+                $.ajax({
+                    url: '/RadioCheckV2?handler=DeleteRCImage&scheduleId=' + $('#Mdl_Settings_RCImagepath').val(),
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (data) {
+                    if (data.status) {
+                        clearSummaryImageRC();
+                        $('#dglClientSiteIdActionList').trigger('change');
+                    }
+                }).fail(function () {
+                    console.log('error')
+                });
+            }
+            else
+                alert(result.message);
+        }).fail(function () { });
+    }
+});
+
+
+// ################## RC Action List Edit End ###################
+/*p4-16 Data dump task1-start*/
+var guardSettings = $('#guard_settings_for_control_room').DataTable({
+    pageLength: 50,
+    autoWidth: false,
+    ajax: '/GuardDetails?handler=Guards',
+    columns: [
+    { data: 'name', width: "10%" },
+    { data: 'securityNo', width: "10%" },
+    { data: 'initial', orderable: false, width: "5%" },
+    { data: 'mobile', width: "10%" },
+    { data: 'email', width: "13%" },
+
+    //{
+    //    data: 'isActive', className: "text-center", width: "10%", 'render': function (value, type, data) {
+    //        return renderGuardActiveCell(value, type, data);
+    //    }
+    //},
+    //{
+    //    targets: -1,
+    //    data: null,
+    //    defaultContent: '<button  class="btn btn-outline-primary mr-2" name="btn_edit_guard"><i class="fa fa-pencil mr-2"></i>Edit</button>',
+    //    orderable: false,
+    //    className: "text-center",
+    //    width: "8%"
+    //},
+    ]
+});
+/*p4-16 Data dump task1-end*/
+
+$('#search_client_siteSteps').on('keyup', function (e) {
+
+    var inputValue = $(this).val();
+    if (inputValue.length >= 3 && inputValue.match(/[a-zA-Z]/)) {
+        e.preventDefault();
+
+        gridSiteSearchradio.reload({ typeId: $('#sel_client_type').val(), searchTerm: $(this).val() });
+        $('#logbook-modalRadio').modal('show');
+        //alert('Letter typed and Enter pressed: ' + inputValue);
+    }
+
+});
+let gridSiteSearchradio;
+gridSiteSearchradio = $('#client_site_RadioSearch').grid({
+    dataSource: '/RadioCheckV2?handler=ClientSitesRadioSearch',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    columns: [
+        { field: 'typeId', hidden: true },
+        { field: 'clientType', title: 'Client Type', width: 180, renderer: function (value, record) { return value ? value.name : ''; } },
+        { field: 'name', title: 'Client Site', width: 180, editor: false },
+        { width: 100, renderer: settingsButtonRenderer },
+
+
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
+
+
+function settingsButtonRenderer(value, record) {
+
+    var ClientTypeName = record.clientType.name;
+    var ClientSiteName = record.name;
+    var clientSiteId = record.id;
+
+    return '<button class="btn btn-outline-success mt-2 del-schedule d-block" data-sch-id="' + ClientSiteName + '_' + clientSiteId + '""><i class="fa fa-check mr-2" aria-hidden="true"></i>Select</button>';
+}
+$('#client_site_RadioSearch').on('click', '.del-schedule', function () {
+
+
+    const ClientSiteName1 = $(this).attr('data-sch-id');
+    const lastUnderscoreIndex = ClientSiteName1.lastIndexOf('_');
+
+
+
+
+
+    if (lastUnderscoreIndex !== -1) {
+        const recordName = ClientSiteName1.slice(0, lastUnderscoreIndex);
+        const clientsiteid = ClientSiteName1.slice(lastUnderscoreIndex + 1);
+
+        $('#logbook-modalRadio').modal('hide');
+        $('#search_client_siteSteps').val(recordName);
+        $.ajax({
+            url: '/RadioCheckV2?handler=ActionList',
+            type: 'POST',
+            data: {
+                clientSiteId: clientsiteid
+            },
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data != null) {
+                $('#Site_Alarm_Keypad_code').val(data.siteAlarmKeypadCode);
+                $('#Action1').val(data.action1);
+                $('#site_Physical_key').val(data.sitephysicalkey);
+                $('#Action2').val(data.action2);
+                $('#Action3').val(data.action3);
+                $('#Action4').val(data.action4);
+                $('#Action5').val(data.action5);
+                $('#Site_Combination_Look').val(data.siteCombinationLook);
+                $('#txtComments').html(data.controlRoomOperator);
+
+                if (data.imagepath != null) {
+                    const myArray = data.imagepath.split(":-:");
+                    $('#download_imageRCList').attr('href', myArray[1]);
+                    $('#download_imageRCList').attr('download', myArray[0]);
+                } else {
+                    $('#download_imageRCList').removeAttr('href');
+                    $('#download_imageRCList').removeAttr('download');
+                }
+
+            }
+        });
+
+    } else {
+        console.log('Invalid data-sch-id format');
+    }
+});
 
 

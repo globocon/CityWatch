@@ -30,6 +30,9 @@ using static Dropbox.Api.Paper.ListPaperDocsSortBy;
 using System.Text;
 using System.Security.Cryptography;
 using DocumentFormat.OpenXml.Vml.Spreadsheet;
+using Dropbox.Api.Files;
+
+
 
 namespace CityWatch.Web.Pages.Incident
 {
@@ -48,10 +51,12 @@ namespace CityWatch.Web.Pages.Incident
         private readonly IIncidentReportGenerator _incidentReportGenerator;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly IConfiguration _configuration;
+        private readonly ISiteEventLogDataProvider _SiteEventLogDataProvider;
 
         [BindProperty]
         public IncidentRequest Report { get; set; }
         public List<SelectListItem> ClientSites { get; set; }
+        public List<SelectListItem> ClientSitesPosition { get; set; }
         public List<SelectListItem> FeedBackTemplates { get; set; }
         public List<SelectListItem> OfficerPosition { get; set; }
 
@@ -68,7 +73,8 @@ namespace CityWatch.Web.Pages.Incident
             ILogger<RegisterModel> logger,
             IIncidentReportGenerator incidentReportGenerator,
             IGuardLogDataProvider guardLogDataProvider,
-            IConfiguration configuration
+            IConfiguration configuration,
+            ISiteEventLogDataProvider siteEventLogDataProvider
             )
         {
             _WebHostEnvironment = webHostEnvironment;
@@ -82,6 +88,7 @@ namespace CityWatch.Web.Pages.Incident
             _incidentReportGenerator = incidentReportGenerator;
             _guardLogDataProvider = guardLogDataProvider;
             _configuration = configuration;
+            _SiteEventLogDataProvider = siteEventLogDataProvider;
         }
         public IConfigDataProvider ConfigDataProiver { get { return _configDataProvider; } }
         public IActionResult OnGet()
@@ -184,6 +191,8 @@ namespace CityWatch.Web.Pages.Incident
                             };
 
                             ClientSites = _ViewDataService.GetUserClientSites(AuthUserHelper.LoggedInUserId, IrPreviousObject.DateLocation.ClientType);
+                   
+                           
                             FeedBackTemplates = _ViewDataService.GetFeedbackTemplatesByType((int)IrPreviousObject.FeedbackType);
                             if (IrPreviousObject.IsPositionPatrolCar)
                                 OfficerPosition = ViewDataService.GetOfficerPositions(OfficerPositionFilter.PatrolOnly);
@@ -392,6 +401,10 @@ namespace CityWatch.Web.Pages.Incident
         {
             return new JsonResult(_ViewDataService.GetOfficerPositions((OfficerPositionFilter)filter));
         }
+        public IActionResult OnGetLogbookData(string logbook)
+        {
+            return new JsonResult(_ViewDataService.GetLoogbookdata(logbook));
+        }
 
         public JsonResult OnPostSubmit()
         {
@@ -468,7 +481,15 @@ namespace CityWatch.Web.Pages.Incident
 
             //To get the Default Email stop
 
-            var ccAddress = _EmailOptions.CcAddress.Split('|');
+            //var ccAddress = _EmailOptions.CcAddress.Split('|');
+            List<IncidentReportField> incidentReportFields = _configDataProvider.GetReportFieldsByType(ReportFieldType.Reimburse);
+            string emailAddress = null;
+            foreach (var incidentReportField in incidentReportFields)
+            {
+                emailAddress = incidentReportField.Name;
+
+            }
+            var ccAddress = emailAddress.Split(',');     
             var subject = _EmailOptions.Subject;
             var messageHtml = _EmailOptions.Message;
 
@@ -479,7 +500,8 @@ namespace CityWatch.Web.Pages.Incident
 
             if (Report.DateLocation.ReimbursementYes)
             {
-                message.Cc.Add(new MailboxAddress(ccAddress[1], ccAddress[0]));
+                foreach (var address in ccAddress)                 
+                message.Cc.Add(new MimeKit.MailboxAddress(String.Empty,address));
             }
             ///* Mail Id added Bcc globoconsoftware for checking Ir Mail not getting Issue Start(date 13,09,2023) */
             //message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
@@ -523,7 +545,19 @@ namespace CityWatch.Web.Pages.Incident
         {
             var fromAddress = _EmailOptions.FromAddress.Split('|');
             var toAddress = _EmailOptions.ToAddress.Split('|');
-            var ccAddress = _EmailOptions.CcAddress.Split('|');
+            // var ccAddress = _EmailOptions.CcAddress.Split('|');
+            List<IncidentReportField> incidentReportFields = _configDataProvider.GetReportFieldsByType(ReportFieldType.Reimburse);
+            string emailAddress = null;
+            foreach (var incidentReportField in incidentReportFields)
+            {
+                 emailAddress = incidentReportField.Name;
+                                                                 
+            }
+            string[] ccAddress = new string[] { };
+            if (!string.IsNullOrEmpty(emailAddress))
+            {
+                ccAddress = emailAddress.Split(',');
+            }
             var subject = _EmailOptions.Subject;
             var messageHtml = _EmailOptions.Message;
 
@@ -533,12 +567,14 @@ namespace CityWatch.Web.Pages.Incident
                 message.To.Add(address);
 
             if (Report.DateLocation.ReimbursementYes)
-            {
-                message.Cc.Add(new MailboxAddress(ccAddress[1], ccAddress[0]));
-            }
+                {
+                    foreach (var address in ccAddress)
+                    message.Cc.Add(new MimeKit.MailboxAddress(String.Empty, address));
+                }
+            
             /* Mail Id added Bcc globoconsoftware for checking Ir Mail not getting Issue Start(date 13,09,2023) */
             message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
-            message.Bcc.Add(new MailboxAddress("globoconsoftware", "jishakallani@gmail.com"));
+           // message.Bcc.Add(new MailboxAddress("globoconsoftware", "jishakallani@gmail.com"));
             /* Mail Id added Bcc globoconsoftware end */
             var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite && x.ClientType.Name == Report.DateLocation.ClientType);
 
@@ -553,55 +589,52 @@ namespace CityWatch.Web.Pages.Incident
             if (Report.SiteColourCodeId != 0  && Report.SiteColourCodeId!=null) { 
             string colorcodes = _ViewDataService.GetFeedbackTemplatesByTypeByColor(3,Convert.ToInt32(Report.SiteColourCodeId));
                 //for DESCRIBING color codes-start
-               if(colorcodes.Contains("Code ORANGE"))
-                { 
-                        Report.SiteColourCode = "Code ORANGE Event";
-                }
-               else if(colorcodes.Contains("Code BLUE"))
-                {
-                    Report.SiteColourCode = "Code BLUE Event";
-                }
-                else if (colorcodes.Contains("Code PINK"))
-                {
-                    Report.SiteColourCode = "Code PINK Event";
-                }
-                else if (colorcodes.Contains("Code PURPLE"))
-                {
-                    Report.SiteColourCode = "Code PURPLE Event";
-                }
-                else if (colorcodes.Contains("Code BLACK"))
-                {
-                    Report.SiteColourCode = "Code BLACK Event";
-                }
-                else if (colorcodes.Contains("Code YELLOW"))
-                {
-                    Report.SiteColourCode = "Code YELLOW Event";
-                }
-                else if (colorcodes.Contains("Code BROWN"))
-                {
-                    Report.SiteColourCode = "Code BROWN Event";
-                }
-                else if (colorcodes.Contains("Code GREY"))
-                {
-                    Report.SiteColourCode = "Code GREY Event";
-                }
-               else if(colorcodes.Contains("SEARCH - CODE GREY BOC"))
-                {
-                    Report.SiteColourCode = "Code GREY Event";
-                }
-                else if (colorcodes.Contains("NON BOC SEARCH"))
-                {
-                    Report.SiteColourCode = "NON BOC SEARCH Event";
-                }
-                else if (colorcodes.Contains("Code RED"))
-                {
-                    Report.SiteColourCode = "Code RED Event";
-                }
+               //if(colorcodes.Contains("Code ORANGE"))
+               // { 
+               //         Report.SiteColourCode = "Code ORANGE Event";
+               // }
+               //else if(colorcodes.Contains("Code BLUE"))
+               // {
+               //     Report.SiteColourCode = "Code BLUE Event";
+               // }
+               // else if (colorcodes.Contains("Code PINK"))
+               // {
+               //     Report.SiteColourCode = "Code PINK Event";
+               // }
+               // else if (colorcodes.Contains("Code PURPLE"))
+               // {
+               //     Report.SiteColourCode = "Code PURPLE Event";
+               // }
+               // else if (colorcodes.Contains("Code BLACK"))
+               // {
+               //     Report.SiteColourCode = "Code BLACK Event";
+               // }
+               // else if (colorcodes.Contains("Code YELLOW"))
+               // {
+               //     Report.SiteColourCode = "Code YELLOW Event";
+               // }
+               // else if (colorcodes.Contains("Code BROWN"))
+               // {
+               //     Report.SiteColourCode = "Code BROWN Event";
+               // }
+               // else if (colorcodes.Contains("Code GREY"))
+               // {
+               //     Report.SiteColourCode = "Code GREY Event";
+               // }
+               //else if(colorcodes.Contains("SEARCH - CODE GREY BOC"))
+               // {
+               //     Report.SiteColourCode = "Code GREY Event";
+               // }
                
-                else
-                {
-                    Report.SiteColourCode = "General (Other) Event";
-                }
+               // else if (colorcodes.Contains("Code RED"))
+               // {
+               //     Report.SiteColourCode = "Code RED Event";
+               // }
+               
+               // else
+                //{
+                    Report.SiteColourCode = colorcodes;
+                //}
                 //for DESCRIBING color codes - end
 
                // Report.SiteColourCode = colorcodes;
@@ -673,8 +706,47 @@ namespace CityWatch.Web.Pages.Incident
 
 
 
+        private bool AzureBlobUploadIrUploadWithOutMail(string fileName)
+        {
 
+            var status = true;
+            try
+            {
+                /* azure blob Implementation download link add to mail body 25-9-2023* Start*/
+                var azureStorageConnectionString = _configuration.GetSection("AzureStorage").Get<List<string>>();
+                if (azureStorageConnectionString.Count > 0)
+                {
+                    if (azureStorageConnectionString[0] != null)
+                    {
+                        string connectionString = azureStorageConnectionString[0];
+                        string blobName = Path.GetFileName(fileName);
+                        string containerName = "irfiles";
+                        BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
+                        BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+                        containerClient.CreateIfNotExists();
+                        /* The container Structure like irfiles/20230925*/
+                        BlobClient blobClient = containerClient.GetBlobClient(new string(blobName.Take(8).ToArray()) + "/" + blobName);
+                        using FileStream fs = System.IO.File.OpenRead(fileName);
+                        var blobHttpHeader = new BlobHttpHeaders { ContentType = "application/pdf" };
+                        /*Commented for local testing ,uncomment when go on live*/
+                        blobClient.Upload(fs, new BlobUploadOptions { HttpHeaders = blobHttpHeader });
+                        fs.Close();
+                    }
 
+                }
+                /* azure blob Implementation 25-9-2023* End*/
+
+                
+
+            }
+            catch (Exception ex)
+            {
+                status = false;
+
+            }
+
+            return status;
+        }
 
 
 
@@ -697,6 +769,10 @@ namespace CityWatch.Web.Pages.Incident
             var callSignEmailTo = GetFieldEmailAddress(fields, ReportFieldType.CallSign, Report.Officer.CallSign);
             if (!string.IsNullOrEmpty(callSignEmailTo))
                 emailAddressList.Add(new MailboxAddress(string.Empty, callSignEmailTo));
+            var areaEmailTo = GetFieldEmailAddress(fields, ReportFieldType.ClientArea, Report.DateLocation.ClientArea);
+            if (!string.IsNullOrEmpty(areaEmailTo))
+                emailAddressList.Add(new MailboxAddress(string.Empty, areaEmailTo));
+
 
             return emailAddressList;
         }
@@ -793,12 +869,11 @@ namespace CityWatch.Web.Pages.Incident
             };
             _guardLogDataProvider.SaveGuardLog(guardLog);
         }
-        //To Save IR in control room start
-        private void CreateControlRoomLogEntry(IncidentReport report)
+        //To Save the Position Of IR in to logbook start
+        private void CreatePositionGuardLogEntry(IncidentReport report)
         {
-            var RadioCheckDetails = _guardLogDataProvider.GetRadiocheckLogbookDetails();
             // p6#73 timezone bug - Added by binoy 24-01-2024
-            var logBookId = GetLogBookId(RadioCheckDetails.ClientSiteId, (int)report.CreatedOnDateTimeUtcOffsetMinute);
+            var logBookId = GetLogBookId(report.ClientSitePositionId.Value, (int)report.CreatedOnDateTimeUtcOffsetMinute);
             //var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)report.CreatedOnDateTimeUtcOffsetMinute);
             var guardLog = new GuardLog()
             {
@@ -815,6 +890,34 @@ namespace CityWatch.Web.Pages.Incident
                 IsIRReportTypeEntry = true
             };
             _guardLogDataProvider.SaveGuardLog(guardLog);
+        }
+        //To Save the Position Of IR in to logbook stop
+        //To Save IR in control room start
+        private void CreateControlRoomLogEntry(IncidentReport report)
+        {
+            var RadioCheckDetails = _guardLogDataProvider.GetRadiocheckLogbookDetails();
+            // p6#73 timezone bug - Added by binoy 24-01-2024
+            var logBookId = GetLogBookId(RadioCheckDetails.ClientSiteId, (int)report.CreatedOnDateTimeUtcOffsetMinute);
+            //var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)report.CreatedOnDateTimeUtcOffsetMinute);
+            if (report.ColourCode!=null ||report.IsPatrol==true)
+            {
+                var guardLog = new GuardLog()
+                {
+                    ClientSiteLogBookId = logBookId,
+                    EventDateTime = DateTime.Now,
+                    Notes = Path.GetFileNameWithoutExtension(report.FileName),
+                    IsSystemEntry = true,
+                    IrEntryType = report.IsEventFireOrAlarm ? IrEntryType.Alarm : IrEntryType.Normal,
+                    EventDateTimeLocal = report.CreatedOnDateTimeLocal,
+                    EventDateTimeLocalWithOffset = report.CreatedOnDateTimeLocalWithOffset,
+                    EventDateTimeZone = report.CreatedOnDateTimeZone,
+                    EventDateTimeZoneShort = report.CreatedOnDateTimeZoneShort,
+                    EventDateTimeUtcOffsetMinute = report.CreatedOnDateTimeUtcOffsetMinute,
+                    IsIRReportTypeEntry = true
+                };
+                _guardLogDataProvider.SaveGuardLog(guardLog);
+            }
+           
         }
         //To Save IR in control room stop
 
@@ -899,6 +1002,9 @@ namespace CityWatch.Web.Pages.Incident
             var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Name == Report.DateLocation.ClientType);
             var clientSite = _clientDataProvider.GetClientSites(clientType.Id).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite);
             var PSPFName = _clientDataProvider.GetPSPF().SingleOrDefault(z => z.Name == Report.PSPFName);
+            
+            var clientSitePosition = _clientDataProvider.GetClientSitePosition(Report.Officer.Position);
+            //To get the clientType oF position stop
             // var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(x => x.Name == Report.DateLocation.ClientSite);
             try
             {
@@ -948,7 +1054,8 @@ namespace CityWatch.Web.Pages.Incident
                 CreatedOnDateTimeZone = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeZone,
                 CreatedOnDateTimeZoneShort = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeZoneShort,
                 CreatedOnDateTimeUtcOffsetMinute = Report.ReportCreatedLocalTimeZone.CreatedOnDateTimeUtcOffsetMinute, // Task p6#73_TimeZone issue -- added by Binoy -- End
-                HASH=hashCode
+                HASH=hashCode,
+                ClientSitePositionId= clientSitePosition?.ClientsiteId//To get the Client Site Position 
 
             };
             if (HttpContext.Session.GetString("GuardId") != null)
@@ -1020,6 +1127,10 @@ namespace CityWatch.Web.Pages.Incident
                     if (report.ClientSiteId.HasValue)
                         CreateGuardLogEntry(report);
                     CreateControlRoomLogEntry(report);//To Save in the control room
+                    if (report.ClientSitePositionId.HasValue)
+                    {
+                        CreatePositionGuardLogEntry(report);
+                    }
 
 
                 }
@@ -1031,7 +1142,76 @@ namespace CityWatch.Web.Pages.Incident
                 try
                 {
                     if (!Convert.ToBoolean(Request.Form["Report.DisableEmail"]))
+                    {
                         SendEmailWithAzureBlob(Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
+
+                        /* Save log for duress button enable Start 02032024 dileep*/
+                        var guradDetailsName = "Admin";
+                        var guardId=0;
+                        if (HttpContext.Session.GetString("GuardId") != null)
+                        {
+                            var GuradDetails = _clientDataProvider.GetGuradName(int.Parse(HttpContext.Session.GetString("GuardId")));
+                            guradDetailsName = GuradDetails.Name;
+                            guardId= GuradDetails.Id;
+                        }
+                        _SiteEventLogDataProvider.SaveSiteEventLogData(
+                            new SiteEventLog()
+                            {
+                                GuardId = guardId,
+                                SiteId = report.ClientSiteId,
+                                GuardName = guradDetailsName,
+                                SiteName = _guardLogDataProvider.GetClientSites(report.ClientSiteId).FirstOrDefault().Name,
+                                ProjectName = "ClientPortal",
+                                ActivityType = "IR Generated",
+                                Module = "Incident",
+                                SubModule = "Register",
+                                GoogleMapCoordinates = "",
+                                IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
+                                ToAddress = string.Empty,
+                                ToMessage = string.Empty,
+                                EventTime = DateTime.Now,
+                                EventLocalTime = DateTime.Now,
+                                EventStatus = "IR Generated"
+                            }
+                         ); 
+                        /* Save log for duress button enable end*/
+                    }
+                    else
+                    {
+                        /* Store in Azure blobwithout mail send 06/032024 dileep*/
+                        AzureBlobUploadIrUploadWithOutMail(Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
+
+                        /* Save log for duress button enable Start 02032024 dileep*/
+                        var guradDetailsName = "Admin";
+                        var guardId = 0;
+                        if (HttpContext.Session.GetString("GuardId") != null)
+                        {
+                            var GuradDetails = _clientDataProvider.GetGuradName(int.Parse(HttpContext.Session.GetString("GuardId")));
+                            guradDetailsName = GuradDetails.Name;
+                            guardId = GuradDetails.Id;
+                        }
+                        _SiteEventLogDataProvider.SaveSiteEventLogData(
+                            new SiteEventLog()
+                            {
+                                GuardId = guardId,
+                                SiteId = report.ClientSiteId,
+                                GuardName = guradDetailsName,
+                                SiteName = _guardLogDataProvider.GetClientSites(report.ClientSiteId).FirstOrDefault().Name,
+                                ProjectName = "ClientPortal",
+                                ActivityType = "IR Generated",
+                                Module = "Incident",
+                                SubModule = "Register",
+                                GoogleMapCoordinates = "",
+                                IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
+                                ToAddress = string.Empty,
+                                ToMessage = string.Empty,
+                                EventTime = DateTime.Now,
+                                EventLocalTime = DateTime.Now,
+                                EventStatus = "IR Generated without email"
+                            }
+                         );
+                        /* Save log for duress button enable end*/
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -1163,7 +1343,12 @@ namespace CityWatch.Web.Pages.Incident
 
             return new JsonResult(new { TruckConfigText });
         }
-
+        public IActionResult OnGetClientAreas(string Id)
+        {
+            IncidentReportField ir = new IncidentReportField();
+            ir.ClientSiteIds = _clientDataProvider.GetClientSites(null).Where(x => x.Name == Id).FirstOrDefault().Id.ToString();
+            return new JsonResult(_ViewDataService.GetClientAreas(ir));
+        }
 
     }
 }

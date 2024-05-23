@@ -12,6 +12,7 @@
         count++;
     var check = count;
 }
+
 <div class="test">
     <ul class="nav nav-tabs" id="kpiSettingsTab" role="tablist">
         <li class="nav-item" role="presentation">
@@ -227,7 +228,7 @@
                                         {
 
                                             var totalMin = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId).Select(x => x.SumOfHours).Sum();
-                                            var guardQty = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId && x.NoOfPatrols!=null).Select(x => x.NoOfPatrols ?? 0).FirstOrDefault();
+                                            var guardQty = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId && x.NoOfPatrols != null).Select(x => x.NoOfPatrols ?? 0).FirstOrDefault();
                                             if (totalMin != null && guardQty != null)
                                                 monthilyHours = Math.Round(((totalMin) * guardQty * 52.143) / 12);
 
@@ -566,10 +567,9 @@
                             <h6>Alarm Response</h6>
                         </div>
                         <div class="col">
-                         
                         </div>
                     </div>
-                    
+
                 </div>
                 <br />
                 <div class="row col-md-12">
@@ -648,7 +648,7 @@
 
             </form>
             <button type="button" class="btn btn-outline-danger mr-2" id="delete_site_RCList"><i class="fa fa-trash mr-2"></i>Delete</button>
-            <button type="button" class="btn btn-success" id="save_site_RC"><i class="fa fa-save mr-2"></i>Save Rc Action List</button>
+            <button type="button" class="btn btn-success" id="save_site_RC"><i class="fa fa-save mr-2"></i>Save RC Action List</button>
         </div>
         @*New Tab for contracted-manning end*@
         <div class="tab-pane" id="notes" role="tabpanel" aria-labelledby="notes-tab">
@@ -686,6 +686,7 @@
         </div>
         @*for menu change-start(jisha)*@
         <div class="tab-pane" id="OtherSettings" role="tabpanel" aria-labelledby="notes-tab">
+
             <ul class="nav nav-tabs" id="kpiOtherSettingsTab" role="tablist">
                 <li class="nav-item" role="presentation">
                     <a class="nav-link active" id="kpi-other-site-settings-tab" data-toggle="tab" href="#othersiteKpiSettings" role="tab" aria-controls="siteKpiSettings" aria-selected="true">Site Settings</a>
@@ -761,6 +762,11 @@
                     </div>
                 </div>
             </div>
+
+            
+            <div id="OtherSettingsNew" class="mt-5"></div>
+         
+
         </div>
         @*for menu change-end(jisha)*@
     </div>

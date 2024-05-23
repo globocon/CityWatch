@@ -1,9 +1,11 @@
 ﻿using CityWatch.Data.Models;
 using Dropbox.Api.Users;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using static Dropbox.Api.TeamLog.EventCategory;
 
 namespace CityWatch.Data.Providers
@@ -28,6 +30,7 @@ namespace CityWatch.Data.Providers
         List<IncidentReportPosition> GetPositions();
         List<IncidentReportPSPF> GetPSPF();
         int GetLastValue();
+        int OnGetMaxIdIR();
         void SavePostion(IncidentReportPosition incidentReportPosition);
         void SavePSPF(IncidentReportPSPF incidentReportPSPF);
         void DeletePSPF(int id);
@@ -52,6 +55,10 @@ namespace CityWatch.Data.Providers
         int GetCalendarEventsCount();
         List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEvents();
         List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEventsByDate();
+        string GetBroadcastLiveEventsNotExpired();
+        string GetUrlsInsideBroadcastLiveEventsNotExpired();
+
+
          void SaveDefaultEmail(string DefaultEmail);
         //broadcast banner calendar events-end
         //broadcast banner calendar events-end
@@ -62,6 +69,13 @@ namespace CityWatch.Data.Providers
         List<GeneralFeeds> GetGeneralFeeds();
         //General Feeds-end
         public List<SmsChannel> GetSmsChannels();
+        public IncidentReportPosition GetIsLogbookData(string Name);
+        List<HrSettings> GetHRSettings();
+        List<LicenseTypes> GetLicensesTypes();
+         KeyVehcileLogField GetKVLogField();
+        List<KeyVehicleLogVisitorPersonalDetail> GetProviderList(int ID);
+
+        //p1-191 hr files task 3-end
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -75,7 +89,7 @@ namespace CityWatch.Data.Providers
 
         public List<FeedbackTemplate> GetFeedbackTemplates()
         {
-            return _context.FeedbackTemplates.OrderBy(x => x.Name).ToList();
+            return _context.FeedbackTemplates.Where(x=>x.DeleteStatus==0).OrderBy(x => x.Name).ToList();
         }
         //to retrieve the feedback type-start
         public List<FeedbackType> GetFeedbackTypes()
@@ -101,17 +115,23 @@ namespace CityWatch.Data.Providers
                 {
                     Name = template.Name,
                     Text = template.Text,
-                    Type = template.Type
+                    Type = template.Type,
+                    BackgroundColour = template.BackgroundColour,
+                    TextColor = template.TextColor,
+                    DeleteStatus=0
                 });
             }
             else
             {
-                var templateToUpdate = _context.FeedbackTemplates.SingleOrDefault(x => x.Id == template.Id);
+                var templateToUpdate = _context.FeedbackTemplates.SingleOrDefault(x => x.Id == template.Id && x.DeleteStatus==0);
                 if (templateToUpdate == null)
                     throw new InvalidOperationException();
 
                 templateToUpdate.Text = template.Text;
                 templateToUpdate.Type = template.Type;
+                templateToUpdate.BackgroundColour = template.BackgroundColour;
+                templateToUpdate.TextColor = template.TextColor;
+                templateToUpdate.DeleteStatus = 0;
             }
             _context.SaveChanges();
         }
@@ -121,12 +141,14 @@ namespace CityWatch.Data.Providers
             if (id == -1)
                 return;
 
-            var templateToDelete = _context.FeedbackTemplates.SingleOrDefault(x => x.Id == id);
+            var templateToDelete = _context.FeedbackTemplates.SingleOrDefault(x => x.Id == id && x.DeleteStatus==0);
             if (templateToDelete == null)
                 throw new InvalidOperationException();
-
-            _context.FeedbackTemplates.Remove(templateToDelete);
+            //Not Delete data just change Status 0 to 1 
+            templateToDelete.DeleteStatus = 1;
             _context.SaveChanges();
+            //_context.FeedbackTemplates.Remove(templateToDelete);
+            //_context.SaveChanges();
         }
 
         public ReportTemplate GetReportTemplate()
@@ -148,6 +170,7 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
 
+    
         public List<State> GetStates()
         {
             return new List<State>()
@@ -207,6 +230,14 @@ namespace CityWatch.Data.Providers
         {
             return _context.IncidentReportFields.OrderBy(x => x.TypeId).ThenBy(x => x.Name).ToList();
         }
+        public List<KeyVehicleLogVisitorPersonalDetail> GetProviderList(int ID)
+        {
+            return _context.KeyVehicleLogVisitorPersonalDetails.Where(x => x.PersonType == ID).OrderBy(x => x.CompanyName).ToList();
+        }
+        public KeyVehcileLogField GetKVLogField()
+        {
+            return _context.KeyVehcileLogFields.Where(x => x.Name == "CRM (Supplier/Partner)").FirstOrDefault();
+        }
 
         public List<IncidentReportField> GetReportFieldsByType(ReportFieldType type)
         {
@@ -236,7 +267,9 @@ namespace CityWatch.Data.Providers
                 {
                     Name = incidentReportField.Name,
                     TypeId = incidentReportField.TypeId,
-                    EmailTo = incidentReportField.EmailTo
+                    EmailTo = incidentReportField.EmailTo,
+                    ClientSiteIds = incidentReportField.ClientSiteIds,
+                    ClientTypeIds=incidentReportField.ClientTypeIds
                 });
             }
             else
@@ -247,6 +280,9 @@ namespace CityWatch.Data.Providers
                 reportFieldToUpdate.Name = incidentReportField.Name;
                 reportFieldToUpdate.TypeId = incidentReportField.TypeId;
                 reportFieldToUpdate.EmailTo = incidentReportField.EmailTo;
+                reportFieldToUpdate.ClientSiteIds = incidentReportField.ClientSiteIds;
+                reportFieldToUpdate.ClientTypeIds = incidentReportField.ClientTypeIds;
+
             }
             _context.SaveChanges();
         }
@@ -273,6 +309,13 @@ namespace CityWatch.Data.Providers
         public int GetLastValue()
         {
             return _context.IncidentReportPSPF.Count();
+        }
+        
+        public int OnGetMaxIdIR()
+        {
+            var incidentReportid = _context.IncidentReportFields.Max(x => (int?)x.Id);
+            return Convert.ToInt32(incidentReportid);
+            
         }
         public void SavePSPF(IncidentReportPSPF incidentReportPSPF)
         {
@@ -314,18 +357,45 @@ namespace CityWatch.Data.Providers
         {
             return _context.IncidentReportPositions.OrderBy(z => z.Name).ToList();
         }
-
+        //To get the Logbbok Data-p6-101 start
+        public IncidentReportPosition GetIsLogbookData(string Name)
+        {
+            return _context.IncidentReportPositions.Where(x => x.Name == Name).FirstOrDefault();
+        }
+        //To get the Logbbok Data-p6-101 stop
         public void SavePostion(IncidentReportPosition incidentReportPosition)
         {
+            var ClientSiteName = _context.ClientSites.Where(x => x.Id == incidentReportPosition.ClientsiteId).FirstOrDefault();
+           
             if (incidentReportPosition.Id == -1)
             {
-                _context.IncidentReportPositions.Add(new IncidentReportPosition()
+                if (ClientSiteName != null)
                 {
-                    Name = incidentReportPosition.Name,
-                    EmailTo = incidentReportPosition.EmailTo,
-                    IsPatrolCar = incidentReportPosition.IsPatrolCar,
-                    DropboxDir = incidentReportPosition.DropboxDir
-                });
+                    _context.IncidentReportPositions.Add(new IncidentReportPosition()
+                    {
+                        Name = incidentReportPosition.Name,
+                        EmailTo = incidentReportPosition.EmailTo,
+                        IsPatrolCar = incidentReportPosition.IsPatrolCar,
+                        DropboxDir = incidentReportPosition.DropboxDir,
+                        IsLogbook = incidentReportPosition.IsLogbook,
+                        ClientsiteId = incidentReportPosition.ClientsiteId,
+                        ClientsiteName = ClientSiteName.Name
+                    });
+                }
+                else
+                {
+                    _context.IncidentReportPositions.Add(new IncidentReportPosition()
+                    {
+                        Name = incidentReportPosition.Name,
+                        EmailTo = incidentReportPosition.EmailTo,
+                        IsPatrolCar = incidentReportPosition.IsPatrolCar,
+                        DropboxDir = incidentReportPosition.DropboxDir,
+                        IsLogbook = incidentReportPosition.IsLogbook,
+                        ClientsiteId = incidentReportPosition.ClientsiteId,
+                        ClientsiteName = null
+                    });
+
+                }
             }
             else
             {
@@ -336,6 +406,17 @@ namespace CityWatch.Data.Providers
                     positionToUpdate.EmailTo = incidentReportPosition.EmailTo;
                     positionToUpdate.IsPatrolCar = incidentReportPosition.IsPatrolCar;
                     positionToUpdate.DropboxDir = incidentReportPosition.DropboxDir;
+                    positionToUpdate.IsLogbook = incidentReportPosition.IsLogbook;
+                    positionToUpdate.ClientsiteId = incidentReportPosition.ClientsiteId;
+                    if (ClientSiteName!=null)
+                    {
+                        positionToUpdate.ClientsiteName = ClientSiteName.Name;
+                    }
+                    else
+                    {
+                        positionToUpdate.ClientsiteName = null;
+                    }
+                    
                 }
             }
             _context.SaveChanges();
@@ -433,9 +514,48 @@ namespace CityWatch.Data.Providers
             return _context.BroadcastBannerLiveEvents.ToList();
         }
         public List<BroadcastBannerLiveEvents> GetBroadcastLiveEventsByDate()
-        {
-            return _context.BroadcastBannerLiveEvents.Where(x=> x.ExpiryDate>=DateTime.Now.Date).ToList();
+        {            
+			return _context.BroadcastBannerLiveEvents.Where(x=> x.ExpiryDate>=DateTime.Now.Date).ToList();
         }
+		public string GetBroadcastLiveEventsNotExpired()
+		{
+			var lv = _context.BroadcastBannerLiveEvents.Where(x => x.ExpiryDate >= DateTime.Now.Date).ToList();
+			var LiveEventstxtmsg = string.Empty;
+			if (lv != null)
+			{
+				foreach (var fileName in lv)
+				{
+					LiveEventstxtmsg = LiveEventstxtmsg + fileName.TextMessage.Replace("\n", "\t") + '\t' + '\t';
+				}   
+            }
+			return LiveEventstxtmsg;
+		}
+        public string GetUrlsInsideBroadcastLiveEventsNotExpired()
+        {
+            string urls = string.Empty;
+            var lv = _context.BroadcastBannerLiveEvents.Where(x => x.ExpiryDate >= DateTime.Now.Date).ToList();
+            var LiveEventstxtmsg = string.Empty;
+            if (lv != null)
+            {
+                foreach (var fileName in lv)
+                {
+                    LiveEventstxtmsg = LiveEventstxtmsg + fileName.TextMessage.Replace("\n", "\t") + '\t' + '\t';
+                }
+
+                var lvsplit = LiveEventstxtmsg.Split(" ");               
+
+                foreach (var line in lvsplit)
+                {                    
+                    if(line.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || 
+                        line.StartsWith("https://", StringComparison.OrdinalIgnoreCase) )
+                        urls = string.Concat(urls, line, "|");
+                }
+            }
+
+            return urls;
+
+        }
+
         public List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEventsByDate()
         {
             return _context.BroadcastBannerCalendarEvents.Where(x =>  DateTime.Now.Date >=x.StartDate && DateTime.Now.Date <= x.ExpiryDate).ToList();
@@ -467,5 +587,24 @@ namespace CityWatch.Data.Providers
         {
             return _context.SmsChannel.OrderBy(x => x.Id).ToList();
         }
+        //p1-191 hr files task 3-start
+        public List<HrSettings> GetHRSettings()
+        {
+            var res= _context.HrSettings.Include(z => z.HRGroups)
+                .Include(z => z.ReferenceNoNumbers).Include(z => z.ReferenceNoAlphabets)
+                .OrderBy(x => x.HRGroups.Name).ThenBy(x=> x.ReferenceNoNumbers.Name).
+                ThenBy(x => x.ReferenceNoAlphabets.Name).ToList();
+            return _context.HrSettings.Include(z => z.HRGroups)
+                .Include(z => z.ReferenceNoNumbers)
+                .Include(z => z.ReferenceNoAlphabets)
+                .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
+                ThenBy(x => x.ReferenceNoAlphabets.Name).ToList();
+        }
+        public List<LicenseTypes> GetLicensesTypes()
+        {
+            return _context.LicenseTypes.Where(x=>x.IsDeleted==false)
+                .OrderBy(x => x.Id).ToList();
+        }
+        //p1-191 hr files task 3-end
     }
 }

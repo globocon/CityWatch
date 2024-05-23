@@ -62,6 +62,7 @@ namespace CityWatch.Web.Pages.Admin
         }
 
         public IViewDataService ViewDataService { get { return _viewDataService; } }
+        public HrSettings HrSettings;
 
         public ActionResult OnGet()
         {
@@ -148,45 +149,45 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { });
         }
 
-        public JsonResult OnGetPatrolCar(int clientSiteId)
-        {
-            return new JsonResult(_clientSiteWandDataProvider.GetClientSitePatrolCars(clientSiteId).ToList());
-        }
+        //public JsonResult OnGetPatrolCar(int clientSiteId)
+        //{
+        //    return new JsonResult(_clientSiteWandDataProvider.GetClientSitePatrolCars(clientSiteId).ToList());
+        //}
 
-        public JsonResult OnPostPatrolCar(ClientSitePatrolCar record)
-        {
-            var success = false;
-            var message = string.Empty;
-            try
-            {
-                _clientSiteWandDataProvider.SaveClientSitePatrolCar(record);
-                success = true;
-            }
-            catch (Exception ex)
-            {
-                message = ex.Message;
-            }
+        //public JsonResult OnPostPatrolCar(ClientSitePatrolCar record)
+        //{
+        //    var success = false;
+        //    var message = string.Empty;
+        //    try
+        //    {
+        //        _clientSiteWandDataProvider.SaveClientSitePatrolCar(record);
+        //        success = true;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        message = ex.Message;
+        //    }
 
-            return new JsonResult(new { success, message });
-        }
+        //    return new JsonResult(new { success, message });
+        //}
 
 
-        public JsonResult OnPostDeletePatrolCar(int id)
-        {
-            var success = false;
-            var message = string.Empty;
-            try
-            {
-                _clientSiteWandDataProvider.DeleteClientSitePatrolCar(id);
-                success = true;
-            }
-            catch (Exception ex)
-            {
-                message = ex.Message;
-            }
+        //public JsonResult OnPostDeletePatrolCar(int id)
+        //{
+        //    var success = false;
+        //    var message = string.Empty;
+        //    try
+        //    {
+        //        _clientSiteWandDataProvider.DeleteClientSitePatrolCar(id);
+        //        success = true;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        message = ex.Message;
+        //    }
 
-            return new JsonResult(new { success, message });
-        }
+        //    return new JsonResult(new { success, message });
+        //}
 
         //public JsonResult OnGetSmartWandSettings(int clientSiteId)
         //{
@@ -227,50 +228,50 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
 
-        public JsonResult OnGetClientSiteKeys(int clientSiteId)
-        {
-            return new JsonResult(_guardSettingsDataProvider.GetClientSiteKeys(clientSiteId).ToList());
-        }
+        //public JsonResult OnGetClientSiteKeys(int clientSiteId)
+        //{
+        //    return new JsonResult(_guardSettingsDataProvider.GetClientSiteKeys(clientSiteId).ToList());
+        //}
 
-        public JsonResult OnPostClientSiteKey(ClientSiteKey clientSiteKey)
-        {
-            var success = false;
-            var message = string.Empty;
-            try
-            {
-                _guardSettingsDataProvider.SaveClientSiteKey(clientSiteKey);
-                success = true;
-            }
-            catch (Exception ex)
-            {
-                message = ex.Message;
-                if (ex.InnerException != null &&
-                    ex.InnerException is SqlException &&
-                    ex.InnerException.Message.StartsWith("Violation of UNIQUE KEY constraint"))
-                {
-                    message = "Key number already exists";
-                }
-            }
+        //public JsonResult OnPostClientSiteKey(ClientSiteKey clientSiteKey)
+        //{
+        //    var success = false;
+        //    var message = string.Empty;
+        //    try
+        //    {
+        //        _guardSettingsDataProvider.SaveClientSiteKey(clientSiteKey);
+        //        success = true;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        message = ex.Message;
+        //        if (ex.InnerException != null &&
+        //            ex.InnerException is SqlException &&
+        //            ex.InnerException.Message.StartsWith("Violation of UNIQUE KEY constraint"))
+        //        {
+        //            message = "Key number already exists";
+        //        }
+        //    }
 
-            return new JsonResult(new { success, message });
-        }
+        //    return new JsonResult(new { success, message });
+        //}
 
-        public JsonResult OnPostDeleteClientSiteKey(int id)
-        {
-            var success = false;
-            var message = string.Empty;
-            try
-            {
-                _guardSettingsDataProvider.DeleteClientSiteKey(id);
-                success = true;
-            }
-            catch (Exception ex)
-            {
-                message = ex.Message;
-            }
+        //public JsonResult OnPostDeleteClientSiteKey(int id)
+        //{
+        //    var success = false;
+        //    var message = string.Empty;
+        //    try
+        //    {
+        //        _guardSettingsDataProvider.DeleteClientSiteKey(id);
+        //        success = true;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        message = ex.Message;
+        //    }
 
-            return new JsonResult(new { success, message });
-        }
+        //    return new JsonResult(new { success, message });
+        //}
 
         //public void OnPostSaveSiteEmail(int siteId, string siteEmail, bool enableLogDump, string landLine, string guardEmailTo, string duressEmail, string duressSms)
         //{
@@ -292,7 +293,13 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(new { data = _viewDataService.GetGuards() });
         }
-
+        //To Get the Last Login Date 
+        public IActionResult OnGetLastTimeLogin(int guardId)
+        {
+            
+            return new JsonResult(_guardLogDataProvider.GetLastLoginNew(guardId));
+        }
+        
         public JsonResult OnPostGuards(Data.Models.Guard guard, string ClientSiteIds)
         {
             if (guard.GuardAccess != null)
@@ -364,161 +371,161 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(_configDataProvider.GetStates());
         }
 
-        public JsonResult OnPostCustomFields(ClientSiteCustomField clientSiteCustomField)
-        {
-            var status = true;
-            var message = "Success";
-            var id = -1;
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return new JsonResult(new { status = false, message = ModelState.Where(x => x.Value.Errors.Count > 0).Select(x => string.Join(',', x.Value.Errors.Select(y => y.ErrorMessage))) });
-                }
+        //public JsonResult OnPostCustomFields(ClientSiteCustomField clientSiteCustomField)
+        //{
+        //    var status = true;
+        //    var message = "Success";
+        //    var id = -1;
+        //    try
+        //    {
+        //        if (!ModelState.IsValid)
+        //        {
+        //            return new JsonResult(new { status = false, message = ModelState.Where(x => x.Value.Errors.Count > 0).Select(x => string.Join(',', x.Value.Errors.Select(y => y.ErrorMessage))) });
+        //        }
 
-                id = _guardLogDataProvider.SaveClientSiteCustomFields(clientSiteCustomField);
+        //        id = _guardLogDataProvider.SaveClientSiteCustomFields(clientSiteCustomField);
 
-                var clientSiteLogBookId = _clientDataProvider.GetClientSiteLogBook(clientSiteCustomField.ClientSiteId, LogBookType.DailyGuardLog, DateTime.Today)?.Id;
-                if (clientSiteLogBookId.HasValue)
-                {
-                    var customFieldLogs = _guardLogDataProvider.GetCustomFieldLogs(clientSiteLogBookId.Value).Where(x => x.CustomFieldId == id);
-                    if (!customFieldLogs.Any())
-                    {
-                        var customFieldLog = new CustomFieldLog
-                        {
-                            CustomFieldId = id,
-                            ClientSiteLogBookId = clientSiteLogBookId.Value
-                        };
-                        _guardLogDataProvider.SaveCustomFieldLog(customFieldLog);
-                    }
-                }
+        //        var clientSiteLogBookId = _clientDataProvider.GetClientSiteLogBook(clientSiteCustomField.ClientSiteId, LogBookType.DailyGuardLog, DateTime.Today)?.Id;
+        //        if (clientSiteLogBookId.HasValue)
+        //        {
+        //            var customFieldLogs = _guardLogDataProvider.GetCustomFieldLogs(clientSiteLogBookId.Value).Where(x => x.CustomFieldId == id);
+        //            if (!customFieldLogs.Any())
+        //            {
+        //                var customFieldLog = new CustomFieldLog
+        //                {
+        //                    CustomFieldId = id,
+        //                    ClientSiteLogBookId = clientSiteLogBookId.Value
+        //                };
+        //                _guardLogDataProvider.SaveCustomFieldLog(customFieldLog);
+        //            }
+        //        }
 
-            }
-            catch (Exception ex)
-            {
-                status = false;
-                message = "Error " + ex.Message;
-            }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        status = false;
+        //        message = "Error " + ex.Message;
+        //    }
 
-            return new JsonResult(new { status, message = new[] { message }, id });
-        }
+        //    return new JsonResult(new { status, message = new[] { message }, id });
+        //}
 
-        public IActionResult OnGetClientSiteCustomFields(int clientSiteId)
-        {
-            return new JsonResult(_guardLogDataProvider.GetCustomFieldsByClientSiteId(clientSiteId));
-        }
+        //public IActionResult OnGetClientSiteCustomFields(int clientSiteId)
+        //{
+        //    return new JsonResult(_guardLogDataProvider.GetCustomFieldsByClientSiteId(clientSiteId));
+        //}
 
-        public IActionResult OnGetCustomFields()
-        {
-            var customFields = _guardLogDataProvider.GetClientSiteCustomFields();
-            var fieldNames = customFields.Select(z => z.Name).Distinct().OrderBy(z => z);
-            var slots = customFields.Select(z => z.TimeSlot).Distinct().OrderBy(z => z);
-            return new JsonResult(new { fieldNames, slots });
-        }
+        //public IActionResult OnGetCustomFields()
+        //{
+        //    var customFields = _guardLogDataProvider.GetClientSiteCustomFields();
+        //    var fieldNames = customFields.Select(z => z.Name).Distinct().OrderBy(z => z);
+        //    var slots = customFields.Select(z => z.TimeSlot).Distinct().OrderBy(z => z);
+        //    return new JsonResult(new { fieldNames, slots });
+        //}
 
-        public IActionResult OnPostDeleteClientSiteCustomField(int id)
-        {
-            var success = true;
-            var message = "Success";
-            try
-            {
-                _guardLogDataProvider.DeleteClientSiteCustomFields(id);
-            }
-            catch (Exception ex)
-            {
-                success = false;
-                message = ex.Message;
-            }
-            return new JsonResult(new { success, message });
-        }
+        //public IActionResult OnPostDeleteClientSiteCustomField(int id)
+        //{
+        //    var success = true;
+        //    var message = "Success";
+        //    try
+        //    {
+        //        _guardLogDataProvider.DeleteClientSiteCustomFields(id);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        success = false;
+        //        message = ex.Message;
+        //    }
+        //    return new JsonResult(new { success, message });
+        //}
 
-        public IActionResult OnGetSitePocs(int clientSiteId)
-        {
-            return new JsonResult(_guardSettingsDataProvider.GetClientSitePocs(clientSiteId));
-        }
+        //public IActionResult OnGetSitePocs(int clientSiteId)
+        //{
+        //    return new JsonResult(_guardSettingsDataProvider.GetClientSitePocs(clientSiteId));
+        //}
 
-        public IActionResult OnPostSitePoc(ClientSitePoc record)
-        {
-            var success = false;
-            var message = string.Empty;
-            try
-            {
-                _guardSettingsDataProvider.SaveClientSitePoc(record);
-                success = true;
-            }
-            catch (Exception ex)
-            {
-                message = ex.Message;
+        //public IActionResult OnPostSitePoc(ClientSitePoc record)
+        //{
+        //    var success = false;
+        //    var message = string.Empty;
+        //    try
+        //    {
+        //        _guardSettingsDataProvider.SaveClientSitePoc(record);
+        //        success = true;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        message = ex.Message;
 
-                if (ex.InnerException != null &&
-                    ex.InnerException is SqlException &&
-                    ex.InnerException.Message.StartsWith("Violation of UNIQUE KEY constraint"))
-                {
-                    message = "A site POC with same name already exists. This may be deleted";
-                }
-            }
-            return new JsonResult(new { success, message });
-        }
+        //        if (ex.InnerException != null &&
+        //            ex.InnerException is SqlException &&
+        //            ex.InnerException.Message.StartsWith("Violation of UNIQUE KEY constraint"))
+        //        {
+        //            message = "A site POC with same name already exists. This may be deleted";
+        //        }
+        //    }
+        //    return new JsonResult(new { success, message });
+        //}
 
-        public IActionResult OnPostDeleteSitePoc(int id)
-        {
-            var success = true;
-            var message = "Success";
-            try
-            {
-                _guardSettingsDataProvider.DeleteClientSitePoc(id);
-            }
-            catch (Exception ex)
-            {
-                success = false;
-                message = ex.Message;
-            }
-            return new JsonResult(new { success, message });
-        }
+        //public IActionResult OnPostDeleteSitePoc(int id)
+        //{
+        //    var success = true;
+        //    var message = "Success";
+        //    try
+        //    {
+        //        _guardSettingsDataProvider.DeleteClientSitePoc(id);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        success = false;
+        //        message = ex.Message;
+        //    }
+        //    return new JsonResult(new { success, message });
+        //}
 
-        public IActionResult OnGetSiteLocations(int clientSiteId)
-        {
-            return new JsonResult(_guardSettingsDataProvider.GetClientSiteLocations(clientSiteId));
-        }
+        //public IActionResult OnGetSiteLocations(int clientSiteId)
+        //{
+        //    return new JsonResult(_guardSettingsDataProvider.GetClientSiteLocations(clientSiteId));
+        //}
 
-        public IActionResult OnPostSiteLocation(ClientSiteLocation record)
-        {
-            var success = false;
-            var message = string.Empty;
-            try
-            {
-                _guardSettingsDataProvider.SaveClientSiteLocation(record);
-                success = true;
-            }
-            catch (Exception ex)
-            {
-                message = ex.Message;
+        //public IActionResult OnPostSiteLocation(ClientSiteLocation record)
+        //{
+        //    var success = false;
+        //    var message = string.Empty;
+        //    try
+        //    {
+        //        _guardSettingsDataProvider.SaveClientSiteLocation(record);
+        //        success = true;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        message = ex.Message;
 
-                if (ex.InnerException != null &&
-                    ex.InnerException is SqlException &&
-                    ex.InnerException.Message.StartsWith("Violation of UNIQUE KEY constraint"))
-                {
-                    message = "A site location with same name already exists. This may be deleted";
-                }
-            }
-            return new JsonResult(new { success, message });
-        }
+        //        if (ex.InnerException != null &&
+        //            ex.InnerException is SqlException &&
+        //            ex.InnerException.Message.StartsWith("Violation of UNIQUE KEY constraint"))
+        //        {
+        //            message = "A site location with same name already exists. This may be deleted";
+        //        }
+        //    }
+        //    return new JsonResult(new { success, message });
+        //}
 
-        public IActionResult OnPostDeleteSiteLocation(int id)
-        {
-            var success = true;
-            var message = "Success";
-            try
-            {
-                _guardSettingsDataProvider.DeleteClientSiteLocation(id);
-            }
-            catch (Exception ex)
-            {
-                success = false;
-                message = ex.Message;
-            }
-            return new JsonResult(new { success, message });
-        }
+        //public IActionResult OnPostDeleteSiteLocation(int id)
+        //{
+        //    var success = true;
+        //    var message = "Success";
+        //    try
+        //    {
+        //        _guardSettingsDataProvider.DeleteClientSiteLocation(id);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        success = false;
+        //        message = ex.Message;
+        //    }
+        //    return new JsonResult(new { success, message });
+        //}
 
         public JsonResult OnGetKeyVehcileLogFields(KvlFieldType typeId)
         {
@@ -573,25 +580,29 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
 
-        public JsonResult OnPostUpdateSiteDataCollection(int clientSiteId, bool disabled)
-        {
-            var success = false;
-            var message = string.Empty;
-            try
-            {
-                _clientDataProvider.SetDataCollectionStatus(clientSiteId, !disabled);
-                success = true;
-            }
-            catch (Exception ex)
-            {
-                message = ex.Message;
-            }
-            return new JsonResult(new { success, message });
-        }
+        //public JsonResult OnPostUpdateSiteDataCollection(int clientSiteId, bool disabled)
+        //{
+        //    var success = false;
+        //    var message = string.Empty;
+        //    try
+        //    {
+        //        _clientDataProvider.SetDataCollectionStatus(clientSiteId, !disabled);
+        //        success = true;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        message = ex.Message;
+        //    }
+        //    return new JsonResult(new { success, message });
+        //}
 
         public JsonResult OnGetGuardLicense(int guardId)
         {
             return new JsonResult(_guardDataProvider.GetGuardLicenses(guardId));
+        }
+        public JsonResult OnGetGuardLicenseAndComplianceData(int guardId)
+        {
+            return new JsonResult(_guardDataProvider.GetGuardLicensesandcompliance(guardId));
         }
 
         public JsonResult OnPostSaveGuardLicense(GuardLicense guardLicense)
@@ -619,7 +630,17 @@ namespace CityWatch.Web.Pages.Admin
                 dbxUploaded = UploadGuardLicenseToDropbox(guardLicense);
                 if (guardLicense.LicenseType==null && guardLicense.Id!=null && guardLicense.LicenseTypeName!=null)
                 {
-                    int intValueToCompare = -1;
+                    //int intValueToCompare = -1;
+                    int intValueToCompare=0;
+                    var licensetypeCount = _guardDataProvider.GetLicenseTypes().Where(x => x.Name == guardLicense.LicenseTypeName);
+                    if(licensetypeCount.Count()>0)
+                    {
+                        intValueToCompare = _guardDataProvider.GetLicenseTypes().Where(x => x.Name == guardLicense.LicenseTypeName).FirstOrDefault().Id;
+                    }
+                    else
+                    {
+                        intValueToCompare = -1;
+                    }
                     guardLicense.LicenseType = (GuardLicenseType)intValueToCompare;
                     guardLicense.LicenseTypeName = guardLicense.LicenseTypeName;
 
@@ -634,7 +655,7 @@ namespace CityWatch.Web.Pages.Admin
                         message = "LicenseType Required"
                     });
                 }
-
+         
                 _guardDataProvider.SaveGuardLicense(guardLicense);
             }
             catch (Exception ex)
@@ -672,7 +693,187 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_guardDataProvider.GetGuardCompliances(guardId));
         }
+        public JsonResult OnGetHRDescription(int HRid)
+        {
+            var DescVal = _guardDataProvider.GetHRDesc(HRid);
+           
+            return new JsonResult(DescVal);
+        }
+        //public JsonResult OnPostSaveGuardComplianceandlicanse(GuardComplianceAndLicense guardComplianceandlicense)
+        //{
+        //    ModelState.Remove("guardComplianceandlicense.Id");
+        //    ModelState.Remove("guardComplianceandlicense.LicenseTypeText");
+        //    ModelState.Remove("guardComplianceandlicense.LicenseType");
 
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return new JsonResult(new
+        //        {
+        //            status = false,
+        //            message = ModelState.Where(x => x.Value.Errors.Count > 0)
+        //                        .Select(x => string.Join(',', x.Value.Errors.Select(y => y.ErrorMessage)))
+        //        });
+        //    }
+
+        //    var status = true;
+        //    var dbxUploaded = true;
+        //    var message = "Success";
+        //    GuardCompliance guardCompliance = new GuardCompliance()
+        //    {
+        //       GuardId= guardComplianceandlicense.GuardId,
+        //       ReferenceNo= guardComplianceandlicense.ReferenceNo,
+        //       Description= guardComplianceandlicense.Description,
+        //       ExpiryDate= guardComplianceandlicense.ExpiryDate,
+        //       Reminder1= guardComplianceandlicense.Reminder1,
+        //       Reminder2= guardComplianceandlicense.Reminder2,
+        //       FileName= guardComplianceandlicense.FileName,
+        //       HrGroup= guardComplianceandlicense.HrGroup
+        //    };
+
+        //    GuardLicense guardLicenseNew = new GuardLicense()
+        //    {
+        //        GuardId = guardComplianceandlicense.GuardId,
+        //        LicenseNo = guardComplianceandlicense.LicenseNo,
+        //        LicenseType = (GuardLicenseType?)guardComplianceandlicense.LicenseType,
+        //        LicenseTypeName = guardComplianceandlicense.LicenseTypeName,
+        //        ExpiryDate = guardComplianceandlicense.ExpiryDate,
+        //        Reminder1 = guardComplianceandlicense.Reminder1,
+        //        Reminder2 = guardComplianceandlicense.Reminder2,
+        //        FileName = guardComplianceandlicense.FileName,
+
+        //    };
+
+        //    try
+        //    {
+        //        dbxUploaded = UploadGuardComplianceToDropbox(guardCompliance);
+        //        _guardDataProvider.SaveGuardCompliance(guardCompliance);
+        //        //To Save License data start
+        //        dbxUploaded = UploadGuardLicenseToDropbox(guardLicenseNew);
+        //        if (guardLicenseNew.LicenseType == null && guardLicenseNew.Id != null && guardLicenseNew.LicenseTypeName != null)
+        //        {
+        //            //int intValueToCompare = -1;
+        //            int intValueToCompare = 0;
+        //            var licensetypeCount = _guardDataProvider.GetLicenseTypes().Where(x => x.Name == guardLicenseNew.LicenseTypeName);
+        //            if (licensetypeCount.Count() > 0)
+        //            {
+        //                intValueToCompare = _guardDataProvider.GetLicenseTypes().Where(x => x.Name == guardLicenseNew.LicenseTypeName).FirstOrDefault().Id;
+        //            }
+        //            else
+        //            {
+        //                intValueToCompare = -1;
+        //            }
+        //            guardLicenseNew.LicenseType = (GuardLicenseType)intValueToCompare;
+        //            guardLicenseNew.LicenseTypeName = guardLicenseNew.LicenseTypeName;
+
+        //        }
+        //        else if (guardLicenseNew.LicenseType == null)
+        //        {
+        //            //int intValueToCompare = -1;
+        //            //guardLicense.LicenseType = (GuardLicenseType)intValueToCompare;
+        //            return new JsonResult(new
+        //            {
+        //                status = false,
+        //                message = "LicenseType Required"
+        //            });
+        //        }
+
+        //        _guardDataProvider.SaveGuardLicense(guardLicenseNew);
+
+        //        //To Save License data stop
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        status = false;
+        //        message = ex.Message;
+        //    }
+        //    return new JsonResult(new { status, dbxUploaded, message });
+        //}
+
+        public JsonResult OnPostSaveGuardComplianceandlicanse(GuardComplianceAndLicense guardComplianceandlicense)
+        {
+            ModelState.Remove("guardComplianceandlicense.Id");
+            ModelState.Remove("guardComplianceandlicense.CurrentDateTime");
+            ModelState.Remove("guardComplianceandlicense.LicenseNo");
+
+            if (!ModelState.IsValid)
+            {
+                return new JsonResult(new
+                {
+                    status = false,
+                    message = ModelState.Where(x => x.Value.Errors.Count > 0)
+                                .Select(x => string.Join(',', x.Value.Errors.Select(y => y.ErrorMessage)))
+                });
+            }
+
+            var status = true;
+            var dbxUploaded = true;
+            var message = "Success";
+            if (guardComplianceandlicense.Id==0) {
+                //var RefrenceNoList = _guardDataProvider.GetHRRefernceNo(Convert.ToInt16(guardComplianceandlicense.HrGroup));
+
+
+                string extension = Path.GetExtension(guardComplianceandlicense.FileName);
+            string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(guardComplianceandlicense.FileName);
+                guardComplianceandlicense.FileName = guardComplianceandlicense.FileName;
+            }
+
+            try
+            {
+                dbxUploaded = UploadGuardComplianceandLicenseToDropbox(guardComplianceandlicense);
+                guardComplianceandlicense.CurrentDateTime = DateTime.Now.ToString();
+                guardComplianceandlicense.Reminder1 = 45;
+                guardComplianceandlicense.Reminder2 = 7;
+                _guardDataProvider.SaveGuardComplianceandlicanse(guardComplianceandlicense);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = ex.Message;
+            }
+            return new JsonResult(new { status, dbxUploaded, message });
+        }
+
+        public JsonResult OnPostSaveGuardComplianceandlicanseNew(GuardComplianceAndLicense guardComplianceandlicense)
+        {
+            ModelState.Remove("guardComplianceandlicense.Id");
+            ModelState.Remove("guardComplianceandlicense.CurrentDateTime");
+            ModelState.Remove("guardComplianceandlicense.GuardId");
+            ModelState.Remove("guardComplianceandlicense.LicenseNo");
+            if (!ModelState.IsValid)
+            {
+                return new JsonResult(new
+                {
+                    status = false,
+                    message = ModelState.Where(x => x.Value.Errors.Count > 0)
+                                .Select(x => string.Join(',', x.Value.Errors.Select(y => y.ErrorMessage)))
+                });
+            }
+
+            var status = true;
+            var dbxUploaded = true;
+            var message = "Success";
+            if (guardComplianceandlicense.Id == 0)
+            {
+                string extension = Path.GetExtension(guardComplianceandlicense.FileName);
+                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(guardComplianceandlicense.FileName);
+                guardComplianceandlicense.FileName = guardComplianceandlicense.FileName;
+            }
+
+            try
+            {
+                dbxUploaded = UploadGuardComplianceandLicenseToDropboxNew(guardComplianceandlicense);
+                guardComplianceandlicense.CurrentDateTime = DateTime.Now.ToString();
+                guardComplianceandlicense.Reminder1 = 45;
+                guardComplianceandlicense.Reminder2 = 7;
+                _guardDataProvider.SaveGuardComplianceandlicanse(guardComplianceandlicense);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = ex.Message;
+            }
+            return new JsonResult(new { status, dbxUploaded, message });
+        }
         public JsonResult OnPostSaveGuardCompliance(GuardCompliance guardCompliance)
         {
             ModelState.Remove("guardCompliance.Id");
@@ -723,30 +924,75 @@ namespace CityWatch.Web.Pages.Admin
         {
             var success = true;
             var files = Request.Form.Files;
+           
             var guardId = Request.Form["guardId"];
+            var LicenseNo = Request.Form["LicenseNo"].ToString(); 
+            var Description= Request.Form["Description"].ToString();
+            var HRid = Request.Form["HRID"].ToString();
             var fileName = string.Empty;
+            var CurrentDate = DateTime.Now.Ticks / 1000;
+            int hrIdInt;
+            if (!string.IsNullOrEmpty(HRid))
+            {
+                hrIdInt = Convert.ToInt32(HRid);
+
+            }
+            else
+            {
+                hrIdInt = 0;
+            }
+            var RefNo = "";
+            var RefrenceNoList = _guardDataProvider.GetHRRefernceNo(hrIdInt, Description);
+            if (RefrenceNoList!=null)
+            {
+                 RefNo = RefrenceNoList.ReferenceNo;
+            }
+               
+           
 
             try
             {
-                if (files.Count == 1)
-                {
-                    var file = files[0];
-                    fileName = file.FileName;
-                    var guardUploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "Guards", guardId);
-                    if (!Directory.Exists(guardUploadDir))
-                        Directory.CreateDirectory(guardUploadDir);
+                    if (files.Count == 1 && RefrenceNoList != null)
+                    {
+                        var file = files[0];
+                        fileName = file.FileName;
 
-                    using var stream = System.IO.File.Create(Path.Combine(guardUploadDir, fileName));
-                    file.CopyTo(stream);
-                }
+
+                        string extension = Path.GetExtension(fileName);
+                        string newFileName = Description + extension;
+                        //string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
+                        //var fileNameUpload = fileNameWithoutExtension + "_" + CurrentDate + extension;
+
+                        fileName = RefNo + "_" + newFileName;
+                        var guardUploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "Guards", "License", LicenseNo);
+
+                        if (!Directory.Exists(guardUploadDir))
+                            Directory.CreateDirectory(guardUploadDir);
+                       
+                        string filePath = Path.Combine(guardUploadDir, fileName);
+                        if (System.IO.File.Exists(filePath))
+                        {
+
+                            System.IO.File.Delete(filePath);
+
+                        }
+                            using var stream = System.IO.File.Create(Path.Combine(guardUploadDir, fileName));
+                            file.CopyTo(stream);
+                        
+                       
+
+                    }
 
             }
             catch
             {
                 success = false;
             }
-            return new JsonResult(new { success, fileName });
+          
+            return new JsonResult(new { success, fileName, CurrentDate });
         }
+
+
 
         public IActionResult OnGetGuardLicenseAndCompliance(int guardId)
         {
@@ -767,17 +1013,15 @@ namespace CityWatch.Web.Pages.Admin
 
             try
             {
-                if (type == 'l')
+                 if (type == 'c')
                 {
-                    var license = _guardDataProvider.GetGuardLicense(id);
-                    license.FileName = string.Empty;
-                    _guardDataProvider.SaveGuardLicense(license);
-                }
-                else if (type == 'c')
-                {
-                    var compliance = _guardDataProvider.GetGuardCompliance(id);
-                    compliance.FileName = string.Empty;
-                    _guardDataProvider.SaveGuardCompliance(compliance);
+                    var compliance = _guardDataProvider.GetGuardComplianceFile(id);
+                    if (compliance!=null)
+                    {
+                        compliance.FileName = string.Empty;
+                        _guardDataProvider.SaveGuardComplianceandlicanse(compliance);
+                    }
+                   
                 }
             }
             catch (Exception)
@@ -961,7 +1205,31 @@ namespace CityWatch.Web.Pages.Admin
             var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardCompliance.Guard)}/{guardCompliance.ReferenceNo}/{guardCompliance.FileName}");
             return UpoadDocumentToDropbox(fileToUpload, dbxFilePath);
         }
+        private bool UploadGuardComplianceandLicenseToDropbox(GuardComplianceAndLicense guardComplianceandlicense)
+        {
+            guardComplianceandlicense.Guard = _guardDataProvider.GetGuards().SingleOrDefault(z => z.Id == guardComplianceandlicense.GuardId);
+            var existingGuardCompliance = _guardDataProvider.GetGuardComplianceFile(guardComplianceandlicense.Id);
+            if ((guardComplianceandlicense.Id == 0 && string.IsNullOrEmpty(guardComplianceandlicense.FileName)) ||
+                (guardComplianceandlicense.Id != 0 && existingGuardCompliance.FileName == guardComplianceandlicense.FileName))
+                return true;
 
+            var fileToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards","License", guardComplianceandlicense.LicenseNo, guardComplianceandlicense.FileName);
+            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.LicenseNo}/{guardComplianceandlicense.FileName}");
+            return UpoadDocumentToDropbox(fileToUpload, dbxFilePath);
+        }
+        private bool UploadGuardComplianceandLicenseToDropboxNew(GuardComplianceAndLicense guardComplianceandlicense)
+        {
+            guardComplianceandlicense.Guard = _guardDataProvider.GetGuards().SingleOrDefault(z => z.Id == guardComplianceandlicense.GuardId);
+            var existingGuardCompliance = _guardDataProvider.GetGuardComplianceFile(guardComplianceandlicense.Id);
+            if ((guardComplianceandlicense.Id == 0 && string.IsNullOrEmpty(guardComplianceandlicense.FileName)) ||
+                (guardComplianceandlicense.Id != 0 && existingGuardCompliance.FileName == guardComplianceandlicense.FileName))
+                return true;
+
+
+            var fileToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards", "License", guardComplianceandlicense.LicenseNo, guardComplianceandlicense.FileName);
+            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.LicenseNo}/{guardComplianceandlicense.FileName}");
+            return UpoadDocumentToDropbox(fileToUpload, dbxFilePath);
+        }
         private bool UpoadDocumentToDropbox(string fileToUpload, string dbxFilePath)
         {
             var dropboxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken,
@@ -971,8 +1239,8 @@ namespace CityWatch.Web.Pages.Admin
             try
             {
                 uploaded = Task.Run(() => _dropboxUploadService.Upload(dropboxSettings, fileToUpload, dbxFilePath)).Result;
-                if (uploaded && System.IO.File.Exists(fileToUpload))
-                    System.IO.File.Delete(fileToUpload);
+                //if (uploaded && System.IO.File.Exists(fileToUpload))
+                //    System.IO.File.Delete(fileToUpload);
             }
             catch
             {
@@ -1068,5 +1336,115 @@ namespace CityWatch.Web.Pages.Admin
                 }
             }
         }
+        //for toggle areas - start 
+        public void OnPostSaveToggleType(int siteId,int timeslottoggleTypeId, bool timeslotIsActive, int vwitoggleTypeId,bool vwiIsActive,
+            int sendertoggleTypeId,bool senderIsActive,int reelstoggleTypeId,bool reelsIsActive)
+        {
+           
+            _clientDataProvider.SaveClientSiteToggle(siteId, timeslottoggleTypeId, timeslotIsActive);
+            _clientDataProvider.SaveClientSiteToggle(siteId, vwitoggleTypeId, vwiIsActive);
+            _clientDataProvider.SaveClientSiteToggle(siteId, sendertoggleTypeId, senderIsActive);
+            _clientDataProvider.SaveClientSiteToggle(siteId, reelstoggleTypeId, reelsIsActive);
+        }
+        public IActionResult OnGetClientSiteToggle(int siteId)
+        {
+
+            return new JsonResult(_guardDataProvider.GetClientSiteToggle().Where(x => x.ClientSiteId == siteId));
+        }
+        //for toggle areas - end
+        // p1-191 hr files task 3-start
+        public JsonResult OnPostSaveHRSettings(int Id,int hrGroupId,int refNoNumberId,int refNoAlphabetId,string description)
+        {
+            var status = true;
+            var message = "Success";
+            var id = -1;
+            try
+            {
+                //if (!ModelState.IsValid)
+                //{
+                //    return new JsonResult(new { status = false, message = ModelState.Where(x => x.Value.Errors.Count > 0).Select(x => string.Join(',', x.Value.Errors.Select(y => y.ErrorMessage))) });
+                //}
+                HrSettings hrSettingsnew = new HrSettings()
+                {
+                    Id=Id,
+                    HRGroupId =hrGroupId,
+                    ReferenceNoNumberId=refNoNumberId,
+                    ReferenceNoAlphabetId=refNoAlphabetId,
+                    Description=description,
+
+                };
+
+
+                _guardLogDataProvider.SaveHRSettings(hrSettingsnew);
+                    
+
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message = new[] { message }, id });
+        }
+        public JsonResult OnPostDeleteHRSettings(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _guardLogDataProvider.DeleteHRSettings(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnGetHRSettings()
+        {
+            return new JsonResult(_configDataProvider.GetHRSettings());
+        }
+        public JsonResult OnPostSaveLicensesTypes(LicenseTypes record)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                
+                    _guardLogDataProvider.SaveLicensesTypes(record);
+                
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnPostDeleteLicensesTypes(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _guardLogDataProvider.DeleteLicensesTypes(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnGetLicensesTypes()
+        {
+            return new JsonResult(_configDataProvider.GetLicensesTypes());
+        }
+        // p1-191 hr files task 3-end
     }
+
+
 }

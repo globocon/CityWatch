@@ -9,6 +9,14 @@
         $('#du_duress_email').val(Emails.emails);
     });
 
+    $.ajax({
+        url: '/Admin/Settings?handler=GlobalComplianceAlertEmail',
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (Emails) {
+        $('#hr_compliance_email').val(Emails.emails);
+    });
+
      //To get the Duress Emails in pageload stop
 
 };
@@ -34,6 +42,20 @@ gridRadioCheckStatusTypeSettings = $('#radiocheck_status_type_settings').grid({
 if (gridRadioCheckStatusTypeSettings) {
     gridRadioCheckStatusTypeSettings.on('rowDataChanged', function (e, id, record) {
         const data = $.extend(true, {}, record);
+        if (isNaN(data.referenceNo)) {
+            $.notify('Reference number should only contains numbers. !!!',
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#D44950",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );
+            gridRadioCheckStatusTypeSettings.edit(id);
+            return;
+        }        
         //data.radioCheckStatusColorId = !Number.isInteger(data.radioCheckStatusColorId) ? data.radioCheckStatusColorId.getValue() : data.radioCheckStatusColorId;
         const token = $('input[name="__RequestVerificationToken"]').val();
         $.ajax({
@@ -41,9 +63,37 @@ if (gridRadioCheckStatusTypeSettings) {
             data: { record: data },
             type: 'POST',
             headers: { 'RequestVerificationToken': token },
-        }).done(function () {
-            gridRadioCheckStatusTypeSettings.clear();
-            gridRadioCheckStatusTypeSettings.reload();
+        }).done(function (result) {
+            //gridRadioCheckStatusTypeSettings.clear();
+            //gridRadioCheckStatusTypeSettings.reload();
+            if (result.status) {
+                //Success
+                $.notify(result.message,
+                    {
+                        align: "center",
+                        verticalAlign: "top",
+                        color: "#fff",
+                        background: "#20D67B",
+                        blur: 0.4,
+                        delay: 0
+                    }
+                );
+                gridRadioCheckStatusTypeSettings.clear();
+                gridRadioCheckStatusTypeSettings.reload();
+            } else {
+                //Failed
+                $.notify(result.message,
+                    {
+                        align: "center",
+                        verticalAlign: "top",
+                        color: "#fff",
+                        background: "#D44950",
+                        blur: 0.4,
+                        delay: 0
+                    }
+                );
+                gridRadioCheckStatusTypeSettings.edit(id);
+            }           
         }).fail(function () {
             console.log('error');
         }).always(function () {
@@ -223,7 +273,8 @@ $('#add_calendar_events').on('click', function () {
                 'id': -1
             }).edit(-1);
         }
-    });
+});
+
     let gridBroadCastBannerCalendarEvents;
     gridBroadCastBannerCalendarEvents = $('#BroadCastBannerCalendarEvents').grid({
         dataSource: '/Admin/Settings?handler=BroadcastCalendarEvents',
@@ -235,9 +286,10 @@ $('#add_calendar_events').on('click', function () {
         columns: [
             { width: 130, field: 'id', title: 'Id', hidden: true },
             { width: 100, field: 'referenceNo', title: 'Reference No', editor: true },
-            { width: 700, field: 'textMessage', title: 'Text Message', editor: true },
-            { width: 120, field: 'formattedStartDate', title: 'Start', type: 'date', format: 'dd-mmm-yyyy', editor: true },
-            { width: 120, field: 'formattedExpiryDate', title: 'Expiry', type: 'date', format: 'dd-mmm-yyyy', editor: true },
+            { width: 600, field: 'textMessage', title: 'Text Message', editor: true },
+            { width: 160, field: 'formattedStartDate', title: 'Start', type: 'date', format: 'dd-mmm-yyyy', editor: true },
+            { width: 160, field: 'formattedExpiryDate', title: 'Expiry', type: 'date', format: 'dd-mmm-yyyy', editor: true },
+            { width: 100, field: 'repeatYearly', title: 'Repeat', type: 'checkbox', align: 'center', editor: true},
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -247,6 +299,49 @@ $('#add_calendar_events').on('click', function () {
 if (gridBroadCastBannerCalendarEvents) {
     gridBroadCastBannerCalendarEvents.on('rowDataChanged', function (e, id, record) {
         const data = $.extend(true, {}, record);
+
+        if (isNaN(data.referenceNo)) {
+            $.notify('Reference number should only contains numbers. !!!',
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#D44950",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );
+            gridBroadCastBannerCalendarEvents.edit(id);
+            return;
+        }        
+        if ((data.formattedStartDate == '') || (data.formattedExpiryDate == '') || (data.formattedStartDate == undefined) || (data.formattedExpiryDate == undefined)) {
+            $.notify('Please check start date and expiry date. !!!',
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#D44950",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );
+            gridBroadCastBannerCalendarEvents.edit(id);
+            return;
+        }
+        if ((data.textMessage == '') || (data.textMessage == undefined)) {
+            $.notify('Event message cannot be empty. !!!',
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#D44950",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );
+            gridBroadCastBannerCalendarEvents.edit(id);
+            return;
+        }
         data.textMessage = data.textMessage.replace(/\s{2,}/g, ' ').trim();
         data.startDate = data.formattedStartDate;
         data.expiryDate = data.formattedExpiryDate;
@@ -258,13 +353,34 @@ if (gridBroadCastBannerCalendarEvents) {
             type: 'POST',
             headers: { 'RequestVerificationToken': token },
         }).done(function (result) {
-            if (result.message == 'Another Event Exists') {
-
-
-                $('#alert-wand-in-use-modal').modal('show');
-            }
-            gridBroadCastBannerCalendarEvents.clear();
-            gridBroadCastBannerCalendarEvents.reload();
+            if (result.status) {
+                //Success
+                $.notify(result.message,
+                    {
+                        align: "center",
+                        verticalAlign: "top",
+                        color: "#fff",
+                        background: "#20D67B",
+                        blur: 0.4,
+                        delay: 0
+                    }
+                );
+                gridBroadCastBannerCalendarEvents.clear();
+                gridBroadCastBannerCalendarEvents.reload();
+            } else {
+                //Failed
+                $.notify(result.message,
+                    {
+                        align: "center",
+                        verticalAlign: "top",
+                        color: "#fff",
+                        background: "#D44950",
+                        blur: 0.4,
+                        delay: 0
+                    }
+                );
+                gridBroadCastBannerCalendarEvents.edit(id);
+            }           
         }).fail(function () {
             console.log('error');
         }).always(function () {
@@ -298,6 +414,166 @@ $('#btn_confrim_wand_usok').on('click', function () {
     $('#alert-wand-in-use-modal').modal('hide')
 })
 
+// ################ Global SMS Start ####################
+let gridGlobalDuressSmsSettings, editManager;;
+
+editManager = function (value, record, $cell, $displayEl, id, $grid) {
+    var data = $grid.data(),
+        $delete = $('<button role="delete" class="gj-button-md"><i class="gj-icon delete text-danger"></i> Delete</button>').attr('data-key', id);
+    $delete.on('click', function (e) {
+        $grid.removeRow($(this).data('key'));
+    });
+    $displayEl.empty().append($delete);
+}
+
+gridGlobalDuressSmsSettings = $('#tbl_GlobalSmsNumbersList').grid({
+    dataSource: '/Admin/Settings?handler=GetGlobalSmsNumberList',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    inlineEditing: { mode: 'command', managementColumn: false },
+    columns: [
+        { field: 'companyId', title: 'Company ID', hidden: true },
+        { field: 'smsNumber', title: 'SMS Number', width: 350 },
+        { width: 100, align: 'center', renderer: editManager }
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
+
+if (gridGlobalDuressSmsSettings) {
+    gridGlobalDuressSmsSettings.on('rowRemoving', function (e, id, record) {
+
+        if (confirm('Are you sure to delete this sms number ?')) {
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteGlobalSmsNumber',
+                data: { SmsNumberId: record },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function (d) {
+                if (d.status == true) {
+                    //Success
+                    $.notify(d.message,
+                        {
+                            align: "center",
+                            verticalAlign: "top",
+                            color: "#fff",
+                            background: "#20D67B",
+                            blur: 0.4,
+                            delay: 0
+                        }
+                    );
+                    gridGlobalDuressSmsSettings.reload();
+                } else {
+                    //Failed
+                    $.notify(d.message,
+                        {
+                            align: "center",
+                            verticalAlign: "top",
+                            color: "#fff",
+                            background: "#D44950",
+                            blur: 0.4,
+                            delay: 0
+                        }
+                    );
+                }        
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                
+            });
+        }
+    });
+
+    gridGlobalDuressSmsSettings.on('dataBound', function (e, records, totalRecords) {       
+        var SmsNumbers = "";        
+        records.forEach(function (item) {            
+            SmsNumbers += item.smsNumber + ", "; 
+        });        
+        if (SmsNumbers.endsWith(", ")) {            
+            SmsNumbers = SmsNumbers.substring(0, SmsNumbers.length - 2);            
+        }        
+        $('#du_duress_sms').val(SmsNumbers);
+    });
+}
+
+
+$('#add_GlobalSms').on('click', function () {
+    $('#sms_number').val('');
+    $('#sms_country_code option:first-child').attr("selected", "selected");
+    $('#sms_country_code')[0].selectedIndex = 0;
+    $('#sms_local_code option:first-child').attr("selected", "selected");
+    $('#sms_local_code')[0].selectedIndex = 0;
+    gridGlobalDuressSmsSettings.reload();
+    $('#smsnumber-modal').modal('show');
+});
+
+$('#btn_add_smsnumber').on('click', function () {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    const countrycode = $('#sms_country_code').val();
+    const localcode = $('#sms_local_code').val();
+    let sms_number = $('#sms_number').val();
+    if (sms_number == '' || sms_number == null || sms_number.length != 9) {
+        $.notify("Invalid sms number.",
+            {
+                align: "center",
+                verticalAlign: "top",
+                color: "#fff",
+                background: "#D44950",
+                blur: 0.4,
+                delay: 0
+            }
+        );
+        return;
+    } 
+    sms_number = sms_number.substring(0, 3) + ' ' + sms_number.substring(3, 6) + ' ' + sms_number.substring(6, 9);
+    var smsnumber = countrycode + ' ' + localcode + ' ' + sms_number ;
+    var adddata = {
+        CompanyId: 1,
+        SmsNumber: smsnumber
+    };
+    $.ajax({
+        url: '/Admin/Settings?handler=AddGlobalSmsNumber',
+        data: { SmsNumber: adddata },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (d) {
+        if (d.status == true) {
+            //Success
+            $.notify(d.message,
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#20D67B",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );
+            gridGlobalDuressSmsSettings.reload();
+        } else {
+            //Failed
+            $.notify(d.message,
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#D44950",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );            
+        }        
+    }).fail(function () {
+        console.log('error');
+    }).always(function () {
+
+    });
+});
+// ################ Global SMS End ####################
+
 
 $('#add_logbook').on('click', function () {
 
@@ -306,7 +582,9 @@ $('#add_logbook').on('click', function () {
     $('#cs_client_type')[0].selectedIndex = 0;
     gridClientSiteSettings.reload({ type: $('#cs_client_type').val(), searchTerm: $('#search_sites_settings').val() });
     $('#logbook-modal').modal('show');
-})
+});
+
+
 //To save the Global Email Of Duress Button start
 $('#add_GloblEmail').on('click', function () {
     const token = $('input[name="__RequestVerificationToken"]').val();
@@ -342,6 +620,54 @@ $('#add_GloblEmail').on('click', function () {
         
     } 
     
+    function isValidEmail(email) {
+        // Regular expression for basic email validation
+        var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailPattern.test(email);
+    }
+})
+
+$('#add_ComplianceEmail').on('click', function () {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    var Email = $('#hr_compliance_email').val();
+    var emailsArray = Email.split(',');
+    isValidEmailIds = true;
+    for (var i = 0; i < emailsArray.length; i++) {
+        var emailAddress = emailsArray[i].trim();
+        if (isValidEmail(emailAddress)) {
+           
+        }
+        else {
+            isValidEmailIds = false;
+            $.notify("Invalid email address." + emailAddress,
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#D44950",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );
+
+        }
+        
+
+
+    }
+
+    if (isValidEmailIds) {
+        $.ajax({
+            url: '/Admin/Settings?handler=SaveGlobalComplianceAlertEmail',
+            data: { Email: Email },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function () {
+            alert("The Compliance Alert Email was saved successfully");
+        })
+
+    }
+
     function isValidEmail(email) {
         // Regular expression for basic email validation
         var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

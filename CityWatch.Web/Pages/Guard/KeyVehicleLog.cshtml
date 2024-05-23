@@ -9,6 +9,7 @@
 @inject IConfiguration Configuration
 @inject IViewDataService viewDataService
 @inject IClientSiteViewDataService clientViewDataService
+@inject IViewDataService viewDataServiceNew
 
 @{
     ViewData["title"] = "CityWatch Security | Vehicle And Key Log";
@@ -18,7 +19,7 @@
     <input type="hidden" id="hid_duressEnabledGpsCoordinates">
     <input type="hidden" id="hid_duressEnabledAddress">
 }
-<input type="hidden" id="ClientSiteID" asp-for="@Model.KeyVehicleLog.ClientSiteLogBook.ClientSite.Id"/>
+<input type="hidden" id="ClientSiteID" asp-for="@Model.KeyVehicleLog.ClientSiteLogBook.ClientSite.Id" />
 <input type="hidden" asp-for="@Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId" />
 <input type="hidden" asp-for="@Model.KeyVehicleLog.GuardLogin.Id" />
 <input type="hidden" asp-for="@Model.KeyVehicleLog.GuardLogin.GuardId" />
@@ -76,10 +77,25 @@
                                 Status: <span id="kv_duress_status" class="@(isDuressActive ? "font-weight-bold" : "")">@duressStatus</span>
                             </p>
                         </div>
-                    </div>                    
+                    </div>
                     <hr />
                     <p class="mb-2">
-                        <b>Guard Name: </b>@Model.KeyVehicleLog.GuardLogin.Guard.Name ; <b>Initials: </b>@Model.KeyVehicleLog.GuardLogin.Guard.Initial ; <b>Smart WAND: </b>@(Model.KeyVehicleLog.GuardLogin.SmartWand?.SmartWandId ?? "N/A") ;  <b>Position: </b>@(Model.KeyVehicleLog.GuardLogin.Position?.Name ?? "N/A")
+                        <b>Guard Name: </b>@Model.KeyVehicleLog.GuardLogin.Guard.Name ; 
+                        <b>Initials: </b>@Model.KeyVehicleLog.GuardLogin.Guard.Initial ;
+                        @if (Model.KeyVehicleLog.GuardLogin.SmartWand?.SmartWandId != null)
+                        {
+                            <b>Smart WAND: </b>
+                            @Model.KeyVehicleLog.GuardLogin.SmartWand?.SmartWandId
+
+
+
+                        }
+                        else
+                        {
+                            <b>Smart WAND: <span style="color:red"> N/A</span></b>
+
+                        };
+                        <b>Position: </b>@(Model.KeyVehicleLog.GuardLogin.Position?.Name ?? "N/A")
                     </p>
                 </div>
             </div>
@@ -121,7 +137,7 @@
                     <label class="col-form-label" width="100%">Search</label>
                     <input type="hidden" value="0" id="kvl_status_filter" />
                     <input type="hidden" asp-for="@Model.KeyVehicleLog.GuardLogin.GuardId" id="GuardLog_GuardLogin_GuardId" />
-                    
+
                     <div class="ml-2">
                         <input type="text" class="form-control" width="100%" id="search_kvl_log" />
                     </div>
@@ -156,9 +172,9 @@
         <button type="button" class="btn btn-primary " id="add_new_vehicle_and_key_log_one"><i class="fa fa-plus mr-2"></i>Add Entry</button>
     </div>
     <div class="col-md-7 text-left">
-       
+
         <div class="d-flex flex-row">
-            
+
             <div>
                 <div class="dropdown kvl-rec-filter  mr-4">
                     <button class="btn btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
@@ -170,13 +186,13 @@
                         <a class="dropdown-item" href="#" data-val="3"><i class="fa fa-circle text-warning mr-2"></i>Pending (Bookings / Request)</a>
                         <a class="dropdown-item" href="#" data-val="2"><i class="fa fa-circle text-danger mr-2"></i>Closed (Exit Site / Key In)</a>
                     </div>
-                    
+
                 </div>
             </div>
-           
+
             <select class="form-control mr-4" asp-for="@Model.KeyVehicleLog.ClientSitePocId" asp-items="@clientViewDataService.GetClientSitePocs(new int[] { Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId })">
             </select>
-            
+
             <select class="form-control mr-2" asp-for="@Model.KeyVehicleLog.ClientSiteLocationId" asp-items="@clientViewDataService.GetClientSiteLocations(new int[] { Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId })">
             </select>
             <input type="hidden" value="0" id="kvl_status_filter" />
@@ -186,10 +202,10 @@
                 <input type="text" class="form-control" style="width: 140px" id="search_kvl_log" />
             </div>
         </div>
-       
-        
+
+
     </div>
-  
+
     <div class="col-md-3 text-right">
         <input type="hidden" asp-for="@Model.KeyVehicleLog.ClientSiteLogBookId" />
         <label class="col-form-label mx-2">Total Events: <span id="total_events"></span></label>
@@ -225,13 +241,13 @@
                 <select class="form-control mr-4" asp-for="@Model.KeyVehicleLog.ClientSitePocId" asp-items="@clientViewDataService.GetClientSitePocs(new int[] { Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId })">
                 </select>
             </div>
-            <div class="mr-2">
+            <div class="mr-4">
                 <label class="col-form-label" width="100%">Site Location</label>
-                <select class="form-control mr-3" asp-for="@Model.KeyVehicleLog.ClientSiteLocationId" asp-items="@clientViewDataService.GetClientSiteLocations(new int[] { Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId })">
+                <select class="form-control mr-4" asp-for="@Model.KeyVehicleLog.ClientSiteLocationId" asp-items="@clientViewDataService.GetClientSiteLocations(new int[] { Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId })">
                 </select>
             </div>
 
-            
+
             <input type="hidden" value="0" id="kvl_status_filter" />
             <input type="hidden" asp-for="@Model.KeyVehicleLog.GuardLogin.GuardId" id="GuardLog_GuardLogin_GuardId" />
             <div>
@@ -240,7 +256,7 @@
                     <input type="text" class="form-control" width="100%" id="search_kvl_log" />
                 </div>
             </div>
-           
+
         </div>
 
 
@@ -269,14 +285,14 @@
                     <th rowspan="2" hidden></th>
                     @*  for searching site location-start*@
                     <th rowspan="2" hidden></th>
-                     @*for searching site location-end*@
+                    @*for searching site location-end*@
                     @*  for searching site poc-start*@
                     <th rowspan="2" hidden></th>
                     @*for searching site poc-end*@
                     <th rowspan="2">
                         <center>
                             <div class="custom-control custom-switch custom-control-inline ml-2 mt-1" title="Toggle Print Docket">
-                            
+
                                 <input type="checkbox" class="custom-control-input" id="chkAllBatchDocketSelect" name="toggleDarkMode">
                                 <label class="custom-control-label" for="chkAllBatchDocketSelect"></label>
                             </div>
@@ -302,10 +318,12 @@
     <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header col-md-12">
+
                 
-                <h5 class="modal-title col-md-5">Add a new log book entry</h5>
+                <h6 class="modal-title col-md-5">Add a new log book entry</h6>
+
                 <h5 style="color:red; text-align:right" class="col-md-6 ml-5" id="titlePOIWarning" hidden>POI Warning</h5>
-                <i id="imagesiren" hidden><img  id="img1" src="~/images/ziren.png" height="25px;" /></i>
+                <i id="imagesiren" hidden><img id="img1" src="~/images/ziren.png" height="25px;" /></i>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -339,7 +357,7 @@
                         <small class="form-text text-primary mb-1">
                             <i class="fa fa-info-circle mr-1"></i>Click any row below to copy Company Name and Person Type. Then click Add Record.
                         </small>
-                        <div class="form-inline">                            
+                        <div class="form-inline">
                             <label>Create a new record with Person Name:</label>
                             <input class="form-control mx-2" type="text" id="driver_name" value="Unknown" />
                             <button class="btn btn-success" id="btn_duplicate_profile">Add Record</button>
@@ -387,6 +405,51 @@
         </div>
     </div>
 </div>
+
+
+<div class="modal" tabindex="-1" role="dialog" id="kvl-trailer_profiles-modal" data-backdrop="static" data-keyboard="false">
+   
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-gear mr-2" aria-hidden="true"></i>Vehicle Rego/Trailer Rego : <span id="kvl-profile-title-rego"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+               
+                <div class="row m-0">
+                    <div class="col-md-12">
+                        <input type="hidden" id="textBoxname" />
+                        <input class="form-control mx-2 d-none" type="text" id="driver_name" value="Unknown" />
+                        <table class="table table-bordered" width="100%" id="key_vehicle_log_trailerprofiles">
+                            <thead>
+
+                                <tr>
+                                    <th rowspan="2" hidden></th>
+                                    <th rowspan="2"><center>ID / Plate</center></th>
+                                    <th rowspan="2"><center>Company Name</center></th>
+                                    <th colspan="2"><center>Individual</center></th>
+                                    <th rowspan="2"><center>Trailer1 Rego</center></th>
+                                    <th rowspan="2"><center>Trailer2 Rego</center></th>
+                                    <th rowspan="2"><center>Trailer3 Rego</center></th>
+                                    <th rowspan="2"><center>Trailer4 Rego</center></th>
+                                    <th rowspan="2"><center>Trailer Type</center></th>
+                                    <th rowspan="2"></th>
+                                </tr>
+                                <tr>
+                                    <th>Person Name</th>
+                                    <th>Person Type</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <partial name="_MessagePopup" />
 @Html.AntiForgeryToken()
 @section PageHeader {
@@ -423,22 +486,22 @@
                         <input type="hidden" id="IsNone" />
                     </div>
 
-                   @* temporarily commented*@
-                       @* <div class="col-md-12">
-                            <table class="table table-bordered table-sm" width="100%" id="gridIsPersonOrVehicle">
-                                <thead>
-                                    <tr>
-                                        <th>SlNo</th>
-                                        <th>file</th>
-                                        <th hidden>Hidden</th>
-                                        <th>Is Person Or Vehicle</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
-                        <input type="text" id="kvl_attachment_upload2"  hidden>*@
-                  @*  temporarily commented*@
+                    @* temporarily commented*@
+                    @* <div class="col-md-12">
+                    <table class="table table-bordered table-sm" width="100%" id="gridIsPersonOrVehicle">
+                    <thead>
+                    <tr>
+                    <th>SlNo</th>
+                    <th>file</th>
+                    <th hidden>Hidden</th>
+                    <th>Is Person Or Vehicle</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                    </table>
+                    </div>
+                    <input type="text" id="kvl_attachment_upload2"  hidden>*@
+                    @*  temporarily commented*@
                 </div>
                 <div class="form-row">
                     <div class="col-md-12">
@@ -450,7 +513,7 @@
             </div>
             <div class="modal-footer justify-content-between">
                 <button class="btn btn-success " id="btnIsPersonOrVehicle">Ok</button>
-                
+
             </div>
         </div>
     </div>
@@ -476,9 +539,9 @@
                     <div class="col-md-8">
                         <button class="btn btn-link" id="btnReplace"><i class="fa fa-copy"></i> Replace the files in the Destination</button>
                     </div>
-                   
 
-                   
+
+
                 </div>
                 <div class="form-row">
                     <div class="col-md-8">
@@ -497,7 +560,7 @@
 
                 </div>
             </div>
-            
+
         </div>
     </div>
 </div>
@@ -592,14 +655,39 @@
                             <div class="col-md-12">
                                 <ul class="nav nav-tabs" id="guardComplianceTab" role="tablist">
                                     <li class="nav-item">
+                                        <a class="nav-link active" id="licensesAndCombliance-tab" data-toggle="tab" href="#guardLicensesandCompliance" role="tab" aria-controls="guardLicenses" aria-selected="true">Compliances</a>
+                                    </li>
+                                    @* <li class="nav-item">
                                         <a class="nav-link active" id="licenses-tab" data-toggle="tab" href="#guardLicenses" role="tab" aria-controls="guardLicenses" aria-selected="true">Licenses</a>
                                     </li>
                                     <li class="nav-item">
                                         <a class="nav-link" id="compliances-tab" data-toggle="tab" href="#guardCompliances" role="tab" aria-controls="guardCompliances" aria-selected="false">Compliances</a>
-                                    </li>
+                                    </li> *@
                                 </ul>
                                 <div class="tab-content" id="guardDataTabContent">
-                                    <div class="tab-pane fade show active py-3" id="guardLicenses" role="tabpanel" aria-labelledby="licenses_tab">
+                                    <div class="tab-pane fade show active py-3" id="guardLicensesandCompliance" role="tabpanel" aria-labelledby="licensesAndCombliance-tab">
+                                        <div class="form-row mb-2 btn-add-guard-addl-details">
+                                            <div class="col-md-2 offset-md-10 text-right">
+                                                <button class="btn btn-success" id="btnAddGuardLicenseKey"><i class="fa fa-plus mr-2"></i>Add Compliance</button>
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="col-md-12">
+                                                <table id="tbl_guard_licensesAndComplianceKey" class="table table-bordered table-sm" width="100%">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>HR Group</th>
+                                                            <th>Description</th>
+                                                            <th>Expiry Date</th>
+                                                            <th>File</th>
+                                                            <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                                                        </tr>
+                                                    </thead>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @* <div class="tab-pane fade show active py-3" id="guardLicenses" role="tabpanel" aria-labelledby="licenses_tab">
                                         <div class="form-row mb-2 btn-add-guard-addl-details">
                                             <div class="col-md-2 offset-md-10 text-right">
                                                 <button class="btn btn-success" id="btnAddGuardLicenseLogDaily"><i class="fa fa-plus mr-2"></i>Add License</button>
@@ -647,7 +735,7 @@
                                                 </table>
                                             </div>
                                         </div>
-                                    </div>
+                                    </div> *@
                                 </div>
                             </div>
                         </div>
@@ -681,8 +769,11 @@
                         </div>
                         <div class="form-group col-md-6">
                             <label class="form-label">License Type</label>
-                            <select class="form-control" id="GuardLicense_LicenseType1" name="GuardLicense.LicenseType" asp-items="@Html.GetEnumSelectList<GuardLicenseType>().OrderBy(z => z.Text)">
+                           @* <select class="form-control" id="GuardLicense_LicenseType1" name="GuardLicense.LicenseType" asp-items="@Html.GetEnumSelectList<GuardLicenseType>().OrderBy(z => z.Text)">
                                 <option value="">Select</option>
+                            </select>*@
+                            <select class="form-control" id="GuardLicense_LicenseType1" name="GuardLicense.LicenseType" asp-items="@viewDataService.GetLicenseTypes(true)">
+                                @*<option value="">Select</option>*@
                             </select>
                             <input type="hidden" id="GuardLicense_License1" name="GuardLicense.LicenseType" />
                             <input type="hidden" id="LicenseTypeOther1" name="GuardLicense.LicenseTypeName" />
@@ -695,12 +786,12 @@
                         </div>
                         <div class="form-group col-md-3">
                             <label class="form-label">Reminder 1</label>
-                            <input type="number" class="form-control" id="GuardLicense_Reminder11" name="GuardLicense.Reminder1" min="1" max="365">
+                            <input type="number" class="form-control" id="GuardLicense_Reminder11" value="45" name="GuardLicense.Reminder1" min="1" max="365" disabled>
 
                         </div>
                         <div class="form-group col-md-3">
                             <label class="form-label">Reminder 2</label>
-                            <input type="number" class="form-control" id="GuardLicense_Reminder21" name="GuardLicense.Reminder2" min="1" max="365">
+                            <input type="number" class="form-control" id="GuardLicense_Reminder21" value="7" name="GuardLicense.Reminder2" min="1" max="365" disabled>
                         </div>
                     </div>
                     <hr />
@@ -734,7 +825,7 @@
 <div class="modal fade" id="addGuardCompliancesLogDailyModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="addComplianceModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header p-2">
                 <h5 class="modal-title">Add/Edit Compliance</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
@@ -761,11 +852,11 @@
                         </div>
                         <div class="form-group col-md-3">
                             <label class="form-label">Reminder 1</label>
-                            <input type="number" class="form-control" id="GuardCompliance_Reminder11" name="GuardCompliance.Reminder1" min="1" max="365">
+                            <input type="number" class="form-control" id="GuardCompliance_Reminder11" value="45" name="GuardCompliance.Reminder1" min="1" max="365" disabled>
                         </div>
                         <div class="form-group col-md-3">
                             <label class="form-label">Reminder 2</label>
-                            <input type="number" class="form-control" id="GuardCompliance_Reminder21" name="GuardCompliance.Reminder2" min="1" max="365">
+                            <input type="number" class="form-control" id="GuardCompliance_Reminder21" value="7" name="GuardCompliance.Reminder2" min="1" max="365" disabled>
                         </div>
                         <div class="form-group col-md-3">
                             <label class="form-label">HR Group</label>
@@ -798,8 +889,178 @@
                     </div>
                 </form>
             </div>
-            <div class="modal-footer justify-content-start">
+            <div class="modal-footer justify-content-start p-2">
                 <button type="button" class="btn btn-primary" id="btn_save_guard_compliance1">Save Compliance</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal" id="addCompliancesDocumentsModal" data-backdrop="static" data-keyboard="false" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Compliance Documents</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="btnkeyComplianceDocumentsclose">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="frm_add_compliance_documents">
+                 @*   <input type="hidden" asp-for="@Model.ClientSiteLogBookId" />
+                    <input type="hidden" asp-for="@Model.GuardLoginId" />
+                    <input type="hidden" asp-for="@Model.Id" />
+                    <input type="hidden" asp-for="@Model.ReportReference" />
+                    <input type="hidden" asp-for="@Model.ActiveGuardLoginId" />
+                    <input type="hidden" asp-for="@Model.IsPreviousDayEntry" />*@
+                    @{
+                        var kvlComplianceDocumentsAttachments = ViewData["KeyVehicleLog_Attachments"] as List<string>;
+                        var kvlComplianceDocumentsAttachmentsCount = kvlComplianceDocumentsAttachments != null ? kvlComplianceDocumentsAttachments.Count : 0;
+
+                        var kvlComplianceDocumentsAttachmentRootPath = ViewData["KeyVehicleLog_FilesPathRoot"] as string;
+                    }
+                    <div class="row mt-5 mt-md-3">
+                        <div class="col">
+                            <i class="text-muted" style="font-size:12px">Click Browse and select one or more files (.jpg, .jpeg, .png, .bmp, .pdf)</i>
+                            <div class="custom-file mt-3">
+
+                                <input type="file" id="kvl_attachment_compliance_documents_upload" name="media" class="custom-file-input" accept=".jpg, .jpeg, .png, .bmp, .pdf, .mp3, .mp4, .avi" multiple>
+
+                                <label class="custom-file-label" for="kvl_attachment_compliance_documents_upload">Choose file(s) to upload</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-12">
+
+                            <ul id="kvl-attachment_compliance_documents-list" class="list-group d-block w-auto pt-2">
+                                @if (kvlComplianceDocumentsAttachments != null)
+                                {
+                                    var index = 0;
+                                    foreach (var fileName in kvlComplianceDocumentsAttachments)
+                                    {
+                                        <li class="list-group-item" id="attach_@index" data-index="@index">
+                                            @fileName
+                                            <i class="fa fa-trash-o ml-2 text-danger btn-delete-kvl-attachment_compliance_documents" title="Delete" style="cursor: pointer;"></i>
+                                            <a href="@kvlComplianceDocumentsAttachmentRootPath/@fileName" target="_blank"><i class="fa fa-download ml-2 text-primary" title="Download" style="cursor: pointer;"></i></a>
+                                        </li>
+                                        index++;
+                                    }
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-start">
+                <button type="button" class="btn btn-primary" id="btn_save_guard_compliancedocuments">Save Compliance</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="addGuardCompliancesLicenseModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="addComplianceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header p-2">
+                <h5 class="modal-title">Add/Edit Compliance</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-1 pt-1">
+                <form id="frm_add_complianceandlicense">
+                    <input type="hidden" id="GuardComplianceandlicense_Id" name="GuardComplianceAndLicense.Id" />
+                    <input type="hidden" id="GuardComplianceandlicense_GuardId" name="GuardComplianceAndLicense.GuardId" />
+                    <input type="hidden" id="GuardComplianceandlicense_CurrentDateTime" name="GuardComplianceAndLicense.CurrentDateTime" />
+                    <input type="hidden" id="GuardComplianceandlicense_LicenseNo" name="GuardComplianceAndLicense.LicenseNo" />
+                    <div class="form-row" style="height:363px;">
+                        <p style="color:black" class="mb-1">
+                            The HR database allows uploads of compliance and license documents based on three groups.
+                            Please select the correct group first, before selecting the description of the file you are uploading. If a document you
+                            are trying to upload is not listed in the dropdown description list, please contact admin
+                        </p>
+                        <h8 class="col-sm-6" style="color:black"><u>LEGEND</u></h8>
+                        <h8 style="color:black;font-size:11px">HR 1=C4i Onboarding    (CV,LICENSES,C4i Training)</h8>
+                        <h8 style="color:black;font-size:11px">HR 2=Client inductions    (client specific SOPs)</h8>
+                        <h8 style="color:black;font-size:11px">HR 3=Special skills    (FLIR,WARDEN,COXSWAIN,etc)</h8>
+                        <div class="row pt-2">
+                            <div class="form-group col-md-5">
+                                <label class="form-label">HR Group</label>
+                                <select class="form-control" id="HRGroup" name="GuardComplianceAndLicense.HrGroup" asp-items="@viewDataServiceNew.GetHRGroups( true)">
+                                   @*  <option selected="selected" value="">Select</option> *@
+                                </select>
+                            </div>
+                            <div class="form-group col-md-7" style="padding-left:0px">
+                                <label class="form-label" id="DescLabel">Description</label>
+
+                                <select name="GuardComplianceAndLicense.Description" id="Description" class="form-control" style="width:287px"></select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-group col-md-4">
+                                <label class="form-label">Expiry Date</label>
+                                <input type="date" class="form-control" id="GuardComplianceAndLicense_ExpiryDate1" name="GuardComplianceAndLicense.ExpiryDate" min="@DateTime.Today.ToString("yyyy-MM-dd")">
+                            </div>
+                            <div class="form-group col-md-8 mb-1">
+                                <div class="container p-0" style="display:flex;font-size:11px;color:black">
+                                    <p class="left-text">Note:</p>&nbsp;&nbsp;
+                                    <p class="right-text">Licenses and inductions expire. Please ensure you add expiry so system can email you when your document needs to be updated</p>
+                                </div>
+                                @*   <div class="col-sm-4">Note:</div>
+                                <div class="col-sm-4">Licenses and inductions expire. Please ensure you add expiry so system can email you when your document needs to be updated</div> *@
+                                @*  <h6 style="color:red;font-size:11px">  </h6> *@
+                            </div>
+                        </div>
+
+                        @*  <div class="form-group col-md-6">
+                        <label class="form-label" id="DescLabel">Description</label>
+                        <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
+                        <input type="checkbox" class="custom-control-input" id="LicanseTypeFilter" name="positionfilterPatrolCar">
+                        <label class="custom-control-label" for="LicanseTypeFilter">License Type</label>
+                        </div>
+                        <input type="text" class="form-control" id="GuardComplianceAndLicense_Description1" name="GuardComplianceAndLicense.Description">
+                        <label class="form-label" id="LicenseLabel" style="display:none">License Type</label>
+                        <select class="form-control" id="GuardCompliance_LicenseType" style="display:none;" name="GuardComplianceAndLicense.LicenseType" asp-items="@Html.GetEnumSelectList<GuardLicenseType>().OrderBy(z => z.Text)">
+                        <option value="">Select</option>
+                        </select>
+
+                        </div> *@
+                    </div>
+
+                    <hr class="mb-1 mt-1" />
+                    <div class="form-row" style="height:162px;">
+                        <div class="form-group col-md-12">
+                            <label class="form-label">Compliance Document: <span id="guardComplianceandlicense_fileName1">None</span></label>
+                            <p class="mt-2">
+                                <input type="hidden" id="GuardComplianceandlicense_FileName1" name="GuardComplianceAndLicense.FileName" />
+                                <label class="btn btn-sm btn-outline-primary mb-0">
+                                    <i class="fa fa-upload mr-2"></i>Upload
+                                    <input type="file" id="upload_complianceandlicanse_file" accept=".jpg, .jpeg, .png, .bmp, .pdf" hidden>
+                                </label>
+                                <button type="button" class="btn btn-outline-danger btn-sm" id="delete_complianceandlicense_file"><i class="fa fa-trash mr-2"></i>Delete</button>
+                                <small class="form-text text-muted">
+                                    Upload a file with extension .jpg, .jpeg, .png, .bmp, .pdf
+                                </small>
+                            </p>
+                            <div class="container  pl-0" style="display:flex;font-size:11px;color:black">
+                                <p class="left-text">Note:</p>&nbsp;&nbsp;
+                                <p class="right-text">
+                                    While Multiple files are able to be uploaded simultaneously,
+                                    the system will only allow files to be uploaded to one HR group.Therefore you may
+                                    need to make multiple separate uploads,based on variations to HR Group and description.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-12 m-0">
+                            <div asp-validation-summary="All" id="compliancelicanseValidationSummary1"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-start p-2">
+                <button type="button" class="btn btn-primary" id="btn_save_guard_compliancelicenseKey">Save Compliance</button>
+                <span id="schRunStatusNew" class="mt-2"></span>
             </div>
         </div>
     </div>

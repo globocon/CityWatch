@@ -1,0 +1,114 @@
+﻿﻿@using CityWatch.Data.Models;
+@using CityWatch.Data.Enums;
+@using CityWatch.Web.Services;
+@inject IViewDataService viewDataServiceNew
+
+<div class="modal fade" id="addGuardCompliancesLicenseModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="addComplianceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header p-2">
+                <h5 class="modal-title">Add/Edit Compliance</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-1 pt-1">
+                <form id="frm_add_complianceandlicense">
+                    <input type="hidden" id="GuardComplianceandlicense_Id" name="GuardComplianceAndLicense.Id" />
+                    <input type="hidden" id="GuardComplianceandlicense_GuardId" name="GuardComplianceAndLicense.GuardId" />
+                    <input type="hidden" id="GuardComplianceandlicense_CurrentDateTime" name="GuardComplianceAndLicense.CurrentDateTime" />
+                    <input type="hidden" id="GuardComplianceandlicense_LicenseNo" name="GuardComplianceAndLicense.LicenseNo" />
+                    <div class="form-row" style="height:363px;">
+                        <p style="color:black" class="mb-1">
+                            The HR database allows uploads of compliance and license documents based on three groups.
+                            Please select the correct group first, before selecting the description of the file you are uploading. If a document you
+                            are trying to upload is not listed in the dropdown description list, please contact admin
+                        </p>
+                        @* <p class="col-sm-6 mb-1" style="color:black"><u>LEGEND</u></p> *@
+                        <h8 class="col-sm-6" style="color:black"><u>LEGEND</u></h8>
+                        <h8 style="color:black;font-size:11px">HR 1=C4i Onboarding    (CV,LICENSES,C4i Training)</h8>
+                        <h8 style="color:black;font-size:11px">HR 2=Client inductions    (client specific SOPs)</h8>
+                        <h8 style="color:black;font-size:11px">HR 3=Special skills    (FLIR,WARDEN,COXSWAIN,etc)</h8><br />
+                        <div class="row pt-2">
+                            <div class="form-group col-md-5">
+                                <label class="form-label">HR Group</label>
+                                <select class="form-control" id="HRGroup" name="GuardComplianceAndLicense.HrGroup" asp-items="@viewDataServiceNew.GetHRGroups( true)">
+                                   @*  <option selected="selected" value="">Select</option> *@
+                                </select>
+                            </div>
+                            <div class="form-group col-md-7" style="padding-left:0px">
+                                <label class="form-label" id="DescLabel">Description</label>
+
+                                <select name="GuardComplianceAndLicense.Description" id="Description" class="form-control" style="width:287px"></select>
+                            </div>
+                        </div>
+                        <div class="row">
+                        <div class="form-group col-md-4">
+                            <label class="form-label">Expiry Date</label>
+                            <input type="date" class="form-control" id="GuardComplianceAndLicense_ExpiryDate1" name="GuardComplianceAndLicense.ExpiryDate" min="@DateTime.Today.ToString("yyyy-MM-dd")">
+                        </div>
+                        <div class="form-group col-md-8 mb-1">
+                            <div class="container p-0" style="display:flex;font-size:11px;color:black">
+                                <p class="left-text">Note:</p>&nbsp;&nbsp;
+                                <p class="right-text">Licenses and inductions expire. Please ensure you add expiry so system can email you when your document needs to be updated</p>
+                            </div>
+                            @*   <div class="col-sm-4">Note:</div>
+                            <div class="col-sm-4">Licenses and inductions expire. Please ensure you add expiry so system can email you when your document needs to be updated</div> *@
+                            @*  <h6 style="color:red;font-size:11px">  </h6> *@
+                        </div>
+                        </div>
+
+                        @*  <div class="form-group col-md-6">
+                        <label class="form-label" id="DescLabel">Description</label>
+                        <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
+                        <input type="checkbox" class="custom-control-input" id="LicanseTypeFilter" name="positionfilterPatrolCar">
+                        <label class="custom-control-label" for="LicanseTypeFilter">License Type</label>
+                        </div>
+                        <input type="text" class="form-control" id="GuardComplianceAndLicense_Description1" name="GuardComplianceAndLicense.Description">
+                        <label class="form-label" id="LicenseLabel" style="display:none">License Type</label>
+                        <select class="form-control" id="GuardCompliance_LicenseType" style="display:none;" name="GuardComplianceAndLicense.LicenseType" asp-items="@Html.GetEnumSelectList<GuardLicenseType>().OrderBy(z => z.Text)">
+                        <option value="">Select</option>
+                        </select>
+
+                        </div> *@
+                    </div>
+
+                    <hr class="mb-1 mt-1" />
+                    <div class="form-row" style="height:162px;">
+                        <div class="form-group col-md-12">
+                            <label class="form-label">Compliance Document: <span id="guardComplianceandlicense_fileName1">None</span></label>
+                            <p class="mt-2">
+                                <input type="hidden" id="GuardComplianceandlicense_FileName1" name="GuardComplianceAndLicense.FileName" />
+                                <label class="btn btn-sm btn-outline-primary mb-0">
+                                    <i class="fa fa-upload mr-2"></i>Upload
+                                    <input type="file" id="upload_complianceandlicanse_file" accept=".jpg, .jpeg, .png, .bmp, .pdf" hidden>
+                                </label>
+                                <button type="button" class="btn btn-outline-danger btn-sm" id="delete_complianceandlicense_file"><i class="fa fa-trash mr-2"></i>Delete</button>
+                                <small class="form-text text-muted">
+                                    Upload a file with extension .jpg, .jpeg, .png, .bmp, .pdf
+                                </small>
+                            </p>
+                            <div class="container pl-0" style="display:flex;font-size:11px;color:black">
+                                <p class="left-text">Note:</p>&nbsp;&nbsp;
+                                <p class="right-text">
+                                    While Multiple files are able to be uploaded simultaneously,
+                                    the system will only allow files to be uploaded to one HR group.Therefore you may
+                                    need to make multiple separate uploads,based on variations to HR Group and description.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <div asp-validation-summary="All" id="compliancelicanseValidationSummary"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-start p-2">
+                <button type="button" class="btn btn-primary" id="btn_save_guard_compliancelicense">Save Compliance</button>
+                <span id="schRunStatusNew" class="mt-2"></span>
+            </div>
+        </div>
+    </div>
+</div>

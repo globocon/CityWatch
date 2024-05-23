@@ -2,14 +2,12 @@
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
-using Dropbox.Api.Users;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
+using System.Text.Json;
 using System.Threading.Tasks;
+
 
 namespace CityWatch.Data.Services
 {
@@ -70,11 +68,13 @@ namespace CityWatch.Data.Services
                     svl.GuardName = sendtonumber.GuardName;
                     svl.SiteId = sendtonumber.SiteId;
                     svl.SiteName = sendtonumber.SiteName;
+
+                    string statusmsg = "Sending sms started: " + DateTime.Now.ToString("dd-MMM-yyyy HH:mm:ss");
+
                     var resp = await _smsGlobalService.SendSMSApi(SanitizedNumber, smsmsg, sendingFrom, _ApiKey, _ApiSecret);
                     // Write status to communication log table
                     var result = resp.messages;
-                    string status = "";
-                    string statusmsg = "";
+                    string status = "";                   
 
                     if (resp.statuscode != 200)
                     {
@@ -85,29 +85,34 @@ namespace CityWatch.Data.Services
                         status = result.Select(x => x.status).FirstOrDefault();
                     }
                                         
-                    statusmsg = "Api call status code: " + resp.statuscode.ToString();
-                    statusmsg += "\r\n" + "Api call status message: " + resp.statusmessage.ToString();
-                    if (result.Select(x => x.status).FirstOrDefault().ToLower().StartsWith("fail"))
+                    statusmsg += "\r\n Api call status code: " + resp.statuscode.ToString();
+                    statusmsg += "\r\n Api call status message: " + resp.statusmessage.ToString();
+                    if(result != null && result.Length > 0)
                     {
-                        string outgoingid = result.Select(x => x.outgoing_id).FirstOrDefault();
-                        statusmsg += "\r\n" + "Message sending failed. Outgoing Id: " + outgoingid;
-                        statusmsg += "\r\n" + result.ToString();
-
-                        //try
-                        //{
-                        //    var msgsts = await _smsGlobalService.GetAllMsgStatus(_ApiKey, _ApiSecret);
-                        //    var sts = msgsts.messages.Where(x => x.outgoing_id == outgoingid);
-                        //    statusmsg += msgsts.statuscode.ToString() + " " + msgsts.statusmessage;
-                        //}
-                        //catch (Exception)
-                        //{
-
-                        //   // throw;
-                        //}
-
-
+                        if (result.Select(x => x.status).FirstOrDefault().ToLower().StartsWith("fail"))
+                        {
+                            string outgoingid = result.Select(x => x.outgoing_id).FirstOrDefault();
+                            statusmsg += "\r\n" + "Message sending failed. Outgoing Id: " + outgoingid;
+                            statusmsg += "\r\n" + JsonSerializer.Serialize(result);
+                        }
+                        else
+                        {
+                            statusmsg += "\r\n" + JsonSerializer.Serialize(result);
+                        }
                     }
-                                       
+                    else
+                    {
+                        try
+                        {
+                            statusmsg += "\r\n" + JsonSerializer.Serialize(resp.messages);
+                        }
+                        catch (Exception)
+                        {
+
+                           // throw;
+                        }                        
+                    }
+
                     svl.EventStatus = status;
                     svl.EventErrorMsg = statusmsg;
                     svl.EventTime = DateTime.Now;
@@ -153,10 +158,13 @@ namespace CityWatch.Data.Services
         }
 
         private string CleanupSmsNumber(string smsnumber)
-        {           
+        {
+            smsnumber = smsnumber.Trim();
 
             if (smsnumber.Contains('+'))
                 smsnumber = smsnumber.Replace("+", "");
+            if (smsnumber.Contains("(0)"))
+                smsnumber = smsnumber.Replace("(0)", "");
             if (smsnumber.Contains('('))
                 smsnumber = smsnumber.Replace("(", "");
             if (smsnumber.Contains(' '))
@@ -169,8 +177,7 @@ namespace CityWatch.Data.Services
                 smsnumber = smsnumber.Substring(2, smsnumber.Length-2) ;
             if (smsnumber.StartsWith("0"))
                 smsnumber = smsnumber.Substring(1, smsnumber.Length - 1);            
-            
-            smsnumber = smsnumber.Trim();
+                       
             return smsnumber;
         }
 

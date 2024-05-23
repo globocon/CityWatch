@@ -41,5 +41,8 @@ namespace CityWatch.Data.Models
 
         [ForeignKey("ClientSiteLogBookId")]
         public ClientSiteLogBook ClientSiteLogBook { get; set; }
+
+
     }
+
 }

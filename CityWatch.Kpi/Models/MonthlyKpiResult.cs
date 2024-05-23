@@ -232,8 +232,15 @@ namespace CityWatch.Kpi.Models
 
                 if (dayCount % 7 == 0)
                 {
-                    _dailyKpiResults.Single(x => x.Date == kpi.Date).EffortCounterImage = sumImage > 0 ? sumImage : null;
-                    _dailyKpiResults.Single(x => x.Date == kpi.Date).EffortCounterWand = sumWand > 0 ? sumWand : null;
+
+                    //Change 02052024 dileep the old codes show error with  multiple values 
+                    _dailyKpiResults.FirstOrDefault(x => x.Date == kpi.Date).EffortCounterImage = sumImage > 0 ? sumImage : null;
+                    _dailyKpiResults.FirstOrDefault(x => x.Date == kpi.Date).EffortCounterWand = sumWand > 0 ? sumWand : null;
+                    //Old Code Start
+                    //_dailyKpiResults.Single(x => x.Date == kpi.Date).EffortCounterImage = sumImage > 0 ? sumImage : null;
+                    //_dailyKpiResults.Single(x => x.Date == kpi.Date).EffortCounterWand = sumWand > 0 ? sumWand : null;
+                    //Old Code end
+                  
 
                     ++weekCount;
                     _effortCounts.Add(new EffortCount()

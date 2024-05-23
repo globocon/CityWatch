@@ -18,9 +18,9 @@
 </div>
 <partial name="_Slogan" />
 @{
-    var LiveEvents = _configDataProvider.GetBroadcastLiveEventsByDate();
-    var LiveEventstxtmsg = "";
-    @if (LiveEvents.Count() > 0)
+    var LiveEventsNotExpired = _configDataProvider.GetBroadcastLiveEventsNotExpired();
+    var LiveEventsNotExpiredUrls = _configDataProvider.GetUrlsInsideBroadcastLiveEventsNotExpired();
+    if (LiveEventsNotExpired != string.Empty)
     {
         @section LiveEvents {
         <div class="container d-flex flex-column flex-md-row pb-1">
@@ -29,27 +29,12 @@
                     <label class="lblclass">Live Events:</label>
                 </div>
             </div>
-            @* <div class="form-group col-md-10 p-0 container marquee-stylenew">
-    //     @foreach (var fileName in LiveEvents)
-    //         {
-    //              LiveEventstxtmsg = LiveEventstxtmsg + fileName.TextMessage.Replace("\n","\t") + '\t' + '\t';
-    //             // LiveEventstxtmsg = LiveEventstxtmsg + fileName.TextMessage + '\n';
-    //         }
-    //         <div id="divmarqueeLiveEvents" class="marquee" style="display:grid; height:20px; width:900px;overflow: hidden;"><pre style="height:inherit; width:auto;">@LiveEventstxtmsg</pre></div>
-    //     </div>*@
-
-            @foreach (var fileName in LiveEvents)
-                {
-                    LiveEventstxtmsg = LiveEventstxtmsg + fileName.TextMessage.Replace("\n", "\t") + '\t' + '\t';
-                    // LiveEventstxtmsg = LiveEventstxtmsg + fileName.TextMessage + '\n';
-                }
-                <div id="divmarqueeLiveEvents" class="form-group col-md-10 p-0 container marquee-stylenew marquee"><pre>@LiveEventstxtmsg</pre></div>
-            </div>
+            <div id="divmarqueeLiveEvents" class="form-group col-md-10 p-0 container marquee-stylenew marquee marqueeurls"><pre>@LiveEventsNotExpired</pre></div>
+        </div>
+        <input type="hidden" id="inp_marqueeurls" value="@LiveEventsNotExpiredUrls" />
+        <a id="a_marqueeurls" hidden href="" target="_blank"></a>
+        }
     }
-    }
-
-
-
 }
 @section PageHeader {
     <h3 class="text-center">CLOUD PORTAL</h3>
@@ -195,7 +180,7 @@
                 pauseOnCycle: false,
 
                 // Pause on hover
-                pauseOnHover: false,
+                pauseOnHover: true,
 
                 // The marquee is visible initially positioned next to the border towards it will be moving
                 startVisible: false

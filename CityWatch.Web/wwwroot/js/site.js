@@ -1,4 +1,5 @@
 ﻿$(function () {
+    
     $('#Report_DateLocation_ClientType').on('change', function () {
         $('#Report_DateLocation_ClientSite').val('');
         $('#Report_DateLocation_ClientAddress').val('');
@@ -24,10 +25,12 @@
     });
 
     $('#Report_DateLocation_ClientSite').attr('placeholder', 'Select Site or Edit');
+    $('#Report_DateLocation_ClientArea').attr('placeholder', 'Select');
     $('#Report_DateLocation_ClientSite').editableSelect({
         //filter: false,
         effects: 'slide'
-    }).on('select.editable-select', function (e, li) {
+    })
+        .on('select.editable-select', function (e, li) {
         $.ajax({
             url: '/Incident/Register?handler=ClientSiteByName',
             type: 'GET',
@@ -43,6 +46,35 @@
                 $('#Report_DateLocation_ShowIncidentLocationAddress').prop('checked', false);
                 $('#clientSiteAddress').val(data.clientSite.address);
                 $('#clientSiteGps').val(data.clientSite.gps);
+                const clientAreaControl = $('#Report_DateLocation_ClientArea');
+                //p1 - 202 site allocation - start
+                clientAreaControl.html('');
+                toggleClientGpsLink(false);
+
+                //const ulClients = $('#Report_DateLocation_ClientArea').siblings('ul.es-list');
+                //ulClients.html('');
+
+                const option = $('#Report_DateLocation_ClientSite').val();
+                if (option == '')
+                    return false;
+
+                $.ajax({
+                    url: '/Incident/Register?handler=ClientAreas&Id=' + encodeURIComponent(option),
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function (data) {
+
+                        data.map(function (site) {
+                            // ulClients.append('<li class="es-visible" value="' + site.text + '">' + site.text + '</li>');
+                            clientAreaControl.append('<option value="' + site.text + '">' + site.text + '</option>');
+
+                        });
+
+                    }
+                });
+
+
+            //p1 - 202 site allocation - end
             }
         }).fail(function () {
         });
@@ -54,6 +86,38 @@
             $('#Report_DateLocation_ClientAddress').val('');
             toggleClientGpsLink(false);
         }
+        //p1 - 202 site allocation - start
+        //else {
+        //    // $('#Report_DateLocation_ClientArea').val('');
+        //    const clientAreaControl = $('#Report_DateLocation_ClientArea');
+        //    clientAreaControl.html('');
+        //    toggleClientGpsLink(false);
+
+        //    //const ulClients = $('#Report_DateLocation_ClientArea').siblings('ul.es-list');
+        //    //ulClients.html('');
+
+        //    const option = $(this).val();
+        //    if (option == '')
+        //        return false;
+
+        //    $.ajax({
+        //        url: '/Incident/Register?handler=ClientAreas&Id=' + encodeURIComponent(option),
+        //        type: 'GET',
+        //        dataType: 'json',
+        //        success: function (data) {
+
+        //            data.map(function (site) {
+        //                // ulClients.append('<li class="es-visible" value="' + site.text + '">' + site.text + '</li>');
+        //                clientAreaControl.append('<option value="' + site.text + '">' + site.text + '</option>');
+
+        //            });
+
+        //        }
+        //    });
+
+
+        //    //p1 - 202 site allocation - end
+        //}
     });
 
     function setSelectedClientStatus(clientSite) {
@@ -86,6 +150,32 @@
     $('#Report_Officer_CallSign').editableSelect({
         effects: 'slide'
     });
+
+
+
+    // editable dropbox issue select the first itesm by deafult Start 
+    const urlParams = new URLSearchParams(window.location.search);
+    const myParam = urlParams.get('reuse');
+    if (myParam === null) {
+        //if the resuse IR not clicked 
+        $('#Report_Officer_NotifiedBy').val('');
+        $('#Report_Officer_CallSign').val('');
+
+    }
+    var uls = document.getElementsByClassName('es-list');
+    // Loop through each <ul> element
+    for (var i = 0; i < uls.length; i++) {
+        var ul = uls[i];
+
+        // Loop through each <li> element within the current <ul>
+        ul.querySelectorAll('li').forEach(function (li) {
+            // Retrieve and log the text content of each <li>
+            li.removeAttribute('style');
+            li.classList.add('es-visible');
+
+        });
+    }
+    // editable dropbox select by deafult end
 
     $('#Report_DateLocation_ClientArea').attr('placeholder', 'n/a')
 
@@ -136,6 +226,10 @@
         if (option == '')
             return false;
 
+        //For setting background and font colour in the selected dropdown (refer setAllControlsForIrFromPreviousIR() in the Register.cshtml.cs file also.)
+        $(this).attr('style', $(this).find('option:selected').attr('style')); 
+        //$(this).attr('style', 'background-color:white;');
+
         // Set feedback Template Type to 3 = 'Colour Codes'
         /*to get the colour code and its id into feedbacktype dropdown-start*/
         $.ajax({
@@ -161,11 +255,39 @@
             $('#Report_Officer_Position').html('');
             data.map(function (position) {
                 $('#Report_Officer_Position').append('<option value="' + position.value + '">' + position.text + '</option>');
+                
             });
         });
     });
+    
+                
+    $('#Report_DateLocation_ClientTypePosition').on('change', function () {
+        $('#Report_DateLocation_ClientSitePosition').val('');
+        //$('#Report_DateLocation_ClientAddress').val('');
+       
+        const ulClientsPosition = $('#Report_DateLocation_ClientSitePosition').siblings('ul.es-list');
+        ulClientsPosition.html('');
 
+        const option = $(this).val();
+        if (option == '')
+            return false;
 
+        $.ajax({
+            url: '/Incident/Register?handler=ClientSites&type=' + encodeURIComponent(option),
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                data.map(function (site) {
+                    ulClientsPosition.append('<li class="es-visible" value="' + site.value + '">' + site.text + '</li>');
+                });
+            }
+        });
+    });
+    $('#Report_DateLocation_ClientSitePosition').attr('placeholder', 'Select Site');
+    $('#Report_DateLocation_ClientSitePosition').editableSelect({
+        //filter: false,
+        effects: 'slide'
+    });
     /****** Client Type & Client Site Settings *******/
     let gridType,
         gridSite;
@@ -485,14 +607,25 @@
     $('#search_kw_client_site').on('keyup', function (event) {
         // Enter key pressed
         if (event.keyCode === 13) {
-            gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $(this).val() });
+            gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $(this).val(), searchTermtwo: $('#search_kw_client_site_email').val() });
         }
     });
 
-    $('#btnSearchClientSite').on('click', function () {
-        gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val() });
-    });
 
+    $('#btnSearchClientSite').on('click', function () {
+        gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val(), searchTermtwo: $('#search_kw_client_site_email').val() });
+    });
+    /*p1-192 client site email seach-start*/
+    $('#btnSearchClientEmail').on('click', function () {
+        gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val(), searchTermtwo: $('#search_kw_client_site_email').val() });
+    });
+    $('#search_kw_client_site_email').on('keyup', function (event) {
+        // Enter key pressed
+        if (event.keyCode === 13) {
+            gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val(), searchTermtwo:  $(this).val()  });
+        }
+    });
+   /* p1 - 192 client site email seach - end*/
     /****** Report Fileds start *******/
     let gridReportFields;
 
@@ -501,28 +634,365 @@
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
+        selectionType: 'multiple',
+        button: true,
         inlineEditing: { mode: 'command' },
+      
         columns: [
-            { field: 'name', title: 'Name', width: 200, editor: true },
-            { field: 'emailTo', title: 'Special Email Condition', width: 350, editor: true }
+            { field: 'name', title: 'Name', width: '100%', editor: true },
+            { field: 'emailTo', title: 'Special Email Condition', width: '100%', editor: true },
+            // { field: 'emailTo', title: 'State', width: 80, type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
+            //{ field: 'clientSiteIds', hidden: true },
+            ///*{ field: 'clientSites', title: 'Site Allocation', type: 'dropdown', width: '100%', type: 'button', editor: select2editor }*/
+            //{ field: 'clientSites', title: 'Site Allocation', width: '100%' },
+            //{
+            //    width: '100%', renderer: irButtonRenderer
+            //}
+
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
+    let gridAreaReportFields;
 
-    let isReportFieldAdding = false;
-    $('#add_field_settings').on('click', function () {
-        const selFieldTypeId = $('#report_field_types').val();
-        if (!selFieldTypeId) {
-            alert('Please select a field type to update');
-            return;
+    gridAreaReportFields = $('#field_settings_Area').grid({
+        dataSource: '/Admin/Settings?handler=AreaReportFields',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        selectionType: 'multiple',
+        button: true,
+        //inlineEditing: { mode: 'command' },
+
+        columns: [
+            { field: 'name', title: 'Name', width: '100%' },
+            { field: 'emailTo', title: 'Special Email Condition', width: '100%' },
+            // { field: 'emailTo', title: 'State', width: 80, type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
+            { field: 'clientSiteIds', hidden: true },
+            { field: 'clientTypeIds', hidden: true },
+            { field: 'clientTypes', title: 'Client Types', hidden: true },
+            /*{ field: 'clientSites', title: 'Site Allocation', type: 'dropdown', width: '100%', type: 'button', editor: select2editor }*/
+            { field: 'clientSites', title: 'Site Allocation', width: '100%' },
+            {
+                width: '100%', renderer: irButtonRenderer
+            }
+
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
+    });
+    /*p1-202 site allocation-start*/
+    function irButtonRenderer(value, record) {
+        return '<button id="btnEditIrGroup" data-irfield-id="' + record.id + '" data-irfield_typeid="' + record.typeId + '" data-irfield-name="' + record.name + '" data-ir-emailto="' + record.emailTo + '" data-ir-clientsiteids="' + record.clientSiteIds + '"data-ir-clientsites="' + record.clientSites + '"data-ir-clienttypeids="' + record.clientTypeIds + '"data-ir-clienttypes="' + record.clientTypes + '" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
+            '<button id="btnDeleteIrGroup" data-irfield-id="' + record.id + '"  class="btn btn-outline-danger"><i class="fa fa-trash mr-2"></i>Delete</button>' +
 
+            '</div>'
+    }
+    $('#field_settings_Area tbody').on('click', '#btnEditIrGroup', function () {
+
+        ClearIrSettings();
+        $('#IrSettings_Id').val($(this).attr('data-irfield-id'));
+        $('#Irfieldtype_Id').val($(this).attr('data-irfield_typeid'));
+        $('#IrSettings_fieldName').val($(this).attr('data-irfield-name'));
+        $('#IrSettings_fieldemailto').val($(this).attr('data-ir-emailto'));
+        var name = $(this).attr('data-ir-clientsites');
+        $('.multiselect [title="' + $(this).attr('data-ir-clientsites') + '"');
+       // $('.multiselect').text($(this).attr('data-ir-clientsites'));
+        clientSitesforReportsnew = $(this).attr('data-ir-clientsiteids');
+        var selectedValues = $(this).attr('data-ir-clientsiteids').split(';');
+        var newselectedvalues = [];
+        var selectedValuesClientType = $(this).attr('data-ir-clienttypeids').split(';');
+        var newselectedvaluesClientType = [];
+        selectedValuesClientType.forEach(function (value) {
+            var newvalue = parseInt(value);
+            var stringnewvalue = String(newvalue)
+            newselectedvaluesClientType.push(newvalue);
+            $('#list_IrClientTypes option[value="' + value + '"]').attr('selected', true);
+        });
+        newselectedvaluesClientType.forEach(function (value) {
+
+            $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+            $(".multiselect-option input[type=checkbox][value='" + value + "']").parent().parent().addClass('active');
+
+        });
+        $('#list_IrClientTypes').val(newselectedvaluesClientType);
+        //clientSiteChange();
+        const clientType = $('#list_IrClientTypes').val().join(';');
+        const clientSiteControl = $('#list_IrClientSites');
+        // keyVehicleLogReport.clear().draw();
+
+        clientSiteControl.html('');
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSitesWithTypeId&types=' + clientType,
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                data.map(function (site) {
+                    clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+                });
+                clientSiteControl.multiselect('rebuild');
+                selectedValues.forEach(function (value) {
+                    var newvalue = parseInt(value);
+                    var stringnewvalue = String(newvalue)
+                    newselectedvalues.push(newvalue);
+                    $('#list_IrClientSites option[value="' + value + '"]').attr('selected', true);
+                });
+                newselectedvalues.forEach(function (value) {
+
+                    $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+                    $(".multiselect-option input[type=checkbox][value='" + value + "']").parent().parent().addClass('active');
+
+                });
+            }
+        });
+        //selectedValues.forEach(function (value) {
+        //    var newvalue = parseInt(value);
+        //    var stringnewvalue = String(newvalue)
+        //    newselectedvalues.push(newvalue);
+        //    $('#list_IrClientSites option[value="' + value + '"]').attr('selected', true);
+        //});
+        
+
+    
+        //$('#list_hrGroups').val($(this).attr('data-doc-hrgroupid'));
+        //$('#list_ReferenceNoNumber').val($(this).attr('data-doc-refnonumberid'));
+        //$('#list_ReferenceNoAlphabet').val($(this).attr('data-doc-refalphnumberid'));
+        //$('#txtHrSettingsDescription').val($(this).attr('data-doc-description'));
+        $('#irSettingsModal').modal('show');
+        //selectedValues.forEach(function (valuenew) {
+
+        //    //select.valueField = valuenew;
+        //    var newvalue = parseInt(valuenew);
+        //    //select.val(valuenew);
+        //    $('#list_IrClientSites option[value="' + newvalue + '"]').prop('selected', true);
+
+        //});
+      
+        
+       
+        $('#list_IrClientSites').val(newselectedvalues);
+       
+        //("#list_IrClientSites").multiselect('refresh');
+
+    });
+    function clientSiteChange() {
+        const clientType = $('#list_IrClientTypes').val().join(';');
+        const clientSiteControl = $('#list_IrClientSites');
+        // keyVehicleLogReport.clear().draw();
+
+        clientSiteControl.html('');
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSitesWithTypeId&types=' + clientType,
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                data.map(function (site) {
+                    clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+                });
+                clientSiteControl.multiselect('rebuild');
+            }
+        });
+
+        clientTypesforReportsnew = clientType;
+    }
+                $('#field_settings_Area tbody').on('click', '#btnDeleteIrGroup', function () {
+        // var data = keyVehicleLog.row($(this).parents('tr')).data();
+        if (confirm('Are you sure want to delete this  entry?')) {
+            $.ajax({
+                type: 'POST',
+                url: '/Admin/Settings?handler=DeleteReportField',
+                data: { 'id': $(this).attr('data-irfield-id') },
+                dataType: 'json',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                beforeSend: function () {
+                    $('#loader').show();
+                }
+            }).done(function () {
+                gridAreaReportFields.reload();
+            }).always(function () {
+                $('#loader').hide();
+            });
+        }
+    });
+    function select2editor($editorContainer, value, record) {
+       // var select = $('<button class="btn btn-primary" id="generate_kvl_docket">Generate Docket</button>');
+        var select = $('<select class="form-control mx-1 " multiple="multiple" id="vklClientSiteIdforir"></select>');
+            $.ajax({
+                url: '/Admin/Settings?handler=ClientSites',
+                // data: { id: record },
+                //type: 'POST',
+                //headers: { 'RequestVerificationToken': token },
+            }).done(function (result) {
+                for (var i = 0; i < result.length; i++) {
+                    //select.valueField = result[i].name;
+                    //select.textField = result[i].name;
+                    var newoption = '<option value= " ' + result[i].id + ' " > ' + result[i].name + '</option >';
+                    select.append(newoption);
+                }
+                var selectedValues = record.clientSiteIds.split(';');
+                selectedValues.forEach(function (valuenew) {
+
+                    //select.valueField = valuenew;
+                    //select.val(valuenew);
+                    $('#vklClientSiteIdforir option[value="' + valuenew + '"]').prop('selected', true);
+
+                });
+                //$.each(item1 in result)
+                //{
+                //    '< option value = "' + item.name + '" >' + item.name +'</option >'
+                //}
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isReportFieldAdding)
+                    isReportFieldAdding = false;
+            }) 
+        $editorContainer.append(select);
+        //select.multiselect({
+        //    maxHeight: 400,
+        //    buttonWidth: '100%',
+        //    nonSelectedText: 'Select',
+        //    buttonTextAlignment: 'left',
+        //    includeSelectAllOption: true,
+        //});
+        select.select2();
+
+        
+    }
+    $('#list_IrClientSites').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
+    $('#list_IrClientTypes').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
+
+    var clientSitesforReportsnew;
+    var clientTypesforReportsnew;
+    $('#field_settings tbody').on('change','#vklClientSiteIdforir', function () {
+
+        const clientSitesforReports = $(this).val().join(';');
+        clientSitesforReportsnew = clientSitesforReports;
+    });
+
+$('#list_IrClientSites').on('change', function () {
+    const clientSitesforReports = $(this).val().join(';');
+    clientSitesforReportsnew = clientSitesforReports;
+    //var selectedValues = $(this).val();
+    //$('#ClientSitePocIdsVehicleLog').val(selectedValues);
+
+
+});
+$('#btn_save_ir_settings').on('click', function () {
+    var form = document.getElementById('form_new_hr_settings');
+    var jsformData = new FormData(form);
+    var id = $('#IrSettings_Id').val();
+    if (id == '') {
+        $('#IrSettings_Id').val(-1);
+    }
+    var data = {
+        'Id': $('#IrSettings_Id').val(),
+        'TypeId': $('#report_field_types').val(),
+        'Name': $('#IrSettings_fieldName').val(),
+        'EmailTo': $('#IrSettings_fieldemailto').val(),
+        'ClientSiteIds': clientSitesforReportsnew,
+        'ClientTypeIds':clientTypesforReportsnew
+    };
+    if ($('#IrSettings_fieldName').val() == '') {
+        alert('Please Enter IR Field Name')
+    }
+
+    else {
+
+        $.ajax({
+            url: '/Admin/Settings?handler=ReportField',
+            data: { reportfield: data },
+            type: 'POST',
+            //data: jsformData,
+
+            //processData: false,
+            //contentType: false,
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            beforeSend: function () {
+                $('#loader').show();
+            }
+        }).done(function (result) {
+            if (result.status) {
+                isReportFieldAdding = false;
+
+                $('#irSettingsModal').modal('hide');
+                gridAreaReportFields.clear();
+                gridAreaReportFields.reload();
+                $('#IrSettings_Id').val('');
+                $('#Irfieldtype_Id').val('');
+                $('#IrSettings_fieldName').val('');
+                $('#IrSettings_fieldemailto').val('');
+            }
+            //else {
+            //    displayValidationSummaryIrSettings(result.errors);
+            //}
+        }).always(function () {
+            $('#loader').hide();
+        });
+
+    }
+
+});
+function displayValidationSummaryIrSettings(errors) {
+    const summaryDiv = document.getElementById('irsettings-field-validation');
+    summaryDiv.className = "validation-summary-errors";
+    summaryDiv.querySelector('ul').innerHTML = '';
+    errors.forEach(function (item) {
+        const li = document.createElement('li');
+        li.appendChild(document.createTextNode(item));
+        summaryDiv.querySelector('ul').appendChild(li);
+    });
+    }
+    
+    $('#list_IrClientTypes').on('change', function () {
+
+        const clientType = $(this).val().join(';');
+        const clientSiteControl = $('#list_IrClientSites');
+       // keyVehicleLogReport.clear().draw();
+
+        clientSiteControl.html('');
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSitesWithTypeId&types=' +clientType,
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                data.map(function (site) {
+                    clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+                });
+                clientSiteControl.multiselect('rebuild');
+            }
+        });
+         
+        clientTypesforReportsnew = clientType;
+    });
+    /*p1 - 202 site allocation - end*/
+    let isReportFieldAdding = false;
+
+$('#add_field_settings').on('click', function () {
+    const selFieldTypeId = $('#report_field_types').val();
+    if (!selFieldTypeId) {
+        alert('Please select a field type to update');
+        return;
+    }
+    if (selFieldTypeId != 4) {
         if (isReportFieldAdding) {
             alert('Unsaved changes in the grid. Refresh the page');
-        } else {
-            isReportFieldAdding = true;
+        }
+        else {
             gridReportFields.addRow({
                 'id': -1,
                 'typeId': selFieldTypeId,
@@ -530,51 +1000,112 @@
                 'emailTo': ''
             }).edit(-1);
         }
-    });
+    } else {
+        isReportFieldAdding = true;
 
-    $('#report_field_types').on('change', function () {
-        const selFieldTypeId = $(this).val();
+        $('#irSettingsModal').modal('show');
+        ClearIrSettings();
+        $('#Irfieldtype_Id').val($('#report_field_types').val());
+        var type = $('#report_field_types').find("option:selected").text();
+        $('#lblFieldType').html(type);
+    }
+});
+    function ClearIrSettings() {
+        $('#IrSettings_fieldName').val('');
+        $(".multiselect-option input[type=checkbox]").prop("checked", false);
+        $(".multiselect-option input[type=checkbox]").parent().parent().removeClass('active');
+        $('#list_IrClientSites').val('');
+        $('#IrSettings_fieldemailto').val('');
 
-        if (!selFieldTypeId) { // None
-            $('#fieldSettings').show();
-            $('#positionSettings').hide();
+    }
+$('#report_field_types').on('change', function () {
+    const selFieldTypeId = $(this).val();
 
-            gridReportFields.clear();
-            gridPositions.clear();
-            gridReportFields.reload({ typeId: selFieldTypeId });
+    if (!selFieldTypeId) { // None
+        $('#fieldSettings').show();
+        $('#positionSettings').hide();
+        $('#FinancialReimbursementSettings').hide();
+        gridReportFields.clear();
+        gridPositions.clear();
+        gridAreaReportFields.clear();
+        gridReportFields.reload({ typeId: selFieldTypeId });
+        gridAreaReportFields.hide();
 
-        } else if (selFieldTypeId === '1') { // Position
-            $('#fieldSettings').hide();
-            $('#positionSettings').show();
-            $('#PSPFSettings').hide();
+    } else if (selFieldTypeId === '1') { // Position
+        $('#fieldSettings').hide();
+        $('#positionSettings').show();
+        $('#PSPFSettings').hide();
+        $('#FinancialReimbursementSettings').hide();
 
-            gridReportFields.clear();
-            gridPositions.reload();
-            gridPSPF.clear();
-        }
-        else if (selFieldTypeId === '5') {
-            $('#PSPFSettings').show();
-            $('#fieldSettings').hide();
-            $('#positionSettings').hide();
+        gridReportFields.clear();
+        gridPositions.reload();
+        gridAreaReportFields.clear();
+        gridPSPF.clear();
+        gridAreaReportFields.hide();
+    }
+    else if (selFieldTypeId === '5') {
+        $('#PSPFSettings').show();
+        $('#fieldSettings').hide();
+        $('#positionSettings').hide();
+        $('#FinancialReimbursementSettings').hide();
 
-            gridPositions.clear();
-            gridReportFields.clear();
-            gridPSPF.reload();
-        }
-        else {
-            $('#fieldSettings').show();
-            $('#positionSettings').hide();
-            $('#PSPFSettings').hide();
+        gridPositions.clear();
+        gridReportFields.clear();
+        gridAreaReportFields.clear();
+        gridPSPF.reload();
+        gridAreaReportFields.hide();
+    }
+    else if (selFieldTypeId === '6') {
 
-            gridPSPF.clear();
-            gridPositions.clear();
-            gridReportFields.reload({ typeId: selFieldTypeId });
-        }
-    });
+        getIrEmailCCforReimbursement();
+        $('#FinancialReimbursementSettings').show();
+        $('#PSPFSettings').hide();
+        $('#fieldSettings').hide();
+        $('#positionSettings').hide();
+
+
+        gridPositions.clear();
+        gridReportFields.clear();
+        gridAreaReportFields.clear();
+        gridPSPF.clear();
+        gridAreaReportFields.hide();
+    }
+    else if (selFieldTypeId === '4') {
+        $('#fieldSettings').show();
+        $('#positionSettings').hide();
+        $('#PSPFSettings').hide();
+        $('#FinancialReimbursementSettings').hide();
+        $('#field_settings').hide();
+        $('#field_settings_Area').attr('hidden',false);
+        gridPSPF.clear();
+        gridPositions.clear();
+        gridReportFields.clear();
+        gridAreaReportFields.show();
+        gridAreaReportFields.reload({ typeId: selFieldTypeId });
+
+
+    }
+    else {
+        $('#fieldSettings').show();
+        $('#positionSettings').hide();
+        $('#PSPFSettings').hide();
+        $('#FinancialReimbursementSettings').hide();
+        $('#field_settings').show();
+        $('#field_settings_Area').hide();
+
+        gridPSPF.clear();
+        gridPositions.clear();
+        gridAreaReportFields.clear();
+        gridAreaReportFields.hide();
+        gridReportFields.reload({ typeId: selFieldTypeId });
+
+    }
+});
 
     if (gridReportFields) {
         gridReportFields.on('rowDataChanged', function (e, id, record) {
             const data = $.extend(true, {}, record);
+            data.clientSiteIds = clientSitesforReportsnew;
             const token = $('input[name="__RequestVerificationToken"]').val();
             $.ajax({
                 url: '/Admin/Settings?handler=ReportField',
@@ -634,7 +1165,7 @@
     });
 
 
-   
+
 
     let isReportTooolsAdding = false;
     $('#add_tools_settings').on('click', function () {
@@ -715,7 +1246,7 @@
             }
         });
     }
-   
+
     $('#add_tools_page').on('click', function () {
         $('#pageType').val('');
         $('#tools-modal').modal();
@@ -726,10 +1257,10 @@
         $('#feedBackType').val('');
         $('#category-modal').modal();
     });
-   
-  
 
-    
+
+
+
     $('#btnSavePageType').on('click', function () {
         if (newpageTypeIsValid()) {
             var newItem = $("#pageType").val();
@@ -858,7 +1389,7 @@
         });
     }
 
-   
+
     const refreshFeedBackType = function () {
         $.ajax({
             url: '/Admin/Settings?handler=FeedBackTypeList',
@@ -866,7 +1397,7 @@
             success: function (data) {
                 if (data) {
                     $('#FeedbackTemplate_Type').html('');
-                    
+
                     data.map(function (template) {
                         $('#FeedbackTemplate_Type').append('<option value="' + template.id + '">' + template.name + '</option>');
                     });
@@ -924,7 +1455,7 @@
     });
 
     /* code added for PSPF subfields start*/
-    
+
 
     $('#add_PSPF_settings').on('click', function () {
         if (isPSPFAdding) {
@@ -933,7 +1464,7 @@
             isPSPFAdding = true;
             gridPSPF.addRow({
                 'id': -1,
-                'ReferenceNo':'',
+                'ReferenceNo': '',
                 'name': '',
                 'isDefault': ''
             }).edit(-1);
@@ -957,7 +1488,7 @@
         }
     });
     let isPSPFAdding = false;
-   
+
     if (gridPSPF) {
         gridPSPF.on('rowDataChanged', function (e, id, record) {
             const data = $.extend(true, {}, record);
@@ -1010,18 +1541,72 @@
         primaryKey: 'id',
         inlineEditing: { mode: 'command' },
         columns: [
-            { field: 'name', title: 'Name', width: 250, editor: true },
+            { field: 'name', title: 'Name', width: 230, editor: true },
             { field: 'emailTo', title: 'Special Email Condition', width: 200, editor: true },
-            { field: 'isPatrolCar', title: 'Patrol Car?', type: 'checkbox', align: 'center', width: 100, editor: true },
-            { field: 'dropboxDir', title: 'Dropbox Directory', width: 300, editor: true }
+            { field: 'isPatrolCar', title: 'Patrol Car?', type: 'checkbox', align: 'center', width: 80, editor: true },
+            { field: 'dropboxDir', title: 'Dropbox Directory', width: 250, editor: true },
+            {
+                field: 'isLogbook', title: 'Logbook',
+                type: 'checkbox', align: 'center', width: 80, editor: true,
+            },
+            { field: 'clientsiteName', title: 'Nominated logbook', width: 130, editor: false },
         ],
         initialized: function (e) {
-            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>').css('width', '205px');
         }
     });
+    //To Position Checkbox and Popup start
+    $('#PositionClientSiteId').select({
+        placeholder: 'Select',
+        theme: 'bootstrap4'
+    });
+    $('#position_settings').on('click', 'input[type="checkbox"]', function () {
+        var itemId = $(this).data('id');
+        var isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#po_client_type').val('');
+            $('#PositionClientSiteId').val('');
+            $('#PositionModel').modal('show');
+        }
+        
+    });
+    $('#po_client_type').on('change', function () {
+        const clientTypeId = $(this).val();
+        const clientSiteControl = $('#PositionClientSiteId');
+        clientSiteControl.html('');
+      
 
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSitesNew',
+            type: 'GET',
+            data: {
+                typeId: clientTypeId
+
+            },
+            dataType: 'json',
+            success: function (data) {
+                $('#PositionClientSiteId').append(new Option('Select', '', true, true));
+                data.map(function (site) {
+                    $('#PositionClientSiteId').append(new Option(site.name, site.id, false, false));
+                });
+
+            }
+
+
+        });
+    });
+    //To Position Checkbox and Popup stop
     if (gridPositions) {
         gridPositions.on('rowDataChanged', function (e, id, record) {
+            var Clientsiteid = '';
+            if (record.isLogbook == false) {
+                Clientsiteid = 0;
+            }
+            else {
+                Clientsiteid = $('#PositionClientSiteId').val();
+            }
+           
+            record.clientsiteId = Clientsiteid;
             const data = $.extend(true, {}, record);
             const token = $('input[name="__RequestVerificationToken"]').val();
             $.ajax({
@@ -1319,6 +1904,8 @@
             $('#FeedbackTemplate_Id').val(selfeedback);
             $('#FeedbackTemplate_Name').val($("option:selected", this).text());
             $('#FeedbackTemplate_Type').prop('selectedIndex', 0);
+            $('#FeedbackTemplate_BackgroundColour').val('#FFFFFF');
+            $('#FeedbackTemplate_TextColor').val('#000000');
             $.ajax({
                 url: '/Admin/Settings?handler=FeedbackTemplate',
                 type: 'GET',
@@ -1327,6 +1914,8 @@
             }).done(function (data) {
                 $('#FeedbackTemplate_Text').val(data.text);
                 $('#FeedbackTemplate_Type').val(data.type);
+                $('#FeedbackTemplate_BackgroundColour').val(data.backgroundColour);
+                $('#FeedbackTemplate_TextColor').val(data.textColor);
             }).fail(function () {
                 showStatusNotification(false, 'Something went wrong');
             });
@@ -1338,6 +1927,8 @@
         $('#FeedbackTemplate_Id').val('')
         $('#FeedbackTemplate_Name').val('');
         $('#FeedbackTemplate_Text').val('');
+        $('#FeedbackTemplate_BackgroundColour').val('#FFFFFF');
+        $('#FeedbackTemplate_TextColor').val('#000000');
         $('#FeedbackTemplate_Type').prop('selectedIndex', 0);
         $('#delete_fbktpl').hide();
         $('#sel_fbktpl_name').html('new template');
@@ -1431,6 +2022,8 @@
         $('#FeedbackTemplate_Name').val('');
         $('#FeedbackTemplate_Text').val('');
         $('#FeedbackTemplate_Type').prop('selectedIndex', 0);
+        $('#FeedbackTemplate_BackgroundColour').val('#FFFFFF');
+        $('#FeedbackTemplate_TextColor').val('#000000');
         $('#sel_fbktpl_name').html('');
         $('#new_fbktpl_name').hide();
         $('#delete_fbktpl').hide();
@@ -1475,20 +2068,20 @@
         $('#DefaultMail').hide();
         $('#btn_DefaultEmailUpdate').show();
         $('#btn_DefaultEmailEdit').hide();
-       
-       
+
+
     });
     $("#btn_DefaultEmailUpdate").on("click", function () {
         var defaultMailEdit = $('#DefaultMailTextboxval').val();
         var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(defaultMailEdit)) {
-           
+
             showStatusNotification(false, 'Please enter a valid email address.');
             return;
         }
 
         $.ajax({
-            url: '/Admin/Settings?handler=DefaultEmailUpdate', 
+            url: '/Admin/Settings?handler=DefaultEmailUpdate',
             type: 'POST',
             data: { defaultMailEdit: defaultMailEdit }, // Send data as key-value pair
             headers: {
@@ -1774,6 +2367,72 @@
         $('#msg-modal .modal-body p').html(message);
         $('#msg-modal').modal();
     }
+
+    /*****IR Email CC for Reimbursement  *****/
+
+
+
+    function getIrEmailCCforReimbursement() {
+
+        
+        $.ajax({
+            url: '/Admin/Settings?handler=IREmailCCForReimbursements',
+            type: 'GET',
+            dataType: 'json'
+        }).done(function (data) {
+
+            for (var i = 0; i < data.length; i++) {
+                $('#txt_IrEmailCCForReimbursements').val(data[i].name);
+               
+            }
+
+        });
+    }
+
+    //save btn IR Email-Click -start 
+
+        $('#btn_add_FR_settings').on('click', function () {
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            var Email = $('#txt_IrEmailCCForReimbursements').val();
+            //var emailsArray = Email.split(',');
+            //for (var i = 0; i < emailsArray.length; i++) {
+                //var emailAddress = emailsArray[i].trim();
+                var emailAddress=Email
+                if (isValidEmail(emailAddress)) {
+                    $.ajax({
+                        url: '/Admin/Settings?handler=SaveIREmail',
+                        data: { Email: emailAddress },
+                        type: 'POST',
+                        headers: { 'RequestVerificationToken': token },
+                    }).done(function () {
+                    })
+                }
+                else {
+                    $.notify("Invalid email address.",
+                        {
+                            align: "center",
+                            verticalAlign: "top",
+                            color: "#fff",
+                            background: "#D44950",
+                            blur: 0.4,
+                            delay: 0
+                        }
+                    );
+
+                }
+
+            //}
+
+            function isValidEmail(email) {
+                // Regular expression for basic email validation
+                var emailPattern = /^(?:[^,\s@]+@[^,\s@]+\.[^,\s@]+(?:,\s*)?)+$/;
+                return emailPattern.test(email);
+            }
+        })
+
+    //save btn IR Email-Click -end 
+    
+
     /*****C4i Core Settings *****/
 
     getC4Settings();
@@ -1838,9 +2497,9 @@
 
                 var result = prlogopath.lastIndexOf("/");
             const newfile = data.filepath;
-            var url = window.location.origin; 
+            var url = window.location.origin;
             var result1 = newfile.lastIndexOf("/");
-            var substr = prlogopath.substring(0, result-1);
+            var substr = prlogopath.substring(0, result - 1);
 
             var substr2 = newfile.substring(result1 + 1);
             substr = substr + "cr_primarylogo.JPG";
@@ -1887,7 +2546,7 @@
 
             var substr2 = newfile.substring(result1 + 1);
             substr = substr + "cr_bannerlogo.JPG";
-            var url = window.location.origin; 
+            var url = window.location.origin;
             var newpath = url + "/Images/cr_bannerlogo.JPG";
             $("#img_BannerLogo").attr('src', newpath);
 
@@ -1951,7 +2610,7 @@
 
 
 
-   
+
     /* Block Print Screen start 27092023 */
     function copyToClipboard() {
         /* when click Print screen it's copy a blank text in clipboard*/
@@ -2054,6 +2713,7 @@
         }
     }
     /* dark mode end */
+    
     $('#register_plate_loaded').on('click', 'button[id=btn_delete_plate]', function () {
 
 
@@ -2092,7 +2752,289 @@
         //$(this).closest("tr").remove();
         return false;
     });
+
+    $('.marqueeurls').on('click', function () {
+        var urlstr = $('#inp_marqueeurls').val();
+        if (urlstr != '') {
+            var url_lst = urlstr.split('|');
+            var alnk = document.getElementById('a_marqueeurls');
+            url_lst.forEach(function (item) {
+                console.log(item);
+                if (item != '') {                     
+                    alnk.removeAttribute("href");
+                    alnk.setAttribute("href", item);
+                    alnk.click();
+                }
+            });            
+        }
+    });
+
+    //p1 - 196 Rationalization Of Menu Changes - start
+    let gridKvlFields;
+    gridKvlFields = $('#tbl_kvl_fields').grid({
+        dataSource: '/Admin/GuardSettings?handler=KeyVehcileLogFields',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        inlineEditing: { mode: 'command' },
+        columns: [
+            { field: 'name', title: 'Name', width: 200, editor: true },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+    let isKvlFieldAdding = false;
+    $('#add_kvl_fields').on('click', function () {
+        const selFieldTypeId = $('#kvl_fields_types').val();
+        if (!selFieldTypeId) {
+            alert('Please select a field type to update');
+            return;
+        }
+        var rowCount = $('#tbl_kvl_fields tr').length;
+
+        if (selFieldTypeId == '9' && rowCount == 8) {
+            alert('Maximum number of CRM/BDM Activity exeeded');
+            return;
+        }
+
+        if (isKvlFieldAdding) {
+            alert('Unsaved changes in the grid. Refresh the page');
+        } else {
+            isKvlFieldAdding = true;
+            gridKvlFields.addRow({
+                'id': -1,
+                'typeId': selFieldTypeId,
+                'name': '',
+            }).edit(-1);
+        }
+    });
+
+    $('#kvl_fields_types').on('change', function () {
+        const selKvlFieldTypeId = $('#kvl_fields_types').val();
+        gridKvlFields.clear();
+        gridKvlFields.reload({ typeId: selKvlFieldTypeId });
+    });
+
+    if (gridKvlFields) {
+        gridKvlFields.on('rowDataChanged', function (e, id, record) {
+            const data = $.extend(true, {}, record);
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=SaveKeyVehicleLogField',
+                data: { record: data },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.success) gridKvlFields.reload({ typeId: $('#kvl_fields_types').val() });
+                else alert(result.message);
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isKvlFieldAdding)
+                    isKvlFieldAdding = false;
+            });
+        });
+
+        gridKvlFields.on('rowRemoving', function (e, id, record) {
+            if (confirm('Are you sure want to delete this field?')) {
+                $.ajax({
+                    url: '/Admin/GuardSettings?handler=DeleteKeyVehicleLogField',
+                    data: { id: record },
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (result) {
+                    if (result.success) gridKvlFields.reload({ typeId: $('#kvl_fields_types').val() });
+                    else alert(result.message);
+                }).fail(function () {
+                    console.log('error');
+                }).always(function () {
+                    if (isKvlFieldAdding)
+                        isKvlFieldAdding = false;
+                });
+            }
+        });
+    }
+    /*to add do's and donts -start*/
+
+    let gridDosAndDontsFields;
+    let isDosandDontsFieldAdding = false;
+    gridDosAndDontsFields = $('#tbl_dosanddonts_fields').grid({
+        dataSource: '/Admin/GuardSettings?handler=DosandDontsFields',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        inlineEditing: { mode: 'command' },
+        columns: [
+            { field: 'name', title: 'Name', width: 200, editor: true },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+    $('#doanddontfields_types').on('change', function () {
+        const selKvlFieldTypeId = $('#doanddontfields_types').val();
+        gridDosAndDontsFields.clear();
+        gridDosAndDontsFields.reload({ typeId: selKvlFieldTypeId });
+    });
+    $('#add_dosanddonts_fields').on('click', function () {
+        const selFieldTypeId = $('#doanddontfields_types').val();
+        if (!selFieldTypeId) {
+            alert('Please select a field type to update');
+            return;
+        }
+        var rowCount = $('#tbl_dosanddonts_fields tr').length;
+
+
+        if (isDosandDontsFieldAdding) {
+            alert('Unsaved changes in the grid. Refresh the page');
+        } else {
+            isKvlFieldAdding = true;
+            gridDosAndDontsFields.addRow({
+                'id': -1,
+                'typeId': selFieldTypeId,
+                'name': '',
+            }).edit(-1);
+        }
+    });
+    if (gridDosAndDontsFields) {
+        gridDosAndDontsFields.on('rowDataChanged', function (e, id, record) {
+            const data = $.extend(true, {}, record);
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=SaveDosandDontsField',
+                data: { record: data },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.success) gridDosAndDontsFields.reload({ typeId: $('#doanddontfields_types').val() });
+                else alert(result.message);
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isDosandDontsFieldAdding)
+                    isDosandDontsFieldAdding = false;
+            });
+        });
+
+        gridDosAndDontsFields.on('rowRemoving', function (e, id, record) {
+            if (confirm('Are you sure want to delete this field?')) {
+                $.ajax({
+                    url: '/Admin/GuardSettings?handler=DeleteDosandDontsField',
+                    data: { id: record },
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (result) {
+                    if (result.success) gridDosAndDontsFields.reload({ typeId: $('#doanddontfields_types').val() });
+                    else alert(result.message);
+                }).fail(function () {
+                    console.log('error');
+                }).always(function () {
+                    if (isKvlFieldAdding)
+                        isKvlFieldAdding = false;
+                });
+            }
+        });
+    }
+    /*to add do's and donts -end*/
+    if ($('#report_module_types').val() == '') {
+        $('#doanddontfields_types').hide();
+        $('#report_field_types').hide();
+        $('#kvl_fields_types').hide();
+
+        $('#lblFieldType').hide();
+
+        $('#add_field_settings').hide();
+        $('#add_dosanddonts_fields').hide();
+        $('#add_kvl_fields').hide();
+
+        gridReportFields.hide();
+        gridKvlFields.hide();
+        gridDosAndDontsFields.hide();
+        gridAreaReportFields.hide();
+    }
+    
+$('#report_module_types').on('change', function () {
+    if ($('#report_module_types').val() == 1) {
+
+        $('#doanddontfields_types').show();
+        $('#report_field_types').hide();
+        $('#kvl_fields_types').hide();
+
+        $('#lblFieldType').show();
+
+        $('#add_field_settings').hide();
+        $('#add_dosanddonts_fields').show();
+        $('#add_kvl_fields').hide();
+
+        gridReportFields.hide();
+        gridKvlFields.hide();
+        gridAreaReportFields.hide();
+        gridDosAndDontsFields.show();
+
+        $('#doanddontfields_types').val('');
+        gridDosAndDontsFields.reload({ typeId: $('#doanddontfields_types').val() });
+    }
+    else if ($('#report_module_types').val() == 2) {
+        $('#doanddontfields_types').hide();
+        $('#report_field_types').hide();
+
+        $('#kvl_fields_types').show();
+
+        $('#lblFieldType').show();
+
+        $('#add_field_settings').hide();
+        $('#add_dosanddonts_fields').hide();
+        $('#add_kvl_fields').show();
+
+        $('#kvl_fields_types').val('');
+        gridKvlFields.reload({ typeId: $('#kvl_fields_types').val() });
+
+        gridReportFields.hide();
+        gridAreaReportFields.hide();
+        gridKvlFields.show();
+        gridDosAndDontsFields.hide();
+    }
+    else if ($('#report_module_types').val() == 3) {
+        $('#doanddontfields_types').hide();
+        $('#report_field_types').show();
+        $('#kvl_fields_types').hide();
+
+        $('#lblFieldType').show();
+
+        $('#add_field_settings').show();
+        $('#add_dosanddonts_fields').hide();
+        $('#add_kvl_fields').hide();
+
+        gridReportFields.show();
+        gridKvlFields.hide();
+        gridDosAndDontsFields.hide();
+        gridAreaReportFields.hide();
+
+        $('#report_field_types').val('');
+        gridReportFields.reload({ typeId: $('#report_field_types').val() });
+    }
+    else {
+        $('#doanddontfields_types').hide();
+        $('#report_field_types').hide();
+        $('#kvl_fields_types').hide();
+
+        $('#lblFieldType').hide();
+
+        $('#add_field_settings').hide();
+        $('#add_dosanddonts_fields').hide();
+        $('#add_kvl_fields').hide();
+
+        gridAreaReportFields.hide();
+        gridReportFields.hide();
+        gridKvlFields.hide();
+        gridDosAndDontsFields.hide();
+    }
 });
+/*p1 - 196 Rationalization Of Menu Changes - end*/
+
+});
+
+
+
 /*for adding a reportlogo-start*/
 $('#cr_reportlogo_upload').on('change', function () {
 
@@ -2136,3 +3078,303 @@ $('#cr_reportlogo_upload').on('change', function () {
     });
 });
 /*for adding a reportlogo-end*/
+/*p1-191 hr files task 3-start*/
+let gridHrSettings;
+//if ($('#tbl_hr_settings').length === 1) {
+//    gridHrSettings = new DataTable('#tbl_hr_settings', {
+//        paging: false,
+//        searching: true,
+//        ordering: false,
+//        info: false,
+//        scrollX: true,
+//        ajax: {
+//            url: '/Admin/Settings?handler=ClientSites',
+//            data: function (d) {
+//                d.logbookId = $('#KeyVehicleLog_ClientSiteLogBookId').val();
+//                d.kvlStatusFilter = $('#kvl_status_filter').val();
+//            },
+//            dataSrc: ''
+//        },
+//        columns: [
+//            { data: 'detail.id', visible: false },
+
+//            { data: 'detail.initialCallTime', width: '100%', title:'HR Group' },
+//            { data: 'detail.entryTime', width: '100%', type: 'dropdown', title: 'Reference No' },
+//            { data: 'detail.initialCallTime', width: '100%', title: 'Description' },
+//            {
+//                targets: -1,
+//                data: 'detail.id',
+//                width: '20%',
+//                defaultContent: '',
+
+//                render: function (value, type, data) {
+//                    return '<button id="btnEditHRSettings" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil"></i></button>' +
+//                        '<button id="btnDeleteHRSettings" class="btn btn-outline-danger mr-2 mt-1"><i class="fa fa-trash"></i></button>' +
+//                        '</div>'
+
+
+//                        ;
+//                    // if (value === null) return 'N/A';
+//                    // return value != 0 ? '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardLogBookInfoModal" id="btnLogBookDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + value + '"><input type="hidden" id="GuardId" value="' + value + '">' : '<i class="fa fa-times-circle text-danger rc-client-status"></i><input type="hidden" id="ClientSiteId" text="' + value + '"><input type="hidden" id="GuardId" text="' + value + '"> ';
+//                }
+//                //render: function (data, type, row) {
+//                //    return '<input type="checkbox" id=' + data.detail.keyNo+'/>';
+//                //}
+//                //defaultContent: '<button id="btnEditVkl" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil"></i></button>' +
+//                //   '<button id="btnPrintVkl" class="btn btn-outline-primary mr-1 "><i class="fa fa-print"></i></button>' +
+//                //    '<button id="btnDeleteVkl" class="btn btn-outline-danger mr-2 mt-1"><i class="fa fa-trash mr-2"></i>Delete</button>',
+//            }],
+
+//    });
+
+//    var dataTable = $('#vehicle_key_daily_log').DataTable();
+//    var ids = [];
+//    dataTable.rows().data().each(function (index, rowData) {
+
+//        ids.push(index.detail.id);
+//    });
+//}
+
+gridHrSettings = $('#tbl_hr_settings').grid({
+    dataSource: '/Admin/GuardSettings?handler=HRSettings',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    columns: [
+        { field: 'id', hidden: true },
+        { field: 'groupName', title: 'HR Group', width: '15%' }, // Show the HR Group column
+        { field: 'referenceNo', title: 'Reference No', width: '20%' },
+        { field: 'description', title: 'Description' },
+        { width: '20%', renderer: hrgroupButtonRenderer },
+    ],
+    dataBound: function (e, records, totalRecords) {
+        var tbody = $(e.target).find('tbody');
+        var rows = tbody.find('tr');
+
+        var lastGroupValue = null;
+
+        rows.each(function (index, row) {
+            var currentGroupValue = $(row).find('td:eq(1)').text();
+
+            if (currentGroupValue !== lastGroupValue) {
+                lastGroupValue = currentGroupValue;
+               
+                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 4).text(currentGroupValue));
+                headerRow.css('background-color', '#CCCCCC');
+                $(row).before(headerRow);
+            }
+        });
+    },
+    initialized: function (e) {
+        // Optionally, you can modify the appearance or behavior after the grid is initialized
+        $('#tbl_hr_settings thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
+function hrgroupButtonRenderer(value, record) {
+    return '<button id="btnEditHrGroup" data-doc-id="' + record.id + '" data-doc-hrgroupid="' + record.hrGroupId + '" data-doc-refnonumberid="' + record.referenceNoNumberId + '" data-doc-refalphnumberid="' + record.referenceNoAlphabetId + '" data-doc-description="' + record.description + '" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
+        '<button id="btnDeleteHrGroup" data-doc-id="' + record.id + '" class="btn btn-outline-danger"><i class="fa fa-trash mr-2"></i>Delete</button>' +
+
+        '</div>'
+}
+let isHrSettingsAdding = false
+//$('#user_settings').on('click', '.deleteuser', function () {
+//    if (confirm('Are you sure want to delete this user?')) {
+//        toggleUserStatus($(this).attr('data-user-id'), true);
+//    }
+//});
+$('#tbl_hr_settings tbody').on('click', '#btnEditHrGroup', function () {
+
+    $('#HrSettings_Id').val($(this).attr('data-doc-id'))
+    $('#list_hrGroups').val($(this).attr('data-doc-hrgroupid'));
+    $('#list_ReferenceNoNumber').val($(this).attr('data-doc-refnonumberid'));
+    $('#list_ReferenceNoAlphabet').val($(this).attr('data-doc-refalphnumberid'));
+    $('#txtHrSettingsDescription').val($(this).attr('data-doc-description'));
+    $('#hrSettingsModal').modal('show');
+
+});
+$('#tbl_hr_settings tbody').on('click', '#btnDeleteHrGroup', function () {
+    // var data = keyVehicleLog.row($(this).parents('tr')).data();
+    if (confirm('Are you sure want to delete this  entry?')) {
+        $.ajax({
+            type: 'POST',
+            url: '/Admin/GuardSettings?handler=DeleteHRSettings',
+            data: { 'id': $(this).attr('data-doc-id') },
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            beforeSend: function () {
+                $('#loader').show();
+            }
+        }).done(function () {
+            gridHrSettings.reload();
+        }).always(function () {
+            $('#loader').hide();
+        });
+    }
+});
+let gridLicenseTypes
+gridLicenseTypes = $('#tbl_license_type').grid({
+    dataSource: '/Admin/GuardSettings?handler=LicensesTypes',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    inlineEditing: { mode: 'command' },
+    columns: [
+        { field: 'id', hidden: true },
+        { field: 'name', title: 'Description', width: '100%', editor: true },
+
+
+    ],
+
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    },
+
+});
+if (gridLicenseTypes) {
+    gridLicenseTypes.on('rowDataChanged', function (e, id, record) {
+        const data = $.extend(true, {}, record);
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=SaveLicensesTypes',
+            data: { record: data },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.success) gridLicenseTypes.reload();
+            else alert(result.message);
+        }).fail(function () {
+            console.log('error');
+        }).always(function () {
+            if (isHrSettingsAdding)
+                isHrSettingsAdding = false;
+        });
+    });
+
+    gridLicenseTypes.on('rowRemoving', function (e, id, record) {
+        if (confirm('Are you sure want to delete this field?')) {
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=DeleteLicensesTypes',
+                data: { id: record },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.success) gridLicenseTypes.reload();
+                else alert(result.message);
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isHrSettingsAdding)
+                    isHrSettingsAdding = false;
+            });
+        }
+    });
+}
+
+if ($('#hr_settings_fields_types').val() == '') {
+gridHrSettings.hide();
+gridLicenseTypes.hide();
+}
+
+$('#hr_settings_fields_types').on('change', function () {
+    const selHTSettingsFieldTypeId = $('#hr_settings_fields_types').val();
+    if ($('#hr_settings_fields_types').val() == 1) {
+        gridHrSettings.show();
+        gridHrSettings.clear();
+        gridHrSettings.reload();
+        gridLicenseTypes.hide();
+    }
+
+    else if ($('#hr_settings_fields_types').val() == 2) {
+        gridHrSettings.hide();
+        gridLicenseTypes.show();
+        gridLicenseTypes.clear();
+        gridLicenseTypes.reload();
+    }
+    else {
+        gridLicenseTypes.hide();
+        gridHrSettings.hide();
+    }
+});
+$('#add_hr_settings').on('click', function () {
+    var selFieldTypeId = $('#hr_settings_fields_types').val();
+    if (!selFieldTypeId) {
+        alert('Please select a field type to update');
+        return;
+    }
+    if (selFieldTypeId == 1) {
+        $('#list_hrGroups').val('');
+        $('#list_ReferenceNoNumber').val('');
+        $('#list_ReferenceNoAlphabet').val('');
+        $('#txtHrSettingsDescription').val('');
+        $('#HrSettings_Id').val('');
+        $('#hrSettingsModal').modal('show');
+    }
+    if ($('#hr_settings_fields_types').val() == 2) { 
+        if (isHrSettingsAdding) {
+            alert('Unsaved changes in the grid. Refresh the page');
+        } else {
+            isHrSettingsAdding = true;
+            gridLicenseTypes.addRow({
+                'id': -1,
+                'name': '',
+            }).edit(-1);
+     }  }
+
+});
+
+$('#btn_save_hr_settings').on('click', function () {
+    var form = document.getElementById('form_new_hr_settings');
+    var jsformData = new FormData(form);
+    var data = $('#list_hrGroups').val();
+    if ($('#list_hrGroups').val() == '') {
+        alert('Please Select HrGroups')
+    }
+    else if ($('#list_ReferenceNoNumber').val() == '' || $('#list_ReferenceNoAlphabet').val() == '') {
+        alert('Please Select  Reference Numbers')
+    }
+    else {
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=SaveHRSettings',
+            type: 'POST',
+            //data: jsformData,
+            data: {
+                'Id': $('#HrSettings_Id').val(),
+                'hrGroupId': $('#list_hrGroups').val(),
+                'refNoNumberId': $('#list_ReferenceNoNumber').val(),
+                'refNoAlphabetId': $('#list_ReferenceNoAlphabet').val(),
+                'description': $('#txtHrSettingsDescription').val()
+            },
+            //processData: false,
+            //contentType: false,
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            beforeSend: function () {
+                $('#loader').show();
+            }
+        }).done(function (result) {
+            if (result.status) {
+
+
+            $('#hrSettingsModal').modal('hide');
+            gridHrSettings.clear();
+            gridHrSettings.reload();
+        } else {
+            displayValidationSummaryHrSettings(result.errors);
+        }
+    }).always(function () {
+        $('#loader').hide();
+    });
+
+    }
+
+});
+function displayValidationSummaryHrSettings(errors) {
+    const summaryDiv = document.getElementById('hrsettings-field-validation');
+    summaryDiv.className = "validation-summary-errors";
+    summaryDiv.querySelector('ul').innerHTML = '';
+    errors.forEach(function (item) {
+        const li = document.createElement('li');
+        li.appendChild(document.createTextNode(item));
+        summaryDiv.querySelector('ul').appendChild(li);
+    });
+}
+
+

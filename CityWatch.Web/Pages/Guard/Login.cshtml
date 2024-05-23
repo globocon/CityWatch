@@ -7,7 +7,7 @@
 @inject IConfiguration Configuration
 @{
     ViewData["Title"] = "CityWatch Security | Guard Daily Log";
-    ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.DailyGuardLog;  
+    ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.DailyGuardLog;
     var mapSettings = @Configuration.GetSection("GoogleMap").Get(typeof(GoogleMapSettings)) as GoogleMapSettings;
     var ApiKey = mapSettings.ApiKey;
 }
@@ -19,7 +19,7 @@
             <input type="hidden" asp-for="@Model.GuardLogin.Guard.Id" />
             <input type="hidden" asp-for="@Model.LogBookType" />
             <input type="hidden" id="hid_duressEnabledGpsCoordinates" asp-for="@Model.GuardLogin.GpsCoordinates">
-           
+
             <div class="form-row">
                 <div class="form-group col-md-12">
                     <div class="d-flex flex-sm-row flex-column justify-content-between">
@@ -56,7 +56,7 @@
                     <select class="form-control" asp-for="@Model.GuardLogin.Guard.State" asp-items="@Model.ViewDataService.States"></select>
                 </div>
             </div>
-            
+
             <div style="display:none" id="guardLoginDetails">
                 <div class="form-row">
                     <div class="form-group col-md-6" id="divGuardEmail">
@@ -82,7 +82,7 @@
                     </div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group col-md-6">
+                    <div class="form-group col-md-6 mb-0">
                         <div class="d-flex flex-row justify-content-between">
                             <label>Smart Wand</label>
                             <div>
@@ -93,7 +93,7 @@
                         <select class="form-control" asp-for="@Model.GuardLogin.SmartWandOrPosition" style="font-family: 'FontAwesome', Inter, sans-serif;" disabled>
                         </select>
                     </div>
-                    <div class="form-group col-md-3">
+                    <div class="form-group col-md-3  mb-0">
                         <label>On Duty</label>
                         <input type="time" class="form-control" id="GuardLogin_OnDuty_Time" disabled />
                         <input type="datetime" class="form-control" asp-for="@Model.GuardLogin.OnDuty" hidden />
@@ -106,7 +106,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="form-group col-md-3">
+                    <div class="form-group col-md-3  mb-0">
                         <label>Off Duty</label>
                         <input type="time" class="form-control" id="GuardLogin_OffDuty_Time" disabled />
                         <input type="datetime" class="form-control" asp-for="@Model.GuardLogin.OffDuty" hidden />
@@ -116,6 +116,24 @@
                                 <label class="custom-control-label" for="offDutyIsToday">
                                     <span id="lblOffDutyToday" class="small">Today</span>/<span id="lblOffDutyTomorrow" class="small">Tomorrow</span>
                                 </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-8 mb-0">
+                        <label for="GuardLogin_ClientType">Compliance Status</label>
+                    </div>
+                    <div class="form-group col-md-9">
+                        <div class="row">
+                            <div class="col-md-4"><span><i class="fa fa-circle mr-2 client-status-circle" id="client_status_0"></i>HR1 (C4i)</span></div>
+                            <div class="col-md-4">
+                                <span><i class="fa fa-circle mr-2 client-status-circle" id="client_status_1"></i>HR2 (Client)</span>
+                                <span id="client_status_date_1" class="small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <span><i class="fa fa-circle mr-2 client-status-circle" id="client_status_2"></i>HR3 (Special)</span>
+                                <span id="client_status_date_2" class="small"></span>
                             </div>
                         </div>
                     </div>
@@ -150,6 +168,25 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" data-dismiss="modal" id="btn_confrim_wand_use">Yes</button>
                 <button type="button" class="btn btn-primary" data-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="confirmModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="confirmModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-exclamation-circle text-warning mr-2"></i>Warning</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="confirmMessage">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="confirmOk">Ok</button>
+                <button type="button" class="btn btn-primary" id="confirmCancel">Cancel</button>
             </div>
         </div>
     </div>

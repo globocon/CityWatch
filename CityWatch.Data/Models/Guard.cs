@@ -30,6 +30,7 @@ namespace CityWatch.Data.Models
         public bool IsSTATS { get; set; }
         [NotMapped]
         public List<string> GuardAccess { get; set; }
+        
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {

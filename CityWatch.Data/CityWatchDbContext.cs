@@ -62,6 +62,7 @@ namespace CityWatch.Data
         public DbSet<KeyVehicleLogProfile> KeyVehicleLogVisitorProfiles { get; set; }
         public DbSet<KeyVehicleLogVisitorPersonalDetail> KeyVehicleLogVisitorPersonalDetails { get; set; }
         public DbSet<GuardLicense> GuardLicenses { get; set; }
+        public DbSet<GuardComplianceAndLicense> GuardComplianceLicense { get; set; }
         public DbSet<GuardCompliance> GuardCompliances { get; set; }
         public DbSet<ClientSiteActivityStatus> ClientSiteActivityStatus { get; set;}
         public DbSet<ClientSiteRadioCheck> ClientSiteRadioChecks { get; set; }
@@ -99,6 +100,21 @@ namespace CityWatch.Data
 
         public DbSet<SiteEventLog> SiteEventLog { get; set; }
 
+        public DbSet<HRGroups> HRGroups { get; set; }
+        public DbSet<ReferenceNoNumbers> ReferenceNoNumbers { get; set; }
+        public DbSet<ReferenceNoAlphabets> ReferenceNoAlphabets { get; set; }
+        public DbSet<HrSettings> HrSettings { get; set; }
+        public DbSet<LicenseTypes> LicenseTypes { get; set; }
+
+
+        public DbSet<TrailerDeatilsViewModel> TrailerDeatilsViewModel { get; set; }
+
+        public DbSet<SmartWandScanGuardHistory> SmartWandScanGuardHistory { get; set; }
+
+        public DbSet<GlobalComplianceAlertEmail> GlobalComplianceAlertEmail { get; set; }
+
+        public DbSet<KPIScheduleDeafultMailbox> KPIScheduleDeafultMailbox { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<GuardLog>()
@@ -118,8 +134,13 @@ namespace CityWatch.Data
         public DbSet<GeneralFeeds> GeneralFeeds { get; set; }
         //General Feeds-end
         public DbSet<SmsChannel> SmsChannel { get; set; }
+        public DbSet<GlobalDuressSms> GlobalDuressSms { get; set; }
+
 
         //public DbSet<SiteEventLog> SiteEventLog { get; set; }
+        //for toggle areas - start 
+        public DbSet<ClientSiteToggle> ClientSiteToggle { get; set; }
+        //for toggle areas - end 
 
 
     }

@@ -18,25 +18,30 @@ using static Dropbox.Api.TeamLog.EventCategory;
 using MailKit.Net.Smtp;
 using static iText.Kernel.Pdf.Function.PdfFunction;
 using Dropbox.Api.Users;
+using Microsoft.AspNetCore.Hosting;
+using CityWatch.RadioCheck.Helpers;
+using iText.Kernel.Crypto.Securityhandler;
 
 namespace CityWatch.Web.Pages.Radio
 {
     public class RadioCheckNewModel : PageModel
     {
-
-
-
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly EmailOptions _EmailOptions;
         private readonly IConfiguration _configuration;
         private readonly ISmsSenderProvider _smsSenderProvider;
+        private readonly IClientDataProvider _clientDataProvider;
+        private readonly Settings _settings;
         public RadioCheckNewModel(IGuardLogDataProvider guardLogDataProvider, IOptions<EmailOptions> emailOptions,
-            IConfiguration configuration, ISmsSenderProvider smsSenderProvider)
+            IConfiguration configuration, ISmsSenderProvider smsSenderProvider, IClientDataProvider clientDataProvider,
+            IOptions<Settings> settings)
         {
             _guardLogDataProvider = guardLogDataProvider;
             _EmailOptions = emailOptions.Value;
             _configuration = configuration;
             _smsSenderProvider = smsSenderProvider;
+            _clientDataProvider = clientDataProvider;
+            _settings = settings.Value;
         }
         public int UserId { get; set; }
         public int GuardId { get; set; }
@@ -171,7 +176,6 @@ namespace CityWatch.Web.Pages.Radio
         //for getting Incident Report Details of Guards-start
         public IActionResult OnGetClientSiteIncidentReportActivityStatus(int clientSiteId, int guardId)
         {
-
             return new JsonResult(_guardLogDataProvider.GetActiveGuardIncidentReportDetails(clientSiteId, guardId));
         }
 
@@ -234,7 +238,7 @@ namespace CityWatch.Web.Pages.Radio
 
         //Send Text Notifications-start
         public JsonResult OnPostSavePushNotificationTestMessages(int clientSiteId, bool checkedLB, bool checkedSiteEmail,
-                                    bool checkedSMSPersonal, bool checkedSMSSmartWand, string Notifications, string Subject, GuardLog tmzdata)
+                                    bool checkedSMSPersonal, bool checkedSMSSmartWand,bool checkedPersonalEmail, string Notifications, string Subject, GuardLog tmzdata)
         {
             var success = true;
             var message = "success";
@@ -394,7 +398,7 @@ namespace CityWatch.Web.Pages.Radio
                     List<SmsChannelEventLog> _smsChannelEventLogList = new List<SmsChannelEventLog>();                    
                     foreach (var item in guardlogins)
                     {
-                        if (item.Guard.Mobile != null || item.Guard.Mobile != "+61 4")
+                        if (item.Guard.Mobile != null)
                         {
                             SmsChannelEventLog smslog = new SmsChannelEventLog();
                             smslog.GuardId = guardid.HasValue ? guardid.Value != 0 ? guardid.Value : null : null; // ID of guard who is sending the message
@@ -423,7 +427,7 @@ namespace CityWatch.Web.Pages.Radio
                     List<SmsChannelEventLog> _smsChannelEventLogList = new List<SmsChannelEventLog>();
                     foreach (var item in smartWands)
                     {
-                        if (item.PhoneNumber != null || item.PhoneNumber != "+61 4")
+                        if (item.PhoneNumber != null)
                         {
                             SmsChannelEventLog smslog = new SmsChannelEventLog();
                             smslog.GuardId = guardid.HasValue ? guardid.Value != 0 ? guardid.Value : null : null; // ID of guard who is sending the message
@@ -445,6 +449,67 @@ namespace CityWatch.Web.Pages.Radio
                     svl.IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
                     _smsSenderProvider.SendSms(_smsChannelEventLogList, Subject + " : " + Notifications, svl);
                 }
+                //p4-79 menucorrections-start
+                if (checkedPersonalEmail == true)
+                {
+
+                    var guardEmails = _guardLogDataProvider.GetGuardLogs(clientSiteId).Select(x=>x.Guard.Email);
+                    string smsSiteEmails = null;
+                    var guardEmailsnew = guardEmails.Distinct().ToList();
+                    foreach (var item in guardEmailsnew)
+                    {
+                        if (item != null)
+                        {
+                            if (smsSiteEmails == null)
+                                smsSiteEmails = item;
+                            else
+                                smsSiteEmails = smsSiteEmails + ',' + item;
+
+                        }
+                        //else
+                        //{
+                        //    success = false;
+                        //    message = "Please Enter the Guard Email";
+                        //    return new JsonResult(new { success, message });
+                        //}
+
+                    }
+
+
+                    var fromAddress = _EmailOptions.FromAddress.Split('|');
+                    var toAddress = smsSiteEmails.Split(',');
+
+                    var subject = Subject;
+                    var messageHtml = Notifications;
+
+                    var messagenew = new MimeMessage();
+                    messagenew.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+                    foreach (var address in GetToEmailAddressList(toAddress))
+                        messagenew.To.Add(address);
+
+
+                    messagenew.Subject = $"{subject}";
+
+                    var builder = new BodyBuilder()
+                    {
+                        HtmlBody = messageHtml
+                    };
+
+                    messagenew.Body = builder.ToMessageBody();
+
+                    using (var client = new SmtpClient())
+                    {
+                        client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                        if (!string.IsNullOrEmpty(_EmailOptions.SmtpUserName) &&
+                            !string.IsNullOrEmpty(_EmailOptions.SmtpPassword))
+                            client.Authenticate(_EmailOptions.SmtpUserName, _EmailOptions.SmtpPassword);
+                        client.Send(messagenew);
+                        client.Disconnect(true);
+                    }
+
+
+                }
+                //p4-79 menucorrections-end
             }
             catch (Exception ex)
             {
@@ -467,37 +532,70 @@ namespace CityWatch.Web.Pages.Radio
 
         //Send Text Notifications-end
 
+        #region history
+        //for getting logBook History of Guards-start
+        public IActionResult OnGetClientSitelogBookHistory(int clientSiteId, int guardId)
+        {
+            var jsresult = _guardLogDataProvider.GetActiveGuardlogBookHistory(clientSiteId, guardId);
+            return new JsonResult(jsresult);
+        }
+        //for getting logBook History of Guards-end
 
-        //to check whthere there is any siteemail or smartwand or guards exists
-        //for getting guards not available -end
+        //for getting Key Vehicle History of Guards-start
+        public IActionResult OnGetClientSiteKeyVehicleHistory(int clientSiteId, int guardId)
+        {
+            var jsresult = _guardLogDataProvider.GetActiveGuardKeyVehicleHistory(clientSiteId, guardId);
+            return new JsonResult(jsresult);
+        }
+        //for getting Key Vehicle History of Guards-end
 
-        //public JsonResult OnGetCompanyTextMessageData(int id)
-        //{
-        //    var clientsite = _guardLogDataProvider.GetClientSites(id).FirstOrDefault() ;
-        //    var clientsitesmartwands = _guardLogDataProvider.GetClientSiteSmartWands(id);
-        //    return new JsonResult(_guardLogDataProvider.GetGuards(id));
-        //}
+        //for getting Incident Report History of Guards-start
+        public IActionResult OnGetClientSiteIncidentReportHistory(int clientSiteId, int guardId)
+        {
+            var jsresult = _guardLogDataProvider.GetActiveGuardIncidentReportHistory(clientSiteId, guardId);
+            return new JsonResult(jsresult);
+        }
+        //for getting Incident Report History of Guards-end
+          
+        //for getting SW Details of Guards-start
+        public IActionResult OnGetClientSiteSWHistory(int clientSiteId, int guardId)
+        {
+            var jsresult = _guardLogDataProvider.GetActiveGuardSwHistory(clientSiteId, guardId);  // GetActiveGuardSwHistory
+            return new JsonResult(jsresult);
+        }
+        //for getting SW details of Guards-end
 
+        #endregion history
 
-        //for getting logBookDetails of Guards-start
+        //for getting ClientSiteRadiocheckStatus of Guards-start
         public IActionResult OnGetClientSiteRadiocheckStatus(int clientSiteId, int guardId, int ColorId)
         {
 
             return new JsonResult(_guardLogDataProvider.GetClientSiteRadiocheckStatus(clientSiteId, guardId));
         }
-
-        //for getting logBookDetails of Guards-end
+        //for getting ClientSiteRadiocheckStatus of Guards-end
 
         // Save Global Text Alert Start
         public JsonResult OnPostSaveGlobalNotificationTestMessages(bool checkedState, string state, string Notifications, string Subject,
-            bool chkClientType, int[] ClientType, bool chkNationality, bool checkedSMSPersonal, bool checkedSMSSmartWand, int[] clientSiteId, GuardLog tmzdata)
+            bool chkClientType, int[] ClientType, bool chkNationality, bool checkedSMSPersonal, bool checkedSMSSmartWand,bool chkGlobalPersonalEmail, int[] clientSiteId, GuardLog tmzdata)
         {
             var success = true;
             var message = "success";
+
+            // For sending SMS
+            SiteEventLog svl = new SiteEventLog();
+            svl.ProjectName = "Radio Check";
+            svl.Module = "Radio Check V2";
+            svl.EventLocalTime = tmzdata.EventDateTimeLocal.Value;
+            svl.EventLocalOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute;
+            svl.EventLocalTimeZone = tmzdata.EventDateTimeZoneShort;
+            svl.IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
+
             try
             {
                 if (checkedState == true)
                 {
+                    svl.SubModule = "Global Push Notification-[Global] [State]";
                     var clientSitesState = _guardLogDataProvider.GetClientSitesForState(state);
                     foreach (var item in clientSitesState)
                     {
@@ -512,19 +610,133 @@ namespace CityWatch.Web.Pages.Radio
                         EmailSender(item.SiteEmail, item.Id, Subject, Notifications);
                     }
 
+                    if (checkedSMSPersonal == true)
+                    {
+                        svl.ActivityType = "SMS Personal";
+                        foreach (var item in clientSitesState)
+                        {                            
+                            var guardlogins = _guardLogDataProvider.GetGuardLoginsByClientSiteId(item.Id, DateTime.Now);                            
+                            string guardname = string.Empty;
+                            List<SmsChannelEventLog> _smsChannelEventLogList = new List<SmsChannelEventLog>();
+                            foreach (var logins in guardlogins)
+                            {
+                                if (logins.Guard.Mobile != null)
+                                {
+                                    SmsChannelEventLog smslog = new SmsChannelEventLog();
+                                    smslog.GuardId = loginguardid != 0 ? loginguardid : null; // ID of guard who is sending the message
+                                    smslog.GuardName = guardname.Length > 0 ? guardname : null; // Name of guard who is sending the message
+                                    smslog.GuardNumber = logins.Guard.Mobile; 
+                                    smslog.SiteId = null;  // setting as null since it is from RC else clientSiteId
+                                    smslog.SiteName = null;  // setting as null since it is from RC else  clientsitename
+                                    _smsChannelEventLogList.Add(smslog);
+                                }
+                            }
+                            _smsSenderProvider.SendSms(_smsChannelEventLogList, Subject + " : " + Notifications, svl);
+                        }
+                    }
 
+                    if (checkedSMSSmartWand == true)
+                    {
+                        svl.ActivityType = "SMS Smart Wand";
+                        foreach (var item in clientSitesState)
+                        {
+                            var smartWands = _guardLogDataProvider.GetClientSiteSmartWands(item.Id);
+                            string guardname = string.Empty;
+                            List<SmsChannelEventLog> _smsChannelEventLogList = new List<SmsChannelEventLog>();
+                            foreach (var sw in smartWands)
+                            {
+                                if (sw.PhoneNumber != null)
+                                {
+                                    SmsChannelEventLog smslog = new SmsChannelEventLog();
+                                    smslog.GuardId = loginguardid != 0 ? loginguardid : null; // ID of guard who is sending the message
+                                    smslog.GuardName = guardname.Length > 0 ? guardname : null; // Name of guard who is sending the message
+                                    smslog.GuardNumber = sw.PhoneNumber; 
+                                    smslog.SiteId = null;  // setting as null since it is from RC else clientSiteId
+                                    smslog.SiteName = null;  // setting as null since it is from RC else  clientsitename
+                                    _smsChannelEventLogList.Add(smslog);
+                                }
+                            }
+                            _smsSenderProvider.SendSms(_smsChannelEventLogList, Subject + " : " + Notifications, svl);
+                        }
+                    }
+                    //p4-79 menucorrections-start
+                    if (chkGlobalPersonalEmail == true)
+                    {
+                        string smsSiteEmails = null;
+                        foreach (var item in clientSitesState)
+                        {
+                            var guardEmails = _guardLogDataProvider.GetGuardLogs(item.Id).Select(x => x.Guard.Email);
+
+                            
+                            var guardEmailsnew = guardEmails.Distinct().ToList();
+
+
+                            foreach (var item2 in guardEmailsnew)
+                        {
+                            if (item2 != null)
+                            {
+                                if (smsSiteEmails == null)
+                                    smsSiteEmails = item2;
+                                else
+                                    smsSiteEmails = smsSiteEmails + ',' + item2;
+
+                            }
+                            //else
+                            //{
+                            //    success = false;
+                            //    message = "Please Enter the Guard Email";
+                            //    return new JsonResult(new { success, message });
+                            //}
+
+                        }
+
+                        }
+                        var fromAddress = _EmailOptions.FromAddress.Split('|');
+                        var toAddress = smsSiteEmails.Split(',');
+
+                        var subject = Subject;
+                        var messageHtml = Notifications;
+
+                        var messagenew = new MimeMessage();
+                        messagenew.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+                        foreach (var address in GetToEmailAddressList(toAddress))
+                            messagenew.To.Add(address);
+
+
+                        messagenew.Subject = $"{subject}";
+
+                        var builder = new BodyBuilder()
+                        {
+                            HtmlBody = messageHtml
+                        };
+
+                        messagenew.Body = builder.ToMessageBody();
+
+                        using (var client = new SmtpClient())
+                        {
+                            client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                            if (!string.IsNullOrEmpty(_EmailOptions.SmtpUserName) &&
+                                !string.IsNullOrEmpty(_EmailOptions.SmtpPassword))
+                                client.Authenticate(_EmailOptions.SmtpUserName, _EmailOptions.SmtpPassword);
+                            client.Send(messagenew);
+                            client.Disconnect(true);
+                        }
+
+
+                    }
+                    //p4-79 menucorrections-end
+                 
 
                 }
                 if (chkClientType == true)
                 {
                     if (clientSiteId.Length == 0)
                     {
+                        svl.SubModule = "Global Push Notification-[Global] [ClientType]";
                         var clientSitesClientType = _guardLogDataProvider.GetAllClientSites().Where(x => ClientType.Contains(x.TypeId));
                         foreach (var clientSiteTypeID in clientSitesClientType)
                         {
                             LogBookDetails(clientSiteTypeID.Id, Notifications, Subject, tmzdata);
-
-
                         }
                         /* log book entry to citywtch control room */
                         var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
@@ -534,9 +746,127 @@ namespace CityWatch.Web.Pages.Radio
                             EmailSender(clientSiteTypeID.SiteEmail, clientSiteTypeID.Id, Subject, Notifications);
                         }
 
+                        if (checkedSMSPersonal == true)
+                        {
+                            svl.ActivityType = "SMS Personal";
+                            foreach (var item in clientSitesClientType)
+                            {
+                                var guardlogins = _guardLogDataProvider.GetGuardLoginsByClientSiteId(item.Id, DateTime.Now);
+                                string guardname = string.Empty;
+                                List<SmsChannelEventLog> _smsChannelEventLogList = new List<SmsChannelEventLog>();
+                                foreach (var logins in guardlogins)
+                                {
+                                    if (logins.Guard.Mobile != null)
+                                    {
+                                        SmsChannelEventLog smslog = new SmsChannelEventLog();
+                                        smslog.GuardId = loginguardid != 0 ? loginguardid : null; // ID of guard who is sending the message
+                                        smslog.GuardName = guardname.Length > 0 ? guardname : null; // Name of guard who is sending the message
+                                        smslog.GuardNumber = logins.Guard.Mobile; 
+                                        smslog.SiteId = null;  // setting as null since it is from RC else clientSiteId
+                                        smslog.SiteName = null;  // setting as null since it is from RC else  clientsitename
+                                        _smsChannelEventLogList.Add(smslog);
+                                    }
+                                }
+                                _smsSenderProvider.SendSms(_smsChannelEventLogList, Subject + " : " + Notifications, svl);
+                            }
+                        }
+
+                        if (checkedSMSSmartWand == true)
+                        {
+                            svl.ActivityType = "SMS Smart Wand";
+                            foreach (var item in clientSitesClientType)
+                            {
+                                var smartWands = _guardLogDataProvider.GetClientSiteSmartWands(item.Id);
+                                string guardname = string.Empty;
+                                List<SmsChannelEventLog> _smsChannelEventLogList = new List<SmsChannelEventLog>();
+                                foreach (var sw in smartWands)
+                                {
+                                    if (sw.PhoneNumber != null)
+                                    {
+                                        SmsChannelEventLog smslog = new SmsChannelEventLog();
+                                        smslog.GuardId = loginguardid != 0 ? loginguardid : null; // ID of guard who is sending the message
+                                        smslog.GuardName = guardname.Length > 0 ? guardname : null; // Name of guard who is sending the message
+                                        smslog.GuardNumber = sw.PhoneNumber; 
+                                        smslog.SiteId = null;  // setting as null since it is from RC else clientSiteId
+                                        smslog.SiteName = null;  // setting as null since it is from RC else  clientsitename
+                                        _smsChannelEventLogList.Add(smslog);
+                                    }
+                                }
+                                _smsSenderProvider.SendSms(_smsChannelEventLogList, Subject + " : " + Notifications, svl);
+                            }
+                        }
+                        //p4-79 menucorrections-start
+                        if (chkGlobalPersonalEmail == true)
+                        {
+                            string smsSiteEmails = null;
+                            foreach (var item in clientSitesClientType)
+                            {
+                                var guardEmails = _guardLogDataProvider.GetGuardLogs(item.Id).Select(x => x.Guard.Email);
+
+                                var guardEmailsnew = guardEmails.Distinct().ToList();
+
+
+
+
+                                foreach (var item2 in guardEmailsnew)
+                                {
+                                    if (item2 != null)
+                                    {
+                                        if (smsSiteEmails == null)
+                                            smsSiteEmails = item2;
+                                        else
+                                            smsSiteEmails = smsSiteEmails + ',' + item2;
+
+                                    }
+                                    //else
+                                    //{
+                                    //    success = false;
+                                    //    message = "Please Enter the Guard Email";
+                                    //    return new JsonResult(new { success, message });
+                                    //}
+
+                                }
+
+                            }
+                            var fromAddress = _EmailOptions.FromAddress.Split('|');
+                            var toAddress = smsSiteEmails.Split(',');
+
+                            var subject = Subject;
+                            var messageHtml = Notifications;
+
+                            var messagenew = new MimeMessage();
+                            messagenew.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+                            foreach (var address in GetToEmailAddressList(toAddress))
+                                messagenew.To.Add(address);
+
+
+                            messagenew.Subject = $"{subject}";
+
+                            var builder = new BodyBuilder()
+                            {
+                                HtmlBody = messageHtml
+                            };
+
+                            messagenew.Body = builder.ToMessageBody();
+
+                            using (var client = new SmtpClient())
+                            {
+                                client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                                if (!string.IsNullOrEmpty(_EmailOptions.SmtpUserName) &&
+                                    !string.IsNullOrEmpty(_EmailOptions.SmtpPassword))
+                                    client.Authenticate(_EmailOptions.SmtpUserName, _EmailOptions.SmtpPassword);
+                                client.Send(messagenew);
+                                client.Disconnect(true);
+                            }
+
+
+                        }
+                        //p4-79 menucorrections-end
+
                     }
                     else
                     {
+                        svl.SubModule = "Global Push Notification-[Global] [ClientType]";
                         var clientSitesClientType = _guardLogDataProvider.GetAllClientSites().Where(x => clientSiteId.Contains(x.Id));
                         foreach (var clientSiteTypeID in clientSitesClientType)
                         {
@@ -550,10 +880,128 @@ namespace CityWatch.Web.Pages.Radio
                             EmailSender(clientSiteTypeID.SiteEmail, clientSiteTypeID.Id, Subject, Notifications);
                         }
 
+                        if (checkedSMSPersonal == true)
+                        {
+                            svl.ActivityType = "SMS Personal";
+                            foreach (var item in clientSitesClientType)
+                            {
+                                var guardlogins = _guardLogDataProvider.GetGuardLoginsByClientSiteId(item.Id, DateTime.Now);
+                                string guardname = string.Empty;
+                                List<SmsChannelEventLog> _smsChannelEventLogList = new List<SmsChannelEventLog>();
+                                foreach (var logins in guardlogins)
+                                {
+                                    if (logins.Guard.Mobile != null)
+                                    {
+                                        SmsChannelEventLog smslog = new SmsChannelEventLog();
+                                        smslog.GuardId = loginguardid != 0 ? loginguardid : null; // ID of guard who is sending the message
+                                        smslog.GuardName = guardname.Length > 0 ? guardname : null; // Name of guard who is sending the message
+                                        smslog.GuardNumber = logins.Guard.Mobile; 
+                                        smslog.SiteId = null;  // setting as null since it is from RC else clientSiteId
+                                        smslog.SiteName = null;  // setting as null since it is from RC else  clientsitename
+                                        _smsChannelEventLogList.Add(smslog);
+                                    }
+                                }
+                                _smsSenderProvider.SendSms(_smsChannelEventLogList, Subject + " : " + Notifications, svl);
+                            }
+                        }
+
+                        if (checkedSMSSmartWand == true)
+                        {
+                            svl.ActivityType = "SMS Smart Wand";
+                            foreach (var item in clientSitesClientType)
+                            {
+                                var smartWands = _guardLogDataProvider.GetClientSiteSmartWands(item.Id);
+                                string guardname = string.Empty;
+                                List<SmsChannelEventLog> _smsChannelEventLogList = new List<SmsChannelEventLog>();
+                                foreach (var sw in smartWands)
+                                {
+                                    if (sw.PhoneNumber != null)
+                                    {
+                                        SmsChannelEventLog smslog = new SmsChannelEventLog();
+                                        smslog.GuardId = loginguardid != 0 ? loginguardid : null; // ID of guard who is sending the message
+                                        smslog.GuardName = guardname.Length > 0 ? guardname : null; // Name of guard who is sending the message
+                                        smslog.GuardNumber = sw.PhoneNumber; 
+                                        smslog.SiteId = null;  // setting as null since it is from RC else clientSiteId
+                                        smslog.SiteName = null;  // setting as null since it is from RC else  clientsitename
+                                        _smsChannelEventLogList.Add(smslog);
+                                    }
+                                }
+                                _smsSenderProvider.SendSms(_smsChannelEventLogList, Subject + " : " + Notifications, svl);
+                            }
+                        }
+                        //p4-79 menucorrections-start
+                        if (chkGlobalPersonalEmail == true)
+                        {
+                            string smsSiteEmails = null;
+                            foreach (var item in clientSitesClientType)
+                            {
+                                var guardEmails = _guardLogDataProvider.GetGuardLogs(item.Id).Select(x => x.Guard.Email);
+
+                                var guardEmailsnew = guardEmails.Distinct().ToList();
+
+
+
+
+                                foreach (var item2 in guardEmailsnew)
+                                {
+                                    if (item2 != null)
+                                    {
+                                        if (smsSiteEmails == null)
+                                            smsSiteEmails = item2;
+                                        else
+                                            smsSiteEmails = smsSiteEmails + ',' + item2;
+
+                                    }
+                                    //else
+                                    //{
+                                    //    success = false;
+                                    //    message = "Please Enter the Guard Email";
+                                    //    return new JsonResult(new { success, message });
+                                    //}
+
+                                }
+
+                            }
+                            var fromAddress = _EmailOptions.FromAddress.Split('|');
+                            var toAddress = smsSiteEmails.Split(',');
+
+                            var subject = Subject;
+                            var messageHtml = Notifications;
+
+                            var messagenew = new MimeMessage();
+                            messagenew.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+                            foreach (var address in GetToEmailAddressList(toAddress))
+                                messagenew.To.Add(address);
+
+
+                            messagenew.Subject = $"{subject}";
+
+                            var builder = new BodyBuilder()
+                            {
+                                HtmlBody = messageHtml
+                            };
+
+                            messagenew.Body = builder.ToMessageBody();
+
+                            using (var client = new SmtpClient())
+                            {
+                                client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                                if (!string.IsNullOrEmpty(_EmailOptions.SmtpUserName) &&
+                                    !string.IsNullOrEmpty(_EmailOptions.SmtpPassword))
+                                    client.Authenticate(_EmailOptions.SmtpUserName, _EmailOptions.SmtpPassword);
+                                client.Send(messagenew);
+                                client.Disconnect(true);
+                            }
+
+
+                        }
+                        //p4-79 menucorrections-end
+
                     }
                 }
                 if (chkNationality == true)
                 {
+                    svl.SubModule = "Global Push Notification-[Global] [National]";
                     var clientsiteIDNationality = _guardLogDataProvider.GetAllClientSites();
                     foreach (var itemAll in clientsiteIDNationality)
                     {
@@ -568,33 +1016,91 @@ namespace CityWatch.Web.Pages.Radio
                         EmailSender(itemAll.SiteEmail, itemAll.Id, Subject, Notifications);
                     }
 
-                }
-
-                if (checkedSMSPersonal == true)
-                {
-                    var logbooktype = LogBookType.DailyGuardLog;
-                    var guardlogins = _guardLogDataProvider.GetGuardLoginsByClientSiteId(null, DateTime.Now);
-                    string smsPersonalEmails = null;
-                    foreach (var item in guardlogins)
+                    if (checkedSMSPersonal == true)
                     {
-                        if (item.Guard.Mobile != null || item.Guard.Mobile != "+61 4")
+                        svl.ActivityType = "SMS Personal";
+                        foreach (var item in clientsiteIDNationality)
                         {
-                            item.Guard.Mobile = item.Guard.Mobile.Replace(" ", "") + "@smsglobal.com";
-                            if (smsPersonalEmails == null)
+                            var guardlogins = _guardLogDataProvider.GetGuardLoginsByClientSiteId(item.Id, DateTime.Now);
+                            string guardname = string.Empty;
+                            List<SmsChannelEventLog> _smsChannelEventLogList = new List<SmsChannelEventLog>();
+                            foreach (var logins in guardlogins)
                             {
-                                smsPersonalEmails = item.Guard.Mobile;
+                                if (logins.Guard.Mobile != null)
+                                {
+                                    SmsChannelEventLog smslog = new SmsChannelEventLog();
+                                    smslog.GuardId = loginguardid != 0 ? loginguardid : null; // ID of guard who is sending the message
+                                    smslog.GuardName = guardname.Length > 0 ? guardname : null; // Name of guard who is sending the message
+                                    smslog.GuardNumber = logins.Guard.Mobile; 
+                                    smslog.SiteId = null;  // setting as null since it is from RC else clientSiteId
+                                    smslog.SiteName = null;  // setting as null since it is from RC else  clientsitename
+                                    _smsChannelEventLogList.Add(smslog);
+                                }
                             }
-                            else
-                            {
-                                smsPersonalEmails = smsPersonalEmails + "," + item.Guard.Mobile;
-                            }
+                            _smsSenderProvider.SendSms(_smsChannelEventLogList, Subject + " : " + Notifications, svl);
                         }
-
                     }
-                    if (guardlogins.Count > 0)
+
+                    if (checkedSMSSmartWand == true)
                     {
+                        svl.ActivityType = "SMS Smart Wand";
+                        foreach (var item in clientsiteIDNationality)
+                        {
+                            var smartWands = _guardLogDataProvider.GetClientSiteSmartWands(item.Id);
+                            string guardname = string.Empty;
+                            List<SmsChannelEventLog> _smsChannelEventLogList = new List<SmsChannelEventLog>();
+                            foreach (var sw in smartWands)
+                            {
+                                if (sw.PhoneNumber != null)
+                                {
+                                    SmsChannelEventLog smslog = new SmsChannelEventLog();
+                                    smslog.GuardId = loginguardid != 0 ? loginguardid : null; // ID of guard who is sending the message
+                                    smslog.GuardName = guardname.Length > 0 ? guardname : null; // Name of guard who is sending the message
+                                    smslog.GuardNumber = sw.PhoneNumber; 
+                                    smslog.SiteId = null;  // setting as null since it is from RC else clientSiteId
+                                    smslog.SiteName = null;  // setting as null since it is from RC else  clientsitename
+                                    _smsChannelEventLogList.Add(smslog);
+                                }
+                            }
+                            _smsSenderProvider.SendSms(_smsChannelEventLogList, Subject + " : " + Notifications, svl);
+                        }
+                    }
+                    //p4-79 menucorrections-start
+                    if (chkGlobalPersonalEmail == true)
+                    {
+                        string smsSiteEmails = null;
+                        foreach (var item in clientsiteIDNationality)
+                        {
+                            var guardEmails = _guardLogDataProvider.GetGuardLogs(item.Id).Select(x => x.Guard.Email);
+
+                            var guardEmailsnew = guardEmails.Distinct().ToList();
+
+
+
+
+                            foreach (var item2 in guardEmailsnew)
+                            {
+                                if (item2 != null)
+                                {
+                                    if (smsSiteEmails == null)
+                                        smsSiteEmails = item2;
+                                    else
+                                        smsSiteEmails = smsSiteEmails + ',' + item2;
+
+                                }
+                                //else
+                                //{
+                                //    success = false;
+                                //    message = "Please Enter the Guard Email";
+                                //    return new JsonResult(new { success, message });
+                                //}
+
+                            }
+
+                        }
                         var fromAddress = _EmailOptions.FromAddress.Split('|');
-                        var toAddress = smsPersonalEmails.Split(',');
+                        var toAddress = smsSiteEmails.Split(',');
+
                         var subject = Subject;
                         var messageHtml = Notifications;
 
@@ -602,6 +1108,8 @@ namespace CityWatch.Web.Pages.Radio
                         messagenew.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
                         foreach (var address in GetToEmailAddressList(toAddress))
                             messagenew.To.Add(address);
+
+
                         messagenew.Subject = $"{subject}";
 
                         var builder = new BodyBuilder()
@@ -621,64 +1129,9 @@ namespace CityWatch.Web.Pages.Radio
                             client.Disconnect(true);
                         }
 
-                    }
-
-
-                }
-                if (checkedSMSSmartWand == true)
-                {
-                    var logbooktype = LogBookType.DailyGuardLog;
-                    var smartWands = _guardLogDataProvider.GetClientSiteSmartWands(null);
-                    string smsPersonalEmails = null;
-                    foreach (var item in smartWands)
-                    {
-                        if (item.PhoneNumber != null || item.PhoneNumber != "+61 4")
-                        {
-                            item.PhoneNumber = item.PhoneNumber.Replace("(0)", "") + "@smsglobal.com";
-                            item.PhoneNumber = item.PhoneNumber.Replace(" ", "");
-                            if (smsPersonalEmails == null)
-                            {
-                                smsPersonalEmails = item.PhoneNumber;
-                            }
-                            else
-                            {
-                                smsPersonalEmails = smsPersonalEmails + "," + item.PhoneNumber;
-                            }
-                        }
 
                     }
-                    if (smartWands.Count > 0)
-                    {
-                        var fromAddress = _EmailOptions.FromAddress.Split('|');
-                        var toAddress = smsPersonalEmails.Split(',');
-                        var subject = Subject;
-                        var messageHtml = Notifications;
-
-                        var messagenew = new MimeMessage();
-                        messagenew.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
-                        foreach (var address in GetToEmailAddressList(toAddress))
-                            messagenew.To.Add(address);
-                        messagenew.Subject = $"{subject}";
-
-                        var builder = new BodyBuilder()
-                        {
-                            HtmlBody = messageHtml
-                        };
-
-                        messagenew.Body = builder.ToMessageBody();
-
-                        using (var client = new SmtpClient())
-                        {
-                            client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
-                            if (!string.IsNullOrEmpty(_EmailOptions.SmtpUserName) &&
-                                !string.IsNullOrEmpty(_EmailOptions.SmtpPassword))
-                                client.Authenticate(_EmailOptions.SmtpUserName, _EmailOptions.SmtpPassword);
-                            client.Send(messagenew);
-                            client.Disconnect(true);
-                        }
-                    }
-
-
+                    //p4-79 menucorrections-end
 
                 }
 
@@ -854,6 +1307,10 @@ namespace CityWatch.Web.Pages.Radio
         public JsonResult OnGetClientSites(int? page, int? limit, int? typeId, string searchTerm)
         {
             return new JsonResult(_guardLogDataProvider.GetUserClientSitesHavingAccess(typeId, AuthUserHelperRadio.LoggedInUserId, searchTerm));
+        }
+        public JsonResult OnGetClientSitesRadioSearch(int? page, int? limit, int? typeId, string searchTerm)
+        {
+            return new JsonResult(_guardLogDataProvider.GetUserClientSitesHavingAccessRadio(typeId, AuthUserHelperRadio.LoggedInUserId, searchTerm));
         }
         public JsonResult OnGetClientSitesNew(string typeId)
         {
@@ -1031,7 +1488,19 @@ namespace CityWatch.Web.Pages.Radio
         }
         public JsonResult OnPostActionList(int clientSiteId)
         {
-            return new JsonResult(_guardLogDataProvider.GetActionlist(clientSiteId));
+            var rtn = _guardLogDataProvider.GetActionlist(clientSiteId);
+
+            if(rtn != null) {
+                if (rtn.Imagepath != null)
+                {
+                    rtn.Imagepath = rtn.Imagepath + ":-:" + ConvertFileToBase64(rtn.Imagepath);
+                }
+            }
+            return new JsonResult(rtn);
+        }
+        public JsonResult OnPostGetClientType(int clientSiteId)
+        {
+            return new JsonResult(_guardLogDataProvider.GetClientTypeByClientSiteId(clientSiteId));
         }
         public JsonResult OnPostSearchClientsite(string searchTerm)
         {
@@ -1055,6 +1524,149 @@ namespace CityWatch.Web.Pages.Radio
         }
         //code added for ActionListSend stop
 
+        #region RcActionListEdit
+        public PartialViewResult OnGetClientSiteKpiSettings(int siteId)
+        {
+            var clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
+            clientSiteKpiSetting ??= new ClientSiteKpiSetting() { ClientSiteId = siteId };
+            if (clientSiteKpiSetting.rclistKP.Imagepath != null )
+            {
+                if (clientSiteKpiSetting.rclistKP.Imagepath.Length > 0 && clientSiteKpiSetting.rclistKP.Imagepath.Trim() != "")
+                {
+                    clientSiteKpiSetting.rclistKP.Imagepath = clientSiteKpiSetting.rclistKP.Imagepath + ":-:" + ConvertFileToBase64(clientSiteKpiSetting.rclistKP.Imagepath);
+                }
+                
+            }
+            return Partial("../admin/_ClientSiteKpiSetting", clientSiteKpiSetting);
+        }
 
+        //code added For RcAction List start
+        public JsonResult OnPostClientSiteRCActionList(RCActionList rcActionList)
+        {
+            var status = true;
+            var message = "Success";
+            var id = -1;
+            try
+            {
+
+                if (rcActionList.SettingsId != 0)
+                {
+
+                    id = _clientDataProvider.SaveRCList(rcActionList);
+
+                }
+                else
+                {
+                    status = false;
+                    message = "Please add site settings in KPI first to proceed with RCAction list.";
+                }
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message, id });
+        }
+
+        //code added For RcAction List stop
+
+        public JsonResult OnPostUploadRCImage()
+        {
+            var success = true;
+            var files = Request.Form.Files;
+            var fileName = string.Empty;
+            var dtm = DateTime.Now;
+            var Imagepath = "";
+            try
+            {
+                if (files.Count == 1)
+                {
+                    var file = files[0];
+                    fileName = file.FileName;
+                    var scheduleId = Convert.ToInt32(Request.Form["scheduleId"]);
+                    var Id = Convert.ToInt32(Request.Form["id"]);
+                    dtm = Convert.ToDateTime(Request.Form["updatetime"]);
+
+                    var summaryImageDir = _settings.RCActionListKpiImageFolder;  // Path.Combine(_webHostEnvironment.WebRootPath, "RCImage");
+                    if (!Directory.Exists(summaryImageDir))
+                        Directory.CreateDirectory(summaryImageDir);
+
+                    using (var stream = System.IO.File.Create(Path.Combine(summaryImageDir, fileName)))
+                    {
+                        file.CopyTo(stream);
+                    }                    
+                    _clientDataProvider.SaveUpdateRCListFile(Id,fileName,dtm);
+                    Imagepath = fileName + ":-:" + ConvertFileToBase64(fileName);
+                }
+            }
+            catch
+            {
+                success = false;
+            }
+
+            return new JsonResult(new { success, fileName, LastUpdated = dtm, Imagepath = Imagepath });
+        }
+
+        public JsonResult OnPostDeleteRCImage(string imageName)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                if (!string.IsNullOrEmpty(imageName))
+                {
+                    var fileToDelete = Path.Combine(_settings.RCActionListKpiImageFolder, imageName);
+                    if (System.IO.File.Exists(fileToDelete))
+                        System.IO.File.Delete(fileToDelete);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message });
+        }
+
+        //to delete RC
+        public JsonResult OnPostDeleteRC(int RCId)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.RemoveRCList(RCId);                
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message });
+        }
+
+        public string ConvertFileToBase64(string imageName)
+        {
+            string rtnstring = "";
+
+            if (!string.IsNullOrEmpty(imageName))
+            {
+                var fileToConvert = Path.Combine(_settings.RCActionListKpiImageFolder, imageName);
+                if (System.IO.File.Exists(fileToConvert))
+                {
+                    byte[] AsBytes = System.IO.File.ReadAllBytes(fileToConvert);
+                    rtnstring = "data:application/octet-stream;base64," +  Convert.ToBase64String(AsBytes);
+                }                   
+            }
+            
+            return rtnstring;
+        }
+
+        #endregion RcActionListEdit
     }
 }

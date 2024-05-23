@@ -11,10 +11,13 @@ namespace CityWatch.Web.Services
     {
         List<SelectListItem> GetUserClientSitesWithId(string types);
         List<SelectListItem> GetClientSitePocs(int[] clientSiteIds);
+        List<SelectListItem> GetClientSitePocsVehicleLog(int[] clientSiteIds);
+        
         List<SelectListItem> GetClientSiteLocations(int[] clientSiteIds);
         List<ClientSiteKey> GetClientSiteKeys(int[] clientSiteIds, string searchKeyNo);
         List<SelectListItem> GetClientSiteLocationsNew(int[] clientSiteIds);
         List<SelectListItem> GetClientSitePocsNew(int[] clientSiteIds);
+        List<SelectListItem> GetClientSites();
     }
 
     public class ClientSiteViewDataService : IClientSiteViewDataService
@@ -49,6 +52,16 @@ namespace CityWatch.Web.Services
 
             return sitePocs;
         }
+        public List<SelectListItem> GetClientSitePocsVehicleLog(int[] clientSiteIds)
+        {
+            var sitePocs = new List<SelectListItem>();
+
+            sitePocs.AddRange(_guardSettingsDataProvider.GetClientSitePocs(clientSiteIds)
+                .Select(z => new SelectListItem(z.Name, z.Id.ToString())));
+
+            return sitePocs;
+        }
+       
 
         public List<SelectListItem> GetClientSiteLocations(int[] clientSiteIds)
         {
@@ -84,6 +97,16 @@ namespace CityWatch.Web.Services
             return _guardSettingsDataProvider.GetClientSiteKeys(clientSiteIds)
                         .Where(z => string.IsNullOrEmpty(searchKeyNo) || z.KeyNo.Contains(searchKeyNo, StringComparison.OrdinalIgnoreCase))
                         .ToList();
+        }
+        public List<SelectListItem> GetClientSites()
+        {
+            var sitePocs = new List<SelectListItem>();
+
+
+            sitePocs.AddRange(_clientDataProvider.GetClientSites(null)
+                .Select(z => new SelectListItem(z.Name, z.Id.ToString())));
+
+            return sitePocs;
         }
     }
 }

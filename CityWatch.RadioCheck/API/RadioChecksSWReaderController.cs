@@ -8,12 +8,9 @@ using Microsoft.Extensions.Logging;
 using System;
 using CityWatch.Data;
 using Microsoft.EntityFrameworkCore;
-
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Net.Http;
 using Microsoft.Extensions.Options;
-using System.Threading.Tasks;
 using System.Text;
 using System.Text.Json;
 using CityWatch.RadioCheck.Helpers;
@@ -21,6 +18,7 @@ using CityWatch.RadioCheck.Models;
 using System.Linq;
 using iText.Commons.Actions.Contexts;
 using static Dropbox.Api.Files.SearchMatchType;
+
 
 namespace CityWatch.RadioCheck.API
 {
@@ -206,7 +204,7 @@ namespace CityWatch.RadioCheck.API
                                                     SiteName = swScanItem.SiteName,
                                                     LocationId = swScanItem.LocationId,
                                                     LocationName = swScanItem.LocationName,
-                                                    LocationScan= swScanItem.LocationScan,
+                                                    LocationScan = swScanItem.LocationScan,
                                                     InspectionStartDatetimeLocal = Convert.ToDateTime(swScanItem.InspectionStartDatetimeLocal),
                                                     InspectionEndDatetimeLocal = Convert.ToDateTime(swScanItem.InspectionEndDatetimeLocal),
                                                     ClientSiteId = smartWandDetails.ClientSiteId,
@@ -258,14 +256,80 @@ namespace CityWatch.RadioCheck.API
                             }
 
 
+
+                            // Code to keep single history of last SW activity of Guard - Binoy 04-04-2024 - Start
+
+                            var newdata = _context.RadioChecksSmartWandScanResults
+                                .OrderBy (x => x.InspectionStartDatetimeLocal)
+                                .ToList();
+                            foreach(var newrecord in newdata)
+                            {
+                                // check if same record exists if not insert else update
+                                var existingrecord = _context.SmartWandScanGuardHistory.Where(x=> x.GuardId == newrecord.GuardId && x.ClientSiteId == newrecord.ClientSiteId).FirstOrDefault();
+                                if(existingrecord != null)
+                                {
+                                    if(newrecord.InspectionStartDatetimeLocal > existingrecord.InspectionStartDatetimeLocal)
+                                    {
+                                        // update existing record
+                                        // existingrecord.Id = newrecord.Id;
+                                        existingrecord.EmployeeId = newrecord.EmployeeId;
+                                        existingrecord.EmployeeName = newrecord.EmployeeName;
+                                        existingrecord.EmployeePhone = newrecord.EmployeePhone;
+                                        existingrecord.TemplateId = newrecord.TemplateId;
+                                        existingrecord.TemplateIdentificationNumber = newrecord.TemplateIdentificationNumber;
+                                        existingrecord.TemplateName = newrecord.TemplateName;
+                                        existingrecord.ClientId = newrecord.ClientId;
+                                        existingrecord.SiteId = newrecord.SiteId;
+                                        existingrecord.SiteName = newrecord.SiteName;
+                                        existingrecord.LocationId = newrecord.LocationId;
+                                        existingrecord.LocationName = newrecord.LocationName;
+                                        existingrecord.InspectionStartDatetimeLocal = newrecord.InspectionStartDatetimeLocal;
+                                        existingrecord.InspectionEndDatetimeLocal = newrecord.InspectionEndDatetimeLocal;
+                                        existingrecord.ClientSiteId = newrecord.ClientSiteId;
+                                        existingrecord.GuardId = newrecord.GuardId;
+                                        existingrecord.SmartWandId = newrecord.SmartWandId;
+                                        existingrecord.LocationScan = newrecord.LocationScan;
+                                        existingrecord.RecordLastUpdateTime = DateTime.Now;
+                                        _context.SmartWandScanGuardHistory.Update(existingrecord);
+                                        _context.SaveChanges();
+                                    }
+                                }
+                                else
+                                {
+                                    // Insert new record
+                                    SmartWandScanGuardHistory nwrecord = new SmartWandScanGuardHistory()
+                                    {
+                                        //Id = newrecord.Id,
+                                        EmployeeId = newrecord.EmployeeId,
+                                        EmployeeName = newrecord.EmployeeName,
+                                        EmployeePhone = newrecord.EmployeePhone,
+                                        TemplateId = newrecord.TemplateId,
+                                        TemplateIdentificationNumber = newrecord.TemplateIdentificationNumber,
+                                        TemplateName = newrecord.TemplateName,
+                                        ClientId = newrecord.ClientId,
+                                        SiteId = newrecord.SiteId,
+                                        SiteName = newrecord.SiteName,
+                                        LocationId = newrecord.LocationId,
+                                        LocationName = newrecord.LocationName,
+                                        InspectionStartDatetimeLocal = newrecord.InspectionStartDatetimeLocal,
+                                        InspectionEndDatetimeLocal = newrecord.InspectionEndDatetimeLocal,
+                                        ClientSiteId = newrecord.ClientSiteId,
+                                        GuardId = newrecord.GuardId,
+                                        SmartWandId = newrecord.SmartWandId,
+                                        LocationScan = newrecord.LocationScan,
+                                        RecordCreateTime = DateTime.Now
+                                    };
+
+                                    _context.SmartWandScanGuardHistory.Add(nwrecord);
+                                    _context.SaveChanges();
+                                }
+                            }
+
+                            // Code to keep single history of last SW activity of Guard - Binoy 04-04-2024 - End
                         }
 
-
                     }
-
                 }
-
-
 
                 return Ok("Data saved successfully");
             }

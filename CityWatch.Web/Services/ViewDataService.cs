@@ -3,15 +3,23 @@ using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Models;
+using DocumentFormat.OpenXml.Drawing.Diagrams;
 using DocumentFormat.OpenXml.Office.CustomUI;
+using DocumentFormat.OpenXml.Office2010.CustomUI;
 using DocumentFormat.OpenXml.Spreadsheet;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
+using Org.BouncyCastle.Asn1.Pkcs;
+using SMSGlobal.api;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Security.Policy;
+using static iText.Kernel.Pdf.Colorspace.PdfSpecialCs;
 
 namespace CityWatch.Web.Services
 {
@@ -43,6 +51,7 @@ namespace CityWatch.Web.Services
         List<SelectListItem> PSPFType { get; }
         List<SelectListItem> States { get; }
         List<SelectListItem> LicenseStates { get; }
+         List<SelectListItem> ProviderList { get; }
         List<SelectListItem> NotifiedBy { get; }
         List<SelectListItem> CallSign { get; }
         List<SelectListItem> ClientArea { get; }
@@ -101,7 +110,29 @@ namespace CityWatch.Web.Services
         IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistoryWithPersonName(string PersonName);
         IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistoryWithKeyNo(string KeyNo);
         string GetFeedbackTemplatesByTypeByColor(int type, int id);
+        List<FeedbackTemplate> GetFeedbackTemplateListByType(int type);
+        public IncidentReportPosition GetLoogbookdata(string IncidentName);
 
+        List<TrailerDeatilsViewModel> GetKeyVehicleTrailerNew(string truckRego);
+
+
+        List<SelectListItem> GetClientSitePocsVehicleLog(int[] clientSiteIds);
+
+
+        //p2-192 client email search-start
+        List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm, string searchTermtwo);
+        //p2-192 client email search-end
+
+        //p1-191 HR Files Task3-start
+        List<SelectListItem> GetHRGroups(bool withoutSelect = false);
+        List<SelectListItem> GetReferenceNoNumbers(bool withoutSelect = false);
+        List<SelectListItem> GetReferenceNoAlphabets(bool withoutSelect = false);
+        //p1-191 HR Files Task3-end
+        List<SelectListItem> GetLicenseTypes(bool withoutSelect = false);
+        //p1-202 site allocation-start
+        List<SelectListItem> GetClientAreas(IncidentReportField ir);
+
+        //p1-202 site allocation-end
 
     }
 
@@ -184,10 +215,19 @@ namespace CityWatch.Web.Services
                  positionFilter == OfficerPositionFilter.SecurityOnly && z.Name.Contains("Security")))
             {
                 items.Add(new SelectListItem(officerPosition.Name, officerPosition.Name));
+                
+
+
             }
 
             return items;
         }
+        //To get the logbook data in IncidentReport start
+        public IncidentReportPosition GetLoogbookdata(string IncidentName)
+        {
+            return _configDataProvider.GetIsLogbookData(IncidentName);
+        }
+        //To get the logbook data in IncidentReport stop
 
         public List<ClientSiteSmartWand> GetSmartWands(string siteName, int? guardId)
         {
@@ -226,6 +266,28 @@ namespace CityWatch.Web.Services
                 foreach (var item in licenseStates)
                 {
                     items.Add(new SelectListItem(item.Name, item.Name));
+                }
+                return items;
+            }
+        }
+       
+        public List<SelectListItem> ProviderList
+        {
+            get
+            {
+                var items = new List<SelectListItem>()
+                {
+                    new SelectListItem("Select", "", true)
+                };
+                var KVID = _configDataProvider.GetKVLogField();
+                var providerlist = _configDataProvider.GetProviderList(KVID.Id);
+                foreach (var item in providerlist)
+                {
+                    if (item.CompanyName!=null)
+                    {
+                        items.Add(new SelectListItem(item.CompanyName, item.CompanyName));
+                    }
+                   
                 }
                 return items;
             }
@@ -382,11 +444,17 @@ namespace CityWatch.Web.Services
 
             return items;
         }
+        public List<FeedbackTemplate> GetFeedbackTemplateListByType(int type)
+        {
+            var feedbackTemplates = _configDataProvider.GetFeedbackTemplates().Where(z => z.Type == type).ToList();   
+            return feedbackTemplates;
+        }
         public string GetFeedbackTemplateText(int id)
         {
             return _configDataProvider.GetFeedbackTemplates().SingleOrDefault(x => x.Id == id)?.Text;
         }
 
+       
         public List<object> GetAllUsersClientSiteAccess()
         {
             var results = new List<object>();
@@ -514,7 +582,7 @@ namespace CityWatch.Web.Services
 
         public DataTable PatrolDataToDataTable(List<DailyPatrolData> dailyPatrolData)
         {
-            var dt = new DataTable("Patrol Report");
+            var dt = new DataTable("IR Statistics");
             dt.Columns.Add("Day");
             dt.Columns.Add("Date");
             dt.Columns.Add("Control Room Job No.");
@@ -727,6 +795,14 @@ namespace CityWatch.Web.Services
         }
 
 
+        public List<TrailerDeatilsViewModel> GetKeyVehicleTrailerNew(string truckRego)
+        {
+            return _guardLogDataProvider.GetKeyVehicleLogProfileDetails(truckRego);
+
+        }
+
+
+
         public List<SelectListItem> VehicleRegos
         {
             get
@@ -756,8 +832,8 @@ namespace CityWatch.Web.Services
 
 
                 items.Add(new SelectListItem("POI", "POI"));
-                items.Add(new SelectListItem("BDM", "BDM"));
-                items.Add(new SelectListItem("Supplier", "Supplier"));
+                items.Add(new SelectListItem("CRM BDM", "BDM"));
+                items.Add(new SelectListItem("CRM Supplier", "Supplier"));
 
 
                 return items;
@@ -922,7 +998,15 @@ namespace CityWatch.Web.Services
             }
             return Enumerable.Empty<ClientSiteKey>();
         }
+        public List<SelectListItem> GetClientSitePocsVehicleLog(int[] clientSiteIds)
+        {
+            var sitePocs = new List<SelectListItem>();
 
+            sitePocs.AddRange(_guardSettingsDataProvider.GetClientSitePocs(clientSiteIds)
+                .Select(z => new SelectListItem(z.Name, z.Id.ToString())));
+
+            return sitePocs;
+        }
         public IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistory(string vehicleRego)
         {
             var kvlVisitorProfile = _guardLogDataProvider.GetKeyVehicleLogVisitorProfile(vehicleRego);
@@ -1036,6 +1120,23 @@ namespace CityWatch.Web.Services
 
             return items;
         }
+        public List<SelectListItem> GetAccessTypes1(bool withoutSelect = true)
+        {
+            var Access = _clientDataProvider.GetGuardAccess();
+            var items = new List<SelectListItem>();
+
+            if (!withoutSelect)
+            {
+                items.Add(new SelectListItem("Select", "", true));
+            }
+
+            foreach (var item in Access)
+            {
+                items.Add(new SelectListItem(item.AccessName, item.Id.ToString()));
+            }
+
+            return items;
+        }
         //}
         //code added for Guard Access Dropdown stop
         //public IEnumerable<KeyVehicleLogAuditHistory> GetKeyVehicleLogAuditHistory()
@@ -1128,5 +1229,127 @@ namespace CityWatch.Web.Services
 
             return st1;
         }
+        //p2-192 client email search-start
+        public List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm,string searchTermtwo)
+        {
+            var results = new List<ClientSite>();
+            var clientSites = _clientDataProvider.GetClientSites(typeId);
+            if (userId == null)
+                results = clientSites;
+            else
+            {
+                var allUserAccess = _userDataProvider.GetUserClientSiteAccess(userId);
+                var clientSiteIds = allUserAccess.Select(x => x.ClientSite.Id).Distinct().ToList();
+                results = clientSites.Where(x => clientSiteIds.Contains(x.Id)).ToList();
+            }
+
+            if (!string.IsNullOrEmpty(searchTerm))
+                results = results.Where(x => x.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                (!string.IsNullOrEmpty(x.Address) && x.Address.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))).ToList();
+            if (!string.IsNullOrEmpty(searchTermtwo))
+                results = results.Where(x => !string.IsNullOrEmpty(x.Emails) && x.Emails.Contains(searchTermtwo, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            return results;
+        }
+        //p2-192 client email search-end
+        //p1-191 HR Files Task 3-start
+        
+        public List<SelectListItem> GetHRGroups( bool withoutSelect = true)
+        {
+            var hrGroups = _guardDataProvider.GetHRGroups();
+            var items = new List<SelectListItem>();
+
+            //if (!withoutSelect)
+            //{
+                items.Add(new SelectListItem("Select", "", true));
+            //}
+
+            foreach (var item in hrGroups)
+            {
+                items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+            }
+
+            return items;
+        }
+        public List<SelectListItem> GetReferenceNoNumbers(bool withoutSelect = true)
+        {
+            var hrGroups = _guardDataProvider.GetReferenceNoNumbers();
+            var items = new List<SelectListItem>();
+
+            //if (!withoutSelect)
+            //{
+                items.Add(new SelectListItem("Select", "", true));
+            //}
+
+            foreach (var item in hrGroups)
+            {
+                items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+            }
+
+            return items;
+        }
+        public List<SelectListItem> GetReferenceNoAlphabets(bool withoutSelect = true)
+        {
+            var hrGroups = _guardDataProvider.GetReferenceNoAlphabets();
+            var items = new List<SelectListItem>();
+
+            //if (!withoutSelect)
+            //{
+                items.Add(new SelectListItem("Select", "", true));
+           // }
+
+            foreach (var item in hrGroups)
+            {
+                items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+            }
+
+            return items;
+        }
+        //p1-191 HR Files Task 3-end
+        public List<SelectListItem> GetLicenseTypes(bool withoutSelect = true)
+        {
+            var hrGroups = _guardDataProvider.GetLicenseTypes().Where(x=>x.IsDeleted==false);
+            var items = new List<SelectListItem>();
+
+            //if (!withoutSelect)
+            //{
+            items.Add(new SelectListItem("Select", "", true));
+            //}
+
+            foreach (var item in hrGroups)
+            {
+                items.Add(new SelectListItem(item.Name, item.Id.ToString()));
+            }
+
+            return items;
+        }
+        //p1-202 site allocation-start
+        public List<SelectListItem> GetClientAreas(IncidentReportField ir)
+        {
+
+            var items = new List<SelectListItem>() { new SelectListItem("Select", "", true) };
+            var clientArea = _configDataProvider.GetReportFieldsByType(ReportFieldType.ClientArea);
+            foreach (var item in clientArea)
+            {
+                if (!String.IsNullOrEmpty(item.ClientSiteIds))
+                {
+                    foreach (var clientsiteid in item.ClientSiteIdsNew)
+                    {
+                        if (clientsiteid.Equals(Convert.ToInt16(ir.ClientSiteIds)))
+                        {
+                            items.Add(new SelectListItem(item.Name, item.Name));
+                        }
+                    }
+                }
+                else
+                {
+                    items.Add(new SelectListItem(item.Name, item.Name));
+                }
+            }
+            return items.ToList();
+
+        }
+
+        //p1-202 site allocation-end
     }
 }
