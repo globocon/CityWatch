@@ -1934,7 +1934,7 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
 
     $('#txtNotificationsCompanyId').val(id);
     $('#chkLB').prop('checked', true);
-    $('#chkSiteEmail').prop('checked', true);
+    $('#chkSiteEmail').prop('checked', false);
     $('#chkSMSPersonal').prop('checked', false);
     $('#chkSMSSmartWand').prop('checked', false); 
     $('#chkNationality').prop('checked', false);
@@ -1943,6 +1943,7 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     $('#chkClientType').prop('checked', false);
     $('#chkSMSPersonalGlobal').prop('checked', false);
     $('#chkSMSSmartWandGlobal').prop('checked', false);
+    $('#chkGlobalPersonalEmail').prop('checked', false);
     $('#txtGlobalNotificationMessage').val('');
     $('#State1').prop('disabled', 'disabled');
     $('#State1').val('ACT');
@@ -2000,6 +2001,9 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
         const clientSiteControl = $('#dglClientSiteIdActionList');
         clientSiteControl.html('');
     }
+    /*p4-79 menu corrections-start*/
+    $('#chkPersonalEmail').prop('checked', false);
+    /*p4-79 menu corrections-end*/
 
 });
 
@@ -2016,6 +2020,7 @@ $('#btnSendPushLotificationMessage').on('click', function () {
     $(this).prop('disabled', true);
     const checkedLB = $('#chkLB').is(':checked');
     const checkedSiteEmail = $('#chkSiteEmail').is(':checked');
+    const checkedPersonalEmail = $('#chkPersonalEmail').is(':checked');
     const checkedSMSPersonal = $('#chkSMSPersonal').is(':checked');
     const checkedSMSSmartWand = $('#chkSMSSmartWand').is(':checked');
     var clientSiteId = $('#txtNotificationsCompanyId').val();
@@ -2026,7 +2031,7 @@ $('#btnSendPushLotificationMessage').on('click', function () {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
         $(this).prop('disabled', false);
     }
-    else if (checkedLB == false && checkedSiteEmail == false && checkedSMSPersonal == false && checkedSMSSmartWand == false) {
+    else if (checkedLB == false && checkedSiteEmail == false && checkedSMSPersonal == false && checkedSMSSmartWand == false && checkedPersonalEmail == false) {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select any one of the transfer options ');
         $(this).prop('disabled', false);
     }
@@ -2048,7 +2053,8 @@ $('#btnSendPushLotificationMessage').on('click', function () {
                 checkedSMSSmartWand: checkedSMSSmartWand,
                 Notifications: Notifications,
                 Subject: Subject,
-                tmzdata: tmzdata
+                tmzdata: tmzdata,
+                checkedPersonalEmail: checkedPersonalEmail
             },
             dataType: 'json',
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -2121,12 +2127,12 @@ $('#btnSendGlabalNotificationMessage').on('click', function () {
     var ClientType = $('#dglClientType').val();
     const chkClientType = $('#chkClientType').is(':checked');
     const chkNationality = $('#chkNationality').is(':checked');
-
+    const chkGlobalPersonalEmail = $('#chkGlobalPersonalEmail').is(':checked');
     if (Notifications === '') {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please enter a Message to send ');
         $(this).prop('disabled', false);
     }
-    else if (checkedState == false && chkClientType == false && chkClientType == false && checkedSMSPersonal == false && checkedSMSSmartWand == false && chkNationality == false) {
+    else if (checkedState == false && chkClientType == false && chkClientType == false && checkedSMSPersonal == false && checkedSMSSmartWand == false && chkNationality == false && chkGlobalPersonalEmail == false) {
         displayGuardValidationSummary('PushNotificationsValidationSummary', 'Please select any one of the transfer options ');
         $(this).prop('disabled', false);
     }
@@ -2154,6 +2160,7 @@ $('#btnSendGlabalNotificationMessage').on('click', function () {
                 chkNationality: chkNationality,
                 checkedSMSPersonal: checkedSMSPersonal,
                 checkedSMSSmartWand: checkedSMSSmartWand,
+                chkGlobalPersonalEmail: chkGlobalPersonalEmail,
                 clientSiteId: clientSiteId,
                 tmzdata: tmzdata
             },
@@ -2411,6 +2418,7 @@ $('#chkNationality').on('change', function () {
         $('#chkClientType').prop('checked', false);
         $('#chkSMSPersonalGlobal').prop('checked', false);
         $('#chkSMSSmartWandGlobal').prop('checked', false);
+        $('#chkGlobalPersonalEmail').prop('checked', false);
         $('#State1').prop('disabled', 'disabled');
         $('#State1').val('ACT');
         $('#dglClientType').val('');
@@ -2427,6 +2435,7 @@ $('#chkSiteState').change(function () {
         $('#chkClientType').prop('checked', false);
         $('#chkSMSPersonalGlobal').prop('checked', false);
         $('#chkSMSSmartWandGlobal').prop('checked', false);
+        $('#chkGlobalPersonalEmail').prop('checked', false);
         $('#State1').val('ACT');
         $('#dglClientType').val('');
         $('#dglClientSiteId').val('');
@@ -2537,6 +2546,7 @@ $('#chkClientType').change(function () {
         $('#chkSiteState').prop('checked', false);
         $('#chkSMSPersonalGlobal').prop('checked', false);
         $('#chkSMSSmartWandGlobal').prop('checked', false);
+        $('#chkGlobalPersonalEmail').prop('checked', false);
         //$('#dglClientType option').removeAttr('disabled');
         $('#dglClientType').val('');
         $('#dglClientType').multiselect("enable");

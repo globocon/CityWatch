@@ -439,6 +439,7 @@
                                 <div class="row m-0">
                                     <div class="col-md-12">
                                         <form>
+                                            <input type="hidden" id="txtNotificationsGuardId" />
                                             <input type="hidden" id="txtNotificationsCompanyId" />
                                             <div class="form-group row mb-1">
                                                 <label for="gs_site_email" class="col-md-4 col-form-label">Broadcast Mode C4i : </label>
@@ -451,9 +452,17 @@
                                             <div class="form-group row">
                                                 <label for="gs_land_line" class="col-md-4 col-form-label"></label>
                                                 <div class="col-md-6">
-                                                    <input type="checkbox" id="chkSiteEmail" checked>
+                                                    <input type="checkbox" id="chkSiteEmail" >
                                                     <label class="col-form-label">Site Email</label>
                                                     <input type="hidden" id="IsSiteEmail">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_land_line" class="col-md-4 col-form-label"></label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkPersonalEmail">
+                                                    <label class="col-form-label">Personal Email</label>
+                                                    <input type="hidden" id="IsPersonalEmail">
                                                 </div>
                                             </div>
                                             <div class="form-group row mb-1">
@@ -495,6 +504,7 @@
                                 <div class="row m-0">
                                     <div class="col-md-12">
                                         <form>
+                                            <input type="hidden" id="txtNotificationsGuardId" />
                                             <input type="hidden" id="txtNotificationsCompanyId" />
                                             <div class="row">
                                                 <label for="gs_site_email" class="col-md-4 col-form-label">Broadcast C4i Grouping : </label>
@@ -539,6 +549,14 @@
                                                     <label class="mx-1" for="dglClientSiteId">Client Site</label>
                                                     <select class="form-control mx-1" id="dglClientSiteId" multiple="multiple" style="width:209px" disabled></select>
 
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="gs_land_line" class="col-md-4 col-form-label"></label>
+                                                <div class="col-md-6">
+                                                    <input type="checkbox" id="chkGlobalPersonalEmail">
+                                                    <label class="col-form-label">Personal Email</label>
+                                                    <input type="hidden" id="IsPersonalEmail">
                                                 </div>
                                             </div>
                                             <div class="form-group row">

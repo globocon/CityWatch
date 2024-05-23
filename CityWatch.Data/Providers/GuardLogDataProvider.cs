@@ -3,6 +3,7 @@ using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using Dropbox.Api.Users;
 using iText.Commons.Actions.Contexts;
+using iText.Kernel.Crypto.Securityhandler;
 using iText.Layout.Element;
 using iText.StyledXmlParser.Css.Resolve.Shorthand.Impl;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -243,7 +244,9 @@ namespace CityWatch.Data.Providers
         void DeleteLicensesTypes(int id);
         //p1-191 hr files task 3-end
 
-
+        //P4-79 MENU CORRECTIONS START
+        List<GuardLogin> GetGuardLogs(int clientSiteId);
+        //P4-79 MENU CORRECTIONS END
 
         List<string> GetTrailerRegosForKVL(string regoStart = null);
 
@@ -4075,6 +4078,33 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
         //p1-191 hr files task 3-end
+        //P4-79 MENU CORRECTIONS START
+        public List<GuardLogin> GetGuardLogs(int clientSiteId)
+        {
+
+
+
+            //return _context.GuardLogs
+            //    .Where(z => z.ClientSiteLogBook.ClientSiteId == clientSiteId && z.ClientSiteLogBook.Type == LogBookType.DailyGuardLog
+            //            && z.ClientSiteLogBook.Date >= logFromDate && z.ClientSiteLogBook.Date <= logToDate &&
+            //            (!excludeSystemLogs || (excludeSystemLogs && (!z.IsSystemEntry || z.IrEntryType.HasValue))))
+            //    .Include(z => z.GuardLogin.Guard)
+            //    .OrderBy(z => z.EventDateTimeLocal.HasValue? z.EventDateTimeLocal : z.EventDateTime) // p6#73 timezone bug - Modified by binoy 29-01-2024
+            //    .ThenBy(z => z.Id)
+            //    //.OrderBy(z => z.Id)
+            //    //.ThenBy(z => z.EventDateTime)
+            //    .ToList();
+
+            var data = _context.GuardLogins
+               .Where(z => z.ClientSiteId == clientSiteId )
+               .Include(z=>z.Guard)
+               .ToList();
+
+           
+
+            return data;
+        }
+        //P4-79 MENU CORRECTIONS END
 
     }
 
