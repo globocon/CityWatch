@@ -1621,6 +1621,7 @@ $('#btnHRDetails').on('click', function () {
         $('#GuardLicense_GuardId1').val(response[0].id);
         $('#GuardCompliance_GuardId1').val(response[0].id);
         $('#GuardComplianceandlicense_GuardId').val(response[0].id);
+        $('#GuardComplianceandlicense_LicenseNo').val(response[0].securityNo);
 
         // ;
         var selectedValues = [];
@@ -2051,7 +2052,7 @@ let gridGuardLicensesAndLicenceKey = $('#tbl_guard_licensesAndComplianceKey').Da
         data: 'fileName',
         render: function (data, type, row, meta) {
             if (data)
-                return '<a href="/Uploads/Guards/License/' + row.fileUrl + '" target="_blank">' + data + '</a>';
+                return '<a href="/Uploads/Guards/License/' + row.licenseNo + '/' + row.fileUrl + '" target="_blank">' + data + '</a>';
             return '-';
         }
     }],

@@ -51,6 +51,8 @@ namespace CityWatch.Data.Models
         public int Reminder1 { get; set; }
 
         public int Reminder2 { get; set; }
+        [NotMapped]
+        public string LicenseNo { get; set; }
 
     }
 }

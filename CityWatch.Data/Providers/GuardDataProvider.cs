@@ -32,6 +32,8 @@ namespace CityWatch.Data.Providers
         void DeleteGuardLicense(int id);
         List<GuardCompliance> GetAllGuardCompliances();
         List<GuardCompliance> GetGuardCompliances(int guardId);
+        HrSettings GetHRRefernceNo(int HRid, string Description);
+        List<string> GetHRDesc(int HRid);
         GuardCompliance GetGuardCompliance(int id);
         void SaveGuardCompliance(GuardCompliance guardCompliance);
         void SaveGuardComplianceandlicanse(GuardComplianceAndLicense guardComplianceandlicense);
@@ -449,7 +451,8 @@ namespace CityWatch.Data.Providers
                 GuardId = x.GuardId,
                 Description = x.Description,
                 HrGroup = x.HrGroup,
-                CurrentDateTime=x.CurrentDateTime
+                CurrentDateTime = x.CurrentDateTime,
+                LicenseNo = x.Guard.SecurityNo
             })
             .ToList();
 
@@ -553,7 +556,24 @@ namespace CityWatch.Data.Providers
                 .Where(x => x.GuardId == guardId && x.ExpiryDate != null)
                 .OrderBy(x => x.ReferenceNo).ToList();
         }
+        public List<string> GetHRDesc(int HRid)
+        {
+            var descriptions = _context.HrSettings
+    .Where(x => x.HRGroupId == HRid)
+    .Select(x => x.Description)
+    .ToList();
+            return descriptions;
+        }
+        public HrSettings GetHRRefernceNo(int HRid,string Description)
+        {
+            
+            return _context.HrSettings.Include(z => z.HRGroups)
+                .Include(z => z.ReferenceNoNumbers)
+                .Include(z => z.ReferenceNoAlphabets)
+                .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
+                ThenBy(x => x.ReferenceNoAlphabets.Name).Where(z => z.HRGroups.Id == HRid && z.Description== Description).FirstOrDefault();
 
+        }
         public List<GuardCompliance> GetGuardCompliancesList(int[] guardIds)
         {
             return _context.GuardCompliances
