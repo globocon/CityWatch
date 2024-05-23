@@ -2663,14 +2663,18 @@
                 columnData.push({ renderer: renderCustomFieldLogManagement, align: 'center', width: 60 });
 
                 $.each(data, function (i, d) {
-                    let colAlign = 'right', colEditor = true;
+                    let colAlign = 'center', colEditor = true, colCssClass = 'text-center';
                     let colWidth = 80;
+                    console.log(d.key);
                     if (d.key === 'timeSlot') {
                         colAlign = 'center';
                         colEditor = false;
                         colWidth = 60;
                     }
-                    columnData.push({ field: d.key, title: d.value, align: colAlign, editor: colEditor, width: colWidth });
+                    else if (d.key === 'Romeo Plate + Initial' || d.key === 'Missed Patrols') {
+                        colCssClass = 'text-right';
+                    } 
+                    columnData.push({ field: d.key, title: d.value, align: colAlign, editor: colEditor, width: colWidth, cssClass: colCssClass });
                 });
 
                 gridCustomFieldLogs = $('#custom_field_log').grid({
@@ -2713,7 +2717,11 @@
 
         gridCustomFieldLogs.on('dataBound', function (e, records, totalRecords) {
             $(this).hide();
-            if (totalRecords > 0) $(this).show();
+            $('#card_custom_field_log').addClass('d-none');
+            if (totalRecords > 0) {
+                $(this).show();
+                $('#card_custom_field_log').removeClass('d-none');
+            } 
         });
     }
 
@@ -2808,12 +2816,14 @@
             { field: 'id', title: 'Id', hidden: true },
             { field: 'patrolCarId', title: 'PatrolCarId', hidden: true, renderer: function (value, record) { return record.PatrolCarId; } },
             { field: 'clientSiteLogBookId', title: 'ClientSiteLogBookId', hidden: true, renderer: function (value, record) { return record.clientSiteLogBookId; } },
-            { field: 'patrolCar', title: 'Patrol Cars', editor: false, renderer: function (value, record) { return renderPatrolCar(value, record); }, width: 75 },
-            { field: 'mileage', title: 'Kms', align: 'right', editor: true, renderer: function (value, record) { return record.mileageText; }, width: 15 },
+            { field: 'patrolCar', title: 'Patrol Cars', align: 'center', cssClass: "text-left", editor: false, renderer: function (value, record) { return renderPatrolCar(value, record); }, width: 75 },
+            { field: 'mileage', title: 'Kms', align: 'center', cssClass: "text-right", editor: true, renderer: function (value, record) { return record.mileageText; }, width: 15 },
             { renderer: renderPatrolCarLogManagement, align: 'center', width: 10 }
         ],
-        initialized: function (e) {
-            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        initialized: function (e) {            
+            var html = '<i class="fa fa-cogs" aria-hidden="true"></i>'
+            $(e.target).find('thead tr th:last').html(html);
+            
         }
     });
 
@@ -2839,7 +2849,11 @@
 
         gridSitePatrolCarLogs.on('dataBound', function (e, records, totalRecords) {
             $(this).hide();
-            if (totalRecords > 0) $(this).show();
+            $('#card_patrol_car').addClass('d-none');
+            if (totalRecords > 0) {
+                $(this).show();
+                $('#card_patrol_car').removeClass('d-none');
+            } 
         });
     }
 
