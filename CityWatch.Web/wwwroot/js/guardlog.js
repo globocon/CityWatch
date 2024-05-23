@@ -2541,6 +2541,7 @@
         $('#GuardLicense_GuardId').val(data.id);
         $('#GuardCompliance_GuardId').val(data.id);
         $('#GuardComplianceandlicense_GuardId').val(data.id);
+        $('#GuardComplianceandlicense_LicenseNo').val(data.securityNo);
 
         // ;
         var selectedValues = [];
@@ -2956,7 +2957,7 @@
             data: 'fileName',
             render: function (data, type, row, meta) {
                 if (data)
-                    return '<a href="/Uploads/Guards/License/' + row.fileUrl + '" target="_blank">' + data + '</a>';
+                    return '<a href="/Uploads/Guards/License/' + row.licenseNo +'/' + row.fileUrl + '" target="_blank">' + data + '</a>';
                 return '-';
             }
         }],
@@ -2977,34 +2978,27 @@
     });
     $('#HRGroup').on('change', function () {
 
+        var Descriptionval = $('#HRGroup').val();
+        const token = $('input[name="__RequestVerificationToken"]').val();
         const ulClients = $('#Description').siblings('ul.es-list');
         ulClients.html('');
-
-        var Descriptionval = $('#HRGroup').val();
-        if (Descriptionval == 1) {
-            //$('#Description').val('CV,LICENSES,C4i Training');
-            var Desc1Val = 'CV,LICENSES,C4i Training';
-            var values = Desc1Val.split(',');
-            values.forEach(function (value) {
-                ulClients.append('<li class="es-visible" value="' + value + '">' + value + '</li>');
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=HRDescription',
+            type: 'GET',
+            data: {
+                HRid: Descriptionval
+            },
+            headers: { 'RequestVerificationToken': token }
+        }).done(function (DescVal) {
+            DescVal.forEach(function (DescVals) {
+                if (DescVals != null) {
+                    ulClients.append('<li class="es-visible" value="' + DescVals + '">' + DescVals + '</li>');
+                }
+               
             });
-        }
-        else if (Descriptionval == 2) {
-            var Desc2Val = 'Client soecialist SPOs';
-            ulClients.append('<li class="es-visible" value="' + Desc2Val + '">' + Desc2Val + '</li>');
-        }
-        else if (Descriptionval == 3) {
-            var Desc3Val = 'LIR,WARDEN,COXSWAIN';
-            var Desc3values = Desc3Val.split(',');
-            Desc3values.forEach(function (Desc3value) {
-                ulClients.append('<li class="es-visible" value="' + Desc3value + '">' + Desc3value + '</li>');
-            });
-        }
-        else {
-            $('#Description').val('');
-        }
+        })
+    
 
-        /*  ulClients.append('<li class="es-visible" value="' + site.value + '">' + site.text + '</li>');*/
     });
 
      //To get the data in description dropdown stop
@@ -3401,27 +3395,36 @@
             alert('Please select a valid file type');
             return false;
         }
-
+        var Desc = $('#Description').val();
         const formData = new FormData();
         formData.append("file", file);
         formData.append('guardId', $('#GuardComplianceandlicense_GuardId').val());
+        formData.append('LicenseNo', $('#GuardComplianceandlicense_LicenseNo').val());
+        formData.append('Description', $('#Description').val());
+        formData.append('HRID', $('#HRGroup').val());
+        if (Desc=='') {
 
-        $.ajax({
-            type: 'POST',
-            url: '/Admin/GuardSettings?handler=UploadGuardAttachment',
-            data: formData,
-            cache: false,
-            contentType: false,
-            processData: false,
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (data) {
-            $('#GuardComplianceandlicense_FileName1').val(data.fileName);
-            $('#guardComplianceandlicense_fileName1').text(data.fileName ? data.fileName : 'None');
-            $('#GuardComplianceandlicense_CurrentDateTime').val(data.currentDate);
-        }).fail(function () {
-        }).always(function () {
-            $('#upload_complianceandlicanse_file').val('');
-        });
+            (confirm('Please select Description'))
+        }
+        else {
+
+            $.ajax({
+                type: 'POST',
+                url: '/Admin/GuardSettings?handler=UploadGuardAttachment',
+                data: formData,
+                cache: false,
+                contentType: false,
+                processData: false,
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (data) {
+                $('#GuardComplianceandlicense_FileName1').val(data.fileName);
+                $('#guardComplianceandlicense_fileName1').text(data.fileName ? data.fileName : 'None');
+                $('#GuardComplianceandlicense_CurrentDateTime').val(data.currentDate);
+            }).fail(function () {
+            }).always(function () {
+                $('#upload_complianceandlicanse_file').val('');
+            });
+        }
     });
 
 

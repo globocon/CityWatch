@@ -9,6 +9,7 @@
 @inject IViewDataService viewDataService
 @inject IGuardLogDataProvider guardmodel
 @inject IConfiguration Configuration
+@inject IViewDataService viewDataServiceNew
 @model CityWatch.Web.Pages.Guard.DailyLogModel
 @{
     ViewData["Title"] = "CityWatch Security | Guard Daily Log";
@@ -704,6 +705,7 @@
                     <input type="hidden" id="GuardComplianceandlicense_Id" name="GuardComplianceAndLicense.Id" />
                     <input type="hidden" id="GuardComplianceandlicense_GuardId" name="GuardComplianceAndLicense.GuardId" />
                     <input type="hidden" id="GuardComplianceandlicense_CurrentDateTime" name="GuardComplianceAndLicense.CurrentDateTime" />
+                    <input type="hidden" id="GuardComplianceandlicense_LicenseNo" name="GuardComplianceAndLicense.LicenseNo" />
                     <div class="form-row" style="height:363px;">
                         <p style="color:black" class="mb-1">
                             The HR database allows uploads of compliance and license documents based on three groups.
@@ -717,11 +719,11 @@
                         <div class="row pt-2">
                             <div class="form-group col-md-5">
                                 <label class="form-label">HR Group</label>
-                                <select class="form-control" id="HRGroup" name="GuardComplianceAndLicense.HrGroup" asp-items="@Html.GetEnumSelectList<HrGroup>()">
-                                    <option selected="selected" value="">Select</option>
+                                <select class="form-control" id="HRGroup" name="GuardComplianceAndLicense.HrGroup" asp-items="@viewDataServiceNew.GetHRGroups( true)">
+                                   @*  <option selected="selected" value="">Select</option> *@
                                 </select>
                             </div>
-                            <div class="form-group col-md-7">
+                            <div class="form-group col-md-7" style="padding-left:0px">
                                 <label class="form-label" id="DescLabel">Description</label>
 
                                 <select name="GuardComplianceAndLicense.Description" id="Description" class="form-control" style="width:287px"></select>
