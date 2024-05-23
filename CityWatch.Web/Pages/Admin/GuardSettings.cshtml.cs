@@ -189,10 +189,10 @@ namespace CityWatch.Web.Pages.Admin
         //    return new JsonResult(new { success, message });
         //}
 
-        public JsonResult OnGetSmartWandSettings(int clientSiteId)
-        {
-            return new JsonResult(_clientSiteWandDataProvider.GetClientSiteSmartWands().Where(z => z.ClientSiteId == clientSiteId).ToList());
-        }
+        //public JsonResult OnGetSmartWandSettings(int clientSiteId)
+        //{
+        //    return new JsonResult(_clientSiteWandDataProvider.GetClientSiteSmartWands().Where(z => z.ClientSiteId == clientSiteId).ToList());
+        //}
 
         public JsonResult OnPostSmartWandSettings(ClientSiteSmartWand record)
         {

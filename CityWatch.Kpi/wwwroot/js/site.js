@@ -968,6 +968,8 @@ $(function () {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
+  
+   
 
     /*code added for search client start */
     $('#search_sites_settings').on('keyup', function (e) {
@@ -998,6 +1000,13 @@ $(function () {
         $('#div_site_settings').html('');
         const button = $(event.relatedTarget);
         $('#client_site_name').text(button.data('cs-name'))
+
+        $('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + button.data('cs-id'));
+        // gritdSmartWands.ajax.reload();
+        //gritdSmartWands.load();
+      
+        //gritdSmartWands.reload();
+
        // $('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + button.data('cs-id'));
 
       
@@ -1015,14 +1024,66 @@ $(function () {
        
         
         
-       
+
     });
-
+    
    
-      
-    
 
-    
+
+    gritdSmartWands = $('#div_site_settings table').find('#cs-smart-wands').grid({
+        dataSource: '/Admin/Settings?handler=SmartWandSettings',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        inlineEditing: { mode: 'command' },
+        columns: [
+            { width: 250, field: 'smartWandId', title: 'Smart Wand Id', editor: true },
+            { width: 250, field: 'phoneNumber', title: 'Number', editor: true },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+   
+   
+    if (gritdSmartWands) {
+        gritdSmartWands.on('rowDataChanged', function (e, id, record) {
+            const data = $.extend(true, {}, record);
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '/Admin/Settings?handler=SmartWandSettings',
+                data: { record: data },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function () {
+                gritdSmartWands.reload({ clientSiteId: $('#gl_client_site_id').val() });
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isSmartWandAdding)
+                    isSmartWandAdding = false;
+            });
+        });
+
+        gritdSmartWands.on('rowRemoving', function (e, id, record) {
+            if (confirm('Are you sure want to delete this smart wand details?')) {
+                const token = $('input[name="__RequestVerificationToken"]').val();
+                $.ajax({
+                    url: '/Admin/Settings?handler=DeleteSmartWandSettings',
+                    data: { id: record },
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': token },
+                }).done(function () {
+                    gritdSmartWands.reload({ clientSiteId: $('#gl_client_site_id').val() });
+                }).fail(function () {
+                    console.log('error');
+                }).always(function () {
+                    if (isSmartWandAdding)
+                        isSmartWandAdding = false;
+                });
+            }
+        });
+    }
 
 
     $('#div_site_settings').on('change', '.patrol-frequency', function () {
@@ -1646,7 +1707,6 @@ $(function () {
      
 
 
-
 });
 
 
@@ -1716,3 +1776,17 @@ $('#div_site_settings').on('click','#btnSaveGuardSiteSettingsnew', function () {
     });
 });
 //menu change 04-03-2024 end
+//menu change 06-03-2024 start
+          
+
+    let isSmartWandAdding = false;
+    $('#add_smart_wand').on('click', function () {
+
+        if (isSmartWandAdding) {
+            alert('Unsaved changes in the grid. Refresh the page');
+        } else {
+            isSmartWandAdding = true;
+            gritdSmartWands.addRow({ 'id': -1, 'smartWandId': '', phoneNumber: '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
+        }
+    });
+    //menu change 06-03-2024 start
