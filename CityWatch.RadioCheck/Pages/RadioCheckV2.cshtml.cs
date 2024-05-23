@@ -453,16 +453,17 @@ namespace CityWatch.Web.Pages.Radio
                 if (checkedPersonalEmail == true)
                 {
 
-                    var guardEmails = _guardLogDataProvider.GetGuardLogs(clientSiteId);
+                    var guardEmails = _guardLogDataProvider.GetGuardLogs(clientSiteId).Select(x=>x.Guard.Email);
                     string smsSiteEmails = null;
-                    foreach (var item in guardEmails)
+                    var guardEmailsnew = guardEmails.Distinct().ToList();
+                    foreach (var item in guardEmailsnew)
                     {
-                        if (item.Guard.Email != null)
+                        if (item != null)
                         {
                             if (smsSiteEmails == null)
-                                smsSiteEmails = item.Guard.Email;
+                                smsSiteEmails = item;
                             else
-                                smsSiteEmails = smsSiteEmails + ',' + item.Guard.Email;
+                                smsSiteEmails = smsSiteEmails + ',' + item;
 
                         }
                         //else
@@ -664,18 +665,20 @@ namespace CityWatch.Web.Pages.Radio
                         string smsSiteEmails = null;
                         foreach (var item in clientSitesState)
                         {
-                            var guardEmails = _guardLogDataProvider.GetGuardLogs(item.Id);
-                        
-                        
-                       
-                        foreach (var item2 in guardEmails)
+                            var guardEmails = _guardLogDataProvider.GetGuardLogs(item.Id).Select(x => x.Guard.Email);
+
+                            
+                            var guardEmailsnew = guardEmails.Distinct().ToList();
+
+
+                            foreach (var item2 in guardEmailsnew)
                         {
-                            if (item2.Guard.Email != null)
+                            if (item2 != null)
                             {
                                 if (smsSiteEmails == null)
-                                    smsSiteEmails = item2.Guard.Email;
+                                    smsSiteEmails = item2;
                                 else
-                                    smsSiteEmails = smsSiteEmails + ',' + item2.Guard.Email;
+                                    smsSiteEmails = smsSiteEmails + ',' + item2;
 
                             }
                             //else
@@ -798,18 +801,21 @@ namespace CityWatch.Web.Pages.Radio
                             string smsSiteEmails = null;
                             foreach (var item in clientSitesClientType)
                             {
-                                var guardEmails = _guardLogDataProvider.GetGuardLogs(item.Id);
+                                var guardEmails = _guardLogDataProvider.GetGuardLogs(item.Id).Select(x => x.Guard.Email);
+
+                                var guardEmailsnew = guardEmails.Distinct().ToList();
 
 
 
-                                foreach (var item2 in guardEmails)
+
+                                foreach (var item2 in guardEmailsnew)
                                 {
-                                    if (item2.Guard.Email != null)
+                                    if (item2 != null)
                                     {
                                         if (smsSiteEmails == null)
-                                            smsSiteEmails = item2.Guard.Email;
+                                            smsSiteEmails = item2;
                                         else
-                                            smsSiteEmails = smsSiteEmails + ',' + item2.Guard.Email;
+                                            smsSiteEmails = smsSiteEmails + ',' + item2;
 
                                     }
                                     //else
@@ -929,18 +935,21 @@ namespace CityWatch.Web.Pages.Radio
                             string smsSiteEmails = null;
                             foreach (var item in clientSitesClientType)
                             {
-                                var guardEmails = _guardLogDataProvider.GetGuardLogs(item.Id);
+                                var guardEmails = _guardLogDataProvider.GetGuardLogs(item.Id).Select(x => x.Guard.Email);
+
+                                var guardEmailsnew = guardEmails.Distinct().ToList();
 
 
 
-                                foreach (var item2 in guardEmails)
+
+                                foreach (var item2 in guardEmailsnew)
                                 {
-                                    if (item2.Guard.Email != null)
+                                    if (item2 != null)
                                     {
                                         if (smsSiteEmails == null)
-                                            smsSiteEmails = item2.Guard.Email;
+                                            smsSiteEmails = item2;
                                         else
-                                            smsSiteEmails = smsSiteEmails + ',' + item2.Guard.Email;
+                                            smsSiteEmails = smsSiteEmails + ',' + item2;
 
                                     }
                                     //else
@@ -1062,18 +1071,21 @@ namespace CityWatch.Web.Pages.Radio
                         string smsSiteEmails = null;
                         foreach (var item in clientsiteIDNationality)
                         {
-                            var guardEmails = _guardLogDataProvider.GetGuardLogs(item.Id);
+                            var guardEmails = _guardLogDataProvider.GetGuardLogs(item.Id).Select(x => x.Guard.Email);
+
+                            var guardEmailsnew = guardEmails.Distinct().ToList();
 
 
 
-                            foreach (var item2 in guardEmails)
+
+                            foreach (var item2 in guardEmailsnew)
                             {
-                                if (item2.Guard.Email != null)
+                                if (item2 != null)
                                 {
                                     if (smsSiteEmails == null)
-                                        smsSiteEmails = item2.Guard.Email;
+                                        smsSiteEmails = item2;
                                     else
-                                        smsSiteEmails = smsSiteEmails + ',' + item2.Guard.Email;
+                                        smsSiteEmails = smsSiteEmails + ',' + item2;
 
                                 }
                                 //else
