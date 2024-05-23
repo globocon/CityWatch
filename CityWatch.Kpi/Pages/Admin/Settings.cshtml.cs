@@ -417,6 +417,8 @@ namespace CityWatch.Kpi.Pages.Admin
                 var kpiSendSchedule = KpiSendScheduleViewModel.ToDataModel(kpiSendScheduleViewModel);
                 if (kpiSendSchedule.Id == 0)
                     kpiSendSchedule.NextRunOn = KpiSendScheduleRunOnCalculator.GetNextRunOn(kpiSendSchedule);
+                else
+                    kpiSendSchedule.NextRunOn = KpiSendScheduleRunOnCalculator.GetNextRunOnUpdate(kpiSendSchedule);
                 _kpiSchedulesDataProvider.SaveSendSchedule(kpiSendSchedule, true);
             }
             catch (Exception ex)
