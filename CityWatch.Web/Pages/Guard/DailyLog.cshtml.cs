@@ -313,16 +313,22 @@ namespace CityWatch.Web.Pages.Guard
                         ClientSiteRadioChecksActivity.GuardLogoutTime = DateTime.Now;
                         _guardLogDataProvider.UpdateRadioChecklistLogOffEntry(ClientSiteRadioChecksActivity);
                         /* Update Radio check status logOff*/
-                        _guardLogDataProvider.SaveClientSiteRadioCheckStatusFromlogBook(new ClientSiteRadioCheck()
-                        {
-                            ClientSiteId = ClientSiteRadioChecksActivity.ClientSiteId,
-                            GuardId = ClientSiteRadioChecksActivity.GuardId,
-                            Status = "Off Duty",
-                            RadioCheckStatusId = 1,
-                            CheckedAt = DateTime.Now,
-                            Active = true
-                        });
+                       
                     }
+                }
+
+                if(guardlogins!=null)
+                {
+                    _guardLogDataProvider.SaveClientSiteRadioCheckStatusFromlogBookNewUpdate(new ClientSiteRadioCheck()
+                    {
+                        ClientSiteId = guardlogins.FirstOrDefault().ClientSiteId,
+                        GuardId = guardlogins.FirstOrDefault().GuardId,
+                        Status = "Off Duty",
+                        RadioCheckStatusId = 1,
+                        CheckedAt = DateTime.Now,
+                        Active = true
+                    });
+
                 }
                 /* new Change 07/11/2023 no need to remove the all the deatils when logoff remove after a buffer time end */
             }
