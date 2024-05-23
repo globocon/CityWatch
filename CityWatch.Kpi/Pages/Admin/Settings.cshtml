@@ -6,36 +6,43 @@
 <div class="container-fluid" style="width:80%">
     <ul class="nav nav-tabs" id="settingsTab" role="tablist">
         <li class="nav-item" role="presentation">
-            <a class="nav-link active" id="schedules-tab" data-toggle="tab" href="#schedules" role="tab" aria-controls="schedules" aria-selected="true">Schedules</a>
+            <a class="nav-link active" id="client-site-tab" data-toggle="tab" href="#site-settings" role="tab" aria-controls="site-settings" aria-selected="true">Client Site Settings</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="schedules-tab" data-toggle="tab" href="#schedules" role="tab" aria-controls="schedules" aria-selected="true">Schedules</a>
         </li>
         <li style="display:none" class="nav-item" role="presentation">
             <a class="nav-link" id="service-log-tab" data-toggle="tab" href="#service-log" role="tab" aria-controls="service-log" aria-selected="true">Import Jobs</a>
         </li>
-        <li class="nav-item" role="presentation">
-            <a class="nav-link" id="client-site-tab" data-toggle="tab" href="#site-settings" role="tab" aria-controls="site-settings" aria-selected="true">Client Site Settings</a>
-        </li>
     </ul>
 
     <div class="tab-content p-3">
-        <div class="tab-pane active" id="schedules" role="tabpanel" aria-labelledby="schedules-tab">
+        <div class="tab-pane" id="schedules" role="tabpanel" aria-labelledby="schedules-tab">
             <div class="row">
                 <div class="col-md-12">
                     <div class="form-group row">
-                        <label class="col-form-label col-md-2">Filter by Cover Style</label>
-                        <div class="col-md-3">
-                            <select class="form-control" id="sel_schedule">
+                        <label class="col-form-label pr-1">Style</label>
+                        <div class="pl-0 pr-0">
+                            <select class="form-control" id="sel_schedule" style="width:150px">
                                 <option value="0" selected>7-Day Schedules</option>
                                 <option value="1">Monthly Reports</option>
                             </select>
                         </div>
-                        <div class="col-md-3 offset-md-2 input-group">
+                        <label class="col-form-label p-2">Default MailBox</label>
+                        <div class="pl-2">
+                            <input type="text" id="txt_defaultEmail" class="form-control mb-3" style="width:250px" >
+                        </div>
+                        <div class="text-right pl-2">
+                            <button class="btn btn-success mb-3" id="save_default_email">Save</button>
+                        </div>
+                        <div class="col-md-3 input-group">
                             <input type="text" id="search_kw_client_site" class="form-control mb-3" placeholder="Search Client Site">
                             <div class="input-group-append">
                                 <button class="btn btn-outline-primary mb-3" id="btnSearchClientSite" title="Press enter to search"><i class="fa fa-search"></i></button>
                             </div>
                         </div>
-                        <div class="col-md-2 text-right">
-                            <button class="btn btn-success mb-3 ml-2" id="add_kpi_schedule" data-toggle="modal" data-target="#schedule-modal"><i class="fa fa-plus mr-2"></i>Add Schedule</button>
+                        <div class="text-right pl-2 ">
+                            <button class="btn btn-success mb-3" id="add_kpi_schedule" data-toggle="modal" data-target="#schedule-modal"><i class="fa fa-plus mr-2"></i>Add Schedule</button>
                         </div>
                     </div>
                     <div class="row">
@@ -97,7 +104,7 @@
                 </div>
             </div>
         </div>
-        <div class="tab-pane" id="site-settings" role="tabpanel" aria-labelledby="client-site-tab">
+        <div class="tab-pane active" id="site-settings" role="tabpanel" aria-labelledby="client-site-tab">
             <div class="row">
                 <div class="col-md-12">
                     <div class="form-group row">

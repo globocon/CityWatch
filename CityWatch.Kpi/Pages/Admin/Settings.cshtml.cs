@@ -417,6 +417,8 @@ namespace CityWatch.Kpi.Pages.Admin
                 var kpiSendSchedule = KpiSendScheduleViewModel.ToDataModel(kpiSendScheduleViewModel);
                 if (kpiSendSchedule.Id == 0)
                     kpiSendSchedule.NextRunOn = KpiSendScheduleRunOnCalculator.GetNextRunOn(kpiSendSchedule);
+                else
+                    kpiSendSchedule.NextRunOn = KpiSendScheduleRunOnCalculator.GetNextRunOnUpdate(kpiSendSchedule);
                 _kpiSchedulesDataProvider.SaveSendSchedule(kpiSendSchedule, true);
             }
             catch (Exception ex)
@@ -1075,6 +1077,30 @@ namespace CityWatch.Kpi.Pages.Admin
         {
            
             return new JsonResult(_clientDataProvider.GetNewClientSites(clientSiteId));
+        }
+
+
+        public JsonResult OnGetKPIScheduleDeafultMailbox()
+        {
+            var Emails = _clientDataProvider.GetKPIScheduleDeafultMailbox();
+            var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
+            return new JsonResult(new { Emails = emailAddresses });
+        }
+        public JsonResult OnPostSaveDeafultMailBox(string Email)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.DeafultMailBox(Email);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = Email, message = message });
         }
 
     }

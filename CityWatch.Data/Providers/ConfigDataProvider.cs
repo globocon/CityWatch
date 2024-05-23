@@ -89,7 +89,7 @@ namespace CityWatch.Data.Providers
 
         public List<FeedbackTemplate> GetFeedbackTemplates()
         {
-            return _context.FeedbackTemplates.OrderBy(x => x.Name).ToList();
+            return _context.FeedbackTemplates.Where(x=>x.DeleteStatus==0).OrderBy(x => x.Name).ToList();
         }
         //to retrieve the feedback type-start
         public List<FeedbackType> GetFeedbackTypes()
@@ -117,12 +117,13 @@ namespace CityWatch.Data.Providers
                     Text = template.Text,
                     Type = template.Type,
                     BackgroundColour = template.BackgroundColour,
-                    TextColor = template.TextColor
+                    TextColor = template.TextColor,
+                    DeleteStatus=0
                 });
             }
             else
             {
-                var templateToUpdate = _context.FeedbackTemplates.SingleOrDefault(x => x.Id == template.Id);
+                var templateToUpdate = _context.FeedbackTemplates.SingleOrDefault(x => x.Id == template.Id && x.DeleteStatus==0);
                 if (templateToUpdate == null)
                     throw new InvalidOperationException();
 
@@ -130,6 +131,7 @@ namespace CityWatch.Data.Providers
                 templateToUpdate.Type = template.Type;
                 templateToUpdate.BackgroundColour = template.BackgroundColour;
                 templateToUpdate.TextColor = template.TextColor;
+                templateToUpdate.DeleteStatus = 0;
             }
             _context.SaveChanges();
         }
@@ -139,12 +141,14 @@ namespace CityWatch.Data.Providers
             if (id == -1)
                 return;
 
-            var templateToDelete = _context.FeedbackTemplates.SingleOrDefault(x => x.Id == id);
+            var templateToDelete = _context.FeedbackTemplates.SingleOrDefault(x => x.Id == id && x.DeleteStatus==0);
             if (templateToDelete == null)
                 throw new InvalidOperationException();
-
-            _context.FeedbackTemplates.Remove(templateToDelete);
+            //Not Delete data just change Status 0 to 1 
+            templateToDelete.DeleteStatus = 1;
             _context.SaveChanges();
+            //_context.FeedbackTemplates.Remove(templateToDelete);
+            //_context.SaveChanges();
         }
 
         public ReportTemplate GetReportTemplate()
@@ -228,7 +232,7 @@ namespace CityWatch.Data.Providers
         }
         public List<KeyVehicleLogVisitorPersonalDetail> GetProviderList(int ID)
         {
-            return _context.KeyVehicleLogVisitorPersonalDetails.Where(x => x.PersonType == ID).ToList();
+            return _context.KeyVehicleLogVisitorPersonalDetails.Where(x => x.PersonType == ID).OrderBy(x => x.CompanyName).ToList();
         }
         public KeyVehcileLogField GetKVLogField()
         {
@@ -263,7 +267,9 @@ namespace CityWatch.Data.Providers
                 {
                     Name = incidentReportField.Name,
                     TypeId = incidentReportField.TypeId,
-                    EmailTo = incidentReportField.EmailTo
+                    EmailTo = incidentReportField.EmailTo,
+                    ClientSiteIds = incidentReportField.ClientSiteIds,
+                    ClientTypeIds=incidentReportField.ClientTypeIds
                 });
             }
             else
@@ -274,6 +280,9 @@ namespace CityWatch.Data.Providers
                 reportFieldToUpdate.Name = incidentReportField.Name;
                 reportFieldToUpdate.TypeId = incidentReportField.TypeId;
                 reportFieldToUpdate.EmailTo = incidentReportField.EmailTo;
+                reportFieldToUpdate.ClientSiteIds = incidentReportField.ClientSiteIds;
+                reportFieldToUpdate.ClientTypeIds = incidentReportField.ClientTypeIds;
+
             }
             _context.SaveChanges();
         }
@@ -360,16 +369,33 @@ namespace CityWatch.Data.Providers
            
             if (incidentReportPosition.Id == -1)
             {
-                _context.IncidentReportPositions.Add(new IncidentReportPosition()
+                if (ClientSiteName != null)
                 {
-                    Name = incidentReportPosition.Name,
-                    EmailTo = incidentReportPosition.EmailTo,
-                    IsPatrolCar = incidentReportPosition.IsPatrolCar,
-                    DropboxDir = incidentReportPosition.DropboxDir,
-                    IsLogbook= incidentReportPosition.IsLogbook,
-                    ClientsiteId= incidentReportPosition.ClientsiteId,
-                    ClientsiteName= ClientSiteName.Name
-                });
+                    _context.IncidentReportPositions.Add(new IncidentReportPosition()
+                    {
+                        Name = incidentReportPosition.Name,
+                        EmailTo = incidentReportPosition.EmailTo,
+                        IsPatrolCar = incidentReportPosition.IsPatrolCar,
+                        DropboxDir = incidentReportPosition.DropboxDir,
+                        IsLogbook = incidentReportPosition.IsLogbook,
+                        ClientsiteId = incidentReportPosition.ClientsiteId,
+                        ClientsiteName = ClientSiteName.Name
+                    });
+                }
+                else
+                {
+                    _context.IncidentReportPositions.Add(new IncidentReportPosition()
+                    {
+                        Name = incidentReportPosition.Name,
+                        EmailTo = incidentReportPosition.EmailTo,
+                        IsPatrolCar = incidentReportPosition.IsPatrolCar,
+                        DropboxDir = incidentReportPosition.DropboxDir,
+                        IsLogbook = incidentReportPosition.IsLogbook,
+                        ClientsiteId = incidentReportPosition.ClientsiteId,
+                        ClientsiteName = null
+                    });
+
+                }
             }
             else
             {

@@ -2541,6 +2541,7 @@
         $('#GuardLicense_GuardId').val(data.id);
         $('#GuardCompliance_GuardId').val(data.id);
         $('#GuardComplianceandlicense_GuardId').val(data.id);
+        $('#GuardComplianceandlicense_LicenseNo').val(data.securityNo);
 
         // ;
         var selectedValues = [];
@@ -2562,6 +2563,7 @@
         });
         gridGuardLicenses.ajax.reload();
         gridGuardCompliances.ajax.reload();
+        gridGuardLicensesAndLicence.ajax.reload();
         $("#Guard_Access").multiselect();
         $("#Guard_Access").val(selectedValues);
         $("#Guard_Access").multiselect("refresh");
@@ -2582,6 +2584,7 @@
     $('#btn_add_guard_top, #btn_add_guard_bottom').on('click', function () {
         gridGuardLicenses.clear().draw();
         gridGuardCompliances.clear().draw();
+        gridGuardLicensesAndLicence.clear().draw();
 
         $('.btn-add-guard-addl-details').hide();
         resetGuardDetailsModal();
@@ -2636,6 +2639,7 @@
                 $('#guard_saved_status').show().delay(2000).hide(0);
                 $('.btn-add-guard-addl-details').show();
                 gridGuardLicenses.ajax.reload();
+                gridGuardLicensesAndLicence.ajax.reload();
                 guardSettings.ajax.reload(null, false);
             } else {
                 displayGuardValidationSummary('glValidationSummary', result.message);
@@ -2866,16 +2870,13 @@
         clearGuardValidationSummary('licenseValidationSummary');
     }
     function resetGuardLicenseandComplianceAddModal() {
-        $('#GuardCompliance_Id').val('');
-        $('#GuardComplianceAndLicense_ReferenceNo').val('');
-        $('#GuardComplianceAndLicense_Description1').val('');
-        $('#GuardCompliance_LicenseNo').val('');
-        $('#GuardCompliance_LicenseType').val('');
-        $('#GuardComplianceAndLicense_Reminder1').val('45');
-        $('#GuardComplianceAndLicense_Reminder2').val('7');
-        $('#GuardComplianceAndLicense_ExpiryDate').val('');
-        $('#GuardComplianceAndLicense_HrGroup').val('');
-        $('#guardComplianceandlicense_fileName').text('None');
+        $('#GuardComplianceandlicense_Id').val('');
+        $('#Description').val('');
+        $('#GuardComplianceAndLicense_ExpiryDate1').val('');
+        $('#HRGroup').val('');
+        $('#guardComplianceandlicense_fileName1').text('None');
+        $('#GuardComplianceandlicense_FileName1').val('');
+        $('#GuardComplianceandlicense_CurrentDateTime').val('');
         clearGuardValidationSummary('compliancelicanseValidationSummary');
     }
 
@@ -2939,8 +2940,88 @@
         },
     });
 
+    //Gurad License and Compliance Form start
+    let gridGuardLicensesAndLicence = $('#tbl_guard_licensesAndCompliance').DataTable({
+        autoWidth: false,
+        ordering: false,
+        searching: false,
+        paging: false,
+        info: false,
+        ajax: {
+            url: '/Admin/GuardSettings?handler=GuardLicenseAndComplianceData',
+            data: function (d) {
+                d.guardId = $('#GuardComplianceandlicense_GuardId').val();
+            },
+            dataSrc: ''
+        },
+        columns: [
+            { data: 'hrGroupText', width: "6%" },
+            { data: 'description', width: "7%" },
+            { data: 'expiryDate', width: '10%', orderable: true },
+            { data: 'fileName', width: '5%' },
+            {
+                targets: -1,
+                data: null,
+                defaultContent: '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
+                    '<button  class="btn btn-outline-danger mr-2" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash mr-2"></i>Delete</button>',
+                width: '12%'
+            }],
+        columnDefs: [{
+            targets: 3,
+            data: 'fileName',
+            render: function (data, type, row, meta) {
+                if (data)
+                    return '<a href="/Uploads/Guards/License/' + row.licenseNo +'/' + row.fileUrl + '" target="_blank">' + data + '</a>';
+                return '-';
+            }
+        }],
+        'createdRow': function (row, data, index) {
+            if (data.expiryDate !== null) {
+                $('td', row).eq(2).html(getFormattedDate(new Date(data.expiryDate), null, ' '));
+            }
+        },
+    });
+
+    //To get the data in description dropdown start
+    $('#Description').attr('placeholder', 'Select');
+    $('#Description').editableSelect({
+        //filter: false,
+        effects: 'slide'
+    }).on('select.editable-select', function (e, li) {
+
+    });
+    $('#HRGroup').on('change', function () {
+
+        var Descriptionval = $('#HRGroup').val();
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        const ulClients = $('#Description').siblings('ul.es-list');
+        ulClients.html('');
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=HRDescription',
+            type: 'GET',
+            data: {
+                HRid: Descriptionval
+            },
+            headers: { 'RequestVerificationToken': token }
+        }).done(function (DescVal) {
+            DescVal.forEach(function (DescVals) {
+                if (DescVals != null) {
+                    ulClients.append('<li class="es-visible" value="' + DescVals + '">' + DescVals + '</li>');
+                }
+               
+            });
+        })
+    
+
+    });
+
+     //To get the data in description dropdown stop
+    //Gurad License and Compliance Form stop
+
     $('#btnAddGuardLicense').on('click', function () {
         resetGuardLicenseandComplianceAddModal();
+        const messageHtml2 = '';
+        $('#schRunStatusNew').html(messageHtml2);
         $('#addGuardCompliancesLicenseModal').modal('show');
     });
     /*code added for Licence Type Dropdown Textbox start*/
@@ -2996,6 +3077,40 @@
             })
         }
     });
+    //Gurad License and Compliance Form start
+    $('#tbl_guard_licensesAndCompliance tbody').on('click', 'button[name=btn_edit_guard_licenseAndCompliance]', function () {
+        resetGuardLicenseandComplianceAddModal();
+        var data = gridGuardLicensesAndLicence.row($(this).parents('tr')).data();
+        
+        if (data.expiryDate) {
+            $('#GuardComplianceAndLicense_ExpiryDate1').val(data.expiryDate.split('T')[0]);
+        }
+        $('#GuardComplianceandlicense_Id').val(data.id);
+        $('#GuardComplianceandlicense_GuardId').val(data.GuardId);
+        $('#HRGroup').val(data.hrGroup);
+        $('#Description').val(data.description);
+        $('#GuardComplianceandlicense_GuardId').val(data.guardId);
+        $('#GuardComplianceandlicense_FileName1').val(data.fileName);
+        $('#guardComplianceandlicense_fileName1').text(data.fileName ? data.fileName : 'None');
+        $('#addGuardCompliancesLicenseModal').modal('show');
+    });
+    $('#tbl_guard_licensesAndCompliance tbody').on('click', 'button[name=btn_delete_guard_licenseAndCompliance]', function () {
+        var data = gridGuardLicensesAndLicence.row($(this).parents('tr')).data();
+        if (confirm('Are you sure want to delete this Guard License?')) {
+            $.ajax({
+                type: 'POST',
+                url: '/Admin/GuardSettings?handler=DeleteGuardLicense',
+                data: { 'id': data.id },
+                dataType: 'json',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.success)
+                    gridGuardLicensesAndLicence.ajax.reload();
+            })
+        }
+    });
+     //Gurad License and Compliance Form stop
+
 
     $('#upload_license_file').on('change', function () {
         const file = $(this).get(0).files.item(0);
@@ -3192,6 +3307,24 @@
     });
     $('#btn_save_guard_compliancelicense').on('click', function () {
         clearGuardValidationSummary('compliancelicanseValidationSummary');
+       
+        var ExpirayDateVal = $('#GuardComplianceAndLicense_ExpiryDate1').val();
+        var HrVal = $('#HRGroup').val();
+        var DescVal = $('#Description').val();
+        var FileVa = $('#guardComplianceandlicense_fileName1').html();
+        const messageHtml = '';
+        $('#schRunStatusNew').html(messageHtml);
+
+        if (HrVal != '' && DescVal != '' && FileVa != 'None') {
+            $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
+            if (ExpirayDateVal == '') {
+                confirm('Are you sure you not want to enter Expiray Date');
+            }
+        }
+        
+        
+        
+ 
         $('#loader').show();
         $.ajax({
             url: '/Admin/GuardSettings?handler=SaveGuardComplianceandlicanse',
@@ -3201,8 +3334,10 @@
         }).done(function (result) {
             if (result.status) {
                 $('#addGuardCompliancesLicenseModal').modal('hide');
-                gridGuardCompliances.ajax.reload();
-                gridGuardLicenses.ajax.reload();
+                const messageHtml1 = '';
+                $('#schRunStatusNew').html(messageHtml1);
+                gridGuardLicensesAndLicence.ajax.reload();
+ 
                 if (!result.dbxUploaded) {
                     displayGuardValidationSummary('compliancelicanseValidationSummary', 'Compliance details saved successfully. However, upload to Dropbox failed.');
                 }
@@ -3216,6 +3351,7 @@
 
     $('#btn_save_guard_compliance').on('click', function () {
         clearGuardValidationSummary('complianceValidationSummary');
+       
         $('#loader').show();
         $.ajax({
             url: '/Admin/GuardSettings?handler=SaveGuardCompliance',
@@ -3273,26 +3409,36 @@
             alert('Please select a valid file type');
             return false;
         }
-
+        var Desc = $('#Description').val();
         const formData = new FormData();
         formData.append("file", file);
         formData.append('guardId', $('#GuardComplianceandlicense_GuardId').val());
+        formData.append('LicenseNo', $('#GuardComplianceandlicense_LicenseNo').val());
+        formData.append('Description', $('#Description').val());
+        formData.append('HRID', $('#HRGroup').val());
+        if (Desc=='') {
 
-        $.ajax({
-            type: 'POST',
-            url: '/Admin/GuardSettings?handler=UploadGuardAttachment',
-            data: formData,
-            cache: false,
-            contentType: false,
-            processData: false,
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (data) {
-            $('#GuardComplianceandlicense_FileName').val(data.fileName);
-            $('#guardComplianceandlicense_fileName').text(data.fileName ? data.fileName : 'None');
-        }).fail(function () {
-        }).always(function () {
-            $('#upload_complianceandlicanse_file').val('');
-        });
+            (confirm('Please select Description'))
+        }
+        else {
+
+            $.ajax({
+                type: 'POST',
+                url: '/Admin/GuardSettings?handler=UploadGuardAttachment',
+                data: formData,
+                cache: false,
+                contentType: false,
+                processData: false,
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (data) {
+                $('#GuardComplianceandlicense_FileName1').val(data.fileName);
+                $('#guardComplianceandlicense_fileName1').text(data.fileName ? data.fileName : 'None');
+                $('#GuardComplianceandlicense_CurrentDateTime').val(data.currentDate);
+            }).fail(function () {
+            }).always(function () {
+                $('#upload_complianceandlicanse_file').val('');
+            });
+        }
     });
 
 
@@ -3503,8 +3649,8 @@
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function (result) {
                 if (result.status) {
-                    $('#guardComplianceandlicense_fileName').val('');
-                    $('#guardComplianceandlicense_fileName').text('None');
+                    $('#GuardComplianceandlicense_fileName1').val('');
+                    $('#guardComplianceandlicense_fileName1').text('None');
                     gridGuardCompliances.ajax.reload();
                 }
                 else {

@@ -2068,5 +2068,40 @@ namespace CityWatch.Web.Pages.Guard
 
             return new JsonResult(_guardDataProvider.GetClientSiteToggle(siteId, toggleId));
         }
+        public JsonResult OnPostSaveGuardComplianceandlicanse(GuardComplianceAndLicense guardComplianceandlicense)
+        {
+            ModelState.Remove("guardComplianceandlicense.Id");
+            ModelState.Remove("guardComplianceandlicense.CurrentDateTime");
+            ModelState.Remove("guardComplianceandlicense.GuardId");
+            if (!ModelState.IsValid)
+            {
+                return new JsonResult(new
+                {
+                    status = false,
+                    message = ModelState.Where(x => x.Value.Errors.Count > 0)
+                                .Select(x => string.Join(',', x.Value.Errors.Select(y => y.ErrorMessage)))
+                });
+            }
+
+            var status = true;
+            var dbxUploaded = true;
+            var message = "Success";
+            string extension = Path.GetExtension(guardComplianceandlicense.FileName);
+            string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(guardComplianceandlicense.FileName);
+            guardComplianceandlicense.FileName = fileNameWithoutExtension + "_" + guardComplianceandlicense.CurrentDateTime + extension;
+
+            try
+            {
+               // dbxUploaded = UploadGuardComplianceandLicenseToDropbox(guardComplianceandlicense);
+                guardComplianceandlicense.CurrentDateTime = DateTime.Now.ToString();
+                _guardDataProvider.SaveGuardComplianceandlicanse(guardComplianceandlicense);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = ex.Message;
+            }
+            return new JsonResult(new { status, dbxUploaded, message });
+        }
     }
 }

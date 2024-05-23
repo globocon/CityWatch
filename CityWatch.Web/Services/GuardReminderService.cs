@@ -35,19 +35,19 @@ namespace CityWatch.Web.Services
 
         public void Process()
         {
-            var guardLicenses = _guardDataProvider.GetAllGuardLicenses().Where(z => z.ExpiryDate.HasValue).ToList();
+            var guardLicenses = _guardDataProvider.GetAllGuardLicensesAndCompliances().Where(z => z.ExpiryDate.HasValue).ToList();
             var guardcompliances = _guardDataProvider.GetAllGuardCompliances().Where(z => z.ExpiryDate.HasValue).ToList();
 
             var messages = new List<KeyValuePair<DateTime, string>>();
-            messages.AddRange(GetLicenseMessages(guardLicenses));
-            messages.AddRange(GetComplianceMessages(guardcompliances));
+            messages.AddRange(GetLicenseMessagesAndCompliance(guardLicenses));
+            //messages.AddRange(GetComplianceMessages(guardcompliances));
 
             if (messages.Any())
             {
                 var mailBodyHtml = new StringBuilder();
                 mailBodyHtml.Append("Hi, <br/><br/>Following guard documents are expiring soon. <br/><br/>");
                 mailBodyHtml.Append("<table border=\"1px solid black\">");
-                mailBodyHtml.Append("<thead><th>Document Type</th><th>Document No</th><th>Guard Name</th><th>Expiry Date</th><th>Description</th></thead>");
+                mailBodyHtml.Append("<thead><th>Document Type</th><th>Guard Name</th><th>Expiry Date</th><th>Description</th></thead>");
                 mailBodyHtml.Append("<tbody>");
                 foreach (var item in messages.OrderBy(z => z.Key))
                 {
@@ -232,6 +232,19 @@ namespace CityWatch.Web.Services
                     (DateTime.Today.AddDays(license.Reminder2.GetValueOrDefault()) == license.ExpiryDate))
                 {
                     var message = $"<tr><td>License</td><td>{license.LicenseNo}</td><td>{license.Guard.Name}</td><td>{license.ExpiryDate?.ToString("dd-MMM-yyyy")}</td>";
+                    yield return new KeyValuePair<DateTime, string>(license.ExpiryDate.Value, message);
+                }
+            }
+        }
+        private static IEnumerable<KeyValuePair<DateTime, string>> GetLicenseMessagesAndCompliance(List<GuardComplianceAndLicense> guardComplianceAndLicense)
+        {
+            foreach (var license in guardComplianceAndLicense)
+            {
+                
+                if ((DateTime.Today.AddDays(license.Reminder1) == license.ExpiryDate) ||
+                    (DateTime.Today.AddDays(license.Reminder2) == license.ExpiryDate))
+                {
+                    var message = $"<tr><td>Compliance</td><td>{license.Guard.Name}</td><td>{license.ExpiryDate?.ToString("dd-MMM-yyyy")}</td><td>{license.Description}</td>";
                     yield return new KeyValuePair<DateTime, string>(license.ExpiryDate.Value, message);
                 }
             }

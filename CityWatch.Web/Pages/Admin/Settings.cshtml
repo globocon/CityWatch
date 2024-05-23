@@ -10,6 +10,10 @@
 @inject IConfiguration Configuration
 @inject IUserDataProvider viewDataService
 @inject IViewDataService viewDataServiceNew
+@inject IClientDataProvider clientDataProvider
+@inject IClientSiteViewDataService clientViewDataService
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css" rel="stylesheet">
+
 @{
     ViewData["Title"] = "CityWatch Security | Settings";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.Settings;
@@ -28,14 +32,15 @@
         <li class="nav-item">
             <a class="nav-link p-2" id="csite-tab" data-toggle="tab" href="#csite" role="tab" aria-controls="csite" aria-selected="false">IR Client Site</a>
         </li>
-        <li class="nav-item" @hideTabStyle>
-            <a class="nav-link p-2" id="fbktpl-tab" data-toggle="tab" href="#fbktpl" role="tab" aria-controls="fbktpl" aria-selected="false">IR Notes</a>
-        </li>
+      
         <li class="nav-item" @hideTabStyle>
             <a class="nav-link p-2" id="irdocs-tab" data-toggle="tab" href="#irdocs" role="tab" aria-controls="irdocs" aria-selected="false">IR Template & Downloads</a>
         </li>
         <li class="nav-item" @hideTabStyle>
             <a class="nav-link p-2" id="fields-tab" data-toggle="tab" href="#fields" role="tab" aria-controls="fields" aria-selected="false">C4i Fields</a>
+        </li>
+        <li class="nav-item" @hideTabStyle>
+            <a class="nav-link p-2" id="fbktpl-tab" data-toggle="tab" href="#fbktpl" role="tab" aria-controls="fbktpl" aria-selected="false">IR Notes</a>
         </li>
         <li class="nav-item" @hideTabStyle>
             <a class="nav-link p-2" id="tools-tab" data-toggle="tab" href="#tools" role="tab" aria-controls="tools" aria-selected="false">C4i Tools</a>
@@ -325,6 +330,7 @@
                         <button class="btn btn-success mb-3" id="add_kvl_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
                     </div>
                     <table class="table" id="field_settings"></table>
+                    <table class="table" id="field_settings_Area" hidden></table>
                     <table class="table" id="tbl_kvl_fields"></table>
                     <table class="table" id="tbl_dosanddonts_fields"></table>
                 </div>
@@ -786,7 +792,8 @@
                                 </div>
                                 <label class="col-md-2 col-form-label text-right">CRM (Supplier)</label>
                                 <div class="col-md-3">
-                                    <input type="text" class="form-control" id="Guard_Provider" name="Guard.Provider">
+                                   @*  <input type="text" class="form-control" id="Guard_Provider" name="Guard.Provider"> *@
+                                    <select id="Guard_Provider" name="Guard.Provider" asp-items="@Model.ViewDataService.ProviderList" class="form-control"></select>
                                 </div>
                             </div>
 
@@ -814,14 +821,39 @@
                     <div class="col-md-12">
                         <ul class="nav nav-tabs" id="guardComplianceTab" role="tablist">
                             <li class="nav-item">
+                                <a class="nav-link active" id="licensesAndCombliance-tab" data-toggle="tab" href="#guardLicensesandCompliance" role="tab" aria-controls="guardLicenses" aria-selected="true">Compliances</a>
+                            </li>
+                            @* <li class="nav-item">
                                 <a class="nav-link active" id="licenses-tab" data-toggle="tab" href="#guardLicenses" role="tab" aria-controls="guardLicenses" aria-selected="true">Licenses</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" id="compliances-tab" data-toggle="tab" href="#guardCompliances" role="tab" aria-controls="guardCompliances" aria-selected="false">Compliances</a>
-                            </li>
+                            </li> *@
                         </ul>
                         <div class="tab-content" id="guardDataTabContent">
-                            <div class="tab-pane fade show active py-3" id="guardLicenses" role="tabpanel" aria-labelledby="licenses_tab">
+                            <div class="tab-pane fade show active py-3" id="guardLicensesandCompliance" role="tabpanel" aria-labelledby="licensesAndCombliance-tab">
+                                <div class="form-row mb-2 btn-add-guard-addl-details">
+                                    <div class="col-md-2 offset-md-10 text-right">
+                                        <button class="btn btn-success" id="btnAddGuardLicense"><i class="fa fa-plus mr-2"></i>Add Compliance</button>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="col-md-12">
+                                        <table id="tbl_guard_licensesAndCompliance" class="table table-bordered table-sm" width="100%">
+                                            <thead>
+                                                <tr>
+                                                    <th>HR Group</th>
+                                                    <th>Description</th>
+                                                    <th>Expiry Date</th>
+                                                    <th>File</th>
+                                                    <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                         @*    <div class="tab-pane fade show active py-3" id="guardLicenses" role="tabpanel" aria-labelledby="licenses_tab">
                                 <div class="form-row mb-2 btn-add-guard-addl-details">
                                     <div class="col-md-2 offset-md-10 text-right">
                                         <button class="btn btn-success" id="btnAddGuardLicense"><i class="fa fa-plus mr-2"></i>Add License</button>
@@ -869,7 +901,7 @@
                                         </table>
                                     </div>
                                 </div>
-                            </div>
+                            </div> *@
                         </div>
                     </div>
                 </div>
@@ -965,12 +997,116 @@
         </div>
     </div>
 </div>
+@*<div class="modal" tabindex="-1" role="dialog" id="irSettingsModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8">Ir Settings - <label id="lblFieldType"></label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="form_new_ir_settings">
+                    <input type="hidden" asp-for="@Model.IncidentReportField.Id" id="IrSettings_Id" />
+                    <div class="form-row">
+                        <div class="col-md-4">
+                            <label>Name</label>
+                            <input type="text" class="form-control" asp-for="@Model.IncidentReportField.Name" id="IrSettings_fieldName" />
+                        </div>
+                        <div class="col-md-8">
+                            <label>Site Allocation</label>
+
+                            <select class="form-control js-example-basic-multiple" id="list_IrClientSites" asp-for="@Model.IncidentReportField.ClientSiteIds" multiple>
+                                @foreach (var item in clientViewDataService.GetClientSites())
+                                {
+                                    <option value="@item.Value">@item.Text</option>
+                                }
+                            </select>
+
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-md-12">
+                            <label>Special Email Condition</label>
+                            <input type="text" asp-for="@Model.IncidentReportField.EmailTo" id="IrSettings_fieldemailto" />
+                        </div>
+
+
+                    </div>
+                    <div asp-validation-summary="All" id="irsettings-field-validation"></div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-start">
+                <button type="button" class="btn btn-primary" id="btn_save_ir_settings">Save</button>
+            </div>
+        </div>
+
+
+    </div>
+</div>*@
+@*<div class="modal" tabindex="-1" role="dialog" id="irSettingsModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8">Ir Settings - <label id="lblFieldType"></label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="form_new_ir_settings">
+                    <input type="hidden" asp-for="@Model.IncidentReportField.Id" id="IrSettings_Id" />
+                    <input type="hidden" asp-for="@Model.IncidentReportField.TypeId" id="Irfieldtype_Id" />
+                    <div class="form-row">
+                        <div class="col-md-12">
+                        <div class="col-md-4">
+                            <label>Name</label>
+                            @*<select class="form-control" id="list_hrGroups" asp-for="@Model.HrSettings.HRGroupId" asp-items="@viewDataServiceNew.GetHRGroups( true)"></select>*@
+@*<input type="text" asp-for="@Model.IncidentReportField.Name" id="IrSettings_fieldName" />
+                        </div>
+                        <div class="col-md-4">
+                            <label>Site Allocation</label>
+
+                            <select class="form-control js-example-basic-multiple" id="list_IrClientSites" asp-for="@Model.IncidentReportField.ClientSiteIds"  multiple>
+                                @foreach (var item in clientViewDataService.GetClientSites())
+                                {
+                                    <option value="@item.Value">@item.Text</option>
+                                }
+                            </select>
+
+
+                        </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-md-12">
+                            <label>Special Email Condition</label>
+                            <input type="text" asp-for="@Model.IncidentReportField.EmailTo" id="IrSettings_fieldemailto" />
+                        </div>
+
+
+                    </div>
+                    <div asp-validation-summary="All" id="irsettings-field-validation"></div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-start">
+                <button type="button" class="btn btn-primary" id="btn_save_ir_settings">Save</button>
+            </div>
+        </div>
+
+
+    </div>
+</div>*@
 <partial name="_SettingsPopup" />
 @Html.AntiForgeryToken()
 <partial name="_GuardAddLicensePopup" />
 <partial name="_GuradAddComplianceLicencePopup" />
 <partial name="_KeySiteSettingsPopup" />
 <partial name="_GuardSiteSettings" />
+<partial name="_irSettingsPopup" />
 @section scripts {
     <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&libraries=places"></script>
 }

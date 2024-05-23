@@ -241,25 +241,36 @@ namespace CityWatch.Kpi.Services
         private void SendEmail(string fileName, KpiSendSchedule schedule, DateTime reportDate, bool ignoreRecipients)
         {
             var fromAddress = _emailOptions.FromAddress.Split('|');
-            //To get the Default Email start
-            var ToAddreddAppset = _emailOptions.ToAddress.Split('|');
-            var toAddressData = _clientDataProvider.GetDefaultEmailAddress() + '|'+ ToAddreddAppset[1];
-            var toAddress = toAddressData.Split('|');
-            var ToAddressFirststr = _clientDataProvider.GetDefaultEmailAddress();
-            if (ToAddressFirststr==null)
-            {
-                toAddress = _emailOptions.ToAddress.Split('|');
-            }
+            //To get the Default Email start Old Code
+            //var ToAddreddAppset = _emailOptions.ToAddress.Split('|');
+            //var toAddressData = _clientDataProvider.GetDefaultEmailAddress() + '|'+ ToAddreddAppset[1];
+            //var toAddress = toAddressData.Split('|');
+            //var ToAddressFirststr = _clientDataProvider.GetDefaultEmailAddress();
+            //if (ToAddressFirststr==null)
+            //{
+            //    toAddress = _emailOptions.ToAddress.Split('|');
+            //}
 
-            //To get the Default Email stop
+            //To get the Default Email stop end Old Code
+
+           
 
             var subject = _emailOptions.Subject;
             var messageHtml = _emailOptions.Message;
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
-            message.To.Add(new MailboxAddress(toAddress[1], toAddress[0]));
+            /*Default to adresss for kpi Schedule Start*/
+            var Emails = _clientDataProvider.GetKPIScheduleDeafultMailbox().ToList();
+            var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
+            if (emailAddresses != null && emailAddresses != "")
+            {
+                var toAddressNew = emailAddresses.Split(',');
+                foreach (var address in GetToEmailAddressList(toAddressNew))
+                    message.To.Add(address);
+            }
+            /*Default to adresss for kpi Schedule end*/
             /* Mail Id added Bcc globoconsoftware for checking KPI Mail not getting Issue Start(date 17,01,2024) */
-            
+
             message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
            // message.Bcc.Add(new MailboxAddress("globoconsoftware2", "jishakallani@gmail.com"));
             /* Mail Id added Bcc globoconsoftware end */
@@ -301,6 +312,16 @@ namespace CityWatch.Kpi.Services
                 client.Send(message);
                 client.Disconnect(true);
             }
+        }
+
+        private List<MailboxAddress> GetToEmailAddressList(string[] toAddress)
+        {
+            var emailAddressList = new List<MailboxAddress>();
+            foreach (var item in toAddress)
+            {
+                emailAddressList.Add(new MailboxAddress(string.Empty, item));
+            }
+            return emailAddressList;
         }
 
         private string GetSchduleIdentifier(KpiSendSchedule schedule)

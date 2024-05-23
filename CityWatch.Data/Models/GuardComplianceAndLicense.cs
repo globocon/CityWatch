@@ -10,46 +10,19 @@ using System.Threading.Tasks;
 
 namespace CityWatch.Data.Models
 {
-    public enum GuardLicenseType2
-    {
-        Other = 0,
-
-        Investigator,
-
-        [Display(Name = "Crowd Controller")]
-        CrowdController,
-
-        [Display(Name = "Security Guard")]
-        SecurityGuard,
-
-        [Display(Name = "Bodyguard")]
-        BodyGuard,
-
-        [Display(Name = "Driver (Car)")]
-        CarDriver,
-
-        [Display(Name = "Driver (Boat)")]
-        BoatDriver,
-
-        Firearm
-    }
+    
     public class GuardComplianceAndLicense
     {
         [Key]
         public int Id { get; set; }
 
         public int GuardId { get; set; }
+
         [Required]
-        public string ReferenceNo { get; set; }
-
         public string Description { get; set; }
-
         public DateTime? ExpiryDate { get; set; }
 
-        public int? Reminder1 { get; set; }
-
-        public int? Reminder2 { get; set; }
-
+        [Required]
         public string FileName { get; set; }
 
         [NotMapped]
@@ -63,10 +36,10 @@ namespace CityWatch.Data.Models
                 if (Guard == null)
                     return FileName;
 
-                return $"{GuardHelper.GetGuardDocumentDbxRootUrl(Guard)}/{ReferenceNo}/{FileName}";
+                return $"{GuardHelper.GetGuardDocumentDbxRootUrl(Guard)}/{GuardId}/{FileName}";
             }
         }
-
+        [Required]
         public HrGroup? HrGroup { get; set; }
 
         [NotMapped]
@@ -74,15 +47,12 @@ namespace CityWatch.Data.Models
 
         [ForeignKey("GuardId")]
         public Guard Guard { get; set; }
+        public string CurrentDateTime { get; set; }
+        public int Reminder1 { get; set; }
 
-        [Required]
+        public int Reminder2 { get; set; }
+        [NotMapped]
         public string LicenseNo { get; set; }
 
-        [Required]
-        public GuardLicenseType2? LicenseType { get; set; }
-
-        [NotMapped]
-        public string LicenseTypeText { get { return LicenseType?.ToDisplayName(); } }
-        public string LicenseTypeName { get; set; }
     }
 }
