@@ -1522,7 +1522,7 @@ let gridGuardLicensesLogDaily = $('#tbl_guard_licenses1').DataTable({
             data: null,
             defaultContent: '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_license1"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
                 '<button  class="btn btn-outline-danger mr-2" name="btn_delete_guard_licence1"><i class="fa fa-trash mr-2"></i>Delete</button>',
-            width: '12%'
+            width: '5%'
         }],
     columnDefs: [{
         targets: 5,
@@ -2036,16 +2036,16 @@ let gridGuardLicensesAndLicenceKey = $('#tbl_guard_licensesAndComplianceKey').Da
         dataSrc: ''
     },
     columns: [
-        { data: 'hrGroupText', width: "6%" },
+        { data: 'hrGroupText', width: "2%" },
         { data: 'description', width: "7%" },
-        { data: 'expiryDate', width: '10%', orderable: true },
-        { data: 'fileName', width: '5%' },
+        { data: 'expiryDate', width: '2%', orderable: true },
+        { data: 'fileName', width: '7%' },
         {
             targets: -1,
             data: null,
-            defaultContent: '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
+            defaultContent: '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance"><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
                 '<button  class="btn btn-outline-danger mr-2" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash mr-2"></i>Delete</button>',
-            width: '12%'
+            width: '5%'
         }],
     columnDefs: [{
         targets: 3,
@@ -2116,7 +2116,7 @@ $('#btn_save_guard_compliancelicenseKey').on('click', function () {
     if (HrVal != '' && DescVal != '' && FileVa != 'None') {
         $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
         if (ExpirayDateVal == '') {
-            confirm('Are you sure you not want to enter Expiray Date');
+            confirm('Are you sure you not want to enter expiry Date');
         }
     }
 
