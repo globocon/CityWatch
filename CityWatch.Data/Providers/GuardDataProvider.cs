@@ -453,7 +453,7 @@ namespace CityWatch.Data.Providers
                 HrGroup = x.HrGroup,
                 CurrentDateTime = x.CurrentDateTime,
                 LicenseNo = x.Guard.SecurityNo
-            })
+            }).OrderBy(x=>x.FileName)
             .ToList();
 
 
