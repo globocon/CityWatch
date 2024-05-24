@@ -1089,6 +1089,7 @@ let clientSiteActiveGuardsLogBookDetails = $('#clientSiteActiveGuardsLogBookDeta
 
     ],
     drawCallback: function () {
+        $('#clientSiteActiveGuardsLogBookDetails').closest('div.dataTables_scrollBody').css('overflow-x', 'hidden'); //Remove the x scrollbar
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;
@@ -1195,6 +1196,7 @@ let clientSiteActiveGuardsKeyVehicleDetails = $('#clientSiteActiveGuardsKeyVehic
 
     ],
     drawCallback: function () {
+        $('#clientSiteActiveGuardsKeyVehicleDetails').closest('div.dataTables_scrollBody').css('overflow-x', 'hidden'); //Remove the x scrollbar
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;
@@ -1297,6 +1299,7 @@ let clientSiteActiveGuardsIncidentReportsDetails = $('#clientSiteActiveGuardsInc
 
     ],
     drawCallback: function () {
+        $('#clientSiteActiveGuardsIncidentReportsDetails').closest('div.dataTables_scrollBody').css('overflow-x', 'hidden'); //Remove the x scrollbar
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;
