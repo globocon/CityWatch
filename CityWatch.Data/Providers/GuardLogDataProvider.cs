@@ -2491,17 +2491,25 @@ namespace CityWatch.Data.Providers
                 {
 
 
-                    var isActive = (DateTime.Now - item.CheckedAt).TotalHours < 2.5;
+                    var isActive = (DateTime.Now - item.CheckedAt).TotalHours < 3;
                     if (!isActive)
                     {
-                        var clientSiteRadioCheckActivityStatusToDelete = _context.ClientSiteRadioChecks.Where(x => x.Id == item.Id);
-                        if (clientSiteRadioCheckActivityStatusToDelete == null)
-                            throw new InvalidOperationException();
-                        else
+                        /* check any active row exist */
+                       var checkIfExistAnyActiveRow=   _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == item.ClientSiteId && x.GuardId == item.GuardId &&
+                        (x.LastIRCreatedTime != null || x.LastKVCreatedTime != null || x.LastLBCreatedTime != null || x.LastSWCreatedTime!=null)).ToList();
 
+                        if (checkIfExistAnyActiveRow.Count == 0)
                         {
-                            _context.RemoveRange(clientSiteRadioCheckActivityStatusToDelete);
-                            _context.SaveChanges();
+                            var clientSiteRadioCheckActivityStatusToDelete = _context.ClientSiteRadioChecks.Where(x => x.Id == item.Id);
+                            if (clientSiteRadioCheckActivityStatusToDelete == null)
+                                throw new InvalidOperationException();
+                            else
+
+                            {
+                                _context.RemoveRange(clientSiteRadioCheckActivityStatusToDelete);
+                                _context.SaveChanges();
+                            }
+
                         }
 
 
