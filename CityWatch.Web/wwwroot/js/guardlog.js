@@ -2545,6 +2545,12 @@
 
         // ;
         var selectedValues = [];
+        if (data.isAdminGlobal) {
+            selectedValues.push(6);
+        }
+        if (data.isAdminPowerUser) {
+            selectedValues.push(5);
+        }
         if (data.isRCAccess) {
             selectedValues.push(4);
         }
@@ -3571,6 +3577,15 @@
         return false;
     });
     /* Check if Guard can access the KPI */
+    /* p1-203 Admin User Profile -start */
+    $("#LoginConformationBtnC4iSettings").on('click', function () {
+        clearGuardValidationSummary('GuardLoginValidationSummary');
+        $('#txt_securityLicenseNoC4iSettings').val('');
+        $("#modelGuardLoginC4iSettingsPatrol").modal("show");
+        return false;
+    });
+    /* p1-203 Admin User Profile -start */
+    /* Check if Guard can access the KPI */
     $('#btnGuardLoginKPI').on('click', function () {
         const securityLicenseNo = $('#txt_securityLicenseNo').val();
         if (securityLicenseNo === '') {
@@ -3709,7 +3724,55 @@
         }
     });
     /* Check if Guard can access the IR-END */
+    /*p1-203 Admin User Profile-start*/
+    //to check whether the Guard can enter the settings
+    $('#btnGuardLoginC4iSettings').on('click', function () {
+        const securityLicenseNo = $('#txt_securityLicenseNoC4iSettings').val();
+        if (securityLicenseNo === '') {
+            displayGuardValidationSummary('GuardLoginValidationSummaryC4iSettings', 'Please enter the security license No ');
+        }
+        else {
 
+
+
+            /* $('#txt_securityLicenseNoIR').val('');*/
+
+
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+                type: 'POST',
+                data: {
+                    securityLicenseNo: securityLicenseNo,
+                    type: 'Settings'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.accessPermission) {
+                    /* $('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginC4iSettingsPatrol').modal('hide');
+
+                    clearGuardValidationSummary('GuardLoginValidationSummaryC4iSettings');
+                    window.location.href = '/Admin/Settings';
+                }
+                else {
+
+                    // $('#txt_securityLicenseNo').val('');
+                    /*$('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginC4iSettingsPatrol').modal('show');
+                    if (result.successCode === 0) {
+                        displayGuardValidationSummary('GuardLoginValidationSummaryC4iSettings', result.successMessage);
+                    }
+                }
+            });
+
+
+            clearGuardValidationSummary('GuardLoginValidationSummaryIR');
+
+
+
+        }
+    });
+   /* p1 - 203 Admin User Profile - end*/
     /*for pushing notifications from the control room - start*/
     $('#pushNoTificationsGuardModal').on('shown.bs.modal', function (event) {
         /*timer pause while editing*/
