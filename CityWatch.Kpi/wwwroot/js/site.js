@@ -861,10 +861,17 @@ $(function () {
                 var downloadedFileName = matches !== null && matches[1] ? matches[1].replace(/['"]/g, '') : fileName;
                 // Create a Blob with the PDF data and initiate the download
                 var blob = new Blob([data], { type: 'application/pdf' });
-                // Create a temporary anchor element to trigger the download
-                var url = window.URL.createObjectURL(blob);
-                // Open the PDF in a new tab
-                var newTab = window.open(url, '_blank');
+                // // Create a temporary anchor element to trigger the download
+                //var url = window.URL.createObjectURL(blob);
+                // // Open the PDF in a new tab
+                //var newTab = window.open(url, '_blank');
+                
+                const URL = window.URL || window.webkitURL;
+                const displayNameHash = encodeURIComponent(`#displayName=${downloadedFileName}`);
+                const objectUrl = URL.createObjectURL(blob) + displayNameHash;
+                const windowUrl = window.location.origin; // + window.location.pathname;
+                const viewerUrl = `${windowUrl}/lib/Pdfjs/web/viewer.html?file=`;
+                var newTab = window.open(`${viewerUrl}${objectUrl}`);
                 if (!newTab) {
                     // If the new tab was blocked, fallback to downloading the file
                     var a = document.createElement('a');
@@ -872,6 +879,17 @@ $(function () {
                     a.download = downloadedFileName;
                     a.click();
                 }
+
+                URL.revokeObjectURL(objectUrl);
+
+                //if (!newTab) {
+                //    // If the new tab was blocked, fallback to downloading the file
+                //    var a = document.createElement('a');
+                //    a.href = url;
+                //    a.download = downloadedFileName;
+                //    a.click();
+                //}
+                //window.URL.revokeObjectURL(url);                
             },
             error: function () {
                 alert('Error while downloading the PDF.');

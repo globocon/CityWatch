@@ -17,6 +17,8 @@ using System.Security.Claims;
 using System.ComponentModel.Design;
 using Microsoft.Data.SqlClient;
 using System.Net.NetworkInformation;
+using CityWatch.Common.Helpers;
+using Microsoft.VisualBasic;
 
 namespace CityWatch.Kpi.Pages.Admin
 {
@@ -734,11 +736,14 @@ namespace CityWatch.Kpi.Pages.Admin
             if (schedule == null)
                 throw new ArgumentException("Schedule not found");
             // Generate the PDF file
-            byte[] pdfBytes = _sendScheduleService.ProcessDownload(schedule, new DateTime(reportYear, reportMonth, 1), ignoreRecipients, false);
-            Response.Headers["Content-Disposition"] = "inline; filename=" + "CityWatch_Schedule_" + reportYear + "_" + reportMonth + "_Doc";
+            DateTime date = new DateTime(reportYear, reportMonth, 1);
+            string filename = $"{reportYear}{reportMonth.ToString("00")} - {FileNameHelper.GetSanitizedFileNamePart(schedule.ProjectName)} - Monthly Report - {date.ToString("MMM").ToUpper()} {reportYear}";
+            byte[] pdfBytes = _sendScheduleService.ProcessDownload(schedule, new DateTime(reportYear, reportMonth, 1), ignoreRecipients, false);            
+            Response.Headers["Content-Disposition"] = $"inline; filename={filename}";
             // Return the PDF file as a download
-            return File(pdfBytes, "application/pdf", "CityWatch_Schedule_" + reportYear + "_" + reportMonth + "_Doc.pdf");
+            return File(pdfBytes, "application/pdf", filename + ".pdf");
         }
+        
         //Menu chage -start
         public JsonResult OnGetSmartWandSettings(int clientSiteId)
         {
