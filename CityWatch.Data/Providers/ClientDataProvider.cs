@@ -1416,21 +1416,36 @@ namespace CityWatch.Data.Providers
         public void DuressGloablEmail(string Email)
         {
 
-            var EmailUpdate = _context.GlobalDuressEmail.SingleOrDefault(x => x.Email == Email);
-            if (EmailUpdate != null)
+            if (!string.IsNullOrEmpty(Email))
             {
-                EmailUpdate.Email = Email;
-            }
-            else
-            {
-                var Emailnew = new GlobalDuressEmail()
+
+                string[] emailIds = Email.Split(',');
+                var EmailUpdate = _context.GlobalDuressEmail.Where(x => x.Id != 0).ToList();
+                if (EmailUpdate != null)
                 {
-                    Email = Email
-                };
-                _context.GlobalDuressEmail.Add(Emailnew);
+                    if (EmailUpdate.Count != 0)
+                    {
+                        _context.GlobalDuressEmail.RemoveRange(EmailUpdate);
+                        _context.SaveChanges();
+                    }
+                }
+                /*Remove all the rows */
+
+                foreach (string part in emailIds)
+                {
+                    var Emailnew = new GlobalDuressEmail()
+                    {
+                        Email = part
+                    };
+                    _context.GlobalDuressEmail.Add(Emailnew);
+                }
+
+                _context.SaveChanges();
             }
 
-            _context.SaveChanges();
+
+
+
         }
 
         public void GlobalComplianceAlertEmail(string Email)
@@ -1489,7 +1504,7 @@ namespace CityWatch.Data.Providers
                         Email = part
                     };
                     _context.KPIScheduleDeafultMailbox.Add(Emailnew);
-                   
+
                 }
                 _context.SaveChanges();
 
@@ -1849,7 +1864,7 @@ namespace CityWatch.Data.Providers
         //To get the clientsites according to the clientType start
         public int GetClientSite(int? typeId)
         {
-            return  _context.UserClientSiteAccess
+            return _context.UserClientSiteAccess
     .Where(x => x.ClientSite.ClientType.Id == typeId && x.ClientSite.IsActive == true)
     .Select(x => x.ClientSiteId)
     .Distinct()
@@ -1915,7 +1930,7 @@ namespace CityWatch.Data.Providers
         public List<KeyVehicleLog> GetKeyVehiclogWithProviders(string[] providers)
         {
 
-            return _context.KeyVehicleLogs.Where(z => providers.Contains(z.CompanyName) && !string.IsNullOrEmpty(z.Email) && z.PersonType==195)
+            return _context.KeyVehicleLogs.Where(z => providers.Contains(z.CompanyName) && !string.IsNullOrEmpty(z.Email) && z.PersonType == 195)
                   .Include(z => z.ClientSiteLogBook)
                 .ThenInclude(z => z.ClientSite)
 

@@ -1375,6 +1375,16 @@ let clientSiteActiveGuardsSWDetails = $('#clientSiteActiveGuardsSWDetails').Data
         },
     ],
 
+    drawCallback: function () {
+        $('#clientSiteActiveGuardsSWDetails').closest('div.dataTables_scrollBody').css('overflow-x', 'hidden'); //Remove the x scrollbar
+        $('#clientSiteActiveGuardsSWDetails').closest('div.dataTables_scrollBody').css('border-bottom', 0);
+       
+        var api = this.api();
+        var rows = api.rows({ page: 'current' }).nodes();
+        var last = null;
+
+    },
+
 });
 
 $('#clientSiteActiveGuards tbody').on('click', '#btnSWdetails', function (value, record) {
