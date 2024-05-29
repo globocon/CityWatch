@@ -21,6 +21,7 @@ using Dropbox.Api.Users;
 using Microsoft.AspNetCore.Hosting;
 using CityWatch.RadioCheck.Helpers;
 using iText.Kernel.Crypto.Securityhandler;
+using CityWatch.RadioCheck.Services;
 
 namespace CityWatch.Web.Pages.Radio
 {
@@ -32,9 +33,10 @@ namespace CityWatch.Web.Pages.Radio
         private readonly ISmsSenderProvider _smsSenderProvider;
         private readonly IClientDataProvider _clientDataProvider;
         private readonly Settings _settings;
+        private readonly IViewDataService _viewDataService;
         public RadioCheckNewModel(IGuardLogDataProvider guardLogDataProvider, IOptions<EmailOptions> emailOptions,
             IConfiguration configuration, ISmsSenderProvider smsSenderProvider, IClientDataProvider clientDataProvider,
-            IOptions<Settings> settings)
+            IOptions<Settings> settings, IViewDataService viewDataService)
         {
             _guardLogDataProvider = guardLogDataProvider;
             _EmailOptions = emailOptions.Value;
@@ -42,7 +44,9 @@ namespace CityWatch.Web.Pages.Radio
             _smsSenderProvider = smsSenderProvider;
             _clientDataProvider = clientDataProvider;
             _settings = settings.Value;
+            _viewDataService = viewDataService;
         }
+        public string IsAdminminOrPoweruser = string.Empty;
         public int UserId { get; set; }
         public int GuardId { get; set; }
 
@@ -92,6 +96,21 @@ namespace CityWatch.Web.Pages.Radio
                 UserId = int.Parse(loginUserId);
                 GuardId = int.Parse(LoginGuardId);
                 HttpContext.Session.SetInt32("GuardId", GuardId);
+                var guardList = _viewDataService.GetGuards().Where(x => x.Id == GuardId);
+                foreach (var item in guardList)
+                {
+                    if (item.IsAdminPowerUser || item.IsAdminGlobal)
+                    {
+
+                        if (item.IsAdminPowerUser)
+                            IsAdminminOrPoweruser = "IsAdminPowerUser";
+                        else
+                            IsAdminminOrPoweruser = "IsAdminGlobal";
+
+
+                    }
+
+                }
                 return Page();
             }
             // Check if the user is authenticated(Normal Admin Login)
@@ -105,7 +124,20 @@ namespace CityWatch.Web.Pages.Radio
             {
 
                 HttpContext.Session.SetInt32("GuardId", GuardId);
-
+                var guardList = _viewDataService.GetGuards().Where(x => x.Id == GuardId);
+                foreach (var item in guardList)
+                {
+                    if (item.IsAdminPowerUser || item.IsAdminGlobal)
+                    {
+                        
+                        if (item.IsAdminPowerUser)
+                            IsAdminminOrPoweruser = "IsAdminPowerUser";
+                        else
+                            IsAdminminOrPoweruser = "IsAdminGlobal";
+                        HttpContext.Session.SetString("IsAdminminOrPoweruser", IsAdminminOrPoweruser);
+                    }
+                   
+                }
                 return Page();
             }
             else

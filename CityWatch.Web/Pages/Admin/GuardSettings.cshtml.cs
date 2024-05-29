@@ -1126,7 +1126,20 @@ namespace CityWatch.Web.Pages.Admin
                             }
                             else
                             {
-                                SuccessMessage = "Not authorized to access this page";
+                                if (guard.IsAdminGlobal || guard.IsAdminPowerUser)
+                                {
+                                    AccessPermission = true;
+                                    GuId = guard.Id;
+                                    if (AuthUserHelper.LoggedInUserId != null)
+                                    {
+                                        LoggedInUserId = AuthUserHelper.LoggedInUserId;
+                                    }
+                                    SuccessCode = 1;
+                                }
+                                else
+                                {
+                                    SuccessMessage = "Not authorized to access this page";
+                                }
                             }
                         }
                         else

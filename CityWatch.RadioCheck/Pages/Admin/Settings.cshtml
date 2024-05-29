@@ -5,6 +5,7 @@
 @using Microsoft.Extensions.Configuration
 @using System.Security.Claims
 @model CityWatch.RadioCheck.Pages.Admin.SettingsModel
+
 @inject IConfiguration Configuration
 @inject IConfigDataProvider configDataProvider
 
@@ -16,189 +17,200 @@
 <div>
 
     <ul class="nav nav-tabs" id="settingsTab" role="tablist">
-        <li class="nav-item">
-            <a class="nav-link active" id="rcstype-tab" data-toggle="tab" href="#rcstype" role="tab" aria-controls="rcstype" aria-selected="true">Radio Check</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link " id="broadcastBanner-tab" data-toggle="tab" href="#broadcastBanner" role="tab" aria-controls="broadcastBanner" aria-selected="false">Broadcast Banner</a>
-        </li>
+        @if (Model.IsAdminminOrPoweruser != "IsAdminPowerUser")
+        {
+            <li class="nav-item">
+                <a class="nav-link active" id="rcstype-tab" data-toggle="tab" href="#rcstype" role="tab" aria-controls="rcstype" aria-selected="true">Radio Check</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link " id="broadcastBanner-tab" data-toggle="tab" href="#broadcastBanner" role="tab" aria-controls="broadcastBanner" aria-selected="false">Broadcast Banner</a>
+            </li>
 
-        <li class="nav-item">
-            <a class="nav-link " id="logbook-tab" data-toggle="tab" href="#logbook" role="tab" aria-controls="logbook" aria-selected="false">Log Book & Alerts</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link " id="apicalls-tab" data-toggle="tab" href="#apicalls" role="tab" aria-controls="apicalls" aria-selected="false">API Calls</a>
-        </li>
+            <li class="nav-item">
+                <a class="nav-link " id="logbook-tab" data-toggle="tab" href="#logbook" role="tab" aria-controls="logbook" aria-selected="false">Log Book & Alerts</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link " id="apicalls-tab" data-toggle="tab" href="#apicalls" role="tab" aria-controls="apicalls" aria-selected="false">API Calls</a>
+            </li>
+        }
+        else
+        {
+            <li class="nav-item">
+                <a class="nav-link active" id="broadcastBanner-tab" data-toggle="tab" href="#broadcastBanner" role="tab" aria-controls="broadcastBanner" aria-selected="false">Broadcast Banner</a>
+            </li>
+        }
 
     </ul>
     <div class="tab-content" id="settingsTabContent">
-        <div class="tab-pane fade show active py-3" id="rcstype" role="tabpanel" aria-labelledby="rcstype-tab">
-            <div class="row">
-                <div class="col text-right">
-                    <button class="btn btn-success mb-3" id="add_radiocheck_status"><i class="fa fa-plus mr-2"></i>Add New</button>
+          @if (Model.IsAdminminOrPoweruser != "IsAdminPowerUser")
+        {
+            <div class="tab-pane fade show active py-3" id="rcstype" role="tabpanel" aria-labelledby="rcstype-tab">
+                <div class="row">
+                    <div class="col text-right">
+                        <button class="btn btn-success mb-3" id="add_radiocheck_status"><i class="fa fa-plus mr-2"></i>Add New</button>
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col">
-                    <table class="table" id="radiocheck_status_type_settings"></table>
+                <div class="row">
+                    <div class="col">
+                        <table class="table" id="radiocheck_status_type_settings"></table>
+                    </div>
                 </div>
-            </div>
-            <div class="row mt-2">
-                <div class="col-md-12">
-                    <div class="card">
-                        <div class="card-header d-flex justify-content-between">
-                            <b><u>LEGEND</u></b>
-                            <i class="fa fa-chevron-up text-black-50" aria-hidden="true" data-toggle="collapse" data-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree"></i>
-                        </div>
+                <div class="row mt-2">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between">
+                                <b><u>LEGEND</u></b>
+                                <i class="fa fa-chevron-up text-black-50" aria-hidden="true" data-toggle="collapse" data-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree"></i>
+                            </div>
 
-                        <div id="collapseThree" class="collapse multi-collapse show">
+                            <div id="collapseThree" class="collapse multi-collapse show">
+                                <div class="card-body row m-0">
+                                    <div class="col-md-12">
+
+                                        <ul class="list-unstyled">
+                                            <li>GREEN 1 = Line stamped, event registered as a 2 hour event.</li>
+                                            <li>GREEN 2 = Line Stamped, recent registered as 2 hour event, DURESS unlocked (back to yellow inactive state)</li>
+                                            <li>RED 1 = Line stamped, Guard Forced OFF DUTY, Yellow Caution into LB that Guard[XXX] did not logoff and Control Room had to correct.</li>
+                                            <li>RED 2 = Line stamped, No Change to Status, Yellow Caution into LB that Control Room tried to contact Guard[XXX] and no answer.</li>
+                                            <li>RED 3 = Line stamped,  No Change to Status, Yellow Caution into LB that Control Room tried to contact Guard[XXX] and they are on their way but running late.</li>
+                                            <li>RED 4 = N/A-Mistake (Clear All Status Data)</li>
+                                        </ul>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade show  py-3" id="broadcastBanner" role="tabpanel" aria-labelledby="broadcastBanner-tab">
+                <div class="row mt-2">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between">
+                                <b><u>Line 1 - Adhoc Live Events</u></b>
+                                <div class="col text-right">
+                                    <button class="btn btn-success" id="add_live_events"><i class="fa fa-plus mr-2"></i>Add New</button>
+                                </div>
+                            </div>
                             <div class="card-body row m-0">
                                 <div class="col-md-12">
+                                    <table class="table table-responsive" id="BroadCastBannerLiveEvents"></table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between">
+                                <b><u>Line 2 - Known Calendar Events</u></b>
+                                <div class="col text-right">
+                                    <button class="btn btn-success" id="add_calendar_events"><i class="fa fa-plus mr-2"></i>Add New</button>
+                                </div>
+                            </div>
+                            <div class="card-body row m-0">
+                                <div class="col-md-12">
+                                    <table class="table table-responsive" id="BroadCastBannerCalendarEvents"></table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                                    <ul class="list-unstyled">
-                                        <li>GREEN 1 = Line stamped, event registered as a 2 hour event.</li>
-                                        <li>GREEN 2 = Line Stamped, recent registered as 2 hour event, DURESS unlocked (back to yellow inactive state)</li>
-                                        <li>RED 1 = Line stamped, Guard Forced OFF DUTY, Yellow Caution into LB that Guard[XXX] did not logoff and Control Room had to correct.</li>
-                                        <li>RED 2 = Line stamped, No Change to Status, Yellow Caution into LB that Control Room tried to contact Guard[XXX] and no answer.</li>
-                                        <li>RED 3 = Line stamped,  No Change to Status, Yellow Caution into LB that Control Room tried to contact Guard[XXX] and they are on their way but running late.</li>
-                                        <li>RED 4 = N/A-Mistake (Clear All Status Data)</li>
-                                    </ul>
+
+            <div class="tab-pane fade show  py-3" id="logbook" role="tabpanel" aria-labelledby="logbook-tab">
+                <div class="row mt-2">
+                    <div class="col-md-12 m-b-2">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between">
+                                <b><u>Control Room Radio Check Logbook Assignment</u></b>
+                                <div class="col text-right">
+                                    <button class="btn btn-success" id="add_logbook"><i class="fa fa-plus mr-2"></i>Add New Site Logbook</button>
+                                </div>
+                            </div>
+
+                            <div class="card-body row m-0">
+                                <div class="col-md-12">
+                                    <table class="table" id="gridSiteDetailsforRcLogbook"></table>
                                 </div>
 
                             </div>
+
                         </div>
+
+
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <div class="tab-pane fade show  py-3" id="broadcastBanner" role="tabpanel" aria-labelledby="broadcastBanner-tab">
-            <div class="row mt-2">
-                <div class="col-md-12">
-                    <div class="card">
-                        <div class="card-header d-flex justify-content-between">
-                            <b><u>Line 1 - Adhoc Live Events</u></b>
-                            <div class="col text-right">
-                                <button class="btn btn-success" id="add_live_events"><i class="fa fa-plus mr-2"></i>Add New</button>
-                            </div>
-                        </div>
-                        <div class="card-body row m-0">
-                            <div class="col-md-12">
-                                <table class="table table-responsive" id="BroadCastBannerLiveEvents"></table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row mt-2">
-                <div class="col-md-12">
-                    <div class="card">
-                        <div class="card-header d-flex justify-content-between">
-                            <b><u>Line 2 - Known Calendar Events</u></b>
-                            <div class="col text-right">
-                                <button class="btn btn-success" id="add_calendar_events"><i class="fa fa-plus mr-2"></i>Add New</button>
-                            </div>
-                        </div>
-                        <div class="card-body row m-0">
-                            <div class="col-md-12">
-                                <table class="table table-responsive" id="BroadCastBannerCalendarEvents"></table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-        <div class="tab-pane fade show  py-3" id="logbook" role="tabpanel" aria-labelledby="logbook-tab">
-            <div class="row mt-2">
-                <div class="col-md-12 m-b-2">
-                    <div class="card">
-                        <div class="card-header d-flex justify-content-between">
-                            <b><u>Control Room Radio Check Logbook Assignment</u></b>
-                            <div class="col text-right">
-                                <button class="btn btn-success" id="add_logbook"><i class="fa fa-plus mr-2"></i>Add New Site Logbook</button>
-                            </div>
-                        </div>
-
-                        <div class="card-body row m-0">
-                            <div class="col-md-12">
-                                <table class="table" id="gridSiteDetailsforRcLogbook"></table>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                </div>
-            </div>
-            <div class="row mt-2">
-                <div class="col-md-12 m-b-2">
-                    <div class="card">
-                        <div class="card-header d-flex justify-content-between">
-                            <b><u>Duress Assignment(Global)</u></b>
-                            @* <div class="col text-right">
+                <div class="row mt-2">
+                    <div class="col-md-12 m-b-2">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between">
+                                <b><u>Duress Assignment(Global)</u></b>
+                                @* <div class="col text-right">
 
                             </div> *@
-                        </div>
+                            </div>
 
-                        <div class="card-body row m-0">
-                            <div class="col-md-12">
-                                <div class="form-group row">
-                                    <label for="gs_duress_email" class="col-md-2 col-form-label">Email alert</label>
-                                    <div class="col-md-3">
-                                        <input type="email" class="form-control" id="du_duress_email">
+                            <div class="card-body row m-0">
+                                <div class="col-md-12">
+                                    <div class="form-group row">
+                                        <label for="gs_duress_email" class="col-md-2 col-form-label">Email alert</label>
+                                        <div class="col-md-3">
+                                            <input type="email" class="form-control" id="du_duress_email">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <button class="btn btn-success" id="add_GloblEmail">Save</button>
+                                        </div>
                                     </div>
-                                    <div class="col-md-3">
-                                        <button class="btn btn-success" id="add_GloblEmail">Save</button>
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <label for="gs_duress_sms" class="col-md-2 col-form-label">SMS alert</label>
-                                    <div class="col-md-3">
-                                        <input type="text" class="form-control" id="du_duress_sms" readonly>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <button class="btn btn-success" id="add_GlobalSms">SMS Numbers</button>
+                                    <div class="form-group row">
+                                        <label for="gs_duress_sms" class="col-md-2 col-form-label">SMS alert</label>
+                                        <div class="col-md-3">
+                                            <input type="text" class="form-control" id="du_duress_sms" readonly>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <button class="btn btn-success" id="add_GlobalSms">SMS Numbers</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="row mt-2">
-                <div class="col-md-12 m-b-2">
-                    <div class="card">
-                        <div class="card-header d-flex justify-content-between">
-                            <b><u>HR Compliance Alerts (Global)</u></b>
-                            @* <div class="col text-right">
+                <div class="row mt-2">
+                    <div class="col-md-12 m-b-2">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between">
+                                <b><u>HR Compliance Alerts (Global)</u></b>
+                                @* <div class="col text-right">
 
                             </div> *@
-                        </div>
+                            </div>
 
-                        <div class="card-body row m-0">
-                            <div class="col-md-12">
-                                <div class="form-group row">
-                                    <label for="hr_compliance_email" class="col-md-2 col-form-label">Email alert</label>
-                                    <div class="col-md-3">
-                                        <input type="email" class="form-control" id="hr_compliance_email">
-                                    </div>
-                                    <div class="col-md-3">
-                                        <button class="btn btn-success" id="add_ComplianceEmail">Save</button>
+                            <div class="card-body row m-0">
+                                <div class="col-md-12">
+                                    <div class="form-group row">
+                                        <label for="hr_compliance_email" class="col-md-2 col-form-label">Email alert</label>
+                                        <div class="col-md-3">
+                                            <input type="email" class="form-control" id="hr_compliance_email">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <button class="btn btn-success" id="add_ComplianceEmail">Save</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
             </div>
 
-        </div>
-
-        <div class="tab-pane fade show  py-3" id="apicalls" role="tabpanel" aria-labelledby="apicalls-tab">
-            <div class="row mt-2">
+            <div class="tab-pane fade show  py-3" id="apicalls" role="tabpanel" aria-labelledby="apicalls-tab">
+                <div class="row mt-2">
                 <div class="col-md-12">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between">
@@ -259,7 +271,48 @@
                     </div>
                 </div>
             </div>
-        </div>
+            </div>
+        }
+        else
+        {
+            <div class="tab-pane fade show  active py-3" id="broadcastBanner" role="tabpanel" aria-labelledby="broadcastBanner-tab">
+                <div class="row mt-2">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between">
+                                <b><u>Line 1 - Adhoc Live Events</u></b>
+                                <div class="col text-right">
+                                    <button class="btn btn-success" id="add_live_events"><i class="fa fa-plus mr-2"></i>Add New</button>
+                                </div>
+                            </div>
+                            <div class="card-body row m-0">
+                                <div class="col-md-12">
+                                    <table class="table table-responsive" id="BroadCastBannerLiveEvents"></table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between">
+                                <b><u>Line 2 - Known Calendar Events</u></b>
+                                <div class="col text-right">
+                                    <button class="btn btn-success" id="add_calendar_events"><i class="fa fa-plus mr-2"></i>Add New</button>
+                                </div>
+                            </div>
+                            <div class="card-body row m-0">
+                                <div class="col-md-12">
+                                    <table class="table table-responsive" id="BroadCastBannerCalendarEvents"></table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        }
 
     </div>
 
