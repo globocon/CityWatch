@@ -79,16 +79,43 @@
         buttonTextAlignment: 'left',
         includeSelectAllOption: true,
     });
-    //$('#Guard_Access').on('change', function () {
-    //    $(".multiselect-option input[type=checkbox]:checked").each(function () {
-    //        var isChecked1 = $(this).is(':checked');
-    //        if (isChecked1 == true) {
-    //            crmindivid = $(this).closest('checkbox').find('#IsCRMIndividualId').val();
-    //        }
+    /*P1-203 ADMIN USER PROFILE-START*/
+    $('#Guard_Access').on('change', function () {
+        
+        var newval = $(this).val();
+        var newval1 = newval[newval.length - 1];
+        if (parseInt(newval1) == 6) {
+            $(".multiselect-option input[type=checkbox]:checked").each(function () {
+                var isChecked1 = $(this).is(':checked');
+                if (isChecked1 == true) {
+                    var new1 = $(this).val();
+                    if (parseInt(new1) == 5)
+                        
+                        $(".multiselect-option input[type=checkbox][value='" + 5 + "']").prop("checked", false);
+                    if (parseInt(new1) == 4)
+                        $(".multiselect-option input[type=checkbox][value='" + 4 + "']").prop("checked", false);
+                }
 
-    //    });
+            });
+        }
+        if (parseInt(newval1) == 5) {
+            $(".multiselect-option input[type=checkbox]:checked").each(function () {
+                var isChecked1 = $(this).is(':checked');
+                if (isChecked1 == true) {
+                    var new1 = $(this).val();
+                    if (parseInt(new1) == 6)
+                        $(".multiselect-option input[type=checkbox][value='" + 6 + "']").prop("checked", false);
+                    if (parseInt(new1) == 4)
+                        $(".multiselect-option input[type=checkbox][value='" + 4 + "']").prop("checked", false);
+                }
 
-    //});
+            });
+        }
+        //$("#Guard_Access").multiselect();
+        //$("#Guard_Access").multiselect("refresh");
+
+    });
+    /*P1-203 ADMIN USER PROFILE-END*/
     function getSmartWandOrOfficerPosition(isPosition, clientSiteName, smartWandOrPositionId) {
         const url = isPosition ?
             '/Guard/Login?handler=OfficerPositions' :
