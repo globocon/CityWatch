@@ -621,6 +621,7 @@ $('#add_GloblEmail').on('click', function () {
             type: 'POST',
             headers: { 'RequestVerificationToken': token },
         }).done(function () {
+            alert("The Duress Email Alert Email was saved successfully");
         })
     }
 
