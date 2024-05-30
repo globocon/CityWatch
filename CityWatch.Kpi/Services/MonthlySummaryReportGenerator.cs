@@ -112,13 +112,7 @@ namespace CityWatch.Kpi.Services
                 DataFilter = PatrolDataFilter.Custom,
                 ClientSites = schedule.KpiSendScheduleClientSites.Select(z => z.ClientSite.Name).ToArray(),
             });
-
-            if (patrolDataReport.ResultsCount > 0)
-            {
-                var graphsTable = CreateGraphsTables(patrolDataReport);
-                doc.Add(graphsTable);
-            }
-
+                        
             var tableLegend = CreateLegend();
             doc.Add(tableLegend);
 
@@ -126,6 +120,14 @@ namespace CityWatch.Kpi.Services
             {
                 var tableNotes = CreateNotes(schedule.SummaryNote1, schedule.SummaryNote2);
                 doc.Add(tableNotes);
+            }
+
+            if (patrolDataReport.ResultsCount > 0)
+            {                
+                doc.Add(new AreaBreak());
+                doc.Add(tableReportHeader);
+                var graphsTable = CreateGraphsTables(patrolDataReport);
+                doc.Add(graphsTable);
             }
 
             doc.Close();
@@ -152,7 +154,7 @@ namespace CityWatch.Kpi.Services
         private Table CreateGraphsTable1(PatrolDataReport patrolDataReport)
         {
             var chartDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 33, 1, 32, 1, 33 })).UseAllAvailableWidth().SetMarginBottom(5);
-
+            
             chartDataTable.AddCell(GetChartHeaderCell("IR RECORDS PERCENTAGE BY SITE", "\nTotal Site Count: " + patrolDataReport.SitePercentage.Count));
 
             // row 1 blank cell
@@ -561,15 +563,21 @@ namespace CityWatch.Kpi.Services
 
         private Image GetChartImage(KeyValuePair<string, double>[] data, ChartType chartType = ChartType.Pie, int? chartWidth = null)
         {
+            var modifiedData = data;
             if (data.All(z => z.Value == 0))
-                return null;
+            {
+                modifiedData = new KeyValuePair<string, double>[]
+                {
+                    new KeyValuePair<string, double>("no/data", 100)
+                };
+            }
 
             try
             {
                 var graphFileName = IO.Path.Combine(_graphImageRootDir, $"{DateTime.Now: ddMMyyyy_HHmmss}.png");
                 var options = new { type = chartType, fileName = graphFileName, width = chartWidth };
 
-                var task = StaticNodeJSService.InvokeFromFileAsync<string>("Scripts/ir-chart.js", "drawChart", args: new object[] { options, data });
+                var task = StaticNodeJSService.InvokeFromFileAsync<string>("Scripts/ir-chart.js", "drawChart", args: new object[] { options, modifiedData });
                 var success = task.Result == "OK";
 
                 if (!success)

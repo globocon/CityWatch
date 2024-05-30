@@ -214,6 +214,12 @@
 
         //Draw arc paths
         arcs.append('path')
+            .attr('stroke', function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return 'black'
+                else
+                    return '';
+            })
             .attr('fill', function (d, i) { return getFillColor(d, i, data[i].key); })
             .attr('d', arc);
 
@@ -223,6 +229,8 @@
             .style('font-size', "11px")
             .attr('text-anchor', 'middle')
             .text(function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return '0%';
                 if (data[i].value > 0)
                     return data[i].value + '%';
             });
@@ -306,7 +314,11 @@
 
         //Append legend text
         legend.append("text")
-            .text(function (d, i) { return data[i].key + " (" + data[i].value + "%)"; })
+            .text(function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return ' (0%)';
+                return truncate(data[i].key) + " (" + data[i].value + "%)";
+            })
             .style("font-size", "10px")
             .attr("x", 11)
             .attr("y", 8);
@@ -331,6 +343,7 @@
         { 'name': 'yellow', 'color': '#ffff00' },
         { 'name': 'green', 'color': '#00ff00' },
         { 'name': 'n/a', 'color': '#4682b4' },
+        { 'name': 'no/data', 'color': '#FFFFFF' },
     ];
 
     const truncate = (value = '', maxLength = 25) =>
@@ -381,6 +394,12 @@
 
         //Draw arc paths
         arcs.append('path')
+            .attr('stroke', function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return 'black'
+                else
+                    return '';
+            })
             .attr('fill', function (d, i) { return getFillColor(d, i, data[i].key); })
             .attr('d', arc);
 
@@ -391,6 +410,8 @@
             .style("font-family", "Arial")
             .attr('text-anchor', 'middle')
             .text(function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return '0%';
                 if (data[i].value > 0)
                     return data[i].value + '%';
             });
@@ -410,7 +431,11 @@
 
         //Append legend text
         legend.append('text')
-            .text(function (d, i) { return truncate(data[i].key) + " (" + data[i].value + "%)"; })
+            .text(function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return ' (0%)';
+                return truncate(data[i].key) + " (" + data[i].value + "%)";
+            })
             .style("font-size", "11px")
             .style("font-family", "Arial")
             .attr("x", 12)

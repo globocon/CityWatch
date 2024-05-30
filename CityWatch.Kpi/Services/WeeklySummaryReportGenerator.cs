@@ -431,8 +431,14 @@ namespace CityWatch.Kpi.Services
         }
         private Image GetChartImage(KeyValuePair<string, double>[] data, ChartType chartType = ChartType.Pie, int? chartWidth = null)
         {
+            var modifiedData = data;
             if (data.All(z => z.Value == 0))
-                return null;
+            {
+                modifiedData = new KeyValuePair<string, double>[]
+                {
+                    new KeyValuePair<string, double>("no/data", 100)
+                };
+            }
 
             try
             {
