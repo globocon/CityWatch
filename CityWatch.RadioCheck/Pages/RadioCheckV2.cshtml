@@ -1,7 +1,7 @@
 ﻿@page
 @using CityWatch.Data.Models;
 @using CityWatch.Data.Providers;
-@model CityWatch.Web.Pages.Radio.RadioCheckNewModel
+@model CityWatch.Web.Pages.Radio.RadioCheckNewModel;
 @inject IConfigDataProvider configDataProvider
 @{
     ViewData["Title"] = "Radio Check";
@@ -38,6 +38,7 @@
             </div>
         </div>
     </div>
+    <input type="hidden" id="txt_admintype" asp-for="@Model.IsAdminminOrPoweruser" />
     <div id="collapse-example" class="collapse show" aria-labelledby="heading-example">
         <div class="card-body" id="events-list">
             <div class="row mt-2">

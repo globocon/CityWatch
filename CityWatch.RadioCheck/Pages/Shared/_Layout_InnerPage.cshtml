@@ -4,6 +4,7 @@
 @using CityWatch.Data.Providers;
 @inject IWebHostEnvironment environment
 @inject IUserDataProvider viewDataService
+@model CityWatch.Web.Pages.Radio.RadioCheckNewModel;
 @{
     var claimsIdentity = User.Identity as ClaimsIdentity;
     var companydetail = viewDataService.GetCompanyDetails().SingleOrDefault(x => x.Id == 1);
@@ -91,7 +92,14 @@
                         <div>
                             <a href="@Url.Page("/Admin/Settings")" class="nav-link py-0"><i class="fa fa-cog mr-2"></i>Settings</a>
                         </div>
-                       
+
+                    }
+                    else
+                    {
+                        @if (@Model.IsAdminminOrPoweruser == "IsAdminPowerUser" || @Model.IsAdminminOrPoweruser == "IsAdminGlobal")
+                        {
+                            <a href="@Url.Page("/Admin/Settings")" class="nav-link py-0"><i class="fa fa-cog mr-2"></i>Settings</a>
+                        }
                     }
                     <div>
                         <a href="@Url.Page("/GuardDetails")" class="nav-link py-0"><i class="fa fa-user mr-2"></i>Guard Details</a>

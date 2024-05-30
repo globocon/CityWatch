@@ -66,6 +66,8 @@ namespace CityWatch.Web.Models
         public bool IsRCAccess { get { return _guard.IsRCAccess; } }
         public bool IsKPIAccess { get { return _guard.IsKPIAccess; } }
         public bool IsLB_KV_IR { get { return _guard.IsLB_KV_IR; } }
+        public bool IsAdminGlobal { get { return _guard.IsAdminGlobal; } }
+        public bool IsAdminPowerUser { get { return _guard.IsAdminPowerUser; } }
         public bool IsSTATS { get { return _guard.IsSTATS; } }
 
        

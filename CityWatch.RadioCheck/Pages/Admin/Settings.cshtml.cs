@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using static Dropbox.Api.TeamLog.EventCategory;
 using MailKit.Net.Smtp;
+using CityWatch.RadioCheck.Services;
 
 namespace CityWatch.RadioCheck.Pages.Admin
 {
@@ -30,11 +31,15 @@ namespace CityWatch.RadioCheck.Pages.Admin
         //private readonly IUserDataProvider _userDataProvider;
         public readonly IConfigDataProvider _configDataProvider;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IViewDataService _viewDataService;
+
+
 
 
         public SettingsModel(IWebHostEnvironment webHostEnvironment,
             IClientDataProvider clientDataProvider,
-            IConfigDataProvider configDataProvider
+            IConfigDataProvider configDataProvider,
+            IViewDataService viewDataService
             //,
             //IUserDataProvider userDataProvider
             )
@@ -43,19 +48,44 @@ namespace CityWatch.RadioCheck.Pages.Admin
             _configDataProvider = configDataProvider;
             //_userDataProvider = userDataProvider;
             _webHostEnvironment = webHostEnvironment;
+            _viewDataService = viewDataService;
         }
 
-
+        public string IsAdminminOrPoweruser = string.Empty;
 
         public IConfigDataProvider ConfigDataProiver { get { return _configDataProvider; } }
 
         //public IUserDataProvider UserDataProvider { get { return _userDataProvider; } }
 
         public IClientDataProvider ClientDataProvider { get { return _clientDataProvider; } }
+        public int GuardId { get; set; }
+        public IActionResult OnGet()
+        {
+            GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            if (GuardId != 0)
+            {
 
+                HttpContext.Session.SetInt32("GuardId", GuardId);
+                var guardList = _viewDataService.GetGuards().Where(x => x.Id == GuardId);
+                foreach (var item in guardList)
+                {
+                    if (item.IsAdminPowerUser || item.IsAdminGlobal)
+                    {
 
+                        if (item.IsAdminPowerUser)
+                            IsAdminminOrPoweruser = "IsAdminPowerUser";
+                        else
+                            IsAdminminOrPoweruser = "IsAdminGlobal";
+                        HttpContext.Session.SetString("IsAdminminOrPoweruser", IsAdminminOrPoweruser);
+                    }
 
-        [BindProperty]
+                }
+
+            }
+            return Page();
+        }
+
+            [BindProperty]
         public FeedbackTemplate FeedbackTemplate { get; set; }
         [BindProperty]
         public FeedbackType FeedbackNewType { get; set; }
@@ -65,14 +95,14 @@ namespace CityWatch.RadioCheck.Pages.Admin
         [BindProperty]
         public ReportTemplate ReportTemplate { get; set; }
 
-        public IActionResult OnGet()
-        {
-            //if (!AuthUserHelper.IsAdminUserLoggedIn)
-            //    return Redirect(Url.Page("/Account/Unauthorized"));
+        //public IActionResult OnGet()
+        //{
+        //    //if (!AuthUserHelper.IsAdminUserLoggedIn)
+        //    //    return Redirect(Url.Page("/Account/Unauthorized"));
 
-            //ReportTemplate = _configDataProvider.GetReportTemplate();
-            return Page();
-        }
+        //    //ReportTemplate = _configDataProvider.GetReportTemplate();
+        //    return Page();
+        //}
 
         //public JsonResult OnGetClientTypes(int? page, int? limit)
         //{

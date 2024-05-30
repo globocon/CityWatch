@@ -202,8 +202,15 @@ namespace CityWatch.Web.Helpers
             if (pageName == PageNameHelper.ControlRoom)
             {
                 menuHtml.AppendLine("<div>");
-                menuHtml.AppendLine(@"<a href=""/Admin/Settings"" class=""nav-link py-0""><i class=""fa fa-cog mr-2""></i>C4i System Settings</a>");
-                menuHtml.AppendLine("</div>");
+                if (!AuthUserHelper.IsAdminUserLoggedIn)
+                {
+                    menuHtml.AppendLine(@"<a href=""{0}"" id=""LoginConformationBtnC4iSettings""class=""nav-link py-0""><i class=""fa fa-cog mr-2""></i>C4i System Settings</a>");
+                }
+                else
+                {
+                    menuHtml.AppendLine(@"<a href=""/Admin/Settings"" class=""nav-link py-0""><i class=""fa fa-cog mr-2""></i>C4i System Settings</a>");
+                }
+                    menuHtml.AppendLine("</div>");
             }
             // p1#188 Hyperlink Missing - Manju - 26-03-2024 --end
 

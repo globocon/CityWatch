@@ -79,16 +79,43 @@
         buttonTextAlignment: 'left',
         includeSelectAllOption: true,
     });
+    /*P1-203 ADMIN USER PROFILE-START*/
     //$('#Guard_Access').on('change', function () {
-    //    $(".multiselect-option input[type=checkbox]:checked").each(function () {
-    //        var isChecked1 = $(this).is(':checked');
-    //        if (isChecked1 == true) {
-    //            crmindivid = $(this).closest('checkbox').find('#IsCRMIndividualId').val();
-    //        }
+        
+    //    var newval = $(this).val();
+    //    var newval1 = newval[newval.length - 1];
+    //    if (parseInt(newval1) == 6) {
+    //        $(".multiselect-option input[type=checkbox]:checked").each(function () {
+    //            var isChecked1 = $(this).is(':checked');
+    //            if (isChecked1 == true) {
+    //                var new1 = $(this).val();
+    //                if (parseInt(new1) == 5)
+                        
+    //                    $(".multiselect-option input[type=checkbox][value='" + 5 + "']").prop("checked", false);
+    //                if (parseInt(new1) == 4)
+    //                    $(".multiselect-option input[type=checkbox][value='" + 4 + "']").prop("checked", false);
+    //            }
 
-    //    });
+    //        });
+    //    }
+    //    if (parseInt(newval1) == 5) {
+    //        $(".multiselect-option input[type=checkbox]:checked").each(function () {
+    //            var isChecked1 = $(this).is(':checked');
+    //            if (isChecked1 == true) {
+    //                var new1 = $(this).val();
+    //                if (parseInt(new1) == 6)
+    //                    $(".multiselect-option input[type=checkbox][value='" + 6 + "']").prop("checked", false);
+    //                if (parseInt(new1) == 4)
+    //                    $(".multiselect-option input[type=checkbox][value='" + 4 + "']").prop("checked", false);
+    //            }
+
+    //        });
+    //    }
+    //    //$("#Guard_Access").multiselect();
+    //    //$("#Guard_Access").multiselect("refresh");
 
     //});
+    /*P1-203 ADMIN USER PROFILE-END*/
     function getSmartWandOrOfficerPosition(isPosition, clientSiteName, smartWandOrPositionId) {
         const url = isPosition ?
             '/Guard/Login?handler=OfficerPositions' :
@@ -2545,6 +2572,12 @@
 
         // ;
         var selectedValues = [];
+        if (data.isAdminGlobal) {
+            selectedValues.push(6);
+        }
+        if (data.isAdminPowerUser) {
+            selectedValues.push(5);
+        }
         if (data.isRCAccess) {
             selectedValues.push(4);
         }
@@ -3571,6 +3604,15 @@
         return false;
     });
     /* Check if Guard can access the KPI */
+    /* p1-203 Admin User Profile -start */
+    $("#LoginConformationBtnC4iSettings").on('click', function () {
+        clearGuardValidationSummary('GuardLoginValidationSummary');
+        $('#txt_securityLicenseNoC4iSettings').val('');
+        $("#modelGuardLoginC4iSettingsPatrol").modal("show");
+        return false;
+    });
+    /* p1-203 Admin User Profile -start */
+    /* Check if Guard can access the KPI */
     $('#btnGuardLoginKPI').on('click', function () {
         const securityLicenseNo = $('#txt_securityLicenseNo').val();
         if (securityLicenseNo === '') {
@@ -3709,7 +3751,55 @@
         }
     });
     /* Check if Guard can access the IR-END */
+    /*p1-203 Admin User Profile-start*/
+    //to check whether the Guard can enter the settings
+    $('#btnGuardLoginC4iSettings').on('click', function () {
+        const securityLicenseNo = $('#txt_securityLicenseNoC4iSettings').val();
+        if (securityLicenseNo === '') {
+            displayGuardValidationSummary('GuardLoginValidationSummaryC4iSettings', 'Please enter the security license No ');
+        }
+        else {
 
+
+
+            /* $('#txt_securityLicenseNoIR').val('');*/
+
+
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+                type: 'POST',
+                data: {
+                    securityLicenseNo: securityLicenseNo,
+                    type: 'Settings'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.accessPermission) {
+                    /* $('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginC4iSettingsPatrol').modal('hide');
+
+                    clearGuardValidationSummary('GuardLoginValidationSummaryC4iSettings');
+                    window.location.href = '/Admin/Settings';
+                }
+                else {
+
+                    // $('#txt_securityLicenseNo').val('');
+                    /*$('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginC4iSettingsPatrol').modal('show');
+                    if (result.successCode === 0) {
+                        displayGuardValidationSummary('GuardLoginValidationSummaryC4iSettings', result.successMessage);
+                    }
+                }
+            });
+
+
+            clearGuardValidationSummary('GuardLoginValidationSummaryIR');
+
+
+
+        }
+    });
+   /* p1 - 203 Admin User Profile - end*/
     /*for pushing notifications from the control room - start*/
     $('#pushNoTificationsGuardModal').on('shown.bs.modal', function (event) {
         /*timer pause while editing*/
