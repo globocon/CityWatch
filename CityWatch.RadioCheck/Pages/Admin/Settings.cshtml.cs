@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using static Dropbox.Api.TeamLog.EventCategory;
 using MailKit.Net.Smtp;
-using CityWatch.RadioCheck.Services;
 
 namespace CityWatch.RadioCheck.Pages.Admin
 {
@@ -31,15 +30,11 @@ namespace CityWatch.RadioCheck.Pages.Admin
         //private readonly IUserDataProvider _userDataProvider;
         public readonly IConfigDataProvider _configDataProvider;
         private readonly IWebHostEnvironment _webHostEnvironment;
-        private readonly IViewDataService _viewDataService;
-
-
 
 
         public SettingsModel(IWebHostEnvironment webHostEnvironment,
             IClientDataProvider clientDataProvider,
-            IConfigDataProvider configDataProvider,
-            IViewDataService viewDataService
+            IConfigDataProvider configDataProvider
             //,
             //IUserDataProvider userDataProvider
             )
@@ -48,44 +43,19 @@ namespace CityWatch.RadioCheck.Pages.Admin
             _configDataProvider = configDataProvider;
             //_userDataProvider = userDataProvider;
             _webHostEnvironment = webHostEnvironment;
-            _viewDataService = viewDataService;
         }
 
-        public string IsAdminminOrPoweruser = string.Empty;
+
 
         public IConfigDataProvider ConfigDataProiver { get { return _configDataProvider; } }
 
         //public IUserDataProvider UserDataProvider { get { return _userDataProvider; } }
 
         public IClientDataProvider ClientDataProvider { get { return _clientDataProvider; } }
-        public int GuardId { get; set; }
-        public IActionResult OnGet()
-        {
-            GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
-            if (GuardId != 0)
-            {
 
-                HttpContext.Session.SetInt32("GuardId", GuardId);
-                var guardList = _viewDataService.GetGuards().Where(x => x.Id == GuardId);
-                foreach (var item in guardList)
-                {
-                    if (item.IsAdminPowerUser || item.IsAdminGlobal)
-                    {
 
-                        if (item.IsAdminPowerUser)
-                            IsAdminminOrPoweruser = "IsAdminPowerUser";
-                        else
-                            IsAdminminOrPoweruser = "IsAdminGlobal";
-                        HttpContext.Session.SetString("IsAdminminOrPoweruser", IsAdminminOrPoweruser);
-                    }
 
-                }
-
-            }
-            return Page();
-        }
-
-            [BindProperty]
+        [BindProperty]
         public FeedbackTemplate FeedbackTemplate { get; set; }
         [BindProperty]
         public FeedbackType FeedbackNewType { get; set; }
@@ -95,14 +65,14 @@ namespace CityWatch.RadioCheck.Pages.Admin
         [BindProperty]
         public ReportTemplate ReportTemplate { get; set; }
 
-        //public IActionResult OnGet()
-        //{
-        //    //if (!AuthUserHelper.IsAdminUserLoggedIn)
-        //    //    return Redirect(Url.Page("/Account/Unauthorized"));
+        public IActionResult OnGet()
+        {
+            //if (!AuthUserHelper.IsAdminUserLoggedIn)
+            //    return Redirect(Url.Page("/Account/Unauthorized"));
 
-        //    //ReportTemplate = _configDataProvider.GetReportTemplate();
-        //    return Page();
-        //}
+            //ReportTemplate = _configDataProvider.GetReportTemplate();
+            return Page();
+        }
 
         //public JsonResult OnGetClientTypes(int? page, int? limit)
         //{
@@ -190,11 +160,11 @@ namespace CityWatch.RadioCheck.Pages.Admin
                 }
                 else
                 {
-                    if(record.ReferenceNo != null)
+                    if (record.ReferenceNo != null)
                     {
                         record.ReferenceNo = record.ReferenceNo.Trim();
                         int refno;
-                        if (int.TryParse(record.ReferenceNo,out refno) == false)
+                        if (int.TryParse(record.ReferenceNo, out refno) == false)
                         {
                             return new JsonResult(new { status = false, message = "Reference number should only contains numbers. !!!" });
                         }
@@ -209,7 +179,7 @@ namespace CityWatch.RadioCheck.Pages.Admin
                             }
                         }
                     }
-                    
+
                 }
                 _clientDataProvider.SaveRadioCheckStatus(record);
             }
@@ -332,8 +302,8 @@ namespace CityWatch.RadioCheck.Pages.Admin
         {
             bool Success = false;
             string message = string.Empty;
-            message = _clientDataProvider.DeleteDuressGloablSMSNumber(SmsNumberId,out Success);
-            return new JsonResult(new {status = Success , message = message });
+            message = _clientDataProvider.DeleteDuressGloablSMSNumber(SmsNumberId, out Success);
+            return new JsonResult(new { status = Success, message = message });
         }
         public JsonResult OnPostAddGlobalSmsNumber(GlobalDuressSms SmsNumber)
         {
@@ -349,9 +319,9 @@ namespace CityWatch.RadioCheck.Pages.Admin
                     sidValue = item.Value;
                     break;
                 }
-            }            
+            }
             SmsNumber.RecordCreateUserId = Convert.ToInt32(sidValue);
-            message = _clientDataProvider.SaveDuressGloablSMS(SmsNumber,out Success);
+            message = _clientDataProvider.SaveDuressGloablSMS(SmsNumber, out Success);
             return new JsonResult(new { status = Success, message = message });
         }
         //To save the Clobal Duress SMS numbers stop
@@ -369,7 +339,7 @@ namespace CityWatch.RadioCheck.Pages.Admin
             var message = "";
             try
             {
-                if((record.StartDate == null) || ( record.ExpiryDate == null))
+                if ((record.StartDate == null) || (record.ExpiryDate == null))
                 {
                     return new JsonResult(new { status = false, message = "Please check the dates. !!!" });
                 }
@@ -391,11 +361,11 @@ namespace CityWatch.RadioCheck.Pages.Admin
                         return new JsonResult(new { status = false, message = "Another event with similar dates exists !!!" });
                     }
 
-                    if(record.ReferenceNo != null)
+                    if (record.ReferenceNo != null)
                     {
                         record.ReferenceNo = record.ReferenceNo.Trim();
                         int refno;
-                        if (int.TryParse(record.ReferenceNo,out refno) == false)
+                        if (int.TryParse(record.ReferenceNo, out refno) == false)
                         {
                             return new JsonResult(new { status = false, message = "Reference number should only contains numbers. !!!" });
                         }
@@ -414,19 +384,19 @@ namespace CityWatch.RadioCheck.Pages.Admin
                         bool refok = false;
                         do
                         {
-                          
-                                LastOne++;
-                                newrefnumb = LastOne.ToString("00");
-                                var eventReferenceExists = _configDataProvider.GetBroadcastCalendarEvents().Where(x => x.ReferenceNo.Equals(newrefnumb));
-                                if (eventReferenceExists.Count() < 1)
-                                {
-                                    refok = true;
-                                }                               
-                                                   
+
+                            LastOne++;
+                            newrefnumb = LastOne.ToString("00");
+                            var eventReferenceExists = _configDataProvider.GetBroadcastCalendarEvents().Where(x => x.ReferenceNo.Equals(newrefnumb));
+                            if (eventReferenceExists.Count() < 1)
+                            {
+                                refok = true;
+                            }
+
 
                         } while (refok == false);
                         record.ReferenceNo = newrefnumb;
-                    }                   
+                    }
 
                 }
                 else
@@ -438,7 +408,7 @@ namespace CityWatch.RadioCheck.Pages.Admin
                         if (int.TryParse(record.ReferenceNo, out refno) == false)
                         {
                             return new JsonResult(new { status = false, message = "Reference number should only contains numbers. !!!" });
-                        }                        
+                        }
                     }
                     message = "Event updated successfully.";
                 }
