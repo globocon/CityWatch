@@ -38,6 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Pages\Radio\" />
     <Folder Include="wwwroot\GpsImage\" />
     <Folder Include="wwwroot\Pdf\Archive\" />
     <Folder Include="wwwroot\Pdf\FromDropbox\" />
