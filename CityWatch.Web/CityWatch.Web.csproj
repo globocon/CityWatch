@@ -34,11 +34,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Pages\Radio\Check.cshtml" />
+    <None Include="Pages\Radio\NonActiveGuards.cshtml" />
+    <None Include="Pages\Radio\RadioCheckNew.cshtml" />
     <None Include="wwwroot\Pdf\Template\IR_Form_Template.pdf" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Pages\Radio\" />
     <Folder Include="wwwroot\GpsImage\" />
     <Folder Include="wwwroot\Pdf\Archive\" />
     <Folder Include="wwwroot\Pdf\FromDropbox\" />
