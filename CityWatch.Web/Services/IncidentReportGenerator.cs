@@ -43,6 +43,7 @@ namespace CityWatch.Web.Services
         Image = 1,
         Pdf = 2,
         Multimedia = 3,  // Added by binoy 0n 03-01-2024 under task id p1#160_MultimediaAttachments03012024
+        Excel = 4, // Added by binoy on 03-06-2024 P1 #215
     }
     public enum ChartType
     {
@@ -260,6 +261,86 @@ namespace CityWatch.Web.Services
                     }
                 }
 
+                index = pdfAttachmentCount + 1;
+
+                if (_IncidentReport.Attachments != null)
+                {
+                    // p1#160_MultimediaAttachments03012024 done by Binoy - Start 
+
+                    float currentX = 20;
+                    float currentY = 700;
+                    float x = 0;
+                    bool newPageRequired = true;
+                    foreach (var fileName in _IncidentReport.Attachments)
+                    {
+
+                        string videoPath = IO.Path.Combine(_UploadRootDir, fileName);
+                        string embeddedFileDescription = fileName;
+                        var embeddedFileExtn = GetAttachmentType(IO.Path.GetExtension(fileName));
+
+                        if (embeddedFileExtn == AttachmentType.Multimedia || embeddedFileExtn == AttachmentType.Excel)
+                        {
+                            if (newPageRequired)
+                            {
+                                var pageSize = new PageSize(pdfDocument.GetFirstPage().GetPageSize());
+                                pdfDocument.AddNewPage(++index, pageSize);
+                                pdfAttachmentCount += 1;
+                                x = pdfDocument.GetFirstPage().GetPageSize().GetWidth();
+                                var paraName = new Paragraph("NOTE: Multimedia Attachments & Spreadsheets require Adobe Reader to be opened or extracted. Web browser viewing generally can’t access the embedded file.")
+                                    .SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLUE));
+                                //.SetBold();                           
+                                var centr = (x / 2) - 10;
+                                paraName.SetFixedPosition(index, 5, pageSize.GetTop() - 40, x - 10);
+                                doc.Add(paraName);
+                                newPageRequired = false;
+                            }
+
+                            byte[] attachmentfileByteArray = ConvertToByteArrayChunked(videoPath);
+
+                            Rectangle rect = new Rectangle(currentX, currentY, ATTACHMENT_BOX_WIDTH, ATTACHMENT_BOX_HEIGHT);
+                            PdfFileSpec fs = PdfFileSpec.CreateEmbeddedFileSpec(pdfDocument, attachmentfileByteArray, embeddedFileDescription, fileName, null, null);
+                            try
+                            {
+                                PdfString title = new PdfString(fileName);
+                                PdfAnnotation attachment = new PdfFileAttachmentAnnotation(rect, fs)
+                                    .SetContents(string.Format("Double click me to open file: {0}", fileName))
+                                    .SetTitle(title)
+                                    .SetColor(WebColors.GetRGBColor(COLOR_LIGHT_BLUE));
+                                PdfPage page = pdfDocument.GetPage(index);
+                                page.AddAnnotation(attachment);
+                                attachment.Flush();
+                                fs.Flush();
+                                fs = null;
+                                attachment = null;
+                            }
+                            finally
+                            {
+                                GC.Collect();
+                                GC.WaitForPendingFinalizers();
+                            }
+
+
+                            currentX += 50;
+                            if (currentX + ATTACHMENT_BOX_WIDTH > x)
+                            {
+                                currentY -= 100;
+                                currentX = 20;
+                            }
+
+                            if (currentY - ATTACHMENT_BOX_HEIGHT < 20)
+                            {
+                                currentY = 700;
+                                currentX = 20;
+                                newPageRequired = true;
+                            }
+                          
+                        }
+
+                    }
+
+                    // p1#160_MultimediaAttachments03012024 done by Binoy - End
+                }
+
                 // Reset index for images
 
                 if (attachLiveGps || attachGpsMap)
@@ -284,87 +365,7 @@ namespace CityWatch.Web.Services
                         }
                     }
                 }
-                if (_IncidentReport.Attachments != null)
-                {
-                    // p1#160_MultimediaAttachments03012024 done by Binoy - Start 
-
-                    float currentX = 20;
-                    float currentY = 750;
-                    float y = 0;
-                    float x = 0;
-                    bool newPageRequired = true;
-                    foreach (var fileName in _IncidentReport.Attachments)
-                    {
-
-                        string videoPath = IO.Path.Combine(_UploadRootDir, fileName);
-                        string embeddedFileDescription = fileName;
-
-
-                        if (GetAttachmentType(IO.Path.GetExtension(fileName)) == AttachmentType.Multimedia)
-                        {
-                            if (newPageRequired)
-                            {
-                                pdfDocument.AddNewPage();
-                                y = pdfDocument.GetLastPage().GetPageSize().GetHeight();
-                                x = pdfDocument.GetLastPage().GetPageSize().GetWidth();
-                                var paraName = new Paragraph("Multimedia Attachments (can be viewed and opened only in Adobe Reader)")
-                                    .SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLUE));
-                                //.SetBold();
-                                var pageIndex = pdfDocument.GetNumberOfPages();
-                                PdfPage Lpage = pdfDocument.GetLastPage();
-                                var pSize = Lpage.GetPageSize();
-                                var centr = (x / 2) - 10;
-                                paraName.SetFixedPosition(pageIndex, 5, pSize.GetTop() - 40, x - 10);
-                                doc.Add(paraName);
-                                newPageRequired = false;
-                            }
-
-                            byte[] attachmentfileByteArray = ConvertToByteArrayChunked(videoPath);
-
-                            Rectangle rect = new Rectangle(currentX, currentY, ATTACHMENT_BOX_WIDTH, ATTACHMENT_BOX_HEIGHT);
-                            PdfFileSpec fs = PdfFileSpec.CreateEmbeddedFileSpec(pdfDocument, attachmentfileByteArray, embeddedFileDescription, fileName, null, null);
-                            try
-                            {
-                                PdfString title = new PdfString(fileName);
-                                PdfAnnotation attachment = new PdfFileAttachmentAnnotation(rect, fs)
-                                    .SetContents(string.Format("Double click me to open file: {0}", fileName))
-                                    .SetTitle(title)
-                                    .SetColor(WebColors.GetRGBColor(COLOR_LIGHT_BLUE));
-                                PdfPage page = pdfDocument.GetLastPage();
-                                page.AddAnnotation(attachment);
-                                attachment.Flush();
-                                fs.Flush();
-                                fs = null;
-                                attachment = null;
-                            }
-                            finally
-                            {
-                                GC.Collect();
-                                GC.WaitForPendingFinalizers();
-                            }
-
-
-                            currentX += 50;
-                            if (currentX + ATTACHMENT_BOX_WIDTH > x)
-                            {
-                                currentY -= 100;
-                                currentX = 20;
-                            }
-
-                            if (currentY - ATTACHMENT_BOX_HEIGHT < 20)
-                            {
-                                currentY = 750;
-                                currentX = 20;
-                                newPageRequired = true;
-                            }
-
-
-                        }
-
-                    }
-
-                    // p1#160_MultimediaAttachments03012024 done by Binoy - End
-                }
+                
             }
 
             try
@@ -551,6 +552,10 @@ namespace CityWatch.Web.Services
             // Added by binoy 0n 03-01-2024 under task id p1#160_MultimediaAttachments03012024
             if (".mp4,.avi,.mp3".IndexOf(extn.ToLower()) >= 0)
                 return AttachmentType.Multimedia;
+
+            // Added by binoy 0n 03-06-2024 under task P1 #215
+            if (".xlsx".IndexOf(extn.ToLower()) >= 0)
+                return AttachmentType.Excel;
 
             return AttachmentType.Unknown;
         }
