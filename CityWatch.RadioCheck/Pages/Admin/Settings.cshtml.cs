@@ -23,6 +23,7 @@ using static Dropbox.Api.TeamLog.EventCategory;
 using MailKit.Net.Smtp;
 using CityWatch.Kpi.Models;
 using CityWatch.RadioCheck.Services;
+using System.ComponentModel.DataAnnotations;
 
 namespace CityWatch.RadioCheck.Pages.Admin
 {
@@ -687,6 +688,39 @@ namespace CityWatch.RadioCheck.Pages.Admin
             }
 
             return new JsonResult(new { status, message });
+        }
+
+        public JsonResult OnPostSaveRCLinkedDuress(RCLinkedDuressViewModel rcLinkedDuressViewModel)
+        {
+            var results = new List<ValidationResult>();
+            if (!Validator.TryValidateObject(rcLinkedDuressViewModel, new ValidationContext(rcLinkedDuressViewModel), results, true))
+                return new JsonResult(new { success = false, message = string.Join(",", results.Select(z => z.ErrorMessage).ToArray()) });
+            var rclinkedDuress = RCLinkedDuressViewModel.ToDataModel(rcLinkedDuressViewModel);
+            var success = true;
+            var message = "Saved successfully";
+            if (_clientDataProvider.CheckAlreadyExistTheGroupName(rclinkedDuress, true))
+            {
+                
+                try
+                {
+                    
+
+                    _clientDataProvider.SaveRCLinkedDuress(rclinkedDuress, true);
+                }
+                catch (Exception ex)
+                {
+                    success = false;
+                    message = ex.Message;
+                }
+            }
+            else
+            {
+                success = false;
+                message = "Group Name already Exists";
+
+            }
+
+            return new JsonResult(new { success, message });
         }
     }
 }

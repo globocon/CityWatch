@@ -184,6 +184,10 @@ namespace CityWatch.Data.Providers
         public RCLinkedDuressMaster GetRCLinkedDuressById(int duressId);
         public void DeleteRCLinkedDuress(int id);
 
+        public void SaveRCLinkedDuress(RCLinkedDuressMaster linkedDuress, bool updateClientSites = false);
+
+        public bool CheckAlreadyExistTheGroupName(RCLinkedDuressMaster linkedDuress, bool updateClientSites = false);
+
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -1979,6 +1983,41 @@ namespace CityWatch.Data.Providers
 
             _context.RCLinkedDuressMaster.Remove(recordToDelete);
             _context.SaveChanges();
+        }
+
+        public void SaveRCLinkedDuress(RCLinkedDuressMaster linkedDuress, bool updateClientSites = false)
+        {
+            var schedule = _context.RCLinkedDuressMaster.Include(z => z.RCLinkedDuressClientSites).SingleOrDefault(z => z.Id == linkedDuress.Id);
+            if (schedule == null)
+                _context.Add(linkedDuress);
+            else
+            {
+                if (updateClientSites)
+                {
+                    _context.RCLinkedDuressClientSites.RemoveRange(schedule.RCLinkedDuressClientSites);
+                    _context.SaveChanges();
+                }
+
+          
+                schedule.GroupName = linkedDuress.GroupName.Trim();
+                if (updateClientSites)
+                    schedule.RCLinkedDuressClientSites = linkedDuress.RCLinkedDuressClientSites;
+            }
+            _context.SaveChanges();
+        }
+
+        public bool CheckAlreadyExistTheGroupName(RCLinkedDuressMaster linkedDuress, bool updateClientSites = false)
+        {
+            var status = true;
+            if(updateClientSites)
+            {
+                var sameGroupName = _context.RCLinkedDuressMaster.Where(x => x.GroupName.Trim() == linkedDuress.GroupName.Trim()
+                && x.Id != linkedDuress.Id).ToList();
+                if (sameGroupName.Count != 0)
+                    status = false;
+            }
+            return status;
+
         }
 
     }

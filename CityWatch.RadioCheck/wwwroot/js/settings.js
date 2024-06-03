@@ -1083,7 +1083,7 @@ gridSchedules = $('#rc_linked_duress').grid({
         { field: 'groupName', title: 'Group Name', width: 100 },
         { field: 'clientTypes', title: 'Client Types', width: 100 },
         { field: 'clientSites', title: 'Client Sites', width: 180 },
-        { width: 110, renderer: schButtonRenderer },
+        { width: 75, renderer: schButtonRenderer },
     ],
     initialized: function (e) {
         $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -1092,9 +1092,9 @@ gridSchedules = $('#rc_linked_duress').grid({
 
 function schButtonRenderer(value, record) {
     let buttonHtml = '';
-    buttonHtml += '<button class="btn btn-outline-primary mr-2 mt-2 d-block" data-toggle="modal" data-target="#schedule-modal" data-sch-id="' + record.id + '" ';
+    buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-primary mr-2 mt-2 d-block" data-toggle="modal" data-target="#schedule-modal" data-sch-id="' + record.id + '" ';
     buttonHtml += 'data-action="editSchedule"><i class="fa fa-pencil mr-2"></i>Edit</button>';
-    buttonHtml += '<button class="btn btn-outline-danger mt-2 del-schedule d-block" data-sch-id="' + record.id + '""><i class="fa fa-trash mr-2" aria-hidden="true"></i>Delete</button>';
+    buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-danger mt-2 del-schedule d-block" data-sch-id="' + record.id + '""><i class="fa fa-trash mr-2" aria-hidden="true"></i>Delete</button>';
     return buttonHtml;
 }
 
@@ -1131,23 +1131,7 @@ $('#clientSites').on('change', function () {
     }
 });
 
-$('#editSelectedSite').on('click', function () {
-    if ($('#editSiteTrigger').length === 1) {
-        $('#editSiteTrigger').remove()
-    }
 
-    const selectedOption = $('#selectedSites option:selected');
-    if (selectedOption.length == 0) {
-        alert('Please select a site to edit');
-    } else if (selectedOption.length > 1) {
-        alert('Select only one site to edit');
-    } else {
-        let triggerButton = '<button type="button" id="editSiteTrigger" style="display:none" data-toggle="modal" data-target="#kpi-settings-modal" ' +
-            'data-cs-id="' + $(selectedOption).val() + '" data-cs-name="' + $(selectedOption).text() + '"></button>';
-        $(triggerButton).insertAfter($(this));
-        $('#editSiteTrigger').click();
-    }
-});
 
 $('#removeSelectedSites').on('click', function () {
     $('#selectedSites option:selected').remove();
@@ -1164,12 +1148,10 @@ $('#schedule-modal').on('shown.bs.modal', function (event) {
     const isEdit = button.data('action') !== undefined && button.data('action') === 'editSchedule';
     if (isEdit) {
         schId = button.data('sch-id');
-        scheduleModalOnEdit(schId);
-    } else {
-        scheduleModalOnAdd();
-    }
+        linkedDuressModalOnEdit(schId);
+    } 
 
-    showHideSchedulePopupTabs(isEdit);
+  
 });
 
 function clearScheduleModal() {
@@ -1180,12 +1162,13 @@ function clearScheduleModal() {
     updateSelectedSitesCount();
     $('input:hidden[name="clientSiteIds"]').remove();
     $('#clientTypeName option:eq(0)').attr('selected', true);
-    $('#projectName').val('');
+    $('#GroupName').val('');
+    $('#sch-modal-validation').hide();
    
 }
 
 
-function scheduleModalOnEdit(scheduleId) {
+function linkedDuressModalOnEdit(scheduleId) {
     $('#loader').show();
     $.ajax({
         url: '/Admin/Settings?handler=RCLinkedDuressbyId&id=' + scheduleId,
@@ -1197,7 +1180,7 @@ function scheduleModalOnEdit(scheduleId) {
             $('#selectedSites').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
             updateSelectedSitesCount();
         });
-        $('#projectName').val(data.groupName);
+        $('#GroupName').val(data.groupName);
         
     }).always(function () {
         $('#loader').hide();
@@ -1219,7 +1202,7 @@ $('#rc_linked_duress').on('click', '.del-schedule', function () {
 
 });
 
-$('#btnSaveSchedule').on('click', function () {
+$('#btnSavelinkedDuress').on('click', function () {
     $("input[name=clientSiteIds]").remove();
     var options = $('#selectedSites option');
     options.each(function () {
@@ -1228,14 +1211,14 @@ $('#btnSaveSchedule').on('click', function () {
     });
 
     $.ajax({
-        url: '/Admin/Settings?handler=SaveKpiSendSchedule',
+        url: '/Admin/Settings?handler=SaveRCLinkedDuress',
         type: 'POST',
         data: $('#frm_kpi_schedule').serialize(),
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (data) {
         if (data.success) {
+            alert('RC LinkedDuress saved successfully');
             $('#schedule-modal').modal('hide');
-            alert('Schedule saved successfully');
             gridSchedules.reload({ type: $('#sel_schedule').val(), searchTerm: $('#search_kw_client_site').val() });
         } else {
             $('#sch-modal-validation').html('');
