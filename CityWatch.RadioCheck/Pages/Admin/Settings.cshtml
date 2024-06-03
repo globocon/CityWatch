@@ -26,6 +26,10 @@
         <li class="nav-item">
             <a class="nav-link " id="logbook-tab" data-toggle="tab" href="#logbook" role="tab" aria-controls="logbook" aria-selected="false">Log Book & Alerts</a>
         </li>
+
+        <li class="nav-item">
+            <a class="nav-link " id="linkedDuress-tab" data-toggle="tab" href="#linkedDuress" role="tab" aria-controls="linkedDuress" aria-selected="false">Linked Duress</a>
+        </li>
         <li class="nav-item">
             <a class="nav-link " id="apicalls-tab" data-toggle="tab" href="#apicalls" role="tab" aria-controls="apicalls" aria-selected="false">API Calls</a>
         </li>
@@ -261,6 +265,30 @@
             </div>
         </div>
 
+        @*//Linked Duress Start//*@
+        <div class="tab-pane fade show  py-3" id="linkedDuress" role="tabpanel" aria-labelledby="linkedDuress-tab">
+            <div class="row mt-2">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between">
+                            <b><u>Linked Duress</u></b>
+                            <div class="col text-right">
+                                <button class="btn btn-success" id="add_newLinkedDuress" data-toggle="modal" data-target="#schedule-modal"><i class="fa fa-plus mr-2"></i>Add New</button>
+                            </div>
+                        </div>
+                        <div class="card-body row m-0">
+                            <div class="table-responsive">
+                                <div class="col-md-12">
+                                    <table class="table" id="rc_linked_duress"></table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        @*//Linked Duress end//*@
     </div>
 
 </div>
@@ -374,6 +402,7 @@
         </div>
     </div>
 </div>
+<partial name="_LinkedDuressPopup" />
 <!-- logbook model popup end-->
 <!-- modal popup -->
 @Html.AntiForgeryToken()

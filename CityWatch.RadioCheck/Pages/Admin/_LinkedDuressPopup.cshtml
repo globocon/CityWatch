@@ -1,0 +1,61 @@
+﻿<!-- schedule modal -->
+<div class="modal" tabindex="-1" role="dialog" id="schedule-modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-calendar" aria-hidden="true"></i> Linked Duress</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-2">
+
+                <form id="frm_kpi_schedule">
+                    <input type="hidden" id="scheduleId" name="id" value="0">
+                    <input type="hidden" id="nextRunOn" name="nextRunOn" value="">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="projectName">Group Name</label>
+                                <input type="text" class="form-control" id="projectName" name="projectName" maxlength="50" />
+                            </div>
+                            <div class="form-group">
+                                <label for="clientTypeName">Client Type</label>
+                                <select class="form-control" id="clientTypeName" name="clientTypeName">
+                                    @foreach (var item in Model.ViewDataService.ClientTypesUsingLoginUserIdCount(@Model.GuardId))
+                                    {
+                                        <option value="@item.Value">@item.Text</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="clientSites">Client Site</label>
+                                <select class="form-control" id="clientSites" name="clientSites">
+                                    <option>Select</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="selectedSites">Selected Client Sites <span class="badge badge-pill badge-info" id="selectedSitesCount">0</span></label>
+                                <select class="form-control" id="selectedSites" name="selectedSites" multiple style="height: 220px"></select>
+                                @* <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="editSelectedSite" title="Edit selected sites from the list"><i class="fa fa-pencil mr-2"></i>Edit Site</button>*@
+                                <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="removeSelectedSites" title="Remove selected sites from the list"><i class="fa fa-trash-o mr-2"></i>Remove Sites</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <ul id="sch-modal-validation" class="text-danger hide"></ul>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button type="button" id="btnSaveSchedule" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save Schedule</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+

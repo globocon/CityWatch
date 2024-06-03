@@ -180,6 +180,9 @@ namespace CityWatch.Data.Providers
         public void DeafultMailBox(string Email);
         List<KPIScheduleDeafultMailbox> GetKPIScheduleDeafultMailbox();
         List<ClientSite> GetClientSitesWithTypeId(int[] typeId);
+        public List<RCLinkedDuressMaster> GetAllRCLinkedDuress();
+        public RCLinkedDuressMaster GetRCLinkedDuressById(int duressId);
+        public void DeleteRCLinkedDuress(int id);
 
     }
 
@@ -1948,6 +1951,36 @@ namespace CityWatch.Data.Providers
                 .ThenBy(x => x.Name)
                 .ToList();
         }
+
+        public List<RCLinkedDuressMaster> GetAllRCLinkedDuress()
+        {
+            return _context.RCLinkedDuressMaster
+                .Include(z => z.RCLinkedDuressClientSites)
+                .ThenInclude(y => y.ClientSite)
+                .ThenInclude(y => y.ClientType)
+                .ToList();
+        }
+
+        public RCLinkedDuressMaster GetRCLinkedDuressById(int duressId)
+        {
+
+            return _context.RCLinkedDuressMaster
+              .Include(t => t.RCLinkedDuressClientSites)
+              .ThenInclude(y => y.ClientSite)
+              .ThenInclude(y => y.ClientType)
+              .SingleOrDefault(x => x.Id == duressId);
+        }
+
+        public void DeleteRCLinkedDuress(int id)
+        {
+            var recordToDelete = _context.RCLinkedDuressMaster.SingleOrDefault(x => x.Id == id);
+            if (recordToDelete == null)
+                throw new InvalidOperationException();
+
+            _context.RCLinkedDuressMaster.Remove(recordToDelete);
+            _context.SaveChanges();
+        }
+
     }
 
 
