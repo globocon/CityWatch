@@ -359,7 +359,7 @@ namespace CityWatch.Web.Services
                 //    index = pdfAttachmentCount + 1;
                 //}
 
-                index = closePageIndex;
+                index = closePageIndex - 1;
 
                 if (_IncidentReport.Attachments != null)
                 {
@@ -368,9 +368,10 @@ namespace CityWatch.Web.Services
                         var paraName = new Paragraph($"File Name: {fileName}").SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLACK));
                         if (GetAttachmentType(IO.Path.GetExtension(fileName)) == AttachmentType.Image)
                         {
-                            var image = AttachImageToPdf(pdfDocument, ++index, IO.Path.Combine(_UploadRootDir, fileName));
+                            var image = AttachImageToPdf(pdfDocument, ++index, IO.Path.Combine(_UploadRootDir, fileName));                            
                             paraName.SetFixedPosition(index, 5, 0, 400);
                             doc.Add(image).Add(paraName);
+                            ++closePageIndex;
                         }
                     }
                 }
