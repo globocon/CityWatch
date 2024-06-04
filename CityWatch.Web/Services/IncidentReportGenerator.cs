@@ -264,9 +264,27 @@ namespace CityWatch.Web.Services
                     }
                 }
 
-                //if(pdfAttachmentCount > 0)
-                //    index = pdfAttachmentCount + 1;
+                
 
+                // Reset index to before close page index
+                index = closePageIndex - 1;
+
+                if (_IncidentReport.Attachments != null)
+                {
+                    foreach (var fileName in _IncidentReport.Attachments)
+                    {
+                        var paraName = new Paragraph($"File Name: {fileName}").SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLACK));
+                        if (GetAttachmentType(IO.Path.GetExtension(fileName)) == AttachmentType.Image)
+                        {
+                            var image = AttachImageToPdf(pdfDocument, ++index, IO.Path.Combine(_UploadRootDir, fileName));                            
+                            paraName.SetFixedPosition(index, 5, 0, 400);
+                            doc.Add(image).Add(paraName);
+                            ++closePageIndex;
+                        }
+                    }
+                }
+
+                // Reset index to before close page index
                 index = closePageIndex - 1;
 
                 if (_IncidentReport.Attachments != null)
@@ -340,7 +358,7 @@ namespace CityWatch.Web.Services
                                 currentX = 20;
                                 newPageRequired = true;
                             }
-                          
+
                         }
 
                     }
@@ -348,34 +366,6 @@ namespace CityWatch.Web.Services
                     // p1#160_MultimediaAttachments03012024 done by Binoy - End
                 }
 
-                // Reset index for images
-
-                //if (attachLiveGps || attachGpsMap)
-                //{
-                //    index = pdfAttachmentCount + 2;
-                //}
-                //else
-                //{
-                //    index = pdfAttachmentCount + 1;
-                //}
-
-                index = closePageIndex - 1;
-
-                if (_IncidentReport.Attachments != null)
-                {
-                    foreach (var fileName in _IncidentReport.Attachments)
-                    {
-                        var paraName = new Paragraph($"File Name: {fileName}").SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLACK));
-                        if (GetAttachmentType(IO.Path.GetExtension(fileName)) == AttachmentType.Image)
-                        {
-                            var image = AttachImageToPdf(pdfDocument, ++index, IO.Path.Combine(_UploadRootDir, fileName));                            
-                            paraName.SetFixedPosition(index, 5, 0, 400);
-                            doc.Add(image).Add(paraName);
-                            ++closePageIndex;
-                        }
-                    }
-                }
-                
             }
 
             try
