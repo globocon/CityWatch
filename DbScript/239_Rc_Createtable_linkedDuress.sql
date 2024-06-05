@@ -47,3 +47,6 @@ REFERENCES [dbo].[RCLinkedDuressMaster] ([Id])
 ON DELETE CASCADE
 GO
 
+
+ALTER TABLE ClientSiteDuress ADD [LinkedDuressParentSiteId] int ;
+ALTER TABLE ClientSiteDuress ADD [IsLinkedDuressParentSite] int ;
