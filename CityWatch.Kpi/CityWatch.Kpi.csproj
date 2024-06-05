@@ -30,9 +30,9 @@
 
   <ItemGroup>    
     <Folder Include="wwwroot\GraphImage\" />    
-    <Folder Include="wwwroot\SummaryImage\" />    
-    <Folder Include="wwwroot\Pdf\Output\" />
-    <Folder Include="wwwroot\SiteImage\" />
+    <Folder Include="wwwroot\SummaryImage\" />
+	  <Folder Include="wwwroot\Pdf\Output\" />
+	  <Folder Include="wwwroot\SiteImage\" />
   </ItemGroup>
 
 </Project>
