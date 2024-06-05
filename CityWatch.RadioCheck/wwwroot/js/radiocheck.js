@@ -1,4 +1,5 @@
 let nIntervId;
+let DuressAlarmNotificationPending = false;
 const duration = 60 * 3;
 var isPaused = false;
 var sitebuttonSelectedClientTypeSiteId = -1;
@@ -19,10 +20,14 @@ var tmzdata = {
     'EventDateTimeUtcOffsetMinute': null,
 };
 // Task p6#73_TimeZone issue -- added by Binoy - End
+let connection;
 window.onload = function () {
     if (document.querySelector('#clockRefresh')) {
-        startClock();
+        startClock();        
     }
+    if (document.querySelector('#txtSignalRConnectionUrl')) {
+        connectToSignalRservice();
+    }    
 };
 $(document).ready(function () {
     $('[data-toggle="tooltip"]').tooltip();
@@ -52,28 +57,43 @@ function startClock() {
                 display.textContent = minutes + " min" + " " + seconds + " sec";
 
                 if (--timer < 0) {
-                    location.reload();
-                    //$.ajax({
-                    //    url: '/Radio/Check?handler=UpdateLatestActivityStatus',
-                    //    type: 'POST',
-                    //    dataType: 'json',
-                    //    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                    //}).done(function () {
-                    //    clientSiteActivityStatus.ajax.reload();
-                    //    timer = duration;
-                    //});
+                    ClearTimerAndReload();
                 }
-
+                else if ((timer > 5) && DuressAlarmNotificationPending) {
+                    ClearTimerAndReload();
+                }
             }
         }, 1000);
     }
 }
 
+function connectToSignalRservice() {
+    var signalRconnHuburl = $('#txtSignalRConnectionUrl').val() + "/updateHub";
+    connection = new signalR.HubConnectionBuilder().withUrl(signalRconnHuburl).configureLogging(signalR.LogLevel.Information).build();
+    connection.on("ReceiveDuressAlarmAlert", function () {
+        console.log("Duress Alarm Alert Received");
+        DuressAlarmNotificationPending = true;
+    });
+
+    connection.start().then(function () {
+        console.log('SignalR connection established.');
+    }).catch(function (err) {
+        return console.error(err.toString());
+    });
+}
+
 $('#btnRefreshActivityStatus').on('click', function () {
+    ClearTimerAndReload();
+});
+
+function ClearTimerAndReload() {
     clearInterval(nIntervId);
+    DuressAlarmNotificationPending = false;
     nIntervId = null;
     location.reload();
-});
+}
+
+
 
 let clientSiteActivityStatus = $('#clientSiteActivityStatus').DataTable({
     paging: false,
