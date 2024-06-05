@@ -160,12 +160,26 @@ namespace CityWatch.Kpi.Models
             get
             {
                 var data = _dailyKpiResults.Where(z => z.EffectiveEmployeeHours.HasValue && z.EffectiveEmployeeHours.Value > 0);
+                //var ImageCount = data.Sum(z => z.ImageCount);
+                //var WandScanCount = data.Sum(z => z.WandScanCount);
+
+                //if(ImageCount == 0 && WandScanCount == 0)
+                //    return null;
+
+                //if (ImageCount > 0 && WandScanCount > 0)
+                //    return 100M;
+
+                //if (ImageCount > 0 || WandScanCount > 0)
+                //    return 50M;
 
                 if (data.All(z => z.ImageCount.GetValueOrDefault() == 0 && z.WandScanCount.GetValueOrDefault() == 0))
                     return null;
 
                 if (data.All(z => z.ImageCount.GetValueOrDefault() > 0 && z.WandScanCount.GetValueOrDefault() > 0))
                     return 100M;
+
+                if (data.All(z => z.ImageCount.GetValueOrDefault() > 0 || z.WandScanCount.GetValueOrDefault() > 0))
+                    return 50M;
 
                 return decimal.Zero;
             }

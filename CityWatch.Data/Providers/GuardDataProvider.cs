@@ -146,6 +146,8 @@ namespace CityWatch.Data.Providers
                 updateGuard.IsRCAccess = guard.IsRCAccess;
                 updateGuard.IsSTATS = guard.IsSTATS;
                 updateGuard.IsLB_KV_IR = guard.IsLB_KV_IR;
+                updateGuard.IsAdminPowerUser = guard.IsAdminPowerUser;
+                updateGuard.IsAdminGlobal = guard.IsAdminGlobal;
 
             }
 

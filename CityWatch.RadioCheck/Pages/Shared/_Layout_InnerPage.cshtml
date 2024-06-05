@@ -84,27 +84,27 @@
                 <div class="col-sm-12 col-md-6 d-flex justify-content-center">
                     <div>
                         <a href="https://www.cws-ir.com/" class="nav-link py-0"><i class="fa fa-home mr-2"></i>Home Page</a>
-                        
+
                     </div>
-                     @if (User.Identity.IsAuthenticated)
+                    @if (User.Identity.IsAuthenticated)
                     {
                         <div>
                             <a href="@Url.Page("/Admin/Settings")" class="nav-link py-0"><i class="fa fa-cog mr-2"></i>Settings</a>
                         </div>
-                       
+
                     }
                     <div>
                         <a href="@Url.Page("/GuardDetails")" class="nav-link py-0"><i class="fa fa-user mr-2"></i>Guard Details</a>
 
                     </div>
-                    
+
                 </div>
-                
+
             </div>
         </div>
     </footer>
-   @* /*Old Script*/*@
-   @* <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    @* /*Old Script*/*@
+    @* <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/gijgo@1.9.13/js/gijgo.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
