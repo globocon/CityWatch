@@ -267,6 +267,8 @@ namespace CityWatch.Data.Providers
 
         public List<ClientSite> GetClientSites(int? typeId)
         {
+            
+
             return _context.ClientSites
                 .Where(x => (!typeId.HasValue || (typeId.HasValue && x.TypeId == typeId.Value)) && x.IsActive == true)
                 .Include(x => x.ClientType)

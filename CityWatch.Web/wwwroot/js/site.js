@@ -3269,10 +3269,7 @@ if (gridLicenseTypes) {
     });
 }
 
-if ($('#hr_settings_fields_types').val() == '') {
-gridHrSettings.hide();
-gridLicenseTypes.hide();
-}
+
 
 $('#hr_settings_fields_types').on('change', function () {
     const selHTSettingsFieldTypeId = $('#hr_settings_fields_types').val();
@@ -3281,6 +3278,9 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHrSettings.clear();
         gridHrSettings.reload();
         gridLicenseTypes.hide();
+        gridCriticalDocument.hide();
+        $('#add_criticalDocuments').hide();
+        $('#add_hr_settings').show();
     }
 
     else if ($('#hr_settings_fields_types').val() == 2) {
@@ -3288,6 +3288,17 @@ $('#hr_settings_fields_types').on('change', function () {
         gridLicenseTypes.show();
         gridLicenseTypes.clear();
         gridLicenseTypes.reload();
+        gridCriticalDocument.hide();
+        $('#add_criticalDocuments').hide();
+        $('#add_hr_settings').show();
+    }
+    else if ($('#hr_settings_fields_types').val() == 3) {
+        $('#add_criticalDocuments').show();
+        $('#add_hr_settings').hide();
+        gridHrSettings.hide();
+        gridLicenseTypes.hide();
+        gridCriticalDocument.show();
+        $('#add_hr_settings').hide();
     }
     else {
         gridLicenseTypes.hide();
@@ -3321,6 +3332,242 @@ $('#add_hr_settings').on('click', function () {
 
 });
 
+//p1-213 critical Document start
+$('#add_criticalDocuments').on('click', function () {
+    
+    $('#Critical-modal').modal('show');
+    clearCriticalModal();
+});
+$('#clientTypeNameDoc').on('change', function () {
+    const option = $(this).find('option:selected').text();;
+    if (option === '') {
+        $('#clientSitesDoc').html('');
+        $('#clientSitesDoc').append('<option value="">Select</option>');
+    }
+
+    $.ajax({
+        url: '/admin/settings?handler=ClientSitesDoc&type=' + encodeURIComponent(option),
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (data) {
+        $('#clientSitesDoc').html('');
+        $('#clientSitesDoc').append('<option value="">Select</option>');
+        data.map(function (site) {
+            $('#clientSitesDoc').append('<option value="' + site.value + '">' + site.text + '</option>');
+        });
+    });
+});
+
+$('#clientSitesDoc').on('change', function () {
+    const elem = $(this).find(":selected");
+    if (elem.val() !== '') {
+        const existing = $('#selectedSitesDoc option[value="' + elem.val() + '"]');
+        if (existing.length === 0) {
+            $('#selectedSitesDoc').append('<option value="' + elem.val() + '">' + elem.text() + '</option>');
+            updateSelectedSitesCount();
+        }
+    }
+});
+function updateSelectedSitesCount() {
+    $('#selectedSitesCountDoc').text($('#selectedSitesDoc option').length);
+    $('#selectedDescCountDoc').text($('#selectedDescDoc option').length);
+}
+$('#HRGroupDoc').on('change', function () {
+    const option = $(this).val();
+    if (option === '') {
+        $('#DescriptionDoc').html('');
+        $('#DescriptionDoc').append('<option value="">Select</option>');
+    }
+
+    $.ajax({
+        url: '/admin/settings?handler=DescriptionList&HRGroupId=' + encodeURIComponent(option),
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (data) {
+        $('#DescriptionDoc').html('');
+        $('#DescriptionDoc').append('<option value="">Select</option>');
+        data.map(function (site) {
+            $('#DescriptionDoc').append('<option value="' + site.value + '">' + site.text + '</option>');
+        });
+    });
+});
+$('#DescriptionDoc').on('change', function () {
+    var Clientsite = $('#clientSitesDoc').val();
+    if (Clientsite == 'Select') {
+        confirm('please select a clientsite')
+    }
+    else {
+        const elem = $(this).find(":selected");
+        if (elem.val() !== '') {
+            const existing = $('#selectedDescDoc option[value="' + elem.val() + '"]');
+            if (existing.length === 0) {
+                $('#selectedDescDoc').append('<option value="' + elem.val() + '">' + elem.text() + '</option>');
+                updateSelectedDescCount();
+            }
+        }
+    }
+    
+});
+function updateSelectedDescCount() {
+    $('#selectedDescCountDoc').text($('#selectedDescDoc option').length);
+}
+$('#btnSaveCriticalDoc').on('click', function () {
+    $("input[name=clientSiteIds]").remove();
+    var options = $('#selectedSitesDoc option');
+    options.each(function () {
+        const elem = '<input type="hidden" name="clientSiteIds" value="' + $(this).val() + '">';
+        $('#frm_CriticalDoc').append(elem);
+    });
+    $("input[name=DescriptionIds]").remove();
+    var optionsNew = $('#selectedDescDoc option');
+    optionsNew.each(function () {
+        const elem1 = '<input type="hidden" name="DescriptionIds" value="' + $(this).val() + '">';
+        $('#frm_CriticalDoc').append(elem1);
+    });
+    $.ajax({
+        url: '/Admin/Settings?handler=SaveCriticalDocuments',
+        type: 'POST',
+        data: $('#frm_CriticalDoc').serialize(),
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (data) {
+        if (data.success) {
+            $('#Critical-modal').modal('hide');
+            alert('Critical Document saved successfully');
+            gridCriticalDocument.reload({ type: $('#sel_schedule').val() });
+        } else {
+            $('#CriDoc-modal-validation').html('');
+            data.message.split(',').map(function (item) { $('#CriDoc-modal-validation').append('<li>' + item + '</li>') });
+            $('#CriDoc-modal-validation').show().delay(5000).fadeOut();
+        }
+    });
+});
+let gridCriticalDocument;
+gridCriticalDocument = $('#tbl_CriticalDocument').grid({
+    dataSource: '/Admin/Settings?handler=CriticalDocumentList',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    columns: [
+        { field: 'clientTypes', title: 'Client Types', width: 100 },
+        { field: 'clientSites', title: 'Client Sites', width: 170 },
+        {
+            field: 'descriptions', title: 'Mandatory HR Doucments', width: 180,
+            renderer: function (value, record) {
+                function splitFirstComma(str) {
+                    const index = str.indexOf(',');
+                    if (index === -1) {
+                        return [str, '']; // If there's no comma, return the string and an empty string
+                    }
+                    return [str.substring(0, index), str.substring(index + 1).trim()];
+                }
+                var descriptions = splitFirstComma(record.descriptions);
+                var referenceNos = splitFirstComma(record.referenceNO);
+                var html = '<table>';
+                html += '<tbody>';
+                for (var i = 0; i < descriptions.length; i++) {
+                    html += '<tr><td>' + record.hrGroupName + '</td><td style="width: 40px;">' + referenceNos[i] + '</td><td>' + descriptions[i] + '</td></tr>';
+                }
+                html += '</tbody>';
+                html += '</table>';
+                return html;
+            }
+        },
+        { width: 110, renderer: schButtonRenderer },
+       
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+
+});
+function schButtonRenderer(value, record) {
+    let buttonHtml = '';
+    //buttonHtml += '<button class="btn btn-outline-primary mt-2 d-block" data-toggle="modal" data-target="#run-schedule-modal" data-sch-id="' + record.id + '""><i class="fa fa-play mr-2" aria-hidden="true"></i>Run</button>';
+    buttonHtml += '<button class="btn btn-outline-primary mr-2 mt-2 d-block" data-toggle="modal" data-target="#Critical-modal" data-sch-id="' + record.id + '" ';
+    buttonHtml += 'data-action="editSchedule"><i class="fa fa-pencil mr-2"></i>Edit</button>';
+    buttonHtml += '<button class="btn btn-outline-danger mt-2 del-Cri d-block" data-sch-id="' + record.id + '""><i class="fa fa-trash mr-2" aria-hidden="true"></i>Delete</button>';
+    return buttonHtml;
+}
+$('#tbl_CriticalDocument').on('click', '.del-Cri', function () {
+    const idToDelete = $(this).attr('data-sch-id');
+    if (confirm('Are you sure want to delete this Document?')) {
+        $.ajax({
+            url: '/Admin/Settings?handler=DeleteCriticalDoc',
+            type: 'POST',
+            data: { id: idToDelete },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function () {
+            gridCriticalDocument.reload({ type: $('#sel_schedule').val() });
+        });
+    }
+
+});
+
+if ($('#hr_settings_fields_types').val() == '') {
+    gridHrSettings.hide();
+    gridLicenseTypes.hide();
+    gridCriticalDocument.hide();
+}
+
+$('#Critical-modal').on('shown.bs.modal', function (event) {
+    clearCriticalModal();
+    const button = $(event.relatedTarget);
+    const isEdit = button.data('action') !== undefined && button.data('action') === 'editSchedule';
+    if (isEdit) {
+        schId = button.data('sch-id');
+        CriticalModelOnEdit(schId);
+    } else {
+        scheduleModalOnAdd();
+    }
+
+    /*showHideSchedulePopupTabs(isEdit);*/
+});
+function clearCriticalModal() {
+    $('#CriticalDocId').val('0');
+    $('#clientTypeName').val('');
+    $('#clientSitesDoc').html('<option value="">Select</option>');
+    $('#DescriptionDoc').html('<option value="">Select</option>');
+    $('#HRGroupDoc option:eq(0)').attr('selected', true);
+    $('#clientTypeNameDoc').val('');
+    $('#selectedSitesDoc').html('');
+    $('#selectedDescDoc').html('');
+    updateSelectedSitesCount();
+    $('input:hidden[name="clientSiteIds"]').remove();
+    $('#clientTypeName option:eq(0)').attr('selected', true);
+    
+    $('#CriDoc-modal-validation').html('');
+   
+    
+}
+function CriticalModelOnEdit(CriticalDocId) {
+    $('#loader').show();
+    $.ajax({
+        url: '/Admin/Settings?handler=CriticalDocList&id=' + CriticalDocId,
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (data) {
+        $('#CriticalDocId').val(data.id);
+       
+        $.each(data.criticalDocumentsClientSites, function (index, item) {
+            $('#selectedSitesDoc').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
+            $('#selectedDescDoc').append('<option value="' + item.hrSettings.id + '">' + item.hrSettings.description + '</option>');
+            updateSelectedSitesCount();
+        });
+       
+    }).always(function () {
+        $('#loader').hide();
+    });
+}
+
+$('#removeSelectedSites1').on('click', function () {
+    $('#selectedSitesDoc option:selected').remove();
+    updateSelectedSitesCount();
+});
+$('#removeSelectedSitesDoc').on('click', function () {
+    $('#selectedDescDoc option:selected').remove();
+    updateSelectedSitesCount();
+});
+//p1-213 critical Document stop
 $('#btn_save_hr_settings').on('click', function () {
     var form = document.getElementById('form_new_hr_settings');
     var jsformData = new FormData(form);
