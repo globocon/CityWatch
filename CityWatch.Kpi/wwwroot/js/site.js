@@ -867,6 +867,7 @@ $(function () {
                 
                 const URL = window.URL || window.webkitURL;
                 const displayNameHash = encodeURIComponent(`#displayName=${downloadedFileName}`);
+                const bloburl = URL.createObjectURL(blob);
                 const objectUrl = URL.createObjectURL(blob) + displayNameHash;
                 const windowUrl = window.location.origin; // + window.location.pathname;
                 const viewerUrl = `${windowUrl}/lib/Pdfjs/web/viewer.html?file=`;
@@ -874,11 +875,12 @@ $(function () {
                 if (!newTab) {
                     // If the new tab was blocked, fallback to downloading the file
                     var a = document.createElement('a');
-                    a.href = url;
+                    a.href = bloburl;
                     a.download = downloadedFileName;
                     a.click();
                 }
 
+                URL.revokeObjectURL(bloburl);
                 URL.revokeObjectURL(objectUrl);
 
                 //if (!newTab) {
