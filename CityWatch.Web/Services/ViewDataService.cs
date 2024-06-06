@@ -51,7 +51,7 @@ namespace CityWatch.Web.Services
         List<SelectListItem> PSPFType { get; }
         List<SelectListItem> States { get; }
         List<SelectListItem> LicenseStates { get; }
-         List<SelectListItem> ProviderList { get; }
+        List<SelectListItem> ProviderList { get; }
         List<SelectListItem> NotifiedBy { get; }
         List<SelectListItem> CallSign { get; }
         List<SelectListItem> ClientArea { get; }
@@ -215,7 +215,7 @@ namespace CityWatch.Web.Services
                  positionFilter == OfficerPositionFilter.SecurityOnly && z.Name.Contains("Security")))
             {
                 items.Add(new SelectListItem(officerPosition.Name, officerPosition.Name));
-                
+
 
 
             }
@@ -270,7 +270,7 @@ namespace CityWatch.Web.Services
                 return items;
             }
         }
-       
+
         public List<SelectListItem> ProviderList
         {
             get
@@ -283,11 +283,11 @@ namespace CityWatch.Web.Services
                 var providerlist = _configDataProvider.GetProviderList(KVID.Id);
                 foreach (var item in providerlist)
                 {
-                    if (item.CompanyName!=null)
+                    if (item.CompanyName != null)
                     {
                         items.Add(new SelectListItem(item.CompanyName, item.CompanyName));
                     }
-                   
+
                 }
                 return items;
             }
@@ -446,7 +446,7 @@ namespace CityWatch.Web.Services
         }
         public List<FeedbackTemplate> GetFeedbackTemplateListByType(int type)
         {
-            var feedbackTemplates = _configDataProvider.GetFeedbackTemplates().Where(z => z.Type == type).ToList();   
+            var feedbackTemplates = _configDataProvider.GetFeedbackTemplates().Where(z => z.Type == type).ToList();
             return feedbackTemplates;
         }
         public string GetFeedbackTemplateText(int id)
@@ -454,7 +454,7 @@ namespace CityWatch.Web.Services
             return _configDataProvider.GetFeedbackTemplates().SingleOrDefault(x => x.Id == id)?.Text;
         }
 
-       
+
         public List<object> GetAllUsersClientSiteAccess()
         {
             var results = new List<object>();
@@ -548,7 +548,7 @@ namespace CityWatch.Web.Services
         //To get the count of ClientType start
         public int GetClientTypeCount(int? typeId)
         {
-            var result= _clientDataProvider.GetClientSite(typeId);
+            var result = _clientDataProvider.GetClientSite(typeId);
             return result;
         }
         //To get the count of ClientType stop
@@ -766,8 +766,8 @@ namespace CityWatch.Web.Services
 
             var kvlIds = kvls.Select(z => z.Id).ToArray();
 
-          // return profiles.Where(z => (string.IsNullOrEmpty(poi) || string.Equals(z.POIOrBDM, poi)) || (z.KeyVehicleLogProfile.CreatedLogId == 0 || kvlIds.Contains(z.KeyVehicleLogProfile.CreatedLogId))).Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
-           return profiles.Where(z => (string.IsNullOrEmpty(poi) || string.Equals(z.POIOrBDM, poi)) ).Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
+            // return profiles.Where(z => (string.IsNullOrEmpty(poi) || string.Equals(z.POIOrBDM, poi)) || (z.KeyVehicleLogProfile.CreatedLogId == 0 || kvlIds.Contains(z.KeyVehicleLogProfile.CreatedLogId))).Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
+            return profiles.Where(z => (string.IsNullOrEmpty(poi) || string.Equals(z.POIOrBDM, poi))).Select(z => new KeyVehicleLogProfileViewModel(z, kvlFields)).ToList();
         }
         //to check with bdm also-end
         public List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRegoNew(string truckRego, string Image)
@@ -956,13 +956,13 @@ namespace CityWatch.Web.Services
                     {
                         _guardLogDataProvider.InsertPreviousLogBook(logToCopy);
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
 
                     }
                 }
 
-               
+
             }
         }
 
@@ -1048,7 +1048,7 @@ namespace CityWatch.Web.Services
         }
 
         public void EnableClientSiteDuress(int clientSiteId, int guardLoginId, int logBookId, int guardId,
-                                            string gpsCoordinates, string enabledAddress, GuardLog tmzdata,string clientSiteName,string GuradName)
+                                            string gpsCoordinates, string enabledAddress, GuardLog tmzdata, string clientSiteName, string GuradName)
         // GuardLog tmzdata parameter added by binoy for Task p6#73_TimeZone issue
         {
             if (!IsClientSiteDuressEnabled(clientSiteId))
@@ -1063,17 +1063,17 @@ namespace CityWatch.Web.Services
                 {
                     ClientSiteId = clientSiteId,
                     LogBookId = logBookId,
-                    Notes = "Duress Alarm Activated By "+ GuradName+" From "+ clientSiteName,
+                    Notes = "Duress Alarm Activated By " + GuradName + " From " + clientSiteName,
                     EntryType = (int)IrEntryType.Alarm,
                     Date = logBook_Date.Value,
                     IsAcknowledged = 0,
-                    IsDuress=1
+                    IsDuress = 1
                 };
                 var pushMessageId = _guardLogDataProvider.SavePushMessage(radioCheckPushMessages);
                 /* Save the push message for reload to logbook on next day end*/
 
-                _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(guardId, guardId, null, "Duress Alarm Activated By " + GuradName + " From " + clientSiteName, IrEntryType.Alarm, 1,0, tmzdata); // GuardLog tmzdata parameter added by binoy for Task p6#73_TimeZone issue
-                _guardLogDataProvider.SaveClientSiteDuress(clientSiteId, guardId, gpsCoordinates, enabledAddress, tmzdata);
+                _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(guardId, guardId, null, "Duress Alarm Activated By " + GuradName + " From " + clientSiteName, IrEntryType.Alarm, 1, 0, tmzdata); // GuardLog tmzdata parameter added by binoy for Task p6#73_TimeZone issue
+                _guardLogDataProvider.SaveClientSiteDuress(clientSiteId, guardId, gpsCoordinates, enabledAddress, tmzdata, clientSiteId,1);
 
                 _guardLogDataProvider.SaveGuardLog(new GuardLog()
                 {
@@ -1083,17 +1083,72 @@ namespace CityWatch.Web.Services
                     EventDateTime = DateTime.Now,
                     ClientSiteLogBookId = logBookId,
                     GuardLoginId = guardLoginId,
-                    RcPushMessageId= pushMessageId,
+                    RcPushMessageId = pushMessageId,
                     EventDateTimeLocal = tmzdata.EventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
                     EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
                     EventDateTimeZone = tmzdata.EventDateTimeZone,
                     EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
                     EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute, // Task p6#73_TimeZone issue -- added by Binoy - End
                     PlayNotificationSound = true,
-                    GpsCoordinates= gpsCoordinates
+                    GpsCoordinates = gpsCoordinates
                 });
 
-             
+                /* enable linked site duress  start */
+                /*Check if the site is a linked duress site*/
+                var ifSiteisLinkedDuressSite = _guardLogDataProvider.checkIfASiteisLinkedDuress(clientSiteId);
+                if (ifSiteisLinkedDuressSite.Count != 0)
+                {   /*get all linked duress sites */
+                    var allLinkedSites = _guardLogDataProvider.getallClientSitesLinkedDuress(clientSiteId);
+                    if (allLinkedSites.Count != 0)
+                    {
+
+                        foreach (var linkedSite in allLinkedSites)
+                        {
+                            /* avoid Repete entery for duress enabled site */
+                            if (linkedSite.ClientSiteId != clientSiteId)
+                            {
+                                var ClientsiteDetails = _clientDataProvider.GetClientSiteName(linkedSite.ClientSiteId);
+                                var localDateTimeLinked = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)tmzdata.EventDateTimeUtcOffsetMinute);
+                                var logBookIdLinked = _guardLogDataProvider.GetClientSiteLogBookIdGloablmessage(ClientsiteDetails.Id, LogBookType.DailyGuardLog, localDateTimeLinked.Date);
+                                var radioCheckPushMessagesLinked = new RadioCheckPushMessages()
+                                {
+                                    ClientSiteId = linkedSite.ClientSiteId,
+                                    LogBookId = logBookIdLinked,
+                                    Notes = "Duress Alarm[Linked] Activated By " + GuradName + " From " + ClientsiteDetails.Name,
+                                    EntryType = (int)IrEntryType.Alarm,
+                                    Date = logBook_Date.Value,
+                                    IsAcknowledged = 0,
+                                    IsDuress = 1
+                                };
+                                var pushMessageIdSave = _guardLogDataProvider.SavePushMessage(radioCheckPushMessagesLinked);
+                                _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(guardId, guardId, null, "Duress Alarm[Linked] Activated By " + GuradName + " From " + ClientsiteDetails.Name, IrEntryType.Alarm, 1, 0, tmzdata); // GuardLog tmzdata parameter added by binoy for Task p6#73_TimeZone issue
+                                _guardLogDataProvider.SaveClientSiteDuress(linkedSite.ClientSiteId, guardId, gpsCoordinates, enabledAddress, tmzdata, clientSiteId,0);
+
+                                _guardLogDataProvider.SaveGuardLog(new GuardLog()
+                                {
+                                    Notes = "Duress Alarm[linked] Activated By " + GuradName + " From " + ClientsiteDetails.Name,
+                                    IsSystemEntry = true,
+                                    IrEntryType = Data.Enums.IrEntryType.Alarm,
+                                    EventDateTime = DateTime.Now,
+                                    ClientSiteLogBookId = logBookIdLinked,
+                                    GuardLoginId = guardLoginId,
+                                    RcPushMessageId = pushMessageId,
+                                    EventDateTimeLocal = tmzdata.EventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
+                                    EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                                    EventDateTimeZone = tmzdata.EventDateTimeZone,
+                                    EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                                    EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute, // Task p6#73_TimeZone issue -- added by Binoy - End
+                                    PlayNotificationSound = true,
+                                    GpsCoordinates = gpsCoordinates
+                                });
+
+                            }
+                        }
+
+                    }
+
+                }
+                /* enable linked site duress  end */
 
             }
         }
@@ -1194,9 +1249,9 @@ namespace CityWatch.Web.Services
             {
                 var hist = GetKeyVehicleLogAuditHistoryWithKeyVehicleLogId(item.Id);
 
-               foreach(var item2 in hist)
+                foreach (var item2 in hist)
                 {
-                    if(item2.AuditMessage=="Initial entry")
+                    if (item2.AuditMessage == "Initial entry")
                     {
                         item2.AuditMessage = "Key received";
                     }
@@ -1217,20 +1272,20 @@ namespace CityWatch.Web.Services
                 .OrderByDescending(z => z.Id)
                 .ThenByDescending(z => z.AuditTime).ToList();
         }
-        public string GetFeedbackTemplatesByTypeByColor(int type,int id)
+        public string GetFeedbackTemplatesByTypeByColor(int type, int id)
         {
 
             var item = _configDataProvider.GetFeedbackTemplates().Where(z => z.Type == type && z.Id == id);
             string st1 = string.Empty;
             foreach (var it1 in item)
             {
-                 st1 = it1.Name;
+                st1 = it1.Name;
             }
 
             return st1;
         }
         //p2-192 client email search-start
-        public List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm,string searchTermtwo)
+        public List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm, string searchTermtwo)
         {
             var results = new List<ClientSite>();
             var clientSites = _clientDataProvider.GetClientSites(typeId);
@@ -1253,15 +1308,15 @@ namespace CityWatch.Web.Services
         }
         //p2-192 client email search-end
         //p1-191 HR Files Task 3-start
-        
-        public List<SelectListItem> GetHRGroups( bool withoutSelect = true)
+
+        public List<SelectListItem> GetHRGroups(bool withoutSelect = true)
         {
             var hrGroups = _guardDataProvider.GetHRGroups();
             var items = new List<SelectListItem>();
 
             //if (!withoutSelect)
             //{
-                items.Add(new SelectListItem("Select", "", true));
+            items.Add(new SelectListItem("Select", "", true));
             //}
 
             foreach (var item in hrGroups)
@@ -1278,7 +1333,7 @@ namespace CityWatch.Web.Services
 
             //if (!withoutSelect)
             //{
-                items.Add(new SelectListItem("Select", "", true));
+            items.Add(new SelectListItem("Select", "", true));
             //}
 
             foreach (var item in hrGroups)
@@ -1295,8 +1350,8 @@ namespace CityWatch.Web.Services
 
             //if (!withoutSelect)
             //{
-                items.Add(new SelectListItem("Select", "", true));
-           // }
+            items.Add(new SelectListItem("Select", "", true));
+            // }
 
             foreach (var item in hrGroups)
             {
@@ -1308,7 +1363,7 @@ namespace CityWatch.Web.Services
         //p1-191 HR Files Task 3-end
         public List<SelectListItem> GetLicenseTypes(bool withoutSelect = true)
         {
-            var hrGroups = _guardDataProvider.GetLicenseTypes().Where(x=>x.IsDeleted==false);
+            var hrGroups = _guardDataProvider.GetLicenseTypes().Where(x => x.IsDeleted == false);
             var items = new List<SelectListItem>();
 
             //if (!withoutSelect)

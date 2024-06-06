@@ -213,7 +213,7 @@ namespace CityWatch.Web.Pages.Radio
             try
             {
 
-
+                var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
                 _guardLogDataProvider.SaveClientSiteRadioCheckNew(new ClientSiteRadioCheck()
                 {
                     ClientSiteId = clientSiteId,
@@ -222,9 +222,9 @@ namespace CityWatch.Web.Pages.Radio
                     CheckedAt = DateTime.Now,
                     Active = active,
                     RadioCheckStatusId = statusId,
-                }, tmzdata);
+                }, tmzdata, loginguardid);
 
-                var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
+               
                 _guardLogDataProvider.LogBookEntryFromRcControlRoomMessages(loginguardid, guardId, null, checkedStatus, IrEntryType.Notification, 2, clientSiteId, tmzdata);
             }
             catch (Exception ex)
