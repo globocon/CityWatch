@@ -27,6 +27,8 @@ namespace CityWatch.Data.Models
 
         public bool IsActive { get; set; }
         public bool IsLB_KV_IR { get; set; }
+        public bool IsAdminPowerUser { get; set; }
+        public bool IsAdminGlobal { get; set; }
         public bool IsSTATS { get; set; }
         [NotMapped]
         public List<string> GuardAccess { get; set; }

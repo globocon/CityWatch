@@ -213,7 +213,7 @@ namespace CityWatch.Web.Pages.Radio
             try
             {
 
-
+                var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
                 _guardLogDataProvider.SaveClientSiteRadioCheckNew(new ClientSiteRadioCheck()
                 {
                     ClientSiteId = clientSiteId,
@@ -222,9 +222,9 @@ namespace CityWatch.Web.Pages.Radio
                     CheckedAt = DateTime.Now,
                     Active = active,
                     RadioCheckStatusId = statusId,
-                }, tmzdata);
+                }, tmzdata, loginguardid);
 
-                var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
+               
                 _guardLogDataProvider.LogBookEntryFromRcControlRoomMessages(loginguardid, guardId, null, checkedStatus, IrEntryType.Notification, 2, clientSiteId, tmzdata);
             }
             catch (Exception ex)
@@ -238,7 +238,7 @@ namespace CityWatch.Web.Pages.Radio
 
         //Send Text Notifications-start
         public JsonResult OnPostSavePushNotificationTestMessages(int clientSiteId, bool checkedLB, bool checkedSiteEmail,
-                                    bool checkedSMSPersonal, bool checkedSMSSmartWand,bool checkedPersonalEmail, string Notifications, string Subject, GuardLog tmzdata)
+                                    bool checkedSMSPersonal, bool checkedSMSSmartWand, bool checkedPersonalEmail, string Notifications, string Subject, GuardLog tmzdata)
         {
             var success = true;
             var message = "success";
@@ -246,7 +246,7 @@ namespace CityWatch.Web.Pages.Radio
             {
                 var guardid = HttpContext.Session.GetInt32("GuardId");
                 string guardname = string.Empty;
-                string clientsitename = _guardLogDataProvider.GetClientSites(clientSiteId).Select(x=> x.Name).FirstOrDefault();
+                string clientsitename = _guardLogDataProvider.GetClientSites(clientSiteId).Select(x => x.Name).FirstOrDefault();
                 if (checkedLB == true)
                 {
                     var logbookdate = DateTime.Today;
@@ -256,9 +256,9 @@ namespace CityWatch.Web.Pages.Radio
                     var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdByLogBookMaxID(clientSiteId, logbooktype, out logbookdate);
 
                     if (guardid != 0)
-                    {                      
+                    {
                         guardname = _guardLogDataProvider.GetGuards(guardid.Value).Name;
-                        
+
                         /* Save the push message for reload to logbook on next day Start*/
                         var radioCheckPushMessages = new RadioCheckPushMessages()
                         {
@@ -395,7 +395,7 @@ namespace CityWatch.Web.Pages.Radio
                 if (checkedSMSPersonal == true)
                 {
                     var guardlogins = _guardLogDataProvider.GetGuardLoginsByClientSiteId(clientSiteId, DateTime.Now);
-                    List<SmsChannelEventLog> _smsChannelEventLogList = new List<SmsChannelEventLog>();                    
+                    List<SmsChannelEventLog> _smsChannelEventLogList = new List<SmsChannelEventLog>();
                     foreach (var item in guardlogins)
                     {
                         if (item.Guard.Mobile != null)
@@ -422,7 +422,7 @@ namespace CityWatch.Web.Pages.Radio
                 }
 
                 if (checkedSMSSmartWand == true)
-                {  
+                {
                     var smartWands = _guardLogDataProvider.GetClientSiteSmartWands(clientSiteId);
                     List<SmsChannelEventLog> _smsChannelEventLogList = new List<SmsChannelEventLog>();
                     foreach (var item in smartWands)
@@ -453,7 +453,7 @@ namespace CityWatch.Web.Pages.Radio
                 if (checkedPersonalEmail == true)
                 {
 
-                    var guardEmails = _guardLogDataProvider.GetGuardLogs(clientSiteId).Select(x=>x.Guard.Email);
+                    var guardEmails = _guardLogDataProvider.GetGuardLogs(clientSiteId).Select(x => x.Guard.Email);
                     string smsSiteEmails = null;
                     var guardEmailsnew = guardEmails.Distinct().ToList();
                     foreach (var item in guardEmailsnew)
@@ -556,7 +556,7 @@ namespace CityWatch.Web.Pages.Radio
             return new JsonResult(jsresult);
         }
         //for getting Incident Report History of Guards-end
-          
+
         //for getting SW Details of Guards-start
         public IActionResult OnGetClientSiteSWHistory(int clientSiteId, int guardId)
         {
@@ -577,7 +577,7 @@ namespace CityWatch.Web.Pages.Radio
 
         // Save Global Text Alert Start
         public JsonResult OnPostSaveGlobalNotificationTestMessages(bool checkedState, string state, string Notifications, string Subject,
-            bool chkClientType, int[] ClientType, bool chkNationality, bool checkedSMSPersonal, bool checkedSMSSmartWand,bool chkGlobalPersonalEmail, int[] clientSiteId, GuardLog tmzdata)
+            bool chkClientType, int[] ClientType, bool chkNationality, bool checkedSMSPersonal, bool checkedSMSSmartWand, bool chkGlobalPersonalEmail, int[] clientSiteId, GuardLog tmzdata)
         {
             var success = true;
             var message = "success";
@@ -614,8 +614,8 @@ namespace CityWatch.Web.Pages.Radio
                     {
                         svl.ActivityType = "SMS Personal";
                         foreach (var item in clientSitesState)
-                        {                            
-                            var guardlogins = _guardLogDataProvider.GetGuardLoginsByClientSiteId(item.Id, DateTime.Now);                            
+                        {
+                            var guardlogins = _guardLogDataProvider.GetGuardLoginsByClientSiteId(item.Id, DateTime.Now);
                             string guardname = string.Empty;
                             List<SmsChannelEventLog> _smsChannelEventLogList = new List<SmsChannelEventLog>();
                             foreach (var logins in guardlogins)
@@ -625,7 +625,7 @@ namespace CityWatch.Web.Pages.Radio
                                     SmsChannelEventLog smslog = new SmsChannelEventLog();
                                     smslog.GuardId = loginguardid != 0 ? loginguardid : null; // ID of guard who is sending the message
                                     smslog.GuardName = guardname.Length > 0 ? guardname : null; // Name of guard who is sending the message
-                                    smslog.GuardNumber = logins.Guard.Mobile; 
+                                    smslog.GuardNumber = logins.Guard.Mobile;
                                     smslog.SiteId = null;  // setting as null since it is from RC else clientSiteId
                                     smslog.SiteName = null;  // setting as null since it is from RC else  clientsitename
                                     _smsChannelEventLogList.Add(smslog);
@@ -650,7 +650,7 @@ namespace CityWatch.Web.Pages.Radio
                                     SmsChannelEventLog smslog = new SmsChannelEventLog();
                                     smslog.GuardId = loginguardid != 0 ? loginguardid : null; // ID of guard who is sending the message
                                     smslog.GuardName = guardname.Length > 0 ? guardname : null; // Name of guard who is sending the message
-                                    smslog.GuardNumber = sw.PhoneNumber; 
+                                    smslog.GuardNumber = sw.PhoneNumber;
                                     smslog.SiteId = null;  // setting as null since it is from RC else clientSiteId
                                     smslog.SiteName = null;  // setting as null since it is from RC else  clientsitename
                                     _smsChannelEventLogList.Add(smslog);
@@ -667,28 +667,28 @@ namespace CityWatch.Web.Pages.Radio
                         {
                             var guardEmails = _guardLogDataProvider.GetGuardLogs(item.Id).Select(x => x.Guard.Email);
 
-                            
+
                             var guardEmailsnew = guardEmails.Distinct().ToList();
 
 
                             foreach (var item2 in guardEmailsnew)
-                        {
-                            if (item2 != null)
                             {
-                                if (smsSiteEmails == null)
-                                    smsSiteEmails = item2;
-                                else
-                                    smsSiteEmails = smsSiteEmails + ',' + item2;
+                                if (item2 != null)
+                                {
+                                    if (smsSiteEmails == null)
+                                        smsSiteEmails = item2;
+                                    else
+                                        smsSiteEmails = smsSiteEmails + ',' + item2;
+
+                                }
+                                //else
+                                //{
+                                //    success = false;
+                                //    message = "Please Enter the Guard Email";
+                                //    return new JsonResult(new { success, message });
+                                //}
 
                             }
-                            //else
-                            //{
-                            //    success = false;
-                            //    message = "Please Enter the Guard Email";
-                            //    return new JsonResult(new { success, message });
-                            //}
-
-                        }
 
                         }
                         var fromAddress = _EmailOptions.FromAddress.Split('|');
@@ -725,7 +725,7 @@ namespace CityWatch.Web.Pages.Radio
 
                     }
                     //p4-79 menucorrections-end
-                 
+
 
                 }
                 if (chkClientType == true)
@@ -761,7 +761,7 @@ namespace CityWatch.Web.Pages.Radio
                                         SmsChannelEventLog smslog = new SmsChannelEventLog();
                                         smslog.GuardId = loginguardid != 0 ? loginguardid : null; // ID of guard who is sending the message
                                         smslog.GuardName = guardname.Length > 0 ? guardname : null; // Name of guard who is sending the message
-                                        smslog.GuardNumber = logins.Guard.Mobile; 
+                                        smslog.GuardNumber = logins.Guard.Mobile;
                                         smslog.SiteId = null;  // setting as null since it is from RC else clientSiteId
                                         smslog.SiteName = null;  // setting as null since it is from RC else  clientsitename
                                         _smsChannelEventLogList.Add(smslog);
@@ -786,7 +786,7 @@ namespace CityWatch.Web.Pages.Radio
                                         SmsChannelEventLog smslog = new SmsChannelEventLog();
                                         smslog.GuardId = loginguardid != 0 ? loginguardid : null; // ID of guard who is sending the message
                                         smslog.GuardName = guardname.Length > 0 ? guardname : null; // Name of guard who is sending the message
-                                        smslog.GuardNumber = sw.PhoneNumber; 
+                                        smslog.GuardNumber = sw.PhoneNumber;
                                         smslog.SiteId = null;  // setting as null since it is from RC else clientSiteId
                                         smslog.SiteName = null;  // setting as null since it is from RC else  clientsitename
                                         _smsChannelEventLogList.Add(smslog);
@@ -895,7 +895,7 @@ namespace CityWatch.Web.Pages.Radio
                                         SmsChannelEventLog smslog = new SmsChannelEventLog();
                                         smslog.GuardId = loginguardid != 0 ? loginguardid : null; // ID of guard who is sending the message
                                         smslog.GuardName = guardname.Length > 0 ? guardname : null; // Name of guard who is sending the message
-                                        smslog.GuardNumber = logins.Guard.Mobile; 
+                                        smslog.GuardNumber = logins.Guard.Mobile;
                                         smslog.SiteId = null;  // setting as null since it is from RC else clientSiteId
                                         smslog.SiteName = null;  // setting as null since it is from RC else  clientsitename
                                         _smsChannelEventLogList.Add(smslog);
@@ -920,7 +920,7 @@ namespace CityWatch.Web.Pages.Radio
                                         SmsChannelEventLog smslog = new SmsChannelEventLog();
                                         smslog.GuardId = loginguardid != 0 ? loginguardid : null; // ID of guard who is sending the message
                                         smslog.GuardName = guardname.Length > 0 ? guardname : null; // Name of guard who is sending the message
-                                        smslog.GuardNumber = sw.PhoneNumber; 
+                                        smslog.GuardNumber = sw.PhoneNumber;
                                         smslog.SiteId = null;  // setting as null since it is from RC else clientSiteId
                                         smslog.SiteName = null;  // setting as null since it is from RC else  clientsitename
                                         _smsChannelEventLogList.Add(smslog);
@@ -1031,7 +1031,7 @@ namespace CityWatch.Web.Pages.Radio
                                     SmsChannelEventLog smslog = new SmsChannelEventLog();
                                     smslog.GuardId = loginguardid != 0 ? loginguardid : null; // ID of guard who is sending the message
                                     smslog.GuardName = guardname.Length > 0 ? guardname : null; // Name of guard who is sending the message
-                                    smslog.GuardNumber = logins.Guard.Mobile; 
+                                    smslog.GuardNumber = logins.Guard.Mobile;
                                     smslog.SiteId = null;  // setting as null since it is from RC else clientSiteId
                                     smslog.SiteName = null;  // setting as null since it is from RC else  clientsitename
                                     _smsChannelEventLogList.Add(smslog);
@@ -1056,7 +1056,7 @@ namespace CityWatch.Web.Pages.Radio
                                     SmsChannelEventLog smslog = new SmsChannelEventLog();
                                     smslog.GuardId = loginguardid != 0 ? loginguardid : null; // ID of guard who is sending the message
                                     smslog.GuardName = guardname.Length > 0 ? guardname : null; // Name of guard who is sending the message
-                                    smslog.GuardNumber = sw.PhoneNumber; 
+                                    smslog.GuardNumber = sw.PhoneNumber;
                                     smslog.SiteId = null;  // setting as null since it is from RC else clientSiteId
                                     smslog.SiteName = null;  // setting as null since it is from RC else  clientsitename
                                     _smsChannelEventLogList.Add(smslog);
@@ -1490,7 +1490,8 @@ namespace CityWatch.Web.Pages.Radio
         {
             var rtn = _guardLogDataProvider.GetActionlist(clientSiteId);
 
-            if(rtn != null) {
+            if (rtn != null)
+            {
                 if (rtn.Imagepath != null)
                 {
                     rtn.Imagepath = rtn.Imagepath + ":-:" + ConvertFileToBase64(rtn.Imagepath);
@@ -1529,13 +1530,13 @@ namespace CityWatch.Web.Pages.Radio
         {
             var clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
             clientSiteKpiSetting ??= new ClientSiteKpiSetting() { ClientSiteId = siteId };
-            if (clientSiteKpiSetting.rclistKP.Imagepath != null )
+            if (clientSiteKpiSetting.rclistKP.Imagepath != null)
             {
                 if (clientSiteKpiSetting.rclistKP.Imagepath.Length > 0 && clientSiteKpiSetting.rclistKP.Imagepath.Trim() != "")
                 {
                     clientSiteKpiSetting.rclistKP.Imagepath = clientSiteKpiSetting.rclistKP.Imagepath + ":-:" + ConvertFileToBase64(clientSiteKpiSetting.rclistKP.Imagepath);
                 }
-                
+
             }
             return Partial("../admin/_ClientSiteKpiSetting", clientSiteKpiSetting);
         }
@@ -1596,8 +1597,8 @@ namespace CityWatch.Web.Pages.Radio
                     using (var stream = System.IO.File.Create(Path.Combine(summaryImageDir, fileName)))
                     {
                         file.CopyTo(stream);
-                    }                    
-                    _clientDataProvider.SaveUpdateRCListFile(Id,fileName,dtm);
+                    }
+                    _clientDataProvider.SaveUpdateRCListFile(Id, fileName, dtm);
                     Imagepath = fileName + ":-:" + ConvertFileToBase64(fileName);
                 }
             }
@@ -1639,7 +1640,7 @@ namespace CityWatch.Web.Pages.Radio
             var message = "Success";
             try
             {
-                _clientDataProvider.RemoveRCList(RCId);                
+                _clientDataProvider.RemoveRCList(RCId);
             }
             catch (Exception ex)
             {
@@ -1660,10 +1661,10 @@ namespace CityWatch.Web.Pages.Radio
                 if (System.IO.File.Exists(fileToConvert))
                 {
                     byte[] AsBytes = System.IO.File.ReadAllBytes(fileToConvert);
-                    rtnstring = "data:application/octet-stream;base64," +  Convert.ToBase64String(AsBytes);
-                }                   
+                    rtnstring = "data:application/octet-stream;base64," + Convert.ToBase64String(AsBytes);
+                }
             }
-            
+
             return rtnstring;
         }
 

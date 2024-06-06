@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
+using Org.BouncyCastle.Crypto.Macs;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -326,6 +327,14 @@ namespace CityWatch.Web.Pages.Admin
                     else if (val == 4)
                     {
                         guard.IsRCAccess = true;
+                    }
+                    else if (val == 5)
+                    {
+                        guard.IsAdminPowerUser = true;
+                    }
+                    else if(val==6)
+                    { 
+                        guard.IsAdminGlobal = true; 
                     }
                 }
             }
@@ -1159,7 +1168,20 @@ namespace CityWatch.Web.Pages.Admin
                             }
                             else
                             {
-                                SuccessMessage = "Not authorized to access this page";
+                                if (guard.IsAdminGlobal || guard.IsAdminPowerUser)
+                                {
+                                    AccessPermission = true;
+                                    GuId = guard.Id;
+                                    if (AuthUserHelper.LoggedInUserId != null)
+                                    {
+                                        LoggedInUserId = AuthUserHelper.LoggedInUserId;
+                                    }
+                                    SuccessCode = 1;
+                                }
+                                else
+                                {
+                                    SuccessMessage = "Not authorized to access this page";
+                                }
                             }
                         }
                         else
@@ -1209,6 +1231,48 @@ namespace CityWatch.Web.Pages.Admin
                         //}
                         //SuccessCode = 1;
                     }
+                    //p1-203 Admin User Profile-start
+                    if (type == "Settings")
+
+                    {
+                        /* Store the value of the Guard Id to seesion for create the Ir from the session-start */
+                        HttpContext.Session.SetString("GuardId", guard.Id.ToString());
+                        if (guard.Mobile == null || guard.Mobile == "+61 4")
+                        {
+                            SuccessMessage = "Mobile is null";
+                        }
+                        else
+                        {
+                            if (guard.IsActive)
+                            {
+                                if (guard.IsAdminGlobal || guard.IsAdminPowerUser)
+                                {
+                                    AccessPermission = true;
+                                    GuId = guard.Id;
+                                    if (AuthUserHelper.LoggedInUserId != null)
+                                    {
+                                        LoggedInUserId = AuthUserHelper.LoggedInUserId;
+                                    }
+                                    SuccessCode = 1;
+                                }
+                                else
+                                {
+                                    SuccessMessage = "Not authorized to access this page";
+                                }
+                            }
+                            else
+                            {
+                                SuccessMessage = "Guard is inactive";
+                            }
+                        }
+
+                        //if (AuthUserHelper.LoggedInUserId != null)
+                        //{
+                        //    LoggedInUserId = AuthUserHelper.LoggedInUserId;
+                        //}
+                        //SuccessCode = 1;
+                    }
+                    //p1-203 Admin User Profile-end
                     /* Store the value of the Guard Id to seesion for create the Ir from the session-end */
 
                 }

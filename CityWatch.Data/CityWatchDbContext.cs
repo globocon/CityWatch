@@ -142,7 +142,8 @@ namespace CityWatch.Data
         //for toggle areas - start 
         public DbSet<ClientSiteToggle> ClientSiteToggle { get; set; }
         //for toggle areas - end 
-
+        public DbSet<RCLinkedDuressMaster> RCLinkedDuressMaster { get; set; }
+        public DbSet<RCLinkedDuressClientSites> RCLinkedDuressClientSites { get; set; }
 
     }
     /* 07022024 dileep to solve the trigger in table not allowed in enity framework 7.0

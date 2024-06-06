@@ -17,7 +17,7 @@
         $('#hr_compliance_email').val(Emails.emails);
     });
 
-     //To get the Duress Emails in pageload stop
+    //To get the Duress Emails in pageload stop
 
 };
 
@@ -30,7 +30,7 @@ gridRadioCheckStatusTypeSettings = $('#radiocheck_status_type_settings').grid({
     primaryKey: 'id',
     inlineEditing: { mode: 'command' },
     columns: [
-        { width: 130, field: 'referenceNo', title: 'Reference No',editor: true },
+        { width: 130, field: 'referenceNo', title: 'Reference No', editor: true },
         { width: 500, field: 'name', title: 'Name', editor: true },
         { width: 200, field: 'radioCheckStatusColorName', title: 'Outcome', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=RadioCheckStatusColorCode', valueField: 'name', textField: 'name' } },
     ],
@@ -55,7 +55,7 @@ if (gridRadioCheckStatusTypeSettings) {
             );
             gridRadioCheckStatusTypeSettings.edit(id);
             return;
-        }        
+        }
         //data.radioCheckStatusColorId = !Number.isInteger(data.radioCheckStatusColorId) ? data.radioCheckStatusColorId.getValue() : data.radioCheckStatusColorId;
         const token = $('input[name="__RequestVerificationToken"]').val();
         $.ajax({
@@ -93,7 +93,7 @@ if (gridRadioCheckStatusTypeSettings) {
                     }
                 );
                 gridRadioCheckStatusTypeSettings.edit(id);
-            }           
+            }
         }).fail(function () {
             console.log('error');
         }).always(function () {
@@ -256,45 +256,45 @@ if (gridBroadCastBannerLiveEvents) {
 /*  broadcast calendar events-start*/
 let isBroadCastCalendareventsAdding = false;
 $('#add_calendar_events').on('click', function () {
-        if (isBroadCastCalendareventsAdding == true) {
-            $.notify("Unsaved changes in the grid. Please Refresh the page.",
-                {
-                    align: "center",
-                    verticalAlign: "top",
-                    color: "#fff",
-                    background: "#A5881B",
-                    blur: 0.4,
-                    delay: 0
-                }
-            );
-        } else {
-            isBroadCastCalendareventsAdding = true;
-            gridBroadCastBannerCalendarEvents.addRow({
-                'id': -1
-            }).edit(-1);
-        }
+    if (isBroadCastCalendareventsAdding == true) {
+        $.notify("Unsaved changes in the grid. Please Refresh the page.",
+            {
+                align: "center",
+                verticalAlign: "top",
+                color: "#fff",
+                background: "#A5881B",
+                blur: 0.4,
+                delay: 0
+            }
+        );
+    } else {
+        isBroadCastCalendareventsAdding = true;
+        gridBroadCastBannerCalendarEvents.addRow({
+            'id': -1
+        }).edit(-1);
+    }
 });
 
-    let gridBroadCastBannerCalendarEvents;
-    gridBroadCastBannerCalendarEvents = $('#BroadCastBannerCalendarEvents').grid({
-        dataSource: '/Admin/Settings?handler=BroadcastCalendarEvents',
-        uiLibrary: 'bootstrap4',
-        iconsLibrary: 'fontawesome',
-        primaryKey: 'id',
-        inlineEditing: { mode: 'command' },
+let gridBroadCastBannerCalendarEvents;
+gridBroadCastBannerCalendarEvents = $('#BroadCastBannerCalendarEvents').grid({
+    dataSource: '/Admin/Settings?handler=BroadcastCalendarEvents',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    inlineEditing: { mode: 'command' },
 
-        columns: [
-            { width: 130, field: 'id', title: 'Id', hidden: true },
-            { width: 100, field: 'referenceNo', title: 'Reference No', editor: true },
-            { width: 600, field: 'textMessage', title: 'Text Message', editor: true },
-            { width: 160, field: 'formattedStartDate', title: 'Start', type: 'date', format: 'dd-mmm-yyyy', editor: true },
-            { width: 160, field: 'formattedExpiryDate', title: 'Expiry', type: 'date', format: 'dd-mmm-yyyy', editor: true },
-            { width: 100, field: 'repeatYearly', title: 'Repeat', type: 'checkbox', align: 'center', editor: true},
-        ],
-        initialized: function (e) {
-            $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
-        }
-    });
+    columns: [
+        { width: 130, field: 'id', title: 'Id', hidden: true },
+        { width: 100, field: 'referenceNo', title: 'Reference No', editor: true },
+        { width: 600, field: 'textMessage', title: 'Text Message', editor: true },
+        { width: 160, field: 'formattedStartDate', title: 'Start', type: 'date', format: 'dd-mmm-yyyy', editor: true },
+        { width: 160, field: 'formattedExpiryDate', title: 'Expiry', type: 'date', format: 'dd-mmm-yyyy', editor: true },
+        { width: 100, field: 'repeatYearly', title: 'Repeat', type: 'checkbox', align: 'center', editor: true },
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
 
 if (gridBroadCastBannerCalendarEvents) {
     gridBroadCastBannerCalendarEvents.on('rowDataChanged', function (e, id, record) {
@@ -313,7 +313,7 @@ if (gridBroadCastBannerCalendarEvents) {
             );
             gridBroadCastBannerCalendarEvents.edit(id);
             return;
-        }        
+        }
         if ((data.formattedStartDate == '') || (data.formattedExpiryDate == '') || (data.formattedStartDate == undefined) || (data.formattedExpiryDate == undefined)) {
             $.notify('Please check start date and expiry date. !!!',
                 {
@@ -380,7 +380,7 @@ if (gridBroadCastBannerCalendarEvents) {
                     }
                 );
                 gridBroadCastBannerCalendarEvents.edit(id);
-            }           
+            }
         }).fail(function () {
             console.log('error');
         }).always(function () {
@@ -478,23 +478,23 @@ if (gridGlobalDuressSmsSettings) {
                             delay: 0
                         }
                     );
-                }        
+                }
             }).fail(function () {
                 console.log('error');
             }).always(function () {
-                
+
             });
         }
     });
 
-    gridGlobalDuressSmsSettings.on('dataBound', function (e, records, totalRecords) {       
-        var SmsNumbers = "";        
-        records.forEach(function (item) {            
-            SmsNumbers += item.smsNumber + ", "; 
-        });        
-        if (SmsNumbers.endsWith(", ")) {            
-            SmsNumbers = SmsNumbers.substring(0, SmsNumbers.length - 2);            
-        }        
+    gridGlobalDuressSmsSettings.on('dataBound', function (e, records, totalRecords) {
+        var SmsNumbers = "";
+        records.forEach(function (item) {
+            SmsNumbers += item.smsNumber + ", ";
+        });
+        if (SmsNumbers.endsWith(", ")) {
+            SmsNumbers = SmsNumbers.substring(0, SmsNumbers.length - 2);
+        }
         $('#du_duress_sms').val(SmsNumbers);
     });
 }
@@ -527,9 +527,9 @@ $('#btn_add_smsnumber').on('click', function () {
             }
         );
         return;
-    } 
+    }
     sms_number = sms_number.substring(0, 3) + ' ' + sms_number.substring(3, 6) + ' ' + sms_number.substring(6, 9);
-    var smsnumber = countrycode + ' ' + localcode + ' ' + sms_number ;
+    var smsnumber = countrycode + ' ' + localcode + ' ' + sms_number;
     var adddata = {
         CompanyId: 1,
         SmsNumber: smsnumber
@@ -564,8 +564,8 @@ $('#btn_add_smsnumber').on('click', function () {
                     blur: 0.4,
                     delay: 0
                 }
-            );            
-        }        
+            );
+        }
     }).fail(function () {
         console.log('error');
     }).always(function () {
@@ -590,19 +590,14 @@ $('#add_GloblEmail').on('click', function () {
     const token = $('input[name="__RequestVerificationToken"]').val();
     var Email = $('#du_duress_email').val();
     var emailsArray = Email.split(',');
+    var isValidEmailIds = true;
     for (var i = 0; i < emailsArray.length; i++) {
         var emailAddress = emailsArray[i].trim();
-        if (isValidEmail(emailAddress))
-        {
-            $.ajax({
-                url: '/Admin/Settings?handler=SaveDuressEmail',
-                data: { Email: emailAddress },
-                type: 'POST',
-                headers: { 'RequestVerificationToken': token },
-            }).done(function () {
-            })
+        if (isValidEmail(emailAddress)) {
+
         }
         else {
+            isValidEmailIds = false;
             $.notify("Invalid email address.",
                 {
                     align: "center",
@@ -615,11 +610,23 @@ $('#add_GloblEmail').on('click', function () {
             );
 
         }
-    
-    
-        
-    } 
-    
+
+    }
+
+    if (isValidEmailIds) {
+
+        $.ajax({
+            url: '/Admin/Settings?handler=SaveDuressEmail',
+            data: { Email: Email },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function () {
+            alert("The Duress Email Alert Email was saved successfully");
+        })
+    }
+
+
+
     function isValidEmail(email) {
         // Regular expression for basic email validation
         var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -635,7 +642,7 @@ $('#add_ComplianceEmail').on('click', function () {
     for (var i = 0; i < emailsArray.length; i++) {
         var emailAddress = emailsArray[i].trim();
         if (isValidEmail(emailAddress)) {
-           
+
         }
         else {
             isValidEmailIds = false;
@@ -651,7 +658,7 @@ $('#add_ComplianceEmail').on('click', function () {
             );
 
         }
-        
+
 
 
     }
@@ -686,12 +693,12 @@ gridSiteDetailsforRcLogbook = $('#gridSiteDetailsforRcLogbook').grid({
         { width: 130, field: 'id', title: 'Id', hidden: true },
         { width: 150, field: 'clientTypeName', title: 'Client Type' },
         { width: 250, field: 'clientSiteName', title: 'Client Site' },
-       
-        
+
+
 
 
     ]
-    
+
 });
 
 
@@ -830,7 +837,7 @@ if (gridSWChannels) {
     });
 }
 $('#add_sw_channel').on('click', function () {
-    if (isAPICallsAdding == true) {        
+    if (isAPICallsAdding == true) {
         $.notify("Unsaved changes in the grid. Please Refresh the page.",
             {
                 align: "center",
@@ -879,8 +886,8 @@ gridSmsChannels = $('#tbl_SmsChannel').grid({
     columns: [
         { width: '0%', field: 'id', title: 'Id', hidden: true },
         { width: '0%', field: 'companyId', title: 'Company Id', hidden: true },
-        { width: '15%', field: 'smsProvider', title: 'SMS Provider Name', editor: true},
-        { width: '15%', field: 'smsSender', title: 'Sender ID', editor: true},
+        { width: '15%', field: 'smsProvider', title: 'SMS Provider Name', editor: true },
+        { width: '15%', field: 'smsSender', title: 'Sender ID', editor: true },
         { width: '25%', field: 'apiKey', title: 'Api Key', editor: true, align: 'center' },
         { width: '25%', field: 'apiSecret', title: 'Api Password', editor: true, align: 'center' },
     ],
@@ -895,9 +902,9 @@ if (gridSmsChannels) {
         data.id = data.id.replace(/\s{2,}/g, ' ').trim();
         data.companyId = data.companyId.replace(/\s{2,}/g, ' ').trim();
         data.smsProvider = data.smsProvider;
-        data.apiKey = data.apiKey;  
-        data.apiSecret = data.apiSecret;  
-        data.smsSender = data.smsSender;  
+        data.apiKey = data.apiKey;
+        data.apiSecret = data.apiSecret;
+        data.smsSender = data.smsSender;
         const token = $('input[name="__RequestVerificationToken"]').val();
         $.ajax({
             url: '/Admin/Settings?handler=SmsChannel',
@@ -935,7 +942,7 @@ if (gridSmsChannels) {
     });
 }
 $('#add_sms_channel').on('click', function () {
-    if (isSmsAPICallsAdding == true) {       
+    if (isSmsAPICallsAdding == true) {
         $.notify("Unsaved changes in the grid. Please Refresh the page.",
             {
                 align: "center",
@@ -954,7 +961,7 @@ $('#add_sms_channel').on('click', function () {
                 'companyId': 1
             }).edit(-1);
         }
-        else {            
+        else {
             $.notify("Only one entry is allowed to be added in SMS Channel.",
                 {
                     align: "center",
@@ -1063,5 +1070,164 @@ $('#add_general_feeds').on('click', function () {
         }).edit(-1);
     }
 });
+
+/*linked duress start dileep 31052024*/
+let gridSchedules;
+
+gridSchedules = $('#rc_linked_duress').grid({
+    dataSource: '/Admin/Settings?handler=RcLinkedDuress',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    columns: [
+        { field: 'groupName', title: 'Group Name', width: 100 },
+        { field: 'clientTypes', title: 'Client Types', width: 100 },
+        { field: 'clientSites', title: 'Client Sites', width: 180 },
+        { width: 75, renderer: schButtonRenderer },
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
+
+function schButtonRenderer(value, record) {
+    let buttonHtml = '';
+    buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-primary mr-2 mt-2 d-block" data-toggle="modal" data-target="#schedule-modal" data-sch-id="' + record.id + '" ';
+    buttonHtml += 'data-action="editSchedule"><i class="fa fa-pencil mr-2"></i>Edit</button>';
+    buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-danger mt-2 del-schedule d-block" data-sch-id="' + record.id + '""><i class="fa fa-trash mr-2" aria-hidden="true"></i>Delete</button>';
+    return buttonHtml;
+}
+
+
+
+$('#clientTypeName').on('change', function () {
+    const option = $(this).val();
+    if (option === '') {
+        $('#clientSites').html('');
+        $('#clientSites').append('<option value="">Select</option>');
+    }
+
+    $.ajax({
+        url: '/Admin/Settings?handler=ClientSites&type=' + encodeURIComponent(option),
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (data) {
+        $('#clientSites').html('');
+        $('#clientSites').append('<option value="">Select</option>');
+        data.map(function (site) {
+            $('#clientSites').append('<option value="' + site.value + '">' + site.text + '</option>');
+        });
+    });
+});
+
+$('#clientSites').on('change', function () {
+    const elem = $(this).find(":selected");
+    if (elem.val() !== '') {
+        const existing = $('#selectedSites option[value="' + elem.val() + '"]');
+        if (existing.length === 0) {
+            $('#selectedSites').append('<option value="' + elem.val() + '">' + elem.text() + '</option>');
+            updateSelectedSitesCount();
+        }
+    }
+});
+
+
+
+$('#removeSelectedSites').on('click', function () {
+    $('#selectedSites option:selected').remove();
+    updateSelectedSitesCount();
+});
+
+function updateSelectedSitesCount() {
+    $('#selectedSitesCount').text($('#selectedSites option').length);
+}
+
+$('#schedule-modal').on('shown.bs.modal', function (event) {
+    clearScheduleModal();
+    const button = $(event.relatedTarget);
+    const isEdit = button.data('action') !== undefined && button.data('action') === 'editSchedule';
+    if (isEdit) {
+        schId = button.data('sch-id');
+        linkedDuressModalOnEdit(schId);
+    } 
+
+  
+});
+
+function clearScheduleModal() {
+    $('#scheduleId').val('0');
+    $('#clientTypeName').val('');
+    $('#clientSites').html('<option value="">Select</option>');
+    $('#selectedSites').html('');
+    updateSelectedSitesCount();
+    $('input:hidden[name="clientSiteIds"]').remove();
+    $('#clientTypeName option:eq(0)').attr('selected', true);
+    $('#GroupName').val('');
+    $('#sch-modal-validation').hide();
+   
+}
+
+
+function linkedDuressModalOnEdit(scheduleId) {
+    $('#loader').show();
+    $.ajax({
+        url: '/Admin/Settings?handler=RCLinkedDuressbyId&id=' + scheduleId,
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (data) {
+        $('#scheduleId').val(data.id);
+        $.each(data.rcLinkedDuressClientSites, function (index, item) {
+            $('#selectedSites').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
+            updateSelectedSitesCount();
+        });
+        $('#GroupName').val(data.groupName);
+        
+    }).always(function () {
+        $('#loader').hide();
+    });
+}
+
+$('#rc_linked_duress').on('click', '.del-schedule', function () {
+    const idToDelete = $(this).attr('data-sch-id');
+    if (confirm('Are you sure want to delete this linked Duress?')) {
+        $.ajax({
+            url: '/Admin/Settings?handler=DeleteRCLinkedDuress',
+            type: 'POST',
+            data: { id: idToDelete },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function () {
+            gridSchedules.reload({ type: $('#sel_schedule').val(), searchTerm: $('#search_kw_client_site').val() });
+        });
+    }
+
+});
+
+$('#btnSavelinkedDuress').on('click', function () {
+    $("input[name=clientSiteIds]").remove();
+    var options = $('#selectedSites option');
+    options.each(function () {
+        const elem = '<input type="hidden" name="clientSiteIds" value="' + $(this).val() + '">';
+        $('#frm_kpi_schedule').append(elem);
+    });
+
+    $.ajax({
+        url: '/Admin/Settings?handler=SaveRCLinkedDuress',
+        type: 'POST',
+        data: $('#frm_kpi_schedule').serialize(),
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (data) {
+        if (data.success) {
+            alert('RC LinkedDuress saved successfully');
+            $('#schedule-modal').modal('hide');
+            gridSchedules.reload({ type: $('#sel_schedule').val(), searchTerm: $('#search_kw_client_site').val() });
+        } else {
+            $('#sch-modal-validation').html('');
+            data.message.split(',').map(function (item) { $('#sch-modal-validation').append('<li>' + item + '</li>') });
+            $('#sch-modal-validation').show().delay(5000).fadeOut();
+        }
+    });
+});
+
+/*linked duress end*/
 /*GeneralFeeds - end*/
 /*API Calls -end*/

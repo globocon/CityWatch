@@ -506,7 +506,6 @@ $(function () {
             $('#delete_summary_image').show();
         }
     }
-
     $('#delete_summary_image').on('click', function () {
         if (confirm('Are you sure want to delete this file?')) {
             $.ajax({
@@ -861,10 +860,17 @@ $(function () {
                 var downloadedFileName = matches !== null && matches[1] ? matches[1].replace(/['"]/g, '') : fileName;
                 // Create a Blob with the PDF data and initiate the download
                 var blob = new Blob([data], { type: 'application/pdf' });
-                // Create a temporary anchor element to trigger the download
-                var url = window.URL.createObjectURL(blob);
-                // Open the PDF in a new tab
-                var newTab = window.open(url, '_blank');
+                // // Create a temporary anchor element to trigger the download
+                //var url = window.URL.createObjectURL(blob);
+                // // Open the PDF in a new tab
+                //var newTab = window.open(url, '_blank');
+                
+                const URL = window.URL || window.webkitURL;
+                const displayNameHash = encodeURIComponent(`#displayName=${downloadedFileName}`);
+                const objectUrl = URL.createObjectURL(blob) + displayNameHash;
+                const windowUrl = window.location.origin; // + window.location.pathname;
+                const viewerUrl = `${windowUrl}/lib/Pdfjs/web/viewer.html?file=`;
+                var newTab = window.open(`${viewerUrl}${objectUrl}`);
                 if (!newTab) {
                     // If the new tab was blocked, fallback to downloading the file
                     var a = document.createElement('a');
@@ -872,6 +878,17 @@ $(function () {
                     a.download = downloadedFileName;
                     a.click();
                 }
+
+                URL.revokeObjectURL(objectUrl);
+
+                //if (!newTab) {
+                //    // If the new tab was blocked, fallback to downloading the file
+                //    var a = document.createElement('a');
+                //    a.href = url;
+                //    a.download = downloadedFileName;
+                //    a.click();
+                //}
+                //window.URL.revokeObjectURL(url);                
             },
             error: function () {
                 alert('Error while downloading the PDF.');
@@ -1000,25 +1017,96 @@ $(function () {
         $('#client_site_name').text(button.data('cs-name'))
        // $('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + button.data('cs-id'));
 
-      
+       
         $('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + button.data('cs-id'), function () {
             // This function will be executed after the content is loaded
             window.sharedVariable = button.data('cs-id');
             console.log('Load operation completed!');
             // You can add your additional code or actions here
             console.log(button.data('cs-id'));
-            $("#OtherSettingsNew").load('settingsOther?clientSiteId=53');
-                  
-            //alert('Removed the worker successfully');
             
-        });
-       
+           // $("#OtherSettingsNew").load('settingsOther?clientSiteId=53');
         
-        
-       
-    });
+             
+                // Hide the sub tabs initially
+               // $("#kpiSettingTab").hide();
+               // $("#RcActionList-tab").hide(); 
+                // Click event handler for the main tab
+                 
+        // $(".nav-link").click(function () {
+        ////         Hide the sub tabs              
+ 
+        //     var clickedTabName = $(this).attr('id');
+             
+        //     if (clickedTabName === 'siteKpiSettings-tab') {
+        //         $("#hrcompliance").hide();
+        //         $("#siteKpiSettings").show();
+        //         $("#notes").hide();
+        //         $("#contractedmanningSettings").hide();
+        //     }
+        //     if (clickedTabName === 'contracted-manning-tab') {
+        //         $("#hrcompliance").hide();
+        //         $("#siteKpiSettings").hide();
+        //         $("#notes").hide();
+        //         $("#contractedmanningSettings").show();
+        //     }
+        //     if (clickedTabName === 'contracted-manning-tab')        
+        //     {                 
+        //         $("#hrcompliance").hide();
+        //         $("#siteKpiSettings").hide();
+        //         $("#notes").hide();
+        //         $("#contractedmanningSettings").show();
+        //     }
+        //     if (clickedTabName === 'notes-tab')
+        //     {
+        //         $("#contractedmanningSettings").hide();
+        //         $("#hrcompliance").hide();
+        //         $("#siteKpiSettings").hide();
+        //         $("#notes").show();
+        //     }
+        //     if (clickedTabName === 'hr-compliance-tab')
+        //     {
+        //         $("#hrcompliance").show();
+        //         $("#siteKpiSettings").hide();
+        //         $("#notes").hide();
+        //         $("#contractedmanningSettings").hide();             }
+             
+        //    if (clickedTabName === 'lb-tab') {
+        //        $("#KVSettingsNew").hide();
+        //        $("#kpiSettingTab").hide();
+        //        $("#siteKpiSettings").hide();
+        //        $("#RcActionList-tab").hide();
+        //        $("#RcActionListSettings").hide();                
+        //        $("#LBSettingsNew").show();
+        //    }
+        //    if (clickedTabName === 'kv-tab') {
+        //        $("#LBSettingsNew").hide();
+        //        $("#kpiSettingTab").hide();
+        //        $("#RcActionList-tab").hide();
+        //        $("#RcActionListSettings").hide();
+        //        $("#KVSettingsNew").show();
+        //        $("#siteKpiSettings").hide();
+        //    }
+        //    if (clickedTabName === 'kpi-tab') {
+        //        $("#LBSettingsNew").hide();
+        //        $("#KVSettingsNew").hide();
+        //        $("#RcActionList-tab").hide();
+        //        $("#RcActionListSettings").hide();
+        //        $("#kpiSettingTab").show();
+        //        $("#siteKpiSettings").show();
+        //    }
+        //    if (clickedTabName === 'rc-tab') {
+        //        $("#LBSettingsNew").hide();
+        //        $("#KVSettingsNew").hide();
+        //        $("#kpiSettingTab").hide();
+        //        $("#RcActionList-tab").show();
+        //        $("#RcActionListSettings").show();
+        //        $("#siteKpiSettings").hide();
+        //    }           
 
-   
+        //});
+        });
+    });
       
     
 
@@ -1160,7 +1248,8 @@ $(function () {
                             console.log('Load operation completed!');
                             // You can add your additional code or actions here
                             console.log(result.clientSiteId);
-                            $("#OtherSettingsNew").load('settingsOther?clientSiteId=53');
+                           // $("#OtherSettingsNew").load('settingsOther?clientSiteId=53');
+                           
 
                             //alert('Removed the worker successfully');
                         });
@@ -1298,7 +1387,9 @@ $(function () {
                     console.log('Load operation completed!');
                     // You can add your additional code or actions here
                     console.log(data.clientSiteId);
-                    $("#OtherSettingsNew").load('settingsOther?clientSiteId=53');
+                 
+                  //  $("#OtherSettingsNew").load('settingsLB?clientSiteId=53');
+                  
                 });
                 $('#kpi-settings-modal').modal('show');
                 $("#kpi-settings-modal").appendTo("body");
@@ -1689,7 +1780,7 @@ $('#save_default_email').on('click', function () {
 })
 
 
-$('#div_site_settings').on('click','#btnSaveGuardSiteSettingsnew', function () {
+$('#div_site_settings').on('click', '#btnSaveGuardSiteSettingsnew', function () {
     var isUpdateDailyLog = false;
 
     const token = $('input[name="__RequestVerificationToken"]').val();

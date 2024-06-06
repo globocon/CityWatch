@@ -78,7 +78,7 @@ namespace CityWatch.Kpi.Services
             _siteImageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "SiteImage");
             _graphImageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "GraphImage");
             //nEWLY ADDAED-START
-            
+
             _patrolDataReportService = patrolDataReportService;
             //nEWLY ADDAED-END
 
@@ -105,7 +105,7 @@ namespace CityWatch.Kpi.Services
 
             var headerTable = CreateReportHeader(_clientSiteKpiSetting);
             doc.Add(headerTable);
-            
+
             //to get the data in 3rd page of report
             var monthlyDataGuard = _viewDataService.GetKpiGuardDetailsData(_clientSiteKpiSetting.ClientSiteId, fromDate, toDate);
             var GuradIds = monthlyDataGuard.Select(z => z.GuardId).ToArray();
@@ -115,7 +115,7 @@ namespace CityWatch.Kpi.Services
             var tableData = CreateReportData(_clientSiteKpiSetting, fromDate, monthlyData.DailyKpiResults, isHrTimerPaused);
             CreateReportDataSummary(tableData, monthlyData);
             var tableSiteStats = CreateSiteStatsData(_clientSiteKpiSetting, monthlyData, fromDate);
-            
+
             var tableLayout = new Table(UnitValue.CreatePercentArray(new float[] { 75, 25 })).UseAllAvailableWidth();
             tableLayout.AddCell(new Cell().SetBorder(iText.Layout.Borders.Border.NO_BORDER).Add(tableData));
             tableLayout.AddCell(new Cell().SetBorder(iText.Layout.Borders.Border.NO_BORDER).Add(tableSiteStats));
@@ -129,7 +129,7 @@ namespace CityWatch.Kpi.Services
                 var monthlyGuardData = _viewDataService.GetMonthlyKpiGuardData(clientSiteId, fromDate, toDate);
                 var tableGuardData = CreateGuardReportData(monthlyGuardData, fromDate);
                 doc.Add(tableGuardData);
-                if (monthlyDataGuard.Count>0)
+                if (monthlyDataGuard.Count > 0)
                 {
                     // To add 3rd Page 
                     var HRGroupList = _viewDataService.GetKpiGuardHRGroup();
@@ -220,7 +220,7 @@ namespace CityWatch.Kpi.Services
                .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_YELLOW))
                .Add(new Paragraph("Site Results % Against KPI")));
 
-            var colorImagePercentage = CELL_BG_RED;            
+            var colorImagePercentage = CELL_BG_RED;
             if (monthlyKpiResult.ImageCountPercentage >= 100)
                 colorImagePercentage = CELL_BG_GREEN;
             table.AddCell(new Cell(1, 2)
@@ -237,7 +237,7 @@ namespace CityWatch.Kpi.Services
               .SetTextAlignment(TextAlignment.RIGHT)
               .SetBackgroundColor(WebColors.GetRGBColor(colorWandPercentage))
               .Add(new Paragraph($"{monthlyKpiResult.WandScanPercentage.GetValueOrDefault():0.00}%")));
-            
+
             table.AddCell(new Cell(1, 1)
              .SetFontSize(CELL_FONT_SIZE)
              .SetTextAlignment(TextAlignment.RIGHT)
@@ -294,7 +294,7 @@ namespace CityWatch.Kpi.Services
                 .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
                 .SetTextAlignment(TextAlignment.CENTER)
                 .Add(new Paragraph("Site KPI Telematics Engine & Statistics\n").SetFont(PdfHelper.GetPdfFont()).SetFontSize(CELL_FONT_SIZE * 1.5f))
-                .Add(new Paragraph("KPI v" + Assembly.GetExecutingAssembly().GetName().Version.ToString()).SetFontSize(CELL_FONT_SIZE * 1.25f))                
+                .Add(new Paragraph("KPI v" + Assembly.GetExecutingAssembly().GetName().Version.ToString()).SetFontSize(CELL_FONT_SIZE * 1.25f))
                 .Add(new Paragraph(clientSiteKpiSetting.ClientSite.ClientType.Name).SetFontSize(CELL_FONT_SIZE * 1.25f))
                 .Add(new Paragraph($"{clientSiteKpiSetting.ClientSite.Name} \n\n").SetFontSize(CELL_FONT_SIZE));
             headerTable.AddCell(cellReportTitle);
@@ -318,7 +318,7 @@ namespace CityWatch.Kpi.Services
             var table = new Table(UnitValue.CreatePercentArray(colWidth)).UseAllAvailableWidth();
 
             CreateHeaderRow(table, fromDate, clientSiteKpiSetting);
-                        
+
             foreach (var item in dailyKpiResults)
             {
                 CreateDataRow(table, item, clientSiteKpiSetting, isHrTimerPaused);
@@ -343,16 +343,16 @@ namespace CityWatch.Kpi.Services
                 .Add(siteStatsLine3)
                 .SetHeight(75);
             tableSiteStats.AddCell(cellTop);
-            
+
             var graphImage = GetGraphImage(monthlyKpiResult.EffortCounts);
             var cellGraphImage = new Cell();
-            if (graphImage != null) 
+            if (graphImage != null)
             {
                 cellGraphImage.Add(new Paragraph("Effort Counter: Week Vs. Week")
                     .SetFontSize(CELL_FONT_SIZE)
                     .SetTextAlignment(TextAlignment.CENTER));
                 cellGraphImage.Add(graphImage);
-            }   
+            }
             tableSiteStats.AddCell(cellGraphImage);
 
             var notesTitle = new Paragraph("NOTES:\n\n").SetFont(PdfHelper.GetPdfFont()).SetTextAlignment(TextAlignment.CENTER);
@@ -538,7 +538,7 @@ namespace CityWatch.Kpi.Services
             return cell;
         }
 
-        private Cell CreateHrDataCell(string text) 
+        private Cell CreateHrDataCell(string text)
         {
             var cell = new Cell();
             cell.SetFontSize(CELL_FONT_SIZE)
@@ -552,12 +552,12 @@ namespace CityWatch.Kpi.Services
                 var textValue = arTexts[index] ?? string.Empty;
                 string textColorHex = GetHrTextColor(textValue);
                 p.Add(new Text(textValue).SetFontColor(WebColors.GetRGBColor(textColorHex)));
-                
+
                 if (index < arTexts.Length - 1)
                     p.Add("\n");
             }
             cell.Add(p);
-            return cell;            
+            return cell;
         }
 
         private Image GetGraphImage(List<EffortCount> effortCounts)
@@ -594,7 +594,7 @@ namespace CityWatch.Kpi.Services
         }
 
         private Table CreateGuardReportData(List<DailyKpiGuard> monthlyKpiGuardData, DateTime fromDate)
-        {            
+        {
             var kpiGuardTable = new Table(UnitValue.CreatePercentArray(new float[] { 2, 6, 6, 6, 12, 9, 3, 3, 3, 12, 9, 3, 3, 3, 12, 9, 3, 3, 3 })).UseAllAvailableWidth();
             CreateGuardReportHeader(kpiGuardTable, fromDate);
             foreach (var data in monthlyKpiGuardData)
@@ -603,21 +603,30 @@ namespace CityWatch.Kpi.Services
                 kpiGuardTable.AddCell(CreateDataCell(data.Date.ToString("dddd")));
                 kpiGuardTable.AddCell(CreateDataCell(data.EmployeeHours?.ToString() ?? string.Empty));
                 kpiGuardTable.AddCell(CreateDataCell(data.ActualEmployeeHours?.ToString() ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardName ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardSecurityNo ?? string.Empty));                
-                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift1GuardHr1));
-                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift1GuardHr2));
-                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift1GuardHr3));               
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardName ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardSecurityNo ?? string.Empty));
-                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift2GuardHr1));
-                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift2GuardHr2));
-                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift2GuardHr3));                
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardName ?? string.Empty));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardSecurityNo ?? string.Empty));
-                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift3GuardHr1));
-                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift3GuardHr2));
-                kpiGuardTable.AddCell(CreateHrDataCell(data.Shift3GuardHr3));                
+
+                var Shift1GuardName = (data.Shift1GuardName.Length > 0 ? data.Shift1GuardName.Split("\n")[0] : string.Empty);
+                Shift1GuardName = Shift1GuardName.Length > 16 ? Shift1GuardName.Substring(0, 16) : Shift1GuardName; ;
+                kpiGuardTable.AddCell(CreateDataCell(Shift1GuardName));
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardSecurityNo.Length > 0 ? data.Shift1GuardSecurityNo.Split("\n")[0] : string.Empty));                                
+                kpiGuardTable.AddCell(CreateHrDataCell((data.Shift1GuardHr1.Length > 0 ? data.Shift1GuardHr1.Split(",")[0] : string.Empty)));
+                kpiGuardTable.AddCell(CreateHrDataCell((data.Shift1GuardHr2.Length > 0 ? data.Shift1GuardHr2.Split(",")[0] : string.Empty)));
+                kpiGuardTable.AddCell(CreateHrDataCell((data.Shift1GuardHr3.Length > 0 ? data.Shift1GuardHr3.Split(",")[0] : string.Empty)));
+
+                var Shift2GuardName = (data.Shift2GuardName.Length > 0 ? data.Shift2GuardName.Split("\n")[0] : string.Empty);
+                Shift2GuardName = Shift2GuardName.Length > 16 ? Shift2GuardName.Substring(0, 16) : Shift2GuardName; ;
+                kpiGuardTable.AddCell(CreateDataCell(Shift2GuardName));                
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardSecurityNo.Length > 0 ? data.Shift2GuardSecurityNo.Split("\n")[0] : string.Empty));
+                kpiGuardTable.AddCell(CreateHrDataCell((data.Shift2GuardHr1.Length > 0 ? data.Shift2GuardHr1.Split(",")[0] : string.Empty)));
+                kpiGuardTable.AddCell(CreateHrDataCell((data.Shift2GuardHr2.Length > 0 ? data.Shift2GuardHr2.Split(",")[0] : string.Empty)));
+                kpiGuardTable.AddCell(CreateHrDataCell((data.Shift2GuardHr3.Length > 0 ? data.Shift2GuardHr3.Split(",")[0] : string.Empty)));
+
+                var Shift3GuardName = (data.Shift3GuardName.Length > 0 ? data.Shift3GuardName.Split("\n")[0] : string.Empty);
+                Shift3GuardName = Shift3GuardName.Length > 16 ? Shift3GuardName.Substring(0, 16) : Shift3GuardName; ;
+                kpiGuardTable.AddCell(CreateDataCell(Shift3GuardName));                
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardSecurityNo.Length > 0 ? data.Shift3GuardSecurityNo.Split("\n")[0] : string.Empty));
+                kpiGuardTable.AddCell(CreateHrDataCell((data.Shift3GuardHr1.Length > 0 ? data.Shift3GuardHr1.Split(",")[0] : string.Empty)));
+                kpiGuardTable.AddCell(CreateHrDataCell((data.Shift3GuardHr2.Length > 0 ? data.Shift3GuardHr2.Split(",")[0] : string.Empty)));
+                kpiGuardTable.AddCell(CreateHrDataCell((data.Shift3GuardHr3.Length > 0 ? data.Shift3GuardHr3.Split(",")[0] : string.Empty)));
             }
             return kpiGuardTable;
         }
@@ -648,8 +657,8 @@ namespace CityWatch.Kpi.Services
             }
 
             int numColumns = monthlyDataGuardCompliance.Count;
-            float[] columnPercentages = new float[largestNumber+2];
-            
+            float[] columnPercentages = new float[largestNumber + 2];
+
             var kpiGuardTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
             CreateGuardDetailsHeader(kpiGuardTable, monthlyDataGuard);
 
@@ -671,7 +680,7 @@ namespace CityWatch.Kpi.Services
                         alertDate = Convert.ToDateTime(compliance.ExpiryDate).AddDays(-45);
                     }
 
-                    if (alertDate <= DateTime.Today && compliance.ExpiryDate> DateTime.Today)
+                    if (alertDate <= DateTime.Today && compliance.ExpiryDate > DateTime.Today)
                     {
                         cellColor = CELL_BG_YELLOW;
                     }
@@ -679,7 +688,7 @@ namespace CityWatch.Kpi.Services
                     {
                         cellColor = CELL_BG_RED;
                     }
-                    else if (compliance?.ExpiryDate==null)
+                    else if (compliance?.ExpiryDate == null)
                     {
                         cellColor = "white";
                     }
@@ -933,7 +942,7 @@ namespace CityWatch.Kpi.Services
 
                 for (int i = 0; i < largestNumber; i++)
                 {
-                    if (i < monthlyDataGuardComplianceData1.Count) 
+                    if (i < monthlyDataGuardComplianceData1.Count)
                     {
                         var Description = monthlyDataGuardComplianceData1[i].Description;
 
@@ -948,8 +957,8 @@ namespace CityWatch.Kpi.Services
                     }
                     else
                     {
-                        
-                        table.AddCell(CreateHeaderCell("")); 
+
+                        table.AddCell(CreateHeaderCell(""));
                     }
                 }
             }
@@ -1171,15 +1180,22 @@ namespace CityWatch.Kpi.Services
         }
         private Image GetChartImage(KeyValuePair<string, double>[] data, ChartType chartType = ChartType.Pie, int? chartWidth = null)
         {
+            var modifiedData = data;
             if (data.All(z => z.Value == 0))
-                return null;
+            {
+                modifiedData = new KeyValuePair<string, double>[]
+                {
+                    new KeyValuePair<string, double>("no/data", 100)
+                };
+            }
+
 
             try
             {
                 var graphFileName = IO.Path.Combine(_graphImageRootDir, $"{DateTime.Now: ddMMyyyy_HHmmss}.png");
                 var options = new { type = chartType, fileName = graphFileName, width = chartWidth };
 
-                var task = StaticNodeJSService.InvokeFromFileAsync<string>("Scripts/ir-chart.js", "drawChart", args: new object[] { options, data });
+                var task = StaticNodeJSService.InvokeFromFileAsync<string>("Scripts/ir-chart.js", "drawChart", args: new object[] { options, modifiedData });
                 var success = task.Result == "OK";
 
                 if (!success)

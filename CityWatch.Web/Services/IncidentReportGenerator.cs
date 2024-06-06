@@ -43,6 +43,7 @@ namespace CityWatch.Web.Services
         Image = 1,
         Pdf = 2,
         Multimedia = 3,  // Added by binoy 0n 03-01-2024 under task id p1#160_MultimediaAttachments03012024
+        Excel = 4, // Added by binoy on 03-06-2024 P1 #215
     }
     public enum ChartType
     {
@@ -223,6 +224,7 @@ namespace CityWatch.Web.Services
             {
                 var doc = new Document(pdfDocument);
                 var index = 1;
+                var closePageIndex = 2;
 
                 var imageFile = string.Empty;
                 if (attachLiveGps)
@@ -234,6 +236,7 @@ namespace CityWatch.Web.Services
                 {
                     var image = AttachImageToPdf(pdfDocument, ++index, imageFile);
                     doc.Add(image);
+                    ++closePageIndex;
                 }
 
                 var pdfAttachmentCount = 0;
@@ -254,22 +257,17 @@ namespace CityWatch.Web.Services
                                 doc.Add(paraName);
                             }
                             pdfAttachmentCount += uploadDoc.GetNumberOfPages();
+                            closePageIndex += uploadDoc.GetNumberOfPages();
                             uploadDoc.Close();
                         }
 
                     }
                 }
 
-                // Reset index for images
+                
 
-                if (attachLiveGps || attachGpsMap)
-                {
-                    index = pdfAttachmentCount + 2;
-                }
-                else
-                {
-                    index = pdfAttachmentCount + 1;
-                }
+                // Reset index to before close page index
+                index = closePageIndex - 1;
 
                 if (_IncidentReport.Attachments != null)
                 {
@@ -278,19 +276,23 @@ namespace CityWatch.Web.Services
                         var paraName = new Paragraph($"File Name: {fileName}").SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLACK));
                         if (GetAttachmentType(IO.Path.GetExtension(fileName)) == AttachmentType.Image)
                         {
-                            var image = AttachImageToPdf(pdfDocument, ++index, IO.Path.Combine(_UploadRootDir, fileName));
+                            var image = AttachImageToPdf(pdfDocument, ++index, IO.Path.Combine(_UploadRootDir, fileName));                            
                             paraName.SetFixedPosition(index, 5, 0, 400);
                             doc.Add(image).Add(paraName);
+                            ++closePageIndex;
                         }
                     }
                 }
+
+                // Reset index to before close page index
+                index = closePageIndex - 1;
+
                 if (_IncidentReport.Attachments != null)
                 {
                     // p1#160_MultimediaAttachments03012024 done by Binoy - Start 
 
                     float currentX = 20;
-                    float currentY = 750;
-                    float y = 0;
+                    float currentY = 700;
                     float x = 0;
                     bool newPageRequired = true;
                     foreach (var fileName in _IncidentReport.Attachments)
@@ -298,23 +300,22 @@ namespace CityWatch.Web.Services
 
                         string videoPath = IO.Path.Combine(_UploadRootDir, fileName);
                         string embeddedFileDescription = fileName;
+                        var embeddedFileExtn = GetAttachmentType(IO.Path.GetExtension(fileName));
 
-
-                        if (GetAttachmentType(IO.Path.GetExtension(fileName)) == AttachmentType.Multimedia)
+                        if (embeddedFileExtn == AttachmentType.Multimedia || embeddedFileExtn == AttachmentType.Excel)
                         {
                             if (newPageRequired)
                             {
-                                pdfDocument.AddNewPage();
-                                y = pdfDocument.GetLastPage().GetPageSize().GetHeight();
-                                x = pdfDocument.GetLastPage().GetPageSize().GetWidth();
-                                var paraName = new Paragraph("Multimedia Attachments (can be viewed and opened only in Adobe Reader)")
+                                var pageSize = new PageSize(pdfDocument.GetFirstPage().GetPageSize());
+                                pdfDocument.AddNewPage(++index, pageSize);
+                                ++pdfAttachmentCount;
+                                ++closePageIndex;
+                                x = pdfDocument.GetFirstPage().GetPageSize().GetWidth();
+                                var paraName = new Paragraph("NOTE: Multimedia Attachments & Spreadsheets require Adobe Reader to be opened or extracted. Web browser viewing generally can’t access the embedded file.")
                                     .SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLUE));
-                                //.SetBold();
-                                var pageIndex = pdfDocument.GetNumberOfPages();
-                                PdfPage Lpage = pdfDocument.GetLastPage();
-                                var pSize = Lpage.GetPageSize();
+                                //.SetBold();                           
                                 var centr = (x / 2) - 10;
-                                paraName.SetFixedPosition(pageIndex, 5, pSize.GetTop() - 40, x - 10);
+                                paraName.SetFixedPosition(index, 5, pageSize.GetTop() - 40, x - 10);
                                 doc.Add(paraName);
                                 newPageRequired = false;
                             }
@@ -330,7 +331,7 @@ namespace CityWatch.Web.Services
                                     .SetContents(string.Format("Double click me to open file: {0}", fileName))
                                     .SetTitle(title)
                                     .SetColor(WebColors.GetRGBColor(COLOR_LIGHT_BLUE));
-                                PdfPage page = pdfDocument.GetLastPage();
+                                PdfPage page = pdfDocument.GetPage(index);
                                 page.AddAnnotation(attachment);
                                 attachment.Flush();
                                 fs.Flush();
@@ -353,11 +354,10 @@ namespace CityWatch.Web.Services
 
                             if (currentY - ATTACHMENT_BOX_HEIGHT < 20)
                             {
-                                currentY = 750;
+                                currentY = 700;
                                 currentX = 20;
                                 newPageRequired = true;
                             }
-
 
                         }
 
@@ -365,6 +365,7 @@ namespace CityWatch.Web.Services
 
                     // p1#160_MultimediaAttachments03012024 done by Binoy - End
                 }
+
             }
 
             try
@@ -551,6 +552,10 @@ namespace CityWatch.Web.Services
             // Added by binoy 0n 03-01-2024 under task id p1#160_MultimediaAttachments03012024
             if (".mp4,.avi,.mp3".IndexOf(extn.ToLower()) >= 0)
                 return AttachmentType.Multimedia;
+
+            // Added by binoy 0n 03-06-2024 under task P1 #215
+            if (".xlsx".IndexOf(extn.ToLower()) >= 0)
+                return AttachmentType.Excel;
 
             return AttachmentType.Unknown;
         }

@@ -2,6 +2,7 @@ using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
+using CityWatch.Web.Models;
 using CityWatch.Web.Services;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Bibliography;
@@ -46,6 +47,7 @@ namespace CityWatch.Web.Pages.Admin
             _webHostEnvironment = webHostEnvironment;
             _viewDataService = viewDataService;
         }
+        public string IsAdminminOrPoweruser=string.Empty;
         public HrSettings HrSettings;
         public IncidentReportField IncidentReportField;
         public IViewDataService ViewDataService { get { return _viewDataService; } }
@@ -69,8 +71,31 @@ namespace CityWatch.Web.Pages.Admin
         public IActionResult OnGet()
         {
             if (!AuthUserHelper.IsAdminUserLoggedIn)
-                return Redirect(Url.Page("/Account/Unauthorized"));
+            {
+                if (HttpContext.Session.GetString("GuardId") != null)
+                {
+                    var guardList = _viewDataService.GetGuards().Where(x => x.Id == Convert.ToInt32(HttpContext.Session.GetString("GuardId")));
+                    foreach (var item in guardList)
+                    {
+                       if(item.IsAdminPowerUser || item.IsAdminGlobal)
+                        {
+                            ReportTemplate = _configDataProvider.GetReportTemplate();
+                            if (item.IsAdminPowerUser)
+                                IsAdminminOrPoweruser = "IsAdminPowerUser";
+                            else
+                                IsAdminminOrPoweruser = "IsAdminGlobal";
+                            return Page();
+                        }
+                       else
+                        {
+                            return Redirect(Url.Page("/Account/Unauthorized"));
+                        }
+                    }
 
+                }
+            }
+            //return Redirect(Url.Page("/Account/Unauthorized"));
+            IsAdminminOrPoweruser = "IsAdminGlobal";
             ReportTemplate = _configDataProvider.GetReportTemplate();
             return Page();
         }
