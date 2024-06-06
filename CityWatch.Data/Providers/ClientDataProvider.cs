@@ -187,6 +187,7 @@ namespace CityWatch.Data.Providers
         public void SaveRCLinkedDuress(RCLinkedDuressMaster linkedDuress, bool updateClientSites = false);
 
         public bool CheckAlreadyExistTheGroupName(RCLinkedDuressMaster linkedDuress, bool updateClientSites = false);
+        List<HRGroups> GetHRGroups();
 
     }
 
@@ -2020,6 +2021,10 @@ namespace CityWatch.Data.Providers
             }
             return status;
 
+        }
+        public List<HRGroups> GetHRGroups()
+        {
+            return _context.HRGroups.ToList();
         }
 
     }
