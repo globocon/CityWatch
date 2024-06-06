@@ -1624,9 +1624,10 @@ namespace CityWatch.Data.Providers
         {
 
             var allvalues = _context.RadioCheckListGuardData.FromSqlRaw($"EXEC sp_GetActiveGuardDetailsForRC").ToList();
+            List<ClientSiteSmartWand> allphoneNumbers = _context.ClientSiteSmartWands.ToList();
             foreach (var item in allvalues)
             {
-                var phoneNumbers = _context.ClientSiteSmartWands
+                var phoneNumbers = allphoneNumbers
                .Where(x => x.ClientSiteId == item.ClientSiteId)
                .Select(x => x.PhoneNumber)
                .ToList();
@@ -1647,9 +1648,10 @@ namespace CityWatch.Data.Providers
         {
 
             var allvalues = _context.RadioCheckListInActiveGuardData.FromSqlRaw($"EXEC sp_GetInActiveGuardDetailsForRC").ToList();
+            List<ClientSiteSmartWand> allphoneNumbers = _context.ClientSiteSmartWands.ToList();
             foreach (var item in allvalues)
             {
-                var phoneNumbers = _context.ClientSiteSmartWands
+                var phoneNumbers = allphoneNumbers
                 .Where(x => x.ClientSiteId == item.ClientSiteId)
                 .Select(x => x.PhoneNumber)
                 .ToList();
