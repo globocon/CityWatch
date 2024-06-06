@@ -82,7 +82,7 @@ namespace CityWatch.Data.Providers
         void DeleteKeyVehicleLogField(int id);
         List<KeyVehicleLogAuditHistory> GetAuditHistory(int id);
         void SaveKeyVehicleLogAuditHistory(KeyVehicleLogAuditHistory keyVehicleLogAuditHistory);
-        void SaveClientSiteDuress(int clientSiteId, int guardId, string gpsCoordinates, string enabledAddress, GuardLog tmzdata,int linkedDuressParentSiteId, int isLinkedDuressParentSite);
+        void SaveClientSiteDuress(int clientSiteId, int guardId, string gpsCoordinates, string enabledAddress, GuardLog tmzdata, int linkedDuressParentSiteId, int isLinkedDuressParentSite);
         ClientSiteDuress GetClientSiteDuress(int clientSiteId);
         List<CompanyDetails> GetCompanyDetails();
         //logBookId entry for radio checklist-start
@@ -174,7 +174,7 @@ namespace CityWatch.Data.Providers
 
 
         //for saving status for active guards-start
-        void SaveClientSiteRadioCheckNew(ClientSiteRadioCheck clientSiteRadioCheck, GuardLog tmzdata,int controlroomGuardLoginId);
+        void SaveClientSiteRadioCheckNew(ClientSiteRadioCheck clientSiteRadioCheck, GuardLog tmzdata, int controlroomGuardLoginId);
         //for saving status for active guards-end
 
         void EditRadioChecklistEntry(ClientSiteRadioChecksActivityStatus clientSiteActivity);
@@ -452,7 +452,7 @@ namespace CityWatch.Data.Providers
                 .LastOrDefault();
         }
 
-        public void SaveClientSiteDuress(int clientSiteId, int guardId, string gpsCoordinates, string enabledAddress, GuardLog tmzdata,int linkedDuressParentSiteId,int isLinkedDuressParentSite)
+        public void SaveClientSiteDuress(int clientSiteId, int guardId, string gpsCoordinates, string enabledAddress, GuardLog tmzdata, int linkedDuressParentSiteId, int isLinkedDuressParentSite)
         {
             var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)tmzdata.EventDateTimeUtcOffsetMinute);  // p6#73 timezone bug - Added by binoy 24-01-2024
             _context.ClientSiteDuress.Add(new ClientSiteDuress()
@@ -469,8 +469,8 @@ namespace CityWatch.Data.Providers
                 EnabledDateTimeZone = tmzdata.EventDateTimeZone,
                 EnabledDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
                 EnabledDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
-                IsLinkedDuressParentSite= isLinkedDuressParentSite,
-                LinkedDuressParentSiteId= linkedDuressParentSiteId
+                IsLinkedDuressParentSite = isLinkedDuressParentSite,
+                LinkedDuressParentSiteId = linkedDuressParentSiteId
 
 
             });
@@ -2507,8 +2507,8 @@ namespace CityWatch.Data.Providers
                     if (!isActive)
                     {
                         /* check any active row exist */
-                       var checkIfExistAnyActiveRow=   _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == item.ClientSiteId && x.GuardId == item.GuardId &&
-                        (x.LastIRCreatedTime != null || x.LastKVCreatedTime != null || x.LastLBCreatedTime != null || x.LastSWCreatedTime!=null)).ToList();
+                        var checkIfExistAnyActiveRow = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == item.ClientSiteId && x.GuardId == item.GuardId &&
+                         (x.LastIRCreatedTime != null || x.LastKVCreatedTime != null || x.LastLBCreatedTime != null || x.LastSWCreatedTime != null)).ToList();
 
                         if (checkIfExistAnyActiveRow.Count == 0)
                         {
@@ -2595,7 +2595,7 @@ namespace CityWatch.Data.Providers
         }
         //for active guards-start
 
-        public void SaveClientSiteRadioCheckNew(ClientSiteRadioCheck clientSiteRadioCheck, GuardLog tmzdata,int controlroomGuardLoginId)
+        public void SaveClientSiteRadioCheckNew(ClientSiteRadioCheck clientSiteRadioCheck, GuardLog tmzdata, int controlroomGuardLoginId)
         {
 
             try
@@ -3104,7 +3104,7 @@ namespace CityWatch.Data.Providers
                                     }
                                 }
 
-                                
+
 
                             }
                             else
@@ -3153,7 +3153,7 @@ namespace CityWatch.Data.Providers
                                         if (linkedSite.ClientSiteId != clientSiteRadioCheck.ClientSiteId)
                                         {
 
-                                           
+
                                             LogBookEntryFromRcControlRoomMessages(0, clientSiteRadioCheck.GuardId, null, clientSiteRadioCheck.Status, IrEntryType.Notification, 2, linkedSite.ClientSiteId, tmzdata);
 
                                             var DuressEnabledUpdateLinked = _context.ClientSiteDuress.Where(z => z.ClientSiteId == linkedSite.ClientSiteId && z.LinkedDuressParentSiteId == clientSiteRadioCheck.ClientSiteId && z.IsLinkedDuressParentSite == 0);
@@ -3162,11 +3162,13 @@ namespace CityWatch.Data.Providers
                                             /* remove Duressbutton Status from RadioCheckPushMessages*/
                                             UpdateDuressButtonAcknowledged(linkedSite.ClientSiteId);
 
-                                            var logBookIdLinked = GetClientSiteLogBookIdByLogBookMaxID(linkedSite.ClientSiteId, logbooktype, out logbookdate); // Get Last Logbookid and logbook Date by latest logbookid  of the client site
+                                            var logBookIdLinked = GetClientSiteLogBookIdGloablmessage(linkedSite.ClientSiteId, LogBookType.DailyGuardLog, logbookdate);
+
+                                            // var logBookIdLinked = GetClientSiteLogBookIdByLogBookMaxID(linkedSite.ClientSiteId, logbooktype, out logbookdate); // Get Last Logbookid and logbook Date by latest logbookid  of the client site
                                             var logbookLinked = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == logBookIdLinked);
                                             var guardLoginIdLinked = _context.GuardLogins
                             .FirstOrDefault(z => z.ClientSiteLogBookId == logBookIdLinked && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == DateTime.Today);
-                                            if (guardLoginId != null)
+                                            if (guardLoginIdLinked != null)
                                             {
                                                 var guardLog = new GuardLog()
                                                 {
@@ -3186,38 +3188,33 @@ namespace CityWatch.Data.Providers
 
                                                 };
                                                 SaveGuardLog(guardLog);
-                                                
+
 
 
                                             }
                                             else
                                             {
-                                                var latestRecord = _context.GuardLogins
-                                                .Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == linkedSite.ClientSiteId)
-                                                .OrderByDescending(r => r.Id)
-                                                 .FirstOrDefault();
-                                                if (latestRecord != null)
+
+                                                var guardLog = new GuardLog()
                                                 {
-                                                    var guardLog = new GuardLog()
-                                                    {
-                                                        ClientSiteLogBookId = logBookIdLinked,
-                                                        GuardLoginId = latestRecord.Id,
-                                                        EventDateTime = DateTime.Now,
-                                                        Notes = "Duress Alarm De-Activated by Control Room",
-                                                        IrEntryType = IrEntryType.Notification,
-                                                        IsSystemEntry = true,
-                                                        EventDateTimeLocal = tmzdata.EventDateTimeLocal,
-                                                        EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
-                                                        EventDateTimeZone = tmzdata.EventDateTimeZone,
-                                                        EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
-                                                        EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
-                                                        PlayNotificationSound = true
+                                                    ClientSiteLogBookId = logBookIdLinked,
+                                                    GuardLoginId = null,
+                                                    EventDateTime = DateTime.Now,
+                                                    Notes = "Duress Alarm De-Activated by Control Room",
+                                                    IrEntryType = IrEntryType.Notification,
+                                                    IsSystemEntry = true,
+                                                    EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                                                    EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                                                    EventDateTimeZone = tmzdata.EventDateTimeZone,
+                                                    EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                                                    EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                                                    PlayNotificationSound = true
 
-                                                    };
-                                                    SaveGuardLog(guardLog);
+                                                };
+                                                SaveGuardLog(guardLog);
 
 
-                                                }
+
 
                                             }
 
@@ -3284,7 +3281,7 @@ namespace CityWatch.Data.Providers
                         if (colorId == 1)
                         {
                             /* Check if Manning type notfication */
-                                var checkIfTypeOneManning = GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1).ToList();
+                            var checkIfTypeOneManning = GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == clientSiteRadioCheck.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1).ToList();
 
                             if (checkIfTypeOneManning.Count == 0)
                             {
@@ -3519,7 +3516,7 @@ namespace CityWatch.Data.Providers
 
                             if (checkIfTypeOneManning.Count == 0)
                             {
-                               
+
 
                                 var guardLoginId = _context.GuardLogins
                               .FirstOrDefault(z => z.ClientSiteLogBookId == logBookId && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == DateTime.Today);
@@ -3812,7 +3809,7 @@ namespace CityWatch.Data.Providers
                                         /* avoid Repete entery for duress enabled site */
                                         if (linkedSite.ClientSiteId != clientSiteRadioCheck.ClientSiteId)
                                         {
-                                            
+
                                             LogBookEntryFromRcControlRoomMessages(0, clientSiteRadioCheck.GuardId, null, clientSiteRadioCheck.Status, IrEntryType.Notification, 2, linkedSite.ClientSiteId, tmzdata);
 
                                             var DuressEnabledUpdateLinked = _context.ClientSiteDuress.Where(z => z.ClientSiteId == linkedSite.ClientSiteId && z.LinkedDuressParentSiteId == clientSiteRadioCheck.ClientSiteId && z.IsLinkedDuressParentSite == 0);
@@ -3820,8 +3817,8 @@ namespace CityWatch.Data.Providers
                                             _context.ClientSiteDuress.RemoveRange(DuressEnabledUpdateLinked);
                                             /* remove Duressbutton Status from RadioCheckPushMessages*/
                                             UpdateDuressButtonAcknowledged(linkedSite.ClientSiteId);
-
-                                            var logBookIdLinked = GetClientSiteLogBookIdByLogBookMaxID(linkedSite.ClientSiteId, logbooktype, out logbookdate); // Get Last Logbookid and logbook Date by latest logbookid  of the client site
+                                            var logBookIdLinked = GetClientSiteLogBookIdGloablmessage(linkedSite.ClientSiteId, LogBookType.DailyGuardLog, logbookdate);
+                                            //var logBookIdLinked = GetClientSiteLogBookIdByLogBookMaxID(linkedSite.ClientSiteId, logbooktype, out logbookdate); // Get Last Logbookid and logbook Date by latest logbookid  of the client site
                                             var logbookLinked = _context.ClientSiteLogBooks.SingleOrDefault(z => z.Id == logBookIdLinked);
                                             var guardLoginIdLinked = _context.GuardLogins
                             .FirstOrDefault(z => z.ClientSiteLogBookId == logBookIdLinked && z.GuardId == clientSiteRadioCheck.GuardId && z.OnDuty.Date == DateTime.Today);
@@ -3851,32 +3848,26 @@ namespace CityWatch.Data.Providers
                                             }
                                             else
                                             {
-                                                var latestRecord = _context.GuardLogins
-                                                .Where(x => x.GuardId == clientSiteRadioCheck.GuardId && x.ClientSiteId == linkedSite.ClientSiteId)
-                                                .OrderByDescending(r => r.Id)
-                                                 .FirstOrDefault();
-                                                if (latestRecord != null)
+
+                                                var guardLog = new GuardLog()
                                                 {
-                                                    var guardLog = new GuardLog()
-                                                    {
-                                                        ClientSiteLogBookId = logBookIdLinked,
-                                                        GuardLoginId = latestRecord.Id,
-                                                        EventDateTime = DateTime.Now,
-                                                        Notes = "Duress Alarm De-Activated by Control Room",
-                                                        IrEntryType = IrEntryType.Notification,
-                                                        IsSystemEntry = true,
-                                                        EventDateTimeLocal = tmzdata.EventDateTimeLocal,
-                                                        EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
-                                                        EventDateTimeZone = tmzdata.EventDateTimeZone,
-                                                        EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
-                                                        EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
-                                                        PlayNotificationSound = true
+                                                    ClientSiteLogBookId = logBookIdLinked,
+                                                    EventDateTime = DateTime.Now,
+                                                    Notes = "Duress Alarm De-Activated by Control Room",
+                                                    IrEntryType = IrEntryType.Notification,
+                                                    IsSystemEntry = true,
+                                                    EventDateTimeLocal = tmzdata.EventDateTimeLocal,
+                                                    EventDateTimeLocalWithOffset = tmzdata.EventDateTimeLocalWithOffset,
+                                                    EventDateTimeZone = tmzdata.EventDateTimeZone,
+                                                    EventDateTimeZoneShort = tmzdata.EventDateTimeZoneShort,
+                                                    EventDateTimeUtcOffsetMinute = tmzdata.EventDateTimeUtcOffsetMinute,
+                                                    PlayNotificationSound = true
 
-                                                    };
-                                                    SaveGuardLog(guardLog);
+                                                };
+                                                SaveGuardLog(guardLog);
 
 
-                                                }
+
 
                                             }
 
@@ -4597,11 +4588,11 @@ namespace CityWatch.Data.Providers
             //    .ToList();
 
             var data = _context.GuardLogins
-               .Where(z => z.ClientSiteId == clientSiteId )
-               .Include(z=>z.Guard)
+               .Where(z => z.ClientSiteId == clientSiteId)
+               .Include(z => z.Guard)
                .ToList();
 
-           
+
 
             return data;
         }
@@ -4611,7 +4602,7 @@ namespace CityWatch.Data.Providers
         {
 
             var ifexist = _context.RCLinkedDuressClientSites
-               .Where(z => z.ClientSiteId == siteId)     
+               .Where(z => z.ClientSiteId == siteId)
                .ToList();
             return ifexist;
 
@@ -4619,15 +4610,15 @@ namespace CityWatch.Data.Providers
 
         public List<RCLinkedDuressClientSites> getallClientSitesLinkedDuress(int siteId)
         {
-            var linkedSitesList= new  List<RCLinkedDuressClientSites>();
+            var linkedSitesList = new List<RCLinkedDuressClientSites>();
             var ifexist = _context.RCLinkedDuressClientSites
                .Where(z => z.ClientSiteId == siteId)
                .ToList();
             if (ifexist.Count > 0)
             {
-               var rclinkedId= ifexist.FirstOrDefault().RCLinkedId;
-               var alllinkedSites = _context.RCLinkedDuressClientSites.Where(x => x.RCLinkedId == rclinkedId).ToList();
-               linkedSitesList = alllinkedSites;
+                var rclinkedId = ifexist.FirstOrDefault().RCLinkedId;
+                var alllinkedSites = _context.RCLinkedDuressClientSites.Where(x => x.RCLinkedId == rclinkedId).ToList();
+                linkedSitesList = alllinkedSites;
             }
             return linkedSitesList;
         }
