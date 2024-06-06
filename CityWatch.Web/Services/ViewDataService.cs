@@ -131,6 +131,8 @@ namespace CityWatch.Web.Services
         List<SelectListItem> GetLicenseTypes(bool withoutSelect = false);
         //p1-202 site allocation-start
         List<SelectListItem> GetClientAreas(IncidentReportField ir);
+        List<SelectListItem> GetClientSites(string type = "");
+        List<HRGroups> GetHRGroups();
 
         //p1-202 site allocation-end
 
@@ -1351,5 +1353,24 @@ namespace CityWatch.Web.Services
         }
 
         //p1-202 site allocation-end
+
+        //p1-213 Critical Documents start
+        public List<SelectListItem> GetClientSites(string type = "")
+        {
+            var sites = new List<SelectListItem>();
+            var mapping = _clientDataProvider.GetClientSites(null).Where(x => x.ClientType.Name == type).OrderBy(clientType => clientType.Name);
+            foreach (var item in mapping)
+            {
+                sites.Add(new SelectListItem(item.Name, item.Id.ToString()));
+            }
+            return sites;
+        }
+        public List<HRGroups> GetHRGroups()
+        {
+            var HRGropList = _clientDataProvider.GetHRGroups();
+            return HRGropList;
+        }
+
+        //p1-213 Critical Documents stop
     }
 }

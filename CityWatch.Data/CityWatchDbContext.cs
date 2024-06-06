@@ -114,7 +114,8 @@ namespace CityWatch.Data
         public DbSet<GlobalComplianceAlertEmail> GlobalComplianceAlertEmail { get; set; }
 
         public DbSet<KPIScheduleDeafultMailbox> KPIScheduleDeafultMailbox { get; set; }
-
+        public DbSet<CriticalDocuments> CriticalDocuments { get; set; }
+        public DbSet<CriticalDocumentsClientSites> CriticalDocumentsClientSites { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<GuardLog>()

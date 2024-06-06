@@ -9,10 +9,13 @@ using Dropbox.Api.Files;
 using MailKit.Search;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
 using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using static Dropbox.Api.TeamLog.ActorLogInfo;
@@ -1133,5 +1136,100 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(_clientDataProvider.GetClientSitesWithTypeId(idsn).OrderBy(z => z.Name));
         }
         //p1 - 202 site allocation-end
+
+        //p1-213 Critical documents start
+        public IActionResult OnGetClientSitesDoc(string type)
+        {
+            int GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            if (GuardId == 0)
+            {
+                return new JsonResult(_viewDataService.GetClientSites(type));
+            }
+            else
+            {
+                return new JsonResult(_configDataProvider.GetClientSitesUsingLoginUserId(GuardId, type));
+            }
+
+
+
+        }
+        public IActionResult OnGetDescriptionList(int HRGroupId)
+        {
+            return new JsonResult(_configDataProvider.GetDescList(HRGroupId));
+        }
+        public JsonResult OnPostSaveCriticalDocuments(CriticalDocumentViewModel CriticalDocModel)
+        {
+            var results = new List<ValidationResult>();
+            if (!Validator.TryValidateObject(CriticalDocModel, new ValidationContext(CriticalDocModel), results, true))
+                return new JsonResult(new { success = false, message = string.Join(",", results.Select(z => z.ErrorMessage).ToArray()) });
+
+            var success = true;
+            var message = "Saved successfully";
+            try
+            {
+                var CriticalDoc = CriticalDocumentViewModel.ToDataModel(CriticalDocModel);
+                _configDataProvider.SaveCriticalDoc(CriticalDoc, true);
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnGetCriticalDocumentList(int type, string searchTerm)
+        {
+            int GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            if (GuardId == 0)
+            {
+                var ddd = _configDataProvider.GetCriticalDocs()
+                    .Select(z => CriticalDocumentViewModel.FromDataModel(z));
+                return new JsonResult(_configDataProvider.GetCriticalDocs()
+                    .Select(z => CriticalDocumentViewModel.FromDataModel(z)));
+                   
+
+            }
+            else
+            {
+                return new JsonResult(_configDataProvider.GetCriticalDocs()
+                   .Select(z => CriticalDocumentViewModel.FromDataModel(z)));
+                //return new JsonResult(_kpiSchedulesDataProvider.GetAllSendSchedulesUisngGuardId(GuardId)
+                //   .Select(z => KpiSendScheduleViewModel.FromDataModel(z))
+                //   .Where(z => z.CoverSheetType == (CoverSheetType)type && (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
+                //   .OrderBy(x => x.ProjectName)
+                //   .ThenBy(x => x.ClientTypes));
+
+            }
+        }
+        public JsonResult OnGetCriticalDocList(int id)
+        {
+            int GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            if (GuardId == 0)
+            {
+                return new JsonResult(_configDataProvider.GetCriticalDocById(id));
+            }
+            else
+            {
+                return new JsonResult(_configDataProvider.GetCriticalDocByIdandGuardId(id, GuardId));
+            }
+        }
+        public JsonResult OnPostDeleteCriticalDoc(int id)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _configDataProvider.DeleteCriticalDoc(id);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message });
+        }
+        //p1-213 Critical documents stop
     }
 }

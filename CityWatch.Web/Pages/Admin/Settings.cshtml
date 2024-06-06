@@ -612,6 +612,7 @@
                         <div class="col-md-12">
                             <div class="text-right">
                                 <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                                <button class="btn btn-success mb-3" id="add_criticalDocuments" style="display:none"><i class="fa fa-plus mr-2"></i>Add Critical Documents</button>
                             </div>
                         </div>
                         <div class="col-md-12">
@@ -639,6 +640,8 @@
                                 </thead>*@
                             </table>
                             <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
+                            <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
+
                         </div>
                     </div>
                 </div>
@@ -1101,6 +1104,7 @@
     </div>
 </div>*@
 <partial name="_SettingsPopup" />
+<partial name="_CriticaldocumentPopup" />
 @Html.AntiForgeryToken()
 <partial name="_GuardAddLicensePopup" />
 <partial name="_GuradAddComplianceLicencePopup" />

@@ -23,6 +23,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using static Dropbox.Api.TeamLog.SpaceCapsType;
 using IO = System.IO;
 
@@ -131,11 +132,18 @@ namespace CityWatch.Kpi.Services
                 if (monthlyDataGuard.Count>0)
                 {
                     // To add 3rd Page 
+                    var HRGroupList = _viewDataService.GetKpiGuardHRGroup();
+                    for (int i = 0; i < HRGroupList.Count; i++) { 
                     doc.Add(new AreaBreak());
 
                     doc.Add(headerTable);
-                    var tableGuardDetailsData = CreateGuardDetailsData(monthlyDataGuard, monthlyDataGuardCompliance);
+                        var hrGroupName = HRGroupList[i];
+                        var tableGuardDetailsData = CreateGuardDetailsLicenseAndCompliance(monthlyDataGuard, monthlyDataGuardCompliance, hrGroupName.Name, hrGroupName.Id);
                     doc.Add(tableGuardDetailsData);
+                        doc.Add(new Paragraph("\n"));
+                        var tableGuardDetailsData1 = CreateGuardDetailsLicenseAndComplianceHR(monthlyDataGuard, monthlyDataGuardCompliance, hrGroupName.Name, hrGroupName.Id);
+                        doc.Add(tableGuardDetailsData1);
+                    }
                 }
                
             }
@@ -691,7 +699,138 @@ namespace CityWatch.Kpi.Services
 
             return kpiGuardTable;
         }
-       
+        private Table CreateGuardDetailsLicenseAndCompliance(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance,string hrGroupName,int Id)
+        {
+
+            var guards = monthlyDataGuard
+                .Select(guardLogin => guardLogin.Guard)
+                .Distinct()
+                .ToArray();
+            List<int> complianceDataCounts = new List<int>();
+            foreach (var guard in guards)
+            {
+                List<GuardComplianceAndLicense> monthlyDataGuardComplianceData = null; // Declare and initialize HRGroupList
+                var GropuNamee = RemoveBrackets(hrGroupName);
+                if (Enum.TryParse<HrGroup>(GropuNamee, out var hrGroup))
+                {
+
+                    monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsComplianceAndLicenseHR(guard.Id, hrGroup);
+                }
+                //var monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsComplianceAndLicense(guard.Id);
+                complianceDataCounts.Add(monthlyDataGuardComplianceData.Count);
+            }
+            int[] countsArray = complianceDataCounts.ToArray();
+            int largestNumber;
+            if (countsArray.Length > 0)
+            {
+                largestNumber = countsArray.Max();
+
+            }
+            else
+            {
+                largestNumber = 0;
+            }
+
+            int numColumns = monthlyDataGuardCompliance.Count;
+            float[] columnPercentages = new float[largestNumber + 2];
+
+            var kpiGuardTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
+            CreateGuardDetailsNewHeader(kpiGuardTable, monthlyDataGuard, hrGroupName,Id);
+           
+            var GropuNamee1 = RemoveBrackets(hrGroupName);
+            int maxComplianceCount=0;
+            if (Enum.TryParse<HrGroup>(GropuNamee1, out var hrGroup1))
+            {
+
+                maxComplianceCount = guards.Select(g => _viewDataService.GetKpiGuardDetailsComplianceAndLicenseHR(g.Id, hrGroup1).Count).Max();
+            }
+            //maxComplianceCount = guards.Select(g => _viewDataService.GetKpiGuardDetailsComplianceAndLicense(g.Id).Count).Max();
+           
+           
+            foreach (var guard in guards)
+            {
+                List<GuardComplianceAndLicense> monthlyDataGuardComplianceData = null; // Declare and initialize HRGroupList
+                var GropuNamee = RemoveBrackets(hrGroupName);
+                if (Enum.TryParse<HrGroup>(GropuNamee, out var hrGroup))
+                {
+                    
+                    monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsComplianceAndLicenseHR(guard.Id, hrGroup);
+                }
+                //var monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsComplianceAndLicense(guard.Id);
+                kpiGuardTable.AddCell(CreateDataCell(guard.Name));
+                kpiGuardTable.AddCell(CreateDataCell(guard.SecurityNo));
+
+                for (int i = 0; i < maxComplianceCount; i++)
+                {
+                    var cellColor = "";
+                    DateTime? alertDate = null;
+                    var compliance = i < monthlyDataGuardComplianceData.Count ? monthlyDataGuardComplianceData[i] : null;
+                    
+                    if (compliance != null && compliance.ExpiryDate != null && compliance.ExpiryDate.ToString() != "")
+                    {
+                        alertDate = Convert.ToDateTime(compliance.ExpiryDate).AddDays(-45);
+                    }
+
+                    if (alertDate <= DateTime.Today && compliance.ExpiryDate > DateTime.Today)
+                    {
+                        cellColor = CELL_BG_YELLOW;
+                    }
+                    else if (compliance?.ExpiryDate < DateTime.Today)
+                    {
+                        cellColor = CELL_BG_RED;
+                    }
+                    else if (compliance?.ExpiryDate == null)
+                    {
+                        cellColor = "white";
+                    }
+                    else
+                    {
+                        cellColor = "#96e3ac";
+                    }
+
+                    DateTime? expiryDate = compliance?.ExpiryDate?.Date;
+                    string expiryDateString = expiryDate.HasValue ? expiryDate.Value.ToString("dd/MM/yyyy") : "";
+                    kpiGuardTable.AddCell(CreateDataCell(expiryDateString, true, cellColor));
+                }
+
+            }
+
+
+
+            return kpiGuardTable;
+        }
+        private string RemoveBrackets(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                return input;
+            }
+
+            string pattern = @"\[.*?\]|\{.*?\}|\(.*?\)";
+            return Regex.Replace(input, pattern, string.Empty);
+        }
+        private Table CreateGuardDetailsLicenseAndComplianceHR(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance, string hrGroupName, int Id)
+        {
+
+          
+            float[] columnPercentages = new float[2];
+
+            var kpiGuardTable1 = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
+            CreateGuardDetailsNewHeaderHR(kpiGuardTable1, monthlyDataGuard, hrGroupName, Id);
+
+            var HTList = _viewDataService.GetHRSettings(Id);
+            foreach (var item in HTList)
+            {
+                
+                kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
+                kpiGuardTable1.AddCell(CreateDataCell(item.Description));
+
+
+            }
+
+
+            return kpiGuardTable1;
+        }
         private static string GetHrTextColor(string hrValue)
         {
             if (hrValue == "Y")
@@ -822,7 +961,122 @@ namespace CityWatch.Kpi.Services
                 throw;
             }
         }
+        private void CreateGuardDetailsNewHeader(Table table, List<GuardLogin> monthlyDataGuard,string hrGroupname,int id)
+        {
+            try
+            {
+                List<int> complianceDataCounts = new List<int>();
+                var guards = monthlyDataGuard
+                    .Select(guardLogin => guardLogin.Guard)
+                    .Distinct()
+                    .ToArray();
 
+                foreach (var guard in guards)
+                {
+                    List<GuardComplianceAndLicense> monthlyDataGuardComplianceData = null; // Declare and initialize HRGroupList
+                    var GropuNamee1 = RemoveBrackets(hrGroupname);
+                    if (Enum.TryParse<HrGroup>(GropuNamee1, out var hrGroup1))
+                    {
+
+                        monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsComplianceAndLicenseHR(guard.Id, hrGroup1);
+                    }
+                    //var monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsComplianceAndLicense(guard.Id);
+                    complianceDataCounts.Add(monthlyDataGuardComplianceData.Count);
+                }
+
+                int[] countsArray = complianceDataCounts.ToArray();
+                int largestNumber;
+
+                if (countsArray.Length > 0)
+                {
+                    largestNumber = countsArray.Max();
+                }
+                else
+                {
+                    largestNumber = 0;
+                }
+                
+                table.AddCell(new Cell(1, 2)
+                    .SetFontSize(CELL_FONT_SIZE)
+                    .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
+                    .Add(new Paragraph().Add(new Text(hrGroupname))));
+                char[] suffixes = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
+
+                for (int i = 0; i < largestNumber; i++)
+                {
+                    int baseNumber = (i / suffixes.Length) + 1;
+                    char suffix = suffixes[i % suffixes.Length];
+                    string sequentialNumber = id.ToString("D2") + suffix;
+
+                    table.AddCell(new Cell(1, 1)
+                        .SetFontSize(CELL_FONT_SIZE)
+                        .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
+                        .Add(new Paragraph().Add(new Text(sequentialNumber))));
+
+                }
+
+                table.AddCell(CreateHeaderCell($"Name\n"));
+                table.AddCell(CreateHeaderCell("C4i+License"));
+
+                var firstGuardId = monthlyDataGuard.Select(guardLogin => guardLogin.GuardId).Distinct().FirstOrDefault();
+                List<GuardComplianceAndLicense> monthlyDataGuardComplianceData1 = null; // Declare and initialize HRGroupList
+                var GropuNamee = RemoveBrackets(hrGroupname);
+                if (Enum.TryParse<HrGroup>(GropuNamee, out var hrGroup))
+                {
+
+                    monthlyDataGuardComplianceData1 = _viewDataService.GetKpiGuardDetailsComplianceAndLicenseHR(firstGuardId, hrGroup);
+                }
+                //var monthlyDataGuardComplianceData1 = _viewDataService.GetKpiGuardDetailsComplianceAndLicense(firstGuardId);
+
+                for (int i = 0; i < largestNumber; i++)
+                {
+                    
+
+                        table.AddCell(CreateHeaderCell(""));
+                   
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle the exception here, for example, log it or show an error message.
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                // You can rethrow the exception if needed.
+                throw;
+            }
+        }
+
+        private void CreateGuardDetailsNewHeaderHR(Table table, List<GuardLogin> monthlyDataGuard, string hrGroupname, int id)
+        {
+            try
+            {
+                float[] columnWidths = { 100f, 200f, 100f }; // Adjust these values as needed
+                table.SetWidth(UnitValue.CreatePointValue(400)); // Total width of the table in points
+                
+
+                Color CELL_BG_GREY_HEADER = new DeviceRgb(211, 211, 211);
+                const float CELL_WIDTH = 1f;
+                table.AddCell(new Cell(1, 1)
+                         .SetFontSize(CELL_FONT_SIZE)
+                         .SetBackgroundColor(CELL_BG_GREY_HEADER)
+                         
+                         .Add(new Paragraph().Add(new Text($"Reference No"))));
+                table.AddCell(new Cell(1, 1)
+                        .SetFontSize(CELL_FONT_SIZE)
+                        .SetBackgroundColor(CELL_BG_GREY_HEADER)
+                        .SetWidth(CELL_WIDTH)
+                        .Add(new Paragraph().Add(new Text($"Description"))));
+                //table.AddCell(CreateHeaderCell($"Reference No\n"));
+                
+
+            }
+            catch (Exception ex)
+            {
+                // Handle the exception here, for example, log it or show an error message.
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                // You can rethrow the exception if needed.
+                throw;
+            }
+        }
         //NEWLY ADDED-START
         private Table CreateGraphsTables(PatrolDataReport patrolDataReport)
         {

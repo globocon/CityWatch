@@ -1,6 +1,7 @@
-using CityWatch.Common.Helpers;
+﻿using CityWatch.Common.Helpers;
 using CityWatch.Common.Models;
 using CityWatch.Common.Services;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
@@ -18,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
 
@@ -693,11 +695,45 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_guardDataProvider.GetGuardCompliances(guardId));
         }
-        public JsonResult OnGetHRDescription(int HRid)
+        public JsonResult OnGetHRDescription(int HRid,int GuardID)
         {
             var DescVal = _guardDataProvider.GetHRDesc(HRid);
-           
-            return new JsonResult(DescVal);
+            var combinedDataList = new List<CombinedData>();
+            foreach (var item in DescVal)
+            {
+                var GropuNamee= RemoveBrackets(item.GroupName);
+                if (Enum.TryParse<HrGroup>(GropuNamee, out var hrGroup))
+                {
+                    var UsedDesc = _guardDataProvider.GetDescriptionList(hrGroup, item.Description, GuardID);
+                    var combinedData = new CombinedData
+                    {
+                        HRGroupId = HRid,
+                        Description = item.Description,
+                        UsedDescription = UsedDesc?.Description
+                    };
+                    combinedDataList.Add(combinedData);
+                }
+                
+            }
+          
+            return new JsonResult(combinedDataList);
+        }
+        private string RemoveBrackets(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                return input;
+            }
+            
+            string pattern = @"\[.*?\]|\{.*?\}|\(.*?\)";
+            return Regex.Replace(input, pattern, string.Empty);
+        }
+    
+        public class CombinedData
+        {
+            public int HRGroupId { get; set; }
+            public string Description { get; set; }
+            public string UsedDescription { get; set; }
         }
         //public JsonResult OnPostSaveGuardComplianceandlicanse(GuardComplianceAndLicense guardComplianceandlicense)
         //{
@@ -804,7 +840,10 @@ namespace CityWatch.Web.Pages.Admin
                                 .Select(x => string.Join(',', x.Value.Errors.Select(y => y.ErrorMessage)))
                 });
             }
-
+            if (!string.IsNullOrEmpty(guardComplianceandlicense.Description))
+            {
+                guardComplianceandlicense.Description = Regex.Replace(guardComplianceandlicense.Description, "[✔️❌]", "").Trim();
+            }
             var status = true;
             var dbxUploaded = true;
             var message = "Success";
@@ -848,7 +887,10 @@ namespace CityWatch.Web.Pages.Admin
                                 .Select(x => string.Join(',', x.Value.Errors.Select(y => y.ErrorMessage)))
                 });
             }
-
+            if (!string.IsNullOrEmpty(guardComplianceandlicense.Description))
+            {
+                guardComplianceandlicense.Description = Regex.Replace(guardComplianceandlicense.Description, "[✔️❌]", "").Trim();
+            }
             var status = true;
             var dbxUploaded = true;
             var message = "Success";
@@ -1444,6 +1486,8 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(_configDataProvider.GetLicensesTypes());
         }
         // p1-191 hr files task 3-end
+
+        
     }
 
 

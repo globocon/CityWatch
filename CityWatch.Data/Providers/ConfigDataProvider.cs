@@ -76,6 +76,13 @@ namespace CityWatch.Data.Providers
         List<KeyVehicleLogVisitorPersonalDetail> GetProviderList(int ID);
 
         //p1-191 hr files task 3-end
+        List<SelectListItem> GetClientSitesUsingLoginUserId(int guardId, string type = "");
+        List<SelectListItem> GetDescList(int HRGroupId);
+        void SaveCriticalDoc(CriticalDocuments CriticalDoc, bool updateClientSites = false);
+        List<CriticalDocuments> GetCriticalDocs();
+        public CriticalDocuments GetCriticalDocById(int CriticalID);
+        public CriticalDocuments GetCriticalDocByIdandGuardId(int CriticalID, int GuardId);
+        void DeleteCriticalDoc(int id);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -606,5 +613,173 @@ namespace CityWatch.Data.Providers
                 .OrderBy(x => x.Id).ToList();
         }
         //p1-191 hr files task 3-end
+        //p1-213 critical documents start
+        public List<SelectListItem> GetClientSitesUsingLoginUserId(int guardId, string type = "")
+        {
+            if (guardId == 0)
+            {
+                var sites = new List<SelectListItem>();
+
+
+                var mapping = _context.UserClientSiteAccess
+               .Where(x => x.ClientSite.ClientType.Name.Trim() == type.Trim() && x.ClientSite.IsActive == true)
+               .Include(x => x.ClientSite)
+               .Include(x => x.ClientSite.ClientType)
+               .Select(x => new { x.ClientSiteId, x.ClientSite.Name })
+            .Distinct().
+             OrderBy(x => x.Name).ToList();
+
+
+                foreach (var item in mapping)
+                {
+                    sites.Add(new SelectListItem(item.Name, item.ClientSiteId.ToString()));
+                }
+                return sites;
+
+            }
+            else
+            {
+                var sites = new List<SelectListItem>();
+
+                var mapping = _context.GuardLogins
+                .Where(z => z.GuardId == guardId)
+                    .Include(z => z.ClientSite)
+                    .OrderBy(x => x.ClientSite.Name)
+                    .ToList();
+
+
+                foreach (var item in mapping)
+                {
+                    if (!sites.Any(cus => cus.Text == item.ClientSite.Name))
+                    {
+                        sites.Add(new SelectListItem(item.ClientSite.Name, item.ClientSite.Id.ToString()));
+                    }
+                }
+                return sites;
+
+            }
+        }
+
+        public List<SelectListItem> GetDescList(int HRGroupId)
+        {
+            var Group= new List<SelectListItem>();
+            var mapping = _context.HrSettings.Where(x=>x.HRGroupId== HRGroupId).ToList();
+            foreach (var item in mapping)
+            {
+              Group.Add(new SelectListItem(item.Description, item.Id.ToString()));
+                
+            }
+            return Group;
+        }
+        public void SaveCriticalDoc(CriticalDocuments CriticalDoc, bool updateClientSites1 = false)
+        {
+            var Document = _context.CriticalDocuments.Include(z => z.CriticalDocumentsClientSites).SingleOrDefault(z => z.Id == CriticalDoc.Id);
+            if (Document == null)
+                _context.Add(CriticalDoc);
+            else
+            {
+                if (updateClientSites1)
+                {
+                    _context.CriticalDocumentsClientSites.RemoveRange(Document.CriticalDocumentsClientSites);
+                    _context.SaveChanges();
+                }
+
+                Document.HRGroupID = CriticalDoc.HRGroupID;
+                Document.ClientTypeId = CriticalDoc.ClientTypeId;
+
+
+
+                if (updateClientSites1)
+                    Document.CriticalDocumentsClientSites = CriticalDoc.CriticalDocumentsClientSites;
+            }
+            _context.SaveChanges();
+
+        }
+        public List<CriticalDocuments> GetCriticalDocs()
+        {
+            var sss= _context.CriticalDocuments
+                .Include(z => z.CriticalDocumentsClientSites)
+                .ThenInclude(y => y.ClientSite)
+                .ThenInclude(y => y.ClientType)
+                .Include(z => z.CriticalDocumentsClientSites)
+                .ThenInclude(y => y.HRSettings)
+         .ThenInclude(z => z.HRGroups)
+         .Include(z => z.CriticalDocumentsClientSites)
+        .ThenInclude(y => y.HRSettings)
+            .ThenInclude(z => z.ReferenceNoNumbers)
+             .Include(z => z.CriticalDocumentsClientSites)
+        .ThenInclude(y => y.HRSettings)
+         .ThenInclude(z => z.ReferenceNoAlphabets)
+
+
+                .ToList();
+            return _context.CriticalDocuments
+                .Include(z => z.CriticalDocumentsClientSites)
+                .ThenInclude(y => y.ClientSite)
+                .ThenInclude(y => y.ClientType)
+                .Include(z => z.CriticalDocumentsClientSites)
+        .ThenInclude(y => y.HRSettings)
+         .ThenInclude(z => z.HRGroups)
+         .Include(z => z.CriticalDocumentsClientSites)
+        .ThenInclude(y => y.HRSettings)
+            .ThenInclude(z => z.ReferenceNoNumbers)
+             .Include(z => z.CriticalDocumentsClientSites)
+        .ThenInclude(y => y.HRSettings)
+         .ThenInclude(z => z.ReferenceNoAlphabets)
+
+                .ToList();
+
+        }
+        public CriticalDocuments GetCriticalDocById(int CriticalID)
+        {
+
+            return _context.CriticalDocuments
+              .Include(z => z.CriticalDocumentsClientSites)
+              .ThenInclude(y => y.ClientSite)
+              .ThenInclude(y => y.ClientType)
+              .Include(z => z.CriticalDocumentsClientSites)
+        .ThenInclude(y => y.HRSettings)
+        .ThenInclude(z => z.HRGroups)
+        .Include(z => z.CriticalDocumentsClientSites)
+        .ThenInclude(y => y.HRSettings)
+            .ThenInclude(z => z.ReferenceNoNumbers)
+             .Include(z => z.CriticalDocumentsClientSites)
+        .ThenInclude(y => y.HRSettings)
+         .ThenInclude(z => z.ReferenceNoAlphabets)
+              .SingleOrDefault(x => x.Id == CriticalID);
+        }
+        public CriticalDocuments GetCriticalDocByIdandGuardId(int CriticalID, int GuardId)
+        {
+            var distinctClientSiteIds = _context.GuardLogins
+          .Where(z => z.GuardId == GuardId)
+          .Select(z => z.ClientSite.Id)
+          .Distinct()
+          .ToList();
+            var KpiSendSchedule = _context.CriticalDocuments
+              .Include(z => z.CriticalDocumentsClientSites)
+              .ThenInclude(y => y.ClientSite)
+              .ThenInclude(y => y.ClientType)
+              .SingleOrDefault(x => x.Id == CriticalID);
+            foreach (var li in KpiSendSchedule.CriticalDocumentsClientSites)
+            {
+                if (!distinctClientSiteIds.Contains(li.ClientSiteId))
+                {
+                    KpiSendSchedule.CriticalDocumentsClientSites.Remove(li);
+
+                }
+
+            }
+            return KpiSendSchedule;
+        }
+        public void DeleteCriticalDoc(int id)
+        {
+            var recordToDelete = _context.CriticalDocuments.SingleOrDefault(x => x.Id == id);
+            if (recordToDelete == null)
+                throw new InvalidOperationException();
+
+            _context.CriticalDocuments.Remove(recordToDelete);
+            _context.SaveChanges();
+        }
+        //p1-213 critical documents stop
     }
 }

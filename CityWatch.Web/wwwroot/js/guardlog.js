@@ -268,6 +268,42 @@
         const isPosition = $('#GuardLogin_IsPosition').is(':checked');
         getSmartWandOrOfficerPosition(isPosition);
         $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
+        //To Get the Critical Documents start
+        var ClientSiteName = $('#GuardLogin_ClientSiteName').val();
+        $.ajax({
+            url: '/Guard/Login?handler=CriticalDocumentsList&ClientSiteName=' + ClientSiteName,
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (result) {
+            var ss = 'kk';
+            console.log(result);
+            if (result.length==0) {
+                $('#client_status_0').css('color', 'red');
+                $('#client_status_1').css('color', 'red');
+            }
+            else if (result[0].hrSettings) {
+                var HRGroupID = result[0].hrSettings.hrGroupId;
+                if (HRGroupID == 1) {
+                    $('#client_status_0').css('color', 'green');
+                    $('#client_status_1').css('color', 'red');
+                    $('#client_status_2').css('color', 'red');
+                }
+                else if (HRGroupID == 2) {
+                    $('#client_status_1').css('color', 'green');
+                    $('#client_status_2').css('color', 'red');
+                    $('#client_status_0').css('color', 'red');
+                }
+                else {
+                    $('#client_status_2').css('color', 'green');
+                    $('#client_status_0').css('color', 'red');
+                    $('#client_status_1').css('color', 'red');
+                }
+            }
+            
+        }).always(function () {
+            $('#loader').hide();
+        });
+        //To Get the Critical Documents stop
     });
 
     
@@ -2993,6 +3029,7 @@
     $('#HRGroup').on('change', function () {
 
         var Descriptionval = $('#HRGroup').val();
+        var GuardID = $('#GuardComplianceandlicense_GuardId').val();
         const token = $('input[name="__RequestVerificationToken"]').val();
         const ulClients = $('#Description').siblings('ul.es-list');
         ulClients.html('');
@@ -3000,13 +3037,23 @@
             url: '/Admin/GuardSettings?handler=HRDescription',
             type: 'GET',
             data: {
-                HRid: Descriptionval
+                HRid: Descriptionval,
+                GuardID: GuardID
             },
             headers: { 'RequestVerificationToken': token }
         }).done(function (DescVal) {
             DescVal.forEach(function (DescVals) {
-                if (DescVals != null) {
-                    ulClients.append('<li class="es-visible" value="' + DescVals + '">' + DescVals + '</li>');
+                var mark = ''; // Initialize the mark variable
+                
+                if (DescVals.description != null) {
+                    if (DescVals.usedDescription == null) {
+                        mark = '✔️';
+                        ulClients.append('<li class="es-visible" value="' + DescVals.description + '">' + DescVals.description + ' ' + mark + '</li>');
+                    }
+                    else {
+                        mark = '❌';
+                        ulClients.append('<li class="es-visible" value="' + DescVals.description + '">' + DescVals.description + ' ' + mark + '</li>');
+                    }
                 }
                
             });
@@ -3410,11 +3457,12 @@
             return false;
         }
         var Desc = $('#Description').val();
+        var cleanText = Desc.replace(/[✔️❌]/g, '').trim();
         const formData = new FormData();
         formData.append("file", file);
         formData.append('guardId', $('#GuardComplianceandlicense_GuardId').val());
         formData.append('LicenseNo', $('#GuardComplianceandlicense_LicenseNo').val());
-        formData.append('Description', $('#Description').val());
+        formData.append('Description', cleanText);
         formData.append('HRID', $('#HRGroup').val());
         if (Desc=='') {
 
