@@ -26,5 +26,8 @@ namespace CityWatch.Data.Models
         public string EnabledDateTimeZone { get; set; }
         public string EnabledDateTimeZoneShort { get; set; }
         public int? EnabledDateTimeUtcOffsetMinute { get; set; }
+        public int LinkedDuressParentSiteId { get; set; }
+        public int IsLinkedDuressParentSite { get; set; }
+
     }
 }

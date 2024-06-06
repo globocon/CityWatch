@@ -114,7 +114,8 @@ namespace CityWatch.Data
         public DbSet<GlobalComplianceAlertEmail> GlobalComplianceAlertEmail { get; set; }
 
         public DbSet<KPIScheduleDeafultMailbox> KPIScheduleDeafultMailbox { get; set; }
-
+        public DbSet<CriticalDocuments> CriticalDocuments { get; set; }
+        public DbSet<CriticalDocumentsClientSites> CriticalDocumentsClientSites { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<GuardLog>()
@@ -141,7 +142,8 @@ namespace CityWatch.Data
         //for toggle areas - start 
         public DbSet<ClientSiteToggle> ClientSiteToggle { get; set; }
         //for toggle areas - end 
-
+        public DbSet<RCLinkedDuressMaster> RCLinkedDuressMaster { get; set; }
+        public DbSet<RCLinkedDuressClientSites> RCLinkedDuressClientSites { get; set; }
 
     }
     /* 07022024 dileep to solve the trigger in table not allowed in enity framework 7.0

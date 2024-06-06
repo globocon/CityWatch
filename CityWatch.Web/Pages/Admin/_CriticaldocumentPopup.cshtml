@@ -1,0 +1,97 @@
+﻿<!-- Critical modal -->
+@using CityWatch.Web.Helpers
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+<div class="modal" tabindex="-1" role="dialog" id="Critical-modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-calendar" aria-hidden="true"></i> Manage Critical Documents</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-2">
+                
+               
+                    <div>
+                        <form id="frm_CriticalDoc">
+                            <input type="hidden" id="CriticalDocId" name="id" value="0">
+                            <input type="hidden" id="nextRunOn" name="nextRunOn" value="">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="clientTypeName">Client Type</label>
+                                        <select class="form-control" id="clientTypeNameDoc" name="ClientTypeId">
+                                            <option value="">All</option>
+                                            @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
+                                            {
+                                                <option value="@item.Id">@item.Name</option>
+                                            }
+                                        </select>
+                                        
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="clientSites">Client Site</label>
+                                        <select class="form-control" id="clientSitesDoc" name="ClientSiteId">
+                                            <option>Select</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="selectedSites">Selected Client Sites <span class="badge badge-pill badge-info" id="selectedSitesCountDoc">0</span></label>
+                                        <select class="form-control" id="selectedSitesDoc" name="selectedSitesDoc" multiple style="height: 220px"></select>
+                                       
+                                        <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="removeSelectedSites1" title="Remove selected sites from the list"><i class="fa fa-trash-o mr-2"></i>Remove Sites</button>
+                                    </div>
+                                   
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">HR Group</label>
+                                        <select class="form-control" id="HRGroupDoc" name="HRGroupID">
+                                            <option>Select</option>
+                                        @foreach (var item in Model.ViewDataService.GetHRGroups())
+                                        {
+                                            <option value="@item.Id">@item.Name</option>
+                                        }
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="clientSites">Description</label>
+                                        <select class="form-control" id="DescriptionDoc" name="DescriptionDoc">
+                                            <option>Select</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="selectedSites">Selected Description <span class="badge badge-pill badge-info" id="selectedDescCountDoc">0</span></label>
+                                        <select class="form-control" id="selectedDescDoc" name="selectedDescDoc" multiple style="height: 220px"></select>
+                                      
+                                        <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="removeSelectedSitesDoc" title="Remove selected sites from the list"><i class="fa fa-trash-o mr-2"></i>Remove Description</button>
+                                    </div>
+                                    </div>
+                               
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <ul id="sch-modal-validation" class="text-danger hide"></ul>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button type="button" id="btnSaveCriticalDoc" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save Critical Document</button>
+                                </div>
+                            </div>
+                        </form>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <ul id="CriDoc-modal-validation" class="text-danger hide"></ul>
+                            </div>
+                        </div>
+                    </div>
+           
+               
+            </div>
+        </div>
+    </div>
+</div>
+

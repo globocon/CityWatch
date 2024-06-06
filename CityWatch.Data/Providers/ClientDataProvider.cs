@@ -180,6 +180,13 @@ namespace CityWatch.Data.Providers
         public void DeafultMailBox(string Email);
         List<KPIScheduleDeafultMailbox> GetKPIScheduleDeafultMailbox();
         List<ClientSite> GetClientSitesWithTypeId(int[] typeId);
+        public List<RCLinkedDuressMaster> GetAllRCLinkedDuress();
+        public RCLinkedDuressMaster GetRCLinkedDuressById(int duressId);
+        public void DeleteRCLinkedDuress(int id);
+
+        public void SaveRCLinkedDuress(RCLinkedDuressMaster linkedDuress, bool updateClientSites = false);
+
+        public bool CheckAlreadyExistTheGroupName(RCLinkedDuressMaster linkedDuress, bool updateClientSites = false);
 
     }
 
@@ -260,6 +267,8 @@ namespace CityWatch.Data.Providers
 
         public List<ClientSite> GetClientSites(int? typeId)
         {
+            
+
             return _context.ClientSites
                 .Where(x => (!typeId.HasValue || (typeId.HasValue && x.TypeId == typeId.Value)) && x.IsActive == true)
                 .Include(x => x.ClientType)
@@ -1948,6 +1957,71 @@ namespace CityWatch.Data.Providers
                 .ThenBy(x => x.Name)
                 .ToList();
         }
+
+        public List<RCLinkedDuressMaster> GetAllRCLinkedDuress()
+        {
+            return _context.RCLinkedDuressMaster
+                .Include(z => z.RCLinkedDuressClientSites)
+                .ThenInclude(y => y.ClientSite)
+                .ThenInclude(y => y.ClientType)
+                .ToList();
+        }
+
+        public RCLinkedDuressMaster GetRCLinkedDuressById(int duressId)
+        {
+
+            return _context.RCLinkedDuressMaster
+              .Include(t => t.RCLinkedDuressClientSites)
+              .ThenInclude(y => y.ClientSite)
+              .ThenInclude(y => y.ClientType)
+              .SingleOrDefault(x => x.Id == duressId);
+        }
+
+        public void DeleteRCLinkedDuress(int id)
+        {
+            var recordToDelete = _context.RCLinkedDuressMaster.SingleOrDefault(x => x.Id == id);
+            if (recordToDelete == null)
+                throw new InvalidOperationException();
+
+            _context.RCLinkedDuressMaster.Remove(recordToDelete);
+            _context.SaveChanges();
+        }
+
+        public void SaveRCLinkedDuress(RCLinkedDuressMaster linkedDuress, bool updateClientSites = false)
+        {
+            var schedule = _context.RCLinkedDuressMaster.Include(z => z.RCLinkedDuressClientSites).SingleOrDefault(z => z.Id == linkedDuress.Id);
+            if (schedule == null)
+                _context.Add(linkedDuress);
+            else
+            {
+                if (updateClientSites)
+                {
+                    _context.RCLinkedDuressClientSites.RemoveRange(schedule.RCLinkedDuressClientSites);
+                    _context.SaveChanges();
+                }
+
+          
+                schedule.GroupName = linkedDuress.GroupName.Trim();
+                if (updateClientSites)
+                    schedule.RCLinkedDuressClientSites = linkedDuress.RCLinkedDuressClientSites;
+            }
+            _context.SaveChanges();
+        }
+
+        public bool CheckAlreadyExistTheGroupName(RCLinkedDuressMaster linkedDuress, bool updateClientSites = false)
+        {
+            var status = true;
+            if(updateClientSites)
+            {
+                var sameGroupName = _context.RCLinkedDuressMaster.Where(x => x.GroupName.Trim() == linkedDuress.GroupName.Trim()
+                && x.Id != linkedDuress.Id).ToList();
+                if (sameGroupName.Count != 0)
+                    status = false;
+            }
+            return status;
+
+        }
+
     }
 
 
