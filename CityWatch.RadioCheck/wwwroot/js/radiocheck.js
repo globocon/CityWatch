@@ -886,6 +886,7 @@ $('#guardInfoModal').on('shown.bs.modal', function (event) {
             $('#lbl_guard_email').html(result.email);
             $('#lbl_guard_mobile').html(result.mobile);
             $('#lbl_guard_provider').html(result.provider);
+            $('#lbl_guard_provider_no').html(result.providerNo);
         }
     });
 });

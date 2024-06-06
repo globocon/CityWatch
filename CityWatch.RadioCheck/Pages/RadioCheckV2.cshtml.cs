@@ -202,7 +202,9 @@ namespace CityWatch.Web.Pages.Radio
 
         public JsonResult OnGetGuardData(int id)
         {
-            return new JsonResult(_guardLogDataProvider.GetGuards(id));
+            //return new JsonResult(_guardLogDataProvider.GetGuards(id));
+            return new JsonResult(_guardLogDataProvider.GetGuardsWtihProviderNumber(id));
+            
         }
 
         //SaveRadioStatus -start

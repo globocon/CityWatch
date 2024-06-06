@@ -270,6 +270,7 @@ namespace CityWatch.Data.Providers
         ClientSitePoc GetClientSitePOCName(int id);
         int GetClientTypeByClientSiteId(int ClientSiteId);
         public void SaveClientSiteRadioCheckStatusFromlogBookNewUpdate(ClientSiteRadioCheck clientSiteRadioCheck);
+        public Guard GetGuardsWtihProviderNumber(int guardId);
 
     }
 
@@ -4418,7 +4419,15 @@ namespace CityWatch.Data.Providers
             return data;
         }
         //P4-79 MENU CORRECTIONS END
+        public Guard GetGuardsWtihProviderNumber(int guardId)
+        {
 
+            var guards= _context.Guards.Where(x => x.Id == guardId).FirstOrDefault();
+            var results = _context.KeyVehicleLogs.Where(x => x.CompanyName == guards.Provider && !string.IsNullOrEmpty(x.CompanyLandline)).FirstOrDefault();
+            guards.ProviderNo = results != null ? results.CompanyLandline : null;
+
+            return guards;
+        }
     }
 
 }
