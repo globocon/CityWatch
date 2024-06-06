@@ -80,7 +80,7 @@ $(function () {
             alert('Unsaved changes in the grid. Refresh the page');
         } else {
             isSmartWandAdding = true;
-            gritdSmartWands.addRow({ 'id': -1, 'smartWandId': '', phoneNumber: '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
+            gritdSmartWands.addRow({ 'id': -1, 'smartWandId': '', phoneNumber: '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);           
         }
     });
 
@@ -333,7 +333,7 @@ $(function () {
             }
         });
     }
-
+    
     $('#ClientSiteCustomField_Name').editableSelect({
         effects: 'slide'
     });
@@ -485,7 +485,9 @@ $(function () {
     });
     /* site poc and locations - end*/
     /*key settings-start*/
-
+    if ($.fn.DataTable.isDataTable('#cs_client_site_keys')) {
+        $('#cs_client_site_keys').DataTable().destroy();
+    }
     let gridClientSiteKeys = $('#cs_client_site_keys').DataTable({
         lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
         paging: true,
@@ -494,6 +496,7 @@ $(function () {
         info: false,
         searching: true,
         autoWidth: false,
+        "bDestroy": true,
         ajax: {
             url: '/Admin/Settings?handler=ClientSiteKeys',
             data: function (d) {
