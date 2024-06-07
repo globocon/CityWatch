@@ -45,6 +45,7 @@ builder.Services.AddScoped<ISmsSenderProvider, SmsSenderProvider>();
 builder.Services.AddScoped<ISiteEventLogDataProvider, SiteEventLogDataProvider>();
 builder.Services.AddScoped<ISmsGlobalService, SmsGlobalService>();
 builder.Services.AddScoped<IViewDataService, ViewDataService>();
+builder.Services.AddScoped<ISignalRNotificationService, SignalRNotificationService>();
 builder.Services.AddSession();
 builder.Services.AddRazorPages(options =>
 {
@@ -60,7 +61,7 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromMinutes(120);
 });
 builder.Services.AddHttpContextAccessor();
-
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 // Configure the HTTP request pipeline.

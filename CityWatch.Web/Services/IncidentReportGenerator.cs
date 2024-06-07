@@ -224,6 +224,7 @@ namespace CityWatch.Web.Services
             {
                 var doc = new Document(pdfDocument);
                 var index = 1;
+                var closePageIndex = 2;
 
                 var imageFile = string.Empty;
                 if (attachLiveGps)
@@ -235,6 +236,7 @@ namespace CityWatch.Web.Services
                 {
                     var image = AttachImageToPdf(pdfDocument, ++index, imageFile);
                     doc.Add(image);
+                    ++closePageIndex;
                 }
 
                 var pdfAttachmentCount = 0;
@@ -255,13 +257,35 @@ namespace CityWatch.Web.Services
                                 doc.Add(paraName);
                             }
                             pdfAttachmentCount += uploadDoc.GetNumberOfPages();
+                            closePageIndex += uploadDoc.GetNumberOfPages();
                             uploadDoc.Close();
                         }
 
                     }
                 }
 
-                index = pdfAttachmentCount + 1;
+                
+
+                // Reset index to before close page index
+                index = closePageIndex - 1;
+
+                if (_IncidentReport.Attachments != null)
+                {
+                    foreach (var fileName in _IncidentReport.Attachments)
+                    {
+                        var paraName = new Paragraph($"File Name: {fileName}").SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLACK));
+                        if (GetAttachmentType(IO.Path.GetExtension(fileName)) == AttachmentType.Image)
+                        {
+                            var image = AttachImageToPdf(pdfDocument, ++index, IO.Path.Combine(_UploadRootDir, fileName));                            
+                            paraName.SetFixedPosition(index, 5, 0, 400);
+                            doc.Add(image).Add(paraName);
+                            ++closePageIndex;
+                        }
+                    }
+                }
+
+                // Reset index to before close page index
+                index = closePageIndex - 1;
 
                 if (_IncidentReport.Attachments != null)
                 {
@@ -284,7 +308,8 @@ namespace CityWatch.Web.Services
                             {
                                 var pageSize = new PageSize(pdfDocument.GetFirstPage().GetPageSize());
                                 pdfDocument.AddNewPage(++index, pageSize);
-                                pdfAttachmentCount += 1;
+                                ++pdfAttachmentCount;
+                                ++closePageIndex;
                                 x = pdfDocument.GetFirstPage().GetPageSize().GetWidth();
                                 var paraName = new Paragraph("NOTE: Multimedia Attachments & Spreadsheets require Adobe Reader to be opened or extracted. Web browser viewing generally can’t access the embedded file.")
                                     .SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLUE));
@@ -333,7 +358,7 @@ namespace CityWatch.Web.Services
                                 currentX = 20;
                                 newPageRequired = true;
                             }
-                          
+
                         }
 
                     }
@@ -341,31 +366,6 @@ namespace CityWatch.Web.Services
                     // p1#160_MultimediaAttachments03012024 done by Binoy - End
                 }
 
-                // Reset index for images
-
-                if (attachLiveGps || attachGpsMap)
-                {
-                    index = pdfAttachmentCount + 2;
-                }
-                else
-                {
-                    index = pdfAttachmentCount + 1;
-                }
-
-                if (_IncidentReport.Attachments != null)
-                {
-                    foreach (var fileName in _IncidentReport.Attachments)
-                    {
-                        var paraName = new Paragraph($"File Name: {fileName}").SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLACK));
-                        if (GetAttachmentType(IO.Path.GetExtension(fileName)) == AttachmentType.Image)
-                        {
-                            var image = AttachImageToPdf(pdfDocument, ++index, IO.Path.Combine(_UploadRootDir, fileName));
-                            paraName.SetFixedPosition(index, 5, 0, 400);
-                            doc.Add(image).Add(paraName);
-                        }
-                    }
-                }
-                
             }
 
             try

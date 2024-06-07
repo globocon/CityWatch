@@ -9,6 +9,8 @@ namespace CityWatch.Data.Models
         HRGroups = 1,
         [Display(Name = "Licence Types")]
         LicenceTypes = 2,
+        [Display(Name = "Critical Documents")]
+        CriticalDocuments = 3,
     }
     public class HRGroups
     {

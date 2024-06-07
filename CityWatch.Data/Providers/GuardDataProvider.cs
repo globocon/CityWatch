@@ -1,4 +1,5 @@
-﻿using CityWatch.Data.Models;
+﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -33,7 +34,7 @@ namespace CityWatch.Data.Providers
         List<GuardCompliance> GetAllGuardCompliances();
         List<GuardCompliance> GetGuardCompliances(int guardId);
         HrSettings GetHRRefernceNo(int HRid, string Description);
-        List<string> GetHRDesc(int HRid);
+        List<HrSettings> GetHRDesc(int HRid);
         GuardCompliance GetGuardCompliance(int id);
         void SaveGuardCompliance(GuardCompliance guardCompliance);
         void SaveGuardComplianceandlicanse(GuardComplianceAndLicense guardComplianceandlicense);
@@ -64,6 +65,12 @@ namespace CityWatch.Data.Providers
 
         //p1-191 hr files task 3-end
         List<LicenseTypes> GetLicenseTypes();
+        GuardComplianceAndLicense GetDescriptionList(HrGroup hrGroup, string Description,int GuardID);
+        List<GuardComplianceAndLicense> GetGuardCompliancesAndLicense(int guardId);
+        List<GuardComplianceAndLicense> GetGuardCompliancesAndLicenseList(string hrGroup);
+        List<GuardComplianceAndLicense> GetGuardCompliancesAndLicenseHR(int guardId, HrGroup hrGroup);
+        List<CriticalDocumentsClientSites> GetCriticalDocs(int clientSiteID);
+         ClientSite GetClientSiteID(string ClientSite);
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -78,6 +85,21 @@ namespace CityWatch.Data.Providers
         public List<Guard> GetGuards()
         {
             return _context.Guards.ToList();
+        }
+        public List<CriticalDocumentsClientSites> GetCriticalDocs(int clientSiteID)
+        {
+            return _context.CriticalDocumentsClientSites
+                .Include(x=>x.HRSettings)
+                    .ThenInclude(z => z.ReferenceNoNumbers)
+                    .Include(x => x.HRSettings)
+                 .ThenInclude(z => z.ReferenceNoAlphabets)
+                 .Include(x => x.HRSettings)
+                 .ThenInclude(z => z.HRGroups)
+                .Where(x=>x.ClientSiteId== clientSiteID).ToList();
+        }
+        public ClientSite GetClientSiteID(string ClientSite)
+        {
+            return _context.ClientSites.Where(x => x.Name == ClientSite).FirstOrDefault();
         }
         //public List<Guard> GetGuardsCount()
         //{
@@ -558,15 +580,48 @@ namespace CityWatch.Data.Providers
                 .Where(x => x.GuardId == guardId && x.ExpiryDate != null)
                 .OrderBy(x => x.ReferenceNo).ToList();
         }
-        public List<string> GetHRDesc(int HRid)
+        public List<GuardComplianceAndLicense> GetGuardCompliancesAndLicense(int guardId)
         {
-            var descriptions = _context.HrSettings
-    .Where(x => x.HRGroupId == HRid)
-    .Select(x => x.Description)
-    .ToList();
+            return _context.GuardComplianceLicense
+                .Include(z => z.Guard)
+                .Where(x => x.GuardId == guardId && x.ExpiryDate != null)
+                .ToList();
+        }
+        public List<GuardComplianceAndLicense> GetGuardCompliancesAndLicenseList(string hrGroup)
+        {
+            var ddd = _context.GuardComplianceLicense
+                .Include(z => z.Guard)
+                .Where(x => x.ExpiryDate != null && x.HrGroupText==hrGroup)
+                .ToList();
+            return _context.GuardComplianceLicense
+                .Include(z => z.Guard)
+                .Where(x =>x.ExpiryDate != null && x.HrGroupText == hrGroup)
+                .ToList();
+        }
+        public List<GuardComplianceAndLicense> GetGuardCompliancesAndLicenseHR(int guardId, HrGroup hrGroup)
+        {
+            return _context.GuardComplianceLicense
+                 .Include(z => z.Guard)
+                 .Where(x => x.GuardId == guardId && x.HrGroup == hrGroup)
+                 .ToList();
+        }
+        public List<HrSettings> GetHRDesc(int HRid)
+        {
+            var descriptions = _context.HrSettings.Include(z => z.HRGroups)
+                .Include(z => z.ReferenceNoNumbers)
+                .Include(z => z.ReferenceNoAlphabets)
+                .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
+                ThenBy(x => x.ReferenceNoAlphabets.Name).Where(z => z.HRGroups.Id == HRid).ToList();
             return descriptions;
         }
-        public HrSettings GetHRRefernceNo(int HRid,string Description)
+        public GuardComplianceAndLicense GetDescriptionList(HrGroup hrGroup, string Description,int GuardID)
+        {
+            var Listt = _context.GuardComplianceLicense.ToList();
+            return _context.GuardComplianceLicense
+        .Where(x => x.HrGroup == hrGroup && x.Description== Description && x.GuardId==GuardID)
+        .FirstOrDefault();
+        }
+            public HrSettings GetHRRefernceNo(int HRid,string Description)
         {
             
             return _context.HrSettings.Include(z => z.HRGroups)

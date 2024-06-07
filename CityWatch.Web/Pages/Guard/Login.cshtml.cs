@@ -524,5 +524,13 @@ namespace CityWatch.Web.Pages.Guard
             //}
             ////logBookId entry for radio checklist-end
         }
+
+
+        public JsonResult OnGetCriticalDocumentsList(string ClientSiteName)
+        {
+            var ClientSiteID = _guardDataProvider.GetClientSiteID(ClientSiteName);
+            return new JsonResult(_guardDataProvider.GetCriticalDocs(ClientSiteID.Id));
+
+        }
     }
 }
