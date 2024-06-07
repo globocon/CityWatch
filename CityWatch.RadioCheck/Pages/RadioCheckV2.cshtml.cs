@@ -1356,16 +1356,16 @@ namespace CityWatch.RadioCheck.Pages.Radio
         {
             var success = true;
             var message = "success";
-            var ActionListMessage = (string.IsNullOrEmpty(AlarmKeypadCode) ? string.Empty : "AlarmKeypadCode: " + AlarmKeypadCode + "\n") +
-                   (string.IsNullOrEmpty(Physicalkey) ? string.Empty : "PhysicalKey: " + Physicalkey + "\n") +
-                   (string.IsNullOrEmpty(AlarmKeypadCode) ? string.Empty : "AlarmKeypadCode: " + AlarmKeypadCode + "\n") +
-                   (string.IsNullOrEmpty(SiteCombinationLook) ? string.Empty : "CombinationLook: " + SiteCombinationLook + "\n") +
-                   (string.IsNullOrEmpty(Action1) ? string.Empty : "Action1: " + Action1 + "\n") +
-                  (string.IsNullOrEmpty(Action2) ? string.Empty : "Action2: " + Action2 + "\n") +
-                   (string.IsNullOrEmpty(Action3) ? string.Empty : "Action3: " + Action3 + "\n") +
-                   (string.IsNullOrEmpty(Action4) ? string.Empty : "Action4: " + Action4 + "\n") +
-                   (string.IsNullOrEmpty(CommentsForControlRoomOperator) ? string.Empty : "CommentsForControlRoomOperator: " + CommentsForControlRoomOperator + "\n") +
-                   (string.IsNullOrEmpty(Notifications) ? string.Empty : "Message: " + Notifications + "\n");
+            //var ActionListMessage = (string.IsNullOrEmpty(AlarmKeypadCode) ? string.Empty : "AlarmKeypadCode: " + AlarmKeypadCode + "\n") +
+            //       (string.IsNullOrEmpty(Physicalkey) ? string.Empty : "PhysicalKey: " + Physicalkey + "\n") +
+            //       (string.IsNullOrEmpty(AlarmKeypadCode) ? string.Empty : "AlarmKeypadCode: " + AlarmKeypadCode + "\n") +
+            //       (string.IsNullOrEmpty(SiteCombinationLook) ? string.Empty : "CombinationLook: " + SiteCombinationLook + "\n") +
+            //       (string.IsNullOrEmpty(Action1) ? string.Empty : "Action1: " + Action1 + "\n") +
+            //      (string.IsNullOrEmpty(Action2) ? string.Empty : "Action2: " + Action2 + "\n") +
+            //       (string.IsNullOrEmpty(Action3) ? string.Empty : "Action3: " + Action3 + "\n") +
+            //       (string.IsNullOrEmpty(Action4) ? string.Empty : "Action4: " + Action4 + "\n") +
+            //       (string.IsNullOrEmpty(CommentsForControlRoomOperator) ? string.Empty : "CommentsForControlRoomOperator: " + CommentsForControlRoomOperator + "\n") +
+            var ActionListMessage = (string.IsNullOrEmpty(Notifications) ? string.Empty : Notifications + "\n");
             try
             {
 
