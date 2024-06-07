@@ -52,7 +52,7 @@ namespace CityWatch.Data.Models
         //Added for logbook Gps 
         public string GpsCoordinates { get; set; }
         public bool IsIRReportTypeEntry { get; set; }
-
+        public bool? RcLogbookStamp { get; set; } = false;
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {

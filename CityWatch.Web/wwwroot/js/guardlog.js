@@ -728,7 +728,21 @@
             { field: 'clientSiteId', hidden: true },
             { field: 'eventDateTime', title: 'Time', width: 100, renderer: function (value, record) { return renderTime(value, record, false); } },
             { field: 'notes', title: 'Event / Notes', width: 450 },
-            { field: 'guardInitials', title: 'Guard Initials', width: 80, renderer: function (value, record) { return record.guardLogin.guard.initial; } }
+            {
+                field: 'guardInitials', title: 'Guard Initials', width: 80, renderer: function (value, record) {
+                    var rtn = '';
+                    if (!record.guardLogin.guard.initial) {
+                        // str is null, undefined, or an empty string
+                        if (record.rcLogbookStamp === true)
+                            rtn = 'Admin';
+                    }
+                    else {
+                        rtn = record.guardLogin.guard.initial;
+                    }
+
+                    return rtn;
+                }
+            }
         ]
     };
     $('#card_new_entry').hide();
@@ -761,7 +775,13 @@
                 {
                     field: 'guardInitials', title: 'Guard Initials', width: 70, renderer: function (value, record) {
                         //return record.guardLogin ? record.guardLogin.guard.initial : '';
-                        return `${record.guardLogin ? record.guardLogin.guard.initial : ''}&nbsp;&nbsp;${record.gpsCoordinates ? `<a href="https://www.google.com/maps?q=${record.gpsCoordinates}" target="_blank" data-toggle="tooltip" title=""><i class="fa fa-map-marker" aria-hidden="true"></i></a>` : ''}`;
+                        var rtn = '';
+                        rtn = `${record.guardLogin ? record.guardLogin.guard.initial : ''}&nbsp;&nbsp;${record.gpsCoordinates ? `<a href="https://www.google.com/maps?q=${record.gpsCoordinates}" target="_blank" data-toggle="tooltip" title=""><i class="fa fa-map-marker" aria-hidden="true"></i></a>` : ''}`;
+                        /*var rtn = record.guardLogin.guard.initial ? record.guardLogin.guard.initial : record.rcLogbookStamp ? 'Admin' : '';*/
+                        if (!rtn || rtn == '&nbsp;&nbsp;') {
+                            rtn = record.rcLogbookStamp ? 'Admin' : '';
+                        } 
+                        return rtn;
                     }
                 },
                 { width: 75, renderer: renderDailyLogManagement, title: '<i class="fa fa-cogs" aria-hidden="true"></i>' },
@@ -904,11 +924,11 @@
 
         gridGuardLog.on('rowDataBound', function (e, $row, id, record) {
             if (record.irEntryType) {
-                $row.css('background-color', record.irEntryType === irEntryTypeIsAlarm ? bg_color_pale_red : bg_color_pale_yellow);
+                $row.css('background-color', record.irEntryType === irEntryTypeIsAlarm ? bg_color_pale_red : record.rcLogbookStamp ? bg_color_pale_red : bg_color_pale_yellow);
                 /* add for check if dark mode is on start*/
                 if ($('#toggleDarkMode').is(':checked')) {
                     $row.css('color', '#333');
-                    $row.css('background-color', record.irEntryType === irEntryTypeIsAlarm ? bg_color_pale_red : bg_color_pale_yellow);
+                    //$row.css('background-color', record.irEntryType === irEntryTypeIsAlarm ? bg_color_pale_red : bg_color_pale_yellow);
                 }
                 /* add for check if dark mode is on end*/
             }

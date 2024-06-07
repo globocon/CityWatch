@@ -634,21 +634,14 @@
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
-        selectionType: 'multiple',
+        /*selectionType: 'multiple',*/
         button: true,
         inlineEditing: { mode: 'command' },
       
         columns: [
             { field: 'name', title: 'Name', width: '100%', editor: true },
             { field: 'emailTo', title: 'Special Email Condition', width: '100%', editor: true },
-            // { field: 'emailTo', title: 'State', width: 80, type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
-            //{ field: 'clientSiteIds', hidden: true },
-            ///*{ field: 'clientSites', title: 'Site Allocation', type: 'dropdown', width: '100%', type: 'button', editor: select2editor }*/
-            //{ field: 'clientSites', title: 'Site Allocation', width: '100%' },
-            //{
-            //    width: '100%', renderer: irButtonRenderer
-            //}
-
+            { field: 'stampRcLogbook', title: 'Stamp Rc Logbook ?', type: 'checkbox', align: 'center', width: '70%', editor: true }
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -997,7 +990,8 @@ $('#add_field_settings').on('click', function () {
                 'id': -1,
                 'typeId': selFieldTypeId,
                 'name': '',
-                'emailTo': ''
+                'emailTo': '',
+                'stampRcLogbook': false
             }).edit(-1);
         }
     } else {

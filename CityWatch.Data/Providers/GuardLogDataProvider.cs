@@ -277,6 +277,8 @@ namespace CityWatch.Data.Providers
 
         public List<RCLinkedDuressClientSites> getallClientSitesLinkedDuress(int siteId);
 
+        bool IsRClogbookStampRequired(string StampName);
+
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -4623,6 +4625,18 @@ namespace CityWatch.Data.Providers
                 linkedSitesList = alllinkedSites;
             }
             return linkedSitesList;
+        }
+
+        public bool IsRClogbookStampRequired(string StampedByName)
+        {
+            bool Req = false;
+            if (!string.IsNullOrEmpty(StampedByName))
+            {
+                var RecExists = _context.IncidentReportFields.Where(x => x.TypeId == ReportFieldType.NotifiedBy && x.Name.Equals(StampedByName)).FirstOrDefault();
+                if (RecExists.StampRcLogbook == true)
+                    Req = true;
+            }            
+            return Req;
         }
 
     }

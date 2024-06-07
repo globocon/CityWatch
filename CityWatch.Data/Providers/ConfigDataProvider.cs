@@ -276,7 +276,8 @@ namespace CityWatch.Data.Providers
                     TypeId = incidentReportField.TypeId,
                     EmailTo = incidentReportField.EmailTo,
                     ClientSiteIds = incidentReportField.ClientSiteIds,
-                    ClientTypeIds=incidentReportField.ClientTypeIds
+                    ClientTypeIds=incidentReportField.ClientTypeIds,
+                    StampRcLogbook = incidentReportField.StampRcLogbook
                 });
             }
             else
@@ -289,6 +290,7 @@ namespace CityWatch.Data.Providers
                 reportFieldToUpdate.EmailTo = incidentReportField.EmailTo;
                 reportFieldToUpdate.ClientSiteIds = incidentReportField.ClientSiteIds;
                 reportFieldToUpdate.ClientTypeIds = incidentReportField.ClientTypeIds;
+                reportFieldToUpdate.StampRcLogbook = incidentReportField.StampRcLogbook;
 
             }
             _context.SaveChanges();
