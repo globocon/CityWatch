@@ -2531,7 +2531,12 @@
         return val;
     }
 
-    var guardSettings = $('#guard_settings').DataTable({
+    var guardSettingsDataLoaded = false;
+    var guardSettings = $('#guard_settings').on('preInit.dt', function (e, settings) {
+        $('#chkbxfilterGuardActive').prop("disabled", true);
+        $('#chkbxfilterGuardInActive').prop("disabled", true);
+        guardSettingsDataLoaded = false;
+    }).DataTable({
         pageLength: 50,
         autoWidth: false,
         ajax: '/Admin/GuardSettings?handler=Guards',
@@ -2549,7 +2554,7 @@
         { data: 'provider', width: "13%" },
         { data: 'clientSites', orderable: false, width: "15%" },
         {
-            data: 'isActive', className: "text-center", width: "10%", 'render': function (value, type, data) {
+            data: 'isActive', name: 'isactive', className: "text-center", width: "10%", 'render': function (value, type, data) {
                 return renderGuardActiveCell(value, type, data);
             }
         },
@@ -2561,9 +2566,52 @@
             className: "text-center",
             width: "8%"
         },
-        ]
+        ],        
+        initComplete: function (settings, json) {
+            $('#chkbxfilterGuardActive').prop("disabled", false);
+            $('#chkbxfilterGuardInActive').prop("disabled", false);
+            //alert('DataTables has finished its initialisation.');
+            guardSettingsDataLoaded = true;            
+        }
     });
 
+    $('#chkbxfilterGuardActive').on('click', function () {
+        var thisCheck = $(this);
+        if (guardSettingsDataLoaded) {
+            if (thisCheck.is(':checked')) {
+                $('#chkbxfilterGuardInActive').prop("checked", false);
+            }
+            filterActiveInActiveGuards(guardSettings);
+        } 
+    });
+
+    $('#chkbxfilterGuardInActive').on('click', function () {
+        var thisCheck = $(this);
+        if (guardSettingsDataLoaded) {
+            if (thisCheck.is(':checked')) {
+                $('#chkbxfilterGuardActive').prop("checked", false);                
+            } 
+            filterActiveInActiveGuards(guardSettings);
+        } 
+    });
+
+    function filterActiveInActiveGuards(table) {
+        let filter = '';
+        let guardInActive = $('#chkbxfilterGuardInActive').is(':checked');
+        let guardActive = $('#chkbxfilterGuardActive').is(':checked');
+
+        let regex = true;
+        let smart = true;
+
+        if (guardActive)
+            filter = 'true';
+        else if (guardInActive)
+            filter = 'false';
+
+        //table.search(filter.value, regex, smart).draw();
+        table.column('isactive:name').search(filter, regex, smart).draw();
+    }
+       
     $('#guard_settings tbody').on('click', 'td.dt-control', function () {
         var tr = $(this).closest('tr');
         var row = guardSettings.row(tr);
