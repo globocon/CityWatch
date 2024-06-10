@@ -1537,6 +1537,11 @@ namespace CityWatch.RadioCheck.Pages.Radio
         {
             var clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
             clientSiteKpiSetting ??= new ClientSiteKpiSetting() { ClientSiteId = siteId };
+            if(clientSiteKpiSetting.rclistKP.ClientSiteID==0)
+            {
+                clientSiteKpiSetting.rclistKP.ClientSiteID = siteId;
+
+            }
             if (clientSiteKpiSetting.rclistKP.Imagepath != null)
             {
                 if (clientSiteKpiSetting.rclistKP.Imagepath.Length > 0 && clientSiteKpiSetting.rclistKP.Imagepath.Trim() != "")

@@ -62,7 +62,7 @@ namespace CityWatch.Data.Models
                         var rcActionList = RCActionList.FirstOrDefault();
                         return rcActionList ?? new RCActionList()
                         {
-
+                            ClientSiteID = ClientSiteId,
                             SettingsId = Id,
                             SiteAlarmKeypadCode = string.Empty,
                             Imagepath = string.Empty
@@ -73,7 +73,7 @@ namespace CityWatch.Data.Models
                     {
                         return new RCActionList()
                         {
-
+                            ClientSiteID = ClientSiteId,
                             SettingsId = Id,
                             SiteAlarmKeypadCode = string.Empty,
                             Imagepath = string.Empty
@@ -86,7 +86,7 @@ namespace CityWatch.Data.Models
                 {
                     return new RCActionList()
                     {
-
+                        ClientSiteID = ClientSiteId,
                         SettingsId = Id,
                         SiteAlarmKeypadCode = string.Empty,
                         Imagepath = string.Empty
