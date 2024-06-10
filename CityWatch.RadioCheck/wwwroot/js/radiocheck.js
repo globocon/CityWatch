@@ -1411,8 +1411,8 @@ $('#clientSiteActiveGuards tbody').on('click', '#btnSWdetails', function (value,
     $('#guardSWInfoModal').modal('show');
     isPaused = true;
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
-    var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
-    var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    var GuardId = $(this).closest("tr").find('td').eq(4).find('#GuardId').val();
+    var ClientSiteId = $(this).closest("tr").find('td').eq(4).find('#ClientSiteId').val();
     if (GuardId.length == 0) {
         GuardId = $(this).closest("tr").find('td').eq(2).find('#GuardId').val();
     }
