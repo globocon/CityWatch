@@ -2532,14 +2532,15 @@
     }
 
     var guardSettingsDataLoaded = false;
-    var guardSettings = $('#guard_settings').on('preInit.dt', function (e, settings) {
-        $('#chkbxfilterGuardActive').prop("disabled", true);
-        $('#chkbxfilterGuardInActive').prop("disabled", true);
-        guardSettingsDataLoaded = false;
-    }).DataTable({
+    var guardSettings = $('#guard_settings').DataTable({
         pageLength: 50,
         autoWidth: false,
         ajax: '/Admin/GuardSettings?handler=Guards',
+        processing: true,
+        language: {
+            'loadingRecords': '&nbsp;',
+            'processing': 'Loading data please wait...'
+        },                
         columns: [{
             className: 'dt-control',
             orderable: false,
@@ -2570,12 +2571,23 @@
         initComplete: function (settings, json) {
             $('#chkbxfilterGuardActive').prop("disabled", false);
             $('#chkbxfilterGuardInActive').prop("disabled", false);
-            //alert('DataTables has finished its initialisation.');
-            guardSettingsDataLoaded = true;            
+            guardSettingsDataLoaded = true; 
+            $('#chkbxfilterGuardActive').trigger('click');
         }
+    }).on('preInit.dt', function (e, settings) {
+        $('#chkbxfilterGuardActive').prop("disabled", true);
+        $('#chkbxfilterGuardInActive').prop("disabled", true);
+        guardSettingsDataLoaded = false;
     });
 
-    $('#chkbxfilterGuardActive').on('click', function () {
+    //$('#btn_refresh_guard_top').on('click', function () {
+    //    if (guardSettings) {   
+    //        guardSettings.clear().draw();
+    //        guardSettings.ajax.reload();            
+    //    }        
+    //});
+
+    $('#chkbxfilterGuardActive').on('click', function () {       
         var thisCheck = $(this);
         if (guardSettingsDataLoaded) {
             if (thisCheck.is(':checked')) {
@@ -2599,7 +2611,6 @@
         let filter = '';
         let guardInActive = $('#chkbxfilterGuardInActive').is(':checked');
         let guardActive = $('#chkbxfilterGuardActive').is(':checked');
-
         let regex = true;
         let smart = true;
 
