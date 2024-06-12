@@ -34,7 +34,10 @@
 
 
 <div>
-
+    <input type="hidden" id="IsAdminUserLoggedIn" name="IsAdminUserLoggedIn" value='@AuthUserHelper.IsAdminUserLoggedIn.ToString()'>
+    <input type="hidden" id="IsAdminGlobal" name="IsAdminGlobal" value=@AuthUserHelper.IsAdminGlobal.ToString()>
+    <input type="hidden" id="IsAdminPowerUser" name="IsAdminPowerUser" value=@AuthUserHelper.IsAdminPowerUser.ToString()>
+    <input type="hidden" id="GuardIdCheck" name="GuardIdCheck" value=@Model.GuardIdCheck.>
     <ul class="nav nav-tabs" id="settingsTab" role="tablist">
         @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal)
         {

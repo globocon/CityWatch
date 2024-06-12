@@ -75,10 +75,15 @@ namespace CityWatch.RadioCheck.Pages.Admin
         [BindProperty]
         public ReportTemplate ReportTemplate { get; set; }
 
+        [BindProperty]
+        public string GuardIdCheck { get; set; }
+
+
         public IActionResult OnGet()
         {
 
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            GuardIdCheck = GuardId.ToString();
             var guard = _guardDataProvider.GetGuards().SingleOrDefault(z => z.Id == GuardId);
 
             if (guard != null)
@@ -667,7 +672,7 @@ namespace CityWatch.RadioCheck.Pages.Admin
 
         public JsonResult OnGetRcLinkedDuress(int type, string searchTerm)
         {
-           
+
             return new JsonResult(_clientDataProvider.GetAllRCLinkedDuress()
                 .Select(z => RCLinkedDuressViewModel.FromDataModel(z))
                 .Where(z => (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
@@ -694,10 +699,10 @@ namespace CityWatch.RadioCheck.Pages.Admin
 
         public JsonResult OnGetRCLinkedDuressbyId(int id)
         {
-            
-           
-                return new JsonResult(_clientDataProvider.GetRCLinkedDuressById(id));
-          
+
+
+            return new JsonResult(_clientDataProvider.GetRCLinkedDuressById(id));
+
         }
 
         public JsonResult OnPostDeleteRCLinkedDuress(int id)
@@ -727,10 +732,10 @@ namespace CityWatch.RadioCheck.Pages.Admin
             var message = "Saved successfully";
             if (_clientDataProvider.CheckAlreadyExistTheGroupName(rclinkedDuress, true))
             {
-                
+
                 try
                 {
-                    
+
 
                     _clientDataProvider.SaveRCLinkedDuress(rclinkedDuress, true);
                 }
