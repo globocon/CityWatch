@@ -20,25 +20,29 @@
 
     var mapSettings = @Configuration.GetSection("GoogleMap").Get(typeof(GoogleMapSettings)) as GoogleMapSettings;
     var ApiKey = mapSettings.ApiKey;
-    var hideTabStyle = "" ;
-    if (!AuthUserHelper.IsAdminUserLoggedIn)
+    var hideTabStyle = "";
+    if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal)
     {
-        if (@Model.IsAdminminOrPoweruser != "IsAdminPowerUser")
-        {
-            hideTabStyle = "";
-        }
-        else
+        hideTabStyle = "";
+
+    }
+    else
+    {
+        if (AuthUserHelper.IsAdminPowerUser)
         {
             hideTabStyle = "style=display:none";
+
         }
-    } else { hideTabStyle = ""; };
-    var companydetail = viewDataService.GetCompanyDetails().SingleOrDefault(x=>x.Id==1);
+        
+
+    };
+    var companydetail = viewDataService.GetCompanyDetails().SingleOrDefault(x => x.Id == 1);
 }
 <div>
     <input type="hidden" id="hdnIsAdminLoggedIn" value="@AuthUserHelper.IsAdminUserLoggedIn.ToString()" />
     <input type="hidden" id="txt_IsAdminPowerUser" value="@Model.IsAdminminOrPoweruser" />
     <ul class="nav nav-tabs" id="settingsTab" role="tablist">
-        @if (@Model.IsAdminminOrPoweruser != "IsAdminPowerUser")
+        @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal)
         {
             <li class="nav-item">
                 <a class="nav-link active p-2" id="ctype-tab" data-toggle="tab" href="#ctype" role="tab" aria-controls="ctype" aria-selected="true">IR Client Type</a>
@@ -64,24 +68,24 @@
             </li>
             <li class="nav-item" @hideTabStyle>
                 <a class="nav-link p-2" id="uca-tab" data-toggle="tab" href="#uca" role="tab" aria-controls="uca" aria-selected="false">C4i Access Control</a>
-        </li>
-        
-        <li class="nav-item" @hideTabStyle>
-            <a class="nav-link p-2" id="c4ihr-tab" data-toggle="tab" href="#c4ihr" role="tab" aria-controls="uca" aria-selected="false">C4i HR</a>
-        </li>
-        <li class="nav-item" @hideTabStyle>
-            <a class="nav-link p-2" id="c4isettings-tab" data-toggle="tab" href="#c4isettings" role="tab" aria-controls="c4isettings" aria-selected="false">C4i Core</a>
+            </li>
+
+            <li class="nav-item" @hideTabStyle>
+                <a class="nav-link p-2" id="c4ihr-tab" data-toggle="tab" href="#c4ihr" role="tab" aria-controls="uca" aria-selected="false">C4i HR</a>
+            </li>
+            <li class="nav-item" @hideTabStyle>
+                <a class="nav-link p-2" id="c4isettings-tab" data-toggle="tab" href="#c4isettings" role="tab" aria-controls="c4isettings" aria-selected="false">C4i Core</a>
             </li>
         }
         else
         {
-            <li class="nav-item" >
+            <li class="nav-item">
                 <a class="nav-link p-2 active" id="c4ihr-tab" data-toggle="tab" href="#c4ihr" role="tab" aria-controls="uca" aria-selected="false">C4i HR</a>
             </li>
         }
     </ul>
     <div class="tab-content" id="settingsTabContent">
-        @if (@Model.IsAdminminOrPoweruser != "IsAdminPowerUser")
+        @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal)
         {
             <div class="tab-pane fade show active py-3" id="ctype" role="tabpanel" aria-labelledby="ctype-tab">
                 <div class="row" @hideTabStyle>
@@ -154,7 +158,7 @@
                             <div class="col-md-5 text-right">
                                 <button class="btn btn-success mb-3" id="add_fbktpl"><i class="fa fa-plus mr-2"></i>New Template</button>
                             </div>
-                        </div>                   
+                        </div>
                         <div class="alert alert-success alert-dismissible fade show" role="alert" id="fbktpl_status" style="display:none">
                             <span>Message</span>
                             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -316,13 +320,13 @@
                     <label class="col-form-label col-md-3" id="lblFieldType">Select a field type</label>
                     <div class="col-md-4">
                         @*         <select class="form-control" id="report_field_types"  onchange="sortSelect()">
-                        <option value="">None</option>
-                        <option value="1">Position</option>
-                        <option value="2">Notified By</option>
-                        <option value="3">Callsign</option>
-                        <option value="4">Area/Ward</option>
-                        <option value="5">PSPF</option>
-                        <option value="6">Financial Reimbursement</option>
+                    <option value="">None</option>
+                    <option value="1">Position</option>
+                    <option value="2">Notified By</option>
+                    <option value="3">Callsign</option>
+                    <option value="4">Area/Ward</option>
+                    <option value="5">PSPF</option>
+                    <option value="6">Financial Reimbursement</option>
                     </select> *@
                         <select class="form-control" id="report_field_types">
                             <option value="">None</option>
@@ -330,7 +334,7 @@
                             <option value="3">Callsign</option>
                             <option value="6">Financial Reimbursement</option>
                             <option value="2">Notified By</option>
-                            <option value="1">Position</option> 
+                            <option value="1">Position</option>
                             <option value="5">PSPF</option>
 
                         </select>
@@ -460,7 +464,7 @@
                         <div class="col-md-4">
                             <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
                                 @*<img id="img_PrimaryLogo" height="60px" src="CompanyDetails.PrimaryLogoPath" />*@
-                                <img id="img_PrimaryLogo" height="60px" src=""  />
+                                <img id="img_PrimaryLogo" height="60px" src="" />
                             </a>
 
 
@@ -508,7 +512,7 @@
                     <div class="form-group row">
                         @*  <label class="col-form-label col-md-2">Home Page Message</label>
                     <div class="col-md-4">
-                        <textarea id="txt_HomePageMessage" class="form-control"></textarea>
+                    <textarea id="txt_HomePageMessage" class="form-control"></textarea>
                     </div>*@
                         <label class="col-form-label col-md-2">Email Message</label>
                         <div class="col-md-4">
@@ -571,77 +575,77 @@
                             <button class="btn btn-success" id="btn_CompanySave">Save</button>
                         </div>
 
-                </div>
-            </form>
-        </div>
-        <div class="tab-pane fade py-3" id="c4ihr" role="tabpanel" aria-labelledby="c4ihr-tab" @hideTabStyle>
-            <ul class="nav nav-tabs" id="guardSettingsTab" role="tablist">
-                <li class="nav-item">
-                    <a class="nav-link active" id="guard_tab" data-toggle="tab" href="#guard" role="tab" aria-controls="guard" aria-selected="true">HR</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="kvl-fields-tab" data-toggle="tab" href="#hrSettings" role="tab" aria-controls="hrSettings" aria-selected="false">HR Settings</a>
-                </li>
-            </ul>
-            <div class="tab-content" id="guardSettingsTabContent">
-                <div class="tab-pane fade show active py-3" id="guard" role="tabpanel" aria-labelledby="guard-tab">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="form-group row">
-                                <div class="col-md-2 offset-md-10 text-right">
-                                    <button class="btn btn-success mb-3" id="btn_add_guard_top"><i class="fa fa-plus mr-2"></i>Add Guard</button>
+                    </div>
+                </form>
+            </div>
+            <div class="tab-pane fade py-3" id="c4ihr" role="tabpanel" aria-labelledby="c4ihr-tab" @hideTabStyle>
+                <ul class="nav nav-tabs" id="guardSettingsTab" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="guard_tab" data-toggle="tab" href="#guard" role="tab" aria-controls="guard" aria-selected="true">HR</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="kvl-fields-tab" data-toggle="tab" href="#hrSettings" role="tab" aria-controls="hrSettings" aria-selected="false">HR Settings</a>
+                    </li>
+                </ul>
+                <div class="tab-content" id="guardSettingsTabContent">
+                    <div class="tab-pane fade show active py-3" id="guard" role="tabpanel" aria-labelledby="guard-tab">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group row">
+                                    <div class="col-md-2 offset-md-10 text-right">
+                                        <button class="btn btn-success mb-3" id="btn_add_guard_top"><i class="fa fa-plus mr-2"></i>Add Guard</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <table id="guard_settings" class="table table-bordered" style="width:100%">
-                                <thead>
-                                    <tr>
-                                        <th></th>
-                                        <th>Name</th>
-                                        <th>License No</th>
-                                        <th>Initial</th>
-                                        <th>State</th>
-                                        <th>CRM (Supplier)</th>
-                                        <th>Sites</th>
-                                        <th>Active</th>
-                                        <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
-                                    </tr>
-                                </thead>
-                            </table>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <table id="guard_settings" class="table table-bordered" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Name</th>
+                                            <th>License No</th>
+                                            <th>Initial</th>
+                                            <th>State</th>
+                                            <th>CRM (Supplier)</th>
+                                            <th>Sites</th>
+                                            <th>Active</th>
+                                            <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 mt-2 text-left">
+                                <button class="btn btn-success mb-3" id="btn_add_guard_bottom"><i class="fa fa-plus mr-2"></i>Add Guard</button>
+                            </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-12 mt-2 text-left">
-                            <button class="btn btn-success mb-3" id="btn_add_guard_bottom"><i class="fa fa-plus mr-2"></i>Add Guard</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="tab-pane fade py-3" id="hrSettings" role="tabpanel" aria-labelledby="hr-settings-tab">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="form-group row">
-                                <label class="col-form-label col-md-2">Select a Field Type</label>
-                                <div class="col-md-5">
-                                    <select class="form-control" id="hr_settings_fields_types" asp-items="@Html.GetEnumSelectList<HrSettingsType>()">
-                                        <option value="">None</option>
-                                    </select>
+                    <div class="tab-pane fade py-3" id="hrSettings" role="tabpanel" aria-labelledby="hr-settings-tab">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group row">
+                                    <label class="col-form-label col-md-2">Select a Field Type</label>
+                                    <div class="col-md-5">
+                                        <select class="form-control" id="hr_settings_fields_types" asp-items="@Html.GetEnumSelectList<HrSettingsType>()">
+                                            <option value="">None</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="text-right">
-                                <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
-                                <button class="btn btn-success mb-3" id="add_criticalDocuments" style="display:none"><i class="fa fa-plus mr-2"></i>Add Critical Documents</button>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="text-right">
+                                    <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                                    <button class="btn btn-success mb-3" id="add_criticalDocuments" style="display:none"><i class="fa fa-plus mr-2"></i>Add Critical Documents</button>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-md-12">
-                            <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings">
-                                @*<thead>
+                            <div class="col-md-12">
+                                <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings">
+                                    @*<thead>
                                 <tr>
                                 <th rowspan="2" style="display:none"></th>
                                 <th rowspan="2">HR Group</th>
@@ -662,27 +666,27 @@
                                 </tr>
 
                                 </thead>*@
-                            </table>
-                            <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
-                            <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
+                                </table>
+                                <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
+                                <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
 
+                            </div>
                         </div>
                     </div>
-                </div>
 
                 </div>
             </div>
             <div class="tab-pane fade py-3" id="uca" role="tabpanel" aria-labelledby="uca-tab" @hideTabStyle>
                 <div class="row">
-                <div class="col-md-12 justify-content-center">
-                    <table class="table" id="user_client_access"></table>
+                    <div class="col-md-12 justify-content-center">
+                        <table class="table" id="user_client_access"></table>
+                    </div>
                 </div>
-            </div>
             </div>
         }
         else
         {
-            <div class="tab-pane fade show active py-3" id="c4ihr" role="tabpanel" aria-labelledby="c4ihr-tab" >
+            <div class="tab-pane fade show active py-3" id="c4ihr" role="tabpanel" aria-labelledby="c4ihr-tab">
                 <ul class="nav nav-tabs" id="guardSettingsTab" role="tablist">
                     <li class="nav-item">
                         <a class="nav-link active" id="guard_tab" data-toggle="tab" href="#guard" role="tab" aria-controls="guard" aria-selected="true">HR</a>
@@ -842,7 +846,7 @@
                                     }
                                 </select>
 
-                                
+
                             </div>
                             <div class="pt-2">
                                 <label class="mx-1" for="dglClientSiteId">Client Site</label>
@@ -903,7 +907,7 @@
                                 <label class="col-md-2 form-check-label">Access</label>
                                 <div class="col-md-3">
                                     <select class="form-control" multiple="multiple" id="Guard_Access" name="Guard.GuardAccess">
-                                        @if (@Model.IsAdminminOrPoweruser != "IsAdminPowerUser")
+                                        @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal)
                                         {
                                             @foreach (var AccessType in viewDataServiceNew.GetAccessTypes(true))
                                             {
@@ -932,7 +936,7 @@
                                 </div>
                                 <label class="col-md-2 col-form-label text-right">CRM (Supplier)</label>
                                 <div class="col-md-3">
-                                   @*  <input type="text" class="form-control" id="Guard_Provider" name="Guard.Provider"> *@
+                                    @*  <input type="text" class="form-control" id="Guard_Provider" name="Guard.Provider"> *@
                                     <select id="Guard_Provider" name="Guard.Provider" asp-items="@Model.ViewDataService.ProviderList" class="form-control"></select>
                                 </div>
                             </div>
@@ -964,10 +968,10 @@
                                 <a class="nav-link active" id="licensesAndCombliance-tab" data-toggle="tab" href="#guardLicensesandCompliance" role="tab" aria-controls="guardLicenses" aria-selected="true">Compliances</a>
                             </li>
                             @* <li class="nav-item">
-                                <a class="nav-link active" id="licenses-tab" data-toggle="tab" href="#guardLicenses" role="tab" aria-controls="guardLicenses" aria-selected="true">Licenses</a>
+                            <a class="nav-link active" id="licenses-tab" data-toggle="tab" href="#guardLicenses" role="tab" aria-controls="guardLicenses" aria-selected="true">Licenses</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" id="compliances-tab" data-toggle="tab" href="#guardCompliances" role="tab" aria-controls="guardCompliances" aria-selected="false">Compliances</a>
+                            <a class="nav-link" id="compliances-tab" data-toggle="tab" href="#guardCompliances" role="tab" aria-controls="guardCompliances" aria-selected="false">Compliances</a>
                             </li> *@
                         </ul>
                         <div class="tab-content" id="guardDataTabContent">
@@ -993,54 +997,54 @@
                                     </div>
                                 </div>
                             </div>
-                         @*    <div class="tab-pane fade show active py-3" id="guardLicenses" role="tabpanel" aria-labelledby="licenses_tab">
-                                <div class="form-row mb-2 btn-add-guard-addl-details">
-                                    <div class="col-md-2 offset-md-10 text-right">
-                                        <button class="btn btn-success" id="btnAddGuardLicense"><i class="fa fa-plus mr-2"></i>Add License</button>
-                                    </div>
-                                </div>
-                                <div class="form-row">
-                                    <div class="col-md-12">
-                                        <table id="tbl_guard_licenses" class="table table-bordered table-sm" width="100%">
-                                            <thead>
-                                                <tr>
-                                                    <th>License No</th>
-                                                    <th>Type</th>
-                                                    <th>Expiry Date</th>
-                                                    <th>Reminder 1</th>
-                                                    <th>Reminder 2</th>
-                                                    <th>File</th>
-                                                    <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
-                                                </tr>
-                                            </thead>
-                                        </table>
-                                    </div>
-                                </div>
+                            @*    <div class="tab-pane fade show active py-3" id="guardLicenses" role="tabpanel" aria-labelledby="licenses_tab">
+                            <div class="form-row mb-2 btn-add-guard-addl-details">
+                            <div class="col-md-2 offset-md-10 text-right">
+                            <button class="btn btn-success" id="btnAddGuardLicense"><i class="fa fa-plus mr-2"></i>Add License</button>
+                            </div>
+                            </div>
+                            <div class="form-row">
+                            <div class="col-md-12">
+                            <table id="tbl_guard_licenses" class="table table-bordered table-sm" width="100%">
+                            <thead>
+                            <tr>
+                            <th>License No</th>
+                            <th>Type</th>
+                            <th>Expiry Date</th>
+                            <th>Reminder 1</th>
+                            <th>Reminder 2</th>
+                            <th>File</th>
+                            <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                            </tr>
+                            </thead>
+                            </table>
+                            </div>
+                            </div>
                             </div>
                             <div class="tab-pane fade py-3" id="guardCompliances" role="tabpanel" aria-labelledby="compliances-tab">
-                                <div class="form-row mb-2 btn-add-guard-addl-details">
-                                    <div class="col-md-2 offset-md-10 text-right">
-                                        <button class="btn btn-success" id="btnAddGuardCompliance"><i class="fa fa-plus mr-2"></i>Add Compliance</button>
-                                    </div>
-                                </div>
-                                <div class="form-row">
-                                    <div class="col-md-12">
-                                        <table id="tbl_guard_compliances" class="table table-bordered table-sm" width="100%">
-                                            <thead>
-                                                <tr>
-                                                    <th>Reference No</th>
-                                                    <th>HR Group</th>
-                                                    <th>Description</th>
-                                                    <th>Expiry Date</th>
-                                                    <th>Reminder 1</th>
-                                                    <th>Reminder 2</th>
-                                                    <th>File</th>
-                                                    <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
-                                                </tr>
-                                            </thead>
-                                        </table>
-                                    </div>
-                                </div>
+                            <div class="form-row mb-2 btn-add-guard-addl-details">
+                            <div class="col-md-2 offset-md-10 text-right">
+                            <button class="btn btn-success" id="btnAddGuardCompliance"><i class="fa fa-plus mr-2"></i>Add Compliance</button>
+                            </div>
+                            </div>
+                            <div class="form-row">
+                            <div class="col-md-12">
+                            <table id="tbl_guard_compliances" class="table table-bordered table-sm" width="100%">
+                            <thead>
+                            <tr>
+                            <th>Reference No</th>
+                            <th>HR Group</th>
+                            <th>Description</th>
+                            <th>Expiry Date</th>
+                            <th>Reminder 1</th>
+                            <th>Reminder 2</th>
+                            <th>File</th>
+                            <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                            </tr>
+                            </thead>
+                            </table>
+                            </div>
+                            </div>
                             </div> *@
                         </div>
                     </div>

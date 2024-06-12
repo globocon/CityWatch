@@ -52,8 +52,11 @@ namespace CityWatch.RadioCheck.Pages.Radio
         public int ActiveGuardCount { get; set; }
 
         public string SignalRConnectionUrl { get; set; }
-        public IActionResult OnGet()
+
+        public string DisplayItem { get; set; }
+        public IActionResult OnGet(string displayItem)
         {
+            DisplayItem = displayItem;
 
             var activeGuardDetails = _guardLogDataProvider.GetActiveGuardDetails();
             ActiveGuardCount = activeGuardDetails.Count();

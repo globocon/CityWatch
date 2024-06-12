@@ -39,7 +39,8 @@ namespace CityWatch.Web.Pages.Admin
 
         public ActionResult OnGet()
         {
-            if (!AuthUserHelper.IsAdminUserLoggedIn)
+            /* Normal admin,PowerAdmin and AdminGlobal can access this page */
+            if (!AuthUserHelper.IsAdminUserLoggedIn && !AuthUserHelper.IsAdminGlobal && !AuthUserHelper.IsAdminPowerUser)
                 return Redirect(Url.Page("/Account/Unauthorized"));
 
             return Page();
@@ -82,7 +83,7 @@ namespace CityWatch.Web.Pages.Admin
             }
         */
 
-        public JsonResult OnPostDownloadDailyGuardLogZip(int clientSiteId, DateTime logFromDate, DateTime logToDate)
+            public JsonResult OnPostDownloadDailyGuardLogZip(int clientSiteId, DateTime logFromDate, DateTime logToDate)
         {
             var success = true;
             var message = string.Empty;

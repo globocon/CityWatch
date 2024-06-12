@@ -4,9 +4,11 @@
 @model CityWatch.RadioCheck.Pages.Radio.RadioCheckNewModel
 @inject IConfigDataProvider configDataProvider
 @{
+   
     ViewData["Title"] = "Radio Check";
     ViewData["PageName"] = "Radio Check";
     Layout = "_Layout_InnerPage";
+    ViewData["DisplayItem"] = Model.DisplayItem;
 }
 
 @using CityWatch.Data.Helpers;
