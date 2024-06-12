@@ -91,19 +91,18 @@
                         <a href="https://www.cws-ir.com/" class="nav-link py-0"><i class="fa fa-home mr-2"></i>Home Page</a>
 
                     </div>
-                    @if (User.Identity.IsAuthenticated)
-                    {
+                 @*   @if (User.Identity.IsAuthenticated || AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal)
+                    {*@
                         <div>
                             <a href="@Url.Page("/Admin/Settings")" class="nav-link py-0"><i class="fa fa-cog mr-2"></i>Settings</a>
                         </div>
 
-                    }
+                 @*   }*@
                     <div>
-                        @if (ViewData["DisplayItem"]?.ToString() == "true")
-                        {
-                            <a href="@Url.Page("/GuardDetails")" class="nav-link py-0"><i class="fa fa-user mr-2"></i>Guard Details</a>
 
-                        }
+                        <a href="@Url.Page("/GuardDetails")" class="nav-link py-0"><i class="fa fa-user mr-2"></i>Guard Details</a>
+
+
 
                     </div>
 
