@@ -23,6 +23,7 @@ using static Dropbox.Api.TeamLog.EventCategory;
 using MailKit.Net.Smtp;
 using CityWatch.Kpi.Models;
 using CityWatch.RadioCheck.Services;
+using CityWatch.RadioCheck.Helpers;
 using System.ComponentModel.DataAnnotations;
 
 namespace CityWatch.RadioCheck.Pages.Admin
@@ -34,12 +35,14 @@ namespace CityWatch.RadioCheck.Pages.Admin
         public readonly IConfigDataProvider _configDataProvider;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IViewDataService _viewDataService;
+        private readonly IGuardDataProvider _guardDataProvider;
 
-      
+
         public SettingsModel(IWebHostEnvironment webHostEnvironment,
             IClientDataProvider clientDataProvider,
             IConfigDataProvider configDataProvider,
             IViewDataService viewDataService
+            , IGuardDataProvider guardDataProvider
             //,
             //IUserDataProvider userDataProvider
             )
@@ -49,6 +52,7 @@ namespace CityWatch.RadioCheck.Pages.Admin
             _viewDataService = viewDataService;
             //_userDataProvider = userDataProvider;
             _webHostEnvironment = webHostEnvironment;
+            _guardDataProvider = guardDataProvider;
         }
 
 
@@ -73,6 +77,29 @@ namespace CityWatch.RadioCheck.Pages.Admin
 
         public IActionResult OnGet()
         {
+
+            GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            var guard = _guardDataProvider.GetGuards().SingleOrDefault(z => z.Id == GuardId);
+
+            if (guard != null)
+            {
+                if (guard.IsAdminPowerUser)
+                {
+                    AuthUserHelper.IsAdminPowerUser = true;
+                }
+                else
+                {
+                    AuthUserHelper.IsAdminPowerUser = false;
+                }
+                if (guard.IsAdminGlobal)
+                {
+                    AuthUserHelper.IsAdminGlobal = true;
+                }
+                else
+                {
+                    AuthUserHelper.IsAdminGlobal = false;
+                }
+            }
             //if (!AuthUserHelper.IsAdminUserLoggedIn)
             //    return Redirect(Url.Page("/Account/Unauthorized"));
 

@@ -20,6 +20,7 @@ using static iText.Kernel.Pdf.Function.PdfFunction;
 using Dropbox.Api.Users;
 using Microsoft.AspNetCore.Hosting;
 using CityWatch.RadioCheck.Helpers;
+
 using iText.Kernel.Crypto.Securityhandler;
 
 namespace CityWatch.RadioCheck.Pages.Radio
@@ -32,8 +33,9 @@ namespace CityWatch.RadioCheck.Pages.Radio
         private readonly ISmsSenderProvider _smsSenderProvider;
         private readonly IClientDataProvider _clientDataProvider;
         private readonly Settings _settings;
+        private readonly IGuardDataProvider _guardDataProvider;
         public RadioCheckNewModel(IGuardLogDataProvider guardLogDataProvider, IOptions<EmailOptions> emailOptions,
-            IConfiguration configuration, ISmsSenderProvider smsSenderProvider, IClientDataProvider clientDataProvider,
+            IConfiguration configuration, ISmsSenderProvider smsSenderProvider, IClientDataProvider clientDataProvider, IGuardDataProvider guardDataProvider,
             IOptions<Settings> settings)
         {
             _guardLogDataProvider = guardLogDataProvider;
@@ -42,6 +44,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
             _smsSenderProvider = smsSenderProvider;
             _clientDataProvider = clientDataProvider;
             _settings = settings.Value;
+            _guardDataProvider = guardDataProvider;
         }
         public int UserId { get; set; }
         public int GuardId { get; set; }
@@ -94,16 +97,41 @@ namespace CityWatch.RadioCheck.Pages.Radio
 
             if (!string.IsNullOrEmpty(securityLicenseNo) && !string.IsNullOrEmpty(loginUserId) && !string.IsNullOrEmpty(LoginGuardId))
             {
-
+                AuthUserHelper.IsAdminUserLoggedIn = false;
                 UserId = int.Parse(loginUserId);
                 GuardId = int.Parse(LoginGuardId);
                 HttpContext.Session.SetInt32("GuardId", GuardId);
+                var guard = _guardDataProvider.GetGuards().SingleOrDefault(z => z.Id == GuardId);
+
+                if (guard != null)
+                {
+                    if (guard.IsAdminPowerUser)
+                    {
+                        AuthUserHelper.IsAdminPowerUser = true;
+                    }
+                    else
+                    {
+                        AuthUserHelper.IsAdminPowerUser = false;
+                    }
+                    if (guard.IsAdminGlobal)
+                    {
+                        AuthUserHelper.IsAdminGlobal = true;
+                    }
+                    else
+                    {
+                        AuthUserHelper.IsAdminGlobal = false;
+                    }
+                }
+
+
                 return Page();
             }
             // Check if the user is authenticated(Normal Admin Login)
             if (claimsIdentity != null && claimsIdentity.IsAuthenticated)
             {   /*Old Code for admin only*/
-
+                AuthUserHelper.IsAdminUserLoggedIn = true;
+                AuthUserHelper.IsAdminPowerUser = false;
+                AuthUserHelper.IsAdminGlobal = false;
                 HttpContext.Session.SetInt32("GuardId", 0);
                 return Page();
             }
@@ -230,7 +258,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     RadioCheckStatusId = statusId,
                 }, tmzdata, loginguardid);
 
-               
+
                 _guardLogDataProvider.LogBookEntryFromRcControlRoomMessages(loginguardid, guardId, null, checkedStatus, IrEntryType.Notification, 2, clientSiteId, tmzdata);
             }
             catch (Exception ex)
@@ -1540,7 +1568,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
         {
             var clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
             clientSiteKpiSetting ??= new ClientSiteKpiSetting() { ClientSiteId = siteId };
-            if(clientSiteKpiSetting.rclistKP.ClientSiteID==0)
+            if (clientSiteKpiSetting.rclistKP.ClientSiteID == 0)
             {
                 clientSiteKpiSetting.rclistKP.ClientSiteID = siteId;
 
