@@ -37,13 +37,13 @@
         }
 
     }
-   
-        
 
-    };
 
-    
-}
+    var companydetail = viewDataService.GetCompanyDetails().SingleOrDefault(x => x.Id == 1);
+};
+
+
+@* } *@
 <div>
     <input type="hidden" id="hdnIsAdminLoggedIn" value="@AuthUserHelper.IsAdminUserLoggedIn.ToString()" />
     <input type="hidden" id="txt_IsAdminPowerUser" value="@Model.IsAdminminOrPoweruser" />
@@ -600,7 +600,7 @@
                                 <div class="form-group row">
 
                                     <div class="col-md-1 offset-md-9 px-0 text-left">
-                                        <input type="checkbox" class="form-check-input" id="chkbxfilterGuardActive" >
+                                        <input type="checkbox" class="form-check-input" id="chkbxfilterGuardActive">
                                         <label class="font-weight-normal" for="chkbxfilterGuardActive">Active</label>
                                         <br />
                                         <input type="checkbox" class="form-check-input" id="chkbxfilterGuardInActive">
@@ -610,8 +610,8 @@
                                         <button class="btn btn-success mb-3" id="btn_add_guard_top"><i class="fa fa-plus mr-2"></i>Add Guard</button>
                                     </div>
                                     @*  <div class="col-md-2 text-right">
-                                        <button class="btn btn-success mb-3" id="btn_refresh_guard_top"><i class="fa fa-refresh mr-2"></i>Refresh</button>
-                                    </div> *@
+                                <button class="btn btn-success mb-3" id="btn_refresh_guard_top"><i class="fa fa-refresh mr-2"></i>Refresh</button>
+                                </div> *@
 
                                 </div>
                             </div>

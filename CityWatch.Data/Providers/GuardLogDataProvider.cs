@@ -541,8 +541,8 @@ namespace CityWatch.Data.Providers
 
                     PlayNotificationSound = guardLog.PlayNotificationSound,
                     GpsCoordinates = guardLog.GpsCoordinates,
-                    IsIRReportTypeEntry = guardLog.IsIRReportTypeEntry
-
+                    IsIRReportTypeEntry = guardLog.IsIRReportTypeEntry,
+                    RcLogbookStamp = guardLog.RcLogbookStamp 
 
                 });
             }
