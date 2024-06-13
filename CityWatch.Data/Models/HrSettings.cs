@@ -12,6 +12,11 @@ namespace CityWatch.Data.Models
         [Display(Name = "Critical Documents")]
         CriticalDocuments = 3,
     }
+    public enum HrCriticalType
+    {
+        [Display(Name = "Critical Documents")]
+        CriticalDocuments = 1,
+    }
     public class HRGroups
     {
         [Key]

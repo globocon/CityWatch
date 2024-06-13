@@ -1320,7 +1320,7 @@ namespace CityWatch.Web.Pages.Admin
                 return true;
 
             var fileToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards","License", guardComplianceandlicense.LicenseNo, guardComplianceandlicense.FileName);
-            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.LicenseNo}/{guardComplianceandlicense.FileName}");
+            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.FileName}");
             return UpoadDocumentToDropbox(fileToUpload, dbxFilePath);
         }
         private bool UploadGuardComplianceandLicenseToDropboxNew(GuardComplianceAndLicense guardComplianceandlicense)
@@ -1333,7 +1333,7 @@ namespace CityWatch.Web.Pages.Admin
 
 
             var fileToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards", "License", guardComplianceandlicense.LicenseNo, guardComplianceandlicense.FileName);
-            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.LicenseNo}/{guardComplianceandlicense.FileName}");
+            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.FileName}");
             return UpoadDocumentToDropbox(fileToUpload, dbxFilePath);
         }
         private bool UpoadDocumentToDropbox(string fileToUpload, string dbxFilePath)

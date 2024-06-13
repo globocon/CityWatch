@@ -19,6 +19,7 @@ using Microsoft.Data.SqlClient;
 using System.Net.NetworkInformation;
 using CityWatch.Common.Helpers;
 using Microsoft.VisualBasic;
+using CityWatch.Data.Helpers;
 
 namespace CityWatch.Kpi.Pages.Admin
 {
@@ -36,6 +37,8 @@ namespace CityWatch.Kpi.Pages.Admin
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly IGuardSettingsDataProvider _guardSettingsDataProvider;
         private readonly IGuardDataProvider _guardDataProvider;
+        public readonly IConfigDataProvider _configDataProvider;
+
 
         [BindProperty]
         public KpiRequest ReportRequest { get; set; }
@@ -55,7 +58,8 @@ namespace CityWatch.Kpi.Pages.Admin
             IClientSiteWandDataProvider clientSiteWandDataProvider,
              IGuardLogDataProvider guardLogDataProvider,
              IGuardSettingsDataProvider guardSettingsDataProvider,
-             IGuardDataProvider guardDataProvider)
+             IGuardDataProvider guardDataProvider,
+             IConfigDataProvider configDataProvider)
         {
             _webHostEnvironment = webHostEnvironment;
             _viewDataService = viewDataService;
@@ -69,6 +73,7 @@ namespace CityWatch.Kpi.Pages.Admin
             _guardLogDataProvider = guardLogDataProvider;
             _guardSettingsDataProvider = guardSettingsDataProvider;
             _guardDataProvider = guardDataProvider;
+            _configDataProvider = configDataProvider;
         }
 
         public IActionResult OnGet()
@@ -1107,7 +1112,11 @@ namespace CityWatch.Kpi.Pages.Admin
 
             return new JsonResult(new { status = Email, message = message });
         }
-
+        public JsonResult OnGetClientTypes(int? page, int? limit)
+        {
+            return new JsonResult(_viewDataService.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId));
+        }
+        
     }
 
 }

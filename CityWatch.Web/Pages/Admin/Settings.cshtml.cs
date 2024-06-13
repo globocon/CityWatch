@@ -1161,8 +1161,8 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(_clientDataProvider.GetClientSitesWithTypeId(idsn).OrderBy(z => z.Name));
         }
         //p1 - 202 site allocation-end
-
         //p1-213 Critical documents start
+        
         public IActionResult OnGetClientSitesDoc(string type)
         {
             int GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
@@ -1212,7 +1212,7 @@ namespace CityWatch.Web.Pages.Admin
                     .Select(z => CriticalDocumentViewModel.FromDataModel(z));
                 return new JsonResult(_configDataProvider.GetCriticalDocs()
                     .Select(z => CriticalDocumentViewModel.FromDataModel(z)));
-                   
+
 
             }
             else
@@ -1256,5 +1256,6 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { status, message });
         }
         //p1-213 Critical documents stop
+
     }
 }

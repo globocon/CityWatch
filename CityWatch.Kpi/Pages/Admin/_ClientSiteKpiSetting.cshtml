@@ -1,6 +1,14 @@
 ﻿@using CityWatch.Kpi.Services
+@using CityWatch.Data.Helpers
+@using CityWatch.Data.Models
+@using CityWatch.Data.Providers;
+@using Microsoft.Extensions.Configuration
+@using System.Security.Claims
 @model CityWatch.Data.Models.ClientSiteKpiSetting
 @inject IViewDataService ViewDataService;
+@inject IConfiguration Configuration;
+@inject IViewDataService viewDataServiceNew
+@inject IClientDataProvider clientDataProvider
 @{
     var rowTitle = new string[6] { "", "Daily Employee Hours", "Patrol Frequency", "No Of Patrols", "Image Target", "Wand Scans Target" };
     var rowTitleManningGuard = new string[4] { "", "Start", "End", "Workers" };
@@ -891,8 +899,7 @@
                     </div>
                 </div>
                 <div class="tab-pane" id="HRCompliance" role="tabpanel" aria-labelledby="hr-compliance-tab">
-                    <div class="container pt-3">
-                    </div>
+                   
                 </div>
                 </div>
             </div>
@@ -1065,3 +1072,4 @@
     </div>
 </div>
 <partial name="_KeySiteSettingsPopup" />
+<partial name="_CriticaldocumentPopup" />

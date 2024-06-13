@@ -188,7 +188,7 @@ namespace CityWatch.Data.Providers
 
         public bool CheckAlreadyExistTheGroupName(RCLinkedDuressMaster linkedDuress, bool updateClientSites = false);
         List<HRGroups> GetHRGroups();
-
+        List<UserClientSiteAccess> GetUserClientSiteAccess(int? userId);
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -225,6 +225,7 @@ namespace CityWatch.Data.Providers
         {
             return _context.ClientTypes.Where(x => x.IsActive == true).OrderBy(x => x.Name).ToList();
         }
+
         //code added to PSPF Dropdown start
         public List<IncidentReportPSPF> GetPSPF()
         {
@@ -2025,6 +2026,15 @@ namespace CityWatch.Data.Providers
         public List<HRGroups> GetHRGroups()
         {
             return _context.HRGroups.ToList();
+        }
+        public List<UserClientSiteAccess> GetUserClientSiteAccess(int? userId)
+        {
+            return _context.UserClientSiteAccess
+                .Where(x => (!userId.HasValue || userId.HasValue && x.UserId == userId) && x.ClientSite.IsActive == true)
+                .Include(x => x.ClientSite)
+                .Include(x => x.ClientSite.ClientType)
+                .Include(x => x.User)
+                .ToList();
         }
 
     }
