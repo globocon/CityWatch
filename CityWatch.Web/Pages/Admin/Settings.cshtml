@@ -40,7 +40,7 @@
 
 
     var companydetail = viewDataService.GetCompanyDetails().SingleOrDefault(x => x.Id == 1);
-};
+}
 
 
 @* } *@
@@ -718,7 +718,14 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group row">
-                                    <div class="col-md-2 offset-md-10 text-right">
+                                    <div class="col-md-1 offset-md-9 px-0 text-left">
+                                        <input type="checkbox" class="form-check-input" id="chkbxfilterGuardActive">
+                                        <label class="font-weight-normal" for="chkbxfilterGuardActive">Active</label>
+                                        <br />
+                                        <input type="checkbox" class="form-check-input" id="chkbxfilterGuardInActive">
+                                        <label class="font-weight-normal" for="chkbxfilterGuardInActive">Non-Active</label>
+                                    </div>
+                                    <div class="col-md-2 text-right">
                                         <button class="btn btn-success mb-3" id="btn_add_guard_top"><i class="fa fa-plus mr-2"></i>Add Guard</button>
                                     </div>
                                 </div>
