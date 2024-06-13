@@ -37,5 +37,6 @@ namespace CityWatch.Data.Models
         public string ClientTypeIds { get; set; }
         [NotMapped]
         public string clientTypes { get; set; }
+        public bool? StampRcLogbook { get; set; }
     }
 }

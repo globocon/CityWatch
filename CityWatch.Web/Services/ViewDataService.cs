@@ -1116,7 +1116,9 @@ namespace CityWatch.Web.Services
                                 {
                                     ClientSiteId = linkedSite.ClientSiteId,
                                     LogBookId = logBookIdLinked,
-                                    Notes = "Duress Alarm[Linked] Activated By " + GuradName + " From " + ClientsiteDetails.Name,
+                                    //Notes = "Duress Alarm[Linked] Activated By " + GuradName + " From " + ClientsiteDetails.Name,
+                                    Notes = "Duress Alarm[Linked] Activated By " + GuradName + " From " + clientSiteName,
+                                    
                                     EntryType = (int)IrEntryType.Alarm,
                                     Date = logBook_Date.Value,
                                     IsAcknowledged = 0,
@@ -1128,7 +1130,8 @@ namespace CityWatch.Web.Services
 
                                 _guardLogDataProvider.SaveGuardLog(new GuardLog()
                                 {
-                                    Notes = "Duress Alarm[linked] Activated By " + GuradName + " From " + ClientsiteDetails.Name,
+                                    //Notes = "Duress Alarm[linked] Activated By " + GuradName + " From " + ClientsiteDetails.Name,
+                                    Notes = "Duress Alarm[Linked] Activated By " + GuradName + " From " + clientSiteName,
                                     IsSystemEntry = true,
                                     IrEntryType = Data.Enums.IrEntryType.Alarm,
                                     EventDateTime = DateTime.Now,

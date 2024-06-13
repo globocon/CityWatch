@@ -277,6 +277,8 @@ namespace CityWatch.Data.Providers
 
         public List<RCLinkedDuressClientSites> getallClientSitesLinkedDuress(int siteId);
 
+        bool IsRClogbookStampRequired(string StampName);
+
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -539,8 +541,8 @@ namespace CityWatch.Data.Providers
 
                     PlayNotificationSound = guardLog.PlayNotificationSound,
                     GpsCoordinates = guardLog.GpsCoordinates,
-                    IsIRReportTypeEntry = guardLog.IsIRReportTypeEntry
-
+                    IsIRReportTypeEntry = guardLog.IsIRReportTypeEntry,
+                    RcLogbookStamp = guardLog.RcLogbookStamp 
 
                 });
             }
@@ -3156,7 +3158,7 @@ namespace CityWatch.Data.Providers
                                         {
 
 
-                                            LogBookEntryFromRcControlRoomMessages(0, clientSiteRadioCheck.GuardId, null, clientSiteRadioCheck.Status, IrEntryType.Notification, 2, linkedSite.ClientSiteId, tmzdata);
+                                            LogBookEntryFromRcControlRoomMessages(0, clientSiteRadioCheck.GuardId, null, clientSiteRadioCheck.Status, IrEntryType.Notification, 2, clientSiteRadioCheck.ClientSiteId, tmzdata);
 
                                             var DuressEnabledUpdateLinked = _context.ClientSiteDuress.Where(z => z.ClientSiteId == linkedSite.ClientSiteId && z.LinkedDuressParentSiteId == clientSiteRadioCheck.ClientSiteId && z.IsLinkedDuressParentSite == 0);
                                             //DuressEnabledUpdate.IsEnabled = false;
@@ -4623,6 +4625,18 @@ namespace CityWatch.Data.Providers
                 linkedSitesList = alllinkedSites;
             }
             return linkedSitesList;
+        }
+
+        public bool IsRClogbookStampRequired(string StampedByName)
+        {
+            bool Req = false;
+            if (!string.IsNullOrEmpty(StampedByName))
+            {
+                var RecExists = _context.IncidentReportFields.Where(x => x.TypeId == ReportFieldType.NotifiedBy && x.Name.Equals(StampedByName)).FirstOrDefault();
+                if (RecExists.StampRcLogbook == true)
+                    Req = true;
+            }            
+            return Req;
         }
 
     }

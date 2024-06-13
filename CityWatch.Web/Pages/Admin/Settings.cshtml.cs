@@ -70,34 +70,17 @@ namespace CityWatch.Web.Pages.Admin
 
         public IActionResult OnGet()
         {
-            if (!AuthUserHelper.IsAdminUserLoggedIn)
+            if (!AuthUserHelper.IsAdminUserLoggedIn && !AuthUserHelper.IsAdminGlobal && !AuthUserHelper.IsAdminPowerUser)
             {
-                if (HttpContext.Session.GetString("GuardId") != null)
-                {
-                    var guardList = _viewDataService.GetGuards().Where(x => x.Id == Convert.ToInt32(HttpContext.Session.GetString("GuardId")));
-                    foreach (var item in guardList)
-                    {
-                       if(item.IsAdminPowerUser || item.IsAdminGlobal)
-                        {
-                            ReportTemplate = _configDataProvider.GetReportTemplate();
-                            if (item.IsAdminPowerUser)
-                                IsAdminminOrPoweruser = "IsAdminPowerUser";
-                            else
-                                IsAdminminOrPoweruser = "IsAdminGlobal";
-                            return Page();
-                        }
-                       else
-                        {
-                            return Redirect(Url.Page("/Account/Unauthorized"));
-                        }
-                    }
-
-                }
+                return Redirect(Url.Page("/Account/Unauthorized"));
             }
-            //return Redirect(Url.Page("/Account/Unauthorized"));
-            IsAdminminOrPoweruser = "IsAdminGlobal";
-            ReportTemplate = _configDataProvider.GetReportTemplate();
-            return Page();
+            else
+            {
+
+                ReportTemplate = _configDataProvider.GetReportTemplate();
+                return Page();
+
+            }
         }
 
         public JsonResult OnGetClientTypes(int? page, int? limit)

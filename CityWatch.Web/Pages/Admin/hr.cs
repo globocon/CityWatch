@@ -299,17 +299,17 @@ namespace CityWatch.Web.Pages.Admin
         //To Get the Last Login Date 
         public IActionResult OnGetLastTimeLogin(int guardId)
         {
-            
+
             return new JsonResult(_guardLogDataProvider.GetLastLoginNew(guardId));
         }
-        
+
         public JsonResult OnPostGuards(Data.Models.Guard guard, string ClientSiteIds)
         {
             if (guard.GuardAccess != null)
             {
                 foreach (var item in guard.GuardAccess)
                 {
-                    
+
                     int val = Convert.ToInt32(item);
                     if (val == 1)
                     {
@@ -332,9 +332,9 @@ namespace CityWatch.Web.Pages.Admin
                     {
                         guard.IsAdminPowerUser = true;
                     }
-                    else if(val==6)
-                    { 
-                        guard.IsAdminGlobal = true; 
+                    else if (val == 6)
+                    {
+                        guard.IsAdminGlobal = true;
                     }
                 }
             }
@@ -637,14 +637,14 @@ namespace CityWatch.Web.Pages.Admin
 
             try
             {
-               
+
                 dbxUploaded = UploadGuardLicenseToDropbox(guardLicense);
-                if (guardLicense.LicenseType==null && guardLicense.Id!=null && guardLicense.LicenseTypeName!=null)
+                if (guardLicense.LicenseType == null && guardLicense.Id != null && guardLicense.LicenseTypeName != null)
                 {
                     //int intValueToCompare = -1;
-                    int intValueToCompare=0;
+                    int intValueToCompare = 0;
                     var licensetypeCount = _guardDataProvider.GetLicenseTypes().Where(x => x.Name == guardLicense.LicenseTypeName);
-                    if(licensetypeCount.Count()>0)
+                    if (licensetypeCount.Count() > 0)
                     {
                         intValueToCompare = _guardDataProvider.GetLicenseTypes().Where(x => x.Name == guardLicense.LicenseTypeName).FirstOrDefault().Id;
                     }
@@ -656,7 +656,7 @@ namespace CityWatch.Web.Pages.Admin
                     guardLicense.LicenseTypeName = guardLicense.LicenseTypeName;
 
                 }
-                else if(guardLicense.LicenseType == null)
+                else if (guardLicense.LicenseType == null)
                 {
                     //int intValueToCompare = -1;
                     //guardLicense.LicenseType = (GuardLicenseType)intValueToCompare;
@@ -666,7 +666,7 @@ namespace CityWatch.Web.Pages.Admin
                         message = "LicenseType Required"
                     });
                 }
-         
+
                 _guardDataProvider.SaveGuardLicense(guardLicense);
             }
             catch (Exception ex)
@@ -704,13 +704,13 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_guardDataProvider.GetGuardCompliances(guardId));
         }
-        public JsonResult OnGetHRDescription(int HRid,int GuardID)
+        public JsonResult OnGetHRDescription(int HRid, int GuardID)
         {
             var DescVal = _guardDataProvider.GetHRDesc(HRid);
             var combinedDataList = new List<CombinedData>();
             foreach (var item in DescVal)
             {
-                var GropuNamee= RemoveBrackets(item.GroupName);
+                var GropuNamee = RemoveBrackets(item.GroupName);
                 if (Enum.TryParse<HrGroup>(GropuNamee, out var hrGroup))
                 {
                     var UsedDesc = _guardDataProvider.GetDescriptionList(hrGroup, item.Description, GuardID);
@@ -722,9 +722,9 @@ namespace CityWatch.Web.Pages.Admin
                     };
                     combinedDataList.Add(combinedData);
                 }
-                
+
             }
-          
+
             return new JsonResult(combinedDataList);
         }
         private string RemoveBrackets(string input)
@@ -733,11 +733,11 @@ namespace CityWatch.Web.Pages.Admin
             {
                 return input;
             }
-            
+
             string pattern = @"\[.*?\]|\{.*?\}|\(.*?\)";
             return Regex.Replace(input, pattern, string.Empty);
         }
-    
+
         public class CombinedData
         {
             public int HRGroupId { get; set; }
@@ -856,12 +856,13 @@ namespace CityWatch.Web.Pages.Admin
             var status = true;
             var dbxUploaded = true;
             var message = "Success";
-            if (guardComplianceandlicense.Id==0) {
+            if (guardComplianceandlicense.Id == 0)
+            {
                 //var RefrenceNoList = _guardDataProvider.GetHRRefernceNo(Convert.ToInt16(guardComplianceandlicense.HrGroup));
 
 
                 string extension = Path.GetExtension(guardComplianceandlicense.FileName);
-            string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(guardComplianceandlicense.FileName);
+                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(guardComplianceandlicense.FileName);
                 guardComplianceandlicense.FileName = guardComplianceandlicense.FileName;
             }
 
@@ -975,10 +976,10 @@ namespace CityWatch.Web.Pages.Admin
         {
             var success = true;
             var files = Request.Form.Files;
-           
+
             var guardId = Request.Form["guardId"];
-            var LicenseNo = Request.Form["LicenseNo"].ToString(); 
-            var Description= Request.Form["Description"].ToString();
+            var LicenseNo = Request.Form["LicenseNo"].ToString();
+            var Description = Request.Form["Description"].ToString();
             var HRid = Request.Form["HRID"].ToString();
             var fileName = string.Empty;
             var CurrentDate = DateTime.Now.Ticks / 1000;
@@ -994,52 +995,52 @@ namespace CityWatch.Web.Pages.Admin
             }
             var RefNo = "";
             var RefrenceNoList = _guardDataProvider.GetHRRefernceNo(hrIdInt, Description);
-            if (RefrenceNoList!=null)
+            if (RefrenceNoList != null)
             {
-                 RefNo = RefrenceNoList.ReferenceNo;
+                RefNo = RefrenceNoList.ReferenceNo;
             }
-               
-           
+
+
 
             try
             {
-                    if (files.Count == 1 && RefrenceNoList != null)
+                if (files.Count == 1 && RefrenceNoList != null)
+                {
+                    var file = files[0];
+                    fileName = file.FileName;
+
+
+                    string extension = Path.GetExtension(fileName);
+                    string newFileName = Description + extension;
+                    //string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
+                    //var fileNameUpload = fileNameWithoutExtension + "_" + CurrentDate + extension;
+
+                    fileName = RefNo + "_" + newFileName;
+                    var guardUploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "Guards", "License", LicenseNo);
+
+                    if (!Directory.Exists(guardUploadDir))
+                        Directory.CreateDirectory(guardUploadDir);
+
+                    string filePath = Path.Combine(guardUploadDir, fileName);
+                    if (System.IO.File.Exists(filePath))
                     {
-                        var file = files[0];
-                        fileName = file.FileName;
 
-
-                        string extension = Path.GetExtension(fileName);
-                        string newFileName = Description + extension;
-                        //string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
-                        //var fileNameUpload = fileNameWithoutExtension + "_" + CurrentDate + extension;
-
-                        fileName = RefNo + "_" + newFileName;
-                        var guardUploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "Guards", "License", LicenseNo);
-
-                        if (!Directory.Exists(guardUploadDir))
-                            Directory.CreateDirectory(guardUploadDir);
-                       
-                        string filePath = Path.Combine(guardUploadDir, fileName);
-                        if (System.IO.File.Exists(filePath))
-                        {
-
-                            System.IO.File.Delete(filePath);
-
-                        }
-                            using var stream = System.IO.File.Create(Path.Combine(guardUploadDir, fileName));
-                            file.CopyTo(stream);
-                        
-                       
+                        System.IO.File.Delete(filePath);
 
                     }
+                    using var stream = System.IO.File.Create(Path.Combine(guardUploadDir, fileName));
+                    file.CopyTo(stream);
+
+
+
+                }
 
             }
             catch
             {
                 success = false;
             }
-          
+
             return new JsonResult(new { success, fileName, CurrentDate });
         }
 
@@ -1064,15 +1065,15 @@ namespace CityWatch.Web.Pages.Admin
 
             try
             {
-                 if (type == 'c')
+                if (type == 'c')
                 {
                     var compliance = _guardDataProvider.GetGuardComplianceFile(id);
-                    if (compliance!=null)
+                    if (compliance != null)
                     {
                         compliance.FileName = string.Empty;
                         _guardDataProvider.SaveGuardComplianceandlicanse(compliance);
                     }
-                   
+
                 }
             }
             catch (Exception)
@@ -1091,11 +1092,31 @@ namespace CityWatch.Web.Pages.Admin
             string SuccessMessage = string.Empty;
             int? SuccessCode = 0;
             int? GuId = 0;
+            AuthUserHelper.IsAdminPowerUser = false;
+            AuthUserHelper.IsAdminGlobal = false;
+
             if (!string.IsNullOrEmpty(securityLicenseNo))
             {
                 var guard = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(securityLicenseNo);
                 if (guard != null)
                 {
+                    if (guard.IsAdminPowerUser)
+                    {
+                        AuthUserHelper.IsAdminPowerUser = true;
+                    }
+                    else
+                    {
+                        AuthUserHelper.IsAdminPowerUser = false;
+                    }
+                    if (guard.IsAdminGlobal)
+                    {
+                        AuthUserHelper.IsAdminGlobal = true;
+                    }
+                    else
+                    {
+                        AuthUserHelper.IsAdminGlobal = false;
+                    }
+
                     //code to check the SecurityNo of Type Patrols&Alarm Statics
                     if (type == "Patrols")
                     {
@@ -1191,7 +1212,7 @@ namespace CityWatch.Web.Pages.Admin
                     }
 
 
-                    if(type=="IR")
+                    if (type == "IR")
 
                     {
                         /* Store the value of the Guard Id to seesion for create the Ir from the session-start */
@@ -1224,7 +1245,7 @@ namespace CityWatch.Web.Pages.Admin
                                 SuccessMessage = "Guard is inactive";
                             }
                         }
-                        
+
                         //if (AuthUserHelper.LoggedInUserId != null)
                         //{
                         //    LoggedInUserId = AuthUserHelper.LoggedInUserId;
@@ -1236,35 +1257,29 @@ namespace CityWatch.Web.Pages.Admin
 
                     {
                         /* Store the value of the Guard Id to seesion for create the Ir from the session-start */
-                        HttpContext.Session.SetString("GuardId", guard.Id.ToString());
-                        if (guard.Mobile == null || guard.Mobile == "+61 4")
+
+                        if (guard.IsActive)
                         {
-                            SuccessMessage = "Mobile is null";
-                        }
-                        else
-                        {
-                            if (guard.IsActive)
+                            if (guard.IsAdminGlobal || guard.IsAdminPowerUser)
                             {
-                                if (guard.IsAdminGlobal || guard.IsAdminPowerUser)
+                                AccessPermission = true;
+                                GuId = guard.Id;
+                                if (AuthUserHelper.LoggedInUserId != null)
                                 {
-                                    AccessPermission = true;
-                                    GuId = guard.Id;
-                                    if (AuthUserHelper.LoggedInUserId != null)
-                                    {
-                                        LoggedInUserId = AuthUserHelper.LoggedInUserId;
-                                    }
-                                    SuccessCode = 1;
+                                    LoggedInUserId = AuthUserHelper.LoggedInUserId;
                                 }
-                                else
-                                {
-                                    SuccessMessage = "Not authorized to access this page";
-                                }
+                                SuccessCode = 1;
                             }
                             else
                             {
-                                SuccessMessage = "Guard is inactive";
+                                SuccessMessage = "Not authorized to access this page";
                             }
                         }
+                        else
+                        {
+                            SuccessMessage = "Guard is inactive";
+                        }
+
 
                         //if (AuthUserHelper.LoggedInUserId != null)
                         //{
@@ -1319,8 +1334,10 @@ namespace CityWatch.Web.Pages.Admin
                 (guardComplianceandlicense.Id != 0 && existingGuardCompliance.FileName == guardComplianceandlicense.FileName))
                 return true;
 
+
             var fileToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards","License", guardComplianceandlicense.LicenseNo, guardComplianceandlicense.FileName);
             var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.FileName}");
+
             return UpoadDocumentToDropbox(fileToUpload, dbxFilePath);
         }
         private bool UploadGuardComplianceandLicenseToDropboxNew(GuardComplianceAndLicense guardComplianceandlicense)
@@ -1366,9 +1383,9 @@ namespace CityWatch.Web.Pages.Admin
             var message = string.Empty;
             try
             {
-           
-                    _guardLogDataProvider.SaveDosandDontsField(record);
-                
+
+                _guardLogDataProvider.SaveDosandDontsField(record);
+
                 success = true;
             }
             catch (Exception ex)
@@ -1405,11 +1422,11 @@ namespace CityWatch.Web.Pages.Admin
             //    ViewName = "_GuardAdditionalDetails",
             //    ViewData = new ViewDataDictionary(ViewData)
             //};
-            return new JsonResult(_guardDataProvider.GetGuards().Where(x=>x.Id== guardId));
+            return new JsonResult(_guardDataProvider.GetGuards().Where(x => x.Id == guardId));
         }
         public IActionResult OnGetExpiredDocuments(int guardId)
         {
-            var guardLicenses = _guardDataProvider.GetAllGuardLicenses().Where(z => z.ExpiryDate.HasValue && z.GuardId==guardId).ToList();
+            var guardLicenses = _guardDataProvider.GetAllGuardLicenses().Where(z => z.ExpiryDate.HasValue && z.GuardId == guardId).ToList();
             var guardcompliances = _guardDataProvider.GetAllGuardCompliances().Where(z => z.ExpiryDate.HasValue && z.GuardId == guardId).ToList();
 
             var messages = new List<KeyValuePair<DateTime, string>>();
@@ -1443,10 +1460,10 @@ namespace CityWatch.Web.Pages.Admin
             }
         }
         //for toggle areas - start 
-        public void OnPostSaveToggleType(int siteId,int timeslottoggleTypeId, bool timeslotIsActive, int vwitoggleTypeId,bool vwiIsActive,
-            int sendertoggleTypeId,bool senderIsActive,int reelstoggleTypeId,bool reelsIsActive)
+        public void OnPostSaveToggleType(int siteId, int timeslottoggleTypeId, bool timeslotIsActive, int vwitoggleTypeId, bool vwiIsActive,
+            int sendertoggleTypeId, bool senderIsActive, int reelstoggleTypeId, bool reelsIsActive)
         {
-           
+
             _clientDataProvider.SaveClientSiteToggle(siteId, timeslottoggleTypeId, timeslotIsActive);
             _clientDataProvider.SaveClientSiteToggle(siteId, vwitoggleTypeId, vwiIsActive);
             _clientDataProvider.SaveClientSiteToggle(siteId, sendertoggleTypeId, senderIsActive);
@@ -1459,7 +1476,7 @@ namespace CityWatch.Web.Pages.Admin
         }
         //for toggle areas - end
         // p1-191 hr files task 3-start
-        public JsonResult OnPostSaveHRSettings(int Id,int hrGroupId,int refNoNumberId,int refNoAlphabetId,string description)
+        public JsonResult OnPostSaveHRSettings(int Id, int hrGroupId, int refNoNumberId, int refNoAlphabetId, string description)
         {
             var status = true;
             var message = "Success";
@@ -1472,17 +1489,17 @@ namespace CityWatch.Web.Pages.Admin
                 //}
                 HrSettings hrSettingsnew = new HrSettings()
                 {
-                    Id=Id,
-                    HRGroupId =hrGroupId,
-                    ReferenceNoNumberId=refNoNumberId,
-                    ReferenceNoAlphabetId=refNoAlphabetId,
-                    Description=description,
+                    Id = Id,
+                    HRGroupId = hrGroupId,
+                    ReferenceNoNumberId = refNoNumberId,
+                    ReferenceNoAlphabetId = refNoAlphabetId,
+                    Description = description,
 
                 };
 
 
                 _guardLogDataProvider.SaveHRSettings(hrSettingsnew);
-                    
+
 
             }
             catch (Exception ex)
@@ -1519,9 +1536,9 @@ namespace CityWatch.Web.Pages.Admin
             var message = string.Empty;
             try
             {
-                
-                    _guardLogDataProvider.SaveLicensesTypes(record);
-                
+
+                _guardLogDataProvider.SaveLicensesTypes(record);
+
                 success = true;
             }
             catch (Exception ex)
@@ -1551,7 +1568,7 @@ namespace CityWatch.Web.Pages.Admin
         }
         // p1-191 hr files task 3-end
 
-        
+
     }
 
 

@@ -18,7 +18,9 @@ using CityWatch.RadioCheck.Models;
 using System.Linq;
 using iText.Commons.Actions.Contexts;
 using static Dropbox.Api.Files.SearchMatchType;
-
+using Dropbox.Api.Team;
+using DocumentFormat.OpenXml.InkML;
+using Microsoft.Data.SqlClient;
 
 namespace CityWatch.RadioCheck.API
 {
@@ -57,9 +59,9 @@ namespace CityWatch.RadioCheck.API
         {
             try
             {
-
-                /* Remove the SW read more than 2 hours Start */
-                var checkIfGreaterThan2hours = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ActivityType == "SW").ToList();
+                RemoveUnusedScanDetails();
+                    /* Remove the SW read more than 2 hours Start */
+                    var checkIfGreaterThan2hours = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ActivityType == "SW").ToList();
                 if (checkIfGreaterThan2hours != null)
                 {
                     if (checkIfGreaterThan2hours.Count != 0)
@@ -342,6 +344,15 @@ namespace CityWatch.RadioCheck.API
 
 
 
+
+        public void  RemoveUnusedScanDetails()
+        {
+            /* This sp removes unwanted smart want result from the SmartWandScanResults 10062024*/
+          
+            _context.Database.ExecuteSql($"EXEC Sp_deleteUnWantedrecordsFromSWResults");
+   
+
+        }
         public string RemoveWhitespace(string input)
         {
             return new string(input.ToCharArray()
