@@ -3159,11 +3159,12 @@
                 
                 if (DescVals.description != null) {
                     if (DescVals.usedDescription == null) {
-                        mark = '✔️';
+                        mark = '❌';
                         ulClients.append('<li class="es-visible" value="' + DescVals.description + '">' + DescVals.description + ' ' + mark + '</li>');
                     }
                     else {
-                        mark = '❌';
+                      
+                        mark = '✔️';
                         ulClients.append('<li class="es-visible" value="' + DescVals.description + '">' + DescVals.description + ' ' + mark + '</li>');
                     }
                 }

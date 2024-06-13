@@ -539,6 +539,7 @@ $(function () {
         var data = gridClientSiteKeys.row($(this).parents('tr')).data();
         loadClientSiteKeyModal(data);
     });
+   
     $("#add_Downloadbtn").click(function () {
 
         var Key = $('#site-settings-for').html();

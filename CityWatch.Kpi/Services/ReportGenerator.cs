@@ -728,18 +728,22 @@ namespace CityWatch.Kpi.Services
                 //var monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsComplianceAndLicense(guard.Id);
                 complianceDataCounts.Add(monthlyDataGuardComplianceData.Count);
             }
+            var HTList = _viewDataService.GetHRSettings(Id);
+
             int[] countsArray = complianceDataCounts.ToArray();
             int largestNumber;
             if (countsArray.Length > 0)
             {
-                largestNumber = countsArray.Max();
+                //largestNumber = countsArray.Max();
+                largestNumber = HTList.Count();
+
 
             }
             else
             {
                 largestNumber = 0;
             }
-
+           
             int numColumns = monthlyDataGuardCompliance.Count;
             float[] columnPercentages = new float[largestNumber + 2];
 
@@ -753,28 +757,28 @@ namespace CityWatch.Kpi.Services
 
                 maxComplianceCount = guards.Select(g => _viewDataService.GetKpiGuardDetailsComplianceAndLicenseHR(g.Id, hrGroup1).Count).Max();
             }
-            //maxComplianceCount = guards.Select(g => _viewDataService.GetKpiGuardDetailsComplianceAndLicense(g.Id).Count).Max();
-           
-           
+            maxComplianceCount = guards.Select(g => _viewDataService.GetKpiGuardDetailsComplianceAndLicense(g.Id).Count).Max();
+
+
             foreach (var guard in guards)
             {
                 List<GuardComplianceAndLicense> monthlyDataGuardComplianceData = null; // Declare and initialize HRGroupList
                 var GropuNamee = RemoveBrackets(hrGroupName);
                 if (Enum.TryParse<HrGroup>(GropuNamee, out var hrGroup))
                 {
-                    
+
                     monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsComplianceAndLicenseHR(guard.Id, hrGroup);
                 }
                 //var monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsComplianceAndLicense(guard.Id);
                 kpiGuardTable.AddCell(CreateDataCell(guard.Name));
                 kpiGuardTable.AddCell(CreateDataCell(guard.SecurityNo));
 
-                for (int i = 0; i < maxComplianceCount; i++)
+                for (int i = 0; i < largestNumber; i++)
                 {
                     var cellColor = "";
                     DateTime? alertDate = null;
                     var compliance = i < monthlyDataGuardComplianceData.Count ? monthlyDataGuardComplianceData[i] : null;
-                    
+
                     if (compliance != null && compliance.ExpiryDate != null && compliance.ExpiryDate.ToString() != "")
                     {
                         alertDate = Convert.ToDateTime(compliance.ExpiryDate).AddDays(-45);
@@ -994,17 +998,21 @@ namespace CityWatch.Kpi.Services
                 }
 
                 int[] countsArray = complianceDataCounts.ToArray();
+                var HTList = _viewDataService.GetHRSettings(id);
                 int largestNumber;
 
                 if (countsArray.Length > 0)
                 {
-                    largestNumber = countsArray.Max();
+                   
+                    largestNumber = HTList.Count();
+
+
                 }
                 else
                 {
                     largestNumber = 0;
                 }
-                
+               
                 table.AddCell(new Cell(1, 2)
                     .SetFontSize(CELL_FONT_SIZE)
                     .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
@@ -1017,10 +1025,12 @@ namespace CityWatch.Kpi.Services
                     char suffix = suffixes[i % suffixes.Length];
                     string sequentialNumber = id.ToString("D2") + suffix;
 
+                    var referenceNo = HTList[i].ReferenceNo;
+
                     table.AddCell(new Cell(1, 1)
                         .SetFontSize(CELL_FONT_SIZE)
                         .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
-                        .Add(new Paragraph().Add(new Text(sequentialNumber))));
+                        .Add(new Paragraph().Add(new Text(referenceNo))));
 
                 }
 
