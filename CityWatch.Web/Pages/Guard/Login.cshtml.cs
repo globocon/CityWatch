@@ -83,6 +83,10 @@ namespace CityWatch.Web.Pages.Guard
             var GPSCoordinates = GuardLogin.GpsCoordinates;
             try
             {
+
+
+
+
                 GuardLogin.SmartWandOrPositionId = smartWandOrPositionId;
                 var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Name == GuardLogin.ClientTypeName);
                 GuardLogin.ClientSite = _clientDataProvider.GetClientSites(clientType.Id).SingleOrDefault(z => z.Name == GuardLogin.ClientSiteName);
@@ -96,7 +100,7 @@ namespace CityWatch.Web.Pages.Guard
                     EventDateTimeZoneShort = GuardLogin.EventDateTimeZoneShort,
                     EventDateTimeUtcOffsetMinute = GuardLogin.EventDateTimeUtcOffsetMinute,
                     PlayNotificationSound = false,
-                    GpsCoordinates= GPSCoordinates
+                    GpsCoordinates = GPSCoordinates
                 };
                 // Task p6#73_TimeZone issue -- added by Binoy - End
 
@@ -126,7 +130,7 @@ namespace CityWatch.Web.Pages.Guard
                 if (LogBookType == LogBookType.DailyGuardLog)
                 {
                     // Task p6#73_TimeZone issue -- modified by Binoy
-                    CreateLogbookLoggedInEntry(logBookId, guardLoginId, eventDateTimeLocal, 
+                    CreateLogbookLoggedInEntry(logBookId, guardLoginId, eventDateTimeLocal,
                         eventDateTimeLocalWithOffset, eventDateTimeZone, eventDateTimeZoneShort, eventDateTimeUtcOffsetMinute, GPSCoordinates);
 
                 }
@@ -154,7 +158,7 @@ namespace CityWatch.Web.Pages.Guard
                 if (isNewLogBook)
                 {
 
-                   
+
                     if (IsLoginInKeyVehOrLogBook)
                     {
                         /*check if id is Citywatch M1 - Romeo Patrol Cars site id=625*/
@@ -167,7 +171,7 @@ namespace CityWatch.Web.Pages.Guard
                             }
                         }
                         /* Check is duress enabled for this site*/
-                        var isDurssEnabled= _viewDataService.IsClientSiteDuressEnabled(GuardLogin.ClientSite.Id);
+                        var isDurssEnabled = _viewDataService.IsClientSiteDuressEnabled(GuardLogin.ClientSite.Id);
                         if (isDurssEnabled)
                         {
                             /* Copy Previous duress message not deactivated (Repete in each logbook untill deactivated )*/
@@ -303,6 +307,7 @@ namespace CityWatch.Web.Pages.Guard
             var guard = _guardDataProvider.GetGuards().SingleOrDefault(z => string.Compare(z.SecurityNo, securityNumber, StringComparison.OrdinalIgnoreCase) == 0);
             GuardLogin lastLogin = null;
             if (guard != null)
+            {
 
                 if (AuthUserHelper.LoggedInUserId != null)
                 {
@@ -312,6 +317,23 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     lastLogin = _guardDataProvider.GetGuardLastLogin(guard.Id);
                 }
+                if (guard.IsAdminPowerUser)
+                {
+                    AuthUserHelper.IsAdminPowerUser = true;
+                }
+                else
+                {
+                    AuthUserHelper.IsAdminPowerUser = false;
+                }
+                if (guard.IsAdminGlobal)
+                {
+                    AuthUserHelper.IsAdminGlobal = true;
+                }
+                else
+                {
+                    AuthUserHelper.IsAdminGlobal = false;
+                }
+            }
 
             return new JsonResult(new { guard, lastLogin });
         }
@@ -335,11 +357,11 @@ namespace CityWatch.Web.Pages.Guard
 
         private int GetGuardLoginId(int logBookId)
         {
-            GuardLogin guardLogin= new GuardLogin();
+            GuardLogin guardLogin = new GuardLogin();
 
             //GuardLogin existingGuardLogin = _guardDataProvider.GetGuardLoginsByLogBookId(logBookId).SingleOrDefault(x => x.GuardId == GuardLogin.Guard.Id && x.OnDuty == GuardLogin.OnDuty);
 
-           
+
             GuardLogin existingGuardLogin = new GuardLogin();
             //GuardLogin existingGuardLogin = _guardDataProvider.GetGuardLoginsByLogBookId(logBookId).SingleOrDefault(x => x.GuardId == GuardLogin.Guard.Id && x.OnDuty == GuardLogin.OnDuty);
             var GuardLoginList = _guardDataProvider.GetGuardLoginsByLogBookId(logBookId).ToList();
@@ -385,7 +407,7 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     ClientSiteId = GuardLogin.ClientSite.Id,
                     Type = LogBookType,
-                    Date = clientDateTime.Date, 
+                    Date = clientDateTime.Date,
                 });  // changed DateTime.Today to clientDateTime.Date p6#73 timezone bug modified by binoy 24-01-2024
 
                 isNewLogBook = true;
@@ -405,9 +427,9 @@ namespace CityWatch.Web.Pages.Guard
              */
             var isNewLogBook = false;
             var logBook = _clientDataProvider.GetClientSiteLogBookWithOutType(GuardLogin.ClientSite.Id, clientDateTime.Date); // p6#73 timezone bug - Added by binoy 24-01-2024
-            if (logBook.Count==0)
+            if (logBook.Count == 0)
             {
-               
+
 
                 isNewLogBook = true;
             }
@@ -458,7 +480,7 @@ namespace CityWatch.Web.Pages.Guard
             {
                 ClientSiteLogBookId = logBookId,
                 GuardLoginId = guardLoginId,
-                EventDateTime = DateTime.Now, 
+                EventDateTime = DateTime.Now,
                 Notes = "KV Logged In",
                 IsSystemEntry = true,
                 EventDateTimeLocal = eventDateTimeLocal, // Task p6#73_TimeZone issue -- added by Binoy - Start
@@ -471,9 +493,9 @@ namespace CityWatch.Web.Pages.Guard
             _guardLogDataProvider.SaveGuardLog(signInEntry);
         }
 
-            private void CreateLogbookLoggedInEntry(int logBookId, int guardLoginId,DateTime? eventDateTimeLocal,
-                       DateTimeOffset? eventDateTimeLocalWithOffset, string eventDateTimeZone, 
-                       string eventDateTimeZoneShort,int? eventDateTimeUtcOffsetMinute,string GPSCoordinates)
+        private void CreateLogbookLoggedInEntry(int logBookId, int guardLoginId, DateTime? eventDateTimeLocal,
+                   DateTimeOffset? eventDateTimeLocalWithOffset, string eventDateTimeZone,
+                   string eventDateTimeZoneShort, int? eventDateTimeUtcOffsetMinute, string GPSCoordinates)
         {
             var signInEntry = new GuardLog()
             {
@@ -491,7 +513,7 @@ namespace CityWatch.Web.Pages.Guard
             };
             _guardLogDataProvider.SaveGuardLog(signInEntry);
 
-           
+
             ////logBookId entry for radio checklist-start
 
             //var gaurdlogin = _clientDataProvider.GetGuardLogin(guardLoginId,logBookId);

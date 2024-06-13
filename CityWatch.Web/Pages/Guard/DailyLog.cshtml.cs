@@ -268,6 +268,8 @@ namespace CityWatch.Web.Pages.Guard
             var message = "Success";
             try
             {
+                AuthUserHelper.IsAdminPowerUser = false;
+                AuthUserHelper.IsAdminGlobal = false;
                 var signOffEntry = new GuardLog()
                 {
                     ClientSiteLogBookId = clientSiteLogBookId,

@@ -21,25 +21,34 @@
     var mapSettings = @Configuration.GetSection("GoogleMap").Get(typeof(GoogleMapSettings)) as GoogleMapSettings;
     var ApiKey = mapSettings.ApiKey;
     var hideTabStyle = "";
-    if (!AuthUserHelper.IsAdminUserLoggedIn)
+
+    if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal)
+
     {
-        if (@Model.IsAdminminOrPoweruser != "IsAdminPowerUser")
-        {
-            hideTabStyle = "";
-        }
-        else
+        hideTabStyle = "";
+
+    }
+    else
+    {
+        if (AuthUserHelper.IsAdminPowerUser)
         {
             hideTabStyle = "style=display:none";
+
         }
+
     }
-    else { hideTabStyle = ""; };
-    var companydetail = viewDataService.GetCompanyDetails().SingleOrDefault(x => x.Id == 1);
+   
+        
+
+    };
+
+    
 }
 <div>
     <input type="hidden" id="hdnIsAdminLoggedIn" value="@AuthUserHelper.IsAdminUserLoggedIn.ToString()" />
     <input type="hidden" id="txt_IsAdminPowerUser" value="@Model.IsAdminminOrPoweruser" />
     <ul class="nav nav-tabs" id="settingsTab" role="tablist">
-        @if (@Model.IsAdminminOrPoweruser != "IsAdminPowerUser")
+        @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal)
         {
             <li class="nav-item">
                 <a class="nav-link active p-2" id="ctype-tab" data-toggle="tab" href="#ctype" role="tab" aria-controls="ctype" aria-selected="true">IR Client Type</a>
@@ -82,7 +91,7 @@
         }
     </ul>
     <div class="tab-content" id="settingsTabContent">
-        @if (@Model.IsAdminminOrPoweruser != "IsAdminPowerUser")
+        @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal)
         {
             <div class="tab-pane fade show active py-3" id="ctype" role="tabpanel" aria-labelledby="ctype-tab">
                 <div class="row" @hideTabStyle>
@@ -589,6 +598,7 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group row">
+
                                     <div class="col-md-1 offset-md-9 px-0 text-left">
                                         <input type="checkbox" class="form-check-input" id="chkbxfilterGuardActive" >
                                         <label class="font-weight-normal" for="chkbxfilterGuardActive">Active</label>
@@ -602,6 +612,7 @@
                                     @*  <div class="col-md-2 text-right">
                                         <button class="btn btn-success mb-3" id="btn_refresh_guard_top"><i class="fa fa-refresh mr-2"></i>Refresh</button>
                                     </div> *@
+
                                 </div>
                             </div>
                         </div>
@@ -914,7 +925,7 @@
                                 <label class="col-md-2 form-check-label">Access</label>
                                 <div class="col-md-3">
                                     <select class="form-control" multiple="multiple" id="Guard_Access" name="Guard.GuardAccess">
-                                        @if (@Model.IsAdminminOrPoweruser != "IsAdminPowerUser")
+                                        @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal)
                                         {
                                             @foreach (var AccessType in viewDataServiceNew.GetAccessTypes(true))
                                             {

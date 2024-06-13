@@ -3691,7 +3691,7 @@
 
                     /*window.location.href = '/Radio/Check';*/
                     window.location.href = 'http://rc.cws-ir.com/RadioCheckV2?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
-                    /*window.location.href = 'https://localhost:7083/RadioCheckV2?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;*/
+                    /* window.location.href = 'https://localhost:7083/RadioCheckV2?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;*/
                 }
                 else {
                     $('#txt_securityLicenseNoRC').val('');
