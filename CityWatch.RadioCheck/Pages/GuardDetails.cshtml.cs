@@ -113,7 +113,15 @@ namespace CityWatch.Web.Pages.Radio
         {
             return new JsonResult(new { data = _viewDataService.GetGuards() });
         }
-
+  
+        public JsonResult OnGetActiveGuards()
+        {
+            return new JsonResult(new { data = _viewDataService.GetActiveGuards() });
+        }
+        public JsonResult OnGetCrmSupplierData(string companyName)
+        {
+            return new JsonResult(_guardLogDataProvider.GetCompanyDetailsVehLog(companyName));
+        }
 
     }
 }

@@ -91,7 +91,8 @@ namespace CityWatch.Data.Providers
         List<RadioCheckListInActiveGuardData> GetInActiveGuardDetails();
         public Guard GetGuards(int guardId);
         //logBookId entry for radio checklist-end
-
+        public KeyVehicleLog GetCompanyDetailsVehLog(string companyName);
+        
         //for getting logBook details of the  guard-start
         List<RadioCheckListGuardLoginData> GetActiveGuardlogBookDetails(int clientSiteId, int guardId);
         //for getting logBook details of the  guard-end
@@ -107,7 +108,7 @@ namespace CityWatch.Data.Providers
         //for getting Key Vehicle history of the  guard-start
         List<KeyVehicleLog> GetActiveGuardKeyVehicleHistory(int clientSiteId, int guardId);
         //for getting Key Vehicle history of the  guard-end
-
+        
         //for getting smartwand history of the  guard-start
         List<SmartWandScanGuardHistory> GetActiveGuardSwHistory(int clientSiteId, int guardId);
         //for getting smartwand history of the  guard-end
@@ -1877,8 +1878,8 @@ namespace CityWatch.Data.Providers
             return gl;
         }
         //for getting Key Vehicle history of the guard-end
-
-
+        
+        
         //for getting SmartWand history of the guard-start
         public List<SmartWandScanGuardHistory> GetActiveGuardSwHistory(int clientSiteId, int guardId)
         {
@@ -1975,14 +1976,21 @@ namespace CityWatch.Data.Providers
             return allvalues;
         }
         //for getting  SW details of the  guard-end
-        public Guard GetGuards(int guardId)
-        {
-
-
-
-
+        public Guard GetGuards(int guardId)      {
 
             return _context.Guards.Where(x => x.Id == guardId).FirstOrDefault();
+        }
+        
+        public KeyVehicleLog GetCompanyDetailsVehLog(string companyName)
+        {
+            if (companyName == null)
+            {
+                // Handle the case where companyName is null
+                return null; 
+            }
+      
+            return _context.KeyVehicleLogs.FirstOrDefault(x => x.CompanyName == companyName);
+            
         }
         public void DeleteClientSiteRadioCheckActivityStatusForKeyVehicleEntry(int id)
         {

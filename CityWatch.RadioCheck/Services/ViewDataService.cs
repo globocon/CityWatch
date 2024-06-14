@@ -13,6 +13,7 @@ namespace CityWatch.RadioCheck.Services
     public interface IViewDataService
     {
         List<GuardViewModel> GetGuards();
+        List<GuardViewModel> GetActiveGuards();
     }
 
     public class ViewDataService : IViewDataService
@@ -40,6 +41,17 @@ namespace CityWatch.RadioCheck.Services
             var guardLogins = _guardDataProvider.GetGuardLogins(guards.Select(z => z.Id).ToArray());
             return guards.Select(z => new GuardViewModel(z, guardLogins.Where(y => y.GuardId == z.Id))).ToList();
         }
-
+        public List<GuardViewModel> GetActiveGuards()
+        {
+            var guards = _guardDataProvider.GetActiveGuards();
+            var guardLogins = _guardDataProvider.GetGuardLogins(guards.Select(z => z.Id).ToArray());
+            return guards.Select(z => new GuardViewModel(z, guardLogins.Where(y => y.GuardId == z.Id))).ToList();
+        }
+        //public List<KeyVehicleLog> GetCompanyDetails()
+        //{
+        //    //var guards = _guardDataProvider.GetEmailPOCVehiclelog( id);
+        //    //var guardLogins = _guardDataProvider.GetGuardLogins(guards.Select(z => z.Id).ToArray());
+        //    //return guards.Select(z => new GuardViewModel(z, guardLogins.Where(y => y.GuardId == z.Id))).ToList();
+        //}
     }
 }

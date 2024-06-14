@@ -1040,6 +1040,49 @@
         </div>
     </div>
 </div>
+
+<!----------------- CRM Supplier Details Modal -------------------->
+<div class="modal fade" id="crmSupplierDetailsModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="crmSupplierDetailsLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered  ">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-vcard-o mr-2"></i>CRM Supplier Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <ul class="list-unstyled col-md-12">
+                        <li class="row">
+
+                            <label style="white-space: nowrap;" class="col-md-3 col-form-label">Company Name:  </label>
+                            <label class="col-form-label" id="lbl_company_name"></label>
+                        </li>
+                        <li class="row">
+                            <label class="col-md-3 col-form-label">ABN: </label>
+                            <label class="col-form-label" id="lbl_abn"></label>
+                        </li>
+                        <li class="row">
+                            <label class="col-md-3 col-form-label">Landline: </label>
+                            <label class="col-form-label" id="lbl_landline"></label>
+                        </li>
+
+                        <li class="row">
+                            <label class="col-md-3 col-form-label">Email: </label>
+                            <label class="col-form-label" id="lbl_email"></label>
+                        </li>
+                        <li class="row">
+                            <label class="col-md-3 col-form-label">Website:</label>
+                            <label class="col-form-label" id="lbl_website"></label>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- logbook model popup end-->
 @Html.AntiForgeryToken()
 @section PageHeader {
