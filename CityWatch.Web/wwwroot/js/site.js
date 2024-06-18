@@ -3630,7 +3630,7 @@ function clearCriticalModal() {
     $('#DescriptionDoc').html('<option value="">Select</option>');
     $('#HRGroupDoc option:eq(0)').attr('selected', true);
     $('#clientTypeNameDoc').val('');
-   /* $('#selectedSitesDoc').html('');*/
+    $('#selectedSitesDoc').html('');
     $('#selectedDescDoc').html('');
     $('#GroupName').html('');
     updateSelectedSitesCount();
