@@ -20,7 +20,7 @@ namespace CityWatch.Data.Models
 
         [Required]
         public string Description { get; set; }
-       
+        [Required]
         public DateTime? ExpiryDate { get; set; }
 
         [Required]
