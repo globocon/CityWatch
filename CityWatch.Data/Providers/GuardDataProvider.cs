@@ -71,6 +71,7 @@ namespace CityWatch.Data.Providers
         List<GuardComplianceAndLicense> GetGuardCompliancesAndLicenseHR(int guardId, HrGroup hrGroup);
         List<CriticalDocumentsClientSites> GetCriticalDocs(int clientSiteID);
          ClientSite GetClientSiteID(string ClientSite);
+        public DropboxDirectory GetDrobox();
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -476,7 +477,8 @@ namespace CityWatch.Data.Providers
                 Description = x.Description,
                 HrGroup = x.HrGroup,
                 CurrentDateTime = x.CurrentDateTime,
-                LicenseNo = x.Guard.SecurityNo
+                LicenseNo = x.Guard.SecurityNo,
+                DateType=x.DateType,
             }).OrderBy(x=>x.FileName)
             .ToList();
 
@@ -564,6 +566,7 @@ namespace CityWatch.Data.Providers
                     guardComplianceToUpdate.ExpiryDate = guardComplianceandlicense.ExpiryDate;
                     guardComplianceToUpdate.FileName = guardComplianceandlicense.FileName;
                     guardComplianceToUpdate.HrGroup = guardComplianceandlicense.HrGroup;
+                    guardComplianceToUpdate.DateType = guardComplianceandlicense.DateType;
                 }
             }
             _context.SaveChanges();
@@ -701,6 +704,10 @@ namespace CityWatch.Data.Providers
         public List<LicenseTypes> GetLicenseTypes()
         {
             return _context.LicenseTypes.ToList();
+        }
+        public DropboxDirectory GetDrobox()
+        {
+            return _context.DropboxDirectory.FirstOrDefault();
         }
     }
 }

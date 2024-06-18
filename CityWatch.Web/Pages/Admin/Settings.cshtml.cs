@@ -1239,6 +1239,45 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { status, message });
         }
         //p1-213 Critical documents stop
+        public JsonResult OnPostSaveGlobalComplianceAlertEmail(string Email)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.GlobalComplianceAlertEmail(Email);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = Email, message = message });
+        }
+        public JsonResult OnPostSaveDropboxDir(string DroboxDir)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.DroboxDir(DroboxDir);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = DroboxDir, message = message });
+        }
+        public JsonResult OnGetSettingsDetails()
+        {
+            var Email = _clientDataProvider.GetEmail();
+            var DropboxDir = _clientDataProvider.GetDropboxDir();
+            return new JsonResult(new { Email = Email.Email, DropboxDir = DropboxDir.DropboxDir });
+        }
+      
 
     }
 }

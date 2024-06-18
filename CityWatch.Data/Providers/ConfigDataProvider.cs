@@ -688,7 +688,7 @@ namespace CityWatch.Data.Providers
 
                 Document.HRGroupID = CriticalDoc.HRGroupID;
                 Document.ClientTypeId = CriticalDoc.ClientTypeId;
-
+                Document.GroupName = CriticalDoc.GroupName;
 
 
                 if (updateClientSites1)

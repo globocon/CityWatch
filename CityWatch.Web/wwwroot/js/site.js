@@ -3275,6 +3275,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridCriticalDocument.hide();
         $('#add_criticalDocuments').hide();
         $('#add_hr_settings').show();
+        $('#SettingsDiv').hide();
     }
 
     else if ($('#hr_settings_fields_types').val() == 2) {
@@ -3285,6 +3286,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridCriticalDocument.hide();
         $('#add_criticalDocuments').hide();
         $('#add_hr_settings').show();
+        $('#SettingsDiv').hide();
     }
     else if ($('#hr_settings_fields_types').val() == 3) {
         $('#add_criticalDocuments').show();
@@ -3293,6 +3295,26 @@ $('#hr_settings_fields_types').on('change', function () {
         gridLicenseTypes.hide();
         gridCriticalDocument.show();
         $('#add_hr_settings').hide();
+        $('#SettingsDiv').hide();
+    }
+    else if ($('#hr_settings_fields_types').val() == 4) {
+        $('#add_criticalDocuments').hide();
+        $('#add_hr_settings').hide();
+        gridHrSettings.hide();
+        gridLicenseTypes.hide();
+        gridCriticalDocument.hide();
+        $('#add_hr_settings').hide();
+        $('#SettingsDiv').show();
+        $.ajax({
+            url: '/Admin/Settings?handler=SettingsDetails',
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                $('#hr_compliance_email').val(data.email)
+                $('#DropboxDir').val(data.dropboxDir)
+            }
+        });
+        
     }
     else {
         gridLicenseTypes.hide();
@@ -3328,39 +3350,85 @@ $('#add_hr_settings').on('click', function () {
 
 //p1-213 critical Document start
 $('#add_criticalDocuments').on('click', function () {
-    
+    $('#clientSitesDoc').html('');
     $('#Critical-modal').modal('show');
     clearCriticalModal();
 });
+//$('#clientTypeNameDoc').on('change', function () {
+//    const option = $(this).find('option:selected').text();;
+//    if (option === '') {
+//        $('#clientSitesDoc').html('');
+//        $('#clientSitesDoc').append('<option value="">Select</option>');
+//    }
+
+//    $.ajax({
+//        url: '/admin/settings?handler=ClientSitesDoc&type=' + encodeURIComponent(option),
+//        type: 'GET',
+//        dataType: 'json',
+//    }).done(function (data) {
+//        $('#clientSitesDoc').html('');
+//        $('#clientSitesDoc').append('<option value="">Select</option>');
+//        data.map(function (site) {
+//            $('#clientSitesDoc').append('<option value="' + site.value + '">' + site.text + '</option>');
+//        });
+//    });
+//});
+$('#clientTypeNameDoc').multiselect({
+    maxHeight: 400,
+    buttonWidth: '100%',
+    nonSelectedText: 'Select',
+    buttonTextAlignment: 'left',
+    includeSelectAllOption: true,
+});
+$('#clientSitesDoc').multiselect({
+    maxHeight: 400,
+    buttonWidth: '100%',
+    nonSelectedText: 'Select',
+    buttonTextAlignment: 'left',
+    includeSelectAllOption: true,
+});
 $('#clientTypeNameDoc').on('change', function () {
-    const option = $(this).find('option:selected').text();;
-    if (option === '') {
-        $('#clientSitesDoc').html('');
-        $('#clientSitesDoc').append('<option value="">Select</option>');
-    }
+    let clientTypeIds = $(this).val().join(';')
+    clientTypeIds = clientTypeIds.replace(';', '');
+    const clientTypeId = clientTypeIds;
+    //$('#clientSitesDoc').multiselect("refresh");
+    $('#clientSitesDoc').html('');
+    const clientSiteControl = $('#clientSitesDoc');
+    var selectedOption = $(this).find("option:selected");
+    var selectedText = selectedOption.text();
 
     $.ajax({
-        url: '/admin/settings?handler=ClientSitesDoc&type=' + encodeURIComponent(option),
+        url: '/admin/settings?handler=ClientSitesNew',
         type: 'GET',
+        data: {
+            typeId: clientTypeId
+
+        },
         dataType: 'json',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (data) {
-        $('#clientSitesDoc').html('');
-        $('#clientSitesDoc').append('<option value="">Select</option>');
+
         data.map(function (site) {
-            $('#clientSitesDoc').append('<option value="' + site.value + '">' + site.text + '</option>');
+            clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
         });
+        clientSiteControl.multiselect('rebuild');
+        
     });
+
 });
 
 $('#clientSitesDoc').on('change', function () {
-    const elem = $(this).find(":selected");
-    if (elem.val() !== '') {
-        const existing = $('#selectedSitesDoc option[value="' + elem.val() + '"]');
-        if (existing.length === 0) {
-            $('#selectedSitesDoc').append('<option value="' + elem.val() + '">' + elem.text() + '</option>');
-            updateSelectedSitesCount();
+    const selectedValues = $(this).val().join(';').split(';');
+    selectedValues.forEach(function (value) {
+        if (value !== '') {
+            const existing = $('#selectedSitesDoc option[value="' + value + '"]');
+            if (existing.length === 0) {
+                const text = $('#clientSitesDoc option[value="' + value + '"]').text();
+                $('#selectedSitesDoc').append('<option value="' + value + '">' + text + '</option>');
+            }
         }
-    }
+    });
+    updateSelectedSitesCount();
 });
 function updateSelectedSitesCount() {
     $('#selectedSitesCountDoc').text($('#selectedSitesDoc option').length);
@@ -3405,6 +3473,7 @@ $('#DescriptionDoc').on('change', function () {
 function updateSelectedDescCount() {
     $('#selectedDescCountDoc').text($('#selectedDescDoc option').length);
 }
+
 $('#btnSaveCriticalDoc').on('click', function () {
     $("input[name=clientSiteIds]").remove();
     var options = $('#selectedSitesDoc option');
@@ -3442,10 +3511,13 @@ gridCriticalDocument = $('#tbl_CriticalDocument').grid({
     iconsLibrary: 'fontawesome',
     primaryKey: 'id',
     columns: [
+        {
+            field: 'groupName', title: 'Group Name', width: 70
+        },
         { field: 'clientTypes', title: 'Client Types', width: 100 },
         { field: 'clientSites', title: 'Client Sites', width: 170 },
         {
-            field: 'descriptions', title: 'Mandatory HR Doucments', width: 180,
+            field: 'descriptions', title: 'Mandatory HR Documents', width: 180,
             renderer: function (value, record) {
                 function splitFirstComma(str) {
                     const index = str.indexOf(',');
@@ -3459,7 +3531,7 @@ gridCriticalDocument = $('#tbl_CriticalDocument').grid({
                 var html = '<table>';
                 html += '<tbody>';
                 for (var i = 0; i < descriptions.length; i++) {
-                    html += '<tr><td>' + record.hrGroupName + '</td><td style="width: 40px;">' + referenceNos[i] + '</td><td>' + descriptions[i] + '</td></tr>';
+                    html += '<tr><td style="width: 58px;">' + record.hrGroupName + '</td><td style="width: 40px;">' + referenceNos[i] + '</td><td>' + descriptions[i] + '</td></tr>';
                 }
                 html += '</tbody>';
                 html += '</table>';
@@ -3511,29 +3583,35 @@ $('#Critical-modal').on('shown.bs.modal', function (event) {
         schId = button.data('sch-id');
         CriticalModelOnEdit(schId);
     } else {
-        scheduleModalOnAdd();
+        //scheduleModalOnAdd();
     }
 
     /*showHideSchedulePopupTabs(isEdit);*/
 });
 function clearCriticalModal() {
     $('#CriticalDocId').val('0');
-    $('#clientTypeName').val('');
-    $('#clientSitesDoc').html('<option value="">Select</option>');
+    //$('#clientTypeNameDoc').html('');
+    //$('#clientTypeNameDoc').val('');
+   $("#clientTypeNameDoc").multiselect("refresh");
+    $('#clientSitesDoc').html('');
+    $('#clientSitesDoc').val('');
+    $("#clientSitesDoc").multiselect("refresh");
+    $('#clientSitesDoc option:eq(0)').attr('select', true);
     $('#DescriptionDoc').html('<option value="">Select</option>');
     $('#HRGroupDoc option:eq(0)').attr('selected', true);
     $('#clientTypeNameDoc').val('');
     $('#selectedSitesDoc').html('');
     $('#selectedDescDoc').html('');
+    $('#GroupName').html('');
     updateSelectedSitesCount();
     $('input:hidden[name="clientSiteIds"]').remove();
-    $('#clientTypeName option:eq(0)').attr('selected', true);
     
     $('#CriDoc-modal-validation').html('');
    
     
 }
 function CriticalModelOnEdit(CriticalDocId) {
+    clearCriticalModal();
     $('#loader').show();
     $.ajax({
         url: '/Admin/Settings?handler=CriticalDocList&id=' + CriticalDocId,
@@ -3541,7 +3619,7 @@ function CriticalModelOnEdit(CriticalDocId) {
         dataType: 'json',
     }).done(function (data) {
         $('#CriticalDocId').val(data.id);
-       
+        $('#GroupName').val(data.groupName);
         $.each(data.criticalDocumentsClientSites, function (index, item) {
             $('#selectedSitesDoc').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
             $('#selectedDescDoc').append('<option value="' + item.hrSettings.id + '">' + item.hrSettings.description + '</option>');
@@ -3561,6 +3639,116 @@ $('#removeSelectedSitesDoc').on('click', function () {
     $('#selectedDescDoc option:selected').remove();
     updateSelectedSitesCount();
 });
+
+//To save the Global Email Of Duress Button start
+$('#add_GloblEmail').on('click', function () {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    var Email = $('#du_duress_email').val();
+    var emailsArray = Email.split(',');
+    var isValidEmailIds = true;
+    for (var i = 0; i < emailsArray.length; i++) {
+        var emailAddress = emailsArray[i].trim();
+        if (isValidEmail(emailAddress)) {
+
+        }
+        else {
+            isValidEmailIds = false;
+            $.notify("Invalid email address.",
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#D44950",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );
+
+        }
+
+    }
+
+    if (isValidEmailIds) {
+
+        $.ajax({
+            url: '/Admin/Settings?handler=SaveDuressEmail',
+            data: { Email: Email },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function () {
+            alert("The Duress Email Alert Email was saved successfully");
+        })
+    }
+
+
+
+    function isValidEmail(email) {
+        // Regular expression for basic email validation
+        var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailPattern.test(email);
+    }
+})
+
+$('#add_ComplianceEmail').on('click', function () {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    var Email = $('#hr_compliance_email').val();
+    var emailsArray = Email.split(',');
+    isValidEmailIds = true;
+    for (var i = 0; i < emailsArray.length; i++) {
+        var emailAddress = emailsArray[i].trim();
+        if (isValidEmail(emailAddress)) {
+
+        }
+        else {
+            isValidEmailIds = false;
+            $.notify("Invalid email address." + emailAddress,
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#D44950",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );
+
+        }
+
+
+
+    }
+
+    if (isValidEmailIds) {
+        $.ajax({
+            url: '/Admin/Settings?handler=SaveGlobalComplianceAlertEmail',
+            data: { Email: Email },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function () {
+            alert("The Compliance Alert Email was saved successfully");
+        })
+
+    }
+
+    function isValidEmail(email) {
+        // Regular expression for basic email validation
+        var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailPattern.test(email);
+    }
+})
+$('#add_Dropbox').on('click', function () {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    var DroboxDir = $('#DropboxDir').val();
+    $.ajax({
+        url: '/Admin/Settings?handler=SaveDropboxDir',
+        data: { DroboxDir: DroboxDir },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (status) {
+        alert("DropboxDirectory was saved successfully");
+    })
+})
+//To save the Global Email Of Duress Button stop
 //p1-213 critical Document stop
 $('#btn_save_hr_settings').on('click', function () {
     var form = document.getElementById('form_new_hr_settings');
