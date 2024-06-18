@@ -4534,8 +4534,7 @@ namespace CityWatch.Data.Providers
                 if (newId != 0)
                 {
                     // Sites 
-                    if (selctedSites.Count() != 0)
-                    {
+                    
                         foreach (var siteId in selctedSites)
                         {
                             HrSettingsClientSites HrSettingsClientSites = new HrSettingsClientSites()
@@ -4552,7 +4551,7 @@ namespace CityWatch.Data.Providers
 
                         }
 
-                    }
+                    
                     // State
                     if (selectedStates.Count() != 0)
                     {
@@ -4589,8 +4588,7 @@ namespace CityWatch.Data.Providers
                     hrSettingsToUpdate.Description = hrSettings.Description;
                     _context.SaveChanges();
                 }
-                if (selctedSites.Count() != 0)
-                {
+               
                     var hrremoveSites = _context.HrSettingsClientSites.Where(x => x.HrSettingsId == hrSettings.Id).ToList();
                     if (hrremoveSites != null)
                     {
@@ -4613,11 +4611,10 @@ namespace CityWatch.Data.Providers
 
                     }
 
-                }
+                
 
 
-                if (selectedStates.Count() != 0)
-                {
+             
                     var hrremoveStates = _context.HrSettingsClientStates.Where(x => x.HrSettingsId == hrSettings.Id).ToList();
                     if (hrremoveStates != null)
                     {
@@ -4640,7 +4637,7 @@ namespace CityWatch.Data.Providers
 
                     }
 
-                }
+               
 
 
 
