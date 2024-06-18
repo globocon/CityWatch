@@ -3421,7 +3421,6 @@ $('#clientSitesDoc').multiselect({
 });
 $('#clientTypeNameDoc').on('change', function () {
     let clientTypeIds = $(this).val().join(';')
-    clientTypeIds = clientTypeIds.replace(';', '');
     const clientTypeId = clientTypeIds;
     //$('#clientSitesDoc').multiselect("refresh");
     $('#clientSitesDoc').html('');
@@ -3623,16 +3622,15 @@ $('#Critical-modal').on('shown.bs.modal', function (event) {
 function clearCriticalModal() {
     $('#CriticalDocId').val('0');
     //$('#clientTypeNameDoc').html('');
-    //$('#clientTypeNameDoc').val('');
+    $('#clientTypeNameDoc').val('');
    $("#clientTypeNameDoc").multiselect("refresh");
     $('#clientSitesDoc').html('');
     $('#clientSitesDoc').val('');
     $("#clientSitesDoc").multiselect("refresh");
-    $('#clientSitesDoc option:eq(0)').attr('select', true);
     $('#DescriptionDoc').html('<option value="">Select</option>');
     $('#HRGroupDoc option:eq(0)').attr('selected', true);
     $('#clientTypeNameDoc').val('');
-    $('#selectedSitesDoc').html('');
+   /* $('#selectedSitesDoc').html('');*/
     $('#selectedDescDoc').html('');
     $('#GroupName').html('');
     updateSelectedSitesCount();
@@ -3643,7 +3641,6 @@ function clearCriticalModal() {
     
 }
 function CriticalModelOnEdit(CriticalDocId) {
-    clearCriticalModal();
     $('#loader').show();
     $.ajax({
         url: '/Admin/Settings?handler=CriticalDocList&id=' + CriticalDocId,
