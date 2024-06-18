@@ -663,27 +663,20 @@
                             </div>
                             <div class="col-md-12">
                                 <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings">
-                                    @*<thead>
-                                <tr>
-                                <th rowspan="2" style="display:none"></th>
-                                <th rowspan="2">HR Group</th>
-                                @*<th colspan="2">Reference No</th>
+                                    <thead>
+                                        <tr>
+                                            <th rowspan="2" style="display:none"></th>
+                                            <th rowspan="2">HR Group</th>
+                                            <th colspan="2">Reference No</th>
+                                            <th rowspan="2">Description</th>
+                                            <th rowspan="2">State</th>
+                                            <th rowspan="2">Site</th>
+                                            <th rowspan="2"></th>
 
-                                <th rowspan="2">Description</th>
-                                <th rowspan="2"></th>
+                                        </tr>
 
-                                </tr>
-                                <tr>
-                                <th style="display:none"></th>
-                                <th></th>
-                                <th></th>
-                                <th></th>
-                                <th></th>
-                                <th></th>
 
-                                </tr>
-
-                                </thead>*@
+                                    </thead>
                                 </table>
                                 <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
                                 <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
@@ -777,27 +770,20 @@
                             </div>
                             <div class="col-md-12">
                                 <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings">
-                                    @*<thead>
-                                <tr>
-                                <th rowspan="2" style="display:none"></th>
-                                <th rowspan="2">HR Group</th>
-                                @*<th colspan="2">Reference No</th>
+                                    <thead>
+                                        <tr>
+                                            <th rowspan="2" style="display:none"></th>
+                                            <th rowspan="2">HR Group</th>
+                                            <th colspan="2">Reference No</th>
+                                            <th rowspan="2">Description</th>
+                                            <th rowspan="2">State</th>
+                                            <th rowspan="2">Site</th>
+                                            <th rowspan="2"></th>
 
-                                <th rowspan="2">Description</th>
-                                <th rowspan="2"></th>
+                                        </tr>
 
-                                </tr>
-                                <tr>
-                                <th style="display:none"></th>
-                                <th></th>
-                                <th></th>
-                                <th></th>
-                                <th></th>
-                                <th></th>
 
-                                </tr>
-
-                                </thead>*@
+                                    </thead>
                                 </table>
                                 <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
                             </div>
@@ -1124,6 +1110,58 @@
 
 
                     </div>
+                     <hr/>
+                    <div class="form-row">
+
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="clientTypeName">Client Type</label>
+                                <select class="form-control" id="clientTypeNameDocHrDoc" name="ClientTypeId">
+                                    <option value="">Select</option>
+                                    @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
+                                    {
+                                        <option value="@item.Id">@item.Name</option>
+                                    }
+                                </select>
+
+                            </div>
+                            <div class="form-group">
+                                <label for="clientSites">Client Site</label>
+                                <select class="form-control" id="clientSitesDocHrDoc" name="ClientSiteId">
+                                    <option>Select</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="selectedSites">Selected Client Sites <span class="badge badge-pill badge-info" id="selectedSitesCountDocHrDoc">0</span></label>
+                                <select class="form-control" id="selectedSitesDocHrDoc" name="selectedSitesDocHrDoc" multiple style="height: 150px"></select>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="removeSelectedSitesHrDoc" title="Remove selected sites from the list"><i class="fa fa-trash-o mr-2"></i>Remove Sites</button>
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">State</label>
+
+                                <select class="form-control" multiple="multiple" id="HrState" name="HrState">
+                                    @foreach (var state in Model.ConfigDataProiver.GetStates())
+                                    {
+                                        <option value="@state.Name">@state.Name</option>
+                                    }
+                                </select>
+
+                            </div>
+
+                        </div>
+
+
+
+                    </div>
+
+                    <input type="hidden" id="hid_slectedSitesHrDoc" name="hid_slectedSitesHrDoc" value="">
+
                     <div asp-validation-summary="All" id="hrsettings-field-validation"></div>
                 </form>
             </div>

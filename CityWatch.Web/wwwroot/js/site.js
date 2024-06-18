@@ -3136,9 +3136,11 @@ gridHrSettings = $('#tbl_hr_settings').grid({
     primaryKey: 'id',
     columns: [
         { field: 'id', hidden: true },
-        { field: 'groupName', title: 'HR Group', width: '15%' }, // Show the HR Group column
-        { field: 'referenceNo', title: 'Reference No', width: '20%' },
-        { field: 'description', title: 'Description' },
+        { field: 'groupName', width: '15%' }, // Show the HR Group column
+        { field: 'referenceNo', width: '20%' },
+        { field: 'description' },
+        { field: 'states' },
+        { field: 'clientSites' },
         { width: '20%', renderer: hrgroupButtonRenderer },
     ],
     dataBound: function (e, records, totalRecords) {
@@ -3153,7 +3155,7 @@ gridHrSettings = $('#tbl_hr_settings').grid({
             if (currentGroupValue !== lastGroupValue) {
                 lastGroupValue = currentGroupValue;
                
-                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 4).text(currentGroupValue));
+                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 6).text(currentGroupValue));
                 headerRow.css('background-color', '#CCCCCC');
                 $(row).before(headerRow);
             }
@@ -3177,13 +3179,43 @@ let isHrSettingsAdding = false
 //    }
 //});
 $('#tbl_hr_settings tbody').on('click', '#btnEditHrGroup', function () {
-
+    $('#loader').show();
+    $('#hrSettingsModal').modal('show');
     $('#HrSettings_Id').val($(this).attr('data-doc-id'))
     $('#list_hrGroups').val($(this).attr('data-doc-hrgroupid'));
     $('#list_ReferenceNoNumber').val($(this).attr('data-doc-refnonumberid'));
     $('#list_ReferenceNoAlphabet').val($(this).attr('data-doc-refalphnumberid'));
     $('#txtHrSettingsDescription').val($(this).attr('data-doc-description'));
-    $('#hrSettingsModal').modal('show');
+    
+    $.ajax({
+        url: '/Admin/GuardSettings?handler=HrSettingById&id=' + $(this).attr('data-doc-id'),
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (data) {
+        clearCriticalModalHrDoc();
+        var selectedValues = [];
+        $.each(data.hrSettingsClientStates, function (index, item2) {
+            selectedValues.push(item2.state);
+        });
+        
+        $("#HrState").multiselect();
+        $("#HrState").val(selectedValues);
+        $("#HrState").multiselect("refresh");
+
+        $.each(data.hrSettingsClientSites, function (index, item) {
+            $('#selectedSitesDocHrDoc').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
+            updateSelectedSitesCountHrDoc();
+           
+        });
+
+    }).always(function () {
+        $('#loader').hide();
+    });
+
+
+
+
+  
 
 });
 $('#tbl_hr_settings tbody').on('click', '#btnDeleteHrGroup', function () {
@@ -3566,6 +3598,17 @@ $('#btn_save_hr_settings').on('click', function () {
     var form = document.getElementById('form_new_hr_settings');
     var jsformData = new FormData(form);
     var data = $('#list_hrGroups').val();
+
+    var SelectedStates = $('#HrState').val(); 
+
+    var allSitesValues = $('#selectedSitesDocHrDoc option');
+    var allValues = [];
+
+    allSitesValues.each(function () {
+        allValues.push($(this).val());
+    });
+   
+
     if ($('#list_hrGroups').val() == '') {
         alert('Please Select HrGroups')
     }
@@ -3582,7 +3625,9 @@ $('#btn_save_hr_settings').on('click', function () {
                 'hrGroupId': $('#list_hrGroups').val(),
                 'refNoNumberId': $('#list_ReferenceNoNumber').val(),
                 'refNoAlphabetId': $('#list_ReferenceNoAlphabet').val(),
-                'description': $('#txtHrSettingsDescription').val()
+                'description': $('#txtHrSettingsDescription').val(),
+                'Selectedsites': allValues,
+                'SelectedStates': SelectedStates
             },
             //processData: false,
             //contentType: false,
@@ -3617,5 +3662,78 @@ function displayValidationSummaryHrSettings(errors) {
         summaryDiv.querySelector('ul').appendChild(li);
     });
 }
+//p1-213 document step L Start 
+$('#clientTypeNameDocHrDoc').on('change', function () {
+    const option = $(this).find('option:selected').text();;
+    if (option === '') {
+        $('#clientSitesDocHrDoc').html('');
+        $('#clientSitesDocHrDoc').append('<option value="">Select</option>');
+    }
+
+    $.ajax({
+        url: '/admin/settings?handler=ClientSitesDoc&type=' + encodeURIComponent(option),
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (data) {
+        $('#clientSitesDocHrDoc').html('');
+        $('#clientSitesDocHrDoc').append('<option value="">Select</option>');
+        data.map(function (site) {
+            $('#clientSitesDocHrDoc').append('<option value="' + site.value + '">' + site.text + '</option>');
+        });
+    });
+});
+
+$('#clientSitesDocHrDoc').on('change', function () {
+    const elem = $(this).find(":selected");
+    if (elem.val() !== '') {
+        const existing = $('#selectedSitesDocHrDoc option[value="' + elem.val() + '"]');
+        if (existing.length === 0) {
+            $('#selectedSitesDocHrDoc').append('<option value="' + elem.val() + '">' + elem.text() + '</option>');
+            updateSelectedSitesCountHrDoc();
+            
+        }
+    }
+});
+function updateSelectedSitesCountHrDoc() {
+    $('#selectedSitesCountDocHrDoc').text($('#selectedSitesDocHrDoc option').length);
+  
+}
+$('#removeSelectedSitesHrDoc').on('click', function () {
+    $('#selectedSitesDocHrDoc option:selected').remove();
+    updateSelectedSitesCountHrDoc();
+});
+
+
+function clearCriticalModalHrDoc() {
+
+    $('#scheduleId').val('0');
+    $('#clientTypeNameDocHrDoc').val('');
+    $('#clientSitesDocHrDoc').html('<option value="">Select</option>');
+    $('#selectedSitesDocHrDoc').html('');
+    updateSelectedSitesCountHrDoc();
+    $('#clientTypeNameDocHrDoc option:eq(0)').attr('selected', true);
+    
+ 
+   
+
+
+}
+
+
+$('#hrSettingsModal').on('shown.bs.modal', function (event) {
+    clearCriticalModalHrDoc();
+    
+    /*showHideSchedulePopupTabs(isEdit);*/
+});
+
+$('#HrState').multiselect({
+    maxHeight: 400,
+    buttonWidth: '100%',
+    nonSelectedText: 'Select',
+    buttonTextAlignment: 'left',
+    includeSelectAllOption: true,
+});
+
+//p1-213 document step L end 
 
 

@@ -144,7 +144,9 @@ namespace CityWatch.Data
         //for toggle areas - end 
         public DbSet<RCLinkedDuressMaster> RCLinkedDuressMaster { get; set; }
         public DbSet<RCLinkedDuressClientSites> RCLinkedDuressClientSites { get; set; }
+        public DbSet<HrSettingsClientSites> HrSettingsClientSites { get; set; }
 
+        public DbSet<HrSettingsClientStates> HrSettingsClientStates { get; set; }
     }
     /* 07022024 dileep to solve the trigger in table not allowed in enity framework 7.0
      issue save changes because the target table has database triggers

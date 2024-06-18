@@ -6,7 +6,9 @@ using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
+using CityWatch.Web.Models;
 using CityWatch.Web.Services;
+using MailKit.Search;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -1476,7 +1478,7 @@ namespace CityWatch.Web.Pages.Admin
         }
         //for toggle areas - end
         // p1-191 hr files task 3-start
-        public JsonResult OnPostSaveHRSettings(int Id, int hrGroupId, int refNoNumberId, int refNoAlphabetId, string description)
+        public JsonResult OnPostSaveHRSettings(int Id, int hrGroupId, int refNoNumberId, int refNoAlphabetId, string description, int[] Selectedsites, string[] SelectedStates)
         {
             var status = true;
             var message = "Success";
@@ -1493,12 +1495,12 @@ namespace CityWatch.Web.Pages.Admin
                     HRGroupId = hrGroupId,
                     ReferenceNoNumberId = refNoNumberId,
                     ReferenceNoAlphabetId = refNoAlphabetId,
-                    Description = description,
-
+                    Description = description
+                    
                 };
 
 
-                _guardLogDataProvider.SaveHRSettings(hrSettingsnew);
+                _guardLogDataProvider.SaveHRSettings(hrSettingsnew, Selectedsites, SelectedStates);
 
 
             }
@@ -1528,7 +1530,13 @@ namespace CityWatch.Web.Pages.Admin
         }
         public JsonResult OnGetHRSettings()
         {
-            return new JsonResult(_configDataProvider.GetHRSettings());
+            return new JsonResult(_configDataProvider.GetHRSettings()
+            .Select(z => HrDoumentViewModel.FromDataModel(z))
+            .OrderBy(x => x.GroupName)
+            .ThenBy(x => x.referenceNo)
+            .ThenBy(x => x.referenceNoAlphabetsName));
+
+            //return new JsonResult(_configDataProvider.GetHRSettings());
         }
         public JsonResult OnPostSaveLicensesTypes(LicenseTypes record)
         {
@@ -1568,6 +1576,13 @@ namespace CityWatch.Web.Pages.Admin
         }
         // p1-191 hr files task 3-end
 
+
+        public JsonResult OnGetHrSettingById(int id)
+        {
+          
+                return new JsonResult(_configDataProvider.GetHrSettingById(id));
+          
+        }
 
     }
 

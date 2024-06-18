@@ -20,6 +20,7 @@ using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
+using static Dropbox.Api.Team.GroupSelector;
 using static Dropbox.Api.TeamLog.EventCategory;
 using static Dropbox.Api.TeamLog.TimeUnit;
 
@@ -240,7 +241,7 @@ namespace CityWatch.Data.Providers
         List<GuardLog> GetLastLoginNew(int GuradId);
 
         //p1-191 hr files task 3-start
-        void SaveHRSettings(HrSettings hrSettings);
+        void SaveHRSettings(HrSettings hrSettings, int[] selectSites, string[] selectedStates);
         void DeleteHRSettings(int id);
         void SaveLicensesTypes(LicenseTypes licenseTypes);
         void DeleteLicensesTypes(int id);
@@ -542,7 +543,7 @@ namespace CityWatch.Data.Providers
                     PlayNotificationSound = guardLog.PlayNotificationSound,
                     GpsCoordinates = guardLog.GpsCoordinates,
                     IsIRReportTypeEntry = guardLog.IsIRReportTypeEntry,
-                    RcLogbookStamp = guardLog.RcLogbookStamp 
+                    RcLogbookStamp = guardLog.RcLogbookStamp
 
                 });
             }
@@ -4520,11 +4521,62 @@ namespace CityWatch.Data.Providers
         }
 
         //p1-191 hr files task 3-start
-        public void SaveHRSettings(HrSettings hrSettings)
+        public void SaveHRSettings(HrSettings hrSettings, int[] selctedSites, string[] selectedStates)
         {
+
+
+
             if (hrSettings.Id == 0)
             {
                 _context.HrSettings.Add(hrSettings);
+                _context.SaveChanges();
+                int newId = hrSettings.Id;
+                if (newId != 0)
+                {
+                    // Sites 
+                    if (selctedSites.Count() != 0)
+                    {
+                        foreach (var siteId in selctedSites)
+                        {
+                            HrSettingsClientSites HrSettingsClientSites = new HrSettingsClientSites()
+                            {
+
+                                ClientSiteId = siteId,
+                                HrSettingsId = newId
+
+                            };
+
+
+                            _context.HrSettingsClientSites.Add(HrSettingsClientSites);
+                            _context.SaveChanges();
+
+                        }
+
+                    }
+                    // State
+                    if (selectedStates.Count() != 0)
+                    {
+                        foreach (var state in selectedStates)
+                        {
+                            HrSettingsClientStates HrSettingsStates = new HrSettingsClientStates()
+                            {
+
+
+                                HrSettingsId = newId,
+                                State = state
+
+                            };
+
+
+                            _context.HrSettingsClientStates.Add(HrSettingsStates);
+                            _context.SaveChanges();
+
+                        }
+
+                    }
+
+
+                }
             }
             else
             {
@@ -4535,9 +4587,65 @@ namespace CityWatch.Data.Providers
                     hrSettingsToUpdate.ReferenceNoAlphabetId = hrSettings.ReferenceNoAlphabetId;
                     hrSettingsToUpdate.ReferenceNoNumberId = hrSettings.ReferenceNoNumberId;
                     hrSettingsToUpdate.Description = hrSettings.Description;
+                    _context.SaveChanges();
                 }
+                if (selctedSites.Count() != 0)
+                {
+                    var hrremoveSites = _context.HrSettingsClientSites.Where(x => x.HrSettingsId == hrSettings.Id).ToList();
+                    if (hrremoveSites != null)
+                    {
+                        _context.HrSettingsClientSites.RemoveRange(hrremoveSites);
+                        _context.SaveChanges();
+
+                    }
+                    foreach (var siteId in selctedSites)
+                    {
+                        HrSettingsClientSites HrSettingsClientSites = new HrSettingsClientSites()
+                        {
+
+                            ClientSiteId = siteId,
+                            HrSettingsId = hrSettings.Id
+
+                        };
+
+                        _context.HrSettingsClientSites.Add(HrSettingsClientSites);
+                        _context.SaveChanges();
+
+                    }
+
+                }
+
+
+                if (selectedStates.Count() != 0)
+                {
+                    var hrremoveStates = _context.HrSettingsClientStates.Where(x => x.HrSettingsId == hrSettings.Id).ToList();
+                    if (hrremoveStates != null)
+                    {
+                        _context.HrSettingsClientStates.RemoveRange(hrremoveStates);
+                        _context.SaveChanges();
+
+                    }
+                    foreach (var State in selectedStates)
+                    {
+                        HrSettingsClientStates HrSettingsStates = new HrSettingsClientStates()
+                        {
+
+                            State = State,
+                            HrSettingsId = hrSettings.Id
+
+                        };
+
+                        _context.HrSettingsClientStates.Add(HrSettingsStates);
+                        _context.SaveChanges();
+
+                    }
+
+                }
+
+
+
             }
-            _context.SaveChanges();
+
         }
         public void DeleteHRSettings(int id)
         {
@@ -4635,7 +4743,7 @@ namespace CityWatch.Data.Providers
                 var RecExists = _context.IncidentReportFields.Where(x => x.TypeId == ReportFieldType.NotifiedBy && x.Name.Equals(StampedByName)).FirstOrDefault();
                 if (RecExists.StampRcLogbook == true)
                     Req = true;
-            }            
+            }
             return Req;
         }
 
