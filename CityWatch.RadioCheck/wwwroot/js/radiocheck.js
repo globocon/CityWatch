@@ -4024,30 +4024,16 @@ var guardSettings = $('#guard_settings_for_control_room').DataTable({
             data: 'provider',
             width: '11%',
             orderable: false, 
-            render: function (value, type, data) {
-                if (data.isactive === 1) {
-                        return '&nbsp;&nbsp;&nbsp;' + data.provider +
-                        '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#crmSupplierDetailsModal" data-id="' + data.provider + '"></i>' +
-                        '&nbsp;&nbsp;&nbsp;<i class="fa fa-map-marker" aria-hidden="true"></i>';
-
-                }
+            render: function (value, type, data) {              
+            
+                    return '&nbsp;&nbsp;&nbsp;' + data.provider +
+                        '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#crmSupplierDetailsModal" data-id="' + data.provider + '"></i>';
+              
              
             }
         },
     
-    //{
-    //    data: 'isActive', className: "text-center", width: "10%", 'render': function (value, type, data) {
-    //        return renderGuardActiveCell(value, type, data);
-    //    }
-    //},
-    //{
-    //    targets: -1,
-    //    data: null,
-    //    defaultContent: '<button  class="btn btn-outline-primary mr-2" name="btn_edit_guard"><i class="fa fa-pencil mr-2"></i>Edit</button>',
-    //    orderable: false,
-    //    className: "text-center",
-    //    width: "8%"
-    //},
+
     ]
 });
 /*p4-16 Data dump task1-end*/

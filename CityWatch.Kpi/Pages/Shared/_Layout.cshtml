@@ -8,7 +8,8 @@
     var claimsIdentity = User.Identity as ClaimsIdentity;
     var companydetail = viewDataService.GetCompanyDetails().SingleOrDefault(x => x.Id == 1);
     var companydetailsprimarylogo = companydetail.PrimaryLogoPath;
-
+    var currentUrl = Context.Request.Path;
+    var isLoginPage = currentUrl.StartsWithSegments("/Account/Login");
 }
 
 <!DOCTYPE html>
@@ -62,19 +63,21 @@
                     <div>
                         <a href="@(environment.IsDevelopment() ? "" : "https://cws-ir.com/")" class="nav-link py-0" target="_blank"><i class="fa fa-home mr-2"></i>Home Page</a>
                     </div>
-                    <div>
+                    @if (!isLoginPage)
+                    {
+                        <div>
+                            <a asp-page="/Kpi/Dashboard" class="nav-link py-0"><i class="fa fa-bar-chart mr-2"></i>KPI Dashboard</a>
 
-                        <a asp-page="/Kpi/Dashboard" class="nav-link py-0"><i class="fa fa-bar-chart mr-2"></i>KPI Dashboard</a>
+                        </div>
 
+                        <div>
 
-                    </div>
-                    <div>
+                            <a asp-page="/Admin/Settings" class="nav-link py-0"><i class="fa fa-cog mr-2"></i>KPI Settings</a>
 
+                        </div>
 
-                        <a asp-page="/Admin/Settings" class="nav-link py-0"><i class="fa fa-cog mr-2"></i>KPI Settings</a>
-
-
-                    </div>
+                    }
+                   
                 </div>
             </div>
         </div>
