@@ -24,6 +24,7 @@ namespace CityWatch.Data.Models
         public int HRGroupID { get; set; }
         public string HRGroupName { get; set; }
         public string ReferenceNO { get; set; }
+        public string GroupName { get; set; }
         public static CriticalDocuments ToDataModel(CriticalDocumentViewModel viewModel)
         {
             int maxLength = Math.Max(viewModel.ClientSiteIds.Length, viewModel.DescriptionIds.Length);
@@ -49,6 +50,7 @@ namespace CityWatch.Data.Models
                 Id = viewModel.Id,
                 HRGroupID = viewModel.HRGroupID,
                 ClientTypeId = viewModel.ClientTypeId,
+                GroupName=viewModel.GroupName,
                 CriticalDocumentsClientSites = criticalDocumentsClientSites
             };
         }
@@ -60,9 +62,10 @@ namespace CityWatch.Data.Models
                 ClientSiteIds = dataModel.CriticalDocumentsClientSites.Select(z => z.ClientSiteId).ToArray(),
                 ClientTypes = string.Join(", ", dataModel.CriticalDocumentsClientSites.Select(z => z.ClientSite.ClientType.Name).Distinct()),
                 ClientSites = string.Join(", ", dataModel.CriticalDocumentsClientSites.Select(z => z.ClientSite.Name).Distinct()),
-                Descriptions =string.Join(", ", dataModel.CriticalDocumentsClientSites.Select(z => z.HRSettings.Description).Distinct()),
+                Descriptions = string.Join(", ", dataModel.CriticalDocumentsClientSites.Select(z => z.HRSettings.Description).Distinct()),
                 HRGroupName = string.Join(", ", dataModel.CriticalDocumentsClientSites.Select(z => z.HRSettings.HRGroups.Name).Distinct()),
-                ReferenceNO= string.Join(", ", dataModel.CriticalDocumentsClientSites.Select(z => z.HRSettings.ReferenceNo).Distinct()),
+                ReferenceNO = string.Join(", ", dataModel.CriticalDocumentsClientSites.Select(z => z.HRSettings.ReferenceNo).Distinct()),
+                GroupName = dataModel.GroupName,
             };
         }
 

@@ -11,6 +11,8 @@ namespace CityWatch.Data.Models
         LicenceTypes = 2,
         [Display(Name = "Critical Documents")]
         CriticalDocuments = 3,
+        [Display(Name = "Settings")]
+        Settings = 4,
     }
     public enum HrCriticalType
     {

@@ -3025,6 +3025,8 @@
         $('#guardComplianceandlicense_fileName1').text('None');
         $('#GuardComplianceandlicense_FileName1').val('');
         $('#GuardComplianceandlicense_CurrentDateTime').val('');
+        $('#LicanseTypeFilter').prop('checked', false);
+        $('#ComplianceDate').text('Expiry Date');
         clearGuardValidationSummary('compliancelicanseValidationSummary');
     }
 
@@ -3160,12 +3162,22 @@
                 if (DescVals.description != null) {
                     if (DescVals.usedDescription == null) {
                         mark = '❌';
-                        ulClients.append('<li class="es-visible" value="' + DescVals.description + '">' + DescVals.description + ' ' + mark + '</li>');
+                        //ulClients.append('<li class="es-visible" value="' + DescVals.description + '">' + DescVals.referenceNo + '      ' + DescVals.description + ' ' + mark + '</li>');
+                        ulClients.append('<li class="es-visible" value="' + DescVals.description + '" style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd;">' +
+                            '<span class="ref-no" style="flex: 1;">' + DescVals.referenceNo + '</span>' +
+                            '<span class="desc" style="flex: 2; margin-left: 10px;">' + DescVals.description + '</span>' +
+                            mark +
+                            '</li>');
                     }
                     else {
                       
-                        mark = '✔️';
-                        ulClients.append('<li class="es-visible" value="' + DescVals.description + '">' + DescVals.description + ' ' + mark + '</li>');
+                        mark = '<span style="color: green !important;">✔️</span>';
+                       // ulClients.append('<li class="es-visible" value="' + DescVals.description + '">' + DescVals.referenceNo + '     ' + DescVals.description + ' ' + mark + '</li>');
+                        ulClients.append('<li class="es-visible" value="' + DescVals.description + '" style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd;">' +
+                            '<span class="ref-no" style="flex: 1;">' + DescVals.referenceNo + '</span>' +
+                            '<span class="desc" style="flex: 2; margin-left: 10px;">' + DescVals.description + '</span>' +
+                            mark +
+                            '</li>');
                     }
                 }
                
@@ -3252,6 +3264,10 @@
         $('#GuardComplianceandlicense_GuardId').val(data.guardId);
         $('#GuardComplianceandlicense_FileName1').val(data.fileName);
         $('#guardComplianceandlicense_fileName1').text(data.fileName ? data.fileName : 'None');
+        if (data.dateType == true) {
+            $('#LicanseTypeFilter').prop('checked', true);
+            $('#ComplianceDate').text('Issue Date');
+        }
         $('#addGuardCompliancesLicenseModal').modal('show');
     });
     $('#tbl_guard_licensesAndCompliance tbody').on('click', 'button[name=btn_delete_guard_licenseAndCompliance]', function () {
@@ -3570,6 +3586,7 @@
             return false;
         }
         var Desc = $('#Description').val();
+        Desc = Desc.substring(3);
         var cleanText = Desc.replace(/[✔️❌]/g, '').trim();
         const formData = new FormData();
         formData.append("file", file);
@@ -4740,20 +4757,24 @@ $('#LicanseTypeFilter').on('change', function () {
 
     const filter = isChecked ? 1 : 2;
     if (filter == 1) {
-        $("#LicenseTypedv").show();
-        $("#RefernceNodv").hide();
-        $("#LicenseLabel").show();
-        $("#GuardCompliance_LicenseType").show();
-        $("#DescLabel").hide();
-        $("#GuardComplianceAndLicense_Description1").hide();
+        $('#ComplianceDate').text('Issue Date');
+        $('#IsDateFilterEnabledHidden').val(true)
+        //$("#LicenseTypedv").show();
+        //$("#RefernceNodv").hide();
+        //$("#LicenseLabel").show();
+        //$("#GuardCompliance_LicenseType").show();
+        //$("#DescLabel").hide();
+        //$("#GuardComplianceAndLicense_Description1").hide();
     }
     if (filter == 2) {
-        $("#LicenseTypedv").hide();
-        $("#RefernceNodv").show();
-        $("#LicenseLabel").hide();
-        $("#GuardCompliance_LicenseType").hide();
-        $("#DescLabel").show();
-        $("#GuardComplianceAndLicense_Description1").show();
+        $('#IsDateFilterEnabledHidden').val(false)
+        $('#ComplianceDate').text('Expiry Date');
+        //$("#LicenseTypedv").hide();
+        //$("#RefernceNodv").show();
+        //$("#LicenseLabel").hide();
+        //$("#GuardCompliance_LicenseType").hide();
+        //$("#DescLabel").show();
+        //$("#GuardComplianceAndLicense_Description1").show();
 
     }
 

@@ -116,6 +116,7 @@ namespace CityWatch.Data
         public DbSet<KPIScheduleDeafultMailbox> KPIScheduleDeafultMailbox { get; set; }
         public DbSet<CriticalDocuments> CriticalDocuments { get; set; }
         public DbSet<CriticalDocumentsClientSites> CriticalDocumentsClientSites { get; set; }
+        public DbSet<DropboxDirectory> DropboxDirectory { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<GuardLog>()
