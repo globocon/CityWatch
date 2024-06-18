@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CityWatch.Data.Models
@@ -62,5 +63,9 @@ namespace CityWatch.Data.Models
         public string ReferenceNo { get { return ReferenceNoNumbers.Name + ReferenceNoAlphabets.Name  ; } }
         [NotMapped]
         public string GroupName { get { return HRGroups.Name ; } }
+
+        public ICollection<HrSettingsClientSites> hrSettingsClientSites { get; set; }
+
+        public ICollection<HrSettingsClientStates> hrSettingsClientStates { get; set; }
     }
 }
