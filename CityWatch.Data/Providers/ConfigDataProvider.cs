@@ -679,7 +679,10 @@ namespace CityWatch.Data.Providers
         }
         public void SaveCriticalDoc(CriticalDocuments CriticalDoc, bool updateClientSites1 = false)
         {
-            var Document = _context.CriticalDocuments.Include(z => z.CriticalDocumentsClientSites).SingleOrDefault(z => z.Id == CriticalDoc.Id);
+            var DesriptionDoc= _context.CriticalDocuments.Include(z => z.CriticalDocumentDescriptions).SingleOrDefault(z => z.Id == CriticalDoc.Id);
+            var Document = _context.CriticalDocuments.Include(z => z.CriticalDocumentsClientSites)
+                .Include(z => z.CriticalDocumentDescriptions)
+                .SingleOrDefault(z => z.Id == CriticalDoc.Id);
             if (Document == null)
                 _context.Add(CriticalDoc);
             else
@@ -687,6 +690,7 @@ namespace CityWatch.Data.Providers
                 if (updateClientSites1)
                 {
                     _context.CriticalDocumentsClientSites.RemoveRange(Document.CriticalDocumentsClientSites);
+                      _context.CriticalDocumentDescriptions.RemoveRange(DesriptionDoc.CriticalDocumentDescriptions);
                     _context.SaveChanges();
                 }
 
@@ -697,62 +701,75 @@ namespace CityWatch.Data.Providers
 
                 if (updateClientSites1)
                     Document.CriticalDocumentsClientSites = CriticalDoc.CriticalDocumentsClientSites;
+                DesriptionDoc.CriticalDocumentDescriptions = CriticalDoc.CriticalDocumentDescriptions;
             }
             _context.SaveChanges();
 
         }
         public List<CriticalDocuments> GetCriticalDocs()
         {
-            var sss = _context.CriticalDocuments
-                .Include(z => z.CriticalDocumentsClientSites)
-                .ThenInclude(y => y.ClientSite)
-                .ThenInclude(y => y.ClientType)
-                .Include(z => z.CriticalDocumentsClientSites)
-                .ThenInclude(y => y.HRSettings)
-         .ThenInclude(z => z.HRGroups)
-         .Include(z => z.CriticalDocumentsClientSites)
-        .ThenInclude(y => y.HRSettings)
-            .ThenInclude(z => z.ReferenceNoNumbers)
-             .Include(z => z.CriticalDocumentsClientSites)
-        .ThenInclude(y => y.HRSettings)
-         .ThenInclude(z => z.ReferenceNoAlphabets)
+            var sss1 = _context.CriticalDocuments
+    .Include(z => z.CriticalDocumentsClientSites)
+        .ThenInclude(y => y.ClientSite)
+            .ThenInclude(cs => cs.ClientType)
+    .Include(z => z.CriticalDocumentDescriptions)
+            .ThenInclude(y => y.HRSettings)
+     .ThenInclude(z => z.HRGroups)
+     .Include(z => z.CriticalDocumentDescriptions)
+    .ThenInclude(y => y.HRSettings)
+        .ThenInclude(z => z.ReferenceNoNumbers)
+         .Include(z => z.CriticalDocumentDescriptions)
+    .ThenInclude(y => y.HRSettings)
+     .ThenInclude(z => z.ReferenceNoAlphabets)
+    .ToList();
 
-
-                .ToList();
             return _context.CriticalDocuments
-                .Include(z => z.CriticalDocumentsClientSites)
-                .ThenInclude(y => y.ClientSite)
-                .ThenInclude(y => y.ClientType)
-                .Include(z => z.CriticalDocumentsClientSites)
-        .ThenInclude(y => y.HRSettings)
-         .ThenInclude(z => z.HRGroups)
-         .Include(z => z.CriticalDocumentsClientSites)
-        .ThenInclude(y => y.HRSettings)
-            .ThenInclude(z => z.ReferenceNoNumbers)
-             .Include(z => z.CriticalDocumentsClientSites)
-        .ThenInclude(y => y.HRSettings)
-         .ThenInclude(z => z.ReferenceNoAlphabets)
-
-                .ToList();
+    .Include(z => z.CriticalDocumentsClientSites)
+        .ThenInclude(y => y.ClientSite)
+            .ThenInclude(cs => cs.ClientType)
+    .Include(z => z.CriticalDocumentDescriptions)
+            .ThenInclude(y => y.HRSettings)
+     .ThenInclude(z => z.HRGroups)
+     .Include(z => z.CriticalDocumentDescriptions)
+    .ThenInclude(y => y.HRSettings)
+        .ThenInclude(z => z.ReferenceNoNumbers)
+         .Include(z => z.CriticalDocumentDescriptions)
+    .ThenInclude(y => y.HRSettings)
+     .ThenInclude(z => z.ReferenceNoAlphabets)
+    .ToList();
 
         }
         public CriticalDocuments GetCriticalDocById(int CriticalID)
         {
+            var sss1 = _context.CriticalDocuments
+   .Include(z => z.CriticalDocumentsClientSites)
+       .ThenInclude(y => y.ClientSite)
+           .ThenInclude(cs => cs.ClientType)
+   .Include(z => z.CriticalDocumentDescriptions)
+           .ThenInclude(y => y.HRSettings)
+    .ThenInclude(z => z.HRGroups)
+    .Include(z => z.CriticalDocumentDescriptions)
+   .ThenInclude(y => y.HRSettings)
+       .ThenInclude(z => z.ReferenceNoNumbers)
+        .Include(z => z.CriticalDocumentDescriptions)
+   .ThenInclude(y => y.HRSettings)
+    .ThenInclude(z => z.ReferenceNoAlphabets)
+  .SingleOrDefault(x => x.Id == CriticalID);
 
             return _context.CriticalDocuments
-              .Include(z => z.CriticalDocumentsClientSites)
-              .ThenInclude(y => y.ClientSite)
-              .ThenInclude(y => y.ClientType)
-              .Include(z => z.CriticalDocumentsClientSites)
-        .ThenInclude(y => y.HRSettings)
-        .ThenInclude(z => z.HRGroups)
-        .Include(z => z.CriticalDocumentsClientSites)
-        .ThenInclude(y => y.HRSettings)
-            .ThenInclude(z => z.ReferenceNoNumbers)
-             .Include(z => z.CriticalDocumentsClientSites)
-        .ThenInclude(y => y.HRSettings)
-         .ThenInclude(z => z.ReferenceNoAlphabets)
-              .SingleOrDefault(x => x.Id == CriticalID);
+   .Include(z => z.CriticalDocumentsClientSites)
+       .ThenInclude(y => y.ClientSite)
+           .ThenInclude(cs => cs.ClientType)
+   .Include(z => z.CriticalDocumentDescriptions)
+           .ThenInclude(y => y.HRSettings)
+    .ThenInclude(z => z.HRGroups)
+    .Include(z => z.CriticalDocumentDescriptions)
+   .ThenInclude(y => y.HRSettings)
+       .ThenInclude(z => z.ReferenceNoNumbers)
+        .Include(z => z.CriticalDocumentDescriptions)
+   .ThenInclude(y => y.HRSettings)
+    .ThenInclude(z => z.ReferenceNoAlphabets)
+  .SingleOrDefault(x => x.Id == CriticalID);
         }
 
 

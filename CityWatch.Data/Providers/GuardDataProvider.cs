@@ -90,12 +90,12 @@ namespace CityWatch.Data.Providers
         public List<CriticalDocumentsClientSites> GetCriticalDocs(int clientSiteID)
         {
             return _context.CriticalDocumentsClientSites
-                .Include(x=>x.HRSettings)
-                    .ThenInclude(z => z.ReferenceNoNumbers)
-                    .Include(x => x.HRSettings)
-                 .ThenInclude(z => z.ReferenceNoAlphabets)
-                 .Include(x => x.HRSettings)
-                 .ThenInclude(z => z.HRGroups)
+                //.Include(x=>x.HRSettings)
+                //    .ThenInclude(z => z.ReferenceNoNumbers)
+                //    .Include(x => x.HRSettings)
+                // .ThenInclude(z => z.ReferenceNoAlphabets)
+                // .Include(x => x.HRSettings)
+                // .ThenInclude(z => z.HRGroups)
                 .Where(x=>x.ClientSiteId== clientSiteID).ToList();
         }
         public ClientSite GetClientSiteID(string ClientSite)

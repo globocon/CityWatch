@@ -16,7 +16,6 @@ namespace CityWatch.Data.Models
         public int CriticalDocumentID { get; set; }
 
         public int ClientSiteId { get; set; }
-        public int DescriptionID { get; set; }
 
         [ForeignKey("CriticalDocumentID")]
         [JsonIgnore]
@@ -24,7 +23,6 @@ namespace CityWatch.Data.Models
 
         [ForeignKey("ClientSiteId")]
         public ClientSite ClientSite { get; set; }
-        [ForeignKey("DescriptionID")]
-        public HrSettings HRSettings { get; set; }
+        //public ICollection<CriticalDocumentDescriptions> CriticalDocumentDescriptions { get; set; }
     }
 }

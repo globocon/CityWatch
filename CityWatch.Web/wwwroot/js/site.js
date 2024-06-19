@@ -3518,6 +3518,8 @@ $('#btnSaveCriticalDoc').on('click', function () {
         const elem1 = '<input type="hidden" name="DescriptionIds" value="' + $(this).val() + '">';
         $('#frm_CriticalDoc').append(elem1);
     });
+    var check = $('#frm_CriticalDoc').serialize();
+    var Check1 = $('#clientSitesDoc').val();
     $.ajax({
         url: '/Admin/Settings?handler=SaveCriticalDocuments',
         type: 'POST',
@@ -3562,7 +3564,11 @@ gridCriticalDocument = $('#tbl_CriticalDocument').grid({
                 var html = '<table>';
                 html += '<tbody>';
                 for (var i = 0; i < descriptions.length; i++) {
-                    html += '<tr><td style="width: 58px;">' + record.hrGroupName + '</td><td style="width: 40px;">' + referenceNos[i] + '</td><td>' + descriptions[i] + '</td></tr>';
+                    var des = descriptions[i];
+                    if (des!='') {
+                        html += '<tr><td style="width: 58px;">' + record.hrGroupName + '</td><td style="width: 40px;">' + referenceNos[i] + '</td><td>' + descriptions[i] + '</td></tr>';
+                    }
+                    
                 }
                 html += '</tbody>';
                 html += '</table>';
@@ -3652,6 +3658,10 @@ function CriticalModelOnEdit(CriticalDocId) {
         $('#GroupName').val(data.groupName);
         $.each(data.criticalDocumentsClientSites, function (index, item) {
             $('#selectedSitesDoc').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
+            //$('#selectedDescDoc').append('<option value="' + item.hrSettings.id + '">' + item.hrSettings.description + '</option>');
+            updateSelectedSitesCount();
+        });
+        $.each(data.criticalDocumentDescriptions, function (index, item) {
             $('#selectedDescDoc').append('<option value="' + item.hrSettings.id + '">' + item.hrSettings.description + '</option>');
             updateSelectedSitesCount();
         });
