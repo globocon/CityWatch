@@ -715,7 +715,8 @@ namespace CityWatch.Web.Pages.Admin
                 var GropuNamee = RemoveBrackets(item.GroupName);
                 if (Enum.TryParse<HrGroup>(GropuNamee, out var hrGroup))
                 {
-                    var NewDesc = item.ReferenceNo+ item.Description;
+                    // var NewDesc = item.ReferenceNo+ item.Description;
+                    var NewDesc = item.Description;
                     var UsedDesc = _guardDataProvider.GetDescriptionList(hrGroup, NewDesc, GuardID);
                     var combinedData = new CombinedData
                     {
@@ -898,6 +899,9 @@ namespace CityWatch.Web.Pages.Admin
             ModelState.Remove("guardComplianceandlicense.LicenseNo");
             ModelState.Remove("guardComplianceandlicense.DataType");
             ModelState.Remove("guardComplianceandlicense.IsDateFilterEnabledHidden");
+            ModelState.Remove("guardComplianceandlicense.IsDateFilterEnabledHidden");
+            ModelState.Remove("guardComplianceandlicense.ExpiryDate");
+            
             if (!ModelState.IsValid)
             {
                 return new JsonResult(new
