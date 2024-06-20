@@ -1188,7 +1188,8 @@ $(function () {
         $('#clientSitesDoc').val('');
         $("#clientSitesDoc").multiselect("refresh");
         $('#DescriptionDoc').html('<option value="">Select</option>');
-        $('#HRGroupDoc option:eq(0)').attr('selected', true);
+        var valueToSelect = "Select";
+        $('#HRGroupDoc').val(valueToSelect);
         $('#clientTypeNameDoc').val('');
         $('#selectedSitesDoc').html('');
 

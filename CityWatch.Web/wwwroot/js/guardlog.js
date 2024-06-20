@@ -3522,7 +3522,7 @@
         $('#schRunStatusNew').html(messageHtml);
 
         if (HrVal != '' && DescVal != '' && FileVa != 'None') {
-           
+            $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
             if (ExpirayDateVal == '') {
                 confirm('Are you sure you not want to enter expiry Date');
             }
@@ -3530,7 +3530,7 @@
 
 
 
-        $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
+        
         $('#loader').show();
         $.ajax({
             url: '/Admin/GuardSettings?handler=SaveGuardComplianceandlicanse',

@@ -3634,7 +3634,9 @@ function clearCriticalModal() {
     $('#clientSitesDoc').val('');
     $("#clientSitesDoc").multiselect("refresh");
     $('#DescriptionDoc').html('<option value="">Select</option>');
-    $('#HRGroupDoc option:eq(0)').attr('selected', true);
+    //$('#HRGroupDoc').html('<option value="">Select</option>');
+    var valueToSelect = "Select";
+    $('#HRGroupDoc').val(valueToSelect);
     $('#clientTypeNameDoc').val('');
      $('#selectedSitesDoc').html('');
 
