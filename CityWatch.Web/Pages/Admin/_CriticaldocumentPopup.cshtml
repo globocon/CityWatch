@@ -18,12 +18,20 @@
                         <form id="frm_CriticalDoc">
                             <input type="hidden" id="CriticalDocId" name="id" value="0">
                             <input type="hidden" id="nextRunOn" name="nextRunOn" value="">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="GroupName">Group Name</label>
+                                    <input type="text" class="form-control" id="GroupName" name="GroupName" />
+                                    </div>
+                                    
+                                    </div>
+                            </div>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="clientTypeName">Client Type</label>
-                                        <select class="form-control" id="clientTypeNameDoc" name="ClientTypeId">
-                                            <option value="">All</option>
+                                    <select class="form-control" id="clientTypeNameDoc" multiple="multiple" name="ClientTypeId">
                                             @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
                                             {
                                                 <option value="@item.Id">@item.Name</option>
@@ -33,8 +41,8 @@
                                     </div>
                                     <div class="form-group">
                                         <label for="clientSites">Client Site</label>
-                                        <select class="form-control" id="clientSitesDoc" name="ClientSiteId">
-                                            <option>Select</option>
+                                    <select class="form-control" id="clientSitesDoc" multiple="multiple" name="ClientSiteId">
+                                           
                                         </select>
                                     </div>
                                     <div class="form-group">

@@ -12,6 +12,18 @@ namespace CityWatch.Data.Helpers
         {
             return $"/CWS-HR/{guard.State ?? "AU"}/{guard.SecurityNo}";
         }
+        public static string GetGuardDocumentDbxRootFolderNew(Data.Models.Guard guard,string DroDir)
+        {
+            if (!DroDir.StartsWith("/"))
+            {
+                DroDir = "/" + DroDir;
+            }
+            if (!DroDir.EndsWith("/"))
+            {
+                DroDir += "/";
+            }
+            return $"{DroDir}{guard.State ?? "AU"}/{guard.SecurityNo}";
+        }
 
         public static string GetGuardDocumentDbxRootUrl(Data.Models.Guard guard)
         {

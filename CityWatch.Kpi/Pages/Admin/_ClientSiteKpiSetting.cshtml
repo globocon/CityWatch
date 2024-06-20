@@ -1,6 +1,14 @@
 ﻿@using CityWatch.Kpi.Services
+@using CityWatch.Data.Helpers
+@using CityWatch.Data.Models
+@using CityWatch.Data.Providers;
+@using Microsoft.Extensions.Configuration
+@using System.Security.Claims
 @model CityWatch.Data.Models.ClientSiteKpiSetting
 @inject IViewDataService ViewDataService;
+@inject IConfiguration Configuration;
+@inject IViewDataService viewDataServiceNew
+@inject IClientDataProvider clientDataProvider
 @{
     var rowTitle = new string[6] { "", "Daily Employee Hours", "Patrol Frequency", "No Of Patrols", "Image Target", "Wand Scans Target" };
     var rowTitleManningGuard = new string[4] { "", "Start", "End", "Workers" };
@@ -33,7 +41,7 @@
         <li class="nav-item" role="presentation">
             <a class="nav-link" id="RcActionList-tab" data-toggle="tab" href="#RcActionListSettings" role="tab" aria-controls="RcActionListSettings">RC</a>
         </li>
-       
+
     </ul>
     <div class="tab-content p-2">
         <div class="tab-pane active" id="KpiLB" role="tabpanel" aria-labelledby="KpiLBTab">
@@ -190,212 +198,212 @@
             </ul>
             <div class="tab-content">
                 <div class="tab-pane active" id="pocsAndLocations" role="tabpanel" aria-labelledby="pocsAndLocationsTab">
-                <div class="row m-0">
-                    <div class="col-md-12 col-lg-6 pt-2">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <button class="btn btn-success mb-3" id="add_site_poc"><i class="fa fa-plus mr-2"></i>Add Site POC</button>
+                    <div class="row m-0">
+                        <div class="col-md-12 col-lg-6 pt-2">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button class="btn btn-success mb-3" id="add_site_poc"><i class="fa fa-plus mr-2"></i>Add Site POC</button>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <table class="table" id="cs-pocs"></table>
+                                </div>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <table class="table" id="cs-pocs"></table>
+                        <div class="col-md-12 col-lg-6 pt-2 border-left">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button class="btn btn-success mb-3" id="add_site_location"><i class="fa fa-plus mr-2"></i>Add Site Location</button>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <table class="table" id="cs-locations"></table>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-12 col-lg-6 pt-2 border-left">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <button class="btn btn-success mb-3" id="add_site_location"><i class="fa fa-plus mr-2"></i>Add Site Location</button>
-                            </div>
+                </div>
+                <div class="tab-pane" id="clientSiteKeys" role="tabpanel" aria-labelledby="clientSiteKeysTab">
+                    <div class="row m-0">
+                        <div class="col-md-12 text-right">
+                            @*  code added to add Download button  *@
+                            <a href="#" class="btn btn-primary mb-3" id="add_Downloadbtn">Download Zip</a>
+
+                            <button class="btn btn-success mb-3" id="add_client_site_key"><i class="fa fa-plus mr-2"></i>Add Key</button>
                         </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <table class="table" id="cs-locations"></table>
-                            </div>
+
+                    </div>
+                    <div class="row m-0">
+                        <div class="col-md-12">
+                            <table class="table table-bordered" width="100%" id="cs_client_site_keys">
+                                <thead>
+                                    <tr>
+                                        <th hidden></th>
+                                        <th>Key #</th>
+                                        <th>Description</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            </table>
                         </div>
+                    </div>
+                </div>
+                @*for toggle areas-start*@
+                <div class="tab-pane" id="toggleKeys" role="tabpanel" aria-labelledby="toggleKeysTab">
+
+                    <div class="row m-0">
+                        <div class="col-md-12">
+                            <table class="table table-bordered" width="100%" id="cs_toggle_keys">
+                                <thead>
+                                    <tr>
+                                        <th> Toggle</th>
+                                        <th>Default Mode</th>
+
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>
+                                            <table class="table table-borderless mb-0">
+                                                <tr>
+                                                    <td width="200px">
+                                                        <input type="checkbox" id="chk_cs_time_slot" checked />
+                                                        <label id="lbl_cs_IsTimeSlotNo">Time Slot No.</label>
+                                                    </td>
+                                                    <td>
+                                                        <input type="checkbox" id="chk_cs_tn_no_load" />
+                                                        <label id="lbl_cs_IsTNo">T.No. (Load).</label>
+                                                        <input type="hidden" id="chk_cs_Is_Time_Slot" />
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>
+
+                                            <table class="table table-borderless mb-0">
+                                                <tr>
+                                                    <td width="200px">
+                                                        <input type="checkbox" id="chk_cs_vwi" checked />
+                                                        <label id="lbl_cs_IsVWI">VWI</label>
+                                                    </td>
+                                                    <td>
+                                                        <input type="checkbox" id="chk_cs_Manifest" />
+                                                        <label id="lbl_cs_Manifest">Manifest</label>
+                                                        <input type="hidden" id="chk_cs_Is_VWI" />
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td>
+                                            <table class="table table-borderless mb-0">
+                                                <tr>
+                                                    <td width="200px">
+                                                        <input type="checkbox" id="chk_cs_Sender" checked />
+                                                        <label id="lbl_cs_IsSender">Sender Address</label>
+                                                    </td>
+                                                    <td>
+                                                        <input type="checkbox" id="chk_cs_Receiver" />
+                                                        <label id="lbl_cs_Receiver">Receiver Address</label>
+                                                        <input type="hidden" id="chk_cs_Is_Sender" />
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>4</td>
+                                        <td>
+                                            <table class="table table-borderless mb-0">
+                                                <tr>
+                                                    <td width="200px">
+                                                        <input type="checkbox" id="chk_cs_Reels" checked />
+                                                        <label id="lbl_cs_IsReels">Reels</label>
+                                                    </td>
+                                                    <td>
+                                                        <input type="checkbox" id="chk_cs_QTY" />
+                                                        <label id="lbl_cs_QTY">QTY</label>
+                                                        <input type="hidden" id="chk_cs_Is_Reels" />
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>5</td>
+                                        <td>
+                                            <table class="table table-borderless mb-0">
+                                                <tr>
+                                                    <td width="200px">
+                                                        <input type="checkbox" id="chk_cs_ISOVIN" checked />
+                                                        <label id="lbl_cs_IsISO">ISO / VIN</label>
+                                                    </td>
+                                                    <td>
+                                                        <input type="checkbox" id="chk_cs_TrailerRego" />
+                                                        <label id="lbl_cs_TrailerRego">Trailer Rego</label>
+                                                        <input type="hidden" id="chk_cs_IsISOVIN" />
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="form-row mt-3">
+                        <button type="button" id="btnSaveToggleKeys" class="btn btn-primary">Save</button>
+                    </div>
+                </div>
+                @*for toggle areas-end*@
+                <div class="tab-pane" id="ringFence" role="tabpanel" aria-labelledby="ringFenceTab">
+                    <div class="container">
+                        <h4 class="my-3 text-center"><i class="fa fa-exclamation-triangle mr-2 text-warning"></i>CAUTION</h4>
+                        <p>
+                            Some clients consider their customer data as sensitive information especially related to products or suppliers.<br />
+                            When the <b>RINGFENCE</b> is enabled the data collected during the day is not retained past midnight.
+                        </p>
+                        <p>This means while a PDF is generated at midnight, it can not be re-generated.</p>
+                        <p>This means any and all AUDIT functions of the Key, Vehicle and visitor Register is disabled and can not be performed.</p>
+                        <p>In effect, Intelligence and analytics are removed, and is similar to behaving like a "paper based" log book.</p>
+                        <p class="my-2">
+                            <div class="form-check mb-1">
+                                <input type="checkbox" id="cbxDisableDataCollection" class="form-check-input" />
+                                <label for="cbxDisableDataCollection" class="form-check-label text-danger">Disable Data Collection & Audit Functions</label>
+                            </div>
+                        </p>
+                        <p>
+                            <button class="btn btn-primary" id="btnDisableDataCollection">Save</button>
+                        </p>
                     </div>
                 </div>
             </div>
-            <div class="tab-pane" id="clientSiteKeys" role="tabpanel" aria-labelledby="clientSiteKeysTab">
-                <div class="row m-0">
-                    <div class="col-md-12 text-right">
-                        @*  code added to add Download button  *@
-                        <a href="#" class="btn btn-primary mb-3" id="add_Downloadbtn">Download Zip</a>
-
-                        <button class="btn btn-success mb-3" id="add_client_site_key"><i class="fa fa-plus mr-2"></i>Add Key</button>
-                    </div>
-
-                </div>
-                <div class="row m-0">
-                    <div class="col-md-12">
-                        <table class="table table-bordered" width="100%" id="cs_client_site_keys">
-                            <thead>
-                                <tr>
-                                    <th hidden></th>
-                                    <th>Key #</th>
-                                    <th>Description</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            @*for toggle areas-start*@
-            <div class="tab-pane" id="toggleKeys" role="tabpanel" aria-labelledby="toggleKeysTab">
-
-                <div class="row m-0">
-                    <div class="col-md-12">
-                        <table class="table table-bordered" width="100%" id="cs_toggle_keys">
-                            <thead>
-                                <tr>
-                                    <th> Toggle</th>
-                                    <th>Default Mode</th>
-
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>1</td>
-                                    <td>
-                                        <table class="table table-borderless mb-0">
-                                            <tr>
-                                                <td width="200px">
-                                                    <input type="checkbox" id="chk_cs_time_slot" checked />
-                                                    <label id="lbl_cs_IsTimeSlotNo">Time Slot No.</label>
-                                                </td>
-                                                <td>
-                                                    <input type="checkbox" id="chk_cs_tn_no_load" />
-                                                    <label id="lbl_cs_IsTNo">T.No. (Load).</label>
-                                                    <input type="hidden" id="chk_cs_Is_Time_Slot" />
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>2</td>
-                                    <td>
-
-                                        <table class="table table-borderless mb-0">
-                                            <tr>
-                                                <td width="200px">
-                                                    <input type="checkbox" id="chk_cs_vwi" checked />
-                                                    <label id="lbl_cs_IsVWI">VWI</label>
-                                                </td>
-                                                <td>
-                                                    <input type="checkbox" id="chk_cs_Manifest" />
-                                                    <label id="lbl_cs_Manifest">Manifest</label>
-                                                    <input type="hidden" id="chk_cs_Is_VWI" />
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>3</td>
-                                    <td>
-                                        <table class="table table-borderless mb-0">
-                                            <tr>
-                                                <td width="200px">
-                                                    <input type="checkbox" id="chk_cs_Sender" checked />
-                                                    <label id="lbl_cs_IsSender">Sender Address</label>
-                                                </td>
-                                                <td>
-                                                    <input type="checkbox" id="chk_cs_Receiver" />
-                                                    <label id="lbl_cs_Receiver">Receiver Address</label>
-                                                    <input type="hidden" id="chk_cs_Is_Sender" />
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>4</td>
-                                    <td>
-                                        <table class="table table-borderless mb-0">
-                                            <tr>
-                                                <td width="200px">
-                                                    <input type="checkbox" id="chk_cs_Reels" checked />
-                                                    <label id="lbl_cs_IsReels">Reels</label>
-                                                </td>
-                                                <td>
-                                                    <input type="checkbox" id="chk_cs_QTY" />
-                                                    <label id="lbl_cs_QTY">QTY</label>
-                                                    <input type="hidden" id="chk_cs_Is_Reels" />
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-
-                                <tr>
-                                    <td>5</td>
-                                    <td>
-                                        <table class="table table-borderless mb-0">
-                                            <tr>
-                                                <td width="200px">
-                                                    <input type="checkbox" id="chk_cs_ISOVIN" checked />
-                                                    <label id="lbl_cs_IsISO">ISO / VIN</label>
-                                                </td>
-                                                <td>
-                                                    <input type="checkbox" id="chk_cs_TrailerRego" />
-                                                    <label id="lbl_cs_TrailerRego">Trailer Rego</label>
-                                                    <input type="hidden" id="chk_cs_IsISOVIN" />
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="form-row mt-3">
-                    <button type="button" id="btnSaveToggleKeys" class="btn btn-primary">Save</button>
-                </div>
-            </div>
-            @*for toggle areas-end*@
-            <div class="tab-pane" id="ringFence" role="tabpanel" aria-labelledby="ringFenceTab">
-                <div class="container">
-                    <h4 class="my-3 text-center"><i class="fa fa-exclamation-triangle mr-2 text-warning"></i>CAUTION</h4>
-                    <p>
-                        Some clients consider their customer data as sensitive information especially related to products or suppliers.<br />
-                        When the <b>RINGFENCE</b> is enabled the data collected during the day is not retained past midnight.
-                    </p>
-                    <p>This means while a PDF is generated at midnight, it can not be re-generated.</p>
-                    <p>This means any and all AUDIT functions of the Key, Vehicle and visitor Register is disabled and can not be performed.</p>
-                    <p>In effect, Intelligence and analytics are removed, and is similar to behaving like a "paper based" log book.</p>
-                    <p class="my-2">
-                        <div class="form-check mb-1">
-                            <input type="checkbox" id="cbxDisableDataCollection" class="form-check-input" />
-                            <label for="cbxDisableDataCollection" class="form-check-label text-danger">Disable Data Collection & Audit Functions</label>
-                        </div>
-                    </p>
-                    <p>
-                        <button class="btn btn-primary" id="btnDisableDataCollection">Save</button>
-                    </p>
-                </div>
-            </div>
-        </div>
         </div>
         <div class="tab-pane" id="KPISettings" role="tabpanel" aria-labelledby="kpiSettingTab">
-                <ul class="nav nav-tabs" id="kpiSettings" role="tablist">
-                    <li class="nav-item" role="presentation">
+            <ul class="nav nav-tabs" id="kpiSettings" role="tablist">
+                <li class="nav-item" role="presentation">
                     <a class="nav-link active" id="siteKpiSettings-tab" data-toggle="tab" href="#siteKpiSettings" role="tab" aria-controls="siteKpiSettings">Site Settings</a>
-                    </li>
-                    <li class="nav-item" role="presentation">
+                </li>
+                <li class="nav-item" role="presentation">
                     <a class="nav-link" id="contracted-manning-tab" data-toggle="tab" href="#contractedmanningSettings" role="tab" aria-controls="contractedmanningSettings">Contracted Manning</a>
-                    </li>
-                    <li class="nav-item" role="presentation">
+                </li>
+                <li class="nav-item" role="presentation">
                     <a class="nav-link" id="notes-tab" data-toggle="tab" href="#notes" role="tab" aria-controls="notes">Notes</a>
-                    </li>
-                    <li class="nav-item" role="presentation">
+                </li>
+                <li class="nav-item" role="presentation">
                     <a class="nav-link" id="hr-compliance-tab" data-toggle="tab" href="#HRCompliance" role="tab" aria-controls="HRCompliance">HR Compliance</a>
-                    </li>
-                </ul>
-                <div class="tab-content">
+                </li>
+            </ul>
+            <div class="tab-content">
                 <div class="tab-pane active" id="siteKpiSettings" role="tabpanel" aria-labelledby="kpi-settings-tab">
 
                     <div class="container pt-3">
@@ -891,17 +899,20 @@
                     </div>
                 </div>
                 <div class="tab-pane" id="HRCompliance" role="tabpanel" aria-labelledby="hr-compliance-tab">
+
                     <div class="container pt-3">
+                        <iframe src="SinglePageCriticalDoc" frameBorder="0" allowtransparency="true" scrolling="no" style=" width: 100%; height: 710px;  overflow: hidden;"> </iframe>
                     </div>
-                </div>
+
                 </div>
             </div>
+        </div>
         <div class="tab-pane" id="RcActionListSettings" role="tabpanel" aria-labelledby="RcActionListSettings">
             <ul class="nav nav-tabs" id="RcActionList" role="tablist">
-                    <li class="nav-item " role="presentation">
+                <li class="nav-item " role="presentation">
                     <a class="nav-link active" id="RcActionList-tab" data-toggle="tab" href="#RcActionListSettings" role="tab" aria-controls="RcActionListSettings">RC Action List</a>
-                    </li>
-              </ul>
+                </li>
+            </ul>
             <div class="tab-content">
                 @*New Tab for Rc List start*@
                 <div class="tab-pane active" id="RcActionListSettings" role="tabpanel" aria-labelledby="RcActionListSettings">
@@ -1058,9 +1069,9 @@
                     <button type="button" class="btn btn-success" id="save_site_RC"><i class="fa fa-save mr-2"></i>Save RC Action List</button>
                 </div>
                 @*New Tab for contracted-manning end*@
-                </div>
+            </div>
         </div>
-  
+
 
     </div>
 </div>

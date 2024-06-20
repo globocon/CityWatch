@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using CityWatch.Data.Models;
+using Microsoft.AspNetCore.Http;
+using System;
 using System.Linq;
 using System.Security.Claims;
 
@@ -39,7 +41,11 @@ namespace CityWatch.Web.Helpers
                     return userClaims.Single(x => x.Type == ClaimTypes.Role).Value == "Administrator";
                 }
                 return false;
+
+                
             }
         }
+        public static bool IsAdminPowerUser { get; set; }
+        public static bool IsAdminGlobal { get; set; }
     }
 }

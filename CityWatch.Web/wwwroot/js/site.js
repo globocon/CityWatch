@@ -634,21 +634,14 @@
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
-        selectionType: 'multiple',
+        /*selectionType: 'multiple',*/
         button: true,
         inlineEditing: { mode: 'command' },
       
         columns: [
             { field: 'name', title: 'Name', width: '100%', editor: true },
             { field: 'emailTo', title: 'Special Email Condition', width: '100%', editor: true },
-            // { field: 'emailTo', title: 'State', width: 80, type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
-            //{ field: 'clientSiteIds', hidden: true },
-            ///*{ field: 'clientSites', title: 'Site Allocation', type: 'dropdown', width: '100%', type: 'button', editor: select2editor }*/
-            //{ field: 'clientSites', title: 'Site Allocation', width: '100%' },
-            //{
-            //    width: '100%', renderer: irButtonRenderer
-            //}
-
+            { field: 'stampRcLogbook', title: 'Stamp RC Logbook ?', type: 'checkbox', align: 'center', width: '70%', editor: true }
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -997,7 +990,8 @@ $('#add_field_settings').on('click', function () {
                 'id': -1,
                 'typeId': selFieldTypeId,
                 'name': '',
-                'emailTo': ''
+                'emailTo': '',
+                'stampRcLogbook': false
             }).edit(-1);
         }
     } else {
@@ -3142,9 +3136,11 @@ gridHrSettings = $('#tbl_hr_settings').grid({
     primaryKey: 'id',
     columns: [
         { field: 'id', hidden: true },
-        { field: 'groupName', title: 'HR Group', width: '15%' }, // Show the HR Group column
-        { field: 'referenceNo', title: 'Reference No', width: '20%' },
-        { field: 'description', title: 'Description' },
+        { field: 'groupName', width: '15%' }, // Show the HR Group column
+        { field: 'referenceNo', width: '20%' },
+        { field: 'description' },
+        { field: 'states' },
+        { field: 'clientSites' },
         { width: '20%', renderer: hrgroupButtonRenderer },
     ],
     dataBound: function (e, records, totalRecords) {
@@ -3159,7 +3155,7 @@ gridHrSettings = $('#tbl_hr_settings').grid({
             if (currentGroupValue !== lastGroupValue) {
                 lastGroupValue = currentGroupValue;
                
-                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 4).text(currentGroupValue));
+                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 6).text(currentGroupValue));
                 headerRow.css('background-color', '#CCCCCC');
                 $(row).before(headerRow);
             }
@@ -3183,13 +3179,43 @@ let isHrSettingsAdding = false
 //    }
 //});
 $('#tbl_hr_settings tbody').on('click', '#btnEditHrGroup', function () {
-
+    $('#loader').show();
+    $('#hrSettingsModal').modal('show');
     $('#HrSettings_Id').val($(this).attr('data-doc-id'))
     $('#list_hrGroups').val($(this).attr('data-doc-hrgroupid'));
     $('#list_ReferenceNoNumber').val($(this).attr('data-doc-refnonumberid'));
     $('#list_ReferenceNoAlphabet').val($(this).attr('data-doc-refalphnumberid'));
     $('#txtHrSettingsDescription').val($(this).attr('data-doc-description'));
-    $('#hrSettingsModal').modal('show');
+    
+    $.ajax({
+        url: '/Admin/GuardSettings?handler=HrSettingById&id=' + $(this).attr('data-doc-id'),
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (data) {
+        clearCriticalModalHrDoc();
+        var selectedValues = [];
+        $.each(data.hrSettingsClientStates, function (index, item2) {
+            selectedValues.push(item2.state);
+        });
+        
+        $("#HrState").multiselect();
+        $("#HrState").val(selectedValues);
+        $("#HrState").multiselect("refresh");
+
+        $.each(data.hrSettingsClientSites, function (index, item) {
+            $('#selectedSitesDocHrDoc').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
+            updateSelectedSitesCountHrDoc();
+           
+        });
+
+    }).always(function () {
+        $('#loader').hide();
+    });
+
+
+
+
+  
 
 });
 $('#tbl_hr_settings tbody').on('click', '#btnDeleteHrGroup', function () {
@@ -3281,6 +3307,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridCriticalDocument.hide();
         $('#add_criticalDocuments').hide();
         $('#add_hr_settings').show();
+        $('#SettingsDiv').hide();
     }
 
     else if ($('#hr_settings_fields_types').val() == 2) {
@@ -3291,6 +3318,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridCriticalDocument.hide();
         $('#add_criticalDocuments').hide();
         $('#add_hr_settings').show();
+        $('#SettingsDiv').hide();
     }
     else if ($('#hr_settings_fields_types').val() == 3) {
         $('#add_criticalDocuments').show();
@@ -3299,6 +3327,26 @@ $('#hr_settings_fields_types').on('change', function () {
         gridLicenseTypes.hide();
         gridCriticalDocument.show();
         $('#add_hr_settings').hide();
+        $('#SettingsDiv').hide();
+    }
+    else if ($('#hr_settings_fields_types').val() == 4) {
+        $('#add_criticalDocuments').hide();
+        $('#add_hr_settings').hide();
+        gridHrSettings.hide();
+        gridLicenseTypes.hide();
+        gridCriticalDocument.hide();
+        $('#add_hr_settings').hide();
+        $('#SettingsDiv').show();
+        $.ajax({
+            url: '/Admin/Settings?handler=SettingsDetails',
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                $('#hr_compliance_email').val(data.email)
+                $('#DropboxDir').val(data.dropboxDir)
+            }
+        });
+        
     }
     else {
         gridLicenseTypes.hide();
@@ -3334,39 +3382,84 @@ $('#add_hr_settings').on('click', function () {
 
 //p1-213 critical Document start
 $('#add_criticalDocuments').on('click', function () {
-    
+    $('#clientSitesDoc').html('');
     $('#Critical-modal').modal('show');
     clearCriticalModal();
 });
+//$('#clientTypeNameDoc').on('change', function () {
+//    const option = $(this).find('option:selected').text();;
+//    if (option === '') {
+//        $('#clientSitesDoc').html('');
+//        $('#clientSitesDoc').append('<option value="">Select</option>');
+//    }
+
+//    $.ajax({
+//        url: '/admin/settings?handler=ClientSitesDoc&type=' + encodeURIComponent(option),
+//        type: 'GET',
+//        dataType: 'json',
+//    }).done(function (data) {
+//        $('#clientSitesDoc').html('');
+//        $('#clientSitesDoc').append('<option value="">Select</option>');
+//        data.map(function (site) {
+//            $('#clientSitesDoc').append('<option value="' + site.value + '">' + site.text + '</option>');
+//        });
+//    });
+//});
+$('#clientTypeNameDoc').multiselect({
+    maxHeight: 400,
+    buttonWidth: '100%',
+    nonSelectedText: 'Select',
+    buttonTextAlignment: 'left',
+    includeSelectAllOption: true,
+});
+$('#clientSitesDoc').multiselect({
+    maxHeight: 400,
+    buttonWidth: '100%',
+    nonSelectedText: 'Select',
+    buttonTextAlignment: 'left',
+    includeSelectAllOption: true,
+});
 $('#clientTypeNameDoc').on('change', function () {
-    const option = $(this).find('option:selected').text();;
-    if (option === '') {
-        $('#clientSitesDoc').html('');
-        $('#clientSitesDoc').append('<option value="">Select</option>');
-    }
+    let clientTypeIds = $(this).val().join(';')
+    const clientTypeId = clientTypeIds;
+    //$('#clientSitesDoc').multiselect("refresh");
+    $('#clientSitesDoc').html('');
+    const clientSiteControl = $('#clientSitesDoc');
+    var selectedOption = $(this).find("option:selected");
+    var selectedText = selectedOption.text();
 
     $.ajax({
-        url: '/admin/settings?handler=ClientSitesDoc&type=' + encodeURIComponent(option),
+        url: '/admin/settings?handler=ClientSitesNew',
         type: 'GET',
+        data: {
+            typeId: clientTypeId
+
+        },
         dataType: 'json',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (data) {
-        $('#clientSitesDoc').html('');
-        $('#clientSitesDoc').append('<option value="">Select</option>');
+
         data.map(function (site) {
-            $('#clientSitesDoc').append('<option value="' + site.value + '">' + site.text + '</option>');
+            clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
         });
+        clientSiteControl.multiselect('rebuild');
+        
     });
+
 });
 
 $('#clientSitesDoc').on('change', function () {
-    const elem = $(this).find(":selected");
-    if (elem.val() !== '') {
-        const existing = $('#selectedSitesDoc option[value="' + elem.val() + '"]');
-        if (existing.length === 0) {
-            $('#selectedSitesDoc').append('<option value="' + elem.val() + '">' + elem.text() + '</option>');
-            updateSelectedSitesCount();
+    const selectedValues = $(this).val().join(';').split(';');
+    selectedValues.forEach(function (value) {
+        if (value !== '') {
+            const existing = $('#selectedSitesDoc option[value="' + value + '"]');
+            if (existing.length === 0) {
+                const text = $('#clientSitesDoc option[value="' + value + '"]').text();
+                $('#selectedSitesDoc').append('<option value="' + value + '">' + text + '</option>');
+            }
         }
-    }
+    });
+    updateSelectedSitesCount();
 });
 function updateSelectedSitesCount() {
     $('#selectedSitesCountDoc').text($('#selectedSitesDoc option').length);
@@ -3411,6 +3504,7 @@ $('#DescriptionDoc').on('change', function () {
 function updateSelectedDescCount() {
     $('#selectedDescCountDoc').text($('#selectedDescDoc option').length);
 }
+
 $('#btnSaveCriticalDoc').on('click', function () {
     $("input[name=clientSiteIds]").remove();
     var options = $('#selectedSitesDoc option');
@@ -3424,6 +3518,8 @@ $('#btnSaveCriticalDoc').on('click', function () {
         const elem1 = '<input type="hidden" name="DescriptionIds" value="' + $(this).val() + '">';
         $('#frm_CriticalDoc').append(elem1);
     });
+    var check = $('#frm_CriticalDoc').serialize();
+    var Check1 = $('#clientSitesDoc').val();
     $.ajax({
         url: '/Admin/Settings?handler=SaveCriticalDocuments',
         type: 'POST',
@@ -3448,10 +3544,13 @@ gridCriticalDocument = $('#tbl_CriticalDocument').grid({
     iconsLibrary: 'fontawesome',
     primaryKey: 'id',
     columns: [
-        { field: 'clientTypes', title: 'Client Types', width: 100 },
+        {
+            field: 'groupName', title: 'Group Name', width: 70
+        },
+       /* { field: 'clientTypes', title: 'Client Types', width: 100 },*/
         { field: 'clientSites', title: 'Client Sites', width: 170 },
         {
-            field: 'descriptions', title: 'Mandatory HR Doucments', width: 180,
+            field: 'descriptions', title: 'Mandatory HR Documents', width: 180,
             renderer: function (value, record) {
                 function splitFirstComma(str) {
                     const index = str.indexOf(',');
@@ -3465,7 +3564,11 @@ gridCriticalDocument = $('#tbl_CriticalDocument').grid({
                 var html = '<table>';
                 html += '<tbody>';
                 for (var i = 0; i < descriptions.length; i++) {
-                    html += '<tr><td>' + record.hrGroupName + '</td><td style="width: 40px;">' + referenceNos[i] + '</td><td>' + descriptions[i] + '</td></tr>';
+                    var des = descriptions[i];
+                    if (des!='') {
+                        html += '<tr><td style="width: 58px;">' + record.hrGroupName + '</td><td style="width: 40px;">' + referenceNos[i] + '</td><td>' + descriptions[i] + '</td></tr>';
+                    }
+                    
                 }
                 html += '</tbody>';
                 html += '</table>';
@@ -3517,23 +3620,30 @@ $('#Critical-modal').on('shown.bs.modal', function (event) {
         schId = button.data('sch-id');
         CriticalModelOnEdit(schId);
     } else {
-        scheduleModalOnAdd();
+        //scheduleModalOnAdd();
     }
 
     /*showHideSchedulePopupTabs(isEdit);*/
 });
 function clearCriticalModal() {
     $('#CriticalDocId').val('0');
-    $('#clientTypeName').val('');
-    $('#clientSitesDoc').html('<option value="">Select</option>');
-    $('#DescriptionDoc').html('<option value="">Select</option>');
-    $('#HRGroupDoc option:eq(0)').attr('selected', true);
+    //$('#clientTypeNameDoc').html('');
     $('#clientTypeNameDoc').val('');
-    $('#selectedSitesDoc').html('');
+   $("#clientTypeNameDoc").multiselect("refresh");
+    $('#clientSitesDoc').html('');
+    $('#clientSitesDoc').val('');
+    $("#clientSitesDoc").multiselect("refresh");
+    $('#DescriptionDoc').html('<option value="">Select</option>');
+    //$('#HRGroupDoc').html('<option value="">Select</option>');
+    var valueToSelect = "Select";
+    $('#HRGroupDoc').val(valueToSelect);
+    $('#clientTypeNameDoc').val('');
+     $('#selectedSitesDoc').html('');
+
     $('#selectedDescDoc').html('');
+    $('#GroupName').val('');
     updateSelectedSitesCount();
     $('input:hidden[name="clientSiteIds"]').remove();
-    $('#clientTypeName option:eq(0)').attr('selected', true);
     
     $('#CriDoc-modal-validation').html('');
    
@@ -3547,9 +3657,13 @@ function CriticalModelOnEdit(CriticalDocId) {
         dataType: 'json',
     }).done(function (data) {
         $('#CriticalDocId').val(data.id);
-       
+        $('#GroupName').val(data.groupName);
         $.each(data.criticalDocumentsClientSites, function (index, item) {
             $('#selectedSitesDoc').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
+            //$('#selectedDescDoc').append('<option value="' + item.hrSettings.id + '">' + item.hrSettings.description + '</option>');
+            updateSelectedSitesCount();
+        });
+        $.each(data.criticalDocumentDescriptions, function (index, item) {
             $('#selectedDescDoc').append('<option value="' + item.hrSettings.id + '">' + item.hrSettings.description + '</option>');
             updateSelectedSitesCount();
         });
@@ -3567,11 +3681,132 @@ $('#removeSelectedSitesDoc').on('click', function () {
     $('#selectedDescDoc option:selected').remove();
     updateSelectedSitesCount();
 });
+
+//To save the Global Email Of Duress Button start
+$('#add_GloblEmail').on('click', function () {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    var Email = $('#du_duress_email').val();
+    var emailsArray = Email.split(',');
+    var isValidEmailIds = true;
+    for (var i = 0; i < emailsArray.length; i++) {
+        var emailAddress = emailsArray[i].trim();
+        if (isValidEmail(emailAddress)) {
+
+        }
+        else {
+            isValidEmailIds = false;
+            $.notify("Invalid email address.",
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#D44950",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );
+
+        }
+
+    }
+
+    if (isValidEmailIds) {
+
+        $.ajax({
+            url: '/Admin/Settings?handler=SaveDuressEmail',
+            data: { Email: Email },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function () {
+            alert("The Duress Email Alert Email was saved successfully");
+        })
+    }
+
+
+
+    function isValidEmail(email) {
+        // Regular expression for basic email validation
+        var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailPattern.test(email);
+    }
+})
+
+$('#add_ComplianceEmail').on('click', function () {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    var Email = $('#hr_compliance_email').val();
+    var emailsArray = Email.split(',');
+    isValidEmailIds = true;
+    for (var i = 0; i < emailsArray.length; i++) {
+        var emailAddress = emailsArray[i].trim();
+        if (isValidEmail(emailAddress)) {
+
+        }
+        else {
+            isValidEmailIds = false;
+            $.notify("Invalid email address." + emailAddress,
+                {
+                    align: "center",
+                    verticalAlign: "top",
+                    color: "#fff",
+                    background: "#D44950",
+                    blur: 0.4,
+                    delay: 0
+                }
+            );
+
+        }
+
+
+
+    }
+
+    if (isValidEmailIds) {
+        $.ajax({
+            url: '/Admin/Settings?handler=SaveGlobalComplianceAlertEmail',
+            data: { Email: Email },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function () {
+            alert("The Compliance Alert Email was saved successfully");
+        })
+
+    }
+
+    function isValidEmail(email) {
+        // Regular expression for basic email validation
+        var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailPattern.test(email);
+    }
+})
+$('#add_Dropbox').on('click', function () {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    var DroboxDir = $('#DropboxDir').val();
+    $.ajax({
+        url: '/Admin/Settings?handler=SaveDropboxDir',
+        data: { DroboxDir: DroboxDir },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': token },
+    }).done(function (status) {
+        alert("DropboxDirectory was saved successfully");
+    })
+})
+//To save the Global Email Of Duress Button stop
 //p1-213 critical Document stop
 $('#btn_save_hr_settings').on('click', function () {
     var form = document.getElementById('form_new_hr_settings');
     var jsformData = new FormData(form);
     var data = $('#list_hrGroups').val();
+
+    var SelectedStates = $('#HrState').val(); 
+
+    var allSitesValues = $('#selectedSitesDocHrDoc option');
+    var allValues = [];
+
+    allSitesValues.each(function () {
+        allValues.push($(this).val());
+    });
+   
+
     if ($('#list_hrGroups').val() == '') {
         alert('Please Select HrGroups')
     }
@@ -3588,7 +3823,9 @@ $('#btn_save_hr_settings').on('click', function () {
                 'hrGroupId': $('#list_hrGroups').val(),
                 'refNoNumberId': $('#list_ReferenceNoNumber').val(),
                 'refNoAlphabetId': $('#list_ReferenceNoAlphabet').val(),
-                'description': $('#txtHrSettingsDescription').val()
+                'description': $('#txtHrSettingsDescription').val(),
+                'Selectedsites': allValues,
+                'SelectedStates': SelectedStates
             },
             //processData: false,
             //contentType: false,
@@ -3623,5 +3860,78 @@ function displayValidationSummaryHrSettings(errors) {
         summaryDiv.querySelector('ul').appendChild(li);
     });
 }
+//p1-213 document step L Start 
+$('#clientTypeNameDocHrDoc').on('change', function () {
+    const option = $(this).find('option:selected').text();;
+    if (option === '') {
+        $('#clientSitesDocHrDoc').html('');
+        $('#clientSitesDocHrDoc').append('<option value="">Select</option>');
+    }
+
+    $.ajax({
+        url: '/admin/settings?handler=ClientSitesDoc&type=' + encodeURIComponent(option),
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (data) {
+        $('#clientSitesDocHrDoc').html('');
+        $('#clientSitesDocHrDoc').append('<option value="">Select</option>');
+        data.map(function (site) {
+            $('#clientSitesDocHrDoc').append('<option value="' + site.value + '">' + site.text + '</option>');
+        });
+    });
+});
+
+$('#clientSitesDocHrDoc').on('change', function () {
+    const elem = $(this).find(":selected");
+    if (elem.val() !== '') {
+        const existing = $('#selectedSitesDocHrDoc option[value="' + elem.val() + '"]');
+        if (existing.length === 0) {
+            $('#selectedSitesDocHrDoc').append('<option value="' + elem.val() + '">' + elem.text() + '</option>');
+            updateSelectedSitesCountHrDoc();
+            
+        }
+    }
+});
+function updateSelectedSitesCountHrDoc() {
+    $('#selectedSitesCountDocHrDoc').text($('#selectedSitesDocHrDoc option').length);
+  
+}
+$('#removeSelectedSitesHrDoc').on('click', function () {
+    $('#selectedSitesDocHrDoc option:selected').remove();
+    updateSelectedSitesCountHrDoc();
+});
+
+
+function clearCriticalModalHrDoc() {
+
+    $('#scheduleId').val('0');
+    $('#clientTypeNameDocHrDoc').val('');
+    $('#clientSitesDocHrDoc').html('<option value="">Select</option>');
+    $('#selectedSitesDocHrDoc').html('');
+    updateSelectedSitesCountHrDoc();
+    $('#clientTypeNameDocHrDoc option:eq(0)').attr('selected', true);
+    
+ 
+   
+
+
+}
+
+
+$('#hrSettingsModal').on('shown.bs.modal', function (event) {
+    clearCriticalModalHrDoc();
+    
+    /*showHideSchedulePopupTabs(isEdit);*/
+});
+
+$('#HrState').multiselect({
+    maxHeight: 400,
+    buttonWidth: '100%',
+    nonSelectedText: 'Select',
+    buttonTextAlignment: 'left',
+    includeSelectAllOption: true,
+});
+
+//p1-213 document step L end 
 
 

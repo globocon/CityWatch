@@ -55,6 +55,8 @@ namespace CityWatch.Kpi.Services
         List<GuardComplianceAndLicense> GetKpiGuardDetailsComplianceAndLicenseHRList(string hrGroup);
         List<HrSettings> GetHRSettings(int HRID);
         List<HRGroups> GetKpiGuardHRGroup();
+        List<ClientType> GetUserClientTypesHavingAccess(int? userId);
+        List<HRGroups> GetHRGroupslist();
     }
 
     public class ViewDataService : IViewDataService
@@ -411,5 +413,20 @@ namespace CityWatch.Kpi.Services
 
                 return dailyKpis;
             }
+        public List<ClientType> GetUserClientTypesHavingAccess(int? userId)
+        {
+            var clientTypes = _clientDataProvider.GetClientTypes();
+            if (userId == null)
+                return clientTypes;
+
+            var allUserAccess = _clientDataProvider.GetUserClientSiteAccess(userId);
+            var clientTypeIds = allUserAccess.Select(x => x.ClientSite.TypeId).Distinct().ToList();
+            return clientTypes.Where(x => clientTypeIds.Contains(x.Id)).ToList();
+        }
+        public List<HRGroups> GetHRGroupslist()
+        {
+            var HRList = _clientDataProvider.GetHRGroups();
+            return HRList;
+        }
         }
     }

@@ -988,6 +988,7 @@ $(function () {
         }
     });
 
+
     /*code added for search client start */
     $('#search_sites_settings').on('keyup', function (e) {
         var SearchTextbox = $("#search_sites_settings");
@@ -1013,7 +1014,7 @@ $(function () {
     let gritdSmartWands;
     $('#kpi-settings-modal').on('shown.bs.modal', function (event) {
         currentDiv = 1;
-        
+        $("#OtherSettingsNew").load('CriticalDocumentNew');
         $('#div_site_settings').html('');
         const button = $(event.relatedTarget);
         $('#client_site_name').text(button.data('cs-name'))
@@ -1809,3 +1810,5 @@ $('#div_site_settings').on('click', '#btnSaveGuardSiteSettingsnew', function () 
     });
 });
 //menu change 04-03-2024 end
+
+

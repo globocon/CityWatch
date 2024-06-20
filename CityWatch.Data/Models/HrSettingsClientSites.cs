@@ -9,20 +9,20 @@ using System.Threading.Tasks;
 
 namespace CityWatch.Data.Models
 {
-    public class CriticalDocumentsClientSites
+    public class HrSettingsClientSites
     {
         [Key]
-        public int Id { get; set; }
-        public int CriticalDocumentID { get; set; }
+        public int Id { get; set; } 
 
+        public int HrSettingsId { get; set; }
+        
         public int ClientSiteId { get; set; }
 
-        [ForeignKey("CriticalDocumentID")]
+        [ForeignKey("HrSettingsId")]
         [JsonIgnore]
-        public CriticalDocuments CriticalDoc { get; set; }
+        public HrSettings Schedule { get; set; }
 
-        [ForeignKey("ClientSiteId")]
+        [ForeignKey("ClientSiteId")]        
         public ClientSite ClientSite { get; set; }
-        //public ICollection<CriticalDocumentDescriptions> CriticalDocumentDescriptions { get; set; }
     }
 }
