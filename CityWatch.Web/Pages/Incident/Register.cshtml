@@ -60,16 +60,20 @@
                     <div class="form-check event-type-check">
                         <label class="form-check-label">
                             <div class="d-flex flex-row align-content-start flex-wrap">
-                                <span>Site COLOUR Code Alert <em class="text-muted">(Code Blue, Code Grey, Code Yellow, etc)</em></span>
+                                <span>COLOUR Code Alert <em class="text-muted">(Code Blue, Code Grey, Code Yellow, etc)</em></span>
                                 @*<select asp-for="@Model.Report.SiteColourCodeId" class="form-control form-control-sm ml-0 ml-lg-2 w-75" disabled asp-items="@Model.ViewDataService.GetFeedbackTemplatesByType(FeedbackType.ColourCodes)"></select>*@
                                 @*Template type is directly taken from database -jisha-start *@
-                                <select asp-for="@Model.Report.SiteColourCodeId" class="form-control form-control-sm ml-0 ml-lg-2 w-75" disabled>
-                                    <option style="background-color:white; color:black" value="" selected>Select Template</option>
+                                <select asp-for="@Model.Report.SiteColourCodeId" class="form-control form-control-sm ml-0 ml-lg-2" style="width: 250px; min-width: 250px;" disabled>
+
+                                  <option style="background-color:white; color:black;" value="" selected>Select AS.3745 & AS.4083 Template</option>
+                                    @*   <option style="background-color:white; color:black;" value="" selected>Select <span style="font-style:italic;">AS.3745</span> & <span style="font-style:italic;">AS.4083</span> Template</option> *@
+                                                                        
                                     @foreach (var item in @Model.ViewDataService.GetFeedbackTemplateListByType(Convert.ToInt16(colourcode)))
                                     {
-                                        <option style="background-color:@item.BackgroundColour; color:@item.TextColor" value="@item.Id">@item.Name</option>
+                                        <option style="background-color:@item.BackgroundColour; color:@item.TextColor;width: 250px; min-width: 250px;" value="@item.Id">@item.Name</option>
                                     }
                                 </select>
+
                                 @*Template type is directly taken from database -jisha-end *@
                                 <input type="hidden" asp-for="@Model.Report.SiteColourCode" />
                             </div>
