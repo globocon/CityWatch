@@ -341,7 +341,7 @@ namespace CityWatch.Web.Pages.Guard
             var thresholdDate = DateTime.Now.AddDays(-120);
             var success = false;
             var initalsUsed = string.Empty;
-            var strResult=string.Empty;
+            var strResult = string.Empty;
             if (!string.IsNullOrEmpty(guardLicNo))
             {
                 var guard = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(guardLicNo);
@@ -350,13 +350,9 @@ namespace CityWatch.Web.Pages.Guard
                     var lastLogin = _guardDataProvider.GetGuardLastLogin(guard.Id);
                     if (guard.IsActive)
                     {
-                        if (lastLogin == null)
+                        if (lastLogin != null)
                         {
-                            strResult = "User not found.";
-                            success = true;
-                        }
-                        else
-                        {
+
                             if (lastLogin.LoginDate < thresholdDate && lastLogin.Guard.IsActive)
                             {
                                 lastLogin.Guard.IsActive = false;
@@ -367,24 +363,28 @@ namespace CityWatch.Web.Pages.Guard
                             else { success = false; }
 
                         }
-                       
+                        else
+                        { success = false; }
                     }
-                    else 
-                    { strResult = "You have'nt logged in for a while. Contact your administrator!.";
+                    else
+                    {
+                        strResult = "You have'nt logged in for a while. Contact your administrator!.";
                         success = true;
                     }
-                    
+
                 }
             }
-            return new JsonResult(new { success,strResult });
+            return new JsonResult(new { success, strResult });
 
 
 
         }
-    
 
-//manju
-private int GetGuardLoginId(int logBookId)
+
+
+
+     
+        private int GetGuardLoginId(int logBookId)
         {
             GuardLogin guardLogin= new GuardLogin();
 
