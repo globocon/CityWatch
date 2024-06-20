@@ -16,7 +16,9 @@ namespace CityWatch.Data.Models
         public int ClientTypeId { get; set; }
         public int HRGroupID { get; set; }
         public string GroupName { get; set; }
+        
         public ICollection<CriticalDocumentsClientSites> CriticalDocumentsClientSites { get; set; }
+        public ICollection<CriticalDocumentDescriptions> CriticalDocumentDescriptions { get; set; }
 
     }
 }

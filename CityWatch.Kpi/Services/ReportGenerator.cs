@@ -984,7 +984,15 @@ namespace CityWatch.Kpi.Services
         private void CreateGuardDetailsNewHeader(Table table, List<GuardLogin> monthlyDataGuard,string hrGroupname,int id)
         {
             float[] columnWidths = { 100f, 200f, 100f }; // Adjust these values as needed
-            table.SetWidth(UnitValue.CreatePointValue(400));
+            if (hrGroupname== "HR3 (Special)")
+            {
+                table.SetWidth(UnitValue.CreatePointValue(500));
+            }
+            else
+            {
+                table.SetWidth(UnitValue.CreatePointValue(400));
+            }
+           
             try
             {
                 List<int> complianceDataCounts = new List<int>();
