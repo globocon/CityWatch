@@ -65,7 +65,7 @@
                                 @*Template type is directly taken from database -jisha-start *@
                                 <select asp-for="@Model.Report.SiteColourCodeId" class="form-control form-control-sm ml-0 ml-lg-2" style="width: 250px; min-width: 250px;" disabled>
 
-                                  <option style="background-color:white; color:black;" value="" selected>Select AS.3745 & AS.4083 Template</option>
+                                  <option style="background-color:white; color:black;" value="" selected>Select 𝘈𝘚.3745 & 𝘈𝘚.4083 Template</option>
                                     @*   <option style="background-color:white; color:black;" value="" selected>Select <span style="font-style:italic;">AS.3745</span> & <span style="font-style:italic;">AS.4083</span> Template</option> *@
                                                                         
                                     @foreach (var item in @Model.ViewDataService.GetFeedbackTemplateListByType(Convert.ToInt16(colourcode)))
