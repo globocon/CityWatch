@@ -628,7 +628,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         {
             data: 'guardName',
 
-            width: '15%',
+            width: '100%',
             createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
                 // Define your conditions to add a class
                 if (rowData.isEnabled == 1) {
@@ -906,6 +906,7 @@ $('#guardInfoModal').on('shown.bs.modal', function (event) {
             $('#lbl_guard_email').html(result.email);
             $('#lbl_guard_mobile').html(result.mobile);
             $('#lbl_guard_provider').html(result.provider);
+            $('#lbl_guard_provider_no').html(result.providerNo);
         }
     });
 });
