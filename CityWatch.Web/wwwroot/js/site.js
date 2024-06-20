@@ -3547,7 +3547,7 @@ gridCriticalDocument = $('#tbl_CriticalDocument').grid({
         {
             field: 'groupName', title: 'Group Name', width: 70
         },
-        { field: 'clientTypes', title: 'Client Types', width: 100 },
+       /* { field: 'clientTypes', title: 'Client Types', width: 100 },*/
         { field: 'clientSites', title: 'Client Sites', width: 170 },
         {
             field: 'descriptions', title: 'Mandatory HR Documents', width: 180,
@@ -3639,7 +3639,7 @@ function clearCriticalModal() {
      $('#selectedSitesDoc').html('');
 
     $('#selectedDescDoc').html('');
-    $('#GroupName').html('');
+    $('#GroupName').val('');
     updateSelectedSitesCount();
     $('input:hidden[name="clientSiteIds"]').remove();
     

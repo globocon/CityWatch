@@ -1197,7 +1197,61 @@ namespace CityWatch.Kpi.Pages.Admin
             int GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             if (GuardId == 0)
             {
-                return new JsonResult(_configDataProvider.GetCriticalDocById(id));
+                var document = _configDataProvider.GetCriticalDocById(id);
+
+                if (document == null)
+                {
+                    return new JsonResult(null);
+                }
+
+                var documentDto = new CriticalDocuments
+                {
+                    Id = document.Id,
+                    ClientTypeId = document.ClientTypeId,
+                    HRGroupID = document.HRGroupID,
+                    GroupName = document.GroupName,
+                    CriticalDocumentsClientSites = document.CriticalDocumentsClientSites.Select(cs => new CriticalDocumentsClientSites
+                    {
+                        Id = cs.Id,
+                        ClientSiteId = cs.ClientSiteId,
+                        ClientSite = new ClientSite
+                        {
+                            Id = cs.ClientSite.Id,
+                            Name = cs.ClientSite.Name,
+                            //ClientTypeId = cs.ClientSite.ClientTypeId,
+
+                        }
+                    }).ToList(),
+                    CriticalDocumentDescriptions = document.CriticalDocumentDescriptions.Select(desc => new CriticalDocumentDescriptions
+                    {
+                        Id = desc.Id,
+                        DescriptionID = desc.DescriptionID,
+                        HRSettings = desc.HRSettings == null ? null : new HrSettings
+                        {
+                            Id = desc.HRSettings.Id,
+                            Description = desc.HRSettings.Description,
+                            ReferenceNoNumbers = desc.HRSettings.ReferenceNoNumbers == null ? null : new ReferenceNoNumbers
+                            {
+                                Id = desc.HRSettings.ReferenceNoNumbers.Id,
+                                Name = desc.HRSettings.ReferenceNoNumbers.Name
+                            },
+                            ReferenceNoAlphabets = desc.HRSettings.ReferenceNoAlphabets == null ? null : new ReferenceNoAlphabets
+                            {
+                                Id = desc.HRSettings.ReferenceNoAlphabets.Id,
+                                Name = desc.HRSettings.ReferenceNoAlphabets.Name
+                            },
+                            HRGroups = desc.HRSettings.HRGroups == null ? null : new HRGroups
+                            {
+                                Id = desc.HRSettings.HRGroups.Id,
+                                Name = desc.HRSettings.HRGroups.Name,
+                                IsDeleted = desc.HRSettings.HRGroups.IsDeleted
+
+                            }
+                        }
+                    }).ToList()
+                };
+
+                return new JsonResult(documentDto);
             }
             else
             {
