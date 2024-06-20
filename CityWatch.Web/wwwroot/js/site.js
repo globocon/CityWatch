@@ -641,7 +641,7 @@
         columns: [
             { field: 'name', title: 'Name', width: '100%', editor: true },
             { field: 'emailTo', title: 'Special Email Condition', width: '100%', editor: true },
-            { field: 'stampRcLogbook', title: 'Stamp Rc Logbook ?', type: 'checkbox', align: 'center', width: '70%', editor: true }
+            { field: 'stampRcLogbook', title: 'Stamp RC Logbook ?', type: 'checkbox', align: 'center', width: '70%', editor: true }
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
