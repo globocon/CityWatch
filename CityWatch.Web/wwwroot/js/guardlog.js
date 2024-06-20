@@ -336,7 +336,7 @@
         });
         //To Get the Critical Documents stop
     });
-    });
+   
 
 
 
@@ -4246,7 +4246,6 @@
 
     }
 
-});
 
 
 
@@ -4873,4 +4872,4 @@ $('#LicanseTypeFilter').on('change', function () {
 });
 //for toggle areas - start
 
-
+});
