@@ -204,17 +204,20 @@
     }
 
     $('#GuardLogin_Guard_SecurityNo').on('blur', function () {
+        
         $('#glValidationSummary').html('');
         const isNewGuard = $('#GuardLogin_IsNewGuard').is(':checked');
         if (isNewGuard)
             return;
-
+    
+        
         showGuardSearchResult('Enter Security License No and click Search');
         resetGuardLoginDetails();
 
         if ($(this).val() === '')
             return;
-
+      
+        
         $('#loader').show();
 
         $.ajax({
@@ -285,8 +288,9 @@
                 $('#loader').hide();
             }
         });
+     
     });
-
+   
     $('#GuardLogin_ClientType').on('change', function () {
         populateClientSites();
     });
@@ -332,8 +336,40 @@
         });
         //To Get the Critical Documents stop
     });
+    });
 
 
+
+    //P4#70-Disable the guard login if guard didnt login for 120 days -added by manju -start
+
+
+    function checkGuardLoginExpiry() {
+        var guardId = $('#GuardLogin_Guard_SecurityNo').val();
+        var res = false;
+
+        $.ajax({
+            url: '/Guard/Login?handler=IsGuardLoginActive',
+            type: 'GET',
+            data: {
+                guardLicNo: guardId
+            }
+        }).done(function (result) {
+            if (result.success) {
+                alert(result.strResult);
+                res = result.success;  // Ensure 'result' is used correctly
+            } else {
+                alert(result.strResult);
+            }
+        }).fail(function () {
+            alert("An error occurred while checking licenses.");
+        }).always(function () {
+            return res; 
+        });
+    }
+
+
+
+    //P4#70-Disable the guard login if guard didnt login for 120 days -added by manju -end
 
 
     $('#GuardLogin_IsPosition').on('change', function () {
@@ -379,7 +415,7 @@
     $('#btn_confrim_wand_use').on('click', function () {
         submitGuardLogin();
     });
-
+    
     //Pr-7-Task-120 Warning-Position Checkbox-Below lines are added-Manju -start-25-04-2024
 
     /* let isPositionModal;
@@ -480,11 +516,31 @@
         var formData = new FormData(form);
         fillRefreshLocalTimeZoneDetails(formData, "GuardLogin", true);
         // Task p6#73_TimeZone issue -- added by Binoy -- End
+
         if (mobileno == null || mobileno == '+61 4' || mobileno == '') {
             new MessageModal({ message: "<b>The Control Room requires your personal mobile number in case of emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.<p> This request occurs only once. Please do not provide false numbers to trick system. It is an OH&S requirement we can contact you in an Emergency </p> </b>" }).showWarning();
+            console.log('after msg modal')
+
         }
         else {
-            $('#loader').show();
+            // P4#70 checking guard license no and mesaging if guard is not logged in for 120 days + disabling the active status
+            var guardId = $('#GuardLogin_Guard_SecurityNo').val();
+
+            $.ajax({
+                url: '/Guard/Login?handler=IsGuardLoginActive',
+                type: 'GET',
+                data: {
+                    guardLicNo: guardId
+                }
+            }).done(function (result) {
+                if (result.success) {
+                    //alert(result.strResult);
+                    new MessageModal({
+                        message: result.strResult }).showWarning();
+                    return;
+                } else {
+                    // if guard is active then submit guard login
+                          $('#loader').show();
             $.ajax({
                 url: '/Guard/Login?handler=LoginGuard',
                 type: 'POST',
@@ -512,6 +568,12 @@
             }).always(function () {
                 $('#loader').hide();
             });
+                }
+            }).fail(function () {
+                alert("An error occurred while checking guard license.");
+
+            });
+            //m
         }
     }
 
