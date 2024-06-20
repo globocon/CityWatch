@@ -1070,5 +1070,164 @@ $('#add_general_feeds').on('click', function () {
         }).edit(-1);
     }
 });
+
+/*linked duress start dileep 31052024*/
+let gridSchedules;
+
+gridSchedules = $('#rc_linked_duress').grid({
+    dataSource: '/Admin/Settings?handler=RcLinkedDuress',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    columns: [
+        { field: 'groupName', title: 'Group Name', width: 100 },
+        { field: 'clientTypes', title: 'Client Types', width: 100 },
+        { field: 'clientSites', title: 'Client Sites', width: 180 },
+        { width: 75, renderer: schButtonRenderer },
+    ],
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    }
+});
+
+function schButtonRenderer(value, record) {
+    let buttonHtml = '';
+    buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-primary mr-2 mt-2 d-block" data-toggle="modal" data-target="#schedule-modal" data-sch-id="' + record.id + '" ';
+    buttonHtml += 'data-action="editSchedule"><i class="fa fa-pencil mr-2"></i>Edit</button>';
+    buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-danger mt-2 del-schedule d-block" data-sch-id="' + record.id + '""><i class="fa fa-trash mr-2" aria-hidden="true"></i>Delete</button>';
+    return buttonHtml;
+}
+
+
+
+$('#clientTypeName').on('change', function () {
+    const option = $(this).val();
+    if (option === '') {
+        $('#clientSites').html('');
+        $('#clientSites').append('<option value="">Select</option>');
+    }
+
+    $.ajax({
+        url: '/Admin/Settings?handler=ClientSites&type=' + encodeURIComponent(option),
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (data) {
+        $('#clientSites').html('');
+        $('#clientSites').append('<option value="">Select</option>');
+        data.map(function (site) {
+            $('#clientSites').append('<option value="' + site.value + '">' + site.text + '</option>');
+        });
+    });
+});
+
+$('#clientSites').on('change', function () {
+    const elem = $(this).find(":selected");
+    if (elem.val() !== '') {
+        const existing = $('#selectedSites option[value="' + elem.val() + '"]');
+        if (existing.length === 0) {
+            $('#selectedSites').append('<option value="' + elem.val() + '">' + elem.text() + '</option>');
+            updateSelectedSitesCount();
+        }
+    }
+});
+
+
+
+$('#removeSelectedSites').on('click', function () {
+    $('#selectedSites option:selected').remove();
+    updateSelectedSitesCount();
+});
+
+function updateSelectedSitesCount() {
+    $('#selectedSitesCount').text($('#selectedSites option').length);
+}
+
+$('#schedule-modal').on('shown.bs.modal', function (event) {
+    clearScheduleModal();
+    const button = $(event.relatedTarget);
+    const isEdit = button.data('action') !== undefined && button.data('action') === 'editSchedule';
+    if (isEdit) {
+        schId = button.data('sch-id');
+        linkedDuressModalOnEdit(schId);
+    } 
+
+  
+});
+
+function clearScheduleModal() {
+    $('#scheduleId').val('0');
+    $('#clientTypeName').val('');
+    $('#clientSites').html('<option value="">Select</option>');
+    $('#selectedSites').html('');
+    updateSelectedSitesCount();
+    $('input:hidden[name="clientSiteIds"]').remove();
+    $('#clientTypeName option:eq(0)').attr('selected', true);
+    $('#GroupName').val('');
+    $('#sch-modal-validation').hide();
+   
+}
+
+
+function linkedDuressModalOnEdit(scheduleId) {
+    $('#loader').show();
+    $.ajax({
+        url: '/Admin/Settings?handler=RCLinkedDuressbyId&id=' + scheduleId,
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (data) {
+        $('#scheduleId').val(data.id);
+        $.each(data.rcLinkedDuressClientSites, function (index, item) {
+            $('#selectedSites').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
+            updateSelectedSitesCount();
+        });
+        $('#GroupName').val(data.groupName);
+        
+    }).always(function () {
+        $('#loader').hide();
+    });
+}
+
+$('#rc_linked_duress').on('click', '.del-schedule', function () {
+    const idToDelete = $(this).attr('data-sch-id');
+    if (confirm('Are you sure want to delete this linked Duress?')) {
+        $.ajax({
+            url: '/Admin/Settings?handler=DeleteRCLinkedDuress',
+            type: 'POST',
+            data: { id: idToDelete },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function () {
+            gridSchedules.reload({ type: $('#sel_schedule').val(), searchTerm: $('#search_kw_client_site').val() });
+        });
+    }
+
+});
+
+$('#btnSavelinkedDuress').on('click', function () {
+    $("input[name=clientSiteIds]").remove();
+    var options = $('#selectedSites option');
+    options.each(function () {
+        const elem = '<input type="hidden" name="clientSiteIds" value="' + $(this).val() + '">';
+        $('#frm_kpi_schedule').append(elem);
+    });
+
+    $.ajax({
+        url: '/Admin/Settings?handler=SaveRCLinkedDuress',
+        type: 'POST',
+        data: $('#frm_kpi_schedule').serialize(),
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (data) {
+        if (data.success) {
+            alert('RC LinkedDuress saved successfully');
+            $('#schedule-modal').modal('hide');
+            gridSchedules.reload({ type: $('#sel_schedule').val(), searchTerm: $('#search_kw_client_site').val() });
+        } else {
+            $('#sch-modal-validation').html('');
+            data.message.split(',').map(function (item) { $('#sch-modal-validation').append('<li>' + item + '</li>') });
+            $('#sch-modal-validation').show().delay(5000).fadeOut();
+        }
+    });
+});
+
+/*linked duress end*/
 /*GeneralFeeds - end*/
 /*API Calls -end*/

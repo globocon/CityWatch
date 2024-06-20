@@ -1,6 +1,14 @@
 ﻿@using CityWatch.Kpi.Services
+@using CityWatch.Data.Helpers
+@using CityWatch.Data.Models
+@using CityWatch.Data.Providers;
+@using Microsoft.Extensions.Configuration
+@using System.Security.Claims
 @model CityWatch.Data.Models.ClientSiteKpiSetting
 @inject IViewDataService ViewDataService;
+@inject IConfiguration Configuration;
+@inject IViewDataService viewDataServiceNew
+@inject IClientDataProvider clientDataProvider
 @{
     var rowTitle = new string[6] { "", "Daily Employee Hours", "Patrol Frequency", "No Of Patrols", "Image Target", "Wand Scans Target" };
     var rowTitleManningGuard = new string[4] { "", "Start", "End", "Workers" };
@@ -13,683 +21,1058 @@
     var check = count;
 }
 
+@{
+
+    Layout = "_LayoutSinglePage";
+}
 <div class="test">
     <ul class="nav nav-tabs" id="kpiSettingsTab" role="tablist">
         <li class="nav-item" role="presentation">
-            <a class="nav-link active" id="kpi-settings-tab" data-toggle="tab" href="#siteKpiSettings" role="tab" aria-controls="siteKpiSettings" aria-selected="true">Site Settings</a>
+            <a class="nav-link active" id="kpi-LB-Menu-tab" data-toggle="tab" href="#KpiLB" role="tab" aria-controls="KpiLB" aria-selected="true">LB</a>
         </li>
         <li class="nav-item" role="presentation">
-            <a class="nav-link" id="contracted-manning-tab" data-toggle="tab" href="#contractedmanningSettings" role="tab" aria-controls="contractedmanningSettings">Contracted Manning</a>
+            <a class="nav-link" id="kv-tab" data-toggle="tab" href="#KVSettings" role="tab" aria-controls="KVSettings">KV</a>
+
         </li>
         <li class="nav-item" role="presentation">
-            <a class="nav-link" id="RcActionList-tab" data-toggle="tab" href="#RcActionListSettings" role="tab" aria-controls="RcActionListSettings">RC Action List</a>
+            <a class="nav-link" id="kpi-tab" data-toggle="tab" href="#KPISettings" role="tab" aria-controls="KPISettings" style="cursor: default;">KPI</a>
+
         </li>
         <li class="nav-item" role="presentation">
-            <a class="nav-link" id="notes-tab" data-toggle="tab" href="#notes" role="tab" aria-controls="notes">Notes</a>
+            <a class="nav-link" id="RcActionList-tab" data-toggle="tab" href="#RcActionListSettings" role="tab" aria-controls="RcActionListSettings">RC</a>
         </li>
-        @*for menu change-start(jisha)*@
-        <li class="nav-item" role="presentation">
-            <a class="nav-link" id="notes-tab" data-toggle="tab" href="#OtherSettings" role="tab" aria-controls="notes">Other Settings</a>
-        </li>
-        @*for menu change-end(jisha)*@
+
     </ul>
-    <div class="tab-content">
-        <div class="tab-pane active" id="siteKpiSettings" role="tabpanel" aria-labelledby="kpi-settings-tab">
-            <div class="container pt-3">
-                <form id="frm_site_settings">
-                    <input type="hidden" asp-for="@Model.Id" />
-                    <input type="hidden" asp-for="@Model.ClientSiteId" />
-                    <div class="row">
-                        <div class="col-md-8">
-                            <div class="form-row my-2 pb-3">
-                                <div class="col-md-4">
-                                    <div class="form-check">
-                                        <input asp-for="@Model.IsThermalCameraSite" class="form-check-input">
-                                        <label class="form-check-label font-weight-bold" asp-for="@Model.IsThermalCameraSite">Thermal Camera Site</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-check pl-0">
-                                        <input asp-for="@Model.IsWeekendOnlySite class=" form-check-input">
-                                        <label class="form-check-label font-weight-bold" asp-for="@Model.IsWeekendOnlySite">Weekend Only Site</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group col-md-8">
-                                    <label class="form-label" asp-for="@Model.DropboxImagesDir"></label>
-                                    <input class="form-control" asp-for="@Model.DropboxImagesDir">
-                                </div>
-                                <div class="form-group col-md-2">
-                                    <label class="form-label" asp-for="@Model.KoiosClientSiteId"></label>
-                                    <input class="form-control w-80px" asp-for="@Model.KoiosClientSiteId">
-                                </div>
-                                <div class="form-group col-md-2">
-                                    <label class="form-label" asp-for="@Model.KoiosClientSiteIdB"></label>
-                                    <input class="form-control w-80px" asp-for="@Model.KoiosClientSiteIdB">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group col-md-4">
-                                    <label class="form-label" asp-for="@Model.PhotoPointsPerPatrol"></label>
-                                    <input class="form-control w-80px daily-img-target" asp-for="@Model.PhotoPointsPerPatrol">
-                                </div>
-                                <div class="form-group col-md-4">
-                                    <label class="form-label" asp-for="@Model.WandPointsPerPatrol"></label>
-                                    <input class="form-control w-80px daily-wand-target" asp-for="@Model.WandPointsPerPatrol">
-                                </div>
-                                <div class="form-group col-md-4">
-                                    <label class="form-label" asp-for="@Model.TuneDowngradeBuffer"></label>
-                                    <input type="number" min="1" class="form-control w-80px daily-img-target" asp-for="@Model.TuneDowngradeBuffer">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div>
-                                <h6 class="font-weight-bold">Site Image (200x112)</h6>
-                                @{
-                                    var siteImage = !string.IsNullOrEmpty(Model.SiteImage) ? Model.SiteImage : "//via.placeholder.com/200x112.png?text=No Image";
-                                }
-                                <img src="@siteImage" width="200" height="112" id="img_site_image" class="img-fluid" />
-                                <input type="hidden" asp-for="@Model.SiteImage" value="@Model.SiteImage" />
-                            </div>
-                            <div class="mt-2">
-                                <label class="btn btn-sm btn-outline-primary">
-                                    <i class="fa fa-upload mr-2"></i>Replace Image
-                                    <input type="file" id="upload_site_image" accept=".jpg" hidden>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <hr />
-                    <div class="row">
+    <div class="tab-content p-2">
+        <div class="tab-pane active" id="KpiLB" role="tabpanel" aria-labelledby="KpiLBTab">
+            <ul class="nav nav-tabs" id="KpiLBSettings" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active" id="kpi-LB-settings-menu-tab" data-toggle="tab" href="#KpiLBSettingsTab" role="tab" aria-controls="KpiLBSettingsTab" aria-selected="true">Settings</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="kpi-LB-smartWands-menu-tab" data-toggle="tab" href="#KpiLBsmartWandsTab" role="tab" aria-controls="KpiLBsmartWandsTab" aria-selected="true">Smart Wand</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="kpi-LB-patrolCars-menu-tab" data-toggle="tab" href="#KpiLBpatrolCarsTab" role="tab" aria-controls="KpiLBpatrolCarsTab" aria-selected="true">Patrol Cars</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="kpi-LB-customFields-menu-tab" data-toggle="tab" href="#KpiLBcustomFieldsTab" role="tab" aria-controls="KpiLBcustomFieldsTab" aria-selected="true">Custom Fields</a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="KpiLBSettingsTab" role="tabpanel" aria-labelledby="KpiLBSettingsTab">
+                    <input type="hidden" id="gl_client_site_id" />
+                    <div class="row m-0">
                         <div class="col-md-12">
-                            @for (int rowIndex = 0; rowIndex < 6; rowIndex++)
-                            {
-                                <div class="form-row">
-                                    <div class="col-md-2">
-                                        <label class="form-label">@rowTitle[rowIndex]</label>
-                                    </div>
-                                    @for (var colIndex = 0; colIndex < 7; colIndex++)
-                                    {
-                                        <div class="col-md-1 mx-1">
-                                            @switch (rowIndex)
-                                            {
-                                                case 0:
-                                                    <label class="form-label">@Model.ClientSiteDayKpiSettings[colIndex].WeekDay.ToString().Substring(0, 3)</label>
-                                                    break;
-                                                case 1:
-                                                    <input class="form-control mb-2" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].EmpHours">
-                                                    break;
-                                                case 2:
-                                                    <div class="custom-control custom-switch patrol-frequency-switch mb-3">
-                                                        <input type="checkbox" class="custom-control-input patrol-frequency" data-index="@colIndex"
-                                                               id="@($"Chk_ClientSiteDayKpiSettings_{colIndex}_PatrolFrequency")" @(Convert.ToBoolean(Model.ClientSiteDayKpiSettings[colIndex].PatrolFrequency) ? "checked=checked" : "")>
-                                                        <label class="custom-control-label" for="@($"Chk_ClientSiteDayKpiSettings_{colIndex}_PatrolFrequency")">
-                                                            @(Convert.ToBoolean(Model.ClientSiteDayKpiSettings[colIndex].PatrolFrequency) ? "per day" : "per hr")
-                                                        </label>
-                                                        <input type="hidden" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].PatrolFrequency" />
-                                                    </div>
-                                                    break;
-                                                case 3:
-                                                    <input class="form-control mb-2 patrols-count" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].NoOfPatrols" data-index="@colIndex">
-                                                    break;
-                                                case 4:
-                                                    <input class="form-control mb-2" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].ImagesTarget" readonly>
-                                                    break;
-                                                case 5:
-                                                    <input class="form-control mb-2" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].WandScansTarget" readonly>
-                                                    break;
-                                            }
-                                            <input type="hidden" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].WeekDay" />
-                                            <input type="hidden" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].Id" />
-                                        </div>
-                                    }
+                            <form>
+                                <div>
+                                    <label>LB & KV Site Report Settings</label>
                                 </div>
-                            }
+                                <div class="form-group row">
+                                    <label for="gs_site_email" class="col-md-3 col-form-label">Site Email</label>
+                                    <div class="col-md-6">
+                                        <input type="email" class="form-control" id="gs_site_email">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="gs_land_line" class="col-md-3 col-form-label">Site Landline</label>
+                                    <div class="col-md-6">
+                                        <input type="text" class="form-control" id="gs_land_line">
+                                    </div>
+                                </div>
+                                <div class="form-check mb-1">
+                                    <input type="checkbox" id="enableLogDump" class="form-check-input" />
+                                    <label for="gs_site_log_dump" class="form-check-label">Enable Daily Log Dump</label>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="gs_email_recipients" class="col-md-3 col-form-label">Email Recipients</label>
+                                    <div class="col-md-6">
+                                        <input type="email" class="form-control" id="gs_email_recipients">
+                                        <label><em>Preceding day log will be sent &#64; 2 am on the next day</em></label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label>Duress Local Site Setting</label>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="gs_duress_email" class="col-md-3 col-form-label">Email alert</label>
+                                    <div class="col-md-6">
+                                        <input type="email" class="form-control" id="gs_duress_email">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="gs_duress_sms" class="col-md-3 col-form-label">SMS alert</label>
+                                    <div class="col-md-6">
+                                        <input type="text" class="form-control" id="gs_duress_sms">
+                                    </div>
+                                </div>
+                                <div class="form-row mt-3">
+                                    <button type="button" id="btnSaveGuardSiteSettings" class="btn btn-primary">Save</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane" id="KpiLBsmartWandsTab" role="tabpanel" aria-labelledby="KpiLBsmartWandsTab">
+                    <div class="row m-0">
+                        <div class="col-md-12 text-right">
+                            <button class="btn btn-success mb-3" id="add_smart_wand"><i class="fa fa-plus mr-2"></i>Add Smart Wand</button>
+                        </div>
+                    </div>
+                    <div class="row m-0">
+                        <div class="col-md-12 m-0 p-0">
+                            <table class="table" id="cs-smart-wands"></table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane" id="KpiLBpatrolCarsTab" role="tabpanel" aria-labelledby="patrolCarsTab">
+                    <div class="row m-0">
+                        <div class="col-md-12 text-right">
+                            <button class="btn btn-success mb-3" id="add_patrol_car"><i class="fa fa-plus mr-2"></i>Add Patrol Car</button>
+                        </div>
+                    </div>
+                    <div class="row m-0 p-0">
+                        <div class="col-md-12 p-0">
+                            <table class="table" id="cs-patrol-cars"></table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane" id="KpiLBcustomFieldsTab" role="tabpanel" aria-labelledby="customFieldsTab">
+                    <div class="row m-0 pt-2">
+                        <div class="col-md-12">
+                            <form id="frm_custom_field">
+                                <input type="hidden" id="ClientSiteCustomField_ClientSiteId" name="ClientSiteCustomField.ClientSiteId" />
+                                <div class="form-group row mb-2">
+                                    <label for="ClientSiteCustomField_TimeSlot" class="site-cf-col-lbl col-form-label">Time Slot</label>
+                                    <div class="site-cf-col-ctrl">
+                                        <select class="form-control" id="ClientSiteCustomField_TimeSlot" name="ClientSiteCustomField.TimeSlot" placeholder="Select or Enter">
+                                        </select>
+                                    </div>
+                                    <label for="ClientSiteCustomField_Name" class="site-cf-col-lbl col-form-label">Field Name</label>
+                                    <div class="site-cf-col-ctrl">
+                                        <select class="form-control" id="ClientSiteCustomField_Name" name="ClientSiteCustomField.Name" placeholder="Select or Enter">
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" id="btnSaveCustomFields" class="btn btn-success"><i class="fa fa-plus mr-2"></i>Add</button>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <em class="small d-block mb-2">Please enter a new timeslot in the format HH:mm</em>
+                                        <div asp-validation-summary="All" id="custom-field-validation"></div>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                     </div>
                     <hr />
-                    <div class="row">
-                        <div class="col-md-8">
-                            <div class="form-row my-2">
-                                <div class="col-md-6">
-                                    <h6 class="font-weight-bold d-inline">Site Statistics</h6>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group col-md-4">
-                                    <label class="form-label" asp-for="@Model.ExpPatrolDuration"></label>
-                                    <input class="form-control w-80px daily-wand-target" asp-for="@Model.ExpPatrolDuration">
-                                </div>
-                                <div class="form-group col-md-4">
-                                    <label class="form-label" asp-for="@Model.MinPatrolFreq"></label>
-                                    <input class="form-control w-80px daily-wand-target" asp-for="@Model.MinPatrolFreq">
-                                </div>
-                                <div class="form-group col-md-4">
-                                    <label class="form-label" asp-for="@Model.MinImagesPerPatrol"></label>
-                                    <input class="form-control w-80px daily-wand-target" asp-for="@Model.MinImagesPerPatrol">
-                                </div>
-                            </div>
+                    <div class="row m-0">
+                        <div class="col-md-12">
+                            <table class="table" id="cs-custom-fields"></table>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-success" id="save_site_settings"><i class="fa fa-save mr-2"></i>Save Settings</button>
-                </form>
+                </div>
             </div>
         </div>
+        <div class="tab-pane " id="KVSettings" role="tabpanel" aria-labelledby="KVSettingsTab">
+            <ul class="nav nav-tabs" id="gridKVTab" role="tablist">
 
-        @*New Tab for contracted-manning start*@
-        <div class="tab-pane" id="contractedmanningSettings" role="tabpanel" aria-labelledby="contracted-manning-tab">
-            <div class="container pt-3">
-                @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == false).Count() != 0 && (Model.ClientSiteManningPatrolCarKpiSettings.Where(x => x.DefaultValue == false).Count() != 0))
-                {
-                    <div class="text-right"><button id="showDivButton" class="btn btn-success" disabled><i class="fa fa-plus" aria-hidden="true"></i> Add Worker</button></div>
-
-
-                }
-                else
-                {
-                    <div class="text-right"><button id="showDivButton" class="btn btn-success"><i class="fa fa-plus" aria-hidden="true"></i> Add Worker</button></div>
-
-                }
-
-
-
-
-                <form id="frm_site_manning_settings">
-                    <input type="hidden" asp-for="@Model.Id" />
-                    <input type="hidden" asp-for="@Model.ClientSiteId" />
-                    <input type="hidden" id="hidCount" value="@count" />
-                    @*display Already Existing Mannings*@
-
-                    @*Check if default value or orginal data exist*@
-                    @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == true).Count() == 0)
-                    {
-                        @*Get All Distinct order Id *@
-                        var distinctOrderIds = Model.ClientSiteManningGuardKpiSettings.Select(order => order.OrderId).Distinct();
-                        @for (int rowIndexFirst = 0; rowIndexFirst < Model.ClientSiteManningGuardKpiSettings.Count(); rowIndexFirst = rowIndexFirst + 8)
-                        {
-
-                            var rowIndextemp = 0;
-                            var idForDelete = @Model.ClientSiteManningGuardKpiSettings[rowIndexFirst].SettingsId + "_" + @Model.ClientSiteManningGuardKpiSettings[rowIndexFirst].OrderId + "_" + @Model.ClientSiteId;
-
-                            <hr />
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active" id="pocsAndLocationsTab" data-toggle="tab" href="#pocsAndLocations" role="tab" aria-controls="pocsAndLocations" aria-selected="false">POCs & Locations</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="clientSiteKeysTab" data-toggle="tab" href="#clientSiteKeys" role="tab" aria-controls="clientSitekeys" aria-selected="false">Keys</a>
+                </li>
+                @*for toggle areas-start*@
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="toggleKeysTab" data-toggle="tab" href="#toggleKeys" role="tab" aria-controls="toggelKeys" aria-selected="false">Toggle</a>
+                </li>
+                @*for toggle areas-end*@
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="ringFenceTab" data-toggle="tab" href="#ringFence" role="tab" aria-controls="ringFence" aria-selected="false">RingFence</a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="pocsAndLocations" role="tabpanel" aria-labelledby="pocsAndLocationsTab">
+                    <div class="row m-0">
+                        <div class="col-md-12 col-lg-6 pt-2">
                             <div class="row">
                                 <div class="col-md-12">
-
-
-                                    <button type="button" class="btn btn-danger" value="@idForDelete" id="delete_worker"><i class="fa fa-trash" aria-hidden="true"></i>&nbsp;Delete Worker</button>
-
-                                    @for (int rowIndex = rowIndexFirst; rowIndex < (4 + rowIndexFirst); rowIndex++)
-                                    {
-                                        /*Monthly Hours Start*/
-                                        var monthilyHours = 0.0;
-                                        @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
-                                        {
-
-                                            var totalMin = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId).Select(x => x.SumOfHours).Sum();
-                                            var guardQty = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId && x.NoOfPatrols != null).Select(x => x.NoOfPatrols ?? 0).FirstOrDefault();
-                                            if (totalMin != null && guardQty != null)
-                                                monthilyHours = Math.Round(((totalMin) * guardQty * 52.143) / 12);
-
-                                        }
-                                        else
-                                        {
-                                            var guardQty = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId).Select(x => x.NoOfPatrols ?? 0).Sum();
-                                            monthilyHours = guardQty;
-                                        }
-
-                                        /*Monthly Hours End*/
-                                        <div class="form-row">
-                                            <div class="col-md-3">
-                                                @if (rowIndextemp == 0)
-                                                {
-
-                                                    <div class="d-flex flex-row justify-content-between">
-                                                        <label class="form-label">Position</label>
-                                                        <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
-                                                            @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
-                                                            {
-                                                                <input type="checkbox" class="custom-control-input" id="positionfilterGuard_@rowIndexFirst" disabled name="positionfilterGuard">
-                                                            }
-                                                            else
-                                                            {
-                                                                <input type="checkbox" class="custom-control-input" id="positionfilterGuard_@rowIndexFirst" disabled checked name="positionfilterGuard">
-
-                                                            }
-                                                            <label class="custom-control-label" for="positionfilterGuard">Patrol Car</label>
-                                                        </div>
-                                                    </div>
-
-                                                }
-                                                @if (rowIndextemp == 1)
-                                                {
-                                                    <div class="form-group p-0">
-
-                                                        @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
-                                                        {
-                                                            <select asp-for="@Model.ClientSiteManningGuardKpiSettings[rowIndex].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.NonPatrolOnly)" class="form-control"></select>
-
-                                                        }
-                                                        else
-                                                        {
-                                                            <select asp-for="@Model.ClientSiteManningGuardKpiSettings[rowIndex].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.PatrolOnly)" class="form-control"></select>
-                                                        }
-                                                    </div>
-                                                }
-                                                @*New Code for Monthly Hours Start*@
-
-                                                @if (rowIndextemp == 3)
-                                                {
-
-                                                    <div class="d-flex flex-row justify-content-between">
-                                                        @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
-                                                        {
-                                                            <label class="form-label" id="lbl_MonthlyHrs">Monthly Hrs :</label>
-
-                                                        }
-                                                        else
-                                                        {
-                                                            <label class="form-label" id="lbl_MonthlyHrs">Total Patrols :</label>
-                                                        }
-                                                        <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
-                                                            <input type="text" class="form-control mb-2 patrols-count" asp-for="@monthilyHours" id="monthlyHrs_@rowIndexFirst" name="monthlyHrs" style="width:120px" readonly />
-                                                        </div>
-                                                    </div>
-
-                                                }
-                                                @*New Code for Monthly Hours end*@
-                                            </div>
-                                            <div class="col-md-1 p-0">
-                                                @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
-                                                {
-                                                    <label class="form-label">@rowTitleManningGuard[rowIndextemp]</label>
-
-                                                }
-                                                else
-                                                {
-                                                    <label class="form-label">@rowTitleManningPatrolCar[rowIndextemp]</label>
-
-                                                }
-                                            </div>
-                                            @for (var colIndex = rowIndexFirst; colIndex < (8 + rowIndexFirst); colIndex++)
-                                            {
-
-
-                                                @if (@Model.ClientSiteManningGuardKpiSettings[colIndex] != null)
-                                                {
-                                                    var headerLabel = string.Empty;
-                                                    @if (@Model.ClientSiteManningGuardKpiSettings[colIndex].IsPHO == 1)
-                                                    {
-                                                        headerLabel = "PHO";
-                                                    }
-                                                    else
-                                                    {
-                                                        headerLabel = @Model.ClientSiteManningGuardKpiSettings[colIndex].WeekDay.ToString().Substring(0, 3);
-                                                    }
-
-                                                    <div class="col-md-1" id="divGuardInner_+@rowIndex+_+@colIndex">
-
-                                                        @switch (rowIndextemp)
-                                                        {
-                                                            case 0:
-
-                                                                //<label class="form-label">@Model.ClientSiteManningGuardKpiSettings[colIndex].WeekDay.ToString().Substring(0, 3)</label>
-                                                                <label class="form-label">@headerLabel</label>
-                                                                break;
-                                                            case 1:
-
-                                                                <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursStart">
-                                                                break;
-
-                                                            case 2:
-
-                                                                <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursEnd">
-                                                                break;
-                                                            case 3:
-                                                                <input class="form-control mb-2 patrols-count" min="0" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].NoOfPatrols" data-index="@colIndex">
-                                                                break;
-
-                                                        }
-                                                        <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].WeekDay" />
-                                                        <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].Id" />
-                                                        <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].OrderId" />
-                                                        <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].Type" />
-                                                        <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].SettingsId" />
-                                                        <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].IsPHO" />
-
-                                                    </div>
-
-                                                }
-
-
-                                            }
-
-
-
-                                        </div>
-                                        rowIndextemp++;
-                                    }
+                                    <button class="btn btn-success mb-3" id="add_site_poc"><i class="fa fa-plus mr-2"></i>Add Site POC</button>
                                 </div>
                             </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <table class="table" id="cs-pocs"></table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 col-lg-6 pt-2 border-left">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button class="btn btn-success mb-3" id="add_site_location"><i class="fa fa-plus mr-2"></i>Add Site Location</button>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <table class="table" id="cs-locations"></table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane" id="clientSiteKeys" role="tabpanel" aria-labelledby="clientSiteKeysTab">
+                    <div class="row m-0">
+                        <div class="col-md-12 text-right">
+                            @*  code added to add Download button  *@
+                            <a href="#" class="btn btn-primary mb-3" id="add_Downloadbtn">Download Zip</a>
 
-                        }
+                            <button class="btn btn-success mb-3" id="add_client_site_key"><i class="fa fa-plus mr-2"></i>Add Key</button>
+                        </div>
 
+                    </div>
+                    <div class="row m-0">
+                        <div class="col-md-12">
+                            <table class="table table-bordered" width="100%" id="cs_client_site_keys">
+                                <thead>
+                                    <tr>
+                                        <th hidden></th>
+                                        <th>Key #</th>
+                                        <th>Description</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                @*for toggle areas-start*@
+                <div class="tab-pane" id="toggleKeys" role="tabpanel" aria-labelledby="toggleKeysTab">
 
-                    }
-                    @*Add New Mannings*@
-                    @if (Model.ClientSiteManningPatrolCarKpiSettings.Where(x => x.DefaultValue == true).Count() != 0)
-                    {
+                    <div class="row m-0">
+                        <div class="col-md-12">
+                            <table class="table table-bordered" width="100%" id="cs_toggle_keys">
+                                <thead>
+                                    <tr>
+                                        <th> Toggle</th>
+                                        <th>Default Mode</th>
 
-                        <div id="divPatrolCar" style="display: none;">
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>
+                                            <table class="table table-borderless mb-0">
+                                                <tr>
+                                                    <td width="200px">
+                                                        <input type="checkbox" id="chk_cs_time_slot" checked />
+                                                        <label id="lbl_cs_IsTimeSlotNo">Time Slot No.</label>
+                                                    </td>
+                                                    <td>
+                                                        <input type="checkbox" id="chk_cs_tn_no_load" />
+                                                        <label id="lbl_cs_IsTNo">T.No. (Load).</label>
+                                                        <input type="hidden" id="chk_cs_Is_Time_Slot" />
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>
+
+                                            <table class="table table-borderless mb-0">
+                                                <tr>
+                                                    <td width="200px">
+                                                        <input type="checkbox" id="chk_cs_vwi" checked />
+                                                        <label id="lbl_cs_IsVWI">VWI</label>
+                                                    </td>
+                                                    <td>
+                                                        <input type="checkbox" id="chk_cs_Manifest" />
+                                                        <label id="lbl_cs_Manifest">Manifest</label>
+                                                        <input type="hidden" id="chk_cs_Is_VWI" />
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td>
+                                            <table class="table table-borderless mb-0">
+                                                <tr>
+                                                    <td width="200px">
+                                                        <input type="checkbox" id="chk_cs_Sender" checked />
+                                                        <label id="lbl_cs_IsSender">Sender Address</label>
+                                                    </td>
+                                                    <td>
+                                                        <input type="checkbox" id="chk_cs_Receiver" />
+                                                        <label id="lbl_cs_Receiver">Receiver Address</label>
+                                                        <input type="hidden" id="chk_cs_Is_Sender" />
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>4</td>
+                                        <td>
+                                            <table class="table table-borderless mb-0">
+                                                <tr>
+                                                    <td width="200px">
+                                                        <input type="checkbox" id="chk_cs_Reels" checked />
+                                                        <label id="lbl_cs_IsReels">Reels</label>
+                                                    </td>
+                                                    <td>
+                                                        <input type="checkbox" id="chk_cs_QTY" />
+                                                        <label id="lbl_cs_QTY">QTY</label>
+                                                        <input type="hidden" id="chk_cs_Is_Reels" />
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>5</td>
+                                        <td>
+                                            <table class="table table-borderless mb-0">
+                                                <tr>
+                                                    <td width="200px">
+                                                        <input type="checkbox" id="chk_cs_ISOVIN" checked />
+                                                        <label id="lbl_cs_IsISO">ISO / VIN</label>
+                                                    </td>
+                                                    <td>
+                                                        <input type="checkbox" id="chk_cs_TrailerRego" />
+                                                        <label id="lbl_cs_TrailerRego">Trailer Rego</label>
+                                                        <input type="hidden" id="chk_cs_IsISOVIN" />
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="form-row mt-3">
+                        <button type="button" id="btnSaveToggleKeys" class="btn btn-primary">Save</button>
+                    </div>
+                </div>
+                @*for toggle areas-end*@
+                <div class="tab-pane" id="ringFence" role="tabpanel" aria-labelledby="ringFenceTab">
+                    <div class="container">
+                        <h4 class="my-3 text-center"><i class="fa fa-exclamation-triangle mr-2 text-warning"></i>CAUTION</h4>
+                        <p>
+                            Some clients consider their customer data as sensitive information especially related to products or suppliers.<br />
+                            When the <b>RINGFENCE</b> is enabled the data collected during the day is not retained past midnight.
+                        </p>
+                        <p>This means while a PDF is generated at midnight, it can not be re-generated.</p>
+                        <p>This means any and all AUDIT functions of the Key, Vehicle and visitor Register is disabled and can not be performed.</p>
+                        <p>In effect, Intelligence and analytics are removed, and is similar to behaving like a "paper based" log book.</p>
+                        <p class="my-2">
+                            <div class="form-check mb-1">
+                                <input type="checkbox" id="cbxDisableDataCollection" class="form-check-input" />
+                                <label for="cbxDisableDataCollection" class="form-check-label text-danger">Disable Data Collection & Audit Functions</label>
+                            </div>
+                        </p>
+                        <p>
+                            <button class="btn btn-primary" id="btnDisableDataCollection">Save</button>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane" id="KPISettings" role="tabpanel" aria-labelledby="kpiSettingTab">
+            <ul class="nav nav-tabs" id="kpiSettings" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active" id="siteKpiSettings-tab" data-toggle="tab" href="#siteKpiSettings" role="tab" aria-controls="siteKpiSettings">Site Settings</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="contracted-manning-tab" data-toggle="tab" href="#contractedmanningSettings" role="tab" aria-controls="contractedmanningSettings">Contracted Manning</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="notes-tab" data-toggle="tab" href="#notes" role="tab" aria-controls="notes">Notes</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="hr-compliance-tab" data-toggle="tab" href="#HRCompliance" role="tab" aria-controls="HRCompliance">HR Compliance</a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="siteKpiSettings" role="tabpanel" aria-labelledby="kpi-settings-tab">
+
+                    <div class="container pt-3">
+                        <form id="frm_site_settings">
+                            <input type="hidden" asp-for="@Model.Id" />
+                            <input type="hidden" asp-for="@Model.ClientSiteId" />
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="form-row my-2 pb-3">
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input asp-for="@Model.IsThermalCameraSite" class="form-check-input">
+                                                <label class="form-check-label font-weight-bold" asp-for="@Model.IsThermalCameraSite">Thermal Camera Site</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-check pl-0">
+                                                <input asp-for="@Model.IsWeekendOnlySite class=" form-check-input">
+                                                <label class="form-check-label font-weight-bold" asp-for="@Model.IsWeekendOnlySite">Weekend Only Site</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group col-md-8">
+                                            <label class="form-label" asp-for="@Model.DropboxImagesDir"></label>
+                                            <input class="form-control" asp-for="@Model.DropboxImagesDir">
+                                        </div>
+                                        <div class="form-group col-md-2">
+                                            <label class="form-label" asp-for="@Model.KoiosClientSiteId"></label>
+                                            <input class="form-control w-80px" asp-for="@Model.KoiosClientSiteId">
+                                        </div>
+                                        <div class="form-group col-md-2">
+                                            <label class="form-label" asp-for="@Model.KoiosClientSiteIdB"></label>
+                                            <input class="form-control w-80px" asp-for="@Model.KoiosClientSiteIdB">
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group col-md-4">
+                                            <label class="form-label" asp-for="@Model.PhotoPointsPerPatrol"></label>
+                                            <input class="form-control w-80px daily-img-target" asp-for="@Model.PhotoPointsPerPatrol">
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label class="form-label" asp-for="@Model.WandPointsPerPatrol"></label>
+                                            <input class="form-control w-80px daily-wand-target" asp-for="@Model.WandPointsPerPatrol">
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label class="form-label" asp-for="@Model.TuneDowngradeBuffer"></label>
+                                            <input type="number" min="1" class="form-control w-80px daily-img-target" asp-for="@Model.TuneDowngradeBuffer">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div>
+                                        <h6 class="font-weight-bold">Site Image (200x112)</h6>
+                                        @{
+                                            var siteImage = !string.IsNullOrEmpty(Model.SiteImage) ? Model.SiteImage : "//via.placeholder.com/200x112.png?text=No Image";
+                                        }
+                                        <img src="@siteImage" width="200" height="112" id="img_site_image" class="img-fluid" />
+                                        <input type="hidden" asp-for="@Model.SiteImage" value="@Model.SiteImage" />
+                                    </div>
+                                    <div class="mt-2">
+                                        <label class="btn btn-sm btn-outline-primary">
+                                            <i class="fa fa-upload mr-2"></i>Replace Image
+                                            <input type="file" id="upload_site_image" accept=".jpg" hidden>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
                             <hr />
                             <div class="row">
                                 <div class="col-md-12">
-                                    @for (int rowIndex2 = 0; rowIndex2 < 4; rowIndex2++)
+                                    @for (int rowIndex = 0; rowIndex < 6; rowIndex++)
                                     {
                                         <div class="form-row">
-                                            <div class="col-md-3">
-                                                @if (rowIndex2 == 0)
-                                                {
-
-                                                    <div class="d-flex flex-row justify-content-between">
-                                                        <label class="form-label">Position</label>
-                                                        <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
-                                                            <input type="checkbox" class="custom-control-input" id="positionfilterPatrolCar" name="positionfilterPatrolCar">
-                                                            <label class="custom-control-label" for="positionfilterPatrolCar">Patrol Car</label>
-                                                        </div>
-                                                    </div>
-
-                                                }
-                                                @if (rowIndex2 == 1)
-                                                {
-                                                    <div class="form-group p-0">
-                                                        <select asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[rowIndex2].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.NonPatrolOnly)" class="form-control"></select>
-                                                    </div>
-                                                }
-                                                @*New Code for Monthly Hours Start*@
-
-                                                @if (rowIndex2 == 3)
-                                                {
-
-                                                    <div class="d-flex flex-row justify-content-between">
-                                                        <label class="form-label" id="monthlyHrsTxtAddNew">Monthly Hrs :</label>
-                                                        <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
-                                                            <input type="text" class="form-control mb-2 patrols-count" id="monthlyHrsAddNew" name="monthlyHrsAddNew" style="width:120px" readonly />
-                                                        </div>
-                                                    </div>
-
-                                                }
-                                                @*New Code for Monthly Hours end*@
-
-
+                                            <div class="col-md-2">
+                                                <label class="form-label">@rowTitle[rowIndex]</label>
                                             </div>
-                                            <div class="col-md-1 p-0">
-                                                <label class="form-label" id="lbl_ManningPatrolCar_@rowIndex2">@rowTitleManningGuard[rowIndex2]</label>
-                                            </div>
-
-                                            @for (var colIndex2 = 0; colIndex2 < 8; colIndex2++)
+                                            @for (var colIndex = 0; colIndex < 7; colIndex++)
                                             {
-                                                var headerLabel2 = string.Empty;
-                                                @if (@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].IsPHO == 1)
-                                                {
-                                                    headerLabel2 = "PHO";
-                                                }
-                                                else
-                                                {
-                                                    headerLabel2 = @Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].WeekDay.ToString().Substring(0, 3);
-                                                }
-                                                <div class="col-md-1">
-                                                    @switch (rowIndex2)
+                                                <div class="col-md-1 mx-1">
+                                                    @switch (rowIndex)
                                                     {
                                                         case 0:
-                                                            <label class="form-label">@headerLabel2</label>
+                                                            <label class="form-label">@Model.ClientSiteDayKpiSettings[colIndex].WeekDay.ToString().Substring(0, 3)</label>
                                                             break;
                                                         case 1:
-                                                            <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].EmpHoursStart">
+                                                            <input class="form-control mb-2" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].EmpHours">
                                                             break;
                                                         case 2:
-                                                            <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].EmpHoursEnd">
+                                                            <div class="custom-control custom-switch patrol-frequency-switch mb-3">
+                                                                <input type="checkbox" class="custom-control-input patrol-frequency" data-index="@colIndex"
+                                                                       id="@($"Chk_ClientSiteDayKpiSettings_{colIndex}_PatrolFrequency")" @(Convert.ToBoolean(Model.ClientSiteDayKpiSettings[colIndex].PatrolFrequency) ? "checked=checked" : "")>
+                                                                <label class="custom-control-label" for="@($"Chk_ClientSiteDayKpiSettings_{colIndex}_PatrolFrequency")">
+                                                                    @(Convert.ToBoolean(Model.ClientSiteDayKpiSettings[colIndex].PatrolFrequency) ? "per day" : "per hr")
+                                                                </label>
+                                                                <input type="hidden" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].PatrolFrequency" />
+                                                            </div>
                                                             break;
                                                         case 3:
-                                                            <input class="form-control mb-2 patrols-count" min="0" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].NoOfPatrols" data-index="@colIndex2">
+                                                            <input class="form-control mb-2 patrols-count" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].NoOfPatrols" data-index="@colIndex">
                                                             break;
-
+                                                        case 4:
+                                                            <input class="form-control mb-2" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].ImagesTarget" readonly>
+                                                            break;
+                                                        case 5:
+                                                            <input class="form-control mb-2" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].WandScansTarget" readonly>
+                                                            break;
                                                     }
-                                                    <input asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].Type" value="2" style="display: none;">
-                                                    <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].WeekDay" />
-                                                    <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].Id" />
-                                                    <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].OrderId" />
-                                                    <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].SettingsId" />
-                                                    <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].IsPHO" />
+                                                    <input type="hidden" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].WeekDay" />
+                                                    <input type="hidden" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].Id" />
                                                 </div>
                                             }
                                         </div>
                                     }
                                 </div>
                             </div>
-                        </div>
+                            <hr />
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="form-row my-2">
+                                        <div class="col-md-6">
+                                            <h6 class="font-weight-bold d-inline">Site Statistics</h6>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group col-md-4">
+                                            <label class="form-label" asp-for="@Model.ExpPatrolDuration"></label>
+                                            <input class="form-control w-80px daily-wand-target" asp-for="@Model.ExpPatrolDuration">
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label class="form-label" asp-for="@Model.MinPatrolFreq"></label>
+                                            <input class="form-control w-80px daily-wand-target" asp-for="@Model.MinPatrolFreq">
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label class="form-label" asp-for="@Model.MinImagesPerPatrol"></label>
+                                            <input class="form-control w-80px daily-wand-target" asp-for="@Model.MinImagesPerPatrol">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-success" id="save_site_settings"><i class="fa fa-save mr-2"></i>Save Settings</button>
+                        </form>
+                    </div>
+                </div>
+                @*New Tab for contracted-manning start*@
+                <div class="tab-pane" id="contractedmanningSettings" role="tabpanel" aria-labelledby="contracted-manning-tab">
+                    <div class="container pt-3">
+                        @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == false).Count() != 0 && (Model.ClientSiteManningPatrolCarKpiSettings.Where(x => x.DefaultValue == false).Count() != 0))
+                        {
+                            <div class="text-right"><button id="showDivButton" class="btn btn-success" disabled><i class="fa fa-plus" aria-hidden="true"></i> Add Worker</button></div>
+
+
+                        }
+                        else
+                        {
+                            <div class="text-right"><button id="showDivButton" class="btn btn-success"><i class="fa fa-plus" aria-hidden="true"></i> Add Worker</button></div>
+
+                        }
 
 
 
 
-                    }
+                        <form id="frm_site_manning_settings">
+                            <input type="hidden" asp-for="@Model.Id" />
+                            <input type="hidden" asp-for="@Model.ClientSiteId" />
+                            <input type="hidden" id="hidCount" value="@count" />
+                            @*display Already Existing Mannings*@
 
-
-
-                    @*Old Code*@
-
-                    @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == true).Count() == 0)
-                    {
-                        <button type="button" class="btn btn-success" id="save_site_manning_settings"><i class="fa fa-save mr-2"></i>Save Settings</button>
-
-                    }
-                    else
-                    {
-                        <div id="divbtn" style="display: none;">
-                            <button type="button" class="btn btn-success" id="save_site_manning_settings"><i class="fa fa-save mr-2"></i>Save Settings</button>
-                        </div>
-                    }
-
-                </form>
-
-            </div>
-        </div>
-        @*New Tab for contracted-manning end*@
-        @*New Tab for Rc List start*@
-        <div class="tab-pane" id="RcActionListSettings" role="tabpanel" aria-labelledby="contracted-manning-tab">
-            <form id="frm_ActionList">
-                <br />
-                <input type="hidden" name="RCActionList.ClientSiteID" asp-for="@Model.ClientSiteId" />
-                <h6>Site Alarm SOP's:</h6>
-                <table class="table table-bordered tbl-settings" id="tbl_summaryImage">
-                    <thead>
-                        <tr>
-
-                            <th style="width:370px">File Name</th>
-                            <th style="width:370px">Date & Time Uploaded</th>
-                            <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            @{
-                                if (Model.rclistKP.Imagepath != null || Model.rclistKP.Imagepath != "")
+                            @*Check if default value or orginal data exist*@
+                            @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == true).Count() == 0)
+                            {
+                                @*Get All Distinct order Id *@
+                                var distinctOrderIds = Model.ClientSiteManningGuardKpiSettings.Select(order => order.OrderId).Distinct();
+                                @for (int rowIndexFirst = 0; rowIndexFirst < Model.ClientSiteManningGuardKpiSettings.Count(); rowIndexFirst = rowIndexFirst + 8)
                                 {
-                                    <td class="align-middle" id="summary_imageRC">@Model.rclistKP.Imagepath</td>
-                                }
-                                else
-                                {
-                                    <td class="align-middle" id="summary_imageRC"></td>
+
+                                    var rowIndextemp = 0;
+                                    var idForDelete = @Model.ClientSiteManningGuardKpiSettings[rowIndexFirst].SettingsId + "_" + @Model.ClientSiteManningGuardKpiSettings[rowIndexFirst].OrderId + "_" + @Model.ClientSiteId;
+
+                                    <hr />
+                                    <div class="row">
+                                        <div class="col-md-12">
+
+
+                                            <button type="button" class="btn btn-danger" value="@idForDelete" id="delete_worker"><i class="fa fa-trash" aria-hidden="true"></i>&nbsp;Delete Worker</button>
+
+                                            @for (int rowIndex = rowIndexFirst; rowIndex < (4 + rowIndexFirst); rowIndex++)
+                                            {
+                                                /*Monthly Hours Start*/
+                                                var monthilyHours = 0.0;
+                                                @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
+                                                {
+
+                                                    var totalMin = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId).Select(x => x.SumOfHours).Sum();
+                                                    var guardQty = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId && x.NoOfPatrols != null).Select(x => x.NoOfPatrols ?? 0).FirstOrDefault();
+                                                    if (totalMin != null && guardQty != null)
+                                                        monthilyHours = Math.Round(((totalMin) * guardQty * 52.143) / 12);
+
+                                                }
+                                                else
+                                                {
+                                                    var guardQty = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId).Select(x => x.NoOfPatrols ?? 0).Sum();
+                                                    monthilyHours = guardQty;
+                                                }
+
+                                                /*Monthly Hours End*/
+                                                <div class="form-row">
+                                                    <div class="col-md-3">
+                                                        @if (rowIndextemp == 0)
+                                                        {
+
+                                                            <div class="d-flex flex-row justify-content-between">
+                                                                <label class="form-label">Position</label>
+                                                                <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
+                                                                    @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
+                                                                    {
+                                                                        <input type="checkbox" class="custom-control-input" id="positionfilterGuard_@rowIndexFirst" disabled name="positionfilterGuard">
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <input type="checkbox" class="custom-control-input" id="positionfilterGuard_@rowIndexFirst" disabled checked name="positionfilterGuard">
+
+                                                                    }
+                                                                    <label class="custom-control-label" for="positionfilterGuard">Patrol Car</label>
+                                                                </div>
+                                                            </div>
+
+                                                        }
+                                                        @if (rowIndextemp == 1)
+                                                        {
+                                                            <div class="form-group p-0">
+
+                                                                @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
+                                                                {
+                                                                    <select asp-for="@Model.ClientSiteManningGuardKpiSettings[rowIndex].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.NonPatrolOnly)" class="form-control"></select>
+
+                                                                }
+                                                                else
+                                                                {
+                                                                    <select asp-for="@Model.ClientSiteManningGuardKpiSettings[rowIndex].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.PatrolOnly)" class="form-control"></select>
+                                                                }
+                                                            </div>
+                                                        }
+                                                        @*New Code for Monthly Hours Start*@
+
+                                                        @if (rowIndextemp == 3)
+                                                        {
+
+                                                            <div class="d-flex flex-row justify-content-between">
+                                                                @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
+                                                                {
+                                                                    <label class="form-label" id="lbl_MonthlyHrs">Monthly Hrs :</label>
+
+                                                                }
+                                                                else
+                                                                {
+                                                                    <label class="form-label" id="lbl_MonthlyHrs">Total Patrols :</label>
+                                                                }
+                                                                <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
+                                                                    <input type="text" class="form-control mb-2 patrols-count" asp-for="@monthilyHours" id="monthlyHrs_@rowIndexFirst" name="monthlyHrs" style="width:120px" readonly />
+                                                                </div>
+                                                            </div>
+
+                                                        }
+                                                        @*New Code for Monthly Hours end*@
+                                                    </div>
+                                                    <div class="col-md-1 p-0">
+                                                        @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
+                                                        {
+                                                            <label class="form-label">@rowTitleManningGuard[rowIndextemp]</label>
+
+                                                        }
+                                                        else
+                                                        {
+                                                            <label class="form-label">@rowTitleManningPatrolCar[rowIndextemp]</label>
+
+                                                        }
+                                                    </div>
+                                                    @for (var colIndex = rowIndexFirst; colIndex < (8 + rowIndexFirst); colIndex++)
+                                                    {
+
+
+                                                        @if (@Model.ClientSiteManningGuardKpiSettings[colIndex] != null)
+                                                        {
+                                                            var headerLabel = string.Empty;
+                                                            @if (@Model.ClientSiteManningGuardKpiSettings[colIndex].IsPHO == 1)
+                                                            {
+                                                                headerLabel = "PHO";
+                                                            }
+                                                            else
+                                                            {
+                                                                headerLabel = @Model.ClientSiteManningGuardKpiSettings[colIndex].WeekDay.ToString().Substring(0, 3);
+                                                            }
+
+                                                            <div class="col-md-1" id="divGuardInner_+@rowIndex+_+@colIndex">
+
+                                                                @switch (rowIndextemp)
+                                                                {
+                                                                    case 0:
+
+                                                                        //<label class="form-label">@Model.ClientSiteManningGuardKpiSettings[colIndex].WeekDay.ToString().Substring(0, 3)</label>
+                                                                        <label class="form-label">@headerLabel</label>
+                                                                        break;
+                                                                    case 1:
+
+                                                                        <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursStart">
+                                                                        break;
+
+                                                                    case 2:
+
+                                                                        <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursEnd">
+                                                                        break;
+                                                                    case 3:
+                                                                        <input class="form-control mb-2 patrols-count" min="0" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].NoOfPatrols" data-index="@colIndex">
+                                                                        break;
+
+                                                                }
+                                                                <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].WeekDay" />
+                                                                <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].Id" />
+                                                                <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].OrderId" />
+                                                                <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].Type" />
+                                                                <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].SettingsId" />
+                                                                <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].IsPHO" />
+
+                                                            </div>
+
+                                                        }
+
+
+                                                    }
+
+
+
+                                                </div>
+                                                rowIndextemp++;
+                                            }
+                                        </div>
+                                    </div>
+
                                 }
 
-                                if (Model.rclistKP.DateandTimeUpdated != null || Model.rclistKP.DateandTimeUpdated != "")
-                                {
-                                    <td class="align-middle" id="summary_image_updatedRC">@Model.rclistKP.DateandTimeUpdated</td>
-                                }
-                                else
-                                {
-                                    <td class="align-middle" id="summary_image_updatedRC"></td>
-                                }
+
                             }
-                            <td class="text-center">
-                                <label class="btn btn-success mb-0">
+                            @*Add New Mannings*@
+                            @if (Model.ClientSiteManningPatrolCarKpiSettings.Where(x => x.DefaultValue == true).Count() != 0)
+                            {
 
-                                    <i class="fa fa-upload mr-2"></i>Replace
-                                    <input type="file" id="upload_summary_imageRcList" accept=".jpg, .jpeg, .png, .bmp, .pdf,.docx" hidden>
+                                <div id="divPatrolCar" style="display: none;">
+                                    <hr />
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            @for (int rowIndex2 = 0; rowIndex2 < 4; rowIndex2++)
+                                            {
+                                                <div class="form-row">
+                                                    <div class="col-md-3">
+                                                        @if (rowIndex2 == 0)
+                                                        {
 
-                                </label>
-                                @{
-                                    if (Model.rclistKP.Imagepath != string.Empty)
-                                    {
-                                        <a href="/RCImage/@Model.rclistKP.Imagepath" target="_blank" class="btn btn-outline-primary" id="download_summary_imageRCList"><i class="fa fa-download mr-2"></i>Download</a>
-                                    }
-                                    else
-                                    {
-                                        <a class="btn btn-outline-primary" id="download_summary_imageRCList"><i class="fa fa-download mr-2"></i>Download</a>
-                                    }
-                                }
+                                                            <div class="d-flex flex-row justify-content-between">
+                                                                <label class="form-label">Position</label>
+                                                                <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
+                                                                    <input type="checkbox" class="custom-control-input" id="positionfilterPatrolCar" name="positionfilterPatrolCar">
+                                                                    <label class="custom-control-label" for="positionfilterPatrolCar">Patrol Car</label>
+                                                                </div>
+                                                            </div>
 
-                                <button class="btn btn-outline-primary btn-outline-danger" type="button" id="delete_summary_imageRC"><i class="fa fa-trash mr-2"></i>Delete</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                                                        }
+                                                        @if (rowIndex2 == 1)
+                                                        {
+                                                            <div class="form-group p-0">
+                                                                <select asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[rowIndex2].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilterManning.NonPatrolOnly)" class="form-control"></select>
+                                                            </div>
+                                                        }
+                                                        @*New Code for Monthly Hours Start*@
+
+                                                        @if (rowIndex2 == 3)
+                                                        {
+
+                                                            <div class="d-flex flex-row justify-content-between">
+                                                                <label class="form-label" id="monthlyHrsTxtAddNew">Monthly Hrs :</label>
+                                                                <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
+                                                                    <input type="text" class="form-control mb-2 patrols-count" id="monthlyHrsAddNew" name="monthlyHrsAddNew" style="width:120px" readonly />
+                                                                </div>
+                                                            </div>
+
+                                                        }
+                                                        @*New Code for Monthly Hours end*@
+
+
+                                                    </div>
+                                                    <div class="col-md-1 p-0">
+                                                        <label class="form-label" id="lbl_ManningPatrolCar_@rowIndex2">@rowTitleManningGuard[rowIndex2]</label>
+                                                    </div>
+
+                                                    @for (var colIndex2 = 0; colIndex2 < 8; colIndex2++)
+                                                    {
+                                                        var headerLabel2 = string.Empty;
+                                                        @if (@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].IsPHO == 1)
+                                                        {
+                                                            headerLabel2 = "PHO";
+                                                        }
+                                                        else
+                                                        {
+                                                            headerLabel2 = @Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].WeekDay.ToString().Substring(0, 3);
+                                                        }
+                                                        <div class="col-md-1">
+                                                            @switch (rowIndex2)
+                                                            {
+                                                                case 0:
+                                                                    <label class="form-label">@headerLabel2</label>
+                                                                    break;
+                                                                case 1:
+                                                                    <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].EmpHoursStart">
+                                                                    break;
+                                                                case 2:
+                                                                    <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].EmpHoursEnd">
+                                                                    break;
+                                                                case 3:
+                                                                    <input class="form-control mb-2 patrols-count" min="0" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].NoOfPatrols" data-index="@colIndex2">
+                                                                    break;
+
+                                                            }
+                                                            <input asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].Type" value="2" style="display: none;">
+                                                            <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].WeekDay" />
+                                                            <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].Id" />
+                                                            <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].OrderId" />
+                                                            <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].SettingsId" />
+                                                            <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].IsPHO" />
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
 
 
 
-                <div class="container">
-                    <div class="row">
-                        <div class="col ml-1 p-0">
-                            <h6>Site Access</h6>
-                        </div>
-                        <div class="col-6" style="padding-left: 44px;">
-                            <h6>Alarm Response</h6>
-                        </div>
-                        <div class="col">
-                        </div>
+
+                            }
+
+
+
+                            @*Old Code*@
+
+                            @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == true).Count() == 0)
+                            {
+                                <button type="button" class="btn btn-success" id="save_site_manning_settings"><i class="fa fa-save mr-2"></i>Save Settings</button>
+
+                            }
+                            else
+                            {
+                                <div id="divbtn" style="display: none;">
+                                    <button type="button" class="btn btn-success" id="save_site_manning_settings"><i class="fa fa-save mr-2"></i>Save Settings</button>
+                                </div>
+                            }
+
+                        </form>
+
                     </div>
-
                 </div>
-                <br />
-                <div class="row col-md-12">
-                    <div class="row col-md-9">
-                        <input type="hidden" id="RCImagepath" name="RCActionList.Imagepath" value="@Model.rclistKP.Imagepath">
-                        <input type="hidden" id="RCImageDateandTime" name="RCActionList.DateandTimeUpdated">
-
-                        <div class="form-group row ml-2">
-                            <label class="col-md-3 form-label text-left pl-0">Site Alarm Keypad Code</label>
-                            <div class="col-md-2">
-                                <input type="text" class="form-control" id="Site_Alarm_Keypad_code" name="RCActionList.SiteAlarmKeypadCode" value="@Model.rclistKP.SiteAlarmKeypadCode">
-                            </div>
-                            <label class="col-form-label text-left">Action 1</label>
+                <div class="tab-pane" id="notes" role="tabpanel" aria-labelledby="notes-tab">
+                    <div class="container pt-3">
+                        <div class="row mt-3">
                             <div class="col-md-6">
-                                <input type="text" class="form-control" id="Action1" name="RCActionList.Action1" value="@Model.rclistKP.Action1">
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label for="note_month">Month</label>
+                                        <select class="form-control" id="note_month" asp-items="@ViewDataService.GetMonthsInYear()"></select>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label for="note_year">Year</label>
+                                        <select class="form-control" id="note_year" asp-items="@ViewDataService.GetYears()"></select>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-12">
+                                        <form id="frm_site_note">
+                                            <textarea class="form-control" name="ClientSiteKpiNote.Notes" id="ClientSiteKpiNote_Notes" maxlength="512" rows="4">@Model.NotesForThisMonth.Notes</textarea>
+                                            <span id="lblSiteNoteRemainingCount" class="mt-2 d-block small"></span>
+                                            <input type="hidden" name="ClientSiteKpiNote.Id" id="ClientSiteKpiNote_Id" value="@Model.NotesForThisMonth.Id" />
+                                            <input type="hidden" name="ClientSiteKpiNote.SettingsId" id="ClientSiteKpiNote_SettingsId" value="@Model.NotesForThisMonth.SettingsId" />
+                                            <input type="hidden" name="ClientSiteKpiNote.ForMonth" id="ClientSiteKpiNote_ForMonth" value="@Model.NotesForThisMonth.ForMonth" />
+                                        </form>
+                                    </div>
+                                </div>
+                                <div class="form-row mt-2">
+                                    <button type="button" class="btn btn-outline-danger mr-2" id="delete_site_notes"><i class="fa fa-trash mr-2"></i>Delete</button>
+                                    <button type="button" class="btn btn-success" id="save_site_notes"><i class="fa fa-save mr-2"></i>Save Notes</button>
+                                </div>
                             </div>
                         </div>
-                        <div class="form-group row ml-2">
-                            <label class="col-md-3 form-label text-left pl-0" style="padding-right: 56px;">Site Physical Key</label>
-                            <div class="col-md-2">
-                                <input type="text" class="form-control" id="site_Physical_key" name="RCActionList.Sitephysicalkey" value="@Model.rclistKP.Sitephysicalkey">
-                            </div>
-                            <label class="col-form-label text-left">Action 2</label>
-                            <div class="col-md-6">
-                                <input type="text" class="form-control" id="Action2" name="RCActionList.Action2" value="@Model.rclistKP.Action2">
-                            </div>
-
-                        </div>
-                        <div class="form-group row row ml-2">
-                            <label class="col-md-3 form-label text-left pl-0">Site Combination Lock</label>
-                            <div class="col-md-2">
-                                <input type="text" class="form-control" id="Site_Combination_Look" name="RCActionList.SiteCombinationLook" value="@Model.rclistKP.SiteCombinationLook">
-                            </div>
-                            <label class="col-form-label text-left">Action 3</label>
-                            <div class="col-md-6">
-                                <input type="text" class="form-control" id="Action3" name="RCActionList.Action3" value="@Model.rclistKP.Action3">
-                            </div>
-
-                        </div>
-
-                        <div class="form-group row row ml-2">
-                            <label class="col-md-3 form-label text-left pl-0" style="visibility:hidden">Site Combination Look</label>
-                            <div class="col-md-2">
-                                <input type="text" class="form-control" style="visibility:hidden">
-                            </div>
-                            <label class="col-form-label text-left">Action 4</label>
-                            <div class="col-md-6">
-                                <input type="text" class="form-control" id="Action4" name="RCActionList.Action4" value="@Model.rclistKP.Action4">
-                            </div>
-
-                        </div>
-
-                        <div class="form-group row row ml-2">
-                            <label class="col-md-3 form-label text-left pl-0" style="visibility:hidden">Site Combination Look</label>
-                            <div class="col-md-2">
-                                <input type="text" class="form-control" style="visibility:hidden">
-                            </div>
-                            <label class="col-form-label text-left">Action 5</label>
-                            <div class="col-md-6">
-                                <input type="text" class="form-control" id="Action5" name="RCActionList.Action5" value="@Model.rclistKP.Action5">
-                            </div>
-
-                        </div>
-
-
-
-                    </div>
-                    <div class="form-group  col-md-3 p-0">
-                        <label class="col-form-label">Comments for Control Room Operator</label>
-                        <textarea id="userInput" name="RCActionList.ControlRoomOperator" rows="4" cols="35">@Model.rclistKP.ControlRoomOperator</textarea>
-                        <input type="hidden" name="RCActionList.Id" id="RCList_Id" value="@Model.rclistKP.Id" />
-                        <input type="hidden" name="RCActionList.SettingsId" id="RCList_SettingsId" value="@Model.rclistKP.SettingsId" />
-                        <input type="hidden" name="RCActionList.SettingsId" id="RCList_SettingsId" value="@Model.rclistKP.SiteAlarmKeypadCode" />
                     </div>
                 </div>
+                <div class="tab-pane" id="HRCompliance" role="tabpanel" aria-labelledby="hr-compliance-tab">
 
-            </form>
-            <button type="button" class="btn btn-outline-danger mr-2" id="delete_site_RCList"><i class="fa fa-trash mr-2"></i>Delete</button>
-            <button type="button" class="btn btn-success" id="save_site_RC"><i class="fa fa-save mr-2"></i>Save RC Action List</button>
-        </div>
-        @*New Tab for contracted-manning end*@
-        <div class="tab-pane" id="notes" role="tabpanel" aria-labelledby="notes-tab">
-            <div class="container pt-3">
-                <div class="row mt-3">
-                    <div class="col-md-6">
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label for="note_month">Month</label>
-                                <select class="form-control" id="note_month" asp-items="@ViewDataService.GetMonthsInYear()"></select>
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label for="note_year">Year</label>
-                                <select class="form-control" id="note_year" asp-items="@ViewDataService.GetYears()"></select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group col-md-12">
-                                <form id="frm_site_note">
-                                    <textarea class="form-control" name="ClientSiteKpiNote.Notes" id="ClientSiteKpiNote_Notes" maxlength="512" rows="4">@Model.NotesForThisMonth.Notes</textarea>
-                                    <span id="lblSiteNoteRemainingCount" class="mt-2 d-block small"></span>
-                                    <input type="hidden" name="ClientSiteKpiNote.Id" id="ClientSiteKpiNote_Id" value="@Model.NotesForThisMonth.Id" />
-                                    <input type="hidden" name="ClientSiteKpiNote.SettingsId" id="ClientSiteKpiNote_SettingsId" value="@Model.NotesForThisMonth.SettingsId" />
-                                    <input type="hidden" name="ClientSiteKpiNote.ForMonth" id="ClientSiteKpiNote_ForMonth" value="@Model.NotesForThisMonth.ForMonth" />
-                                </form>
-                            </div>
-                        </div>
-                        <div class="form-row mt-2">
-                            <button type="button" class="btn btn-outline-danger mr-2" id="delete_site_notes"><i class="fa fa-trash mr-2"></i>Delete</button>
-                            <button type="button" class="btn btn-success" id="save_site_notes"><i class="fa fa-save mr-2"></i>Save Notes</button>
-                        </div>
+                    <div class="container pt-3">
+                        <iframe src="SinglePageCriticalDoc" frameBorder="0" allowtransparency="true" scrolling="no" style=" width: 100%; height: 710px;  overflow: hidden;"> </iframe>
                     </div>
+
                 </div>
             </div>
         </div>
-        @*for menu change-start(jisha)*@
-        <div class="tab-pane" id="OtherSettings" role="tabpanel" aria-labelledby="notes-tab">
-            
-            <div id="OtherSettingsNew" class="mt-5"></div>
-         
+        <div class="tab-pane" id="RcActionListSettings" role="tabpanel" aria-labelledby="RcActionListSettings">
+            <ul class="nav nav-tabs" id="RcActionList" role="tablist">
+                <li class="nav-item " role="presentation">
+                    <a class="nav-link active" id="RcActionList-tab" data-toggle="tab" href="#RcActionListSettings" role="tab" aria-controls="RcActionListSettings">RC Action List</a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                @*New Tab for Rc List start*@
+                <div class="tab-pane active" id="RcActionListSettings" role="tabpanel" aria-labelledby="RcActionListSettings">
+                    <form id="frm_ActionList">
+                        <br />
+                        <input type="hidden" name="RCActionList.ClientSiteID" asp-for="@Model.ClientSiteId" />
+                        <h6>Site Alarm SOP's:</h6>
+                        <table class="table table-bordered tbl-settings" id="tbl_summaryImage">
+                            <thead>
+                                <tr>
+
+                                    <th style="width:370px">File Name</th>
+                                    <th style="width:370px">Date & Time Uploaded</th>
+                                    <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    @{
+                                        if (Model.rclistKP.Imagepath != null || Model.rclistKP.Imagepath != "")
+                                        {
+                                            <td class="align-middle" id="summary_imageRC">@Model.rclistKP.Imagepath</td>
+                                        }
+                                        else
+                                        {
+                                            <td class="align-middle" id="summary_imageRC"></td>
+                                        }
+
+                                        if (Model.rclistKP.DateandTimeUpdated != null || Model.rclistKP.DateandTimeUpdated != "")
+                                        {
+                                            <td class="align-middle" id="summary_image_updatedRC">@Model.rclistKP.DateandTimeUpdated</td>
+                                        }
+                                        else
+                                        {
+                                            <td class="align-middle" id="summary_image_updatedRC"></td>
+                                        }
+                                    }
+                                    <td class="text-center">
+                                        <label class="btn btn-success mb-0">
+
+                                            <i class="fa fa-upload mr-2"></i>Replace
+                                            <input type="file" id="upload_summary_imageRcList" accept=".jpg, .jpeg, .png, .bmp, .pdf,.docx" hidden>
+
+                                        </label>
+                                        @{
+                                            if (Model.rclistKP.Imagepath != string.Empty)
+                                            {
+                                                <a href="/RCImage/@Model.rclistKP.Imagepath" target="_blank" class="btn btn-outline-primary" id="download_summary_imageRCList"><i class="fa fa-download mr-2"></i>Download</a>
+                                            }
+                                            else
+                                            {
+                                                <a class="btn btn-outline-primary" id="download_summary_imageRCList"><i class="fa fa-download mr-2"></i>Download</a>
+                                            }
+                                        }
+
+                                        <button class="btn btn-outline-primary btn-outline-danger" type="button" id="delete_summary_imageRC"><i class="fa fa-trash mr-2"></i>Delete</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+
+
+                        <div class="container">
+                            <div class="row">
+                                <div class="col ml-1 p-0">
+                                    <h6>Site Access</h6>
+                                </div>
+                                <div class="col-6" style="padding-left: 44px;">
+                                    <h6>Alarm Response</h6>
+                                </div>
+                                <div class="col">
+                                </div>
+                            </div>
+
+                        </div>
+                        <br />
+                        <div class="row col-md-12">
+                            <div class="row col-md-9">
+                                <input type="hidden" id="RCImagepath" name="RCActionList.Imagepath" value="@Model.rclistKP.Imagepath">
+                                <input type="hidden" id="RCImageDateandTime" name="RCActionList.DateandTimeUpdated">
+
+                                <div class="form-group row ml-2">
+                                    <label class="col-md-3 form-label text-left pl-0">Site Alarm Keypad Code</label>
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control" id="Site_Alarm_Keypad_code" name="RCActionList.SiteAlarmKeypadCode" value="@Model.rclistKP.SiteAlarmKeypadCode">
+                                    </div>
+                                    <label class="col-form-label text-left">Action 1</label>
+                                    <div class="col-md-6">
+                                        <input type="text" class="form-control" id="Action1" name="RCActionList.Action1" value="@Model.rclistKP.Action1">
+                                    </div>
+                                </div>
+                                <div class="form-group row ml-2">
+                                    <label class="col-md-3 form-label text-left pl-0" style="padding-right: 56px;">Site Physical Key</label>
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control" id="site_Physical_key" name="RCActionList.Sitephysicalkey" value="@Model.rclistKP.Sitephysicalkey">
+                                    </div>
+                                    <label class="col-form-label text-left">Action 2</label>
+                                    <div class="col-md-6">
+                                        <input type="text" class="form-control" id="Action2" name="RCActionList.Action2" value="@Model.rclistKP.Action2">
+                                    </div>
+
+                                </div>
+                                <div class="form-group row row ml-2">
+                                    <label class="col-md-3 form-label text-left pl-0">Site Combination Lock</label>
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control" id="Site_Combination_Look" name="RCActionList.SiteCombinationLook" value="@Model.rclistKP.SiteCombinationLook">
+                                    </div>
+                                    <label class="col-form-label text-left">Action 3</label>
+                                    <div class="col-md-6">
+                                        <input type="text" class="form-control" id="Action3" name="RCActionList.Action3" value="@Model.rclistKP.Action3">
+                                    </div>
+
+                                </div>
+
+                                <div class="form-group row row ml-2">
+                                    <label class="col-md-3 form-label text-left pl-0" style="visibility:hidden">Site Combination Look</label>
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control" style="visibility:hidden">
+                                    </div>
+                                    <label class="col-form-label text-left">Action 4</label>
+                                    <div class="col-md-6">
+                                        <input type="text" class="form-control" id="Action4" name="RCActionList.Action4" value="@Model.rclistKP.Action4">
+                                    </div>
+
+                                </div>
+
+                                <div class="form-group row row ml-2">
+                                    <label class="col-md-3 form-label text-left pl-0" style="visibility:hidden">Site Combination Look</label>
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control" style="visibility:hidden">
+                                    </div>
+                                    <label class="col-form-label text-left">Action 5</label>
+                                    <div class="col-md-6">
+                                        <input type="text" class="form-control" id="Action5" name="RCActionList.Action5" value="@Model.rclistKP.Action5">
+                                    </div>
+
+                                </div>
+
+
+
+                            </div>
+                            <div class="form-group  col-md-3 p-0">
+                                <label class="col-form-label">Comments for Control Room Operator</label>
+                                <textarea id="userInput" name="RCActionList.ControlRoomOperator" rows="4" cols="35">@Model.rclistKP.ControlRoomOperator</textarea>
+                                <input type="hidden" name="RCActionList.Id" id="RCList_Id" value="@Model.rclistKP.Id" />
+                                <input type="hidden" name="RCActionList.SettingsId" id="RCList_SettingsId" value="@Model.rclistKP.SettingsId" />
+                                <input type="hidden" name="RCActionList.SettingsId" id="RCList_SettingsId" value="@Model.rclistKP.SiteAlarmKeypadCode" />
+                            </div>
+                        </div>
+
+                    </form>
+                    <button type="button" class="btn btn-outline-danger mr-2" id="delete_site_RCList"><i class="fa fa-trash mr-2"></i>Delete</button>
+                    <button type="button" class="btn btn-success" id="save_site_RC"><i class="fa fa-save mr-2"></i>Save RC Action List</button>
+                </div>
+                @*New Tab for contracted-manning end*@
+            </div>
         </div>
-        @*for menu change-end(jisha)*@
+
+
     </div>
 </div>
+<partial name="_KeySiteSettingsPopup" />

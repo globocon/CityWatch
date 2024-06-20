@@ -20,6 +20,7 @@ namespace CityWatch.Data.Models
 
         [Required]
         public string Description { get; set; }
+        
         public DateTime? ExpiryDate { get; set; }
 
         [Required]
@@ -53,6 +54,8 @@ namespace CityWatch.Data.Models
         public int Reminder2 { get; set; }
         [NotMapped]
         public string LicenseNo { get; set; }
-
+        public bool DateType { get; set; }
+        [NotMapped]
+        public bool IsDateFilterEnabledHidden { get; set; }
     }
 }

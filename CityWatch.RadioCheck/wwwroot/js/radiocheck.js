@@ -1,4 +1,5 @@
 let nIntervId;
+let DuressAlarmNotificationPending = false;
 const duration = 60 * 3;
 var isPaused = false;
 var sitebuttonSelectedClientTypeSiteId = -1;
@@ -19,10 +20,14 @@ var tmzdata = {
     'EventDateTimeUtcOffsetMinute': null,
 };
 // Task p6#73_TimeZone issue -- added by Binoy - End
+let connection;
 window.onload = function () {
     if (document.querySelector('#clockRefresh')) {
-        startClock();
+        startClock();        
     }
+    if (document.querySelector('#txtSignalRConnectionUrl')) {
+        connectToSignalRservice();
+    }    
 };
 $(document).ready(function () {
     $('[data-toggle="tooltip"]').tooltip();
@@ -52,28 +57,43 @@ function startClock() {
                 display.textContent = minutes + " min" + " " + seconds + " sec";
 
                 if (--timer < 0) {
-                    location.reload();
-                    //$.ajax({
-                    //    url: '/Radio/Check?handler=UpdateLatestActivityStatus',
-                    //    type: 'POST',
-                    //    dataType: 'json',
-                    //    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                    //}).done(function () {
-                    //    clientSiteActivityStatus.ajax.reload();
-                    //    timer = duration;
-                    //});
+                    ClearTimerAndReload();
                 }
-
+                else if ((timer > 5) && DuressAlarmNotificationPending) {
+                    ClearTimerAndReload();
+                }
             }
         }, 1000);
     }
 }
 
+function connectToSignalRservice() {
+    var signalRconnHuburl = $('#txtSignalRConnectionUrl').val() + "/updateHub";
+    connection = new signalR.HubConnectionBuilder().withUrl(signalRconnHuburl).configureLogging(signalR.LogLevel.Information).build();
+    connection.on("ReceiveDuressAlarmAlert", function () {
+        console.log("Duress Alarm Alert Received");
+        DuressAlarmNotificationPending = true;
+    });
+
+    connection.start().then(function () {
+        console.log('SignalR connection established.');
+    }).catch(function (err) {
+        return console.error(err.toString());
+    });
+}
+
 $('#btnRefreshActivityStatus').on('click', function () {
+    ClearTimerAndReload();
+});
+
+function ClearTimerAndReload() {
     clearInterval(nIntervId);
+    DuressAlarmNotificationPending = false;
     nIntervId = null;
     location.reload();
-});
+}
+
+
 
 let clientSiteActivityStatus = $('#clientSiteActivityStatus').DataTable({
     paging: false,
@@ -611,7 +631,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         {
             data: 'guardName',
 
-            width: '15%',
+            width: '18%',
             createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
                 // Define your conditions to add a class
                 if (rowData.isEnabled == 1) {
@@ -1480,8 +1500,8 @@ $('#clientSiteActiveGuards tbody').on('click', '#btnSWdetails', function (value,
     $('#guardSWInfoModal').modal('show');
     isPaused = true;
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
-    var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
-    var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    var GuardId = $(this).closest("tr").find('td').eq(4).find('#GuardId').val();
+    var ClientSiteId = $(this).closest("tr").find('td').eq(4).find('#ClientSiteId').val();
     if (GuardId.length == 0) {
         GuardId = $(this).closest("tr").find('td').eq(2).find('#GuardId').val();
     }
@@ -3388,8 +3408,8 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnSWdetails', functi
     $('#guardSWInfoModal').modal('show');
     isPaused = true;
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
-    var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
-    var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    var GuardId = $(this).closest("tr").find('td').eq(4).find('#GuardId').val();
+    var ClientSiteId = $(this).closest("tr").find('td').eq(4).find('#ClientSiteId').val();
     if (GuardId.length == 0) {
         GuardId = $(this).closest("tr").find('td').eq(2).find('#GuardId').val();
     }
@@ -3948,8 +3968,8 @@ function clearSummaryImageRC() {
 //RC Action List Save start
 
 $('#div_site_settings').on('click', '#save_site_RC', function () {
-    //var List = $('#frm_Kpi_ActionList').serialize();
-    //console.log(List);
+    var List = $('#frm_Kpi_ActionList').serialize();
+    console.log(List);
     $.ajax({
         url: '/RadioCheckV2?handler=ClientSiteRCActionList',
         type: 'POST',
@@ -4074,25 +4094,48 @@ function settingsButtonRenderer(value, record) {
     var ClientTypeName = record.clientType.name;
     var ClientSiteName = record.name;
     var clientSiteId = record.id;
+    var typeIdNew = record.typeId;
 
-    return '<button class="btn btn-outline-success mt-2 del-schedule d-block" data-sch-id="' + ClientSiteName + '_' + clientSiteId + '""><i class="fa fa-check mr-2" aria-hidden="true"></i>Select</button>';
+    return '<button class="btn btn-outline-success mt-2 del-schedule d-block" data-sch-id="' + ClientTypeName + '_' + clientSiteId + '_' + typeIdNew + '""><i class="fa fa-check mr-2" aria-hidden="true"></i>Select</button>';
 }
 $('#client_site_RadioSearch').on('click', '.del-schedule', function () {
 
 
     const ClientSiteName1 = $(this).attr('data-sch-id');
     const lastUnderscoreIndex = ClientSiteName1.lastIndexOf('_');
-
+    var fields = ClientSiteName1.split('_');
 
 
 
 
     if (lastUnderscoreIndex !== -1) {
-        const recordName = ClientSiteName1.slice(0, lastUnderscoreIndex);
-        const clientsiteid = ClientSiteName1.slice(lastUnderscoreIndex + 1);
+        const recordName = fields[0];
+        const clientsiteid = fields[1];
+        const typeId = fields[2];
+
+        $('#dglClientTypeActionList option').each(function () {
+          
+            if ($(this).val() === typeId) {
+                $(this).prop('selected', true);
+                return false;
+            }
+        });
+        sitebuttonSelectedClientSiteId = clientsiteid;
+        $('#dglClientTypeActionList').val(typeId).trigger('change');
+        var options = $('#dglClientSiteIdActionList option');
+        $('#dglClientSiteIdActionList option').each(function () {
+
+            var check = $(this).val();
+            if ($(this).val() === clientsiteid) {
+                $(this).prop('selected', true);
+                return false;
+            }
+        });
+
+       
 
         $('#logbook-modalRadio').modal('hide');
-        $('#search_client_siteSteps').val(recordName);
+        $('#search_client_siteSteps').val('');
         $.ajax({
             url: '/RadioCheckV2?handler=ActionList',
             type: 'POST',
@@ -4103,6 +4146,8 @@ $('#client_site_RadioSearch').on('click', '.del-schedule', function () {
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (data) {
             if (data != null) {
+
+                $('#dglClientSiteIdActionList').val(clientsiteid);                
                 $('#Site_Alarm_Keypad_code').val(data.siteAlarmKeypadCode);
                 $('#Action1').val(data.action1);
                 $('#site_Physical_key').val(data.sitephysicalkey);
@@ -4121,6 +4166,8 @@ $('#client_site_RadioSearch').on('click', '.del-schedule', function () {
                     $('#download_imageRCList').removeAttr('href');
                     $('#download_imageRCList').removeAttr('download');
                 }
+               
+
 
             }
         });

@@ -1,4 +1,5 @@
-﻿using CityWatch.Data.Models;
+﻿using CityWatch.Data.Enums;
+using CityWatch.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -34,7 +35,7 @@ namespace CityWatch.Data.Providers
         List<GuardCompliance> GetAllGuardCompliances();
         List<GuardCompliance> GetGuardCompliances(int guardId);
         HrSettings GetHRRefernceNo(int HRid, string Description);
-        List<string> GetHRDesc(int HRid);
+        List<HrSettings> GetHRDesc(int HRid);
         GuardCompliance GetGuardCompliance(int id);
         void SaveGuardCompliance(GuardCompliance guardCompliance);
         void SaveGuardComplianceandlicanse(GuardComplianceAndLicense guardComplianceandlicense);
@@ -65,6 +66,13 @@ namespace CityWatch.Data.Providers
 
         //p1-191 hr files task 3-end
         List<LicenseTypes> GetLicenseTypes();
+        GuardComplianceAndLicense GetDescriptionList(HrGroup hrGroup, string Description,int GuardID);
+        List<GuardComplianceAndLicense> GetGuardCompliancesAndLicense(int guardId);
+        List<GuardComplianceAndLicense> GetGuardCompliancesAndLicenseList(string hrGroup);
+        List<GuardComplianceAndLicense> GetGuardCompliancesAndLicenseHR(int guardId, HrGroup hrGroup);
+        List<CriticalDocumentsClientSites> GetCriticalDocs(int clientSiteID);
+         ClientSite GetClientSiteID(string ClientSite);
+        public DropboxDirectory GetDrobox();
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -88,14 +96,26 @@ namespace CityWatch.Data.Providers
         { 
             return _context.Guards.Where(x => x.IsActive == true).OrderBy(x => x.Name).ToList();
         }
-        //P4#70 to display only active guards PartB-C-end
-
-
-    //public List<Guard> GetGuardsCount()
-    //{
-    //    var guards = _context.Guards.ToList();
-    //    foreach (var guard in guards)
-    //    {
+        public List<CriticalDocumentsClientSites> GetCriticalDocs(int clientSiteID)
+        {
+            return _context.CriticalDocumentsClientSites
+                //.Include(x=>x.HRSettings)
+                //    .ThenInclude(z => z.ReferenceNoNumbers)
+                //    .Include(x => x.HRSettings)
+                // .ThenInclude(z => z.ReferenceNoAlphabets)
+                // .Include(x => x.HRSettings)
+                // .ThenInclude(z => z.HRGroups)
+                .Where(x=>x.ClientSiteId== clientSiteID).ToList();
+        }
+        public ClientSite GetClientSiteID(string ClientSite)
+        {
+            return _context.ClientSites.Where(x => x.Name == ClientSite).FirstOrDefault();
+        }
+        //public List<Guard> GetGuardsCount()
+        //{
+        //    var guards = _context.Guards.ToList();
+        //    foreach (var guard in guards)
+        //    {
 
     //        guard.IsActiveCount = CalculateIsActiveCountForGuard(guard.Id); 
     //    }
@@ -466,7 +486,8 @@ namespace CityWatch.Data.Providers
                 Description = x.Description,
                 HrGroup = x.HrGroup,
                 CurrentDateTime = x.CurrentDateTime,
-                LicenseNo = x.Guard.SecurityNo
+                LicenseNo = x.Guard.SecurityNo,
+                DateType=x.DateType,
             }).OrderBy(x=>x.FileName)
             .ToList();
 
@@ -554,6 +575,7 @@ namespace CityWatch.Data.Providers
                     guardComplianceToUpdate.ExpiryDate = guardComplianceandlicense.ExpiryDate;
                     guardComplianceToUpdate.FileName = guardComplianceandlicense.FileName;
                     guardComplianceToUpdate.HrGroup = guardComplianceandlicense.HrGroup;
+                    guardComplianceToUpdate.DateType = guardComplianceandlicense.DateType;
                 }
             }
             _context.SaveChanges();
@@ -570,15 +592,80 @@ namespace CityWatch.Data.Providers
                 .Where(x => x.GuardId == guardId && x.ExpiryDate != null)
                 .OrderBy(x => x.ReferenceNo).ToList();
         }
-        public List<string> GetHRDesc(int HRid)
+        public List<GuardComplianceAndLicense> GetGuardCompliancesAndLicense(int guardId)
         {
-            var descriptions = _context.HrSettings
-    .Where(x => x.HRGroupId == HRid)
-    .Select(x => x.Description)
-    .ToList();
+            return _context.GuardComplianceLicense
+                .Include(z => z.Guard)
+                .Where(x => x.GuardId == guardId && x.ExpiryDate != null)
+                .ToList();
+        }
+        public List<GuardComplianceAndLicense> GetGuardCompliancesAndLicenseList(string hrGroup)
+        {
+            var ddd = _context.GuardComplianceLicense
+                .Include(z => z.Guard)
+                .Where(x => x.ExpiryDate != null && x.HrGroupText==hrGroup)
+                .ToList();
+            return _context.GuardComplianceLicense
+                .Include(z => z.Guard)
+                .Where(x =>x.ExpiryDate != null && x.HrGroupText == hrGroup)
+                .ToList();
+        }
+        public List<GuardComplianceAndLicense> GetGuardCompliancesAndLicenseHR(int guardId, HrGroup hrGroup)
+        {
+            return _context.GuardComplianceLicense
+                 .Include(z => z.Guard)
+                 .Where(x => x.GuardId == guardId && x.HrGroup == hrGroup)
+                 .ToList();
+        }
+        public List<HrSettings> GetHRDesc(int HRid)
+        {
+            var descriptions = _context.HrSettings.Include(z => z.HRGroups)
+                .Include(z => z.ReferenceNoNumbers)
+                .Include(z => z.ReferenceNoAlphabets)
+                .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
+                ThenBy(x => x.ReferenceNoAlphabets.Name).Where(z => z.HRGroups.Id == HRid).ToList();
             return descriptions;
         }
-        public HrSettings GetHRRefernceNo(int HRid,string Description)
+        public GuardComplianceAndLicense GetDescriptionList(HrGroup hrGroup, string Description,int GuardID)
+        {
+            var guardAddedDoc = _context.GuardComplianceLicense
+        .Where(x => x.HrGroup == hrGroup &&  x.GuardId == GuardID).ToList();
+
+            var valueReturn = _context.GuardComplianceLicense
+          .Where(x => x.HrGroup == hrGroup && x.Description == Description && x.GuardId == 0)
+          .FirstOrDefault();
+
+            if (guardAddedDoc!=null)
+            {
+                foreach(var doc in guardAddedDoc)
+                {
+                    var s = doc.Description.Trim();
+                    var firstSpaceIndex = s.IndexOf(' ');
+                    if (firstSpaceIndex != -1)
+                    {
+                        var firstString = s.Substring(0, firstSpaceIndex); // INAGX4
+                        var secondString = s.Substring(firstSpaceIndex + 1); // Agatti Island
+                        if (Description.Trim() == secondString.Trim())
+                        {
+                            valueReturn = doc;
+
+
+                        }
+                    }
+
+
+                }
+
+
+            }
+
+
+            return valueReturn;
+        //    return _context.GuardComplianceLicense
+        //.Where(x => x.HrGroup == hrGroup && x.Description== Description && x.GuardId==GuardID)
+        //.FirstOrDefault();
+        }
+            public HrSettings GetHRRefernceNo(int HRid,string Description)
         {
             
             return _context.HrSettings.Include(z => z.HRGroups)
@@ -658,6 +745,10 @@ namespace CityWatch.Data.Providers
         public List<LicenseTypes> GetLicenseTypes()
         {
             return _context.LicenseTypes.ToList();
+        }
+        public DropboxDirectory GetDrobox()
+        {
+            return _context.DropboxDirectory.FirstOrDefault();
         }
     }
 }

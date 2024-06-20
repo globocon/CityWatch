@@ -1,4 +1,5 @@
 ﻿using CityWatch.Data;
+using CityWatch.Data.Enums;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Kpi.Models;
@@ -49,6 +50,13 @@ namespace CityWatch.Kpi.Services
         List<GuardCompliance> GetKpiGuardDetailsComplianceData(int[] guardIds);
         int GetClientTypeCount(int? typeId);
         List<SelectListItem> ClientTypesUsingLoginUserIdCount(int guardId);
+        List<GuardComplianceAndLicense> GetKpiGuardDetailsComplianceAndLicense(int guardIds);
+        List<GuardComplianceAndLicense> GetKpiGuardDetailsComplianceAndLicenseHR(int guardIds, HrGroup hrGroup);
+        List<GuardComplianceAndLicense> GetKpiGuardDetailsComplianceAndLicenseHRList(string hrGroup);
+        List<HrSettings> GetHRSettings(int HRID);
+        List<HRGroups> GetKpiGuardHRGroup();
+        List<ClientType> GetUserClientTypesHavingAccess(int? userId);
+        List<HRGroups> GetHRGroupslist();
     }
 
     public class ViewDataService : IViewDataService
@@ -332,6 +340,47 @@ namespace CityWatch.Kpi.Services
 
             return guardCompliance.ToList();
         }
+        public List<HRGroups> GetKpiGuardHRGroup()
+        {
+            var hrGroups = _guardDataProvider.GetHRGroups();
+            return hrGroups;
+
+
+
+        }
+        public List<HrSettings> GetHRSettings(int HRID)
+        {
+            
+            return _context.HrSettings.Include(z => z.HRGroups)
+                .Include(z => z.ReferenceNoNumbers)
+                .Include(z => z.ReferenceNoAlphabets)
+                .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
+                ThenBy(x => x.ReferenceNoAlphabets.Name).Where(z=>z.HRGroups.Id== HRID).ToList();
+
+
+        }
+
+        public List<GuardComplianceAndLicense> GetKpiGuardDetailsComplianceAndLicense(int guardIds)
+        {
+
+            var guardCompliance = _guardDataProvider.GetGuardCompliancesAndLicense(guardIds).ToList();
+
+            return guardCompliance.ToList();
+        }
+        public List<GuardComplianceAndLicense> GetKpiGuardDetailsComplianceAndLicenseHR(int guardIds, HrGroup hrGroup)
+        {
+
+            var guardCompliance = _guardDataProvider.GetGuardCompliancesAndLicenseHR(guardIds, hrGroup).ToList();
+
+            return guardCompliance.ToList();
+        }
+        public List<GuardComplianceAndLicense> GetKpiGuardDetailsComplianceAndLicenseHRList(string hrGroup)
+        {
+
+            var guardCompliance = _guardDataProvider.GetGuardCompliancesAndLicenseList(hrGroup).ToList();
+
+            return guardCompliance.ToList();
+        }
         //To  get the details of Gurad in 3rd page of report stop
         public Dictionary<int, MonthlyKpiResult> GetMonthlyKpiReportData(int[] clientSiteIds, DateTime fromDate, DateTime toDate)
             {
@@ -364,5 +413,20 @@ namespace CityWatch.Kpi.Services
 
                 return dailyKpis;
             }
+        public List<ClientType> GetUserClientTypesHavingAccess(int? userId)
+        {
+            var clientTypes = _clientDataProvider.GetClientTypes();
+            if (userId == null)
+                return clientTypes;
+
+            var allUserAccess = _clientDataProvider.GetUserClientSiteAccess(userId);
+            var clientTypeIds = allUserAccess.Select(x => x.ClientSite.TypeId).Distinct().ToList();
+            return clientTypes.Where(x => clientTypeIds.Contains(x.Id)).ToList();
+        }
+        public List<HRGroups> GetHRGroupslist()
+        {
+            var HRList = _clientDataProvider.GetHRGroups();
+            return HRList;
+        }
         }
     }

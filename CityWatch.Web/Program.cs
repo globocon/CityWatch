@@ -1,3 +1,4 @@
+using CityWatch.Common.Models;
 using CityWatch.Common.Services;
 using CityWatch.Data;
 using CityWatch.Data.Helpers;
@@ -60,6 +61,7 @@ builder.Services.AddScoped<ISiteEventLogDataProvider, SiteEventLogDataProvider>(
 builder.Services.AddScoped<ISmsService, SmsService>();
 builder.Services.AddScoped<ISmsSenderProvider, SmsSenderProvider>();
 builder.Services.AddScoped<ISmsGlobalService, SmsGlobalService>();
+builder.Services.AddScoped<ISignalRNotificationService, SignalRNotificationService>();
 
 builder.Services.AddRazorPages(options =>
 {
@@ -77,12 +79,26 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromMinutes(120);
 });
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddSignalR();
+var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin",
+        builder =>
+        {
+            builder.WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+        });
+});
+
 //builder.Services.Configure<CookiePolicyOptions>(options =>
 //{
 
 //    builder.Services.AddHttpContextAccessor();
 //    builder.Services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-   
+
 //});
 
 //builder.Services.AddHttpContextAccessor();
@@ -99,8 +115,10 @@ else
 {
     app.UseExceptionHandler("/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+    app.UseHsts();    
 }
+
+app.UseCors("AllowSpecificOrigin");
 AuthUserHelper.Configure(app.Services.GetService<IHttpContextAccessor>());
 app.UseHttpsRedirection();
 app.UseStaticFiles();
@@ -113,4 +131,6 @@ app.MapRazorPages();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+// Configure the HTTP request pipeline.
+app.MapHub<UpdateHub>("/updateHub");
 app.Run();

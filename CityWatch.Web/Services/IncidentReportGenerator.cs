@@ -669,7 +669,7 @@ namespace CityWatch.Web.Services
                 }
                 else
                 {
-                    uploadDoc.CopyPagesTo(1, uploadDoc.GetNumberOfPages(), pdfDocument, 3);
+                    uploadDoc.CopyPagesTo(1, uploadDoc.GetNumberOfPages(), pdfDocument, 2);
                 }
                 // uploadDoc.CopyPagesTo(1, uploadDoc.GetNumberOfPages(), pdfDocument, pdfDocument.GetNumberOfPages());
                 uploadDoc.Close();

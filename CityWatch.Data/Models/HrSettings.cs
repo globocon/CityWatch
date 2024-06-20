@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CityWatch.Data.Models
@@ -9,6 +10,15 @@ namespace CityWatch.Data.Models
         HRGroups = 1,
         [Display(Name = "Licence Types")]
         LicenceTypes = 2,
+        [Display(Name = "Critical Documents")]
+        CriticalDocuments = 3,
+        [Display(Name = "Settings")]
+        Settings = 4,
+    }
+    public enum HrCriticalType
+    {
+        [Display(Name = "Critical Documents")]
+        CriticalDocuments = 1,
     }
     public class HRGroups
     {
@@ -53,5 +63,9 @@ namespace CityWatch.Data.Models
         public string ReferenceNo { get { return ReferenceNoNumbers.Name + ReferenceNoAlphabets.Name  ; } }
         [NotMapped]
         public string GroupName { get { return HRGroups.Name ; } }
+
+        public ICollection<HrSettingsClientSites> hrSettingsClientSites { get; set; }
+
+        public ICollection<HrSettingsClientStates> hrSettingsClientStates { get; set; }
     }
 }

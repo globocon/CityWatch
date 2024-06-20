@@ -1,12 +1,14 @@
 ﻿@page
 @using CityWatch.Data.Models;
 @using CityWatch.Data.Providers;
-@model CityWatch.Web.Pages.Radio.RadioCheckNewModel
+@model CityWatch.RadioCheck.Pages.Radio.RadioCheckNewModel
 @inject IConfigDataProvider configDataProvider
 @{
+   
     ViewData["Title"] = "Radio Check";
     ViewData["PageName"] = "Radio Check";
     Layout = "_Layout_InnerPage";
+    ViewData["DisplayItem"] = Model.DisplayItem;
 }
 
 @using CityWatch.Data.Helpers;
@@ -19,6 +21,7 @@
 @*----------------Hidden Inputs---------------------*@
 <input type="hidden" id="txtClientSiteId" />
 <input type="hidden" id="txtGuardId" />
+<input type="hidden" id="txtSignalRConnectionUrl" value="@Model.SignalRConnectionUrl" />
 
 <!-----------------In Acive List -------------------->
 
@@ -184,28 +187,32 @@
                 <div class="row">
                     <ul class="list-unstyled col-md-12">
                         <li class="row">
-                            <label class="col-md-3 col-form-label">Guard Name: </label>
+                            <label class="col-md-4 col-form-label">Guard Name: </label>
                             <label class="col-form-label" id="lbl_guard_name"></label>
                         </li>
                         <li class="row">
-                            <label class="col-md-3 col-form-label">Security No: </label>
+                            <label class="col-md-4 col-form-label">Security No: </label>
                             <label class="col-form-label" id="lbl_guard_security_no"></label>
                         </li>
                         <li class="row">
-                            <label class="col-md-3 col-form-label">State: </label>
+                            <label class="col-md-4 col-form-label">State: </label>
                             <label class="col-form-label" id="lbl_guard_state"></label>
                         </li>
                         <li class="row">
-                            <label class="col-md-3 col-form-label">Mobile: </label>
+                            <label class="col-md-4 col-form-label">Mobile: </label>
                             <label class="col-form-label" id="lbl_guard_mobile"></label>
                         </li>
                         <li class="row">
-                            <label class="col-md-3 col-form-label">Email: </label>
+                            <label class="col-md-4 col-form-label">Email: </label>
                             <label class="col-form-label" id="lbl_guard_email"></label>
                         </li>
                         <li class="row">
-                            <label class="col-md-3 col-form-label">Provider:</label>
+                            <label class="col-md-4 col-form-label">CRM (Supplier):</label>
                             <label class="col-form-label" id="lbl_guard_provider"></label>
+                        </li>
+                        <li class="row">
+                            <label class="col-md-4 col-form-label">No:</label>
+                            <label class="col-form-label" id="lbl_guard_provider_no"></label>
                         </li>
                     </ul>
                 </div>
@@ -791,8 +798,8 @@
                                                             sortedClientTypes1 = userClientTypes1.OrderBy(clientType => clientType.Name);
                                                             foreach (var clientType in sortedClientTypes1)
                                                             {
-                                                                var countClientType1 = _guardLogDataProvider.GetClientTypeCount(clientType.Id);
-                                                                <option value="@clientType.Id">@clientType.Name (@countClientType1)</option>
+                                                                //var countClientType1 = _guardLogDataProvider.GetClientTypeCount(clientType.Id);
+                                                                <option value="@clientType.Id">@clientType.Name</option>
                                                             }
                                                         }
                                                     </select>
@@ -805,7 +812,7 @@
                                                 </div>
                                                 <div class="col-md-2 m-0 p-0">
                                                     <label class="mt-3"></label>
-                                                    <input type="text" id="search_client_siteSteps" class="form-control mb-3" placeholder="Search Client Site">
+                                                    <input type="text" id="search_client_siteSteps" class="form-control mb-3" placeholder="Search Site">
                                                 </div>
                                                 <div class="col-md-2 m-0 p-0 text-center">
                                                     <label class="mt-3"></label>
@@ -858,7 +865,7 @@
 
                                                     </div>
                                                     <div class="form-group row row ml-2">
-                                                        <label class="col-md-3 form-label text-left pl-0">Combination Look</label>
+                                                        <label class="col-md-3 form-label text-left pl-0">Combination Lock</label>
                                                         <div class="col-md-2">
                                                             <input type="text" class="form-control" id="Site_Combination_Look" name="RCActionList.SiteCombinationLook">
                                                         </div>
@@ -1084,6 +1091,7 @@
 </div>
 
 <!-- logbook model popup end-->
+
 @Html.AntiForgeryToken()
 @section PageHeader {
     <h3 class="text-center">RADIO CHECKLIST</h3>

@@ -899,7 +899,10 @@ namespace CityWatch.Web.Pages.Incident
             // p6#73 timezone bug - Added by binoy 24-01-2024
             var logBookId = GetLogBookId(RadioCheckDetails.ClientSiteId, (int)report.CreatedOnDateTimeUtcOffsetMinute);
             //var localDateTime = DateTimeHelper.GetCurrentLocalTimeFromUtcMinute((int)report.CreatedOnDateTimeUtcOffsetMinute);
-            if (report.ColourCode!=null ||report.IsPatrol==true)
+
+            var StampRcLogbook = _guardLogDataProvider.IsRClogbookStampRequired(report.NotifiedBy);
+
+            if (report.ColourCode!=null || report.IsPatrol==true || StampRcLogbook)
             {
                 var guardLog = new GuardLog()
                 {
@@ -913,7 +916,8 @@ namespace CityWatch.Web.Pages.Incident
                     EventDateTimeZone = report.CreatedOnDateTimeZone,
                     EventDateTimeZoneShort = report.CreatedOnDateTimeZoneShort,
                     EventDateTimeUtcOffsetMinute = report.CreatedOnDateTimeUtcOffsetMinute,
-                    IsIRReportTypeEntry = true
+                    IsIRReportTypeEntry = true,
+                    RcLogbookStamp = StampRcLogbook
                 };
                 _guardLogDataProvider.SaveGuardLog(guardLog);
             }

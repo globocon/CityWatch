@@ -20,9 +20,10 @@ using static iText.Kernel.Pdf.Function.PdfFunction;
 using Dropbox.Api.Users;
 using Microsoft.AspNetCore.Hosting;
 using CityWatch.RadioCheck.Helpers;
+
 using iText.Kernel.Crypto.Securityhandler;
 
-namespace CityWatch.Web.Pages.Radio
+namespace CityWatch.RadioCheck.Pages.Radio
 {
     public class RadioCheckNewModel : PageModel
     {
@@ -32,8 +33,9 @@ namespace CityWatch.Web.Pages.Radio
         private readonly ISmsSenderProvider _smsSenderProvider;
         private readonly IClientDataProvider _clientDataProvider;
         private readonly Settings _settings;
+        private readonly IGuardDataProvider _guardDataProvider;
         public RadioCheckNewModel(IGuardLogDataProvider guardLogDataProvider, IOptions<EmailOptions> emailOptions,
-            IConfiguration configuration, ISmsSenderProvider smsSenderProvider, IClientDataProvider clientDataProvider,
+            IConfiguration configuration, ISmsSenderProvider smsSenderProvider, IClientDataProvider clientDataProvider, IGuardDataProvider guardDataProvider,
             IOptions<Settings> settings)
         {
             _guardLogDataProvider = guardLogDataProvider;
@@ -42,6 +44,7 @@ namespace CityWatch.Web.Pages.Radio
             _smsSenderProvider = smsSenderProvider;
             _clientDataProvider = clientDataProvider;
             _settings = settings.Value;
+            _guardDataProvider = guardDataProvider;
         }
         public int UserId { get; set; }
         public int GuardId { get; set; }
@@ -50,13 +53,19 @@ namespace CityWatch.Web.Pages.Radio
         public int InActiveGuardCount { get; set; }
 
         public int ActiveGuardCount { get; set; }
-        public IActionResult OnGet()
+
+        public string SignalRConnectionUrl { get; set; }
+
+        public string DisplayItem { get; set; }
+        public IActionResult OnGet(string displayItem)
         {
+            DisplayItem = displayItem;
 
             var activeGuardDetails = _guardLogDataProvider.GetActiveGuardDetails();
             ActiveGuardCount = activeGuardDetails.Count();
             var inActiveGuardDetails = _guardLogDataProvider.GetInActiveGuardDetails();
             InActiveGuardCount = inActiveGuardDetails.Count();
+            SignalRConnectionUrl = _configuration.GetSection("SignalRConnectionUrl").Value;
 
             var guardLoginId = HttpContext.Session.GetInt32("GuardLoginId");
             /* The following changes done for allowing guard to access the KPI*/
@@ -88,16 +97,41 @@ namespace CityWatch.Web.Pages.Radio
 
             if (!string.IsNullOrEmpty(securityLicenseNo) && !string.IsNullOrEmpty(loginUserId) && !string.IsNullOrEmpty(LoginGuardId))
             {
-
+                AuthUserHelper.IsAdminUserLoggedIn = false;
                 UserId = int.Parse(loginUserId);
                 GuardId = int.Parse(LoginGuardId);
                 HttpContext.Session.SetInt32("GuardId", GuardId);
+                var guard = _guardDataProvider.GetGuards().SingleOrDefault(z => z.Id == GuardId);
+
+                if (guard != null)
+                {
+                    if (guard.IsAdminPowerUser)
+                    {
+                        AuthUserHelper.IsAdminPowerUser = true;
+                    }
+                    else
+                    {
+                        AuthUserHelper.IsAdminPowerUser = false;
+                    }
+                    if (guard.IsAdminGlobal)
+                    {
+                        AuthUserHelper.IsAdminGlobal = true;
+                    }
+                    else
+                    {
+                        AuthUserHelper.IsAdminGlobal = false;
+                    }
+                }
+
+
                 return Page();
             }
             // Check if the user is authenticated(Normal Admin Login)
             if (claimsIdentity != null && claimsIdentity.IsAuthenticated)
             {   /*Old Code for admin only*/
-
+                AuthUserHelper.IsAdminUserLoggedIn = true;
+                AuthUserHelper.IsAdminPowerUser = false;
+                AuthUserHelper.IsAdminGlobal = false;
                 HttpContext.Session.SetInt32("GuardId", 0);
                 return Page();
             }
@@ -202,7 +236,9 @@ namespace CityWatch.Web.Pages.Radio
 
         public JsonResult OnGetGuardData(int id)
         {
-            return new JsonResult(_guardLogDataProvider.GetGuards(id));
+            //return new JsonResult(_guardLogDataProvider.GetGuards(id));
+            return new JsonResult(_guardLogDataProvider.GetGuardsWtihProviderNumber(id));
+            
         }
         public JsonResult OnGetCrmSupplierData(string name)
         {
@@ -216,7 +252,7 @@ namespace CityWatch.Web.Pages.Radio
             try
             {
 
-
+                var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
                 _guardLogDataProvider.SaveClientSiteRadioCheckNew(new ClientSiteRadioCheck()
                 {
                     ClientSiteId = clientSiteId,
@@ -225,9 +261,9 @@ namespace CityWatch.Web.Pages.Radio
                     CheckedAt = DateTime.Now,
                     Active = active,
                     RadioCheckStatusId = statusId,
-                }, tmzdata);
+                }, tmzdata, loginguardid);
 
-                var loginguardid = HttpContext.Session.GetInt32("GuardId") ?? 0;
+
                 _guardLogDataProvider.LogBookEntryFromRcControlRoomMessages(loginguardid, guardId, null, checkedStatus, IrEntryType.Notification, 2, clientSiteId, tmzdata);
             }
             catch (Exception ex)
@@ -1356,16 +1392,20 @@ namespace CityWatch.Web.Pages.Radio
         {
             var success = true;
             var message = "success";
-            var ActionListMessage = (string.IsNullOrEmpty(AlarmKeypadCode) ? string.Empty : "AlarmKeypadCode: " + AlarmKeypadCode + "\n") +
-                   (string.IsNullOrEmpty(Physicalkey) ? string.Empty : "PhysicalKey: " + Physicalkey + "\n") +
-                   (string.IsNullOrEmpty(AlarmKeypadCode) ? string.Empty : "AlarmKeypadCode: " + AlarmKeypadCode + "\n") +
-                   (string.IsNullOrEmpty(SiteCombinationLook) ? string.Empty : "CombinationLook: " + SiteCombinationLook + "\n") +
-                   (string.IsNullOrEmpty(Action1) ? string.Empty : "Action1: " + Action1 + "\n") +
-                  (string.IsNullOrEmpty(Action2) ? string.Empty : "Action2: " + Action2 + "\n") +
-                   (string.IsNullOrEmpty(Action3) ? string.Empty : "Action3: " + Action3 + "\n") +
-                   (string.IsNullOrEmpty(Action4) ? string.Empty : "Action4: " + Action4 + "\n") +
-                   (string.IsNullOrEmpty(CommentsForControlRoomOperator) ? string.Empty : "CommentsForControlRoomOperator: " + CommentsForControlRoomOperator + "\n") +
-                   (string.IsNullOrEmpty(Notifications) ? string.Empty : "Message: " + Notifications + "\n");
+            //Coomented  as per the client request 07062024
+            //var ActionListMessage = (string.IsNullOrEmpty(AlarmKeypadCode) ? string.Empty : "AlarmKeypadCode: " + AlarmKeypadCode + "\n") +
+            //       (string.IsNullOrEmpty(Physicalkey) ? string.Empty : "PhysicalKey: " + Physicalkey + "\n") +
+            //       (string.IsNullOrEmpty(AlarmKeypadCode) ? string.Empty : "AlarmKeypadCode: " + AlarmKeypadCode + "\n") +
+            //       (string.IsNullOrEmpty(SiteCombinationLook) ? string.Empty : "CombinationLook: " + SiteCombinationLook + "\n") +
+            //       (string.IsNullOrEmpty(Action1) ? string.Empty : "Action1: " + Action1 + "\n") +
+            //      (string.IsNullOrEmpty(Action2) ? string.Empty : "Action2: " + Action2 + "\n") +
+            //       (string.IsNullOrEmpty(Action3) ? string.Empty : "Action3: " + Action3 + "\n") +
+            //       (string.IsNullOrEmpty(Action4) ? string.Empty : "Action4: " + Action4 + "\n") +
+            //       (string.IsNullOrEmpty(CommentsForControlRoomOperator) ? string.Empty : "CommentsForControlRoomOperator: " + CommentsForControlRoomOperator + "\n") +
+            //       (string.IsNullOrEmpty(Notifications) ? string.Empty : "Message: " + Notifications + "\n");
+
+
+            var ActionListMessage = (string.IsNullOrEmpty(Notifications) ? string.Empty : "Message: " + Notifications);
             try
             {
 
@@ -1533,6 +1573,11 @@ namespace CityWatch.Web.Pages.Radio
         {
             var clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
             clientSiteKpiSetting ??= new ClientSiteKpiSetting() { ClientSiteId = siteId };
+            if (clientSiteKpiSetting.rclistKP.ClientSiteID == 0)
+            {
+                clientSiteKpiSetting.rclistKP.ClientSiteID = siteId;
+
+            }
             if (clientSiteKpiSetting.rclistKP.Imagepath != null)
             {
                 if (clientSiteKpiSetting.rclistKP.Imagepath.Length > 0 && clientSiteKpiSetting.rclistKP.Imagepath.Trim() != "")

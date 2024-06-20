@@ -59,7 +59,7 @@ namespace CityWatch.Data.Providers
         string GetUrlsInsideBroadcastLiveEventsNotExpired();
 
 
-         void SaveDefaultEmail(string DefaultEmail);
+        void SaveDefaultEmail(string DefaultEmail);
         //broadcast banner calendar events-end
         //broadcast banner calendar events-end
         //SW Channels-start
@@ -72,10 +72,18 @@ namespace CityWatch.Data.Providers
         public IncidentReportPosition GetIsLogbookData(string Name);
         List<HrSettings> GetHRSettings();
         List<LicenseTypes> GetLicensesTypes();
-         KeyVehcileLogField GetKVLogField();
+        KeyVehcileLogField GetKVLogField();
         List<KeyVehicleLogVisitorPersonalDetail> GetProviderList(int ID);
 
         //p1-191 hr files task 3-end
+        List<SelectListItem> GetClientSitesUsingLoginUserId(int guardId, string type = "");
+        List<SelectListItem> GetDescList(int HRGroupId);
+        void SaveCriticalDoc(CriticalDocuments CriticalDoc, bool updateClientSites = false);
+        List<CriticalDocuments> GetCriticalDocs();
+        public CriticalDocuments GetCriticalDocById(int CriticalID);
+        public CriticalDocuments GetCriticalDocByIdandGuardId(int CriticalID, int GuardId);
+        void DeleteCriticalDoc(int id);
+        public HrSettings GetHrSettingById(int CriticalID);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -89,7 +97,7 @@ namespace CityWatch.Data.Providers
 
         public List<FeedbackTemplate> GetFeedbackTemplates()
         {
-            return _context.FeedbackTemplates.Where(x=>x.DeleteStatus==0).OrderBy(x => x.Name).ToList();
+            return _context.FeedbackTemplates.Where(x => x.DeleteStatus == 0).OrderBy(x => x.Name).ToList();
         }
         //to retrieve the feedback type-start
         public List<FeedbackType> GetFeedbackTypes()
@@ -118,12 +126,12 @@ namespace CityWatch.Data.Providers
                     Type = template.Type,
                     BackgroundColour = template.BackgroundColour,
                     TextColor = template.TextColor,
-                    DeleteStatus=0
+                    DeleteStatus = 0
                 });
             }
             else
             {
-                var templateToUpdate = _context.FeedbackTemplates.SingleOrDefault(x => x.Id == template.Id && x.DeleteStatus==0);
+                var templateToUpdate = _context.FeedbackTemplates.SingleOrDefault(x => x.Id == template.Id && x.DeleteStatus == 0);
                 if (templateToUpdate == null)
                     throw new InvalidOperationException();
 
@@ -141,7 +149,7 @@ namespace CityWatch.Data.Providers
             if (id == -1)
                 return;
 
-            var templateToDelete = _context.FeedbackTemplates.SingleOrDefault(x => x.Id == id && x.DeleteStatus==0);
+            var templateToDelete = _context.FeedbackTemplates.SingleOrDefault(x => x.Id == id && x.DeleteStatus == 0);
             if (templateToDelete == null)
                 throw new InvalidOperationException();
             //Not Delete data just change Status 0 to 1 
@@ -170,7 +178,7 @@ namespace CityWatch.Data.Providers
             _context.SaveChanges();
         }
 
-    
+
         public List<State> GetStates()
         {
             return new List<State>()
@@ -195,7 +203,7 @@ namespace CityWatch.Data.Providers
 
         public List<StaffDocument> GetStaffDocumentsUsingType(int type)
         {
-            return _context.StaffDocuments.Where(x=>x.DocumentType== type).OrderBy(x => x.FileName).ToList();
+            return _context.StaffDocuments.Where(x => x.DocumentType == type).OrderBy(x => x.FileName).ToList();
         }
 
         public void SaveStaffDocument(StaffDocument staffdocument)
@@ -204,8 +212,8 @@ namespace CityWatch.Data.Providers
             {
                 _context.StaffDocuments.Add(staffdocument);
             }
-            else 
-            { 
+            else
+            {
                 var documentToUpdate = _context.StaffDocuments.SingleOrDefault(x => x.Id == staffdocument.Id);
                 if (documentToUpdate != null)
                 {
@@ -218,8 +226,8 @@ namespace CityWatch.Data.Providers
 
         public void DeleteStaffDocument(int id)
         {
-            var docToDelete = _context.StaffDocuments.SingleOrDefault(x=> x.Id == id);
-            if(docToDelete == null)
+            var docToDelete = _context.StaffDocuments.SingleOrDefault(x => x.Id == id);
+            if (docToDelete == null)
                 throw new InvalidOperationException();
 
             _context.StaffDocuments.Remove(docToDelete);
@@ -259,7 +267,7 @@ namespace CityWatch.Data.Providers
 
         public void SaveReportField(IncidentReportField incidentReportField)
         {
-            if(incidentReportField == null)
+            if (incidentReportField == null)
                 throw new ArgumentNullException();
             if (incidentReportField.Id == -1)
             {
@@ -269,19 +277,21 @@ namespace CityWatch.Data.Providers
                     TypeId = incidentReportField.TypeId,
                     EmailTo = incidentReportField.EmailTo,
                     ClientSiteIds = incidentReportField.ClientSiteIds,
-                    ClientTypeIds=incidentReportField.ClientTypeIds
+                    ClientTypeIds = incidentReportField.ClientTypeIds,
+                    StampRcLogbook = incidentReportField.StampRcLogbook
                 });
             }
             else
             {
                 var reportFieldToUpdate = _context.IncidentReportFields.SingleOrDefault(x => x.Id == incidentReportField.Id);
-                if(reportFieldToUpdate == null)
+                if (reportFieldToUpdate == null)
                     throw new InvalidOperationException();
                 reportFieldToUpdate.Name = incidentReportField.Name;
                 reportFieldToUpdate.TypeId = incidentReportField.TypeId;
                 reportFieldToUpdate.EmailTo = incidentReportField.EmailTo;
                 reportFieldToUpdate.ClientSiteIds = incidentReportField.ClientSiteIds;
                 reportFieldToUpdate.ClientTypeIds = incidentReportField.ClientTypeIds;
+                reportFieldToUpdate.StampRcLogbook = incidentReportField.StampRcLogbook;
 
             }
             _context.SaveChanges();
@@ -299,7 +309,7 @@ namespace CityWatch.Data.Providers
         }
         public string GetPSPFName(string name)
         {
-         return _context.IncidentReportPSPF.Where(x => x.Name == name).Select(x => x.Name).FirstOrDefault();
+            return _context.IncidentReportPSPF.Where(x => x.Name == name).Select(x => x.Name).FirstOrDefault();
 
         }
         public List<IncidentReportPSPF> GetPSPF()
@@ -310,12 +320,12 @@ namespace CityWatch.Data.Providers
         {
             return _context.IncidentReportPSPF.Count();
         }
-        
+
         public int OnGetMaxIdIR()
         {
             var incidentReportid = _context.IncidentReportFields.Max(x => (int?)x.Id);
             return Convert.ToInt32(incidentReportid);
-            
+
         }
         public void SavePSPF(IncidentReportPSPF incidentReportPSPF)
         {
@@ -366,7 +376,7 @@ namespace CityWatch.Data.Providers
         public void SavePostion(IncidentReportPosition incidentReportPosition)
         {
             var ClientSiteName = _context.ClientSites.Where(x => x.Id == incidentReportPosition.ClientsiteId).FirstOrDefault();
-           
+
             if (incidentReportPosition.Id == -1)
             {
                 if (ClientSiteName != null)
@@ -408,7 +418,7 @@ namespace CityWatch.Data.Providers
                     positionToUpdate.DropboxDir = incidentReportPosition.DropboxDir;
                     positionToUpdate.IsLogbook = incidentReportPosition.IsLogbook;
                     positionToUpdate.ClientsiteId = incidentReportPosition.ClientsiteId;
-                    if (ClientSiteName!=null)
+                    if (ClientSiteName != null)
                     {
                         positionToUpdate.ClientsiteName = ClientSiteName.Name;
                     }
@@ -416,7 +426,7 @@ namespace CityWatch.Data.Providers
                     {
                         positionToUpdate.ClientsiteName = null;
                     }
-                    
+
                 }
             }
             _context.SaveChanges();
@@ -434,15 +444,15 @@ namespace CityWatch.Data.Providers
             _context.IncidentReportPositions.Remove(positionToDelete);
             _context.SaveChanges();
         }
-         
+
         public void CrPrimaryLogoUpload(DateTime dateTimeUploaded, string primaryLogoPath)
         {
             var templateToUpdate = _context.CompanyDetails.Single();
             templateToUpdate.PrimaryLogoUploadedOn = dateTimeUploaded;
-            templateToUpdate.PrimaryLogoPath= primaryLogoPath;
+            templateToUpdate.PrimaryLogoPath = primaryLogoPath;
             _context.SaveChanges();
         }
-        public List<IncidentReportsPlatesLoaded> GetPlatesLoaded(int  LogId)
+        public List<IncidentReportsPlatesLoaded> GetPlatesLoaded(int LogId)
         {
             return _context.IncidentReportsPlatesLoaded.Where(z => z.LogId == LogId).OrderBy(z => z.Id).ToList();
         }
@@ -450,10 +460,10 @@ namespace CityWatch.Data.Providers
         public List<RadioCheckStatusColor> GetRadioCheckStatusColorCode(string name)
         {
             //To get the Name in order
-             var filteredRecords = _context.RadioCheckStatusColor
-                 .Where(x => string.IsNullOrEmpty(name) || x.Name == name)
-                 .OrderBy(x => x.Name)
-                 .ToList();
+            var filteredRecords = _context.RadioCheckStatusColor
+                .Where(x => string.IsNullOrEmpty(name) || x.Name == name)
+                .OrderBy(x => x.Name)
+                .ToList();
 
             var redRecords = filteredRecords
                 .Where(x => x.Name.StartsWith("Red", StringComparison.OrdinalIgnoreCase))
@@ -479,10 +489,10 @@ namespace CityWatch.Data.Providers
                 {
                     item.RadioCheckStatusColor.Name = item1.Name;
                 }
-               
+
             }
-                // return _context.RadioCheckStatus.ToList();
-            return radiocheckstatus.OrderBy(x=>Convert.ToInt32(x.ReferenceNo)).ToList();
+            // return _context.RadioCheckStatus.ToList();
+            return radiocheckstatus.OrderBy(x => Convert.ToInt32(x.ReferenceNo)).ToList();
         }
         public int GetRadioCheckStatusCount()
         {
@@ -495,7 +505,7 @@ namespace CityWatch.Data.Providers
 
             if (!withoutSelect)
             {
-                items.Add(new SelectListItem("Select","", true));
+                items.Add(new SelectListItem("Select", "", true));
             }
 
             foreach (var item in radioCheckStatuses)
@@ -514,22 +524,22 @@ namespace CityWatch.Data.Providers
             return _context.BroadcastBannerLiveEvents.ToList();
         }
         public List<BroadcastBannerLiveEvents> GetBroadcastLiveEventsByDate()
-        {            
-			return _context.BroadcastBannerLiveEvents.Where(x=> x.ExpiryDate>=DateTime.Now.Date).ToList();
+        {
+            return _context.BroadcastBannerLiveEvents.Where(x => x.ExpiryDate >= DateTime.Now.Date).ToList();
         }
-		public string GetBroadcastLiveEventsNotExpired()
-		{
-			var lv = _context.BroadcastBannerLiveEvents.Where(x => x.ExpiryDate >= DateTime.Now.Date).ToList();
-			var LiveEventstxtmsg = string.Empty;
-			if (lv != null)
-			{
-				foreach (var fileName in lv)
-				{
-					LiveEventstxtmsg = LiveEventstxtmsg + fileName.TextMessage.Replace("\n", "\t") + '\t' + '\t';
-				}   
+        public string GetBroadcastLiveEventsNotExpired()
+        {
+            var lv = _context.BroadcastBannerLiveEvents.Where(x => x.ExpiryDate >= DateTime.Now.Date).ToList();
+            var LiveEventstxtmsg = string.Empty;
+            if (lv != null)
+            {
+                foreach (var fileName in lv)
+                {
+                    LiveEventstxtmsg = LiveEventstxtmsg + fileName.TextMessage.Replace("\n", "\t") + '\t' + '\t';
+                }
             }
-			return LiveEventstxtmsg;
-		}
+            return LiveEventstxtmsg;
+        }
         public string GetUrlsInsideBroadcastLiveEventsNotExpired()
         {
             string urls = string.Empty;
@@ -542,12 +552,12 @@ namespace CityWatch.Data.Providers
                     LiveEventstxtmsg = LiveEventstxtmsg + fileName.TextMessage.Replace("\n", "\t") + '\t' + '\t';
                 }
 
-                var lvsplit = LiveEventstxtmsg.Split(" ");               
+                var lvsplit = LiveEventstxtmsg.Split(" ");
 
                 foreach (var line in lvsplit)
-                {                    
-                    if(line.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || 
-                        line.StartsWith("https://", StringComparison.OrdinalIgnoreCase) )
+                {
+                    if (line.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                        line.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
                         urls = string.Concat(urls, line, "|");
                 }
             }
@@ -558,7 +568,7 @@ namespace CityWatch.Data.Providers
 
         public List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEventsByDate()
         {
-            return _context.BroadcastBannerCalendarEvents.Where(x =>  DateTime.Now.Date >=x.StartDate && DateTime.Now.Date <= x.ExpiryDate).ToList();
+            return _context.BroadcastBannerCalendarEvents.Where(x => DateTime.Now.Date >= x.StartDate && DateTime.Now.Date <= x.ExpiryDate).ToList();
         }
         //broadcast banner live events-end
         //broadcast banner calendar events-start
@@ -568,13 +578,13 @@ namespace CityWatch.Data.Providers
         }
         public List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEvents()
         {
-            return _context.BroadcastBannerCalendarEvents.OrderBy(x=>Convert.ToInt32(x.ReferenceNo)).ToList();
+            return _context.BroadcastBannerCalendarEvents.OrderBy(x => Convert.ToInt32(x.ReferenceNo)).ToList();
         }
         //broadcast banner calendar events-end
         //SW Channels-start
         public List<SWChannels> GetSWChannels()
         {
-            return _context.SWChannel.OrderBy(x=>x.Id).ToList();
+            return _context.SWChannel.OrderBy(x => x.Id).ToList();
         }
         //SW Channels-end
         //General Feeds-start
@@ -590,21 +600,227 @@ namespace CityWatch.Data.Providers
         //p1-191 hr files task 3-start
         public List<HrSettings> GetHRSettings()
         {
-            var res= _context.HrSettings.Include(z => z.HRGroups)
-                .Include(z => z.ReferenceNoNumbers).Include(z => z.ReferenceNoAlphabets)
-                .OrderBy(x => x.HRGroups.Name).ThenBy(x=> x.ReferenceNoNumbers.Name).
-                ThenBy(x => x.ReferenceNoAlphabets.Name).ToList();
+
+
+
             return _context.HrSettings.Include(z => z.HRGroups)
                 .Include(z => z.ReferenceNoNumbers)
                 .Include(z => z.ReferenceNoAlphabets)
+                .Include(z => z.hrSettingsClientStates)
+                .Include(z => z.hrSettingsClientSites)
+                .ThenInclude(y => y.ClientSite)
+              .ThenInclude(y => y.ClientType)
                 .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
                 ThenBy(x => x.ReferenceNoAlphabets.Name).ToList();
         }
         public List<LicenseTypes> GetLicensesTypes()
         {
-            return _context.LicenseTypes.Where(x=>x.IsDeleted==false)
+            return _context.LicenseTypes.Where(x => x.IsDeleted == false)
                 .OrderBy(x => x.Id).ToList();
         }
         //p1-191 hr files task 3-end
+        //p1-213 critical documents start
+        public List<SelectListItem> GetClientSitesUsingLoginUserId(int guardId, string type = "")
+        {
+            if (guardId == 0)
+            {
+                var sites = new List<SelectListItem>();
+
+
+                var mapping = _context.UserClientSiteAccess
+               .Where(x => x.ClientSite.ClientType.Name.Trim() == type.Trim() && x.ClientSite.IsActive == true)
+               .Include(x => x.ClientSite)
+               .Include(x => x.ClientSite.ClientType)
+               .Select(x => new { x.ClientSiteId, x.ClientSite.Name })
+            .Distinct().
+             OrderBy(x => x.Name).ToList();
+
+
+                foreach (var item in mapping)
+                {
+                    sites.Add(new SelectListItem(item.Name, item.ClientSiteId.ToString()));
+                }
+                return sites;
+
+            }
+            else
+            {
+                var sites = new List<SelectListItem>();
+
+                var mapping = _context.GuardLogins
+                .Where(z => z.GuardId == guardId)
+                    .Include(z => z.ClientSite)
+                    .OrderBy(x => x.ClientSite.Name)
+                    .ToList();
+
+
+                foreach (var item in mapping)
+                {
+                    if (!sites.Any(cus => cus.Text == item.ClientSite.Name))
+                    {
+                        sites.Add(new SelectListItem(item.ClientSite.Name, item.ClientSite.Id.ToString()));
+                    }
+                }
+                return sites;
+
+            }
+        }
+
+        public List<SelectListItem> GetDescList(int HRGroupId)
+        {
+            var Group = new List<SelectListItem>();
+            var mapping = _context.HrSettings.Where(x => x.HRGroupId == HRGroupId).ToList();
+            foreach (var item in mapping)
+            {
+                Group.Add(new SelectListItem(item.Description, item.Id.ToString()));
+
+            }
+            return Group;
+        }
+        public void SaveCriticalDoc(CriticalDocuments CriticalDoc, bool updateClientSites1 = false)
+        {
+            var DesriptionDoc= _context.CriticalDocuments.Include(z => z.CriticalDocumentDescriptions).SingleOrDefault(z => z.Id == CriticalDoc.Id);
+            var Document = _context.CriticalDocuments.Include(z => z.CriticalDocumentsClientSites)
+                .Include(z => z.CriticalDocumentDescriptions)
+                .SingleOrDefault(z => z.Id == CriticalDoc.Id);
+            if (Document == null)
+                _context.Add(CriticalDoc);
+            else
+            {
+                if (updateClientSites1)
+                {
+                    _context.CriticalDocumentsClientSites.RemoveRange(Document.CriticalDocumentsClientSites);
+                      _context.CriticalDocumentDescriptions.RemoveRange(DesriptionDoc.CriticalDocumentDescriptions);
+                    _context.SaveChanges();
+                }
+
+                Document.HRGroupID = CriticalDoc.HRGroupID;
+                Document.ClientTypeId = CriticalDoc.ClientTypeId;
+                Document.GroupName = CriticalDoc.GroupName;
+
+
+                if (updateClientSites1)
+                    Document.CriticalDocumentsClientSites = CriticalDoc.CriticalDocumentsClientSites;
+                DesriptionDoc.CriticalDocumentDescriptions = CriticalDoc.CriticalDocumentDescriptions;
+            }
+            _context.SaveChanges();
+
+        }
+        public List<CriticalDocuments> GetCriticalDocs()
+        {
+            var sss1 = _context.CriticalDocuments
+    .Include(z => z.CriticalDocumentsClientSites)
+        .ThenInclude(y => y.ClientSite)
+            .ThenInclude(cs => cs.ClientType)
+    .Include(z => z.CriticalDocumentDescriptions)
+            .ThenInclude(y => y.HRSettings)
+     .ThenInclude(z => z.HRGroups)
+     .Include(z => z.CriticalDocumentDescriptions)
+    .ThenInclude(y => y.HRSettings)
+        .ThenInclude(z => z.ReferenceNoNumbers)
+         .Include(z => z.CriticalDocumentDescriptions)
+    .ThenInclude(y => y.HRSettings)
+     .ThenInclude(z => z.ReferenceNoAlphabets)
+    .ToList();
+
+            return _context.CriticalDocuments
+    .Include(z => z.CriticalDocumentsClientSites)
+        .ThenInclude(y => y.ClientSite)
+            .ThenInclude(cs => cs.ClientType)
+    .Include(z => z.CriticalDocumentDescriptions)
+            .ThenInclude(y => y.HRSettings)
+     .ThenInclude(z => z.HRGroups)
+     .Include(z => z.CriticalDocumentDescriptions)
+    .ThenInclude(y => y.HRSettings)
+        .ThenInclude(z => z.ReferenceNoNumbers)
+         .Include(z => z.CriticalDocumentDescriptions)
+    .ThenInclude(y => y.HRSettings)
+     .ThenInclude(z => z.ReferenceNoAlphabets)
+    .ToList();
+
+        }
+        public CriticalDocuments GetCriticalDocById(int CriticalID)
+        {
+            var sss1 = _context.CriticalDocuments
+   .Include(z => z.CriticalDocumentsClientSites)
+       .ThenInclude(y => y.ClientSite)
+           .ThenInclude(cs => cs.ClientType)
+   .Include(z => z.CriticalDocumentDescriptions)
+           .ThenInclude(y => y.HRSettings)
+    .ThenInclude(z => z.HRGroups)
+    .Include(z => z.CriticalDocumentDescriptions)
+   .ThenInclude(y => y.HRSettings)
+       .ThenInclude(z => z.ReferenceNoNumbers)
+        .Include(z => z.CriticalDocumentDescriptions)
+   .ThenInclude(y => y.HRSettings)
+    .ThenInclude(z => z.ReferenceNoAlphabets)
+  .SingleOrDefault(x => x.Id == CriticalID);
+
+            return _context.CriticalDocuments
+   .Include(z => z.CriticalDocumentsClientSites)
+       .ThenInclude(y => y.ClientSite)
+           .ThenInclude(cs => cs.ClientType)
+   .Include(z => z.CriticalDocumentDescriptions)
+           .ThenInclude(y => y.HRSettings)
+    .ThenInclude(z => z.HRGroups)
+    .Include(z => z.CriticalDocumentDescriptions)
+   .ThenInclude(y => y.HRSettings)
+       .ThenInclude(z => z.ReferenceNoNumbers)
+        .Include(z => z.CriticalDocumentDescriptions)
+   .ThenInclude(y => y.HRSettings)
+    .ThenInclude(z => z.ReferenceNoAlphabets)
+  .SingleOrDefault(x => x.Id == CriticalID);
+        }
+
+
+        public HrSettings GetHrSettingById(int CriticalID)
+        {
+
+
+            return _context.HrSettings.Include(z => z.HRGroups)
+                .Include(z => z.ReferenceNoNumbers)
+                .Include(z => z.ReferenceNoAlphabets)
+                .Include(z => z.hrSettingsClientStates)
+                .Include(z => z.hrSettingsClientSites)
+                .ThenInclude(y => y.ClientSite)
+              .ThenInclude(y => y.ClientType)
+                .OrderBy(z => z.HRGroups.Name).ThenBy(z => z.ReferenceNoNumbers.Name).
+                ThenBy(z => z.ReferenceNoAlphabets.Name).SingleOrDefault(z => z.Id == CriticalID);
+
+
+        }
+        public CriticalDocuments GetCriticalDocByIdandGuardId(int CriticalID, int GuardId)
+        {
+            var distinctClientSiteIds = _context.GuardLogins
+          .Where(z => z.GuardId == GuardId)
+          .Select(z => z.ClientSite.Id)
+          .Distinct()
+          .ToList();
+            var KpiSendSchedule = _context.CriticalDocuments
+              .Include(z => z.CriticalDocumentsClientSites)
+              .ThenInclude(y => y.ClientSite)
+              .ThenInclude(y => y.ClientType)
+              .SingleOrDefault(x => x.Id == CriticalID);
+            foreach (var li in KpiSendSchedule.CriticalDocumentsClientSites)
+            {
+                if (!distinctClientSiteIds.Contains(li.ClientSiteId))
+                {
+                    KpiSendSchedule.CriticalDocumentsClientSites.Remove(li);
+
+                }
+
+            }
+            return KpiSendSchedule;
+        }
+        public void DeleteCriticalDoc(int id)
+        {
+            var recordToDelete = _context.CriticalDocuments.SingleOrDefault(x => x.Id == id);
+            if (recordToDelete == null)
+                throw new InvalidOperationException();
+
+            _context.CriticalDocuments.Remove(recordToDelete);
+            _context.SaveChanges();
+        }
+        //p1-213 critical documents stop
     }
 }

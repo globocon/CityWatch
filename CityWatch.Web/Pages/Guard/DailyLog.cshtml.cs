@@ -268,6 +268,8 @@ namespace CityWatch.Web.Pages.Guard
             var message = "Success";
             try
             {
+                AuthUserHelper.IsAdminPowerUser = false;
+                AuthUserHelper.IsAdminGlobal = false;
                 var signOffEntry = new GuardLog()
                 {
                     ClientSiteLogBookId = clientSiteLogBookId,
@@ -642,7 +644,7 @@ namespace CityWatch.Web.Pages.Guard
                 }
 
                 EmailSender(emailAddresses, Subject, Notifications, GuradDetails.Name, ClientsiteDetails.Name, gpsCoordinates);
-                                
+
                 var GlobalDuressSmsNumbers = _clientDataProvider.GetDuressSms();
                 if (ClientsiteDetails.DuressSms != null)
                 {// Adding Site Duress Sms number.
@@ -653,7 +655,7 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     string smsnumber = "+61 (0) 423 404 982"; // Sending to Jino sir number for testing purpose
                     GlobalDuressSmsNumbers = new List<GlobalDuressSms>();
-                    GlobalDuressSms gd = new GlobalDuressSms() {SmsNumber = smsnumber }; 
+                    GlobalDuressSms gd = new GlobalDuressSms() { SmsNumber = smsnumber };
                     GlobalDuressSmsNumbers.Add(gd);
                 }
 

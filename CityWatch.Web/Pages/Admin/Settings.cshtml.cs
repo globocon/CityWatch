@@ -15,6 +15,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
 using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using static Dropbox.Api.TeamLog.ActorLogInfo;
@@ -68,34 +70,17 @@ namespace CityWatch.Web.Pages.Admin
 
         public IActionResult OnGet()
         {
-            if (!AuthUserHelper.IsAdminUserLoggedIn)
+            if (!AuthUserHelper.IsAdminUserLoggedIn && !AuthUserHelper.IsAdminGlobal && !AuthUserHelper.IsAdminPowerUser)
             {
-                if (HttpContext.Session.GetString("GuardId") != null)
-                {
-                    var guardList = _viewDataService.GetGuards().Where(x => x.Id == Convert.ToInt32(HttpContext.Session.GetString("GuardId")));
-                    foreach (var item in guardList)
-                    {
-                       if(item.IsAdminPowerUser || item.IsAdminGlobal)
-                        {
-                            ReportTemplate = _configDataProvider.GetReportTemplate();
-                            if (item.IsAdminPowerUser)
-                                IsAdminminOrPoweruser = "IsAdminPowerUser";
-                            else
-                                IsAdminminOrPoweruser = "IsAdminGlobal";
-                            return Page();
-                        }
-                       else
-                        {
-                            return Redirect(Url.Page("/Account/Unauthorized"));
-                        }
-                    }
-
-                }
+                return Redirect(Url.Page("/Account/Unauthorized"));
             }
-            //return Redirect(Url.Page("/Account/Unauthorized"));
-            IsAdminminOrPoweruser = "IsAdminGlobal";
-            ReportTemplate = _configDataProvider.GetReportTemplate();
-            return Page();
+            else
+            {
+
+                ReportTemplate = _configDataProvider.GetReportTemplate();
+                return Page();
+
+            }
         }
 
         public JsonResult OnGetClientTypes(int? page, int? limit)
@@ -1159,5 +1144,194 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(_clientDataProvider.GetClientSitesWithTypeId(idsn).OrderBy(z => z.Name));
         }
         //p1 - 202 site allocation-end
+        //p1-213 Critical documents start
+        
+        public IActionResult OnGetClientSitesDoc(string type)
+        {
+            int GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            if (GuardId == 0)
+            {
+                return new JsonResult(_viewDataService.GetClientSites(type));
+            }
+            else
+            {
+                return new JsonResult(_configDataProvider.GetClientSitesUsingLoginUserId(GuardId, type));
+            }
+
+
+
+        }
+        public IActionResult OnGetDescriptionList(int HRGroupId)
+        {
+            return new JsonResult(_configDataProvider.GetDescList(HRGroupId));
+        }
+        public JsonResult OnPostSaveCriticalDocuments(CriticalDocumentViewModel CriticalDocModel)
+        {
+            var results = new List<ValidationResult>();
+            if (!Validator.TryValidateObject(CriticalDocModel, new ValidationContext(CriticalDocModel), results, true))
+                return new JsonResult(new { success = false, message = string.Join(",", results.Select(z => z.ErrorMessage).ToArray()) });
+
+            var success = true;
+            var message = "Saved successfully";
+            try
+            {
+                var CriticalDoc = CriticalDocumentViewModel.ToDataModel(CriticalDocModel);
+                _configDataProvider.SaveCriticalDoc(CriticalDoc, true);
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnGetCriticalDocumentList(int type, string searchTerm)
+        {
+            int GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            if (GuardId == 0)
+            {
+                var ddd = _configDataProvider.GetCriticalDocs()
+                    .Select(z => CriticalDocumentViewModel.FromDataModel(z));
+                return new JsonResult(_configDataProvider.GetCriticalDocs()
+                    .Select(z => CriticalDocumentViewModel.FromDataModel(z)));
+
+
+            }
+            else
+            {
+                return new JsonResult(_configDataProvider.GetCriticalDocs()
+                   .Select(z => CriticalDocumentViewModel.FromDataModel(z)));
+                //return new JsonResult(_kpiSchedulesDataProvider.GetAllSendSchedulesUisngGuardId(GuardId)
+                //   .Select(z => KpiSendScheduleViewModel.FromDataModel(z))
+                //   .Where(z => z.CoverSheetType == (CoverSheetType)type && (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
+                //   .OrderBy(x => x.ProjectName)
+                //   .ThenBy(x => x.ClientTypes));
+
+            }
+        }
+        public JsonResult OnGetCriticalDocList(int id)
+        {
+            int GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            if (GuardId == 0)
+            {
+                var document = _configDataProvider.GetCriticalDocById(id);
+
+                if (document == null)
+                {
+                    return new JsonResult(null);
+                }
+
+                var documentDto = new CriticalDocuments
+                {
+                    Id = document.Id,
+                    ClientTypeId = document.ClientTypeId,
+                    HRGroupID = document.HRGroupID,
+                    GroupName = document.GroupName,
+                    CriticalDocumentsClientSites = document.CriticalDocumentsClientSites.Select(cs => new CriticalDocumentsClientSites
+                    {
+                        Id = cs.Id,
+                        ClientSiteId = cs.ClientSiteId,
+                        ClientSite = new ClientSite
+                        {
+                            Id = cs.ClientSite.Id,
+                            Name = cs.ClientSite.Name,
+                            //ClientTypeId = cs.ClientSite.ClientTypeId,
+                            
+                        }
+                    }).ToList(),
+                    CriticalDocumentDescriptions = document.CriticalDocumentDescriptions.Select(desc => new CriticalDocumentDescriptions
+                    {
+                        Id = desc.Id,
+                        DescriptionID = desc.DescriptionID,
+                        HRSettings = desc.HRSettings == null ? null : new HrSettings
+                        {
+                            Id = desc.HRSettings.Id,
+                            Description = desc.HRSettings.Description,
+                            ReferenceNoNumbers = desc.HRSettings.ReferenceNoNumbers == null ? null : new ReferenceNoNumbers
+                            {
+                                Id = desc.HRSettings.ReferenceNoNumbers.Id,
+                                Name = desc.HRSettings.ReferenceNoNumbers.Name
+                            },
+                            ReferenceNoAlphabets = desc.HRSettings.ReferenceNoAlphabets == null ? null : new ReferenceNoAlphabets
+                            {
+                                Id = desc.HRSettings.ReferenceNoAlphabets.Id,
+                                Name = desc.HRSettings.ReferenceNoAlphabets.Name
+                            },
+                            HRGroups= desc.HRSettings.HRGroups == null ? null : new HRGroups
+                            {
+                                Id=desc.HRSettings.HRGroups.Id,
+                                Name=desc.HRSettings.HRGroups.Name,
+                                IsDeleted=desc.HRSettings.HRGroups.IsDeleted
+                                
+                            }
+                        }
+                    }).ToList()
+                };
+
+                return new JsonResult(documentDto);
+            }
+            else
+            {
+                return new JsonResult(_configDataProvider.GetCriticalDocByIdandGuardId(id, GuardId));
+            }
+        }
+        public JsonResult OnPostDeleteCriticalDoc(int id)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _configDataProvider.DeleteCriticalDoc(id);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message });
+        }
+        //p1-213 Critical documents stop
+        public JsonResult OnPostSaveGlobalComplianceAlertEmail(string Email)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.GlobalComplianceAlertEmail(Email);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = Email, message = message });
+        }
+        public JsonResult OnPostSaveDropboxDir(string DroboxDir)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.DroboxDir(DroboxDir);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = DroboxDir, message = message });
+        }
+        public JsonResult OnGetSettingsDetails()
+        {
+            var Email = _clientDataProvider.GetEmail();
+            var DropboxDir = _clientDataProvider.GetDropboxDir();
+            return new JsonResult(new { Email = Email.Email, DropboxDir = DropboxDir.DropboxDir });
+        }
+      
+
     }
 }

@@ -31,9 +31,14 @@ namespace CityWatch.Data.Models
         public bool IsAdminGlobal { get; set; }
         public bool IsSTATS { get; set; }
         [NotMapped]
-        public List<string> GuardAccess { get; set; }
-        
-
+        public List<string> GuardAccess { get;  set; }
+      
+        [NotMapped]
+        public string? ProviderNo
+        {
+            get;
+            set ;
+        }
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             var errors = new List<ValidationResult>();
