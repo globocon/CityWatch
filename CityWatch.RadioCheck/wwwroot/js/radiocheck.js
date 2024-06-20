@@ -4043,15 +4043,17 @@ var guardSettings = $('#guard_settings_for_control_room').DataTable({
         {
             data: 'provider',
             width: '11%',
-            orderable: false, 
-            render: function (value, type, data) {
-               
-                        return '&nbsp;&nbsp;&nbsp;' + data.provider +
-                        '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#crmSupplierDetailsModal" data-id="' + data.provider + '"></i>';
-             
-           
+            orderable: false,
+            render: function (data, type, row) {
+                var provider = row.provider ? row.provider : ''; 
+                if (provider !== '') {
+                    return '&nbsp;&nbsp;&nbsp;' + provider +
+                        '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#crmSupplierDetailsModal" data-id="' + provider + '"></i>';
+                } else {
+                    return provider; // Return 'N/A' if provider is null or undefined
+                }
             }
-        },
+        }
 
     ]
 });
