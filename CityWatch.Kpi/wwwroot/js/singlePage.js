@@ -994,7 +994,7 @@ $(function () {
             {
                 field: 'groupName', title: 'Group Name', width: 70
             },
-            { field: 'clientTypes', title: 'Client Types', width: 100 },
+           /* { field: 'clientTypes', title: 'Client Types', width: 100 },*/
             { field: 'clientSites', title: 'Client Sites', width: 170 },
             {
                 field: 'descriptions', title: 'Mandatory HR Documents', width: 180,
@@ -1011,7 +1011,10 @@ $(function () {
                     var html = '<table>';
                     html += '<tbody>';
                     for (var i = 0; i < descriptions.length; i++) {
-                        html += '<tr><td style="width: 58px;">' + record.hrGroupName + '</td><td style="width: 40px;">' + referenceNos[i] + '</td><td>' + descriptions[i] + '</td></tr>';
+                        var des = descriptions[i];
+                        if (des != '') {
+                            html += '<tr><td style="width: 58px;">' + record.hrGroupName + '</td><td style="width: 40px;">' + referenceNos[i] + '</td><td>' + descriptions[i] + '</td></tr>';
+                        }
                     }
                     html += '</tbody>';
                     html += '</table>';
@@ -1190,7 +1193,7 @@ $(function () {
         $('#selectedSitesDoc').html('');
 
         $('#selectedDescDoc').html('');
-        $('#GroupName').html('');
+        $('#GroupName').val('');
         updateSelectedSitesCount();
         $('input:hidden[name="clientSiteIds"]').remove();
 
@@ -1222,6 +1225,10 @@ $(function () {
             $('#GroupName').val(data.groupName);
             $.each(data.criticalDocumentsClientSites, function (index, item) {
                 $('#selectedSitesDoc').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
+                //$('#selectedDescDoc').append('<option value="' + item.hrSettings.id + '">' + item.hrSettings.description + '</option>');
+                updateSelectedSitesCount();
+            });
+            $.each(data.criticalDocumentDescriptions, function (index, item) {
                 $('#selectedDescDoc').append('<option value="' + item.hrSettings.id + '">' + item.hrSettings.description + '</option>');
                 updateSelectedSitesCount();
             });
