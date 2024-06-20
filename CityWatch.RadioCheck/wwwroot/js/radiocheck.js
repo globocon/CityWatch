@@ -628,7 +628,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         {
             data: 'guardName',
 
-            width: '100%',
+            width: '18%',
             createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
                 // Define your conditions to add a class
                 if (rowData.isEnabled == 1) {
