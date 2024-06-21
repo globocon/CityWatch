@@ -87,11 +87,11 @@ $(function () {
             gritdSmartWands.addRow({ 'id': -1, 'smartWandId': '', phoneNumber: '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);           
         }
     });
-    console.log('SinglePages.js loaded 1.1...');
+    
 
     $('#btnSaveGuardSiteSettings').on('click', function () {
-        var isUpdateDailyLog = false;
-
+        var isUpdateDailyLog = false;        
+        
         const token = $('input[name="__RequestVerificationToken"]').val();
         if ($('#enableLogDump').is(":checked")) {
             isUpdateDailyLog = true;
@@ -954,17 +954,15 @@ $(function () {
     });
     //Ring Fence Settings - End
     
-    //GetClientSites();
+    GetClientSites();
     function GetClientSites() {
         $.ajax({
             url: '/Admin/Settings?handler=ClientSiteEmail',
             type: 'GET',
             data: { clientSiteId: $('#gl_client_site_id').val() },
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {
-            
-          
-            const siteEmail = result[0].siteEmail;
+        }).done(function (result) {          
+            const SiteEmail = result[0].siteEmail;
             const duressEmail = result[0].duressEmail;
             const duressSms = result[0].duressSms;
             const landLine = result[0].landLine;
@@ -972,7 +970,7 @@ $(function () {
 
             const guardLogEmailTo = result[0].guardLogEmailTo;
             const isUpdateDailyLog = result[0].uploadGuardLog;
-            $('#gs_site_email').val(siteEmail);
+            $('#gs_site_email').val(SiteEmail);
             $('#gs_duress_email').val(duressEmail);
             $('#gs_duress_sms').val(duressSms);
             $('#gs_land_line').val(landLine);
@@ -1370,6 +1368,4 @@ $(function () {
 
     });
 });
-        
-
-});
+       
