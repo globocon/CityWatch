@@ -20,6 +20,10 @@ using System.Net.NetworkInformation;
 using CityWatch.Common.Helpers;
 using Microsoft.VisualBasic;
 using CityWatch.Data.Helpers;
+using CityWatch.Common.Models;
+using CityWatch.Kpi.Helpers;
+using Microsoft.Extensions.Options;
+using CityWatch.Common.Services;
 
 namespace CityWatch.Kpi.Pages.Admin
 {
@@ -38,7 +42,8 @@ namespace CityWatch.Kpi.Pages.Admin
         private readonly IGuardSettingsDataProvider _guardSettingsDataProvider;
         private readonly IGuardDataProvider _guardDataProvider;
         public readonly IConfigDataProvider _configDataProvider;
-
+        private readonly Settings _settings;
+        private readonly IDropboxService _dropboxUploadService;
 
         [BindProperty]
         public KpiRequest ReportRequest { get; set; }
@@ -59,7 +64,9 @@ namespace CityWatch.Kpi.Pages.Admin
              IGuardLogDataProvider guardLogDataProvider,
              IGuardSettingsDataProvider guardSettingsDataProvider,
              IGuardDataProvider guardDataProvider,
-             IConfigDataProvider configDataProvider)
+             IConfigDataProvider configDataProvider,
+             IOptions<Settings> settings,
+             IDropboxService dropboxUploadService)
         {
             _webHostEnvironment = webHostEnvironment;
             _viewDataService = viewDataService;
@@ -74,6 +81,8 @@ namespace CityWatch.Kpi.Pages.Admin
             _guardSettingsDataProvider = guardSettingsDataProvider;
             _guardDataProvider = guardDataProvider;
             _configDataProvider = configDataProvider;
+            _settings = settings.Value;
+            _dropboxUploadService = dropboxUploadService;
         }
 
         public IActionResult OnGet()
@@ -1117,6 +1126,108 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(_viewDataService.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId));
         }
 
+        /*Dropbox settings-start*/
+        public JsonResult OnGetCustomDropboxSettings(int clientSiteId)
+        {
+            var r = _clientDataProvider.GetKpiSettingsCustomDropboxFolder(clientSiteId);
+            return new JsonResult(r);
+        }
+
+        public async Task<JsonResult> OnPostCustomDropboxSettings(ClientSiteKpiSettingsCustomDropboxFolder record)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _clientDataProvider.SaveKpiSettingsCustomDropboxFolder(record);
+                success = true;
+
+               //await CheckAndCreateCustomDropBoxFolder(record);
+            }
+            catch (Exception ex)
+            {
+             message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
+        
+        private async Task<bool> CheckAndCreateCustomDropBoxFolder(ClientSiteKpiSettingsCustomDropboxFolder record)
+        {
+            try
+            {
+                // Try creating folder
+                var reportFromDate = DateTime.Now;
+                var clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSettings().Where(x => x.ClientSiteId == record.ClientSiteId).SingleOrDefault();
+                var customDbxFolderPath = $"{clientSiteKpiSetting.DropboxImagesDir}/FLIR - Wand Recordings - IRs - Daily Logs/{reportFromDate.Date.Year}/{reportFromDate.Date:yyyyMM} - {reportFromDate.Date.ToString("MMMM").ToUpper()} DATA/";
+                var customdropboxfolders = _clientDataProvider.GetKpiSettingsCustomDropboxFolder(clientSiteKpiSetting.ClientSiteId).ToList();
+                if (customdropboxfolders.Count > 0)
+                {
+                    var dropboxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken,
+                                            _settings.DropboxRefreshToken, _settings.DropboxUserEmail);
+                    foreach (var customdropboxfolder in customdropboxfolders)
+                    {
+                        var dbxfldr = $"{customDbxFolderPath}{customdropboxfolder.DropboxFolderName}";
+                        try
+                        {
+                            await _dropboxUploadService.CreateFolder(dropboxSettings, dbxfldr);
+                            _logger.LogInformation($"Custom dropbox folder {dbxfldr} created.");
+                            return true;
+                        }
+                        catch (Exception exp)
+                        {
+                            _logger.LogError(exp.Message);
+                            _logger.LogError(exp.InnerException.ToString());
+                        }
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                _logger.LogError(ex.InnerException.ToString());
+            }
+            return false;
+        }
+
+        public JsonResult OnPostDeleteCustomDropboxSettings(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _clientDataProvider.DeleteKpiSettingsCustomDropboxFolder(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnPostSaveDropboxSettings(KpiDropboxSettings record)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _clientDataProvider.SaveKpiDropboxSettings(record);
+                success = true;
+                message = "Site dropbox settings updated successfully.";
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
+
+        /*Dropbox settings-end*/
+
 
         public JsonResult OnGetCriticalDocumentList(int type, string searchTerm)
         {
@@ -1275,6 +1386,7 @@ namespace CityWatch.Kpi.Pages.Admin
 
             return new JsonResult(new { status, message });
         }
+
 
     }
 

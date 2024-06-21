@@ -51,6 +51,16 @@ namespace CityWatch.Data.Models
 
         public List<RCActionList> RCActionList { get; set; }
 
+        [Display(Name ="")]
+        public bool KpiTelematicsAndStatistics { get; set; } = true;
+        [Display(Name = "")]
+        public bool SmartWandPatrolReports { get; set; } = true;
+        [Display(Name = "")]
+        public bool MonthlyClientReport { get; set; } = false;
+
+        [ForeignKey("ClientSiteId")]
+        public List<ClientSiteKpiSettingsCustomDropboxFolder> clientSiteKpiSettingsCustomDropboxFolder { get; set; }
+
         public RCActionList rclistKP
         {
             get

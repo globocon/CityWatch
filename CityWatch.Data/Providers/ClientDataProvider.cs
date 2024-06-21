@@ -189,9 +189,16 @@ namespace CityWatch.Data.Providers
         public bool CheckAlreadyExistTheGroupName(RCLinkedDuressMaster linkedDuress, bool updateClientSites = false);
         List<HRGroups> GetHRGroups();
         List<UserClientSiteAccess> GetUserClientSiteAccess(int? userId);
+
+        List<ClientSiteKpiSettingsCustomDropboxFolder> GetKpiSettingsCustomDropboxFolder(int clientSiteId);
+        void SaveKpiSettingsCustomDropboxFolder(ClientSiteKpiSettingsCustomDropboxFolder record);
+        void DeleteKpiSettingsCustomDropboxFolder(int id);
+        void SaveKpiDropboxSettings(KpiDropboxSettings record);
+
         void DroboxDir(string DroboxDir);
         GlobalComplianceAlertEmail GetEmail();
         public DropboxDirectory GetDropboxDir();
+
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -2064,6 +2071,67 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.User)
                 .ToList();
         }
+        public List<ClientSiteKpiSettingsCustomDropboxFolder> GetKpiSettingsCustomDropboxFolder(int clientSiteId)
+        {
+            return _context.ClientSiteKpiSettingsCustomDropboxFolder.Where(x=> x.ClientSiteId == clientSiteId).ToList();
+        }
+
+        public void SaveKpiSettingsCustomDropboxFolder(ClientSiteKpiSettingsCustomDropboxFolder record)
+        {            
+            if (record.Id == -1)
+            {
+                record.Id = 0;
+                _context.ClientSiteKpiSettingsCustomDropboxFolder.Add(record);
+            }
+            else
+            {
+                var recordToUpdate = _context.ClientSiteKpiSettingsCustomDropboxFolder.SingleOrDefault(x => x.Id == record.Id);
+                if (recordToUpdate != null)
+                {
+                    recordToUpdate.DropboxFolderName = record.DropboxFolderName;
+                }
+            }
+            _context.SaveChanges();
+        }
+
+        public void DeleteKpiSettingsCustomDropboxFolder(int id)
+        {
+            var recordToDelete = _context.ClientSiteKpiSettingsCustomDropboxFolder.SingleOrDefault(x => x.Id == id);
+            if (recordToDelete != null)
+            {
+                _context.ClientSiteKpiSettingsCustomDropboxFolder.Remove(recordToDelete);
+                _context.SaveChanges();
+            }
+        }
+
+
+        public void SaveKpiDropboxSettings(KpiDropboxSettings record)
+        {
+            if (record.Id > 0) //if (record.Id == -1)
+            {
+                //var recordToUpdate = _context.ClientSiteKpiSettings.SingleOrDefault(x => x.ClientSiteId == record.ClientSiteId);
+                var recordToUpdate = _context.ClientSiteKpiSettings.SingleOrDefault(x => x.Id == record.Id);
+                if (recordToUpdate != null)
+                {
+                    recordToUpdate.DropboxImagesDir = record.DropboxImagesDir;
+                    recordToUpdate.IsThermalCameraSite = record.IsThermalCameraSite;
+                    recordToUpdate.IsWeekendOnlySite = record.IsWeekendOnlySite;
+                    recordToUpdate.KpiTelematicsAndStatistics = record.KpiTelematicsAndStatistics;
+                    recordToUpdate.SmartWandPatrolReports = record.SmartWandPatrolReports;
+                    recordToUpdate.MonthlyClientReport = record.MonthlyClientReport;
+                    _context.SaveChanges();
+                }
+                else
+                {
+                    throw new InvalidOperationException("Record not found for updation !!!.");
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException("Only update is allowed !!!.");
+            }
+            
+        }
         public GlobalComplianceAlertEmail GetEmail()
         {
             return _context.GlobalComplianceAlertEmail.FirstOrDefault();
@@ -2072,8 +2140,6 @@ namespace CityWatch.Data.Providers
         {
             return _context.DropboxDirectory.FirstOrDefault();
         }
+
     }
-
-
-
 }

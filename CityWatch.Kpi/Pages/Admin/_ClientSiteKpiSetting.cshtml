@@ -178,6 +178,7 @@
                 </div>
             </div>
         </div>
+
         <div class="tab-pane " id="KVSettings" role="tabpanel" aria-labelledby="KVSettingsTab">
             <ul class="nav nav-tabs" id="gridKVTab" role="tablist">
 
@@ -230,10 +231,8 @@
                         <div class="col-md-12 text-right">
                             @*  code added to add Download button  *@
                             <a href="#" class="btn btn-primary mb-3" id="add_Downloadbtn">Download Zip</a>
-
                             <button class="btn btn-success mb-3" id="add_client_site_key"><i class="fa fa-plus mr-2"></i>Add Key</button>
                         </div>
-
                     </div>
                     <div class="row m-0">
                         <div class="col-md-12">
@@ -402,35 +401,19 @@
                 <li class="nav-item" role="presentation">
                     <a class="nav-link" id="hr-compliance-tab" data-toggle="tab" href="#HRCompliance" role="tab" aria-controls="HRCompliance">HR Compliance</a>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="DropBox-submenu-tab" data-toggle="tab" href="#DropBoxTabPanel" role="tab" aria-controls="DropBox">Dropbox</a>
+                </li>
             </ul>
             <div class="tab-content">
                 <div class="tab-pane active" id="siteKpiSettings" role="tabpanel" aria-labelledby="kpi-settings-tab">
-
                     <div class="container pt-3">
                         <form id="frm_site_settings">
                             <input type="hidden" asp-for="@Model.Id" />
                             <input type="hidden" asp-for="@Model.ClientSiteId" />
                             <div class="row">
                                 <div class="col-md-8">
-                                    <div class="form-row my-2 pb-3">
-                                        <div class="col-md-4">
-                                            <div class="form-check">
-                                                <input asp-for="@Model.IsThermalCameraSite" class="form-check-input">
-                                                <label class="form-check-label font-weight-bold" asp-for="@Model.IsThermalCameraSite">Thermal Camera Site</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-check pl-0">
-                                                <input asp-for="@Model.IsWeekendOnlySite class=" form-check-input">
-                                                <label class="form-check-label font-weight-bold" asp-for="@Model.IsWeekendOnlySite">Weekend Only Site</label>
-                                            </div>
-                                        </div>
-                                    </div>
                                     <div class="form-row">
-                                        <div class="form-group col-md-8">
-                                            <label class="form-label" asp-for="@Model.DropboxImagesDir"></label>
-                                            <input class="form-control" asp-for="@Model.DropboxImagesDir">
-                                        </div>
                                         <div class="form-group col-md-2">
                                             <label class="form-label" asp-for="@Model.KoiosClientSiteId"></label>
                                             <input class="form-control w-80px" asp-for="@Model.KoiosClientSiteId">
@@ -865,6 +848,7 @@
 
                     </div>
                 </div>
+
                 <div class="tab-pane" id="notes" role="tabpanel" aria-labelledby="notes-tab">
                     <div class="container pt-3">
                         <div class="row mt-3">
@@ -898,12 +882,107 @@
                         </div>
                     </div>
                 </div>
-                <div class="tab-pane" id="HRCompliance" role="tabpanel" aria-labelledby="hr-compliance-tab">
 
-                    <div class="container pt-3">
+                <div class="tab-pane" id="HRCompliance" role="tabpanel" aria-labelledby="hr-compliance-tab">
+                  <div class="container pt-3">
                         <iframe src="SinglePageCriticalDoc" frameBorder="0" allowtransparency="true" scrolling="no" style=" width: 100%; height: 710px;  overflow: hidden;"> </iframe>
                     </div>
+                </div>
 
+                <div class="tab-pane" id="DropBoxTabPanel" role="tabpanel" aria-labelledby="DropBoxTabPanel">
+                    <div class="container pt-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-row my-1">
+                                    <div class="form-group col-md-12">
+                                        <label class="form-label font-weight-bold" asp-for="@Model.DropboxImagesDir"></label>
+                                        <input class="form-control" asp-for="@Model.DropboxImagesDir">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="col-md-12">
+                                        <div class="form-check">
+                                            <input asp-for="@Model.IsThermalCameraSite" class="form-check-input">
+                                            <label class="form-check-label font-weight-bold" asp-for="@Model.IsThermalCameraSite">Thermal Camera Site</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-check pl-0">
+                                            <input asp-for="@Model.IsWeekendOnlySite class=" form-check-input">
+                                            <label class="form-check-label font-weight-bold" asp-for="@Model.IsWeekendOnlySite">Weekend Only Site</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr />
+                                <div class="form-row mt-3">
+                                    <div class="col-md-12 mb-1">
+                                        <label class="form-label font-weight-bold">Dropbox Folders (Default)</label>
+                                    </div>
+                                    <div class="col-md-12 mb-1">
+                                        <div class="form-row ml-2">
+                                            <div class="col-md-6">
+                                                <label class="form-check-label">x - Site KPI Telematics & Statistics</label>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="custom-control custom-switch">
+                                                    <input type="checkbox" class="custom-control-input" asp-for="@Model.KpiTelematicsAndStatistics">
+                                                    <label class="custom-control-label" asp-for="@Model.KpiTelematicsAndStatistics"></label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 mb-1">
+                                        <div class="form-row ml-2">
+                                            <div class="col-md-6">
+                                                <label class="form-check-label">x - SmartWAND Partol Reports</label>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="custom-control custom-switch">
+                                                    <input type="checkbox" class="custom-control-input" asp-for="@Model.SmartWandPatrolReports">
+                                                    <label class="custom-control-label" asp-for="@Model.SmartWandPatrolReports"></label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 mb-1">
+                                        <div class="form-row ml-2">
+                                            <div class="col-md-6">
+                                                <label class="form-check-label">x - Monthly Client Report</label>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="custom-control custom-switch">
+                                                    <input type="checkbox" class="custom-control-input" asp-for="@Model.MonthlyClientReport">
+                                                    <label class="custom-control-label" asp-for="@Model.MonthlyClientReport"></label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-row mt-4">
+                                    <div class="col-md-12 mb-2">
+                                        <div id="_dropboxStatusDisplay"></div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <button type="button" class="btn btn-success" id="save_site_dropboxsettings"><i class="fa fa-save mr-2"></i>Save Dropbox Settings</button>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                            <div class="col-md-6 border-left" style="border-left-width:5px !important; border-left-color:lightgray">
+                                <div class="form-row mt-3">
+                                    <div class="col-md-8 mb-2">
+                                        <label class="form-label font-weight-bold">Dropbox Folders (Custom)</label>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <button type="button" class="btn btn-success pull-right" id="add_new_custom_dropboxsetting"><i class="fa fa-plus mr-2"></i>Add New</button>
+                                    </div>
+                                </div>
+                                <div class="row mt-3 pl-2">
+                                    <table class="table mr-1" id="grid_Drpbx_Custom"></table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
