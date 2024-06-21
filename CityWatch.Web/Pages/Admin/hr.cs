@@ -6,7 +6,9 @@ using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
+using CityWatch.Web.Models;
 using CityWatch.Web.Services;
+using MailKit.Search;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -713,12 +715,15 @@ namespace CityWatch.Web.Pages.Admin
                 var GropuNamee = RemoveBrackets(item.GroupName);
                 if (Enum.TryParse<HrGroup>(GropuNamee, out var hrGroup))
                 {
-                    var UsedDesc = _guardDataProvider.GetDescriptionList(hrGroup, item.Description, GuardID);
+                    // var NewDesc = item.ReferenceNo+ item.Description;
+                    var NewDesc = item.Description;
+                    var UsedDesc = _guardDataProvider.GetDescriptionList(hrGroup, NewDesc, GuardID);
                     var combinedData = new CombinedData
                     {
                         HRGroupId = HRid,
                         Description = item.Description,
-                        UsedDescription = UsedDesc?.Description
+                        UsedDescription = UsedDesc?.Description,
+                        ReferenceNo = item.ReferenceNo,
                     };
                     combinedDataList.Add(combinedData);
                 }
@@ -743,6 +748,7 @@ namespace CityWatch.Web.Pages.Admin
             public int HRGroupId { get; set; }
             public string Description { get; set; }
             public string UsedDescription { get; set; }
+            public string ReferenceNo { get; set; }
         }
         //public JsonResult OnPostSaveGuardComplianceandlicanse(GuardComplianceAndLicense guardComplianceandlicense)
         //{
@@ -836,9 +842,12 @@ namespace CityWatch.Web.Pages.Admin
 
         public JsonResult OnPostSaveGuardComplianceandlicanse(GuardComplianceAndLicense guardComplianceandlicense)
         {
+            guardComplianceandlicense.DateType = guardComplianceandlicense.IsDateFilterEnabledHidden;
             ModelState.Remove("guardComplianceandlicense.Id");
             ModelState.Remove("guardComplianceandlicense.CurrentDateTime");
             ModelState.Remove("guardComplianceandlicense.LicenseNo");
+            ModelState.Remove("guardComplianceandlicense.DataType");
+            ModelState.Remove("guardComplianceandlicense.IsDateFilterEnabledHidden");
 
             if (!ModelState.IsValid)
             {
@@ -884,10 +893,15 @@ namespace CityWatch.Web.Pages.Admin
 
         public JsonResult OnPostSaveGuardComplianceandlicanseNew(GuardComplianceAndLicense guardComplianceandlicense)
         {
+            guardComplianceandlicense.DateType = guardComplianceandlicense.IsDateFilterEnabledHidden;
             ModelState.Remove("guardComplianceandlicense.Id");
             ModelState.Remove("guardComplianceandlicense.CurrentDateTime");
-            ModelState.Remove("guardComplianceandlicense.GuardId");
             ModelState.Remove("guardComplianceandlicense.LicenseNo");
+            ModelState.Remove("guardComplianceandlicense.DataType");
+            ModelState.Remove("guardComplianceandlicense.IsDateFilterEnabledHidden");
+            ModelState.Remove("guardComplianceandlicense.IsDateFilterEnabledHidden");
+            ModelState.Remove("guardComplianceandlicense.ExpiryDate");
+            
             if (!ModelState.IsValid)
             {
                 return new JsonResult(new
@@ -1336,7 +1350,9 @@ namespace CityWatch.Web.Pages.Admin
 
 
             var fileToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards","License", guardComplianceandlicense.LicenseNo, guardComplianceandlicense.FileName);
-            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.FileName}");
+            var DropboxDir = _guardDataProvider.GetDrobox();
+            //var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.FileName}");
+            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolderNew(guardComplianceandlicense.Guard, DropboxDir.DropboxDir)}/{guardComplianceandlicense.FileName}");
 
             return UpoadDocumentToDropbox(fileToUpload, dbxFilePath);
         }
@@ -1350,7 +1366,10 @@ namespace CityWatch.Web.Pages.Admin
 
 
             var fileToUpload = Path.Combine(_reportRootDir, "Uploads", "Guards", "License", guardComplianceandlicense.LicenseNo, guardComplianceandlicense.FileName);
-            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.FileName}");
+            var DropboxDir = _guardDataProvider.GetDrobox();
+            //var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolder(guardComplianceandlicense.Guard)}/{guardComplianceandlicense.FileName}");
+            var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{GuardHelper.GetGuardDocumentDbxRootFolderNew(guardComplianceandlicense.Guard, DropboxDir.DropboxDir)}/{guardComplianceandlicense.FileName}");
+
             return UpoadDocumentToDropbox(fileToUpload, dbxFilePath);
         }
         private bool UpoadDocumentToDropbox(string fileToUpload, string dbxFilePath)
@@ -1476,7 +1495,7 @@ namespace CityWatch.Web.Pages.Admin
         }
         //for toggle areas - end
         // p1-191 hr files task 3-start
-        public JsonResult OnPostSaveHRSettings(int Id, int hrGroupId, int refNoNumberId, int refNoAlphabetId, string description)
+        public JsonResult OnPostSaveHRSettings(int Id, int hrGroupId, int refNoNumberId, int refNoAlphabetId, string description, int[] Selectedsites, string[] SelectedStates)
         {
             var status = true;
             var message = "Success";
@@ -1493,12 +1512,12 @@ namespace CityWatch.Web.Pages.Admin
                     HRGroupId = hrGroupId,
                     ReferenceNoNumberId = refNoNumberId,
                     ReferenceNoAlphabetId = refNoAlphabetId,
-                    Description = description,
-
+                    Description = description
+                    
                 };
 
 
-                _guardLogDataProvider.SaveHRSettings(hrSettingsnew);
+                _guardLogDataProvider.SaveHRSettings(hrSettingsnew, Selectedsites, SelectedStates);
 
 
             }
@@ -1528,7 +1547,13 @@ namespace CityWatch.Web.Pages.Admin
         }
         public JsonResult OnGetHRSettings()
         {
-            return new JsonResult(_configDataProvider.GetHRSettings());
+            return new JsonResult(_configDataProvider.GetHRSettings()
+            .Select(z => HrDoumentViewModel.FromDataModel(z))
+            .OrderBy(x => x.GroupName)
+            .ThenBy(x => x.referenceNo)
+            .ThenBy(x => x.referenceNoAlphabetsName));
+
+            //return new JsonResult(_configDataProvider.GetHRSettings());
         }
         public JsonResult OnPostSaveLicensesTypes(LicenseTypes record)
         {
@@ -1568,6 +1593,13 @@ namespace CityWatch.Web.Pages.Admin
         }
         // p1-191 hr files task 3-end
 
+
+        public JsonResult OnGetHrSettingById(int id)
+        {
+          
+                return new JsonResult(_configDataProvider.GetHrSettingById(id));
+          
+        }
 
     }
 

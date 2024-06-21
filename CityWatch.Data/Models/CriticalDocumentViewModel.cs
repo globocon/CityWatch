@@ -24,13 +24,15 @@ namespace CityWatch.Data.Models
         public int HRGroupID { get; set; }
         public string HRGroupName { get; set; }
         public string ReferenceNO { get; set; }
+        public string GroupName { get; set; }
         public static CriticalDocuments ToDataModel(CriticalDocumentViewModel viewModel)
         {
             int maxLength = Math.Max(viewModel.ClientSiteIds.Length, viewModel.DescriptionIds.Length);
 
             var criticalDocumentsClientSites = new List<CriticalDocumentsClientSites>();
+            var criticalDocumentsDescription = new List<CriticalDocumentDescriptions>();
 
-            for (int i = 0; i < maxLength; i++)
+            for (int i = 0; i < viewModel.ClientSiteIds.Length; i++)
             {
                 
                 int clientId = i < viewModel.ClientSiteIds.Length ? viewModel.ClientSiteIds[i] : default(int);
@@ -39,7 +41,19 @@ namespace CityWatch.Data.Models
                 criticalDocumentsClientSites.Add(new CriticalDocumentsClientSites()
                 {
                     CriticalDocumentID = viewModel.Id,
-                    ClientSiteId = clientId,
+                    ClientSiteId = clientId
+                });
+    
+            }
+            for (int i = 0; i < viewModel.DescriptionIds.Length; i++)
+            {
+
+                int clientId = i < viewModel.ClientSiteIds.Length ? viewModel.ClientSiteIds[i] : default(int);
+                int descriptionId = i < viewModel.DescriptionIds.Length ? viewModel.DescriptionIds[i] : default(int);
+
+                criticalDocumentsDescription.Add(new CriticalDocumentDescriptions()
+                {
+                    CriticalDocumentID = viewModel.Id,
                     DescriptionID = descriptionId
                 });
             }
@@ -49,7 +63,9 @@ namespace CityWatch.Data.Models
                 Id = viewModel.Id,
                 HRGroupID = viewModel.HRGroupID,
                 ClientTypeId = viewModel.ClientTypeId,
-                CriticalDocumentsClientSites = criticalDocumentsClientSites
+                GroupName=viewModel.GroupName,
+                CriticalDocumentsClientSites = criticalDocumentsClientSites,
+                CriticalDocumentDescriptions= criticalDocumentsDescription
             };
         }
         public static CriticalDocumentViewModel FromDataModel(CriticalDocuments dataModel)
@@ -60,9 +76,10 @@ namespace CityWatch.Data.Models
                 ClientSiteIds = dataModel.CriticalDocumentsClientSites.Select(z => z.ClientSiteId).ToArray(),
                 ClientTypes = string.Join(", ", dataModel.CriticalDocumentsClientSites.Select(z => z.ClientSite.ClientType.Name).Distinct()),
                 ClientSites = string.Join(", ", dataModel.CriticalDocumentsClientSites.Select(z => z.ClientSite.Name).Distinct()),
-                Descriptions =string.Join(", ", dataModel.CriticalDocumentsClientSites.Select(z => z.HRSettings.Description).Distinct()),
-                HRGroupName = string.Join(", ", dataModel.CriticalDocumentsClientSites.Select(z => z.HRSettings.HRGroups.Name).Distinct()),
-                ReferenceNO= string.Join(", ", dataModel.CriticalDocumentsClientSites.Select(z => z.HRSettings.ReferenceNo).Distinct()),
+                Descriptions = string.Join(", ", dataModel.CriticalDocumentDescriptions.Select(z => z.HRSettings.Description).Distinct()),
+                HRGroupName = string.Join(", ", dataModel.CriticalDocumentDescriptions.Select(z => z.HRSettings.HRGroups.Name).Distinct()),
+                ReferenceNO = string.Join(", ", dataModel.CriticalDocumentDescriptions.Select(z => z.HRSettings.ReferenceNo).Distinct()),
+                GroupName = dataModel.GroupName,
             };
         }
 

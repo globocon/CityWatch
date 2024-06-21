@@ -1215,7 +1215,61 @@ namespace CityWatch.Web.Pages.Admin
             int GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             if (GuardId == 0)
             {
-                return new JsonResult(_configDataProvider.GetCriticalDocById(id));
+                var document = _configDataProvider.GetCriticalDocById(id);
+
+                if (document == null)
+                {
+                    return new JsonResult(null);
+                }
+
+                var documentDto = new CriticalDocuments
+                {
+                    Id = document.Id,
+                    ClientTypeId = document.ClientTypeId,
+                    HRGroupID = document.HRGroupID,
+                    GroupName = document.GroupName,
+                    CriticalDocumentsClientSites = document.CriticalDocumentsClientSites.Select(cs => new CriticalDocumentsClientSites
+                    {
+                        Id = cs.Id,
+                        ClientSiteId = cs.ClientSiteId,
+                        ClientSite = new ClientSite
+                        {
+                            Id = cs.ClientSite.Id,
+                            Name = cs.ClientSite.Name,
+                            //ClientTypeId = cs.ClientSite.ClientTypeId,
+                            
+                        }
+                    }).ToList(),
+                    CriticalDocumentDescriptions = document.CriticalDocumentDescriptions.Select(desc => new CriticalDocumentDescriptions
+                    {
+                        Id = desc.Id,
+                        DescriptionID = desc.DescriptionID,
+                        HRSettings = desc.HRSettings == null ? null : new HrSettings
+                        {
+                            Id = desc.HRSettings.Id,
+                            Description = desc.HRSettings.Description,
+                            ReferenceNoNumbers = desc.HRSettings.ReferenceNoNumbers == null ? null : new ReferenceNoNumbers
+                            {
+                                Id = desc.HRSettings.ReferenceNoNumbers.Id,
+                                Name = desc.HRSettings.ReferenceNoNumbers.Name
+                            },
+                            ReferenceNoAlphabets = desc.HRSettings.ReferenceNoAlphabets == null ? null : new ReferenceNoAlphabets
+                            {
+                                Id = desc.HRSettings.ReferenceNoAlphabets.Id,
+                                Name = desc.HRSettings.ReferenceNoAlphabets.Name
+                            },
+                            HRGroups= desc.HRSettings.HRGroups == null ? null : new HRGroups
+                            {
+                                Id=desc.HRSettings.HRGroups.Id,
+                                Name=desc.HRSettings.HRGroups.Name,
+                                IsDeleted=desc.HRSettings.HRGroups.IsDeleted
+                                
+                            }
+                        }
+                    }).ToList()
+                };
+
+                return new JsonResult(documentDto);
             }
             else
             {
@@ -1239,6 +1293,45 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { status, message });
         }
         //p1-213 Critical documents stop
+        public JsonResult OnPostSaveGlobalComplianceAlertEmail(string Email)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.GlobalComplianceAlertEmail(Email);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = Email, message = message });
+        }
+        public JsonResult OnPostSaveDropboxDir(string DroboxDir)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.DroboxDir(DroboxDir);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = DroboxDir, message = message });
+        }
+        public JsonResult OnGetSettingsDetails()
+        {
+            var Email = _clientDataProvider.GetEmail();
+            var DropboxDir = _clientDataProvider.GetDropboxDir();
+            return new JsonResult(new { Email = Email.Email, DropboxDir = DropboxDir.DropboxDir });
+        }
+      
 
     }
 }

@@ -5,6 +5,7 @@ using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
 using CityWatch.Web.Services;
+using DocumentFormat.OpenXml.Drawing.Diagrams;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -13,6 +14,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
+using static Dropbox.Api.TeamLog.SpaceCapsType;
 
 namespace CityWatch.Web.Pages.Guard
 {
@@ -355,6 +357,55 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(_viewDataService.CheckWandIsInUse(smartWand.Id, guardId));
         }
 
+        public JsonResult OnGetIsGuardLoginActive(string guardLicNo)
+        {
+
+            var thresholdDate = DateTime.Now.AddDays(-120);
+            var success = false;
+            var initalsUsed = string.Empty;
+            var strResult = string.Empty;
+            if (!string.IsNullOrEmpty(guardLicNo))
+            {
+                var guard = _guardDataProvider.GetGuardDetailsbySecurityLicenseNo(guardLicNo);
+                if (guard != null)
+                {
+                    var lastLogin = _guardDataProvider.GetGuardLastLogin(guard.Id);
+                    if (guard.IsActive)
+                    {
+                        if (lastLogin != null)
+                        {
+
+                            if (lastLogin.LoginDate < thresholdDate && lastLogin.Guard.IsActive)
+                            {
+                                lastLogin.Guard.IsActive = false;
+                                _guardDataProvider.UpdateGuard(lastLogin.Guard, lastLogin.ClientSite.State, out initalsUsed);
+                                strResult = "You have'nt logged in for a while. Contact your administrator!.";
+                                success = true;
+                            }
+                            else { success = false; }
+
+                        }
+                        else
+                        { success = false; }
+                    }
+                    else
+                    {
+                        strResult = "You have'nt logged in for a while. Contact your administrator!.";
+                        success = true;
+                    }
+
+                }
+            }
+            return new JsonResult(new { success, strResult });
+
+
+
+        }
+
+
+
+
+     
         private int GetGuardLoginId(int logBookId)
         {
             GuardLogin guardLogin = new GuardLogin();

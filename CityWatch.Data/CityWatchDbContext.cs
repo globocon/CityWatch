@@ -116,7 +116,10 @@ namespace CityWatch.Data
         public DbSet<KPIScheduleDeafultMailbox> KPIScheduleDeafultMailbox { get; set; }
         public DbSet<CriticalDocuments> CriticalDocuments { get; set; }
         public DbSet<CriticalDocumentsClientSites> CriticalDocumentsClientSites { get; set; }
+
         public DbSet<ClientSiteKpiSettingsCustomDropboxFolder> ClientSiteKpiSettingsCustomDropboxFolder { get; set; }
+        public DbSet<CriticalDocumentDescriptions> CriticalDocumentDescriptions { get; set; }
+        public DbSet<DropboxDirectory> DropboxDirectory { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -146,7 +149,9 @@ namespace CityWatch.Data
         //for toggle areas - end 
         public DbSet<RCLinkedDuressMaster> RCLinkedDuressMaster { get; set; }
         public DbSet<RCLinkedDuressClientSites> RCLinkedDuressClientSites { get; set; }
+        public DbSet<HrSettingsClientSites> HrSettingsClientSites { get; set; }
 
+        public DbSet<HrSettingsClientStates> HrSettingsClientStates { get; set; }
     }
     /* 07022024 dileep to solve the trigger in table not allowed in enity framework 7.0
      issue save changes because the target table has database triggers

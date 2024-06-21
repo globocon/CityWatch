@@ -189,10 +189,16 @@ namespace CityWatch.Data.Providers
         public bool CheckAlreadyExistTheGroupName(RCLinkedDuressMaster linkedDuress, bool updateClientSites = false);
         List<HRGroups> GetHRGroups();
         List<UserClientSiteAccess> GetUserClientSiteAccess(int? userId);
+
         List<ClientSiteKpiSettingsCustomDropboxFolder> GetKpiSettingsCustomDropboxFolder(int clientSiteId);
         void SaveKpiSettingsCustomDropboxFolder(ClientSiteKpiSettingsCustomDropboxFolder record);
         void DeleteKpiSettingsCustomDropboxFolder(int id);
         void SaveKpiDropboxSettings(KpiDropboxSettings record);
+
+        void DroboxDir(string DroboxDir);
+        GlobalComplianceAlertEmail GetEmail();
+        public DropboxDirectory GetDropboxDir();
+
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -1462,7 +1468,7 @@ namespace CityWatch.Data.Providers
 
 
         }
-
+         
         public void GlobalComplianceAlertEmail(string Email)
         {
             if (!string.IsNullOrEmpty(Email))
@@ -1494,7 +1500,32 @@ namespace CityWatch.Data.Providers
 
         }
 
+        public void DroboxDir(string DroboxDir)
+        {
+            if (!string.IsNullOrEmpty(DroboxDir))
+            {
 
+               
+                var DropboxDirUpdate = _context.DropboxDirectory.Where(x => x.Id != 0).ToList();
+                if (DropboxDirUpdate != null)
+                {
+                    if (DropboxDirUpdate.Count != 0)
+                    {
+                        _context.DropboxDirectory.RemoveRange(DropboxDirUpdate);
+                        _context.SaveChanges();
+                    }
+                }
+                var Dropboxnew = new DropboxDirectory()
+                {
+                    DropboxDir = DroboxDir
+                };
+                _context.DropboxDirectory.Add(Dropboxnew);
+                
+
+                _context.SaveChanges();
+            }
+
+        }
         public void DeafultMailBox(string Email)
         {
             if (!string.IsNullOrEmpty(Email))
@@ -2040,7 +2071,6 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.User)
                 .ToList();
         }
-
         public List<ClientSiteKpiSettingsCustomDropboxFolder> GetKpiSettingsCustomDropboxFolder(int clientSiteId)
         {
             return _context.ClientSiteKpiSettingsCustomDropboxFolder.Where(x=> x.ClientSiteId == clientSiteId).ToList();
@@ -2102,10 +2132,14 @@ namespace CityWatch.Data.Providers
             }
             
         }
-
+        public GlobalComplianceAlertEmail GetEmail()
+        {
+            return _context.GlobalComplianceAlertEmail.FirstOrDefault();
+        }
+        public DropboxDirectory GetDropboxDir()
+        {
+            return _context.DropboxDirectory.FirstOrDefault();
+        }
 
     }
-
-
-
 }

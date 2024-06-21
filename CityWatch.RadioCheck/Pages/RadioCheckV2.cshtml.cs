@@ -236,9 +236,14 @@ namespace CityWatch.RadioCheck.Pages.Radio
 
         public JsonResult OnGetGuardData(int id)
         {
-            return new JsonResult(_guardLogDataProvider.GetGuards(id));
+            //return new JsonResult(_guardLogDataProvider.GetGuards(id));
+            return new JsonResult(_guardLogDataProvider.GetGuardsWtihProviderNumber(id));
+            
         }
-
+        public JsonResult OnGetCrmSupplierData(string name)
+        {
+            return new JsonResult(_guardLogDataProvider.GetCompanyDetailsVehLog(name));
+        }
         //SaveRadioStatus -start
         public JsonResult OnPostSaveRadioStatus(int clientSiteId, int guardId, string checkedStatus, bool active, int statusId, GuardLog tmzdata)
         {

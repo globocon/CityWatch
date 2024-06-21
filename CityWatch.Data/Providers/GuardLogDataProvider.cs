@@ -20,6 +20,7 @@ using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
+using static Dropbox.Api.Team.GroupSelector;
 using static Dropbox.Api.TeamLog.EventCategory;
 using static Dropbox.Api.TeamLog.TimeUnit;
 
@@ -93,7 +94,8 @@ namespace CityWatch.Data.Providers
         List<RadioCheckListInActiveGuardData> GetInActiveGuardDetails();
         public Guard GetGuards(int guardId);
         //logBookId entry for radio checklist-end
-
+        public KeyVehicleLog GetCompanyDetailsVehLog(string companyName);
+        
         //for getting logBook details of the  guard-start
         List<RadioCheckListGuardLoginData> GetActiveGuardlogBookDetails(int clientSiteId, int guardId);
         //for getting logBook details of the  guard-end
@@ -109,7 +111,7 @@ namespace CityWatch.Data.Providers
         //for getting Key Vehicle history of the  guard-start
         List<KeyVehicleLog> GetActiveGuardKeyVehicleHistory(int clientSiteId, int guardId);
         //for getting Key Vehicle history of the  guard-end
-
+        
         //for getting smartwand history of the  guard-start
         List<SmartWandScanGuardHistory> GetActiveGuardSwHistory(int clientSiteId, int guardId);
         //for getting smartwand history of the  guard-end
@@ -240,7 +242,7 @@ namespace CityWatch.Data.Providers
         List<GuardLog> GetLastLoginNew(int GuradId);
 
         //p1-191 hr files task 3-start
-        void SaveHRSettings(HrSettings hrSettings);
+        void SaveHRSettings(HrSettings hrSettings, int[] selectSites, string[] selectedStates);
         void DeleteHRSettings(int id);
         void SaveLicensesTypes(LicenseTypes licenseTypes);
         void DeleteLicensesTypes(int id);
@@ -272,6 +274,7 @@ namespace CityWatch.Data.Providers
         ClientSitePoc GetClientSitePOCName(int id);
         int GetClientTypeByClientSiteId(int ClientSiteId);
         public void SaveClientSiteRadioCheckStatusFromlogBookNewUpdate(ClientSiteRadioCheck clientSiteRadioCheck);
+        public Guard GetGuardsWtihProviderNumber(int guardId);
 
         public List<RCLinkedDuressClientSites> checkIfASiteisLinkedDuress(int siteId);
 
@@ -542,7 +545,7 @@ namespace CityWatch.Data.Providers
                     PlayNotificationSound = guardLog.PlayNotificationSound,
                     GpsCoordinates = guardLog.GpsCoordinates,
                     IsIRReportTypeEntry = guardLog.IsIRReportTypeEntry,
-                    RcLogbookStamp = guardLog.RcLogbookStamp 
+                    RcLogbookStamp = guardLog.RcLogbookStamp
 
                 });
             }
@@ -1890,8 +1893,8 @@ namespace CityWatch.Data.Providers
             return gl;
         }
         //for getting Key Vehicle history of the guard-end
-
-
+        
+        
         //for getting SmartWand history of the guard-start
         public List<SmartWandScanGuardHistory> GetActiveGuardSwHistory(int clientSiteId, int guardId)
         {
@@ -1988,14 +1991,21 @@ namespace CityWatch.Data.Providers
             return allvalues;
         }
         //for getting  SW details of the  guard-end
-        public Guard GetGuards(int guardId)
-        {
-
-
-
-
+        public Guard GetGuards(int guardId)      {
 
             return _context.Guards.Where(x => x.Id == guardId).FirstOrDefault();
+        }
+        
+        public KeyVehicleLog GetCompanyDetailsVehLog(string companyName)
+        {
+            if (companyName == null)
+            {
+                // Handle the case where companyName is null
+                return null; 
+            }
+      
+            return _context.KeyVehicleLogs.FirstOrDefault(x => x.CompanyName == companyName);
+            
         }
         public void DeleteClientSiteRadioCheckActivityStatusForKeyVehicleEntry(int id)
         {
@@ -4520,11 +4530,61 @@ namespace CityWatch.Data.Providers
         }
 
         //p1-191 hr files task 3-start
-        public void SaveHRSettings(HrSettings hrSettings)
+        public void SaveHRSettings(HrSettings hrSettings, int[] selctedSites, string[] selectedStates)
         {
+
+
+
             if (hrSettings.Id == 0)
             {
                 _context.HrSettings.Add(hrSettings);
+                _context.SaveChanges();
+                int newId = hrSettings.Id;
+                if (newId != 0)
+                {
+                    // Sites 
+                    
+                        foreach (var siteId in selctedSites)
+                        {
+                            HrSettingsClientSites HrSettingsClientSites = new HrSettingsClientSites()
+                            {
+
+                                ClientSiteId = siteId,
+                                HrSettingsId = newId
+
+                            };
+
+
+                            _context.HrSettingsClientSites.Add(HrSettingsClientSites);
+                            _context.SaveChanges();
+
+                        }
+
+                    
+                    // State
+                    if (selectedStates.Count() != 0)
+                    {
+                        foreach (var state in selectedStates)
+                        {
+                            HrSettingsClientStates HrSettingsStates = new HrSettingsClientStates()
+                            {
+
+
+                                HrSettingsId = newId,
+                                State = state
+
+                            };
+
+
+                            _context.HrSettingsClientStates.Add(HrSettingsStates);
+                            _context.SaveChanges();
+
+                        }
+
+                    }
+
+
+                }
             }
             else
             {
@@ -4535,9 +4595,63 @@ namespace CityWatch.Data.Providers
                     hrSettingsToUpdate.ReferenceNoAlphabetId = hrSettings.ReferenceNoAlphabetId;
                     hrSettingsToUpdate.ReferenceNoNumberId = hrSettings.ReferenceNoNumberId;
                     hrSettingsToUpdate.Description = hrSettings.Description;
+                    _context.SaveChanges();
                 }
+               
+                    var hrremoveSites = _context.HrSettingsClientSites.Where(x => x.HrSettingsId == hrSettings.Id).ToList();
+                    if (hrremoveSites != null)
+                    {
+                        _context.HrSettingsClientSites.RemoveRange(hrremoveSites);
+                        _context.SaveChanges();
+
+                    }
+                    foreach (var siteId in selctedSites)
+                    {
+                        HrSettingsClientSites HrSettingsClientSites = new HrSettingsClientSites()
+                        {
+
+                            ClientSiteId = siteId,
+                            HrSettingsId = hrSettings.Id
+
+                        };
+
+                        _context.HrSettingsClientSites.Add(HrSettingsClientSites);
+                        _context.SaveChanges();
+
+                    }
+
+                
+
+
+             
+                    var hrremoveStates = _context.HrSettingsClientStates.Where(x => x.HrSettingsId == hrSettings.Id).ToList();
+                    if (hrremoveStates != null)
+                    {
+                        _context.HrSettingsClientStates.RemoveRange(hrremoveStates);
+                        _context.SaveChanges();
+
+                    }
+                    foreach (var State in selectedStates)
+                    {
+                        HrSettingsClientStates HrSettingsStates = new HrSettingsClientStates()
+                        {
+
+                            State = State,
+                            HrSettingsId = hrSettings.Id
+
+                        };
+
+                        _context.HrSettingsClientStates.Add(HrSettingsStates);
+                        _context.SaveChanges();
+
+                    }
+
+               
+
+
+
             }
-            _context.SaveChanges();
+
         }
         public void DeleteHRSettings(int id)
         {
@@ -4601,6 +4715,16 @@ namespace CityWatch.Data.Providers
             return data;
         }
         //P4-79 MENU CORRECTIONS END
+        public Guard GetGuardsWtihProviderNumber(int guardId)
+        {
+
+            var guards= _context.Guards.Where(x => x.Id == guardId).FirstOrDefault();
+            var results = _context.KeyVehicleLogs.Where(x => x.CompanyName == guards.Provider && !string.IsNullOrEmpty(x.CompanyLandline)).FirstOrDefault();
+            guards.ProviderNo = results != null ? results.CompanyLandline : null;
+
+
+            return guards;
+        }
 
         public List<RCLinkedDuressClientSites> checkIfASiteisLinkedDuress(int siteId)
         {
@@ -4627,6 +4751,7 @@ namespace CityWatch.Data.Providers
             return linkedSitesList;
         }
 
+
         public bool IsRClogbookStampRequired(string StampedByName)
         {
             bool Req = false;
@@ -4635,9 +4760,10 @@ namespace CityWatch.Data.Providers
                 var RecExists = _context.IncidentReportFields.Where(x => x.TypeId == ReportFieldType.NotifiedBy && x.Name.Equals(StampedByName)).FirstOrDefault();
                 if (RecExists.StampRcLogbook == true)
                     Req = true;
-            }            
+            }
             return Req;
         }
+
 
     }
 

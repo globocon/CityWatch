@@ -803,6 +803,13 @@ namespace CityWatch.Kpi.Services
 
                     DateTime? expiryDate = compliance?.ExpiryDate?.Date;
                     string expiryDateString = expiryDate.HasValue ? expiryDate.Value.ToString("dd/MM/yyyy") : "";
+                    if (compliance != null)
+                    {
+                    if (compliance.DateType == true)
+                    {
+                        expiryDateString= expiryDateString+$"(I)";
+                    }
+                    }
                     kpiGuardTable.AddCell(CreateDataCell(expiryDateString, true, cellColor));
                 }
 
@@ -976,6 +983,16 @@ namespace CityWatch.Kpi.Services
         }
         private void CreateGuardDetailsNewHeader(Table table, List<GuardLogin> monthlyDataGuard,string hrGroupname,int id)
         {
+            float[] columnWidths = { 100f, 200f, 100f }; // Adjust these values as needed
+            if (hrGroupname== "HR3 (Special)")
+            {
+                table.SetWidth(UnitValue.CreatePointValue(500));
+            }
+            else
+            {
+                table.SetWidth(UnitValue.CreatePointValue(400));
+            }
+           
             try
             {
                 List<int> complianceDataCounts = new List<int>();
@@ -1035,7 +1052,7 @@ namespace CityWatch.Kpi.Services
                 }
 
                 table.AddCell(CreateHeaderCell($"Name\n"));
-                table.AddCell(CreateHeaderCell("C4i+License"));
+                table.AddCell(CreateHeaderCell("License"));
 
                 var firstGuardId = monthlyDataGuard.Select(guardLogin => guardLogin.GuardId).Distinct().FirstOrDefault();
                 List<GuardComplianceAndLicense> monthlyDataGuardComplianceData1 = null; // Declare and initialize HRGroupList

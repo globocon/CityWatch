@@ -1126,7 +1126,6 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(_viewDataService.GetUserClientTypesHavingAccess(AuthUserHelperRadio.LoggedInUserId));
         }
 
-
         /*Dropbox settings-start*/
         public JsonResult OnGetCustomDropboxSettings(int clientSiteId)
         {
@@ -1147,12 +1146,12 @@ namespace CityWatch.Kpi.Pages.Admin
             }
             catch (Exception ex)
             {
-                message = ex.Message;
+             message = ex.Message;
             }
 
             return new JsonResult(new { success, message });
         }
-
+        
         private async Task<bool> CheckAndCreateCustomDropBoxFolder(ClientSiteKpiSettingsCustomDropboxFolder record)
         {
             try
@@ -1228,6 +1227,166 @@ namespace CityWatch.Kpi.Pages.Admin
         }
 
         /*Dropbox settings-end*/
+
+
+        public JsonResult OnGetCriticalDocumentList(int type, string searchTerm)
+        {
+            int GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            if (GuardId == 0)
+            {
+                var ddd = _configDataProvider.GetCriticalDocs()
+                    .Select(z => CriticalDocumentViewModel.FromDataModel(z));
+                return new JsonResult(_configDataProvider.GetCriticalDocs()
+                    .Select(z => CriticalDocumentViewModel.FromDataModel(z)));
+
+
+            }
+            else
+            {
+                return new JsonResult(_configDataProvider.GetCriticalDocs()
+                   .Select(z => CriticalDocumentViewModel.FromDataModel(z)));
+                //return new JsonResult(_kpiSchedulesDataProvider.GetAllSendSchedulesUisngGuardId(GuardId)
+                //   .Select(z => KpiSendScheduleViewModel.FromDataModel(z))
+                //   .Where(z => z.CoverSheetType == (CoverSheetType)type && (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
+                //   .OrderBy(x => x.ProjectName)
+                //   .ThenBy(x => x.ClientTypes));
+
+            }
+        }
+
+
+        public JsonResult OnGetClientSitesNew(string typeId)
+        {
+            if (typeId != null)
+            {
+                string[] typeId2 = typeId.Split(';');
+                int[] typeId3 = new int[typeId2.Length];
+                int i = 0;
+                foreach (var item in typeId2)
+                {
+
+                    typeId3[i] = Convert.ToInt32(item);
+                    i++;
+
+
+                }
+
+                return new JsonResult(_guardLogDataProvider.GetAllClientSites().Where(x => typeId == null || typeId3.Contains(x.TypeId)).OrderBy(z => z.Name).ThenBy(z => z.TypeId));
+            }
+            return new JsonResult(_guardLogDataProvider.GetAllClientSites().Where(x => x.TypeId == 0).OrderBy(z => z.Name).ThenBy(z => z.TypeId));
+        }
+
+        public IActionResult OnGetDescriptionList(int HRGroupId)
+        {
+            return new JsonResult(_configDataProvider.GetDescList(HRGroupId));
+        }
+
+        public JsonResult OnPostSaveCriticalDocuments(CriticalDocumentViewModel CriticalDocModel)
+        {
+            var results = new List<ValidationResult>();
+            if (!Validator.TryValidateObject(CriticalDocModel, new ValidationContext(CriticalDocModel), results, true))
+                return new JsonResult(new { success = false, message = string.Join(",", results.Select(z => z.ErrorMessage).ToArray()) });
+
+            var success = true;
+            var message = "Saved successfully";
+            try
+            {
+                var CriticalDoc = CriticalDocumentViewModel.ToDataModel(CriticalDocModel);
+                _configDataProvider.SaveCriticalDoc(CriticalDoc, true);
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnGetCriticalDocList(int id)
+        {
+            int GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            if (GuardId == 0)
+            {
+                var document = _configDataProvider.GetCriticalDocById(id);
+
+                if (document == null)
+                {
+                    return new JsonResult(null);
+                }
+
+                var documentDto = new CriticalDocuments
+                {
+                    Id = document.Id,
+                    ClientTypeId = document.ClientTypeId,
+                    HRGroupID = document.HRGroupID,
+                    GroupName = document.GroupName,
+                    CriticalDocumentsClientSites = document.CriticalDocumentsClientSites.Select(cs => new CriticalDocumentsClientSites
+                    {
+                        Id = cs.Id,
+                        ClientSiteId = cs.ClientSiteId,
+                        ClientSite = new ClientSite
+                        {
+                            Id = cs.ClientSite.Id,
+                            Name = cs.ClientSite.Name,
+                            //ClientTypeId = cs.ClientSite.ClientTypeId,
+
+                        }
+                    }).ToList(),
+                    CriticalDocumentDescriptions = document.CriticalDocumentDescriptions.Select(desc => new CriticalDocumentDescriptions
+                    {
+                        Id = desc.Id,
+                        DescriptionID = desc.DescriptionID,
+                        HRSettings = desc.HRSettings == null ? null : new HrSettings
+                        {
+                            Id = desc.HRSettings.Id,
+                            Description = desc.HRSettings.Description,
+                            ReferenceNoNumbers = desc.HRSettings.ReferenceNoNumbers == null ? null : new ReferenceNoNumbers
+                            {
+                                Id = desc.HRSettings.ReferenceNoNumbers.Id,
+                                Name = desc.HRSettings.ReferenceNoNumbers.Name
+                            },
+                            ReferenceNoAlphabets = desc.HRSettings.ReferenceNoAlphabets == null ? null : new ReferenceNoAlphabets
+                            {
+                                Id = desc.HRSettings.ReferenceNoAlphabets.Id,
+                                Name = desc.HRSettings.ReferenceNoAlphabets.Name
+                            },
+                            HRGroups = desc.HRSettings.HRGroups == null ? null : new HRGroups
+                            {
+                                Id = desc.HRSettings.HRGroups.Id,
+                                Name = desc.HRSettings.HRGroups.Name,
+                                IsDeleted = desc.HRSettings.HRGroups.IsDeleted
+
+                            }
+                        }
+                    }).ToList()
+                };
+
+                return new JsonResult(documentDto);
+            }
+            else
+            {
+                return new JsonResult(_configDataProvider.GetCriticalDocByIdandGuardId(id, GuardId));
+            }
+        }
+
+        public JsonResult OnPostDeleteCriticalDoc(int id)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _configDataProvider.DeleteCriticalDoc(id);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message });
+        }
+
 
     }
 

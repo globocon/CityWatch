@@ -2,7 +2,9 @@
  *  Fix for issues while opening one BS modal over another
  *  https://stackoverflow.com/questions/19305821/multiple-modals-overlay * 
  **/
+
 $(document).on('ready',function () {
+
     $(document).on('show.bs.modal', '.modal', function () {
         const zIndex = 1040 + 10 * $('.modal:visible').length;
         $(this).css('z-index', zIndex);
@@ -10,7 +12,7 @@ $(document).on('ready',function () {
     });
 
     $(document).on('hidden.bs.modal', '.modal', () => $('.modal:visible').length && $(document.body).addClass('modal-open'));
-        
+
 });
 
 $(function () {
@@ -952,7 +954,7 @@ $(function () {
     });
     //Ring Fence Settings - End
     
-    GetClientSites();
+    //GetClientSites();
     function GetClientSites() {
         $.ajax({
             url: '/Admin/Settings?handler=ClientSiteEmail',
@@ -983,10 +985,7 @@ $(function () {
     }
 
     
-    /*Dropbox settings-start*/
-    
-    
-
+    /*Dropbox settings-start*/        
     gridSiteDropboxSettings = $('#grid_Drpbx_Custom').grid({
         dataSource: '/admin/settings?handler=CustomDropboxSettings&clientSiteId=' + $('#gl_client_site_id').val(),
         uiLibrary: 'bootstrap4',
@@ -1021,8 +1020,7 @@ $(function () {
                     isCustomDropboxSettingsAdding = false;
             });
         });
-
-        gridSiteDropboxSettings.on('rowRemoving', function (e, id, record) {
+      gridSiteDropboxSettings.on('rowRemoving', function (e, id, record) {
             if (confirm('Are you sure to delete this dropbox folder ?')) {
                 const token = $('input[name="__RequestVerificationToken"]').val();
                 $.ajax({
@@ -1090,7 +1088,288 @@ $(function () {
     
     /*Dropbox settings-end*/
 
+
+    //crtical doc
+
+    let gridCriticalDocument;
+    gridCriticalDocument = $('#tbl_CriticalDocument').grid({
+        dataSource: '/Admin/Settings?handler=CriticalDocumentList',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        columns: [
+            {
+                field: 'groupName', title: 'Group Name', width: 70
+            },
+           /* { field: 'clientTypes', title: 'Client Types', width: 100 },*/
+            { field: 'clientSites', title: 'Client Sites', width: 170 },
+            {
+                field: 'descriptions', title: 'Mandatory HR Documents', width: 180,
+                renderer: function (value, record) {
+                    function splitFirstComma(str) {
+                        const index = str.indexOf(',');
+                        if (index === -1) {
+                            return [str, '']; // If there's no comma, return the string and an empty string
+                        }
+                        return [str.substring(0, index), str.substring(index + 1).trim()];
+                    }
+                    var descriptions = splitFirstComma(record.descriptions);
+                    var referenceNos = splitFirstComma(record.referenceNO);
+                    var html = '<table>';
+                    html += '<tbody>';
+                    for (var i = 0; i < descriptions.length; i++) {
+                        var des = descriptions[i];
+                        if (des != '') {
+                            html += '<tr><td style="width: 58px;">' + record.hrGroupName + '</td><td style="width: 40px;">' + referenceNos[i] + '</td><td>' + descriptions[i] + '</td></tr>';
+                        }
+                    }
+                    html += '</tbody>';
+                    html += '</table>';
+                    return html;
+                }
+            },
+            { width: 110, renderer: schButtonRendererCrital },
+
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+
+    });
+
+    function schButtonRendererCrital(value, record) {
+        let buttonHtml = '';
+        //buttonHtml += '<button class="btn btn-outline-primary mt-2 d-block" data-toggle="modal" data-target="#run-schedule-modal" data-sch-id="' + record.id + '""><i class="fa fa-play mr-2" aria-hidden="true"></i>Run</button>';
+        buttonHtml += '<button class="btn btn-outline-primary mr-2 mt-2 d-block" data-toggle="modal" data-target="#Critical-modal" data-sch-id="' + record.id + '" ';
+        buttonHtml += 'data-action="editSchedule"><i class="fa fa-pencil mr-2"></i>Edit</button>';
+        buttonHtml += '<button class="btn btn-outline-danger mt-2 del-Cri d-block" data-sch-id="' + record.id + '""><i class="fa fa-trash mr-2" aria-hidden="true"></i>Delete</button>';
+        return buttonHtml;
+    }
+
+    $('#add_criticalDocuments').on('click', function () {
+        $('#clientSitesDoc').html('');
+        $('#Critical-modal').modal('show');
+        clearCriticalModal();
+    });
+
+
+  
+
+    $('#clientTypeNameDoc').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
+    $('#clientSitesDoc').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
+    $('#clientTypeNameDoc').on('change', function () {
+        let clientTypeIds = $(this).val().join(';')
+        const clientTypeId = clientTypeIds;
+        //$('#clientSitesDoc').multiselect("refresh");
+        $('#clientSitesDoc').html('');
+        const clientSiteControl = $('#clientSitesDoc');
+        var selectedOption = $(this).find("option:selected");
+        var selectedText = selectedOption.text();
+
+        $.ajax({
+            url: '/admin/settings?handler=ClientSitesNew',
+            type: 'GET',
+            data: {
+                typeId: clientTypeId
+
+            },
+            dataType: 'json',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+
+            data.map(function (site) {
+                clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+            });
+            clientSiteControl.multiselect('rebuild');
+
+        });
+
+    });
+
+    $('#clientSitesDoc').on('change', function () {
+        const selectedValues = $(this).val().join(';').split(';');
+        selectedValues.forEach(function (value) {
+            if (value !== '') {
+                const existing = $('#selectedSitesDoc option[value="' + value + '"]');
+                if (existing.length === 0) {
+                    const text = $('#clientSitesDoc option[value="' + value + '"]').text();
+                    $('#selectedSitesDoc').append('<option value="' + value + '">' + text + '</option>');
+                }
+            }
+        });
+        updateSelectedSitesCount();
+    });
+    function updateSelectedSitesCount() {
+        $('#selectedSitesCountDoc').text($('#selectedSitesDoc option').length);
+        $('#selectedDescCountDoc').text($('#selectedDescDoc option').length);
+    }
+    $('#HRGroupDoc').on('change', function () {
+        const option = $(this).val();
+        if (option === '') {
+            $('#DescriptionDoc').html('');
+            $('#DescriptionDoc').append('<option value="">Select</option>');
+        }
+
+        $.ajax({
+            url: '/admin/settings?handler=DescriptionList&HRGroupId=' + encodeURIComponent(option),
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+            $('#DescriptionDoc').html('');
+            $('#DescriptionDoc').append('<option value="">Select</option>');
+            data.map(function (site) {
+                $('#DescriptionDoc').append('<option value="' + site.value + '">' + site.text + '</option>');
+            });
+        });
+    });
+    $('#DescriptionDoc').on('change', function () {
+        var Clientsite = $('#clientSitesDoc').val();
+        if (Clientsite == 'Select') {
+            confirm('please select a clientsite')
+        }
+        else {
+            const elem = $(this).find(":selected");
+            if (elem.val() !== '') {
+                const existing = $('#selectedDescDoc option[value="' + elem.val() + '"]');
+                if (existing.length === 0) {
+                    $('#selectedDescDoc').append('<option value="' + elem.val() + '">' + elem.text() + '</option>');
+                    updateSelectedDescCount();
+                }
+            }
+        }
+
+    });
+    function updateSelectedDescCount() {
+        $('#selectedDescCountDoc').text($('#selectedDescDoc option').length);
+    }
+
+    $('#btnSaveCriticalDoc').on('click', function () {
+        $("input[name=clientSiteIds]").remove();
+        var options = $('#selectedSitesDoc option');
+        options.each(function () {
+            const elem = '<input type="hidden" name="clientSiteIds" value="' + $(this).val() + '">';
+            $('#frm_CriticalDoc').append(elem);
+        });
+        $("input[name=DescriptionIds]").remove();
+        var optionsNew = $('#selectedDescDoc option');
+        optionsNew.each(function () {
+            const elem1 = '<input type="hidden" name="DescriptionIds" value="' + $(this).val() + '">';
+            $('#frm_CriticalDoc').append(elem1);
+        });
+        $.ajax({
+            url: '/admin/Settings?handler=SaveCriticalDocuments',
+            type: 'POST',
+            data: $('#frm_CriticalDoc').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data.success) {
+                $('#Critical-modal').modal('hide');
+                alert('Critical Document saved successfully');
+                gridCriticalDocument.reload({ type: $('#sel_schedule').val() });
+            } else {
+                $('#CriDoc-modal-validation').html('');
+                data.message.split(',').map(function (item) { $('#CriDoc-modal-validation').append('<li>' + item + '</li>') });
+                $('#CriDoc-modal-validation').show().delay(5000).fadeOut();
+            }
+        });
+    });
+
+    function clearCriticalModal() {
+        $('#CriticalDocId').val('0');
+        //$('#clientTypeNameDoc').html('');
+        $('#clientTypeNameDoc').val('');
+        $("#clientTypeNameDoc").multiselect("refresh");
+        $('#clientSitesDoc').html('');
+        $('#clientSitesDoc').val('');
+        $("#clientSitesDoc").multiselect("refresh");
+        $('#DescriptionDoc').html('<option value="">Select</option>');
+        var valueToSelect = "Select";
+        $('#HRGroupDoc').val(valueToSelect);
+        $('#clientTypeNameDoc').val('');
+        $('#selectedSitesDoc').html('');
+
+        $('#selectedDescDoc').html('');
+        $('#GroupName').val('');
+        updateSelectedSitesCount();
+        $('input:hidden[name="clientSiteIds"]').remove();
+
+        $('#CriDoc-modal-validation').html('');
+
+
+    }
+    $('#Critical-modal').on('shown.bs.modal', function (event) {
+        clearCriticalModal();
+        const button = $(event.relatedTarget);
+        const isEdit = button.data('action') !== undefined && button.data('action') === 'editSchedule';
+        if (isEdit) {
+            schId = button.data('sch-id');
+            CriticalModelOnEdit(schId);
+        } else {
+            //scheduleModalOnAdd();
+        }
+
+        /*showHideSchedulePopupTabs(isEdit);*/
+    });
+    function CriticalModelOnEdit(CriticalDocId) {
+        $('#loader').show();
+        $.ajax({
+            url: '/admin/Settings?handler=CriticalDocList&id=' + CriticalDocId,
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+            $('#CriticalDocId').val(data.id);
+            $('#GroupName').val(data.groupName);
+            $.each(data.criticalDocumentsClientSites, function (index, item) {
+                $('#selectedSitesDoc').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
+                //$('#selectedDescDoc').append('<option value="' + item.hrSettings.id + '">' + item.hrSettings.description + '</option>');
+                updateSelectedSitesCount();
+            });
+            $.each(data.criticalDocumentDescriptions, function (index, item) {
+                $('#selectedDescDoc').append('<option value="' + item.hrSettings.id + '">' + item.hrSettings.description + '</option>');
+                updateSelectedSitesCount();
+            });
+
+        }).always(function () {
+            $('#loader').hide();
+        });
+    }
+
+    $('#removeSelectedSites1').on('click', function () {
+        $('#selectedSitesDoc option:selected').remove();
+        updateSelectedSitesCount();
+    });
+    $('#removeSelectedSitesDoc').on('click', function () {
+        $('#selectedDescDoc option:selected').remove();
+        updateSelectedSitesCount();
+    });
+
+    $('#tbl_CriticalDocument').on('click', '.del-Cri', function () {
+        const idToDelete = $(this).attr('data-sch-id');
+        if (confirm('Are you sure want to delete this Document?')) {
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteCriticalDoc',
+                type: 'POST',
+                data: { id: idToDelete },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function () {
+                gridCriticalDocument.reload({ type: $('#sel_schedule').val() });
+            });
+        }
+
+    });
 });
+        
 
-
-
+});

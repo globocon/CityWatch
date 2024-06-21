@@ -501,6 +501,9 @@ $('#clientSiteActiveGuards tbody').on('click', '#btnUpArrow', function () {
 
 
 //});
+
+
+
 function getGpsAsHyperLink(value) {
     const gps = value.split(',');
     let lat = gps[0];
@@ -628,7 +631,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         {
             data: 'guardName',
 
-            width: '15%',
+            width: '18%',
             createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
                 // Define your conditions to add a class
                 if (rowData.isEnabled == 1) {
@@ -889,6 +892,8 @@ $('#guardInfoModal').on('shown.bs.modal', function (event) {
     $('#lbl_guard_name').html('');
     $('#lbl_guard_security_no').html('');
     $('#lbl_guard_state').html('');
+    $('#lbl_guard_email').html('');
+    $('#lbl_guard_mobile').html('');
     $('#lbl_guard_provider').html('');
 
     const button = $(event.relatedTarget);
@@ -906,8 +911,55 @@ $('#guardInfoModal').on('shown.bs.modal', function (event) {
             $('#lbl_guard_email').html(result.email);
             $('#lbl_guard_mobile').html(result.mobile);
             $('#lbl_guard_provider').html(result.provider);
+
+            // Now check if lbl_guard_provider has content and append the icon
+            var label = $('#lbl_guard_provider');
+            if (label.text().trim() !== '' && $('#contactCardIcon').length === 0) {
+                var iconHtml = '<span id="contactCardIcon" class="icon-button" data-toggle="modal" data-target="#crmSupplierDetailsModal"><i class="fa fa-vcard-o text-info ml-2"></i></span>';
+                label.html('<span class="company-name">' + result.provider + '</span>' + iconHtml);
+            }
+
         }
+    }).fail(function () {
+        alert("An error occurred while fetching guard details.");
     });
+    
+  
+});
+function showCrmSupplierDetailsModal(compName) {
+    $('#lbl_company_name').html('');
+    $('#lbl_abn').html('');
+    $('#lbl_landline').html('');
+    $('#lbl_email').html('');
+    $('#lbl_website').html('');
+
+    var csrfToken = $('input[name="__RequestVerificationToken"]').val();
+
+    $.ajax({
+        url: '/GuardDetails?handler=CrmSupplierData',
+        data: { companyName: compName },
+        type: 'GET',
+        headers: {
+            'RequestVerificationToken': csrfToken
+        },
+    }).done(function (result) {
+        if (result) {
+            $('#lbl_company_name').html(result.companyName);
+            $('#lbl_abn').html(result.companyABN);
+            $('#lbl_landline').html(result.companyLandline);
+            $('#lbl_email').html(result.email);
+            $('#lbl_website').html(result.website);
+        }
+    }).fail(function () {
+        alert("An error occurred while fetching supplier details.");
+    });
+}
+
+$(document).on('click', '#contactCardIcon', function () {
+    
+    var companyName = $(this).siblings('.company-name').text().trim();
+    showCrmSupplierDetailsModal(companyName);
+    $('#crmSupplierDetailsModal').modal('show');
 });
 const renderGuardInitialColumn = function (value, record, $cell, $displayEl) {
     if (record.guardId !== null) {
@@ -915,7 +967,44 @@ const renderGuardInitialColumn = function (value, record, $cell, $displayEl) {
     }
     else return value;
 }
+/* P4#70 to show crm details in guard details-start*/
 
+$('#crmSupplierDetailsModal').on('shown.bs.modal', function (event) {
+    isPaused = true;
+    $('#lbl_company_name').html('');
+    $('#lbl_abn').html('');
+    $('#lbl_landline').html('');
+    $('#lbl_email').html('');
+    $('#lbl_website').html('');
+    
+
+    const button = $(event.relatedTarget);
+   
+    const compName = button.data('id');
+    
+
+    $.ajax({
+        url: '/GuardDetails?handler=CrmSupplierData',
+        data: { companyName: compName },
+        type: 'GET',
+    }).done(function (result) {
+        if (result) {
+            $('#lbl_company_name').html(result.companyName);
+            $('#lbl_abn').html(result.companyABN);
+            $('#lbl_landline').html(result.companyLandline);
+            $('#lbl_email').html(result.email);
+            $('#lbl_website').html(result.website);
+        }
+    });
+});
+const renderCrmGuardInitialColumn = function (value, record, $cell, $displayEl) {
+    if (record.companyName !== null) {
+        return value + '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#crmSupplierDetailsModal" data-id="' + record.provider + '"></i>';
+    }
+    else return value;
+}
+
+/* P4#70 to show crm details in guard details-end*/
 
 /*to get the guards that are not available-start*/
 $('#btnNonActiveList').on('click', function () {
@@ -3660,6 +3749,7 @@ $("#hoverModal").on("hidden.bs.modal", function () {
 });
 $("#guardInfoModal").on("hidden.bs.modal", function () {
     isPaused = false;
+    $('#contactCardIcon').remove();
 });
 $("#guardLogBookHistoryModal").on("hidden.bs.modal", function () {
     isPaused = false;
@@ -3673,7 +3763,9 @@ $("#guardIncidentReportsHistoryModal").on("hidden.bs.modal", function () {
 $("#guardSWHistoryModal").on("hidden.bs.modal", function () {
     isPaused = false;
 });
-
+$("#crmSupplierDetailsModal").on("hidden.bs.modal", function () {
+    isPaused = false;
+});
 //hover display tooltip-end
 
 // Task p6#73_TimeZone issue -- added by Binoy - Start
@@ -3939,29 +4031,30 @@ $('#div_site_settings').on('click', '#delete_site_RCList', function () {
 // ################## RC Action List Edit End ###################
 /*p4-16 Data dump task1-start*/
 var guardSettings = $('#guard_settings_for_control_room').DataTable({
-    pageLength: 50,
+    pageLength: 10,
     autoWidth: false,
-    ajax: '/GuardDetails?handler=Guards',
+    ajax: '/GuardDetails?handler=ActiveGuards',
     columns: [
     { data: 'name', width: "10%" },
-    { data: 'securityNo', width: "10%" },
-    { data: 'initial', orderable: false, width: "5%" },
-    { data: 'mobile', width: "10%" },
-    { data: 'email', width: "13%" },
+    { data: 'securityNo', width: "8%" },
+    { data: 'initial', orderable: false, width: "4%" },
+    { data: 'mobile', width: "7%" },
+    { data: 'email', width: "11%" },
+        {
+            data: 'provider',
+            width: '11%',
+            orderable: false,
+            render: function (data, type, row) {
+                var provider = row.provider ? row.provider : ''; 
+                if (provider !== '') {
+                    return '&nbsp;&nbsp;&nbsp;' + provider +
+                        '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#crmSupplierDetailsModal" data-id="' + provider + '"></i>';
+                } else {
+                    return provider; // Return 'N/A' if provider is null or undefined
+                }
+            }
+        }
 
-    //{
-    //    data: 'isActive', className: "text-center", width: "10%", 'render': function (value, type, data) {
-    //        return renderGuardActiveCell(value, type, data);
-    //    }
-    //},
-    //{
-    //    targets: -1,
-    //    data: null,
-    //    defaultContent: '<button  class="btn btn-outline-primary mr-2" name="btn_edit_guard"><i class="fa fa-pencil mr-2"></i>Edit</button>',
-    //    orderable: false,
-    //    className: "text-center",
-    //    width: "8%"
-    //},
     ]
 });
 /*p4-16 Data dump task1-end*/

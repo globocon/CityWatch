@@ -12,6 +12,7 @@ namespace CityWatch.Data.Providers
     public interface IGuardDataProvider
     {
         List<Guard> GetGuards();
+        List<Guard> GetActiveGuards();
         int SaveGuard(Guard guard, out string initalsUsed);
         int UpdateGuard(Guard guard, string state, out string initalsUsed);
         List<GuardLogin> GetGuardLogins(int clientSiteId, DateTime fromDate, DateTime toDate);
@@ -71,6 +72,7 @@ namespace CityWatch.Data.Providers
         List<GuardComplianceAndLicense> GetGuardCompliancesAndLicenseHR(int guardId, HrGroup hrGroup);
         List<CriticalDocumentsClientSites> GetCriticalDocs(int clientSiteID);
          ClientSite GetClientSiteID(string ClientSite);
+        public DropboxDirectory GetDrobox();
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -85,16 +87,24 @@ namespace CityWatch.Data.Providers
         public List<Guard> GetGuards()
         {
             return _context.Guards.ToList();
+
+        }
+
+        //P4#70 to display only active guards PartB-C -x => x.IsActive == true-Added by Manju -start
+
+        public List<Guard> GetActiveGuards()
+        { 
+            return _context.Guards.Where(x => x.IsActive == true).OrderBy(x => x.Name).ToList();
         }
         public List<CriticalDocumentsClientSites> GetCriticalDocs(int clientSiteID)
         {
             return _context.CriticalDocumentsClientSites
-                .Include(x=>x.HRSettings)
-                    .ThenInclude(z => z.ReferenceNoNumbers)
-                    .Include(x => x.HRSettings)
-                 .ThenInclude(z => z.ReferenceNoAlphabets)
-                 .Include(x => x.HRSettings)
-                 .ThenInclude(z => z.HRGroups)
+                //.Include(x=>x.HRSettings)
+                //    .ThenInclude(z => z.ReferenceNoNumbers)
+                //    .Include(x => x.HRSettings)
+                // .ThenInclude(z => z.ReferenceNoAlphabets)
+                // .Include(x => x.HRSettings)
+                // .ThenInclude(z => z.HRGroups)
                 .Where(x=>x.ClientSiteId== clientSiteID).ToList();
         }
         public ClientSite GetClientSiteID(string ClientSite)
@@ -107,25 +117,25 @@ namespace CityWatch.Data.Providers
         //    foreach (var guard in guards)
         //    {
 
-        //        guard.IsActiveCount = CalculateIsActiveCountForGuard(guard.Id); 
-        //    }
+    //        guard.IsActiveCount = CalculateIsActiveCountForGuard(guard.Id); 
+    //    }
 
-        //    return guards;
-        //}
-        //public int CalculateIsActiveCountForGuard(int GuradID)
-        //{
-        //    var guardLoginsForId = _context.GuardLogins
-        //            .Where(z => z.GuardId == GuradID && z.ClientSite.IsActive && z.GuardLogs.Notes== "Logbook Logged In")
-        //            .Include(z => z.ClientSite)
-        //            .Include(z => z.Guard)
-        //            .Include(z => z.GuardLogs)
-        //            .ToList();
+    //    return guards;
+    //}
+    //public int CalculateIsActiveCountForGuard(int GuradID)
+    //{
+    //    var guardLoginsForId = _context.GuardLogins
+    //            .Where(z => z.GuardId == GuradID && z.ClientSite.IsActive && z.GuardLogs.Notes== "Logbook Logged In")
+    //            .Include(z => z.ClientSite)
+    //            .Include(z => z.Guard)
+    //            .Include(z => z.GuardLogs)
+    //            .ToList();
 
-        //    int isActiveCount = guardLoginsForId.Count;
-        //    return isActiveCount;
-        //}
+    //    int isActiveCount = guardLoginsForId.Count;
+    //    return isActiveCount;
+    //}
 
-        public Guard GetGuardDetailsbySecurityLicenseNo(string securityLicenseNo)
+    public Guard GetGuardDetailsbySecurityLicenseNo(string securityLicenseNo)
         {
             return _context.Guards.SingleOrDefault(x => x.SecurityNo.Trim() == securityLicenseNo.Trim());
         }
@@ -476,7 +486,8 @@ namespace CityWatch.Data.Providers
                 Description = x.Description,
                 HrGroup = x.HrGroup,
                 CurrentDateTime = x.CurrentDateTime,
-                LicenseNo = x.Guard.SecurityNo
+                LicenseNo = x.Guard.SecurityNo,
+                DateType=x.DateType,
             }).OrderBy(x=>x.FileName)
             .ToList();
 
@@ -564,6 +575,7 @@ namespace CityWatch.Data.Providers
                     guardComplianceToUpdate.ExpiryDate = guardComplianceandlicense.ExpiryDate;
                     guardComplianceToUpdate.FileName = guardComplianceandlicense.FileName;
                     guardComplianceToUpdate.HrGroup = guardComplianceandlicense.HrGroup;
+                    guardComplianceToUpdate.DateType = guardComplianceandlicense.DateType;
                 }
             }
             _context.SaveChanges();
@@ -616,10 +628,42 @@ namespace CityWatch.Data.Providers
         }
         public GuardComplianceAndLicense GetDescriptionList(HrGroup hrGroup, string Description,int GuardID)
         {
-            var Listt = _context.GuardComplianceLicense.ToList();
-            return _context.GuardComplianceLicense
-        .Where(x => x.HrGroup == hrGroup && x.Description== Description && x.GuardId==GuardID)
-        .FirstOrDefault();
+            var guardAddedDoc = _context.GuardComplianceLicense
+        .Where(x => x.HrGroup == hrGroup &&  x.GuardId == GuardID).ToList();
+
+            var valueReturn = _context.GuardComplianceLicense
+          .Where(x => x.HrGroup == hrGroup && x.Description == Description && x.GuardId == 0)
+          .FirstOrDefault();
+
+            if (guardAddedDoc!=null)
+            {
+                foreach(var doc in guardAddedDoc)
+                {
+                    var s = doc.Description.Trim();
+                    var firstSpaceIndex = s.IndexOf(' ');
+                    if (firstSpaceIndex != -1)
+                    {
+                        var firstString = s.Substring(0, firstSpaceIndex); // INAGX4
+                        var secondString = s.Substring(firstSpaceIndex + 1); // Agatti Island
+                        if (Description.Trim() == secondString.Trim())
+                        {
+                            valueReturn = doc;
+
+
+                        }
+                    }
+
+
+                }
+
+
+            }
+
+
+            return valueReturn;
+        //    return _context.GuardComplianceLicense
+        //.Where(x => x.HrGroup == hrGroup && x.Description== Description && x.GuardId==GuardID)
+        //.FirstOrDefault();
         }
             public HrSettings GetHRRefernceNo(int HRid,string Description)
         {
@@ -701,6 +745,10 @@ namespace CityWatch.Data.Providers
         public List<LicenseTypes> GetLicenseTypes()
         {
             return _context.LicenseTypes.ToList();
+        }
+        public DropboxDirectory GetDrobox()
+        {
+            return _context.DropboxDirectory.FirstOrDefault();
         }
     }
 }
