@@ -912,12 +912,13 @@ $('#guardInfoModal').on('shown.bs.modal', function (event) {
             $('#lbl_guard_mobile').html(result.mobile);
             $('#lbl_guard_provider').html(result.provider);
 
-            // Now check if lbl_guard_provider has content and append the icon
-            var label = $('#lbl_guard_provider');
-            if (label.text().trim() !== '' && $('#contactCardIcon').length === 0) {
-                var iconHtml = '<span id="contactCardIcon" class="icon-button" data-toggle="modal" data-target="#crmSupplierDetailsModal"><i class="fa fa-vcard-o text-info ml-2"></i></span>';
-                label.html('<span class="company-name">' + result.provider + '</span>' + iconHtml);
+            if (result.provider !== '') {
+                var providerHtml = '&nbsp;&nbsp;&nbsp;' + result.provider +
+                    '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#crmSupplierDetailsModal" data-id="' + result.provider + '"></i>';
+                $('#lbl_guard_provider').html(providerHtml);
             }
+
+           
 
         }
     }).fail(function () {
@@ -925,41 +926,6 @@ $('#guardInfoModal').on('shown.bs.modal', function (event) {
     });
     
   
-});
-function showCrmSupplierDetailsModal(compName) {
-    $('#lbl_company_name').html('');
-    $('#lbl_abn').html('');
-    $('#lbl_landline').html('');
-    $('#lbl_email').html('');
-    $('#lbl_website').html('');
-
-    var csrfToken = $('input[name="__RequestVerificationToken"]').val();
-
-    $.ajax({
-        url: '/GuardDetails?handler=CrmSupplierData',
-        data: { companyName: compName },
-        type: 'GET',
-        headers: {
-            'RequestVerificationToken': csrfToken
-        },
-    }).done(function (result) {
-        if (result) {
-            $('#lbl_company_name').html(result.companyName);
-            $('#lbl_abn').html(result.companyABN);
-            $('#lbl_landline').html(result.companyLandline);
-            $('#lbl_email').html(result.email);
-            $('#lbl_website').html(result.website);
-        }
-    }).fail(function () {
-        alert("An error occurred while fetching supplier details.");
-    });
-}
-
-$(document).on('click', '#contactCardIcon', function () {
-    
-    var companyName = $(this).siblings('.company-name').text().trim();
-    showCrmSupplierDetailsModal(companyName);
-    $('#crmSupplierDetailsModal').modal('show');
 });
 const renderGuardInitialColumn = function (value, record, $cell, $displayEl) {
     if (record.guardId !== null) {
@@ -989,11 +955,11 @@ $('#crmSupplierDetailsModal').on('shown.bs.modal', function (event) {
         type: 'GET',
     }).done(function (result) {
         if (result) {
-            $('#lbl_company_name').html(result.companyName);
-            $('#lbl_abn').html(result.companyABN);
-            $('#lbl_landline').html(result.companyLandline);
-            $('#lbl_email').html(result.email);
-            $('#lbl_website').html(result.website);
+            $('#lbl_company_name').html('&nbsp;' + result.companyName);
+            $('#lbl_abn').html('&nbsp;' + result.companyABN);
+            $('#lbl_landline').html('&nbsp;' + result.companyLandline);
+            $('#lbl_email').html('&nbsp;' + result.email);
+            $('#lbl_website').html('&nbsp;' + result.website);
         }
     });
 });
