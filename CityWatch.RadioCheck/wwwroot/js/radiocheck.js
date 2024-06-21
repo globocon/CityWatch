@@ -904,20 +904,20 @@ $('#guardInfoModal').on('shown.bs.modal', function (event) {
         data: { id: id },
         type: 'GET',
     }).done(function (result) {
-        if (result) {
-            $('#lbl_guard_name').html(result.name);
-            $('#lbl_guard_security_no').html(result.securityNo);
-            $('#lbl_guard_state').html(result.state);
-            $('#lbl_guard_email').html(result.email);
-            $('#lbl_guard_mobile').html(result.mobile);
-            $('#lbl_guard_provider').html(result.provider);
+        $('#lbl_guard_name').html('&nbsp;&nbsp;&nbsp;' + result.name);
+        $('#lbl_guard_security_no').html('&nbsp;&nbsp;&nbsp;' + result.securityNo);
+        $('#lbl_guard_state').html('&nbsp;&nbsp;&nbsp;' + result.state);
+        $('#lbl_guard_email').html('&nbsp;&nbsp;&nbsp;' + result.email);
+        $('#lbl_guard_mobile').html('&nbsp;&nbsp;&nbsp;' + result.mobile);
+        var provider = result.provider ? result.provider : '';
 
-            if (result.provider !== '') {
-                var providerHtml = '&nbsp;&nbsp;&nbsp;' + result.provider +
-                    '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#crmSupplierDetailsModal" data-id="' + result.provider + '"></i>';
-                $('#lbl_guard_provider').html(providerHtml);
-            }
+        $('#lbl_guard_provider').html('&nbsp;&nbsp;&nbsp;' + provider);
 
+        if (result.provider !== null && result.provider !== '') {
+            var providerHtml = '&nbsp;&nbsp;&nbsp;' + result.provider +
+                '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#crmSupplierDetailsModal" data-id="' + result.provider + '"></i>';
+            $('#lbl_guard_provider').html(providerHtml);
+        }
            
 
         }
