@@ -920,7 +920,7 @@ $('#guardInfoModal').on('shown.bs.modal', function (event) {
         }
            
 
-        }
+       
     }).fail(function () {
         alert("An error occurred while fetching guard details.");
     });
