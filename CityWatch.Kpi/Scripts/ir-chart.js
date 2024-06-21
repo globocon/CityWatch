@@ -197,9 +197,19 @@ function drawChart(callback, options, data) {
             .append('rect')
             .attr('x', x(0))
             .attr('y', function (d) { return y(d.key); })
-            .attr('width', function (d) { return x(d.value); })
+            .attr('width', function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return 0;
+                else
+                    return x(d.value);
+            })
             .attr('height', y.bandwidth())
-            .attr('fill', '#00468b')
+            .attr('fill', function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return '#FFFFFF';
+                else
+                    return '#00468b';                
+            })
 
         // values on bar chart
         svg.selectAll('text.bar')
@@ -207,14 +217,26 @@ function drawChart(callback, options, data) {
             .enter().append("text")
             .attr("font-size", "11px")
             .attr("font-family", "Arial")
-            .attr('x', function (d) { return x(d.value) + 8; })
-            .attr('y', function (d) { return y(d.key) + 12; })
+            .attr('x', function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return 0;
+                else
+                    return x(d.value) + 8;
+            })
+            .attr('y', function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return 0;
+                else
+                    return y(d.key) + 12;
+            })
             .attr('width', function (d) { return x(d.value); })
             .attr('height', y.bandwidth())
             .text(function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return 0;
                 if (data[i].value > 0)
                     return data[i].value
-            });
+            });           
     }
 }
 
