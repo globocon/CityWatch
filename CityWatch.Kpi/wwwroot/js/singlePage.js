@@ -2,7 +2,7 @@
  *  Fix for issues while opening one BS modal over another
  *  https://stackoverflow.com/questions/19305821/multiple-modals-overlay * 
  **/
-$(document).ready(function () {
+$(document).on('ready',function () {
     $(document).on('show.bs.modal', '.modal', function () {
         const zIndex = 1040 + 10 * $('.modal:visible').length;
         $(this).css('z-index', zIndex);
@@ -10,11 +10,13 @@ $(document).ready(function () {
     });
 
     $(document).on('hidden.bs.modal', '.modal', () => $('.modal:visible').length && $(document.body).addClass('modal-open'));
-
-
+        
 });
+
 $(function () {
     let gritdSmartWands;
+    let gridSiteDropboxSettings;
+
     var clientSiteId = getUrlVars()["clientSiteId"];
     $("#gl_client_site_id").val(window.sharedVariable);
     $("#ClientSiteKey_ClientSiteId").val(window.sharedVariable);
@@ -83,7 +85,7 @@ $(function () {
             gritdSmartWands.addRow({ 'id': -1, 'smartWandId': '', phoneNumber: '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);           
         }
     });
-
+    console.log('SinglePages.js loaded 1.1...');
 
     $('#btnSaveGuardSiteSettings').on('click', function () {
         var isUpdateDailyLog = false;
@@ -980,8 +982,115 @@ $(function () {
         }).fail(function () { });
     }
 
-});
+    
+    /*Dropbox settings-start*/
+    
+    
 
+    gridSiteDropboxSettings = $('#grid_Drpbx_Custom').grid({
+        dataSource: '/admin/settings?handler=CustomDropboxSettings&clientSiteId=' + $('#gl_client_site_id').val(),
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        inlineEditing: { mode: 'command' },
+        columns: [
+            { width: 0, field: 'id', title: 'Id', hidden: true },
+            { width: 0, field: 'clientSiteId', title: 'ClientSiteId', hidden: true },
+            { width: '250', field: 'dropboxFolderName', title: 'Folder Name', editor: true }
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+    
+    if (gridSiteDropboxSettings) {
+        gridSiteDropboxSettings.on('rowDataChanged', function (e, id, record) {
+            const data = $.extend(true, {}, record);
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '/admin/settings?handler=CustomDropboxSettings',
+                data: { record: data },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function () {
+                gridSiteDropboxSettings.reload({ clientSiteId: $('#gl_client_site_id').val() });
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isCustomDropboxSettingsAdding)
+                    isCustomDropboxSettingsAdding = false;
+            });
+        });
+
+        gridSiteDropboxSettings.on('rowRemoving', function (e, id, record) {
+            if (confirm('Are you sure to delete this dropbox folder ?')) {
+                const token = $('input[name="__RequestVerificationToken"]').val();
+                $.ajax({
+                    url: '/admin/settings?handler=DeleteCustomDropboxSettings',
+                    data: { id: record },
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': token },
+                }).done(function () {
+                    gridSiteDropboxSettings.reload({ clientSiteId: $('#gl_client_site_id').val() });
+                }).fail(function () {
+                    console.log('error');
+                }).always(function () {
+                    if (isCustomDropboxSettingsAdding)
+                        isCustomDropboxSettingsAdding = false;
+                });
+            }
+        });
+    }
+        
+    let isCustomDropboxSettingsAdding = false;
+
+    $('#add_new_custom_dropboxsetting').on('click', function () {
+
+        if (isCustomDropboxSettingsAdding) {
+            alert('Unsaved changes in the grid. Refresh the page');
+        } else {
+            isCustomDropboxSettingsAdding = true;
+            gridSiteDropboxSettings.addRow({ 'id': -1, 'dropboxFolderName': '', clientSiteId: $('#gl_client_site_id').val() }).edit(-1);
+        }
+    });
+
+
+    $('#save_site_dropboxsettings').on('click', function () {
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        const dt = {
+            Id: $('#Id').val(),
+            ClientSiteId: $('#gl_client_site_id').val(),
+            DropboxImagesDir: $('#DropboxImagesDir').val(),
+            IsThermalCameraSite: $('#IsThermalCameraSite').is(":checked"),
+            IsWeekendOnlySite: $('#IsWeekendOnlySite').is(":checked"),
+            KpiTelematicsAndStatistics: $('#KpiTelematicsAndStatistics').is(":checked"),
+            SmartWandPatrolReports: $('#SmartWandPatrolReports').is(":checked"),
+            MonthlyClientReport: $('#MonthlyClientReport').is(":checked")
+        };
+
+        $.ajax({
+            url: '/admin/settings?handler=SaveDropboxSettings',
+            data: { record: dt },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function (d) {
+            $('#_dropboxStatusDisplay').html(d.message);
+            if (d.success) {
+                $('#_dropboxStatusDisplay').addClass('text-success').removeClass('text-danger').show().delay(5000).fadeOut('slow');
+            } else {
+                $('#_dropboxStatusDisplay').addClass('text-danger').removeClass('text-success').show().delay(5000).fadeOut('slow');
+            }            
+        }).fail(function () {            
+            console.log('error');
+        }).always(function () {
+            
+        });
+
+    });
+    
+    /*Dropbox settings-end*/
+
+});
 
 
 

@@ -3,6 +3,7 @@ using CityWatch.Common.Services;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Kpi.Helpers;
+using Jering.Javascript.NodeJS;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -74,6 +75,11 @@ namespace CityWatch.Kpi.Services
                     var dbxFilePath = $"{clientSiteKpiSetting.DropboxImagesDir}/FLIR - Wand Recordings - IRs - Daily Logs/{reportFromDate.Date.Year}/{reportFromDate.Date:yyyyMM} - {reportFromDate.Date.ToString("MMMM").ToUpper()} DATA/x - Site KPI Telematics & Statistics/{clientSiteKpiSetting.ClientSite.Name} - Daily KPI Reports - {reportFromDate.Date:MMM yyyy}.pdf";
                     
                     await _dropboxUploadService.Upload(dropboxSettings, fileToUpload, dbxFilePath);
+
+                    if(clientSiteKpiSetting.MonthlyClientReport == true)
+                    {
+                        //await CreateCustomDropboxFolders(clientSiteKpiSetting, dropboxSettings, reportFromDate);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -82,6 +88,31 @@ namespace CityWatch.Kpi.Services
             }
 
             return true;
+        }
+
+        private async Task CreateCustomDropboxFolders(ClientSiteKpiSetting clientSiteKpiSetting, DropboxSettings dropboxSettings, DateTime reportFromDate)
+        {
+            var customDbxFolderPath = $"{clientSiteKpiSetting.DropboxImagesDir}/FLIR - Wand Recordings - IRs - Daily Logs/{reportFromDate.Date.Year}/{reportFromDate.Date:yyyyMM} - {reportFromDate.Date.ToString("MMMM").ToUpper()} DATA/";
+            var customdropboxfolders = _clientDataProvider.GetKpiSettingsCustomDropboxFolder(clientSiteKpiSetting.ClientSiteId).ToList();
+            if (customdropboxfolders.Count > 0)
+            {
+                foreach (var customdropboxfolder in customdropboxfolders)
+                {
+                    var dbxfldr = $"{customDbxFolderPath}{customdropboxfolder.DropboxFolderName}";
+                    try
+                    {
+                        await _dropboxUploadService.CreateFolder(dropboxSettings, dbxfldr);
+                        _logger.LogInformation($"Custom dropbox folder {dbxfldr} created.");
+                    }
+                    catch (Exception exp)
+                    {
+                        _logger.LogError(exp.Message);
+                        _logger.LogError(exp.InnerException.ToString());
+                    }
+
+                }
+            }
+
         }
     }
 }

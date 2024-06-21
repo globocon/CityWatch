@@ -1011,7 +1011,9 @@ $(function () {
     });
     /*code added for search client stop */
     var currentDiv = 1;
-    let gritdSmartWands;
+    let gritdSmartWands;   
+    let gridSiteDropboxSettings;
+
     $('#kpi-settings-modal').on('shown.bs.modal', function (event) {
         currentDiv = 1;
         $("#OtherSettingsNew").load('CriticalDocumentNew');
@@ -1019,95 +1021,14 @@ $(function () {
         const button = $(event.relatedTarget);
         $('#client_site_name').text(button.data('cs-name'))
        // $('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + button.data('cs-id'));
-
        
         $('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + button.data('cs-id'), function () {
             // This function will be executed after the content is loaded
             window.sharedVariable = button.data('cs-id');
             console.log('Load operation completed!');
             // You can add your additional code or actions here
-            console.log(button.data('cs-id'));
-            
-           // $("#OtherSettingsNew").load('settingsOther?clientSiteId=53');
-        
-             
-                // Hide the sub tabs initially
-               // $("#kpiSettingTab").hide();
-               // $("#RcActionList-tab").hide(); 
-                // Click event handler for the main tab
-                 
-        // $(".nav-link").click(function () {
-        ////         Hide the sub tabs              
- 
-        //     var clickedTabName = $(this).attr('id');
-             
-        //     if (clickedTabName === 'siteKpiSettings-tab') {
-        //         $("#hrcompliance").hide();
-        //         $("#siteKpiSettings").show();
-        //         $("#notes").hide();
-        //         $("#contractedmanningSettings").hide();
-        //     }
-        //     if (clickedTabName === 'contracted-manning-tab') {
-        //         $("#hrcompliance").hide();
-        //         $("#siteKpiSettings").hide();
-        //         $("#notes").hide();
-        //         $("#contractedmanningSettings").show();
-        //     }
-        //     if (clickedTabName === 'contracted-manning-tab')        
-        //     {                 
-        //         $("#hrcompliance").hide();
-        //         $("#siteKpiSettings").hide();
-        //         $("#notes").hide();
-        //         $("#contractedmanningSettings").show();
-        //     }
-        //     if (clickedTabName === 'notes-tab')
-        //     {
-        //         $("#contractedmanningSettings").hide();
-        //         $("#hrcompliance").hide();
-        //         $("#siteKpiSettings").hide();
-        //         $("#notes").show();
-        //     }
-        //     if (clickedTabName === 'hr-compliance-tab')
-        //     {
-        //         $("#hrcompliance").show();
-        //         $("#siteKpiSettings").hide();
-        //         $("#notes").hide();
-        //         $("#contractedmanningSettings").hide();             }
-             
-        //    if (clickedTabName === 'lb-tab') {
-        //        $("#KVSettingsNew").hide();
-        //        $("#kpiSettingTab").hide();
-        //        $("#siteKpiSettings").hide();
-        //        $("#RcActionList-tab").hide();
-        //        $("#RcActionListSettings").hide();                
-        //        $("#LBSettingsNew").show();
-        //    }
-        //    if (clickedTabName === 'kv-tab') {
-        //        $("#LBSettingsNew").hide();
-        //        $("#kpiSettingTab").hide();
-        //        $("#RcActionList-tab").hide();
-        //        $("#RcActionListSettings").hide();
-        //        $("#KVSettingsNew").show();
-        //        $("#siteKpiSettings").hide();
-        //    }
-        //    if (clickedTabName === 'kpi-tab') {
-        //        $("#LBSettingsNew").hide();
-        //        $("#KVSettingsNew").hide();
-        //        $("#RcActionList-tab").hide();
-        //        $("#RcActionListSettings").hide();
-        //        $("#kpiSettingTab").show();
-        //        $("#siteKpiSettings").show();
-        //    }
-        //    if (clickedTabName === 'rc-tab') {
-        //        $("#LBSettingsNew").hide();
-        //        $("#KVSettingsNew").hide();
-        //        $("#kpiSettingTab").hide();
-        //        $("#RcActionList-tab").show();
-        //        $("#RcActionListSettings").show();
-        //        $("#siteKpiSettings").hide();
-        //    }           
-
-        //});
+            console.log(button.data('cs-id'));     
+            $('#_dropboxStatusDisplay').html('');
         });
     });
       
