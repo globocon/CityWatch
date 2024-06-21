@@ -3584,37 +3584,100 @@
         $('#schRunStatusNew').html(messageHtml);
 
         if (HrVal != '' && DescVal != '' && FileVa != 'None') {
-            $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
+           
             if (ExpirayDateVal == '') {
-                confirm('Are you sure you not want to enter expiry Date');
+                if (confirm('Are you sure you not want to enter expiry Date')) {
+                    $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
+                    $('#loader').show();
+                    $.ajax({
+                        url: '/Admin/GuardSettings?handler=SaveGuardComplianceandlicanse',
+                        data: $('#frm_add_complianceandlicense').serialize(),
+                        type: 'POST',
+                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                    }).done(function (result) {
+                        if (result.status) {
+                            $('#addGuardCompliancesLicenseModal').modal('hide');
+                            const messageHtml1 = '';
+                            $('#schRunStatusNew').html(messageHtml1);
+                            gridGuardLicensesAndLicence.ajax.reload();
+
+                            if (!result.dbxUploaded) {
+                                displayGuardValidationSummary('compliancelicanseValidationSummary', 'Compliance details saved successfully. However, upload to Dropbox failed.');
+                            }
+                        } else {
+                            const messageHtml1 = '';
+                            $('#schRunStatusNew').html(messageHtml1);
+                            displayGuardValidationSummary('compliancelicanseValidationSummary', result.message);
+                        }
+                    }).always(function () {
+                        $('#loader').hide();
+                    });
+
+                }
             }
+            else {
+                $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
+                $('#loader').show();
+                $.ajax({
+                    url: '/Admin/GuardSettings?handler=SaveGuardComplianceandlicanse',
+                    data: $('#frm_add_complianceandlicense').serialize(),
+                    type: 'POST',
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                }).done(function (result) {
+                    if (result.status) {
+                        $('#addGuardCompliancesLicenseModal').modal('hide');
+                        const messageHtml1 = '';
+                        $('#schRunStatusNew').html(messageHtml1);
+                        gridGuardLicensesAndLicence.ajax.reload();
+
+                        if (!result.dbxUploaded) {
+                            displayGuardValidationSummary('compliancelicanseValidationSummary', 'Compliance details saved successfully. However, upload to Dropbox failed.');
+                        }
+                    } else {
+                        const messageHtml1 = '';
+                        $('#schRunStatusNew').html(messageHtml1);
+                        displayGuardValidationSummary('compliancelicanseValidationSummary', result.message);
+                    }
+                }).always(function () {
+                    $('#loader').hide();
+                });
+
+            }
+        }
+        else {
+            $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
+            $('#loader').show();
+            $('#loader').show();
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=SaveGuardComplianceandlicanse',
+                data: $('#frm_add_complianceandlicense').serialize(),
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.status) {
+                    $('#addGuardCompliancesLicenseModal').modal('hide');
+                    const messageHtml1 = '';
+                    $('#schRunStatusNew').html(messageHtml1);
+                    gridGuardLicensesAndLicence.ajax.reload();
+
+                    if (!result.dbxUploaded) {
+                        displayGuardValidationSummary('compliancelicanseValidationSummary', 'Compliance details saved successfully. However, upload to Dropbox failed.');
+                    }
+                } else {
+                    const messageHtml1 = '';
+                    $('#schRunStatusNew').html(messageHtml1);
+                    displayGuardValidationSummary('compliancelicanseValidationSummary', result.message);
+                }
+            }).always(function () {
+                $('#loader').hide();
+            });
+
         }
 
 
 
         
-        $('#loader').show();
-        $.ajax({
-            url: '/Admin/GuardSettings?handler=SaveGuardComplianceandlicanse',
-            data: $('#frm_add_complianceandlicense').serialize(),
-            type: 'POST',
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {
-            if (result.status) {
-                $('#addGuardCompliancesLicenseModal').modal('hide');
-                const messageHtml1 = '';
-                $('#schRunStatusNew').html(messageHtml1);
-                gridGuardLicensesAndLicence.ajax.reload();
-
-                if (!result.dbxUploaded) {
-                    displayGuardValidationSummary('compliancelicanseValidationSummary', 'Compliance details saved successfully. However, upload to Dropbox failed.');
-                }
-            } else {
-                displayGuardValidationSummary('compliancelicanseValidationSummary', result.message);
-            }
-        }).always(function () {
-            $('#loader').hide();
-        });
+       
     });
 
     $('#btn_save_guard_compliance').on('click', function () {
