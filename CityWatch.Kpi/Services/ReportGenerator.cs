@@ -163,11 +163,16 @@ namespace CityWatch.Kpi.Services
                 ClientSites = clientsitename,
             });
 
-            if (patrolDataReport.ResultsCount > 0)
-            {
-                var graphsTable = CreateGraphsTables(patrolDataReport);
-                doc.Add(graphsTable);
-            }
+            // Disable on 21-06-2024 by binoy to enable empty graph for zero data. Task P2#126 
+            //if (patrolDataReport.ResultsCount > 0)
+            //{
+            //    var graphsTable = CreateGraphsTables(patrolDataReport);
+            //    doc.Add(graphsTable);
+            //}
+
+            var graphsTable = CreateGraphsTables(patrolDataReport);
+            doc.Add(graphsTable);
+
             //NEWLY ADDED-END
             doc.Close();
             pdfDoc.Close();
