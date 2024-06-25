@@ -377,12 +377,25 @@ namespace CityWatch.Web.Pages.Guard
 
                             if (lastLogin.LoginDate < thresholdDate && lastLogin.Guard.IsActive)
                             {
-                                lastLogin.Guard.IsActive = false;
-                                _guardDataProvider.UpdateGuard(lastLogin.Guard, lastLogin.ClientSite.State, out initalsUsed);
-                                strResult = "You have'nt logged in for a while. Contact your administrator!.";
-                                success = true;
+                                if (guard.IsReActive)
+                                {
+                                    lastLogin.Guard.IsReActive = false;
+                                    _guardDataProvider.UpdateGuard(lastLogin.Guard, lastLogin.ClientSite.State, out initalsUsed);
+                                    success = false;
+                                }
+                                else
+                                {
+                                    lastLogin.Guard.IsActive = false;
+                                    _guardDataProvider.UpdateGuard(lastLogin.Guard, lastLogin.ClientSite.State, out initalsUsed);
+                                    strResult = "You have'nt logged in for a while. Contact your administrator!.";
+                                    success = true;
+                                }
                             }
-                            else { success = false; }
+                            else {
+                                
+                                success = false;
+
+                                 }
 
                         }
                         else
