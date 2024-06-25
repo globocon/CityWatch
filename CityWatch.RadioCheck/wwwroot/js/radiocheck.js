@@ -895,6 +895,8 @@ $('#guardInfoModal').on('shown.bs.modal', function (event) {
     $('#lbl_guard_email').html('');
     $('#lbl_guard_mobile').html('');
     $('#lbl_guard_provider').html('');
+    $('#lbl_guard_provider_no').html('');
+    
 
     const button = $(event.relatedTarget);
     const id = button.data('id');
@@ -912,6 +914,7 @@ $('#guardInfoModal').on('shown.bs.modal', function (event) {
         var provider = result.provider ? result.provider : '';
 
         $('#lbl_guard_provider').html('&nbsp;&nbsp;&nbsp;' + provider);
+        $('#lbl_guard_provider_no').html('&nbsp;&nbsp;&nbsp;' + result.providerNo);
 
         if (result.provider !== null && result.provider !== '') {
             var providerHtml = '&nbsp;&nbsp;&nbsp;' + result.provider +
