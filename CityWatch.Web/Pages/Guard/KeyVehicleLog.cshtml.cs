@@ -147,7 +147,7 @@ namespace CityWatch.Web.Pages.Guard
                 ViewData = new ViewDataDictionary<KeyVehicleLog>(ViewData, keyVehicleLog)
             };
         }
-        
+
         public JsonResult OnGetAuditHistory(string vehicleRego)
         {
             return new JsonResult(_viewDataService.GetKeyVehicleLogAuditHistory(vehicleRego).ToList());
@@ -198,7 +198,7 @@ namespace CityWatch.Web.Pages.Guard
 
                 }
                 var individualType = _viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.IndividualType).Where(x => x.Value == KeyVehicleLog.PersonType.ToString()).Select(x => x.Text).FirstOrDefault();
-                if (individualType == "CRM (BDM Activity)")
+                if (individualType == "CRM (Supplier/Partner)" || individualType == "CRM (BDM/Sales)")
                 {
                     var personalDetails = _guardLogDataProvider.GetKeyVehicleLogVisitorPersonalDetailsWithIndividualType(Convert.ToInt32(KeyVehicleLog.PersonType));
                     if (personalDetails.Count > 0)
@@ -510,6 +510,18 @@ namespace CityWatch.Web.Pages.Guard
             var keyVehicleLogDetails = _guardLogDataProvider.GetKeyVehicleLogProfileWithPersonalDetails(id);
             if (keyVehicleLogDetails != null)
             {
+                var CRMdetails = _guardLogDataProvider.GetKeyVehicleLogs(keyVehicleLogDetails.KeyVehicleLogProfile.VehicleRego.Trim());
+
+                if(CRMdetails.Count!=0)
+                {
+                    var temp = CRMdetails.FirstOrDefault();
+                    keyVehicleLogDetails.Website=temp.Website;
+                    keyVehicleLogDetails.Email= temp.Email;
+                    keyVehicleLogDetails.CompanyABN = temp.CompanyABN;
+                    keyVehicleLogDetails .CompanyLandline = temp.CompanyLandline;
+
+                }
+
 
 
                 keyVehicleLogDetails.Attachments = _viewDataService.GetKeyVehicleLogAttachments(
@@ -593,17 +605,17 @@ namespace CityWatch.Web.Pages.Guard
                         (trailer4Rego != string.Empty))
                 {
 
-                    var temp= _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open);
+                    var temp = _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open);
                     var isOpenInThisSite = _viewDataService.GetKeyVehicleLogs(logbookId, KvlStatusFilter.Open)
-                    .Any(x => 
+                    .Any(x =>
                     (x.Detail.Trailer1Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer2Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer3Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) || (x.Detail.Trailer4Rego == trailer1Rego && !string.IsNullOrEmpty(trailer1Rego)) ||
                     (x.Detail.Trailer1Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer2Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer3Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) || (x.Detail.Trailer4Rego == trailer2Rego && !string.IsNullOrEmpty(trailer2Rego)) ||
                     (x.Detail.Trailer1Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer2Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer3Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) || (x.Detail.Trailer4Rego == trailer3Rego && !string.IsNullOrEmpty(trailer3Rego)) ||
-                    (x.Detail.Trailer1Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer2Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer3Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer4Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego))) ;
+                    (x.Detail.Trailer1Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer2Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer3Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)) || (x.Detail.Trailer4Rego == trailer4Rego && !string.IsNullOrEmpty(trailer4Rego)));
 
                     if (isOpenInThisSite)
                         return new JsonResult(new { status = 1 });
-                   
+
 
                 }
 
@@ -1099,13 +1111,13 @@ namespace CityWatch.Web.Pages.Guard
         {
             string[] values = Emails.Split(',');
             List<string> pocEmails = new List<string>();
-           
-                foreach (var item in values)
-                {
-                    var poc = _guardLogDataProvider.GetEmailPOC(Convert.ToInt32(item));
-                    var email = poc.Email;
-                    pocEmails.Add(email);
-                }
+
+            foreach (var item in values)
+            {
+                var poc = _guardLogDataProvider.GetEmailPOC(Convert.ToInt32(item));
+                var email = poc.Email;
+                pocEmails.Add(email);
+            }
 
             return new JsonResult(new { pocEmails });
         }
@@ -1232,7 +1244,7 @@ namespace CityWatch.Web.Pages.Guard
                     _logger.LogError(ex.StackTrace);
                 }
             }
-           
+
             //try
             //{
             //    var keyVehicleLog = _guardLogDataProvider.GetKeyVehicleLogById(id);
@@ -1372,9 +1384,9 @@ namespace CityWatch.Web.Pages.Guard
         }
         public async Task<JsonResult> OnPostGetKeyvehicleemails(int id)
         {
-           
-                    var poc = _guardDataProvider.GetEmailPOCVehiclelog(id);
-                    
+
+            var poc = _guardDataProvider.GetEmailPOCVehiclelog(id);
+
             return new JsonResult(new { poc });
         }
         private KeyVehicleLog GetKeyVehicleLog()
@@ -1690,7 +1702,7 @@ namespace CityWatch.Web.Pages.Guard
             message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
             /* Mail Id added Bcc globoconsoftware for checking KPI Mail not getting Issue Start(date 17,01,2024) */
             message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
-           // message.Bcc.Add(new MailboxAddress("globoconsoftware2", "jishakallani@gmail.com"));
+            // message.Bcc.Add(new MailboxAddress("globoconsoftware2", "jishakallani@gmail.com"));
             /* Mail Id added Bcc globoconsoftware end */
             if (!string.IsNullOrEmpty(toAddresses))
             {
@@ -1938,7 +1950,7 @@ namespace CityWatch.Web.Pages.Guard
             var files = Request.Form.Files;
             var vehicle_rego = Request.Form["vehicle_rego"].ToString();
             var foundit = Request.Form["foundit"].ToString();
-            int Id= Convert.ToInt32(Request.Form["id"].ToString());
+            int Id = Convert.ToInt32(Request.Form["id"].ToString());
             if (files.Count == 1)
             {
                 var file = files[0];
@@ -1950,11 +1962,11 @@ namespace CityWatch.Web.Pages.Guard
                         var folderPath = string.Empty;
                         if (Id == 0)
                         {
-                            folderPath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", vehicle_rego ,"ComplianceDocuments");
+                            folderPath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", vehicle_rego, "ComplianceDocuments");
                         }
                         else
                         {
-                            folderPath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", Id.ToString() ,"ComplianceDocuments");
+                            folderPath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", Id.ToString(), "ComplianceDocuments");
                         }
                         if (!IO.Directory.Exists(folderPath))
                             IO.Directory.CreateDirectory(folderPath);
@@ -2006,16 +2018,16 @@ namespace CityWatch.Web.Pages.Guard
 
             return new JsonResult(new { attachmentId = Request.Form["attach_id"], success });
         }
-        public JsonResult OnGetComplianceDocumentsAttachments(string truck,int id)
+        public JsonResult OnGetComplianceDocumentsAttachments(string truck, int id)
         {
             var path = string.Empty;
-            if(id==0)
+            if (id == 0)
             {
                 path = truck + "/ComplianceDocuments/";
             }
             else
             {
-                path=id + "/ComplianceDocuments/";
+                path = id + "/ComplianceDocuments/";
             }
             var keyVehicleLogDetails = _viewDataService.GetKeyVehicleLogAttachments(
                  IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads"), path)
@@ -2031,38 +2043,38 @@ namespace CityWatch.Web.Pages.Guard
 
             return new JsonResult(keyVehicleLogDetails);
         }
-        public JsonResult OnPostDeleteComplianceDocumentsAttachment(string reportReference, string fileName, string vehicleRego,int id)
+        public JsonResult OnPostDeleteComplianceDocumentsAttachment(string reportReference, string fileName, string vehicleRego, int id)
 
         {
             var success = false;
             var filepath = string.Empty;
-            if(id==0)
+            if (id == 0)
             {
-                filepath= IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", vehicleRego,"ComplianceDocuments", fileName);
+                filepath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", vehicleRego, "ComplianceDocuments", fileName);
             }
             else
             {
-                filepath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", id.ToString(), "ComplianceDocuments", fileName) ;
+                filepath = IO.Path.Combine(_WebHostEnvironment.WebRootPath, "KvlUploads", id.ToString(), "ComplianceDocuments", fileName);
             }
-               
-                if (IO.File.Exists(filepath))
-                {
-                    try
-                    {
-                        IO.File.Delete(filepath);
-                        success = true;
-                    }
-                    catch
-                    {
 
-                    }
+            if (IO.File.Exists(filepath))
+            {
+                try
+                {
+                    IO.File.Delete(filepath);
+                    success = true;
                 }
-            
+                catch
+                {
+
+                }
+            }
+
             return new JsonResult(success);
         }
         //P7-115 DOCKET OUTPUT ISSUES-start
 
-        public IActionResult OnGetClientSiteToggle(int siteId,int toggleId)
+        public IActionResult OnGetClientSiteToggle(int siteId, int toggleId)
         {
 
 
@@ -2092,7 +2104,7 @@ namespace CityWatch.Web.Pages.Guard
 
             try
             {
-               // dbxUploaded = UploadGuardComplianceandLicenseToDropbox(guardComplianceandlicense);
+                // dbxUploaded = UploadGuardComplianceandLicenseToDropbox(guardComplianceandlicense);
                 guardComplianceandlicense.CurrentDateTime = DateTime.Now.ToString();
                 _guardDataProvider.SaveGuardComplianceandlicanse(guardComplianceandlicense);
             }

@@ -832,6 +832,9 @@ $(function () {
             else
                 $('#LandLineNumber').val(result.companyLandline);
             $('#Email').val(result.email);
+            $('#Website').val(result.website);
+            
+
             /*for cheking  the BDM is true-start*/
             let isBDM = $('#IsBDM').val(result.isBDM);
             $('#cbIsBDMOrSales').prop('checked', result.isBDM);
@@ -3537,6 +3540,7 @@ $(function () {
                 else
                     $('#LandLineNumber').val(result.companyLandline);
                 $('#Email').val(result.email);
+                $('#Website').val(result.website);
                 /*for cheking  the BDM is true-start*/
                 let isBDM = $('#IsBDM').val(result.isBDM);
                 $('#cbIsBDMOrSales').prop('checked', result.isBDM);
