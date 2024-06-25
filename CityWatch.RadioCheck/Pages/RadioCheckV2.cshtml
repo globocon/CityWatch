@@ -820,11 +820,11 @@
                                         </div>
                                         <div class="form-group row">
                                             <div class="col-md-9">
-                                                <input type="text" id="client_site_address" class="form-control mb-3" placeholder="Site address" readonly>
+                                                <input type="text" id="pn_client_site_address" class="form-control mb-3" placeholder="Site address" readonly>
                                             </div>
                                             <div class="form-group col-md-3 mx-0 pl-4">
-                                                <label class="form-label pull-left mt-1">GPS Map Link</label>                                                
-                                                <button class="btn btn-sm w-25 ml-2" id="btnsitegpsmap" title="Click to view in map"><i class="fa fa-map fa-2x text-dark"></i></button>
+                                                <label class="form-label pull-left mt-1">GPS Map Link</label> 
+                                                <a class="btn btn-sm w-25 ml-2" id="pn_sitegpsmap" target="_blank" title="Click to view in map"><i class="fa fa-map fa-2x text-dark"></i></a>
                                             </div>
                                         </div>
 
@@ -886,7 +886,7 @@
                                                             <label class="form-label text-left pl-0">Contracted Manning</label>
                                                         </div>
                                                         <div class="col-md-5">
-                                                            <button class="btn btn-outline-primary w-100" id="btncontractedmanning"><i class="fa fa-edit mr-1"></i>Edit</button>
+                                                            <button type="button" class="btn btn-outline-primary w-100" id="btncontractedmanning"><i class="fa fa-edit mr-1"></i>Edit</button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -899,7 +899,7 @@
                                                             <h6 class="font-weight-bold">Alarm Response</h6>
                                                         </div>
                                                         <div class="col-md-4 pull-right text-right">
-                                                            <button class="btn btn-sm w-50" id="btncopytoclipboard" title="Copy to Clipboard"><i class="fa fa-clipboard fa-2x text-success"></i></button>
+                                                            <button type="button" class="btn btn-sm w-50" id="btncopytoclipboard" title="Copy to Clipboard"><i class="fa fa-clipboard fa-2x text-success"></i></button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1070,6 +1070,7 @@
                 </button>
             </div>
             <div class="modal-body">
+                <input type="hidden" id="modelchoice" />
                 <div id="div_site_settings"></div>
             </div>
         </div>

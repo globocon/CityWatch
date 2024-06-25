@@ -2068,6 +2068,11 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     $('#dglClientSiteIdActionList').val('');
     $('#dglClientSiteIdActionList2').val('');
     $('#search_client_site').val('');
+    $('#pn_client_site_address').val('');
+    $('#pn_sitegpsmap').attr('href', "javascript:void(0)");
+    $('#pn_sitegpsmap').addClass("disabled-anchor-link");
+    //$('#pn_sitegpsmap').prop('disabled', true);
+    $('#btncontractedmanning').prop('disabled', true);
         
 
     var inpcallfun = $('#inpCallingFunction').val();
@@ -2094,6 +2099,7 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
 
         const clientSiteControl = $('#dglClientSiteIdActionList');
         clientSiteControl.html('');
+
     }
     /*p4-79 menu corrections-start*/
     $('#chkPersonalEmail').prop('checked', false);
@@ -2363,6 +2369,7 @@ $('#btnSendActionList').on('click', function () {
 });
 
 $('#dglClientSiteIdActionList').on('change', function () {
+    $('#btncontractedmanning').prop('disabled', true);
     $('#Site_Alarm_Keypad_code').val('');
     $('#Action1').val('');
     $('#site_Physical_key').val('');
@@ -2393,7 +2400,7 @@ $('#dglClientSiteIdActionList').on('change', function () {
             $('#Action5').val(data.action5);
             $('#Site_Combination_Look').val(data.siteCombinationLook);
             $('#txtComments').html(data.controlRoomOperator);
-
+            $('#btncontractedmanning').prop('disabled', false);
             if (data.imagepath != null) {
                 const myArray = data.imagepath.split(":-:");
                 $('#download_imageRCList').attr('href', myArray[1]);
@@ -2405,8 +2412,90 @@ $('#dglClientSiteIdActionList').on('change', function () {
             
         }       
     });
+    if (clientSiteId)
+        $('#btncontractedmanning').prop('disabled', false);
+        
+
+    // Get Site Address and map Details
+    getSiteAddressAndMapDetails(clientSiteId);
     sitebuttonSelectedClientSiteId = -1;
 });
+
+function getSiteAddressAndMapDetails(clientSiteId) {    
+    $('#pn_client_site_address').val('');
+    $('#pn_sitegpsmap').attr('href', "javascript:void(0)");
+    $('#pn_sitegpsmap').addClass("disabled-anchor-link");    
+    $.ajax({
+        url: '/RadioCheckV2?handler=GetClientsiteAddressAndMapDetails',
+        type: 'POST',
+        data: {
+            searchclientSiteId: parseInt(clientSiteId)
+        },
+        dataType: 'json',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (data) {        
+        var html = '';
+        if (data) {
+            $('#pn_client_site_address').val(data.address);
+            if (data.gps != null) {                
+                var gpslink = 'https://www.google.com/maps?q=' + data.gps;
+                $('#pn_sitegpsmap').attr('href', gpslink);
+                $('#pn_sitegpsmap').removeClass("disabled-anchor-link");
+            }
+        }        
+    });
+}
+
+
+$('#btncopytoclipboard').on('click', function () {
+    var clientSiteId = $('#dglClientSiteIdActionList').val();
+    if (clientSiteId === null) {
+        alert('Please select a site.');
+        return;
+    }
+        
+    /*Copy to clipboard*/
+    var textToCopy = "";
+    var nwl = "\r\n";
+
+    var cl_type = $("#dglClientTypeActionList option[value='" + $('#dglClientTypeActionList').val() + "']").text() + nwl;
+    var cl_site = $("#dglClientSiteIdActionList option[value='" + $('#dglClientSiteIdActionList').val() + "']").text() + nwl;
+    var cl_address = $('#pn_client_site_address').val() + nwl;
+    var cl_gps = ($('#pn_sitegpsmap').prop('href') == "javascript:void(0)" ? "" : $('#pn_sitegpsmap').prop('href')) + nwl + nwl;
+    var cl_keypadcode = $('#Site_Alarm_Keypad_code').val() + nwl;           
+    var cl_phykey = $('#site_Physical_key').val() + nwl; 
+    var cl_cmblock = $('#Site_Combination_Look').val() + nwl; 
+    var cl_act1 = $('#Action1').val() + nwl; 
+    var cl_act2 = $('#Action2').val() + nwl;
+    var cl_act3 = $('#Action3').val() + nwl;
+    var cl_act4 = $('#Action4').val() + nwl;
+    var cl_act5 = $('#Action5').val() + nwl;
+    var cl_txtcoment = $('#txtComments').val() + nwl;
+    var cl_txtmsgactlist = $('#txtMessageActionList').val() + nwl;
+                
+    textToCopy = `Client Type: ${cl_type}`;
+    textToCopy += `Client Site: ${cl_site}`;
+    textToCopy += `Address: ${cl_address}`;
+    textToCopy += `Google Map Link: ${cl_gps}`;
+    textToCopy += "Site Access" + nwl;
+    textToCopy += "===========" + nwl;    
+    textToCopy += `Alarm Keypad Code: ${cl_keypadcode}`;
+    textToCopy += `Physical key: ${cl_phykey}`;
+    textToCopy += `Combination Lock: ${cl_cmblock}${nwl}`;
+    textToCopy += "Alarm Response" + nwl;
+    textToCopy += "==============" + nwl;     
+    textToCopy += `Action 1: ${cl_act1}`;
+    textToCopy += `Action 2: ${cl_act2}`;
+    textToCopy += `Action 3: ${cl_act3}`;
+    textToCopy += `Action 4: ${cl_act4}`;
+    textToCopy += `Action 5: ${cl_act5}`;
+    textToCopy += `Comments For Control Room Operator: ${cl_txtcoment}`;
+    textToCopy += `New Outgoing Message: ${cl_txtmsgactlist}`;
+    navigator.clipboard.writeText(textToCopy)
+        .then(() => { alert('Copied to clipboard.') })
+        .catch((error) => {alert(`Copy failed. Error: ${error}`) })
+});
+
 
 
 $('#search_client_site').keypress(function (e) {
@@ -3805,6 +3894,290 @@ $('#itemList,#itemList2').on('click', '.btn-select-radio-status', function (even
 });
 
 
+// ################## Contracted Manning Edit Start ###################
+// ---> Need to refer Kpi settings screen also
+$('#btncontractedmanning').on('click', function (event) {
+    var csnme = $('#dglClientSiteIdActionList option:selected').text();
+    var csid = $('#dglClientSiteIdActionList option:selected').val();
+    if (csnme == '' || csid == '') {
+        console.log('Nothing selected...')
+        alert('Please select a site to edit.');
+        return;
+    }
+
+    $('#modelchoice').val('CONTRACTEDMANNING');
+    $('#kpi-settings-modal').modal('show');
+
+});
+
+$('#kpi-settings-modal').on('shown.bs.modal', function (event) {
+    ShowKpiModelChoice();
+});
+
+
+$('#div_site_settings').on('click', '#save_site_manning_settings', function () {
+    $.ajax({
+        url: '/RadioCheckV2?handler=ClientSiteManningKpiSettings',
+        type: 'POST',
+        data: $('#frm_site_manning_settings').serialize(),
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (data) {
+        if (data.success == 1) {
+            alert('Saved site manning details successfully');
+            $('#kpi-settings-modal').modal('hide');
+            $('#modelchoice').val('CONTRACTEDMANNING');
+            $('#kpi-settings-modal').modal('show');
+        }
+        else if (data.success == 2) {
+            $("input[name^='ClientSiteManningGuardKpiSettings']").val("");
+            $("input[name^='ClientSiteManningPatrolCarKpiSettings']").val("");
+            $('#ClientSiteManningGuardKpiSettings_1__PositionId').val($('#ClientSiteManningGuardKpiSettings_1__PositionId option:first').val());
+            $('#ClientSiteManningPatrolCarKpiSettings_1__PositionId').val($('#ClientSiteManningPatrolCarKpiSettings_1__PositionId option:first').val());
+            alert('Please add the site settings from site settings tab');
+        }
+        else if (data.success == 3) {
+            alert('Please select position');
+        }
+        else if (data.success == 4) {
+            alert('Error! Please try again');
+            $("input[name^='ClientSiteManningGuardKpiSettings']").val("");
+            $("input[name^='ClientSiteManningPatrolCarKpiSettings']").val("");
+        }
+        else if (data.success == 5) {
+            alert('Please enter a valid time for Start and End. These are invalid times ' + data.erorrMessage + ' .');
+        }
+
+    }).fail(function () { });
+});
+
+$('#div_site_settings').on('click', '#showDivButton', function () {
+
+    $('#divPatrolCar').show();
+    $('#divbtn').show();
+});
+
+$('#div_site_settings').on('click', '#delete_worker', function () {
+    if (confirm('Are you sure want to delete worker ?')) {
+        var buttonValue = $(this).val();
+        $.ajax({
+            url: '/RadioCheckV2?handler=DeleteWorker',
+            type: 'POST',
+            data: { settingsId: buttonValue },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.status) {
+                if (result.clientSiteId !== 0) {
+                    $('#kpi-settings-modal').modal('hide');
+                    $('#modelchoice').val('CONTRACTEDMANNING');
+                    $('#kpi-settings-modal').modal('show');
+                }
+            }
+            else
+                alert(result.message);
+        }).fail(function () { });
+    }
+});
+
+$('#div_site_settings').on('change', '#positionfilterGuard', function () {
+    const isChecked = $(this).is(':checked');
+    const filter = isChecked ? 1 : 2;
+
+    $.ajax({
+        url: '/RadioCheckV2?handler=OfficerPositions&filter=' + filter,
+        type: 'GET',
+        dataType: 'json'
+    }).done(function (data) {
+        $('#Report_Officer_Position').html('');
+        data.map(function (position) {
+            $('#Report_Officer_Position').append('<option value="' + position.value + '">' + position.text + '</option>');
+        });
+    });
+});
+
+$(".patrol-sum").on("input", function () {
+    alert('ddd');
+    calculateSum();
+});
+$('#div_site_settings').on('change', '#positionfilterPatrolCar', function () {
+
+    const isChecked = $(this).is(':checked');
+    const filter = isChecked ? 1 : 2;
+
+    $("#ClientSiteManningPatrolCarKpiSettings_0__Type").val(filter);
+    $("#ClientSiteManningPatrolCarKpiSettings_1__Type").val(filter);
+    $("#ClientSiteManningPatrolCarKpiSettings_2__Type").val(filter);
+    $("#ClientSiteManningPatrolCarKpiSettings_3__Type").val(filter);
+    $("#ClientSiteManningPatrolCarKpiSettings_4__Type").val(filter);
+    $("#ClientSiteManningPatrolCarKpiSettings_5__Type").val(filter);
+    $("#ClientSiteManningPatrolCarKpiSettings_6__Type").val(filter);
+    $("#ClientSiteManningPatrolCarKpiSettings_7__Type").val(filter);
+
+
+    calculateSumOfTextBoxValues();
+
+    $.ajax({
+        url: '/RadioCheckV2?handler=OfficerPositions&filter=' + filter,
+        type: 'GET',
+        dataType: 'json'
+    }).done(function (data) {
+        $('#ClientSiteManningPatrolCarKpiSettings_1__PositionId').html('');
+        data.map(function (position) {
+            $('#ClientSiteManningPatrolCarKpiSettings_1__PositionId').append('<option value="' + position.value + '">' + position.text + '</option>');
+        });
+    });
+
+});
+
+$('#div_site_settings').on('input', '#ClientSiteManningPatrolCarKpiSettings_0__NoOfPatrols,#ClientSiteManningPatrolCarKpiSettings_1__NoOfPatrols, #ClientSiteManningPatrolCarKpiSettings_2__NoOfPatrols, #ClientSiteManningPatrolCarKpiSettings_3__NoOfPatrols, #ClientSiteManningPatrolCarKpiSettings_4__NoOfPatrols, #ClientSiteManningPatrolCarKpiSettings_5__NoOfPatrols,#ClientSiteManningPatrolCarKpiSettings_6__NoOfPatrols,#ClientSiteManningPatrolCarKpiSettings_7__NoOfPatrols', function () {
+
+    calculateSumOfTextBoxValues();
+
+});
+
+$('#div_site_settings').on('input', '#ClientSiteManningGuardKpiSettings_0__NoOfPatrols,#ClientSiteManningGuardKpiSettings_1__NoOfPatrols, #ClientSiteManningGuardKpiSettings_2__NoOfPatrols, #ClientSiteManningGuardKpiSettings_3__NoOfPatrols, #ClientSiteManningGuardKpiSettings_4__NoOfPatrols, #ClientSiteManningGuardKpiSettings_5__NoOfPatrols,#ClientSiteManningGuardKpiSettings_6__NoOfPatrols,#ClientSiteManningGuardKpiSettings_7__NoOfPatrols', function () {
+
+    calculateSumOfTextBoxValues2();
+
+});
+
+$('#div_site_settings').on('input', '#ClientSiteManningGuardKpiSettings_8__NoOfPatrols, #ClientSiteManningGuardKpiSettings_9__NoOfPatrols, #ClientSiteManningGuardKpiSettings_10__NoOfPatrols, #ClientSiteManningGuardKpiSettings_11__NoOfPatrols, #ClientSiteManningGuardKpiSettings_12__NoOfPatrols,#ClientSiteManningGuardKpiSettings_13__NoOfPatrols,#ClientSiteManningGuardKpiSettings_14__NoOfPatrols,#ClientSiteManningGuardKpiSettings_15__NoOfPatrols', function () {
+
+    calculateSumOfTextBoxValues3();
+
+});
+
+$('#div_site_settings').on('input', '#ClientSiteManningGuardKpiSettings_16__NoOfPatrols,#ClientSiteManningGuardKpiSettings_17__NoOfPatrols, #ClientSiteManningGuardKpiSettings_18__NoOfPatrols, #ClientSiteManningGuardKpiSettings_19__NoOfPatrols, #ClientSiteManningGuardKpiSettings_20__NoOfPatrols, #ClientSiteManningGuardKpiSettings_21__NoOfPatrols,#ClientSiteManningGuardKpiSettings_22__NoOfPatrols,#ClientSiteManningGuardKpiSettings_23__NoOfPatrols', function () {
+
+    calculateSumOfTextBoxValues4();
+
+});
+
+function calculateSumOfTextBoxValues() {
+
+    if ($("#positionfilterPatrolCar").prop('checked') == true) {
+
+
+        // Get the values from textbox1 and convert them to numbers
+        var value1 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_0__NoOfPatrols').val()) || 0;
+        var value2 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_1__NoOfPatrols').val()) || 0;
+        var value3 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_2__NoOfPatrols').val()) || 0;
+        var value4 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_3__NoOfPatrols').val()) || 0;
+        var value5 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_4__NoOfPatrols').val()) || 0;
+        var value6 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_5__NoOfPatrols').val()) || 0;
+        var value7 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_6__NoOfPatrols').val()) || 0;
+        var value8 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_7__NoOfPatrols').val()) || 0;
+        // Calculate the sum
+        var sum = value1 + value2 + value3 + value4 + value5 + value6 + value7 + value8;
+        // Update the value in textbox2
+        if (sum !== 0) { $('#monthlyHrsAddNew').val(sum); }
+        $('#monthlyHrsTxtAddNew').text('Total Patrols :');
+        $('#lbl_ManningPatrolCar_3').text('No of Patrols');
+    }
+    else {
+        $('#monthlyHrsTxtAddNew').text('Monthly Hrs :');
+        $('#lbl_ManningPatrolCar_3').text('Workers');
+        $('#monthlyHrsAddNew').val('');
+    }
+
+}
+
+function calculateSumOfTextBoxValues2() {
+
+    var check = $("#positionfilterGuard_0").prop('checked');
+    if ($("#positionfilterGuard_0").prop('checked') == true) {
+
+        // Get the values from textbox1 and convert them to numbers
+        var value1 = parseFloat($('#ClientSiteManningGuardKpiSettings_0__NoOfPatrols').val()) || 0;
+        var value2 = parseFloat($('#ClientSiteManningGuardKpiSettings_1__NoOfPatrols').val()) || 0;
+        var value3 = parseFloat($('#ClientSiteManningGuardKpiSettings_2__NoOfPatrols').val()) || 0;
+        var value4 = parseFloat($('#ClientSiteManningGuardKpiSettings_3__NoOfPatrols').val()) || 0;
+        var value5 = parseFloat($('#ClientSiteManningGuardKpiSettings_4__NoOfPatrols').val()) || 0;
+        var value6 = parseFloat($('#ClientSiteManningGuardKpiSettings_5__NoOfPatrols').val()) || 0;
+        var value7 = parseFloat($('#ClientSiteManningGuardKpiSettings_6__NoOfPatrols').val()) || 0;
+        var value8 = parseFloat($('#ClientSiteManningGuardKpiSettings_7__NoOfPatrols').val()) || 0;
+        // Calculate the sum
+        var sum = value1 + value2 + value3 + value4 + value5 + value6 + value7 + value8;
+        // Update the value in textbox2
+        $('#monthlyHrs_0').val(sum);
+
+
+    }
+
+}
+
+function calculateSumOfTextBoxValues3() {
+
+    var check = $("#positionfilterGuard_8").prop('checked');
+    if ($("#positionfilterGuard_8").prop('checked') == true) {
+
+        // Get the values from textbox1 and convert them to numbers
+        var value1 = parseFloat($('#ClientSiteManningGuardKpiSettings_8__NoOfPatrols').val()) || 0;
+        var value2 = parseFloat($('#ClientSiteManningGuardKpiSettings_9__NoOfPatrols').val()) || 0;
+        var value3 = parseFloat($('#ClientSiteManningGuardKpiSettings_10__NoOfPatrols').val()) || 0;
+        var value4 = parseFloat($('#ClientSiteManningGuardKpiSettings_11__NoOfPatrols').val()) || 0;
+        var value5 = parseFloat($('#ClientSiteManningGuardKpiSettings_12__NoOfPatrols').val()) || 0;
+        var value6 = parseFloat($('#ClientSiteManningGuardKpiSettings_13__NoOfPatrols').val()) || 0;
+        var value7 = parseFloat($('#ClientSiteManningGuardKpiSettings_14__NoOfPatrols').val()) || 0;
+        var value8 = parseFloat($('#ClientSiteManningGuardKpiSettings_15__NoOfPatrols').val()) || 0;
+        // Calculate the sum
+        var sum = value1 + value2 + value3 + value4 + value5 + value6 + value7 + value8;
+        // Update the value in textbox2
+        $('#monthlyHrs_8').val(sum);
+
+
+    }
+
+}
+
+function calculateSumOfTextBoxValues4() {
+
+    var check = $("#positionfilterGuard_16").prop('checked');
+    if ($("#positionfilterGuard_16").prop('checked') == true) {
+
+        // Get the values from textbox1 and convert them to numbers
+        var value1 = parseFloat($('#ClientSiteManningGuardKpiSettings_16__NoOfPatrols').val()) || 0;
+        var value2 = parseFloat($('#ClientSiteManningGuardKpiSettings_17__NoOfPatrols').val()) || 0;
+        var value3 = parseFloat($('#ClientSiteManningGuardKpiSettings_18__NoOfPatrols').val()) || 0;
+        var value4 = parseFloat($('#ClientSiteManningGuardKpiSettings_19__NoOfPatrols').val()) || 0;
+        var value5 = parseFloat($('#ClientSiteManningGuardKpiSettings_20__NoOfPatrols').val()) || 0;
+        var value6 = parseFloat($('#ClientSiteManningGuardKpiSettings_21__NoOfPatrols').val()) || 0;
+        var value7 = parseFloat($('#ClientSiteManningGuardKpiSettings_22__NoOfPatrols').val()) || 0;
+        var value8 = parseFloat($('#ClientSiteManningGuardKpiSettings_23__NoOfPatrols').val()) || 0;
+
+        // Calculate the sum
+        var sum = value1 + value2 + value3 + value4 + value5 + value6 + value7 + value8;
+        // Update the value in textbox2
+        $('#monthlyHrs_16').val(sum);
+
+
+    }
+
+}
+
+
+// ################## Contracted Manning Edit End ###################
+
+
+function ShowKpiModelChoice() {
+    $('#div_site_settings').html('');
+    var csnme = $('#dglClientSiteIdActionList option:selected').text();
+    var csid = $('#dglClientSiteIdActionList option:selected').val();
+    $('#client_site_name').text(csnme)
+    var choice = $('#modelchoice').val();
+
+    $('#div_site_settings').load('/RadioCheckV2?handler=ClientSiteKpiSettings&siteId=' + csid, function () {
+        // This function will be executed after the content is loaded
+        // window.sharedVariable = button.data('cs-id');
+        // console.log('Load operation completed!');
+        // You can add your additional code or actions here
+        // console.log(csnme);    
+        if (choice == 'RCACTIONLIST')
+            $('#div_kpi_rc_contractedmanning').html('');            
+        else if (choice == 'CONTRACTEDMANNING')
+            $('#div_kpi_rc_action_list').html('');
+    });
+}
+
 // ################## RC Action List Edit Start ###################
 // ---> Need to refer Kpi settings screen also
 
@@ -3828,25 +4201,9 @@ $('#btn_Edit_ActionList').on('click', function (event) {
         alert('Please select a site to edit.');
         return;
     }      
-   
+
+    $('#modelchoice').val('RCACTIONLIST');
     $('#kpi-settings-modal').modal('show');
-
-});
-
-
-$('#kpi-settings-modal').on('shown.bs.modal', function (event) {
-    $('#div_site_settings').html('');    
-    var csnme = $('#dglClientSiteIdActionList option:selected').text();
-    var csid = $('#dglClientSiteIdActionList option:selected').val();
-    $('#client_site_name').text(csnme)
-
-    $('#div_site_settings').load('/RadioCheckV2?handler=ClientSiteKpiSettings&siteId=' + csid, function () {
-        // This function will be executed after the content is loaded
-        // window.sharedVariable = button.data('cs-id');
-        // console.log('Load operation completed!');
-        // You can add your additional code or actions here
-        // console.log(csnme);    
-    });
 
 });
 
@@ -4048,8 +4405,6 @@ gridSiteSearchradio = $('#client_site_RadioSearch').grid({
         { field: 'clientType', title: 'Client Type', width: 180, renderer: function (value, record) { return value ? value.name : ''; } },
         { field: 'name', title: 'Client Site', width: 180, editor: false },
         { width: 100, renderer: settingsButtonRenderer },
-
-
     ],
     initialized: function (e) {
         $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');

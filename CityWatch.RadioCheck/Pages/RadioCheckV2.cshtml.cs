@@ -20,6 +20,7 @@ using static iText.Kernel.Pdf.Function.PdfFunction;
 using Dropbox.Api.Users;
 using Microsoft.AspNetCore.Hosting;
 using CityWatch.RadioCheck.Helpers;
+using CityWatch.RadioCheck.Services;
 
 using iText.Kernel.Crypto.Securityhandler;
 
@@ -34,9 +35,11 @@ namespace CityWatch.RadioCheck.Pages.Radio
         private readonly IClientDataProvider _clientDataProvider;
         private readonly Settings _settings;
         private readonly IGuardDataProvider _guardDataProvider;
+        private readonly IViewDataService _viewDataService;
+
         public RadioCheckNewModel(IGuardLogDataProvider guardLogDataProvider, IOptions<EmailOptions> emailOptions,
             IConfiguration configuration, ISmsSenderProvider smsSenderProvider, IClientDataProvider clientDataProvider, IGuardDataProvider guardDataProvider,
-            IOptions<Settings> settings)
+            IOptions<Settings> settings, IViewDataService viewDataService)
         {
             _guardLogDataProvider = guardLogDataProvider;
             _EmailOptions = emailOptions.Value;
@@ -45,10 +48,12 @@ namespace CityWatch.RadioCheck.Pages.Radio
             _clientDataProvider = clientDataProvider;
             _settings = settings.Value;
             _guardDataProvider = guardDataProvider;
+            _viewDataService = viewDataService;
         }
         public int UserId { get; set; }
         public int GuardId { get; set; }
 
+        public IViewDataService ViewDataService { get { return _viewDataService; } }
 
         public int InActiveGuardCount { get; set; }
 
@@ -1555,7 +1560,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
             }
 
             return new JsonResult(clientSites);
-        }
+        }  
+
         public JsonResult OnPostSearchClientsiteRCList(string searchTerm, int clientSiteId)
         {
             //int clientSiteId;
@@ -1565,6 +1571,97 @@ namespace CityWatch.RadioCheck.Pages.Radio
             }
 
             return new JsonResult(_guardLogDataProvider.GetActionlist(clientSiteId));
+        }
+
+        public JsonResult OnPostGetClientsiteAddressAndMapDetails(int searchclientSiteId)
+        {
+            ClientSite sitesDetails = new ClientSite();
+            if (searchclientSiteId > 0)
+            {
+                sitesDetails = _guardLogDataProvider.GetClientSites(searchclientSiteId).FirstOrDefault();
+            }
+            return new JsonResult(sitesDetails);
+        }
+        public JsonResult OnPostClientSiteManningKpiSettings(ClientSiteKpiSetting clientSiteKpiSetting)
+        {
+            var success = 0;
+            var clientSiteId = 0;
+            var erorrMessage = string.Empty;
+            try
+            {
+                if (clientSiteKpiSetting != null)
+                {
+                    if (clientSiteKpiSetting.Id != 0)
+                    {
+                        clientSiteId = clientSiteKpiSetting.ClientSiteId;
+                        var positionIdGuard = clientSiteKpiSetting.ClientSiteManningGuardKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
+                        var positionIdPatrolCar = clientSiteKpiSetting.ClientSiteManningPatrolCarKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
+                        var InvalidTimes = _clientDataProvider.ValidDateTime(clientSiteKpiSetting);
+                        if (InvalidTimes.Trim() == string.Empty)
+                        {
+                            if (positionIdGuard != null || positionIdPatrolCar != null)
+                            {
+                                success = _clientDataProvider.SaveClientSiteManningKpiSetting(clientSiteKpiSetting);
+                            }
+                            else
+                            {
+                                success = 3;
+                            }
+                        }
+                        else
+                        {
+                            erorrMessage = InvalidTimes;
+                            success = 5;
+                        }
+                    }
+                    else
+                    {
+                        success = 2;
+                    }
+                }
+                else
+                {
+                    success = 4;
+                }
+            }
+            catch
+            {
+                success = 4;
+            }
+
+            return new JsonResult(new { success, clientSiteId, erorrMessage });
+        }
+
+        public JsonResult OnPostDeleteWorker(string settingsId)
+        {
+            var status = true;
+            var message = "Success";
+            var clientSiteId = 0;
+            try
+            {
+                if (settingsId != string.Empty)
+                {
+                    var split = settingsId.Split('_');
+                    if (split.Length > 0)
+                    {
+                        var settId = int.Parse(split[0]);
+                        var orderId = int.Parse(split[1]);
+                        clientSiteId = int.Parse(split[2]);
+                        _clientDataProvider.RemoveWorker(settId, orderId);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+            return new JsonResult(new { status, message, clientSiteId });
+        }
+
+        public IActionResult OnGetOfficerPositions(OfficerPositionFilterManning filter)
+        {
+            return new JsonResult(ViewDataService.GetOfficerPositions((OfficerPositionFilterManning)filter));
         }
         //code added for ActionListSend stop
 

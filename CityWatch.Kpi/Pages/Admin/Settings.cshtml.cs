@@ -1,5 +1,6 @@
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
+using CityWatch.Data.Enums;
 using CityWatch.Kpi.Models;
 using CityWatch.Kpi.Services;
 using Microsoft.AspNetCore.Hosting;

@@ -12,18 +12,7 @@ using System.Linq;
 
 
 namespace CityWatch.Kpi.Services
-{
-
-    public enum OfficerPositionFilterManning
-    {
-        All = 0,
-
-        PatrolOnly = 1,
-
-        NonPatrolOnly = 2,
-
-        SecurityOnly = 3
-    }
+{ 
     public interface IViewDataService
     {
         List<SelectListItem> ClientTypes { get; }
