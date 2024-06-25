@@ -1,18 +1,6 @@
-﻿/** 
- *  Fix for issues while opening one BS modal over another
- *  https://stackoverflow.com/questions/19305821/multiple-modals-overlay * 
- **/
-
-$(document).on('ready',function () {
-
-    $(document).on('show.bs.modal', '.modal', function () {
-        const zIndex = 1040 + 10 * $('.modal:visible').length;
-        $(this).css('z-index', zIndex);
-        setTimeout(() => $('.modal-backdrop').not('.modal-stack').css('z-index', zIndex - 1).addClass('modal-stack'));
-    });
-
-    $(document).on('hidden.bs.modal', '.modal', () => $('.modal:visible').length && $(document.body).addClass('modal-open'));
-
+﻿
+$(document).ready(function () {
+       
 });
 
 $(function () {
@@ -598,19 +586,21 @@ $(function () {
         XLSX.writeFile(excelFile, name + type);
     });
     $('#add_client_site_key').on('click', function () {
-        resetClientSiteKeyModal();
-
+       resetClientSiteKeyModal();
         $('#client-site-key-modal-new').modal('show');
        // $('#client-site-key-modal-new').appendTo("body").modal('show');
-        
     });
-    $('#btnkeyclose').on('click', function () {
-        
-
-        $('#client-site-key-modal-new').modal('hide');
-        // $('#client-site-key-modal-new').appendTo("body").modal('show');
-
+          
+    $('#btnkeyclose').on('click', function () {       
+        $('#client-site-key-modal-new').modal('hide');       
     });
+
+    $('#client-site-key-modal-new').on('hidden.bs.modal', function () {
+        $('body').addClass('modal-open'); // Add the modal-open class to the body to prevent scrolling
+        $('#kpi-settings-modal').focus(); // Refocus on the second modal
+    });
+
+
     function loadClientSiteKeyModal(data) {
         $('#ClientSiteKey_Id').val(data.id);
         $('#ClientSiteKey_KeyNo').val(data.keyNo);
@@ -624,7 +614,6 @@ $(function () {
         $('#ClientSiteKey_KeyNo').val('');
         $('#ClientSiteKey_Description').val('');
         $('#csKeyValidationSummary').html('');
-        //$('#client-site-key-modal-new').modal('hide');
         $('#client-site-key-modal-new').modal('hide');
     }
     $('#btn_save_cs_key').on('click', function () {
