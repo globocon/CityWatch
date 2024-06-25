@@ -818,14 +818,23 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <div class="form-group row">
+                                            <div class="col-md-9">
+                                                <input type="text" id="client_site_address" class="form-control mb-3" placeholder="Site address" readonly>
+                                            </div>
+                                            <div class="form-group col-md-3 mx-0 pl-4">
+                                                <label class="form-label pull-left mt-1">GPS Map Link</label>                                                
+                                                <button class="btn btn-sm w-25 ml-2" id="btnsitegpsmap" title="Click to view in map"><i class="fa fa-map fa-2x text-dark"></i></button>
+                                            </div>
+                                        </div>
 
                                         <div id="searchResults" class="form-group row mt-2">
                                         </div>
 
                                         <div class="form-group row mt-2">
                                             <div class="form-group col-md-6">
-                                                <div class="form-group col-md-12">
-                                                    <div class="row">
+                                                <div class="form-group col-md-12 mb-4">
+                                                    <div class="row mb-1">
                                                         <div class="col-md-12">
                                                             <h6 class="font-weight-bold">Site Access</h6>
                                                         </div>
@@ -867,7 +876,17 @@
                                                             <label class="form-label text-left pl-0">Site Alarm SOP'S</label>
                                                         </div>
                                                         <div class="col-md-5">
-                                                            <a class="btn btn-outline-primary w-100" id="download_imageRCList" target="_blank"><i class="fa fa-download"></i></a> @*Download*@
+                                                            <a class="btn btn-outline-primary w-100 text-primary" id="download_imageRCList" target="_blank"><i class="fa fa-download mr-1"></i>Download</a> @*Download*@
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group col-md-12">
+                                                    <div class="row">
+                                                        <div class="col-md-7">
+                                                            <label class="form-label text-left pl-0">Contracted Manning</label>
+                                                        </div>
+                                                        <div class="col-md-5">
+                                                            <button class="btn btn-outline-primary w-100" id="btncontractedmanning"><i class="fa fa-edit mr-1"></i>Edit</button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -876,8 +895,11 @@
                                             <div class="form-group col-md-6">
                                                 <div class="form-group col-md-12">
                                                     <div class="row">
-                                                        <div class="col-md-12">
+                                                        <div class="col-md-8">
                                                             <h6 class="font-weight-bold">Alarm Response</h6>
+                                                        </div>
+                                                        <div class="col-md-4 pull-right text-right">
+                                                            <button class="btn btn-sm w-50" id="btncopytoclipboard" title="Copy to Clipboard"><i class="fa fa-clipboard fa-2x text-success"></i></button>
                                                         </div>
                                                     </div>
                                                 </div>
