@@ -21,6 +21,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -133,19 +134,21 @@ namespace CityWatch.Kpi.Services
                 {
                     // To add 3rd Page 
                     var HRGroupList = _viewDataService.GetKpiGuardHRGroup();
-                    for (int i = 0; i < HRGroupList.Count; i++) { 
-                    doc.Add(new AreaBreak());
+                    for (int i = 0; i < HRGroupList.Count; i++)
+                    {
+                        var ClientSiteState = _clientDataProvider.GetClientSites(null).Where(x => x.Id == clientSiteId).FirstOrDefault().State;
+                        doc.Add(new AreaBreak());
 
-                    doc.Add(headerTable);
+                        doc.Add(headerTable);
                         var hrGroupName = HRGroupList[i];
-                        var tableGuardDetailsData = CreateGuardDetailsLicenseAndCompliance(monthlyDataGuard, monthlyDataGuardCompliance, hrGroupName.Name, hrGroupName.Id);
-                    doc.Add(tableGuardDetailsData);
+                        var tableGuardDetailsData = CreateGuardDetailsLicenseAndCompliance(monthlyDataGuard, monthlyDataGuardCompliance, hrGroupName.Name, hrGroupName.Id, clientSiteId, ClientSiteState);
+                        doc.Add(tableGuardDetailsData);
                         doc.Add(new Paragraph("\n"));
-                        var tableGuardDetailsData1 = CreateGuardDetailsLicenseAndComplianceHR(monthlyDataGuard, monthlyDataGuardCompliance, hrGroupName.Name, hrGroupName.Id);
+                        var tableGuardDetailsData1 = CreateGuardDetailsLicenseAndComplianceHR(monthlyDataGuard, monthlyDataGuardCompliance, hrGroupName.Name, hrGroupName.Id, clientSiteId, ClientSiteState);
                         doc.Add(tableGuardDetailsData1);
                     }
                 }
-               
+
             }
             //NEWLY ADDED-START
             doc.Add(new AreaBreak());
@@ -612,14 +615,14 @@ namespace CityWatch.Kpi.Services
                 var Shift1GuardName = (data.Shift1GuardName.Length > 0 ? data.Shift1GuardName.Split("\n")[0] : string.Empty);
                 Shift1GuardName = Shift1GuardName.Length > 16 ? Shift1GuardName.Substring(0, 16) : Shift1GuardName; ;
                 kpiGuardTable.AddCell(CreateDataCell(Shift1GuardName));
-                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardSecurityNo.Length > 0 ? data.Shift1GuardSecurityNo.Split("\n")[0] : string.Empty));                                
+                kpiGuardTable.AddCell(CreateDataCell(data.Shift1GuardSecurityNo.Length > 0 ? data.Shift1GuardSecurityNo.Split("\n")[0] : string.Empty));
                 kpiGuardTable.AddCell(CreateHrDataCell((data.Shift1GuardHr1.Length > 0 ? data.Shift1GuardHr1.Split(",")[0] : string.Empty)));
                 kpiGuardTable.AddCell(CreateHrDataCell((data.Shift1GuardHr2.Length > 0 ? data.Shift1GuardHr2.Split(",")[0] : string.Empty)));
                 kpiGuardTable.AddCell(CreateHrDataCell((data.Shift1GuardHr3.Length > 0 ? data.Shift1GuardHr3.Split(",")[0] : string.Empty)));
 
                 var Shift2GuardName = (data.Shift2GuardName.Length > 0 ? data.Shift2GuardName.Split("\n")[0] : string.Empty);
                 Shift2GuardName = Shift2GuardName.Length > 16 ? Shift2GuardName.Substring(0, 16) : Shift2GuardName; ;
-                kpiGuardTable.AddCell(CreateDataCell(Shift2GuardName));                
+                kpiGuardTable.AddCell(CreateDataCell(Shift2GuardName));
                 kpiGuardTable.AddCell(CreateDataCell(data.Shift2GuardSecurityNo.Length > 0 ? data.Shift2GuardSecurityNo.Split("\n")[0] : string.Empty));
                 kpiGuardTable.AddCell(CreateHrDataCell((data.Shift2GuardHr1.Length > 0 ? data.Shift2GuardHr1.Split(",")[0] : string.Empty)));
                 kpiGuardTable.AddCell(CreateHrDataCell((data.Shift2GuardHr2.Length > 0 ? data.Shift2GuardHr2.Split(",")[0] : string.Empty)));
@@ -627,7 +630,7 @@ namespace CityWatch.Kpi.Services
 
                 var Shift3GuardName = (data.Shift3GuardName.Length > 0 ? data.Shift3GuardName.Split("\n")[0] : string.Empty);
                 Shift3GuardName = Shift3GuardName.Length > 16 ? Shift3GuardName.Substring(0, 16) : Shift3GuardName; ;
-                kpiGuardTable.AddCell(CreateDataCell(Shift3GuardName));                
+                kpiGuardTable.AddCell(CreateDataCell(Shift3GuardName));
                 kpiGuardTable.AddCell(CreateDataCell(data.Shift3GuardSecurityNo.Length > 0 ? data.Shift3GuardSecurityNo.Split("\n")[0] : string.Empty));
                 kpiGuardTable.AddCell(CreateHrDataCell((data.Shift3GuardHr1.Length > 0 ? data.Shift3GuardHr1.Split(",")[0] : string.Empty)));
                 kpiGuardTable.AddCell(CreateHrDataCell((data.Shift3GuardHr2.Length > 0 ? data.Shift3GuardHr2.Split(",")[0] : string.Empty)));
@@ -713,7 +716,7 @@ namespace CityWatch.Kpi.Services
 
             return kpiGuardTable;
         }
-        private Table CreateGuardDetailsLicenseAndCompliance(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance,string hrGroupName,int Id)
+        private Table CreateGuardDetailsLicenseAndCompliance(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance, string hrGroupName, int Id, int clientSiteId, string ClientSiteState)
         {
 
             var guards = monthlyDataGuard
@@ -734,29 +737,46 @@ namespace CityWatch.Kpi.Services
                 complianceDataCounts.Add(monthlyDataGuardComplianceData.Count);
             }
             var HTList = _viewDataService.GetHRSettings(Id);
+            int referenceNoCount = 0;
 
+            foreach (var item in HTList)
+            {
+                var SiteConditions = item.hrSettingsClientSites;
+                var StateConditions = item.hrSettingsClientStates;
+                bool shouldAddCells = false;
+
+                if (SiteConditions.Count != 0)
+                {
+                    var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
+                    var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
+
+                    if (SelctedSiteExist.Count != 0 || SelctedStateExist.Count != 0)
+                    {
+                        shouldAddCells = true;
+                    }
+                }
+                else
+                {
+                    shouldAddCells = true;
+                }
+
+                if (shouldAddCells)
+                {
+                    referenceNoCount++;
+                }
+            }
             int[] countsArray = complianceDataCounts.ToArray();
-            int largestNumber;
-            if (countsArray.Length > 0)
-            {
-                //largestNumber = countsArray.Max();
-                largestNumber = HTList.Count();
+            int largestNumber = referenceNoCount;
 
 
-            }
-            else
-            {
-                largestNumber = 0;
-            }
-           
             int numColumns = monthlyDataGuardCompliance.Count;
             float[] columnPercentages = new float[largestNumber + 2];
 
             var kpiGuardTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
-            CreateGuardDetailsNewHeader(kpiGuardTable, monthlyDataGuard, hrGroupName,Id);
-           
+            CreateGuardDetailsNewHeader(kpiGuardTable, monthlyDataGuard, hrGroupName, Id, clientSiteId, ClientSiteState);
+
             var GropuNamee1 = RemoveBrackets(hrGroupName);
-            int maxComplianceCount=0;
+            int maxComplianceCount = 0;
             if (Enum.TryParse<HrGroup>(GropuNamee1, out var hrGroup1))
             {
 
@@ -772,18 +792,29 @@ namespace CityWatch.Kpi.Services
                 if (Enum.TryParse<HrGroup>(GropuNamee, out var hrGroup))
                 {
 
+                    //var SiteConditions = item.hrSettingsClientSites;
+                    //var StateConditions = item.hrSettingsClientStates;
+
                     monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsComplianceAndLicenseHR(guard.Id, hrGroup);
                 }
                 //var monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsComplianceAndLicense(guard.Id);
                 kpiGuardTable.AddCell(CreateDataCell(guard.Name));
                 kpiGuardTable.AddCell(CreateDataCell(guard.SecurityNo));
 
+                var HTList1 = _viewDataService.GetHRSettings(Id);
+
                 for (int i = 0; i < largestNumber; i++)
                 {
+
                     var cellColor = "";
                     DateTime? alertDate = null;
                     var compliance = i < monthlyDataGuardComplianceData.Count ? monthlyDataGuardComplianceData[i] : null;
 
+                    var SelectedDesc = HTList1
+            .Where(x => compliance != null && compliance.Description != null && x.Description.Trim() == compliance.Description.Trim())
+             .FirstOrDefault();
+                    var SiteConditions = SelectedDesc?.hrSettingsClientSites;
+                    var StateConditions = SelectedDesc?.hrSettingsClientStates;
                     if (compliance != null && compliance.ExpiryDate != null && compliance.ExpiryDate.ToString() != "")
                     {
                         alertDate = Convert.ToDateTime(compliance.ExpiryDate).AddDays(-45);
@@ -810,12 +841,36 @@ namespace CityWatch.Kpi.Services
                     string expiryDateString = expiryDate.HasValue ? expiryDate.Value.ToString("dd/MM/yyyy") : "";
                     if (compliance != null)
                     {
-                    if (compliance.DateType == true)
+                        if (compliance.DateType == true)
+                        {
+                            expiryDateString = expiryDateString + $"(I)";
+                        }
+                    }
+                    if (SiteConditions != null && SiteConditions.Count != 0)
                     {
-                        expiryDateString= expiryDateString+$"(I)";
+                        var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
+                        var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
+                        if (SelctedSiteExist.Count != 0)
+                        {
+                            kpiGuardTable.AddCell(CreateDataCell(expiryDateString, true, cellColor));
+                        }
+                        else if (SelctedStateExist.Count != 0)
+                        {
+                            kpiGuardTable.AddCell(CreateDataCell(expiryDateString, true, cellColor));
+                        }
+                        else
+                        {
+                            cellColor = "white";
+                            expiryDateString = "";
+                            kpiGuardTable.AddCell(CreateDataCell(expiryDateString, true, cellColor));
+                        }
                     }
+                    else
+                    {
+                        kpiGuardTable.AddCell(CreateDataCell(expiryDateString, true, cellColor));
                     }
-                    kpiGuardTable.AddCell(CreateDataCell(expiryDateString, true, cellColor));
+                   
+
                 }
 
             }
@@ -834,28 +889,73 @@ namespace CityWatch.Kpi.Services
             string pattern = @"\[.*?\]|\{.*?\}|\(.*?\)";
             return Regex.Replace(input, pattern, string.Empty);
         }
-        private Table CreateGuardDetailsLicenseAndComplianceHR(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance, string hrGroupName, int Id)
+        private Table CreateGuardDetailsLicenseAndComplianceHR(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance, string hrGroupName, int Id, int clientSiteId, string ClientSiteState)
         {
 
-          
             float[] columnPercentages = new float[2];
-
             var kpiGuardTable1 = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
+
+
             CreateGuardDetailsNewHeaderHR(kpiGuardTable1, monthlyDataGuard, hrGroupName, Id);
 
             var HTList = _viewDataService.GetHRSettings(Id);
-            foreach (var item in HTList)
+            if (HTList.Count > 0)
             {
-                
-                kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
-                kpiGuardTable1.AddCell(CreateDataCell(item.Description));
+                foreach (var item in HTList)
+                {
+                    var SiteConditions = item.hrSettingsClientSites;
+                    var StateConditions = item.hrSettingsClientStates;
+                    if (SiteConditions.Count != 0)
+                    {
+                        var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
+                        var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
+                        if (SelctedSiteExist.Count != 0)
+                        {
+                            kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
+                            kpiGuardTable1.AddCell(CreateDataCell(item.Description));
+                        }
+                        else if (SelctedStateExist.Count != 0)
+                        {
+                            kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
+                            kpiGuardTable1.AddCell(CreateDataCell(item.Description));
+                        }
+                    }
+                    else
+                    {
+                        kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
+                        kpiGuardTable1.AddCell(CreateDataCell(item.Description));
+                    }
 
+                }
 
             }
+            //var ClientDetailsList = new List<ClientDetailsData>();
+            //foreach (var hrSetting in HTList)
+            //{
+            //    foreach (var site in hrSetting.hrSettingsClientSites)
+            //    {
+            //        var combinedData = new ClientDetailsData
+            //        {
+            //            ClientSiteId= site.ClientSiteId,
+            //            Description= hrSetting.Description,
+            //            ReferenceNo= hrSetting.ReferenceNo,
+            //            HRGroupID=hrSetting.HRGroupId
+            //        };
+            //        ClientDetailsList.Add(combinedData);
+            //    }
+            //}
+            //for (int i = 0; i < HTList.Count; i++)
+            //{
 
+            //    kpiGuardTable1.AddCell(CreateDataCell(HTList[i].ReferenceNo));
+            //    kpiGuardTable1.AddCell(CreateDataCell(HTList[i].Description));
+
+
+            //}
 
             return kpiGuardTable1;
         }
+
         private static string GetHrTextColor(string hrValue)
         {
             if (hrValue == "Y")
@@ -986,10 +1086,10 @@ namespace CityWatch.Kpi.Services
                 throw;
             }
         }
-        private void CreateGuardDetailsNewHeader(Table table, List<GuardLogin> monthlyDataGuard,string hrGroupname,int id)
+        private void CreateGuardDetailsNewHeader(Table table, List<GuardLogin> monthlyDataGuard, string hrGroupname, int id, int clientSiteId, string ClientSiteState)
         {
             float[] columnWidths = { 100f, 200f, 100f }; // Adjust these values as needed
-            if (hrGroupname== "HR3 (Special)")
+            if (hrGroupname == "HR3 (Special)")
             {
                 table.SetWidth(UnitValue.CreatePointValue(500));
             }
@@ -997,7 +1097,7 @@ namespace CityWatch.Kpi.Services
             {
                 table.SetWidth(UnitValue.CreatePointValue(400));
             }
-           
+
             try
             {
                 List<int> complianceDataCounts = new List<int>();
@@ -1021,38 +1121,54 @@ namespace CityWatch.Kpi.Services
 
                 int[] countsArray = complianceDataCounts.ToArray();
                 var HTList = _viewDataService.GetHRSettings(id);
-                int largestNumber;
-
-                if (countsArray.Length > 0)
-                {
-                   
-                    largestNumber = HTList.Count();
 
 
-                }
-                else
-                {
-                    largestNumber = 0;
-                }
-               
+
                 table.AddCell(new Cell(1, 2)
                     .SetFontSize(CELL_FONT_SIZE)
                     .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
                     .Add(new Paragraph().Add(new Text(hrGroupname))));
                 char[] suffixes = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
 
-                for (int i = 0; i < largestNumber; i++)
+                foreach (var item in HTList)
                 {
-                    int baseNumber = (i / suffixes.Length) + 1;
-                    char suffix = suffixes[i % suffixes.Length];
-                    string sequentialNumber = id.ToString("D2") + suffix;
 
-                    var referenceNo = HTList[i].ReferenceNo;
 
-                    table.AddCell(new Cell(1, 1)
-                        .SetFontSize(CELL_FONT_SIZE)
-                        .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
-                        .Add(new Paragraph().Add(new Text(referenceNo))));
+                    var SiteConditions = item.hrSettingsClientSites;
+                    var StateConditions = item.hrSettingsClientStates;
+                    if (SiteConditions.Count != 0)
+                    {
+                        var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
+                        var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
+                        if (SelctedSiteExist.Count != 0)
+                        {
+                            var referenceNo = item.ReferenceNo;
+
+                            table.AddCell(new Cell(1, 1)
+                                .SetFontSize(CELL_FONT_SIZE)
+                                .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
+                                .Add(new Paragraph().Add(new Text(referenceNo))));
+                        }
+                        else if (SelctedStateExist.Count != 0)
+                        {
+                            var referenceNo = item.ReferenceNo;
+
+                            table.AddCell(new Cell(1, 1)
+                                .SetFontSize(CELL_FONT_SIZE)
+                                .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
+                                .Add(new Paragraph().Add(new Text(referenceNo))));
+                        }
+                    }
+                    else
+                    {
+                        var referenceNo = item.ReferenceNo;
+
+                        table.AddCell(new Cell(1, 1)
+                            .SetFontSize(CELL_FONT_SIZE)
+                            .SetBackgroundColor(WebColors.GetRGBColor(CELL_BG_BLUE_HEADER))
+                            .Add(new Paragraph().Add(new Text(referenceNo))));
+                    }
+
 
                 }
 
@@ -1069,12 +1185,31 @@ namespace CityWatch.Kpi.Services
                 }
                 //var monthlyDataGuardComplianceData1 = _viewDataService.GetKpiGuardDetailsComplianceAndLicense(firstGuardId);
 
-                for (int i = 0; i < largestNumber; i++)
+                foreach (var item in HTList)
                 {
-                    
 
+
+                    var SiteConditions = item.hrSettingsClientSites;
+                    var StateConditions = item.hrSettingsClientStates;
+                    if (SiteConditions.Count != 0)
+                    {
+                        var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
+                        var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
+                        if (SelctedSiteExist.Count != 0)
+                        {
+                            table.AddCell(CreateHeaderCell(""));
+                        }
+                        else if (SelctedStateExist.Count != 0)
+                        {
+                            table.AddCell(CreateHeaderCell(""));
+                        }
+                    }
+                    else
+                    {
                         table.AddCell(CreateHeaderCell(""));
-                   
+                    }
+
+
                 }
             }
             catch (Exception ex)
@@ -1092,14 +1227,14 @@ namespace CityWatch.Kpi.Services
             {
                 float[] columnWidths = { 100f, 200f, 100f }; // Adjust these values as needed
                 table.SetWidth(UnitValue.CreatePointValue(400)); // Total width of the table in points
-                
+
 
                 Color CELL_BG_GREY_HEADER = new DeviceRgb(211, 211, 211);
                 const float CELL_WIDTH = 1f;
                 table.AddCell(new Cell(1, 1)
                          .SetFontSize(CELL_FONT_SIZE)
                          .SetBackgroundColor(CELL_BG_GREY_HEADER)
-                         
+
                          .Add(new Paragraph().Add(new Text($"Reference No"))));
                 table.AddCell(new Cell(1, 1)
                         .SetFontSize(CELL_FONT_SIZE)
@@ -1107,7 +1242,7 @@ namespace CityWatch.Kpi.Services
                         .SetWidth(CELL_WIDTH)
                         .Add(new Paragraph().Add(new Text($"Description"))));
                 //table.AddCell(CreateHeaderCell($"Reference No\n"));
-                
+
 
             }
             catch (Exception ex)

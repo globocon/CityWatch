@@ -3201,13 +3201,14 @@ $('#tbl_hr_settings tbody').on('click', '#btnEditHrGroup', function () {
         $("#HrState").multiselect();
         $("#HrState").val(selectedValues);
         $("#HrState").multiselect("refresh");
-
+        $("#clientTypeNameDocHrDoc").multiselect("refresh");
+        
         $.each(data.hrSettingsClientSites, function (index, item) {
             $('#selectedSitesDocHrDoc').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
             updateSelectedSitesCountHrDoc();
            
         });
-
+        $("#clientSitesDocHrDoc").multiselect("refresh");
     }).always(function () {
         $('#loader').hide();
     });
@@ -3792,6 +3793,20 @@ $('#add_Dropbox').on('click', function () {
 })
 //To save the Global Email Of Duress Button stop
 //p1-213 critical Document stop
+$('#clientTypeNameDocHrDoc').multiselect({
+    maxHeight: 400,
+    buttonWidth: '100%',
+    nonSelectedText: 'Select',
+    buttonTextAlignment: 'left',
+    includeSelectAllOption: true,
+});
+$('#clientSitesDocHrDoc').multiselect({
+    maxHeight: 400,
+    buttonWidth: '100%',
+    nonSelectedText: 'Select',
+    buttonTextAlignment: 'left',
+    includeSelectAllOption: true,
+});
 $('#btn_save_hr_settings').on('click', function () {
     var form = document.getElementById('form_new_hr_settings');
     var jsformData = new FormData(form);
@@ -3862,35 +3877,45 @@ function displayValidationSummaryHrSettings(errors) {
 }
 //p1-213 document step L Start 
 $('#clientTypeNameDocHrDoc').on('change', function () {
-    const option = $(this).find('option:selected').text();;
-    if (option === '') {
-        $('#clientSitesDocHrDoc').html('');
-        $('#clientSitesDocHrDoc').append('<option value="">Select</option>');
-    }
+    let clientTypeIds = $(this).val().join(';');
+    const option = clientTypeIds;
+    $('#clientSitesDocHrDoc').html('');
+    const clientSiteControl = $('#clientSitesDocHrDoc');
+
+    //if (option === '') {
+    //    $('#clientSitesDocHrDoc').html('');
+    //    $('#clientSitesDocHrDoc').append('<option value="">Select</option>');
+    //}
 
     $.ajax({
-        url: '/admin/settings?handler=ClientSitesDoc&type=' + encodeURIComponent(option),
+        url: '/admin/settings?handler=ClientSitesNew',
         type: 'GET',
-        dataType: 'json',
+        data: {
+            typeId: option
+
+        },
     }).done(function (data) {
-        $('#clientSitesDocHrDoc').html('');
-        $('#clientSitesDocHrDoc').append('<option value="">Select</option>');
         data.map(function (site) {
-            $('#clientSitesDocHrDoc').append('<option value="' + site.value + '">' + site.text + '</option>');
+            $('#clientSitesDocHrDoc').append('<option value="' + site.id + '">' + site.name + '</option>');
         });
+        clientSiteControl.multiselect('rebuild');
+
     });
 });
 
 $('#clientSitesDocHrDoc').on('change', function () {
-    const elem = $(this).find(":selected");
-    if (elem.val() !== '') {
-        const existing = $('#selectedSitesDocHrDoc option[value="' + elem.val() + '"]');
-        if (existing.length === 0) {
-            $('#selectedSitesDocHrDoc').append('<option value="' + elem.val() + '">' + elem.text() + '</option>');
-            updateSelectedSitesCountHrDoc();
-            
+    const selectedValues = $(this).val().join(';').split(';');
+    selectedValues.forEach(function (value) {
+        if (value !== '') {
+            const existing = $('#selectedSitesDocHrDoc option[value="' + value + '"]');
+            if (existing.length === 0) {
+                const text = $('#clientSitesDocHrDoc option[value="' + value + '"]').text();
+                $('#selectedSitesDocHrDoc').append('<option value="' + value + '">' + text + '</option>');
+            }
         }
-    }
+    });
+    updateSelectedSitesCount();
+
 });
 function updateSelectedSitesCountHrDoc() {
     $('#selectedSitesCountDocHrDoc').text($('#selectedSitesDocHrDoc option').length);

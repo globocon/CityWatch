@@ -352,6 +352,8 @@ namespace CityWatch.Kpi.Services
         {
             
             return _context.HrSettings.Include(z => z.HRGroups)
+                .Include(z=>z.hrSettingsClientSites)
+                .Include(z => z.hrSettingsClientStates)
                 .Include(z => z.ReferenceNoNumbers)
                 .Include(z => z.ReferenceNoAlphabets)
                 .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
