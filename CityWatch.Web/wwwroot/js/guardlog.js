@@ -3081,9 +3081,11 @@
     }
     function resetGuardLicenseandComplianceAddModal() {
         $('#GuardComplianceandlicense_Id').val('');
-        $('#Description').val('');
-        $('#GuardComplianceAndLicense_ExpiryDate1').val('');
         $('#HRGroup').val('');
+        $('#Description').val('');
+        $(".es-list").empty();
+        $('#GuardComplianceAndLicense_ExpiryDate1').val('');
+        
         $('#guardComplianceandlicense_fileName1').text('None');
         $('#GuardComplianceandlicense_FileName1').val('');
         $('#GuardComplianceandlicense_CurrentDateTime').val('');

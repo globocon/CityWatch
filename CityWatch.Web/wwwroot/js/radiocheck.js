@@ -1987,6 +1987,7 @@ function resetGuardLicenseandComplianceAddModal() {
     $('#Description').val('');
     $('#GuardComplianceAndLicense_ExpiryDate1').val('');
     $('#HRGroup').val('');
+    $(".es-list").empty();
     $('#guardComplianceandlicense_fileName1').text('None');
     $('#GuardComplianceandlicense_FileName1').val('');
     $('#GuardComplianceandlicense_CurrentDateTime').val('');
