@@ -4001,14 +4001,14 @@ var guardSettings = $('#guard_settings_for_control_room').DataTable({
     autoWidth: false,
     ajax: '/GuardDetails?handler=ActiveGuards',
     columns: [
-    { data: 'name', width: "10%" },
-    { data: 'securityNo', width: "8%" },
-    { data: 'initial', orderable: false, width: "4%" },
-    { data: 'mobile', width: "7%" },
+    { data: 'name', width: "22%" },
+    { data: 'securityNo', width: "10%" },
+    { data: 'initial', orderable: false, width: "3%" },
+    { data: 'mobile', width: "15%" },
     { data: 'email', width: "11%" },
         {
             data: 'provider',
-            width: '11%',
+            width: '23%',
             orderable: false,
             render: function (data, type, row) {
                 var provider = row.provider ? row.provider : ''; 
@@ -4016,7 +4016,7 @@ var guardSettings = $('#guard_settings_for_control_room').DataTable({
                     return '&nbsp;&nbsp;&nbsp;' + provider +
                         '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#crmSupplierDetailsModal" data-id="' + provider + '"></i>';
                 } else {
-                    return provider; // Return 'N/A' if provider is null or undefined
+                    return ''; 
                 }
             }
         }
