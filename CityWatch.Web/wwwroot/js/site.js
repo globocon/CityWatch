@@ -3354,6 +3354,20 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHrSettings.hide();
     }
 });
+$('#clientTypeNameDoc').multiselect({
+    maxHeight: 400,
+    buttonWidth: '100%',
+    nonSelectedText: 'Select',
+    buttonTextAlignment: 'left',
+    includeSelectAllOption: true,
+});
+$('#clientSitesDoc').multiselect({
+    maxHeight: 400,
+    buttonWidth: '100%',
+    nonSelectedText: 'Select',
+    buttonTextAlignment: 'left',
+    includeSelectAllOption: true,
+});
 $('#add_hr_settings').on('click', function () {
     var selFieldTypeId = $('#hr_settings_fields_types').val();
     if (!selFieldTypeId) {
@@ -3366,6 +3380,14 @@ $('#add_hr_settings').on('click', function () {
         $('#list_ReferenceNoAlphabet').val('');
         $('#txtHrSettingsDescription').val('');
         $('#HrSettings_Id').val('');
+        
+        $('#clientTypeNameDocHrDoc').val('');
+        $('#clientSitesDocHrDoc').val('');
+        $('#HrState').val('');
+        
+        $("#clientTypeNameDocHrDoc").multiselect("refresh");
+        $("#clientSitesDocHrDoc").multiselect("refresh");
+        $("#HrState").multiselect("refresh");
         $('#hrSettingsModal').modal('show');
     }
     if ($('#hr_settings_fields_types').val() == 2) { 
@@ -3406,20 +3428,7 @@ $('#add_criticalDocuments').on('click', function () {
 //        });
 //    });
 //});
-$('#clientTypeNameDoc').multiselect({
-    maxHeight: 400,
-    buttonWidth: '100%',
-    nonSelectedText: 'Select',
-    buttonTextAlignment: 'left',
-    includeSelectAllOption: true,
-});
-$('#clientSitesDoc').multiselect({
-    maxHeight: 400,
-    buttonWidth: '100%',
-    nonSelectedText: 'Select',
-    buttonTextAlignment: 'left',
-    includeSelectAllOption: true,
-});
+
 $('#clientTypeNameDoc').on('change', function () {
     let clientTypeIds = $(this).val().join(';')
     const clientTypeId = clientTypeIds;
@@ -3914,7 +3923,7 @@ $('#clientSitesDocHrDoc').on('change', function () {
             }
         }
     });
-    updateSelectedSitesCount();
+    updateSelectedSitesCountHrDoc();
 
 });
 function updateSelectedSitesCountHrDoc() {
@@ -3931,7 +3940,7 @@ function clearCriticalModalHrDoc() {
 
     $('#scheduleId').val('0');
     $('#clientTypeNameDocHrDoc').val('');
-    $('#clientSitesDocHrDoc').html('<option value="">Select</option>');
+    $('#clientSitesDocHrDoc').val('');
     $('#selectedSitesDocHrDoc').html('');
     updateSelectedSitesCountHrDoc();
     $('#clientTypeNameDocHrDoc option:eq(0)').attr('selected', true);
