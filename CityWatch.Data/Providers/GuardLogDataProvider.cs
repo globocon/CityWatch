@@ -4741,9 +4741,23 @@ namespace CityWatch.Data.Providers
         {
 
             var guards= _context.Guards.Where(x => x.Id == guardId).FirstOrDefault();
-            var results = _context.KeyVehicleLogs.Where(x => x.CompanyName == guards.Provider && !string.IsNullOrEmpty(x.CompanyLandline)).FirstOrDefault();
-            guards.ProviderNo = results != null ? results.CompanyLandline : null;
+            if (guards != null)
+            {
+                if (guards.Provider != null)
+                {
+                    var results = _context.KeyVehicleLogs.Where(x => x.CompanyName == guards.Provider).FirstOrDefault();
+                    guards.ProviderNo = results != null ? results.CompanyLandline : string.Empty;
+                }
+                else
+                {
+                    guards.ProviderNo = string.Empty;
 
+                }
+                
+
+            }
+
+            
 
             return guards;
         }
