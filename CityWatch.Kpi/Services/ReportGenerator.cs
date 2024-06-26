@@ -745,7 +745,7 @@ namespace CityWatch.Kpi.Services
                 var StateConditions = item.hrSettingsClientStates;
                 bool shouldAddCells = false;
 
-                if (SiteConditions.Count != 0)
+                if (SiteConditions.Count != 0 || StateConditions.Count!=0)
                 {
                     var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
                     var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
@@ -846,7 +846,7 @@ namespace CityWatch.Kpi.Services
                             expiryDateString = expiryDateString + $"(I)";
                         }
                     }
-                    if (SiteConditions != null && SiteConditions.Count != 0)
+                    if ((SiteConditions != null && SiteConditions.Count != 0) || (StateConditions != null && StateConditions.Count != 0))
                     {
                         var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
                         var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
@@ -905,7 +905,7 @@ namespace CityWatch.Kpi.Services
                 {
                     var SiteConditions = item.hrSettingsClientSites;
                     var StateConditions = item.hrSettingsClientStates;
-                    if (SiteConditions.Count != 0)
+                    if (SiteConditions.Count != 0 || StateConditions.Count!=0)
                     {
                         var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
                         var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
@@ -1136,7 +1136,7 @@ namespace CityWatch.Kpi.Services
 
                     var SiteConditions = item.hrSettingsClientSites;
                     var StateConditions = item.hrSettingsClientStates;
-                    if (SiteConditions.Count != 0)
+                    if (SiteConditions.Count != 0 || StateConditions.Count!=0)
                     {
                         var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
                         var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
@@ -1191,7 +1191,7 @@ namespace CityWatch.Kpi.Services
 
                     var SiteConditions = item.hrSettingsClientSites;
                     var StateConditions = item.hrSettingsClientStates;
-                    if (SiteConditions.Count != 0)
+                    if (SiteConditions.Count != 0 || StateConditions.Count != 0)
                     {
                         var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
                         var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();

@@ -1995,14 +1995,15 @@ function resetGuardLicenseandComplianceAddModal() {
 }
 $('#upload_complianceandlicanse_file').on('change', function () {
     const file = $(this).get(0).files.item(0);
-    const fileExtn = file.name.split('.').pop();
+    const fileExtn = file.name.split('.').pop().toLowerCase();
     if (!fileExtn || 'jpg,jpeg,png,bmp,pdf'.indexOf(fileExtn) < 0) {
         alert('Please select a valid file type');
         return false;
     }
-
+    const fileNameWithoutExtn = file.name.substring(0, file.name.lastIndexOf('.'));
+    const newFileName = fileNameWithoutExtn + '.' + fileExtn;
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", newFileName);
     formData.append('guardId', $('#GuardComplianceandlicense_GuardId').val());
 
     $.ajax({
