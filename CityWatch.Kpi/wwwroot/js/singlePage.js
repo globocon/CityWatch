@@ -945,29 +945,33 @@ $(function () {
     
     GetClientSites();
     function GetClientSites() {
+
+        var chek = $('#gl_client_site_id').val();
         $.ajax({
             url: '/Admin/Settings?handler=ClientSiteEmail',
             type: 'GET',
             data: { clientSiteId: $('#gl_client_site_id').val() },
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {          
-            const SiteEmail = result[0].siteEmail;
-            const duressEmail = result[0].duressEmail;
-            const duressSms = result[0].duressSms;
-            const landLine = result[0].landLine;
-            const isDataCollectionEnabled = result[0].dataCollectionEnabled;
+        }).done(function (result) { 
+            if (result.length != 0) {
+                const SiteEmail = result[0].siteEmail;
+                const duressEmail = result[0].duressEmail;
+                const duressSms = result[0].duressSms;
+                const landLine = result[0].landLine;
+                const isDataCollectionEnabled = result[0].dataCollectionEnabled;
 
-            const guardLogEmailTo = result[0].guardLogEmailTo;
-            const isUpdateDailyLog = result[0].uploadGuardLog;
-            $('#gs_site_email').val(SiteEmail);
-            $('#gs_duress_email').val(duressEmail);
-            $('#gs_duress_sms').val(duressSms);
-            $('#gs_land_line').val(landLine);
-            $('#gs_email_recipients').val(guardLogEmailTo);
-            $('#enableLogDump').prop('checked', false);
-            $('#cbxDisableDataCollection').prop('checked', !isDataCollectionEnabled);
-        if (isUpdateDailyLog)
-            $('#enableLogDump').prop('checked', true);
+                const guardLogEmailTo = result[0].guardLogEmailTo;
+                const isUpdateDailyLog = result[0].uploadGuardLog;
+                $('#gs_site_email').val(SiteEmail);
+                $('#gs_duress_email').val(duressEmail);
+                $('#gs_duress_sms').val(duressSms);
+                $('#gs_land_line').val(landLine);
+                $('#gs_email_recipients').val(guardLogEmailTo);
+                $('#enableLogDump').prop('checked', false);
+                $('#cbxDisableDataCollection').prop('checked', !isDataCollectionEnabled);
+                if (isUpdateDailyLog)
+                    $('#enableLogDump').prop('checked', true);
+            }
         }).fail(function () { });
     }
 
