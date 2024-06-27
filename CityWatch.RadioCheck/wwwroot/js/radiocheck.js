@@ -217,6 +217,52 @@ var scrollPosition2;
 var rowIndex2;
 //var scrollY = ($(window).height() - 300);
 let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
+
+    dom: 'Bfrtip',
+    buttons: [
+
+        {
+            extend: 'copy',
+            text: '<i class="fa fa-copy"></i>',
+            titleAttr: 'Copy',
+            className: 'btn btn-md mr-2 btn-copy'
+        },
+        {
+            extend: 'excel',
+            text: '<i class="fa fa-file-excel-o"></i>',
+            titleAttr: 'Excel',
+            className: 'btn btn-md mr-2 btn-excel'
+        },
+        {
+            extend: 'pdf',
+            text: '<i class="fa fa-file-pdf-o"></i>',
+            titleAttr: 'PDF',
+            className: 'btn btn-md mr-2 btn-pdf'
+        },
+        {
+            extend: 'print',
+            text: '<i class="fa fa-print"></i>',
+            titleAttr: 'Print',
+            className: 'btn btn-md mr-2 btn-print'
+        },
+
+        {
+            text: '<img src="/images/man-climbing-stairs.png" alt="Image" height="16" width="16">',
+            titleAttr: 'Steps',
+            className: 'btn btn-md mr-2 btn-custom',
+            action: function () {
+                $('#inpCallingFunction').val('STEPBUTTON'); // Setting calling function to step button
+                $('#pushNoTificationsControlRoomModal').modal('show');
+
+            }
+        }
+
+
+    ],
+
+
+
+
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
     ordering: true,
     "columnDefs": [
@@ -330,7 +376,8 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                         return '<button type="button" class="btn" id="btnSwHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
                 }
                 else {
-                    return '<button type="button" class="btn" id="btnSwHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
+                    /* return '<button type="button" class="btn" id="btnSwHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';*/
+                    return '<i class="fa fa-times-circle text-text-muted rc-client-status" style="color:#B8B8B8"></i>';
                 }
             }
         },
@@ -570,7 +617,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
         {
             text: '<img src="/images/man-climbing-stairs.png" alt="Image" height="16" width="16">',
-            titleAttr: 'Custom',
+            titleAttr: 'Steps',
             className: 'btn btn-md mr-2 btn-custom',
             action: function () {
                 $('#inpCallingFunction').val('STEPBUTTON'); // Setting calling function to step button
@@ -1297,8 +1344,8 @@ $('#clientSiteActiveGuards tbody').on('click', '#btnKeyVehicleDetailsByGuard', f
     $('#guardKeyVehicleInfoModal').modal('show');
     isPaused = true;
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
-    var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
-    var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    var GuardId = $(this).closest("tr").find('td').eq(2).find('#GuardId').val();
+    var ClientSiteId = $(this).closest("tr").find('td').eq(2).find('#ClientSiteId').val();
     if (GuardId.length == 0) {
         GuardId = $(this).closest("tr").find('td').eq(2).find('#GuardId').val();
     }
@@ -1491,8 +1538,8 @@ $('#clientSiteActiveGuards tbody').on('click', '#btnIncidentReportdetails', func
     $('#guardIncidentReportsInfoModal').modal('show');
     isPaused = true;
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
-    var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
-    var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    var GuardId = $(this).closest("tr").find('td').eq(3).find('#GuardId').val();
+    var ClientSiteId = $(this).closest("tr").find('td').eq(3).find('#ClientSiteId').val();
     if (GuardId.length == 0) {
         GuardId = $(this).closest("tr").find('td').eq(2).find('#GuardId').val();
     }
@@ -2738,6 +2785,16 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
             className: 'btn btn-md mr-2 btn-print'
         },
 
+        {
+            text: '<img src="/images/man-climbing-stairs.png" alt="Image" height="16" width="16">',
+            titleAttr: 'Steps',
+            className: 'btn btn-md mr-2 btn-custom',
+            action: function () {
+                $('#inpCallingFunction').val('STEPBUTTON'); // Setting calling function to step button
+                $('#pushNoTificationsControlRoomModal').modal('show');
+
+            }
+        }
 
 
     ],
@@ -3003,6 +3060,53 @@ $('#clientSiteInActiveGuardsSinglePage').on('click', 'button[name="btnRadioCheck
 
 
 let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').DataTable({
+
+    dom: 'Bfrtip',
+    buttons: [
+
+        {
+            extend: 'copy',
+            text: '<i class="fa fa-copy"></i>',
+            titleAttr: 'Copy',
+            className: 'btn btn-md mr-2 btn-copy'
+        },
+        {
+            extend: 'excel',
+            text: '<i class="fa fa-file-excel-o"></i>',
+            titleAttr: 'Excel',
+            className: 'btn btn-md mr-2 btn-excel'
+        },
+        {
+            extend: 'pdf',
+            text: '<i class="fa fa-file-pdf-o"></i>',
+            titleAttr: 'PDF',
+            className: 'btn btn-md mr-2 btn-pdf'
+        },
+        {
+            extend: 'print',
+            text: '<i class="fa fa-print"></i>',
+            titleAttr: 'Print',
+            className: 'btn btn-md mr-2 btn-print'
+        },
+
+        {
+            text: '<img src="/images/man-climbing-stairs.png" alt="Image" height="16" width="16">',
+            titleAttr: 'Steps',
+            className: 'btn btn-md mr-2 btn-custom',
+            action: function () {
+                $('#inpCallingFunction').val('STEPBUTTON'); // Setting calling function to step button
+                $('#pushNoTificationsControlRoomModal').modal('show');
+
+            }
+        }
+
+
+    ],
+
+
+
+
+
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
     ordering: true,
     "columnDefs": [
@@ -3108,7 +3212,8 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
                         return '<button type="button" class="btn" id="btnSwHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
                 }
                 else {
-                    return '<button type="button" class="btn" id="btnSwHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
+                    return '<i class="fa fa-times-circle text-text-muted rc-client-status" style="color:#B8B8B8"></i>'
+                   // return '<button type="button" class="btn" id="btnSwHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
                 }
             }
         },
@@ -3305,8 +3410,8 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnKeyVehicleDetailsB
     $('#guardKeyVehicleInfoModal').modal('show');
     isPaused = true;
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
-    var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
-    var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    var GuardId = $(this).closest("tr").find('td').eq(2).find('#GuardId').val();
+    var ClientSiteId = $(this).closest("tr").find('td').eq(2).find('#ClientSiteId').val();
     if (GuardId.length == 0) {
         GuardId = $(this).closest("tr").find('td').eq(2).find('#GuardId').val();
     }
@@ -3341,13 +3446,13 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnIncidentReportdeta
     $('#guardIncidentReportsInfoModal').modal('show');
     isPaused = true;
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
-    var GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
-    var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    var GuardId = $(this).closest("tr").find('td').eq(3).find('#GuardId').val();
+    var ClientSiteId = $(this).closest("tr").find('td').eq(3).find('#ClientSiteId').val();
     if (GuardId.length == 0) {
-        GuardId = $(this).closest("tr").find('td').eq(2).find('#GuardId').val();
+        GuardId = $(this).closest("tr").find('td').eq(1).find('#GuardId').val();
     }
     if (ClientSiteId.length == 0) {
-        ClientSiteId = $(this).closest("tr").find('td').eq(2).find('#ClientSiteId').val();
+        ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
     }
 
     $('#txtClientSiteId').val(ClientSiteId);
