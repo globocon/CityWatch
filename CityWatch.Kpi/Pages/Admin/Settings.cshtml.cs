@@ -1143,7 +1143,7 @@ namespace CityWatch.Kpi.Pages.Admin
                 _clientDataProvider.SaveKpiSettingsCustomDropboxFolder(record);
                 success = true;
 
-               //await CheckAndCreateCustomDropBoxFolder(record);
+               await CheckAndCreateCustomDropBoxFolder(record);
             }
             catch (Exception ex)
             {

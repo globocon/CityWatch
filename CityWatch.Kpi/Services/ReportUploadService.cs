@@ -78,7 +78,7 @@ namespace CityWatch.Kpi.Services
 
                     if(clientSiteKpiSetting.MonthlyClientReport == true)
                     {
-                        //await CreateCustomDropboxFolders(clientSiteKpiSetting, dropboxSettings, reportFromDate);
+                        await CreateCustomDropboxFolders(clientSiteKpiSetting, dropboxSettings, reportFromDate);
                     }
                 }
                 catch (Exception ex)

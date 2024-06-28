@@ -698,6 +698,28 @@ namespace CityWatch.Data.Providers
                     _context.KeyVehicleLogs.Add(keyVehicleLog);
                     _context.SaveChanges();
 
+                    /* update already existing CRM Company details for the keyVehicleLog for fix the issue(the company details are taking frm keyVehicleLog RC and other modules  ) */
+                    if (keyVehicleLog.Website != string.Empty || keyVehicleLog.Email != string.Empty
+                        || keyVehicleLog.CompanyABN != string.Empty || keyVehicleLog.CompanyLandline !=string.Empty)
+                    {
+                        var CRMdetails = GetKeyVehicleLogs(keyVehicleLog.VehicleRego.Trim());
+                        if (CRMdetails.Count != 0)
+                        {
+                            foreach (var kvp in CRMdetails)
+                            {
+
+                                kvp.Website = keyVehicleLog.Website;
+                                kvp.Email = keyVehicleLog.Email;
+                                kvp.CompanyABN = keyVehicleLog.CompanyABN;
+                                kvp.CompanyLandline = keyVehicleLog.CompanyLandline;
+                                _context.SaveChanges();
+                            }
+
+                        }
+
+
+                    }
+
 
 
 
@@ -799,7 +821,7 @@ namespace CityWatch.Data.Providers
                 /* this condition added for prevent duplicate kV p7 103 issue 30112023 dileep
                   the insert with entity framework shows some key reference issue ,so query using
                  */
-                var checkifAlreadyExist = _context.KeyVehicleLogs.Where(x => x.InitialCallTime == keyVehicleLog.InitialCallTime
+                    var checkifAlreadyExist = _context.KeyVehicleLogs.Where(x => x.InitialCallTime == keyVehicleLog.InitialCallTime
                 && x.EntryTime == keyVehicleLog.EntryTime && x.SentInTime == keyVehicleLog.SentInTime && x.VehicleRego == keyVehicleLog.VehicleRego).ToList();
                 if (checkifAlreadyExist.Count == 0)
                 {
@@ -4719,9 +4741,23 @@ namespace CityWatch.Data.Providers
         {
 
             var guards= _context.Guards.Where(x => x.Id == guardId).FirstOrDefault();
-            var results = _context.KeyVehicleLogs.Where(x => x.CompanyName == guards.Provider && !string.IsNullOrEmpty(x.CompanyLandline)).FirstOrDefault();
-            guards.ProviderNo = results != null ? results.CompanyLandline : null;
+            if (guards != null)
+            {
+                if (guards.Provider != null)
+                {
+                    var results = _context.KeyVehicleLogs.Where(x => x.CompanyName == guards.Provider).FirstOrDefault();
+                    guards.ProviderNo = results != null ? results.CompanyLandline : string.Empty;
+                }
+                else
+                {
+                    guards.ProviderNo = string.Empty;
 
+                }
+                
+
+            }
+
+            
 
             return guards;
         }

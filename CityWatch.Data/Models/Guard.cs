@@ -101,5 +101,6 @@ namespace CityWatch.Data.Models
 
         public bool IsRCAccess { get; set; }
         public bool IsKPIAccess { get; set; }
+        public bool IsReActive { get; set; }
     }
 }

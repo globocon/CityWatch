@@ -161,6 +161,7 @@ namespace CityWatch.Data.Providers
                 updateGuard.Name = guard.Name;
                 updateGuard.SecurityNo = guard.SecurityNo;
                 updateGuard.IsActive = guard.IsActive;
+                updateGuard.IsReActive = guard.IsActive;
                 if (updateGuard.Initial != guard.Initial)
                 {
                     initalsUsed = MakeGuardInitials(guard.Initial);

@@ -1024,7 +1024,7 @@ namespace CityWatch.Web.Pages.Admin
                     fileName = file.FileName;
 
 
-                    string extension = Path.GetExtension(fileName);
+                    string extension = Path.GetExtension(fileName).ToLower();
                     string newFileName = Description + extension;
                     //string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
                     //var fileNameUpload = fileNameWithoutExtension + "_" + CurrentDate + extension;

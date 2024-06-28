@@ -16,14 +16,15 @@ window.onload = function () {
 
 };
 $(document).ready(function () {
-    $(document).on('show.bs.modal', '.modal', function () {
-        const zIndex = 1040 + 10 * $('.modal:visible').length;
-        $(this).css('z-index', zIndex);
-        setTimeout(() => $('.modal-backdrop').not('.modal-stack').css('z-index', zIndex - 1).addClass('modal-stack'));
-    });
-
-    $(document).on('hidden.bs.modal', '.modal', () => $('.modal:visible').length && $(document.body).addClass('modal-open'));
-
+    
+    //$(document).on('show.bs.modal', '.modal', function () {
+    //    const zIndex = 1040 + 10 * $('.modal:visible').length;
+    //    $(this).css('z-index', zIndex);
+    //    console.log('show.bs.modal');
+    //    setTimeout(() => $('.modal-backdrop').not('.modal-stack').css('z-index', zIndex - 1).addClass('modal-stack'));
+    //});
+        
+    //$(document).on('hidden.bs.modal', '.modal', () => $('.modal:visible').length && $(document.body).addClass('modal-open'));
 
 });
 
