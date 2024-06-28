@@ -3171,14 +3171,20 @@
         columns: [
             { data: 'hrGroupText', width: "2%" },
             { data: 'description', width: "7%" },
-            { data: 'expiryDate', width: '2%', orderable: true },
+            {
+                data: 'expiryDate',
+                width: '2%',
+                orderable: true,
+               
+            },
             { data: 'fileName', width: '7%' },
+            { data: 'status', width: "1%" },
             {
                 targets: -1,
                 data: null,
                 defaultContent: '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance"><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
-                    '<button  class="btn btn-outline-danger mr-2" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash mr-2"></i>Delete</button>',
-                width: '5%'
+                    '<button  class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash"></i></button>',
+                width: '4%'
             }],
         columnDefs: [{
             targets: 3,
@@ -3187,15 +3193,62 @@
                 if (data)
                     return '<a href="/Uploads/Guards/License/' + row.licenseNo + '/' + row.fileUrl + '" target="_blank">' + data + '</a>';
                 return '-';
+            },
+
+        },
+            {
+                targets: 4, 
+                data: 'status',
+                render: function (data, type, row, meta) {
+                    var currentDate = new Date();
+                    var ExpiryDate = new Date(row.expiryDate);
+                    var timeDifference = ExpiryDate - currentDate;
+                    var daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+                    var  statusColor = 'green';
+                    if (daysDifference <= 45) {
+                         statusColor = 'yellow';
+                    }
+                    if (row.dateType==true) {
+                        statusColor = 'green';
+                    }
+                    if (ExpiryDate < currentDate) {
+                        statusColor = 'red';
+                    }
+                    return '<div style="display: flex; align-items: center; justify-content: center;"><div style="background-color:' + statusColor + '; width: 10px; height: 10px; border-radius: 50%;"></div></div>';
+                }
             }
-        }],
+        ],
         'createdRow': function (row, data, index) {
             if (data.expiryDate !== null) {
-                $('td', row).eq(2).html(getFormattedDate(new Date(data.expiryDate), null, ' '));
+                var formattedDate = getFormattedDate(new Date(data.expiryDate), null, ' ');
+                if (data.dateType === true) {
+                    formattedDate = formattedDate + '  (I)';
+                    $('td', row).eq(2).html(formattedDate);
+                }
+                else {
+                    $('td', row).eq(2).html(getFormattedDate(new Date(data.expiryDate), null, ' '));
+                }
+                
             }
         },
     });
+    gridGuardLicensesAndLicence.on('draw.dt', function () {
+        var tbody = $('#tbl_guard_licensesAndCompliance tbody');
+        var rows = tbody.find('tr');
+        var lastGroupValue = null;
 
+        rows.each(function (index, row) {
+            var currentGroupValue = $(row).find('td:eq(0)').text();
+
+            if (currentGroupValue !== lastGroupValue) {
+                lastGroupValue = currentGroupValue;
+
+                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 6));
+                headerRow.css('background-color', '#CCCCCC');
+                $(row).before(headerRow);
+            }
+        });
+    });
     //To get the data in description dropdown start
     $('#Description').attr('placeholder', 'Select');
     $('#Description').editableSelect({
@@ -4938,3 +4991,4 @@ $('#LicanseTypeFilter').on('change', function () {
 //for toggle areas - start
 
 });
+

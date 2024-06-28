@@ -3555,6 +3555,13 @@ gridCriticalDocument = $('#tbl_CriticalDocument').grid({
     primaryKey: 'id',
     columns: [
         {
+            className: 'dt-control',
+            orderable: false,
+            data: null,
+            width: '2%',
+            defaultContent: '',
+        },
+        {
             field: 'groupName', title: 'Group Name', width: 70
         },
        /* { field: 'clientTypes', title: 'Client Types', width: 100 },*/
@@ -3578,7 +3585,7 @@ gridCriticalDocument = $('#tbl_CriticalDocument').grid({
                     if (des!='') {
                         html += '<tr><td style="width: 58px;">' + record.hrGroupName + '</td><td style="width: 40px;">' + referenceNos[i] + '</td><td>' + descriptions[i] + '</td></tr>';
                     }
-                    
+
                 }
                 html += '</tbody>';
                 html += '</table>';
@@ -3586,13 +3593,14 @@ gridCriticalDocument = $('#tbl_CriticalDocument').grid({
             }
         },
         { width: 110, renderer: schButtonRenderer },
-       
+
     ],
     initialized: function (e) {
         $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
     }
 
 });
+
 function schButtonRenderer(value, record) {
     let buttonHtml = '';
     //buttonHtml += '<button class="btn btn-outline-primary mt-2 d-block" data-toggle="modal" data-target="#run-schedule-modal" data-sch-id="' + record.id + '""><i class="fa fa-play mr-2" aria-hidden="true"></i>Run</button>';
