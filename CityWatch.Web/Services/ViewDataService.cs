@@ -79,6 +79,7 @@ namespace CityWatch.Web.Services
         List<ClientSiteSmartWand> GetClientSiteSmartWands(int clientSiteId);
         List<GuardViewModel> GetGuards();
         List<KeyVehicleLogViewModel> GetKeyVehicleLogs(int logBookId, KvlStatusFilter kvlStatusFilter);
+        List<KeyVehicleLogViewModel> GetKeyVehicleLogsForIds(int logBookId);
         List<SelectListItem> GetKeyVehicleLogFieldsByType(KvlFieldType type, bool withoutSelect = false);
         List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRego(string truckRego);
         List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRego(string truckRego, string poi);
@@ -655,6 +656,14 @@ namespace CityWatch.Web.Services
             return _guardLogDataProvider.GetKeyVehicleLogs(logBookId)
                 .Select(z => new KeyVehicleLogViewModel(z, kvlFields))
                 .Where(r => kvlStatusFilter == KvlStatusFilter.All || r.Status == kvlStatusFilter)
+               .ToList();
+        }
+
+        public List<KeyVehicleLogViewModel> GetKeyVehicleLogsForIds(int logBookId)
+        {
+            var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
+            return _guardLogDataProvider.GetKeyVehicleLogs(logBookId)
+                .Select(z => new KeyVehicleLogViewModel(z, kvlFields))
                .ToList();
         }
 

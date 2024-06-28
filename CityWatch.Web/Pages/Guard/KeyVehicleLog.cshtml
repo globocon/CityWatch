@@ -32,7 +32,8 @@
     <div class="col-md-5" style="padding-left:69px;">
         <button type="button" class="btn btn-outline-primary" id="btnHRDetails"><i class="fa fa-user" aria-hidden="true"></i>HR</button>
         <a class="btn btn-outline-primary" id="btn_kvl_pdf_POIList" href="#">POI List</a>
-        <a class="btn btn-outline-primary" id="btn_kvl_pdf_download" href="SiteLogPdf?id=@Model.KeyVehicleLog.ClientSiteLogBookId&t=vl" target="_blank">Download PDF</a>
+        @* <a class="btn btn-outline-primary d-none" id="btn_kvl_pdf_download" href="SiteLogPdf?id=@Model.KeyVehicleLog.ClientSiteLogBookId&t=vl" target="_blank">Download PDF</a> *@
+        <button type="button" class="btn btn-outline-primary" id="btn_kvl_pdf_generate" data-logbookid="@Model.KeyVehicleLog.ClientSiteLogBookId">Download PDF</button>
         <a class="btn btn-primary" href="#" id="keyvehicle_offduty">Off Duty</a>
     </div>
 </div>
