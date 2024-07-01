@@ -3133,14 +3133,20 @@ gridHrSettings = $('#tbl_hr_settings').grid({
     dataSource: '/Admin/GuardSettings?handler=HRSettings',
     uiLibrary: 'bootstrap4',
     iconsLibrary: 'fontawesome',
+    detailTemplate: '<div class="bg-light"><b>Sites:</b><br>{clientSites}</div>',
+    showHiddenColumnsAsDetails: false,
     primaryKey: 'id',
+    icons: {
+        expandRow: '<i class="fa fa-arrow-circle-o-right fa-2x text-success" aria-hidden="true"></i>',
+        collapseRow: '<i class="fa fa-arrow-circle-o-down fa-2x text-success" aria-hidden="true"></i>'
+    },
     columns: [
         { field: 'id', hidden: true },
         { field: 'groupName', width: '15%' }, // Show the HR Group column
         { field: 'referenceNo', width: '20%' },
         { field: 'description' },
         { field: 'states' },
-        { field: 'clientSites' },
+        { field: 'clientSitesSummary' },
         { width: '20%', renderer: hrgroupButtonRenderer },
     ],
     dataBound: function (e, records, totalRecords) {
@@ -3150,12 +3156,13 @@ gridHrSettings = $('#tbl_hr_settings').grid({
         var lastGroupValue = null;
 
         rows.each(function (index, row) {
-            var currentGroupValue = $(row).find('td:eq(1)').text();
+            var expandbutton 
 
+            var currentGroupValue = $(row).find('td:eq(2)').text();
             if (currentGroupValue !== lastGroupValue) {
                 lastGroupValue = currentGroupValue;
                
-                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 6).text(currentGroupValue));
+                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 7).text(currentGroupValue));
                 headerRow.css('background-color', '#CCCCCC');
                 $(row).before(headerRow);
             }
@@ -3163,11 +3170,12 @@ gridHrSettings = $('#tbl_hr_settings').grid({
     },
     initialized: function (e) {
         // Optionally, you can modify the appearance or behavior after the grid is initialized
-        $('#tbl_hr_settings thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        $('#tbl_hr_settings thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
     }
 });
 function hrgroupButtonRenderer(value, record) {
-    return '<button id="btnEditHrGroup" data-doc-id="' + record.id + '" data-doc-hrgroupid="' + record.hrGroupId + '" data-doc-refnonumberid="' + record.referenceNoNumberId + '" data-doc-refalphnumberid="' + record.referenceNoAlphabetId + '" data-doc-description="' + record.description + '" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
+    return '<div class="text-center">' +
+        '<button id="btnEditHrGroup" data-doc-id="' + record.id + '" data-doc-hrgroupid="' + record.hrGroupId + '" data-doc-refnonumberid="' + record.referenceNoNumberId + '" data-doc-refalphnumberid="' + record.referenceNoAlphabetId + '" data-doc-description="' + record.description + '" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
         '<button id="btnDeleteHrGroup" data-doc-id="' + record.id + '" class="btn btn-outline-danger"><i class="fa fa-trash mr-2"></i>Delete</button>' +
 
         '</div>'

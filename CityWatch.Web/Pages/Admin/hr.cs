@@ -1547,11 +1547,13 @@ namespace CityWatch.Web.Pages.Admin
         }
         public JsonResult OnGetHRSettings()
         {
-            return new JsonResult(_configDataProvider.GetHRSettings()
+            var jresult = _configDataProvider.GetHRSettings()
             .Select(z => HrDoumentViewModel.FromDataModel(z))
             .OrderBy(x => x.GroupName)
             .ThenBy(x => x.referenceNo)
-            .ThenBy(x => x.referenceNoAlphabetsName));
+            .ThenBy(x => x.referenceNoAlphabetsName);
+
+            return new JsonResult(jresult);
 
             //return new JsonResult(_configDataProvider.GetHRSettings());
         }
@@ -1600,7 +1602,7 @@ namespace CityWatch.Web.Pages.Admin
                 return new JsonResult(_configDataProvider.GetHrSettingById(id));
           
         }
-
+        
     }
 
 
