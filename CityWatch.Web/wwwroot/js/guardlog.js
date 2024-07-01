@@ -3632,6 +3632,7 @@
         }
     });
     $('#btn_save_guard_compliancelicense').on('click', function () {
+       
         clearGuardValidationSummary('compliancelicanseValidationSummary');
 
         var ExpirayDateVal = $('#GuardComplianceAndLicense_ExpiryDate1').val();
@@ -3798,6 +3799,7 @@
             alert('Please select a valid file type');
             return false;
         }
+  
         var Desc = $('#Description').val();
         Desc = Desc.substring(3);
         var cleanText = Desc.replace(/[✔️❌]/g, '').trim();
@@ -3807,9 +3809,11 @@
         formData.append('LicenseNo', $('#GuardComplianceandlicense_LicenseNo').val());
         formData.append('Description', cleanText);
         formData.append('HRID', $('#HRGroup').val());
+        formData.append('ExpiryDate', $('#GuardComplianceAndLicense_ExpiryDate1').val());
+        formData.append('DateType', $('#IsDateFilterEnabledHidden').val());
         if (Desc == '') {
 
-            (confirm('Please select Description'))
+            (confirm('Please select Description and Expiry/Issue Date'))
         }
         else {
 
