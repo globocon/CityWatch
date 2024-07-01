@@ -26,6 +26,7 @@ namespace CityWatch.Web.Services
     {
         string GeneratePdfReport(int clientSiteLogBookId, KvlStatusFilter kvlStatusFilter = KvlStatusFilter.All);
         string GeneratePdfReport(int clientSiteLogBookId, KeyVehicleLogAuditLogRequest kvlAuditLogRequest);
+        string GeneratePdfReportWithIds(int clientSiteLogBookId, List<int> keyvechilelogids);
     }
 
     public class KeyVehicleLogReportGenerator : IKeyVehicleLogReportGenerator
@@ -75,6 +76,20 @@ namespace CityWatch.Web.Services
             var keyVehicleLogs = _viewDataService.GetKeyVehicleLogs(clientSiteLogBookId, kvlStatusFilter);
 
             return GeneratePdf(clientsiteLogBook, keyVehicleLogs);
+        }
+
+        public string GeneratePdfReportWithIds(int clientSiteLogBookId, List<int> keyvechilelogids)
+        {
+            var clientsiteLogBook = _clientDataProvider.GetClientSiteLogBooks().SingleOrDefault(z => z.Id == clientSiteLogBookId);
+
+            if (clientsiteLogBook == null)
+                return string.Empty;
+
+            var keyVehicleLogs1 = _viewDataService.GetKeyVehicleLogsForIds(clientSiteLogBookId).ToList();
+            var keyVehicleLogs = keyVehicleLogs1.Where(x => keyvechilelogids.Contains(x.Detail.Id)).ToList();
+
+            return GeneratePdf(clientsiteLogBook, keyVehicleLogs);
+
         }
 
         public string GeneratePdfReport(int clientSiteLogBookId, KeyVehicleLogAuditLogRequest kvlAuditLogRequest)
