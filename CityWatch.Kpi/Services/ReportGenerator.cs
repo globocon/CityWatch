@@ -745,7 +745,7 @@ namespace CityWatch.Kpi.Services
                 var StateConditions = item.hrSettingsClientStates;
                 bool shouldAddCells = false;
 
-                if (SiteConditions.Count != 0 || StateConditions.Count!=0)
+                if (SiteConditions.Count != 0 || StateConditions.Count != 0)
                 {
                     var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
                     var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
@@ -802,33 +802,103 @@ namespace CityWatch.Kpi.Services
                 kpiGuardTable.AddCell(CreateDataCell(guard.SecurityNo));
 
                 var HTList1 = _viewDataService.GetHRSettings(Id);
+                
+                var FilterHR = new List<FilteredHrSettings>();
+                foreach (var item in HTList)
+                {
+
+
+                    var SiteConditions = item.hrSettingsClientSites;
+                    var StateConditions = item.hrSettingsClientStates;
+                    if (SiteConditions.Count != 0 || StateConditions.Count != 0)
+                    {
+                        var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
+                        var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
+                        if (SelctedSiteExist.Count != 0)
+                        {
+                            var filteredItem = new FilteredHrSettings
+                            {
+                                Id = item.Id,
+                                Description = item.Description,
+                                ReferenceNo = item.ReferenceNo,
+                                hrSettingsClientSites = SelctedSiteExist,
+                                hrSettingsClientStates = SelctedStateExist
+                            };
+
+                            // Add the filtered item to the filterHR list
+                            FilterHR.Add(filteredItem);
+                        }
+                        else if (SelctedStateExist.Count != 0)
+                        {
+                            var filteredItem = new FilteredHrSettings
+                            {
+                                Id = item.Id,
+                                Description = item.Description,
+                                ReferenceNo = item.ReferenceNo,
+                                hrSettingsClientSites = SelctedSiteExist,
+                                hrSettingsClientStates = SelctedStateExist
+                            };
+
+                            // Add the filtered item to the filterHR list
+                            FilterHR.Add(filteredItem);
+                        }
+                    }
+                    else
+                    {
+
+                        var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
+                        var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
+                        var filteredItem = new FilteredHrSettings
+                        {
+                             
+                        Id = item.Id,
+                            Description = item.Description,
+                            ReferenceNo = item.ReferenceNo,
+                            hrSettingsClientSites = SelctedSiteExist,
+                            hrSettingsClientStates = SelctedStateExist
+                        };
+
+                        // Add the filtered item to the filterHR list
+                        FilterHR.Add(filteredItem);
+                    }
+
+
+                }
+
 
                 for (int i = 0; i < largestNumber; i++)
                 {
+                    var HRDesc = (FilterHR[i].ReferenceNo+ FilterHR[i].Description).Trim().Replace(" ", ""); 
+                    var test = monthlyDataGuardComplianceData.Select(x => x.Description.Trim().Replace(" ", "")).FirstOrDefault();
+                    var matchingDescription = monthlyDataGuardComplianceData
+                    .Where(data => data.Description.Trim().Replace(" ", "") == HRDesc)
+                    .FirstOrDefault();
+                    if (true)
+                    {
 
+                    }
                     var cellColor = "";
                     DateTime? alertDate = null;
-                    var compliance = i < monthlyDataGuardComplianceData.Count ? monthlyDataGuardComplianceData[i] : null;
-
-                    var SelectedDesc = HTList1
-            .Where(x => compliance != null && compliance.Description != null && x.Description.Trim() == compliance.Description.Trim())
+                    
+                    var SelectedDesc = FilterHR
+            .Where(x => matchingDescription != null && matchingDescription.Description != null && x.Description.Trim() == matchingDescription.Description.Trim())
              .FirstOrDefault();
                     var SiteConditions = SelectedDesc?.hrSettingsClientSites;
                     var StateConditions = SelectedDesc?.hrSettingsClientStates;
-                    if (compliance != null && compliance.ExpiryDate != null && compliance.ExpiryDate.ToString() != "")
+                    if (matchingDescription != null && matchingDescription.ExpiryDate != null && matchingDescription.ExpiryDate.ToString() != "")
                     {
-                        alertDate = Convert.ToDateTime(compliance.ExpiryDate).AddDays(-45);
+                        alertDate = Convert.ToDateTime(matchingDescription.ExpiryDate).AddDays(-45);
                     }
 
-                    if (alertDate <= DateTime.Today && compliance.ExpiryDate > DateTime.Today)
+                    if (alertDate <= DateTime.Today && matchingDescription.ExpiryDate > DateTime.Today)
                     {
                         cellColor = CELL_BG_YELLOW;
                     }
-                    else if (compliance?.ExpiryDate < DateTime.Today)
+                    else if (matchingDescription?.ExpiryDate < DateTime.Today)
                     {
                         cellColor = CELL_BG_RED;
                     }
-                    else if (compliance?.ExpiryDate == null)
+                    else if (matchingDescription?.ExpiryDate == null)
                     {
                         cellColor = "white";
                     }
@@ -837,11 +907,11 @@ namespace CityWatch.Kpi.Services
                         cellColor = "#96e3ac";
                     }
 
-                    DateTime? expiryDate = compliance?.ExpiryDate?.Date;
+                    DateTime? expiryDate = matchingDescription?.ExpiryDate?.Date;
                     string expiryDateString = expiryDate.HasValue ? expiryDate.Value.ToString("dd/MM/yyyy") : "";
-                    if (compliance != null)
+                    if (matchingDescription != null)
                     {
-                        if (compliance.DateType == true)
+                        if (matchingDescription.DateType == true)
                         {
                             expiryDateString = expiryDateString + $"(I)";
                         }
@@ -869,15 +939,24 @@ namespace CityWatch.Kpi.Services
                     {
                         kpiGuardTable.AddCell(CreateDataCell(expiryDateString, true, cellColor));
                     }
-                   
+
 
                 }
+
 
             }
 
 
 
             return kpiGuardTable;
+        }
+        public class FilteredHrSettings
+        {
+            public int Id { get; set; }
+            public string Description { get; set; }
+            public string ReferenceNo { get; set; }
+            public List<HrSettingsClientSites> hrSettingsClientSites { get; set; }
+            public List<HrSettingsClientStates> hrSettingsClientStates { get; set; }
         }
         private string RemoveBrackets(string input)
         {
@@ -905,7 +984,7 @@ namespace CityWatch.Kpi.Services
                 {
                     var SiteConditions = item.hrSettingsClientSites;
                     var StateConditions = item.hrSettingsClientStates;
-                    if (SiteConditions.Count != 0 || StateConditions.Count!=0)
+                    if (SiteConditions.Count != 0 || StateConditions.Count != 0)
                     {
                         var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
                         var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
@@ -1136,7 +1215,7 @@ namespace CityWatch.Kpi.Services
 
                     var SiteConditions = item.hrSettingsClientSites;
                     var StateConditions = item.hrSettingsClientStates;
-                    if (SiteConditions.Count != 0 || StateConditions.Count!=0)
+                    if (SiteConditions.Count != 0 || StateConditions.Count != 0)
                     {
                         var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
                         var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
