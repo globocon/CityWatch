@@ -135,6 +135,8 @@ namespace CityWatch.Web.Services
         List<SelectListItem> GetClientSites(string type = "");
         List<HRGroups> GetHRGroups();
 
+        public List<SelectListItem> ProviderListNewwithSmallLetter { get; }
+
         //p1-202 site allocation-end
 
     }
@@ -289,6 +291,28 @@ namespace CityWatch.Web.Services
                     if (item.CompanyName != null)
                     {
                         items.Add(new SelectListItem(item.CompanyName, item.CompanyName));
+                    }
+
+                }
+                return items;
+            }
+        }
+
+        public List<SelectListItem> ProviderListNewwithSmallLetter
+        {
+            get
+            {
+                var items = new List<SelectListItem>()
+                {
+                    new SelectListItem("Select", "", true)
+                };
+                var KVID = _configDataProvider.GetKVLogField();
+                var providerlist = _configDataProvider.GetProviderList(KVID.Id);
+                foreach (var item in providerlist)
+                {
+                    if (item.CompanyName != null)
+                    {
+                        items.Add(new SelectListItem(item.CompanyName, item.CompanyName.Trim().ToLower()));
                     }
 
                 }
