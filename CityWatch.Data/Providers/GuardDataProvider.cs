@@ -73,6 +73,7 @@ namespace CityWatch.Data.Providers
         List<CriticalDocumentsClientSites> GetCriticalDocs(int clientSiteID);
          ClientSite GetClientSiteID(string ClientSite);
         public DropboxDirectory GetDrobox();
+        public GuardComplianceAndLicense GetDescriptionUsed(HrGroup hrGroup, string Description, int GuardID);
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -626,6 +627,13 @@ namespace CityWatch.Data.Providers
                 .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
                 ThenBy(x => x.ReferenceNoAlphabets.Name).Where(z => z.HRGroups.Id == HRid).ToList();
             return descriptions;
+        }
+        public GuardComplianceAndLicense GetDescriptionUsed(HrGroup hrGroup, string Description, int GuardID)
+        {
+            var valueReturn = _context.GuardComplianceLicense
+          .Where(x => x.HrGroup == hrGroup && x.Description == Description && x.GuardId == GuardID)
+          .FirstOrDefault();
+            return valueReturn;
         }
         public GuardComplianceAndLicense GetDescriptionList(HrGroup hrGroup, string Description,int GuardID)
         {
