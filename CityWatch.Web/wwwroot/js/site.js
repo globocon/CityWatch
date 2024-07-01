@@ -3136,6 +3136,10 @@ gridHrSettings = $('#tbl_hr_settings').grid({
     detailTemplate: '<div class="bg-light"><b>Sites:</b><br>{clientSites}</div>',
     showHiddenColumnsAsDetails: false,
     primaryKey: 'id',
+    icons: {
+        expandRow: '<i class="fa fa-arrow-circle-o-right fa-2x text-success" aria-hidden="true"></i>',
+        collapseRow: '<i class="fa fa-arrow-circle-o-down fa-2x text-success" aria-hidden="true"></i>'
+    },
     columns: [
         { field: 'id', hidden: true },
         { field: 'groupName', width: '15%' }, // Show the HR Group column
@@ -3152,8 +3156,9 @@ gridHrSettings = $('#tbl_hr_settings').grid({
         var lastGroupValue = null;
 
         rows.each(function (index, row) {
-            var currentGroupValue = $(row).find('td:eq(2)').text();
+            var expandbutton 
 
+            var currentGroupValue = $(row).find('td:eq(2)').text();
             if (currentGroupValue !== lastGroupValue) {
                 lastGroupValue = currentGroupValue;
                
