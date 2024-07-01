@@ -2734,7 +2734,7 @@
         $('#Guard_SecurityNo').val(data.securityNo);
         $('#Guard_Initial').val(data.initial);
         $('#Guard_State').val(data.state);
-        $('#Guard_Provider').val(data.provider);
+        $('#Guard_Provider').val(data.provider.toLowerCase());
         $('#Guard_Mobile').val(data.mobile)
         $('#Guard_Email').val(data.email)
         $('#Guard_Id').val(data.id);
