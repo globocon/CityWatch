@@ -2734,7 +2734,13 @@
         $('#Guard_SecurityNo').val(data.securityNo);
         $('#Guard_Initial').val(data.initial);
         $('#Guard_State').val(data.state);
-        $('#Guard_Provider').val(data.provider);
+        if (data.provider !== null && data.provider !== undefined) {
+            $('#Guard_Provider').val(data.provider.toLowerCase());
+        }
+        else {
+
+            $('#Guard_Provider').val(data.provider);
+        }
         $('#Guard_Mobile').val(data.mobile)
         $('#Guard_Email').val(data.email)
         $('#Guard_Id').val(data.id);
@@ -3382,34 +3388,34 @@
     //Gurad License and Compliance Form stop
 
 
-    $('#upload_license_file').on('change', function () {
-        const file = $(this).get(0).files.item(0);
-        const fileExtn = file.name.split('.').pop();
-        if (!fileExtn || 'jpg,jpeg,png,bmp,pdf'.indexOf(fileExtn) < 0) {
-            alert('Please select a valid file type');
-            return false;
-        }
+    //$('#upload_license_file').on('change', function () {
+    //    const file = $(this).get(0).files.item(0);
+    //    const fileExtn = file.name.split('.').pop();
+    //    if (!fileExtn || 'jpg,jpeg,png,bmp,pdf'.indexOf(fileExtn) < 0) {
+    //        alert('Please select a valid file type');
+    //        return false;
+    //    }
 
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append('guardId', $('#GuardLicense_GuardId').val());
+    //    const formData = new FormData();
+    //    formData.append("file", file);
+    //    formData.append('guardId', $('#GuardLicense_GuardId').val());
 
-        $.ajax({
-            type: 'POST',
-            url: '/Admin/GuardSettings?handler=UploadGuardAttachment',
-            data: formData,
-            cache: false,
-            contentType: false,
-            processData: false,
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (data) {
-            $('#GuardLicense_FileName').val(data.fileName);
-            $('#guardLicense_fileName').text(data.fileName ? data.fileName : 'None');
-        }).fail(function () {
-        }).always(function () {
-            $('#upload_license_file').val('');
-        });
-    });
+    //    $.ajax({
+    //        type: 'POST',
+    //        url: '/Admin/GuardSettings?handler=UploadGuardAttachment',
+    //        data: formData,
+    //        cache: false,
+    //        contentType: false,
+    //        processData: false,
+    //        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    //    }).done(function (data) {
+    //        $('#GuardLicense_FileName').val(data.fileName);
+    //        $('#guardLicense_fileName').text(data.fileName ? data.fileName : 'None');
+    //    }).fail(function () {
+    //    }).always(function () {
+    //        $('#upload_license_file').val('');
+    //    });
+    //});
 
     $('#delete_license_file').on('click', function () {
         const guardLicenseId = $('#GuardLicense_Id').val();
@@ -3706,38 +3712,38 @@
         });
     });
 
-    $('#upload_compliance_file').on('change', function () {
-        const file = $(this).get(0).files.item(0);
-        const fileExtn = file.name.split('.').pop();
-        if (!fileExtn || 'jpg,jpeg,png,bmp,pdf'.indexOf(fileExtn) < 0) {
-            alert('Please select a valid file type');
-            return false;
-        }
+    //$('#upload_compliance_file').on('change', function () {
+    //    const file = $(this).get(0).files.item(0);
+    //    const fileExtn = file.name.split('.').pop();
+    //    if (!fileExtn || 'jpg,jpeg,png,bmp,pdf'.indexOf(fileExtn) < 0) {
+    //        alert('Please select a valid file type');
+    //        return false;
+    //    }
 
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append('guardId', $('#GuardCompliance_GuardId').val());
+    //    const formData = new FormData();
+    //    formData.append("file", file);
+    //    formData.append('guardId', $('#GuardCompliance_GuardId').val());
 
-        $.ajax({
-            type: 'POST',
-            url: '/Admin/GuardSettings?handler=UploadGuardAttachment',
-            data: formData,
-            cache: false,
-            contentType: false,
-            processData: false,
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (data) {
-            $('#GuardCompliance_FileName').val(data.fileName);
-            $('#guardCompliance_fileName').text(data.fileName ? data.fileName : 'None');
-        }).fail(function () {
-        }).always(function () {
-            $('#upload_compliance_file').val('');
-        });
-    });
+    //    $.ajax({
+    //        type: 'POST',
+    //        url: '/Admin/GuardSettings?handler=UploadGuardAttachment',
+    //        data: formData,
+    //        cache: false,
+    //        contentType: false,
+    //        processData: false,
+    //        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    //    }).done(function (data) {
+    //        $('#GuardCompliance_FileName').val(data.fileName);
+    //        $('#guardCompliance_fileName').text(data.fileName ? data.fileName : 'None');
+    //    }).fail(function () {
+    //    }).always(function () {
+    //        $('#upload_compliance_file').val('');
+    //    });
+    //});
 
     $('#upload_complianceandlicanse_file').on('change', function () {
         const file = $(this).get(0).files.item(0);
-        const fileExtn = file.name.split('.').pop();
+        const fileExtn = file.name.split('.').pop().toLowerCase();
         if (!fileExtn || 'jpg,jpeg,png,bmp,pdf'.indexOf(fileExtn) < 0) {
             alert('Please select a valid file type');
             return false;
