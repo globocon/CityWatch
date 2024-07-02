@@ -2636,11 +2636,13 @@
         { data: 'state', width: "5%" },
         { data: 'provider', width: "13%" },
         { data: 'clientSites', orderable: false, width: "15%" },
+        { data: 'pin', width: "1%" ,visible: false },
         {
             data: 'isActive', name: 'isactive', className: "text-center", width: "10%", 'render': function (value, type, data) {
                 return renderGuardActiveCell(value, type, data);
             }
         },
+
         {
             targets: -1,
             data: null,
@@ -2735,7 +2737,7 @@
         $('#Guard_Initial').val(data.initial);
         $('#Guard_State').val(data.state);
         $('#Guard_Provider').val(data.provider);
-     
+        $('#Guard_Pin').val(data.pin);
            
        
         $('#Guard_Mobile').val(data.mobile)
@@ -2818,6 +2820,7 @@
         $('#Guard_Initial').val('');
         $('#Guard_State').val('');
         $('#Guard_Provider').val('');
+        $('#Guard_Pin').val('');
         $('#Guard_Email').val('');
         $('#Guard_Mobile').val('');
         $('#Guard_Mobile').val('+61 4');
@@ -4996,6 +4999,22 @@ $('#LicanseTypeFilter').on('change', function () {
 
 });
 //for toggle areas - start
+
+
+    $('#togglePassword').on('click', function () {
+        // Get the password field
+        var passwordField = $('#Guard_Pin');
+        // Get the current type of the password field
+        var passwordFieldType = passwordField.attr('type');
+        // Toggle the type attribute
+        if (passwordFieldType === 'password') {
+            passwordField.attr('type', 'text');
+            $(this).html('<i class="fa fa-eye-slash" aria-hidden="true"></i>'); // Change icon to a closed eye
+        } else {
+            passwordField.attr('type', 'password');
+            $(this).html('<i class="fa fa-eye" aria-hidden="true"></i>'); // Change icon to an open eye
+        }
+    });
 
 });
 

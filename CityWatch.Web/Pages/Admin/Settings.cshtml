@@ -628,6 +628,7 @@
                                             <th>State</th>
                                             <th>CRM (Supplier)</th>
                                             <th>Sites</th>
+                                            <th>Pin</th>
                                             <th>Active</th>
                                             <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
                                         </tr>
@@ -676,18 +677,18 @@
                                     </thead>
                                 </table>
                                 <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
-                         
+
                                 <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
                                 <div id="SettingsDiv" style="display:none">
-                                <div class="form-group row">
+                                    <div class="form-group row">
                                         <div class="col-md-8">
-                                    <label class="form-label" id="DropboxImagesDir">Dropbox Directory</label>
+                                            <label class="form-label" id="DropboxImagesDir">Dropbox Directory</label>
                                             <input class="form-control" id="DropboxDir">
-                                    </div>
+                                        </div>
                                         <div class="col-md-3" style="padding-top:28px">
                                             <button class="btn btn-success" id="add_Dropbox">Save</button>
                                         </div>
-                                </div>
+                                    </div>
                                     <div class="card">
                                         <div class="card-header d-flex justify-content-between">
                                             <b><u>HR Compliance Alerts (Global)</u></b>
@@ -971,11 +972,16 @@
 
                                 </div>
                                 <label class="col-md-1 form-check-label">Is Active</label>
-                                <div class="col-md-1">
+                                <div class="pr-1 pl-3">
                                     <input type="checkbox" class="form-check" id="cbIsActive">
                                     <input type="hidden" id="Guard_IsActive" name="Guard.IsActive">
                                 </div>
-                                <label class="col-md-2 col-form-label text-right">CRM (Supplier)</label>
+                                <div class="pr-0" style="width:60px;">
+                                    <input type="password" class="form-control" id="Guard_Pin" name="Guard.Pin" style="width:60px;">
+                                   
+                                </div>
+                                <span id="togglePassword" class="p-1"><i class="fa fa-eye-slash" aria-hidden="true"></i></span>
+                                <label class="form-label text-right" style="width: 166px;">CRM (Supplier)</label>
                                 <div class="col-md-3">
                                     @*  <input type="text" class="form-control" id="Guard_Provider" name="Guard.Provider"> *@
                                     <select id="Guard_Provider" name="Guard.Provider" asp-items="@Model.ViewDataService.ProviderList" class="form-control"></select>
@@ -1141,7 +1147,7 @@
 
 
                     </div>
-                     <hr/>
+                    <hr />
                     <div class="form-row">
 
 
@@ -1160,7 +1166,7 @@
                             <div class="form-group">
                                 <label for="clientSites">Client Site</label>
                                 <select class="form-control" id="clientSitesDocHrDoc" multiple="multiple" name="ClientSiteId">
-                                   @*  <option>Select</option> *@
+                                    @*  <option>Select</option> *@
                                 </select>
                             </div>
                             <div class="form-group">

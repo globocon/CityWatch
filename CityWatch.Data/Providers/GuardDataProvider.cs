@@ -153,7 +153,7 @@ namespace CityWatch.Data.Providers
                 guard.IsActive = true;
                 initalsUsed = MakeGuardInitials(guard.Initial);
                 guard.Initial = initalsUsed;
-                guard.DateEnrolled = DateTime.Today;
+                guard.DateEnrolled = DateTime.Today;                
                 _context.Guards.Add(guard);
             }
             else
@@ -182,7 +182,7 @@ namespace CityWatch.Data.Providers
                 updateGuard.IsLB_KV_IR = guard.IsLB_KV_IR;
                 updateGuard.IsAdminPowerUser = guard.IsAdminPowerUser;
                 updateGuard.IsAdminGlobal = guard.IsAdminGlobal;
-
+                updateGuard.Pin = guard.Pin;
             }
 
             _context.SaveChanges();
