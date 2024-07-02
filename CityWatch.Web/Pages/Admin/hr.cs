@@ -875,7 +875,7 @@ namespace CityWatch.Web.Pages.Admin
             {
                 UsedDesc = _guardDataProvider.GetDescriptionUsed(hrGroup1, guardComplianceandlicense.Description, guardComplianceandlicense.GuardId);
             }
-            if (UsedDesc != null)
+            if (UsedDesc != null && guardComplianceandlicense.Id == 0)
             {
                 status = false;
                 message = "This Document already used";
@@ -944,7 +944,7 @@ namespace CityWatch.Web.Pages.Admin
             {
                 UsedDesc = _guardDataProvider.GetDescriptionUsed(hrGroup1, guardComplianceandlicense.Description, guardComplianceandlicense.GuardId);
             }
-            if (UsedDesc != null)
+            if (UsedDesc != null && guardComplianceandlicense.Id == 0)
             {
                 status = false;
                 message = "This Document already used";
