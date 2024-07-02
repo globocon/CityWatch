@@ -74,6 +74,8 @@ namespace CityWatch.Data.Providers
          ClientSite GetClientSiteID(string ClientSite);
         public DropboxDirectory GetDrobox();
         public GuardComplianceAndLicense GetDescriptionUsed(HrGroup hrGroup, string Description, int GuardID);
+
+        public List<Guard> GetGuardDetailsUsingId(int Id);
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -88,6 +90,13 @@ namespace CityWatch.Data.Providers
         public List<Guard> GetGuards()
         {
             return _context.Guards.ToList();
+
+        }
+
+
+        public List<Guard> GetGuardDetailsUsingId(int Id)
+        {
+            return _context.Guards.Where(x => x.Id == Id).ToList(); ;
 
         }
 
