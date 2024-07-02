@@ -35,6 +35,7 @@ namespace CityWatch.Data.Providers
         void SavePSPF(IncidentReportPSPF incidentReportPSPF);
         void DeletePSPF(int id);
         string GetPSPFName(string name);
+        string GetPSPFNameFromId(int pspfid);
         void UpdateDefault();
         void DeletePosition(int id);
         void CrPrimaryLogoUpload(DateTime dateTimeUploaded, string primaryLogoPath);
@@ -310,6 +311,11 @@ namespace CityWatch.Data.Providers
         public string GetPSPFName(string name)
         {
             return _context.IncidentReportPSPF.Where(x => x.Name == name).Select(x => x.Name).FirstOrDefault();
+
+        }
+        public string GetPSPFNameFromId(int id)
+        {
+            return _context.IncidentReportPSPF.Where(x => x.Id == id).Select(x => x.Name).FirstOrDefault();
 
         }
         public List<IncidentReportPSPF> GetPSPF()

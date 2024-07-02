@@ -44,10 +44,10 @@
             { data: 'totalMinsOnsite' },
             { data: 'responseTime' },
             { data: 'alarm' },
-            { data: 'patrolAttented' },
+            { data: 'patrolAttented' },           
             { data: 'actionTaken' },
             { data: 'notifiedBy' },
-            { data: 'billing' }
+            { data: 'billing' }           
         ],
         'createdRow': function (row, data, index) {
             // alarm

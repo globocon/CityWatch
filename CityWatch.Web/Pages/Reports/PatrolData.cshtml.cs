@@ -69,7 +69,7 @@ namespace CityWatch.Web.Pages.Reports
 
             var feedbackTemplatesColour = ArrageColurCode(colorCodePercentage,feedbackTemplates).ToArray();
 
-            var dataTable = _viewDataService.PatrolDataToDataTable(results);
+            var dataTable = _viewDataService.PatrolDataToDataTable(results).Result;
             var excelFileDir = Path.Combine(_webHostEnvironment.WebRootPath, "Excel", "Output");
             if (!Directory.Exists(excelFileDir))
                 Directory.CreateDirectory(excelFileDir);

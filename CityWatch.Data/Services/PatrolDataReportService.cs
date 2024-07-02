@@ -1,7 +1,9 @@
 ﻿using CityWatch.Data.Enums;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
+using Microsoft.Extensions.Configuration;
 using System;
+using System.Configuration;
 using System.Linq;
 
 namespace CityWatch.Data.Services
@@ -16,12 +18,14 @@ namespace CityWatch.Data.Services
         private readonly IIrDataProvider _irDataProvider;
         private readonly IClientDataProvider _clientDataProvider;
         private readonly IConfigDataProvider _configDataProvider;
+        private readonly IConfiguration _configuration;
 
         public PatrolDataReportService(IClientDataProvider clientDataProvider, IIrDataProvider irDataProvider, IConfigDataProvider configDataProvider)
         {
             _clientDataProvider = clientDataProvider;
             _irDataProvider = irDataProvider;
             _configDataProvider = configDataProvider;
+          
         }
 
         public PatrolDataReport GetDailyPatrolData(PatrolRequest patrolRequest)
@@ -45,7 +49,7 @@ namespace CityWatch.Data.Services
             var feedbackTemplates = _configDataProvider.GetFeedbackTemplates().Where(x => x.Type == feedbackTypes);
             //To get the feedback id for Colour Codes -end
 
-            return new PatrolDataReport(patrolRequest.ClientSites, incidentReports.Select(x => new DailyPatrolData(x, clientSites)), feedbackTemplates);
+            return new PatrolDataReport(patrolRequest.ClientSites, incidentReports.Select(x => new DailyPatrolData(x, clientSites, _configDataProvider)), feedbackTemplates);
         }
     }
 }
