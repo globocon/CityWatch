@@ -3274,7 +3274,7 @@
         $(this).prop('selectedIndex', 0);
     });
     $('#HRGroup').on('change', function () {
-
+        $('#Description').val('');
         var Descriptionval = $('#HRGroup').val();
         var GuardID = $('#GuardComplianceandlicense_GuardId').val();
         const token = $('input[name="__RequestVerificationToken"]').val();
@@ -3402,6 +3402,7 @@
     //Gurad License and Compliance Form start
     $('#tbl_guard_licensesAndCompliance tbody').on('click', 'button[name=btn_edit_guard_licenseAndCompliance]', function () {
         resetGuardLicenseandComplianceAddModal();
+       
         var data = gridGuardLicensesAndLicence.row($(this).parents('tr')).data();
 
         if (data.expiryDate) {
@@ -3419,6 +3420,7 @@
             $('#ComplianceDate').text('Issue Date');
         }
         $('#addGuardCompliancesLicenseModal').modal('show');
+        
     });
     $('#tbl_guard_licensesAndCompliance tbody').on('click', 'button[name=btn_delete_guard_licenseAndCompliance]', function () {
         var data = gridGuardLicensesAndLicence.row($(this).parents('tr')).data();

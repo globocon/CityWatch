@@ -913,6 +913,7 @@ namespace CityWatch.Kpi.Services
                     {
                         if (matchingDescription.DateType == true)
                         {
+                            cellColor = "#96e3ac";
                             expiryDateString = expiryDateString + $"(I)";
                         }
                     }
