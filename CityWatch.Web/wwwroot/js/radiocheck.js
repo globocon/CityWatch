@@ -1594,60 +1594,158 @@ let gridGuardCompliancesLogDaily = $('#tbl_guard_compliances1').DataTable({
         }
     },
 });
+
 $('#btnHRDetails').on('click', function () {
-    $.ajax({
-        type: 'GET',
-        url: '/Admin/Guardsettings?handler=GuardLicenseAndCompliancForGuardse',
-        data: { guardId: $('#GuardLog_GuardLogin_GuardId').val() },
-    }).done(function (response) {
-        $('#addGuardModalnew').modal('show');
-        isPaused = true;
-        $('.btn-add-guard-addl-details').show();
-
-        //var data = guardSettings.row($(this).parents('tr')).data();
-
-        //$('#Guard_Name1').val(response[0].name);
-        //$('#Guard_SecurityNo1').val(response[0].securityNo);
-        //$('#Guard_Initial1').val(response[0].initial);
-        //$('#Guard_State1').val(response[0].state);
-        //$('#Guard_Provider1').val(response[0].provider);
-        //$('#Guard_Mobile1').val(response[0].mobile)
-        //$('#Guard_Email1').val(response[0].email)
-        //$('#Guard_Id1').val(response[0].id);
-        //$('#cbIsActive1').prop('checked', response[0].isActive);
-        //$('#cbIsRCAccess1').prop('checked', response[0].isRCAccess);
-        //$('#cbIsKPIAccess1').prop('checked', response[0].isKPIAccess);
-        $('#addGuardModal1').modal('show');
-        $('#GuardLicense_GuardId1').val(response[0].id);
-        $('#GuardCompliance_GuardId1').val(response[0].id);
-        $('#GuardComplianceandlicense_GuardId').val(response[0].id);
-        $('#GuardComplianceandlicense_LicenseNo').val(response[0].securityNo);
-
-        // ;
-        var selectedValues = [];
-        if (response[0].isRCAccess) {
-            selectedValues.push(4);
-        }
-        if (response[0].isKPIAccess) {
-            selectedValues.push(3);
-        }
-        if (response[0].isLB_KV_IR) {
-            selectedValues.push(1);
-        }
-        if (response[0].isSTATS) {
-            selectedValues.push(2);
-        }
-        selectedValues.forEach(function (value) {
-
-            $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
-        });
-        gridGuardLicensesLogDaily.ajax.reload();
-        gridGuardCompliancesLogDaily.ajax.reload();
-        $("#Guard_Access1").multiselect();
-        $("#Guard_Access1").val(selectedValues);
-        $("#Guard_Access1").multiselect("refresh");
-    });
+    $('#txt_guardKey').val('');
+    clearGuardValidationSummary('GuardLoginValidationSummaryHR');
+    $('#loginHrEditGuard').modal('show');
 });
+
+
+$('#btnGuardHrUpdate').on('click', function () {
+    clearGuardValidationSummary('GuardLoginValidationSummaryHR');
+    const securityLicenseNo = $('#txt_guardKey').val();
+    if (securityLicenseNo === '') {
+        displayGuardValidationSummary('GuardLoginValidationSummaryHR', 'Please enter PIN ');
+    }
+    else {
+
+
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=GuardHrDocLoginConformation',
+            type: 'POST',
+            data: {
+                guardId: $('#GuardLog_GuardLogin_GuardId').val(),
+                key: securityLicenseNo
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+
+            if (result.accessPermission) {
+
+                $('#modelGuardLoginForHrUpdate').modal('hide');
+
+
+                $.ajax({
+                    type: 'GET',
+                    url: '/Admin/Guardsettings?handler=GuardLicenseAndCompliancForGuardse',
+                    data: { guardId: $('#GuardLog_GuardLogin_GuardId').val() },
+                }).done(function (response) {
+                    $('#loginHrEditGuard').modal('hide');
+                    $('#addGuardModalnew').modal('show');
+                    isPaused = true;
+                    $('.btn-add-guard-addl-details').show();
+                    $('#addGuardModal1').modal('show');
+                    $('#GuardLicense_GuardId1').val(response[0].id);
+                    $('#GuardCompliance_GuardId1').val(response[0].id);
+                    $('#GuardComplianceandlicense_GuardId').val(response[0].id);
+                    $('#GuardComplianceandlicense_LicenseNo').val(response[0].securityNo);
+
+                    // ;
+                    var selectedValues = [];
+                    if (response[0].isRCAccess) {
+                        selectedValues.push(4);
+                    }
+                    if (response[0].isKPIAccess) {
+                        selectedValues.push(3);
+                    }
+                    if (response[0].isLB_KV_IR) {
+                        selectedValues.push(1);
+                    }
+                    if (response[0].isSTATS) {
+                        selectedValues.push(2);
+                    }
+                    selectedValues.forEach(function (value) {
+
+                        $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+                    });
+                    gridGuardLicensesLogDaily.ajax.reload();
+                    gridGuardCompliancesLogDaily.ajax.reload();
+                    $("#Guard_Access1").multiselect();
+                    $("#Guard_Access1").val(selectedValues);
+                    $("#Guard_Access1").multiselect("refresh");
+                });
+
+
+            }
+            else {
+
+
+
+
+
+
+                displayGuardValidationSummary('GuardLoginValidationSummaryHR', result.successMessage);
+
+
+
+            }
+        });
+
+
+
+
+
+
+    }
+});
+
+
+
+//$('#btnHRDetails').on('click', function () {
+//    $.ajax({
+//        type: 'GET',
+//        url: '/Admin/Guardsettings?handler=GuardLicenseAndCompliancForGuardse',
+//        data: { guardId: $('#GuardLog_GuardLogin_GuardId').val() },
+//    }).done(function (response) {
+//        $('#addGuardModalnew').modal('show');
+//        isPaused = true;
+//        $('.btn-add-guard-addl-details').show();
+
+//        //var data = guardSettings.row($(this).parents('tr')).data();
+
+//        //$('#Guard_Name1').val(response[0].name);
+//        //$('#Guard_SecurityNo1').val(response[0].securityNo);
+//        //$('#Guard_Initial1').val(response[0].initial);
+//        //$('#Guard_State1').val(response[0].state);
+//        //$('#Guard_Provider1').val(response[0].provider);
+//        //$('#Guard_Mobile1').val(response[0].mobile)
+//        //$('#Guard_Email1').val(response[0].email)
+//        //$('#Guard_Id1').val(response[0].id);
+//        //$('#cbIsActive1').prop('checked', response[0].isActive);
+//        //$('#cbIsRCAccess1').prop('checked', response[0].isRCAccess);
+//        //$('#cbIsKPIAccess1').prop('checked', response[0].isKPIAccess);
+//        $('#addGuardModal1').modal('show');
+//        $('#GuardLicense_GuardId1').val(response[0].id);
+//        $('#GuardCompliance_GuardId1').val(response[0].id);
+//        $('#GuardComplianceandlicense_GuardId').val(response[0].id);
+//        $('#GuardComplianceandlicense_LicenseNo').val(response[0].securityNo);
+
+//        // ;
+//        var selectedValues = [];
+//        if (response[0].isRCAccess) {
+//            selectedValues.push(4);
+//        }
+//        if (response[0].isKPIAccess) {
+//            selectedValues.push(3);
+//        }
+//        if (response[0].isLB_KV_IR) {
+//            selectedValues.push(1);
+//        }
+//        if (response[0].isSTATS) {
+//            selectedValues.push(2);
+//        }
+//        selectedValues.forEach(function (value) {
+
+//            $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+//        });
+//        gridGuardLicensesLogDaily.ajax.reload();
+//        gridGuardCompliancesLogDaily.ajax.reload();
+//        $("#Guard_Access1").multiselect();
+//        $("#Guard_Access1").val(selectedValues);
+//        $("#Guard_Access1").multiselect("refresh");
+//    });
+//});
 function clearGuardValidationLogDailySummary(validationControl) {
     $('#' + validationControl).removeClass('validation-summary-errors').addClass('validation-summary-valid');
     $('#' + validationControl).html('');

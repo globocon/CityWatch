@@ -18,6 +18,8 @@ namespace CityWatch.Data.Models
         public string SecurityNo { get; set; }
 
         public string Initial { get; set; }
+        public string Pin { get; set; }
+        
 
         public string State { get; set; }
 
