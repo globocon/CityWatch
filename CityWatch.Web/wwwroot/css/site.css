@@ -742,6 +742,14 @@ pre.dark-mode {
 .exit-time-colour {
     background-color: #F5B7B1;
 }
+
+
+
+.page-break {
+    page-break-after: always;
+}
+
+</style >
 /*form trafiic lights-end*/
 
 

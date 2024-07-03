@@ -29,7 +29,8 @@
                 <div>
                     <button type="button" class="btn btn-primary mx-1" id="btnPatrolReportSumbit">Generate Report</button>
                     <a href="#" target="_blank" class="btn btn-outline-secondary mx-1" id="btnExportExcel">Download Excel</a>
-                    <a href="#" class="btn btn-outline-secondary mx-1" id="btnExportPatrolPdf">Download Pdf</a>
+                    @*<a href="#" class="btn btn-outline-secondary mx-1" id="btnExportPatrolPdf">Download Pdf</a>*@
+                    <a href="#" class="btn btn-outline-secondary mx-1" id="convert-to-pdf">Download Pdf</a>
                     <input type="hidden" id="txtDownloadfilename" />
                 </div>
             </div>
@@ -147,7 +148,7 @@
                         </div>
                         <div class="card-body" style="height: 235px; width: 400px;">
                             <canvas id="pie_chart_ir_by_colorcode"></canvas>
-                           @* <svg width="400" height="200" id="pie_chart_ir_by_colorcode"></svg>*@
+                            @* <svg width="400" height="200" id="pie_chart_ir_by_colorcode"></svg>*@
                         </div>
                     </div>
                 </div>
@@ -156,7 +157,7 @@
                 <div class="col-md-12">
                     <div class="card">
                         <div class="card-header">
-                            IR Event Type Quantity (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_event_type_quantity"><span id="count_by_ir" class="p-0 b-0"></span></a>)
+                            IR Event Type Quantity (Count :<span id="count_by_ir" class="p-0 b-0"></span>)
                             @* <div class="float-right">Total IR Count:  <a href="#" class="btn btn-link" id="btncount_event_type_quantity"><span id="count_by_ir"></span></a></div>*@
                         </div>
                         <div class="card-body">
@@ -174,6 +175,94 @@
             </div>
         </div>
     </div>
+    @*  <div style="width: 1px;height: 1px; border: 0px none;position: relative ;overflow: hidden; ">*@
+    <div id="content-to-pdf" style="width:99%">
+
+        <div class="page-break">
+            <div class="card">
+
+                <div class="row">
+                    <div class="col-md-10" style="text-align:center">
+                        <h2 style="padding-top: 35px;text-align: center;">
+                            IR Statistics Report
+                        </h2>
+                        <span id="Spanfromdate"></span> to <span id="Spantodate"></span>
+                    </div>
+                    <div class="col-md-1">
+                        <img src="~/images/cwslogopdf.png" />
+                    </div>
+                </div>
+                <div class="card-header">
+                    IR Records Percentage By Site (Count :<span id="count_by_site3" class="p-0 b-0"></span>)
+                    @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                </div>
+                <div class="card-body">
+                    <svg width="1200" height="900" id="pie_chart_ir_by_site3"></svg>
+                </div>
+            </div>
+        </div>
+        <div class="page-break">
+            <div class="card">
+                <div class="card-header">
+                    IR Records Percentage By Area/Ward (Count :<span id="count_by_area_ward3" class="p-0 b-0"></span>)
+                </div>
+                <div class="card-body">
+                    @*<div style="height:750px ;width:1200px">*@
+                    <div style="height:800px ;width:1100px">
+                        <canvas id="pie_chart_ir_by_areaward3"></canvas>
+                    </div>
+                    @* </div>*@
+                </div>
+            </div>
+        </div>
+        <div class="page-break">
+            <div class="card">
+                <div class="card-header">
+                    IR Records Percentage By Colour Code (Count :<span id="count_color_code3" class="p-0 b-0"></span>)
+                </div>
+                <div class="card-body">
+                    @*<div style="height:750px ;width:1200px">*@
+                    <div style="height:800px ;width:1100px">
+                        <canvas id="pie_chart_ir_by_colorcode3"></canvas>
+                    </div>
+                    @* </div>*@
+                </div>
+            </div>
+        </div>
+        <div class="page-break">
+            <div class="card">
+                <div class="card-header">
+                    IR Event Type Quantity (Count :<span id="count_by_ir3" class="p-0 b-0"></span>)
+                    @* <div class="float-right">Total IR Count:  <a href="#" class="btn btn-link" id="btncount_event_type_quantity"><span id="count_by_ir"></span></a></div>*@
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-row align-items-center">
+                        <div class="col-md-6">
+                            <svg width="650" height="300" id="pie_chart_by_ireventype_quantity3"></svg>
+                        </div>
+                        <div class="col-md-6">
+                            <svg width="550" height="300" id="bar_chart_by_ireventype_quantity3"></svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @*<div style="height:450px ;width:800px">
+        <div style="height:430px ;width:750px">
+
+        </div>
+
+        </div>*@
+        @* <div style="height:450px ;width:800px">
+        <div style="height:430px ;width:750px">
+        <svg width="430" height="430" id="pie_chart_by_ireventype_quantity3"></svg>
+        </div>
+
+        </div>*@
+
+    </div>
+    @*</div>*@
 </div>
 @Html.AntiForgeryToken()
 @section PageHeader {
@@ -291,7 +380,7 @@
                 </div>
 
             </div>
-            
+
             @*   </div>
             </div>
             </div>
@@ -339,5 +428,7 @@
             </div>*@
         </div>
     </div>
+
+
 
 </div>
