@@ -1,4 +1,6 @@
-﻿$(function () {
+﻿
+var FileuploadFileChanged = null;
+$(function () {
     function isLogbookExpired(logBookDate) {
         if (((new Date()).toLocaleDateString('en-AU') > new Date(logBookDate).toLocaleDateString('en-AU'))) {
             return true;
@@ -79,6 +81,10 @@
         buttonTextAlignment: 'left',
         includeSelectAllOption: true,
     });
+
+    $("#fileUpload").fileUpload();
+
+
     /*P1-203 ADMIN USER PROFILE-START*/
     //$('#Guard_Access').on('change', function () {
 
@@ -3095,6 +3101,9 @@
         $('#LicanseTypeFilter').prop('checked', false);
         $('#ComplianceDate').text('Expiry Date');
         clearGuardValidationSummary('compliancelicanseValidationSummary');
+        if (fileuploadinfotable) {
+            fileuploadinfotableBody.empty();
+        }
     }
 
     let gridGuardLicenses = $('#tbl_guard_licenses').DataTable({
@@ -3793,13 +3802,18 @@
     //});
 
     $('#upload_complianceandlicanse_file').on('change', function () {
-        const file = $(this).get(0).files.item(0);
-        const fileExtn = file.name.split('.').pop().toLowerCase();
-        if (!fileExtn || 'jpg,jpeg,png,bmp,pdf'.indexOf(fileExtn) < 0) {
+        const file = $(this).get(0).files; //.item(0); 
+        FileuploadFileChanged(file);
+    });
+
+    FileuploadFileChanged = function (allfile) {
+        const file = allfile.item(0); // allfile.get(0).files.item(0);
+        const fileExtn = "." + file.name.split('.').pop().toLowerCase();        
+        console.log('fileExtn: ' + fileExtn);
+        if (!fileExtn || allowedfiletypes.includes(fileExtn) == false) {
             alert('Please select a valid file type');
             return false;
         }
-  
         var Desc = $('#Description').val();
         Desc = Desc.substring(3);
         var cleanText = Desc.replace(/[✔️❌]/g, '').trim();
@@ -3812,11 +3826,11 @@
         formData.append('ExpiryDate', $('#GuardComplianceAndLicense_ExpiryDate1').val());
         formData.append('DateType', $('#IsDateFilterEnabledHidden').val());
         if (Desc == '') {
-
             (confirm('Please select Description and Expiry/Issue Date'))
         }
         else {
-
+            fileprocess(allfile);
+            
             $.ajax({
                 type: 'POST',
                 url: '/Admin/GuardSettings?handler=UploadGuardAttachment',
@@ -3834,7 +3848,8 @@
                 $('#upload_complianceandlicanse_file').val('');
             });
         }
-    });
+
+    }
 
 
     $("#LoginConformationBtnRC").on('click', function () {
@@ -4980,7 +4995,11 @@ $('#LicanseTypeFilter').on('change', function () {
         //$("#LicenseLabel").show();
         //$("#GuardCompliance_LicenseType").show();
         //$("#DescLabel").hide();
-        //$("#GuardComplianceAndLicense_Description1").hide();
+        $("#GuardComplianceAndLicense_ExpiryDate1").val('');
+        $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', function () {
+            return new Date().toJSON().split('T')[0];
+        });
+        $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', '');
     }
     if (filter == 2) {
         $('#IsDateFilterEnabledHidden').val(false)
@@ -4991,7 +5010,11 @@ $('#LicanseTypeFilter').on('change', function () {
         //$("#GuardCompliance_LicenseType").hide();
         //$("#DescLabel").show();
         //$("#GuardComplianceAndLicense_Description1").show();
-
+        $("#GuardComplianceAndLicense_ExpiryDate1").val('');
+        $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', function () {
+            return new Date().toJSON().split('T')[0];
+        });
+        $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', '');
     }
 
 });
