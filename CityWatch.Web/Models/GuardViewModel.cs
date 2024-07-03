@@ -29,6 +29,8 @@ namespace CityWatch.Web.Models
 
         public string Initial { get { return _guard.Initial; } }
 
+        public string Pin { get { return _guard.Pin; } }
+
         public string State
         {
             get

@@ -2642,11 +2642,13 @@ $(function () {
         { data: 'state', width: "5%" },
         { data: 'provider', width: "13%" },
         { data: 'clientSites', orderable: false, width: "15%" },
+        { data: 'pin', width: "1%" ,visible: false },
         {
             data: 'isActive', name: 'isactive', className: "text-center", width: "10%", 'render': function (value, type, data) {
                 return renderGuardActiveCell(value, type, data);
             }
         },
+
         {
             targets: -1,
             data: null,
@@ -2741,7 +2743,7 @@ $(function () {
         $('#Guard_Initial').val(data.initial);
         $('#Guard_State').val(data.state);
         $('#Guard_Provider').val(data.provider);
-     
+        $('#Guard_Pin').val(data.pin);
            
        
         $('#Guard_Mobile').val(data.mobile)
@@ -2824,6 +2826,7 @@ $(function () {
         $('#Guard_Initial').val('');
         $('#Guard_State').val('');
         $('#Guard_Provider').val('');
+        $('#Guard_Pin').val('');
         $('#Guard_Email').val('');
         $('#Guard_Mobile').val('');
         $('#Guard_Mobile').val('+61 4');
@@ -3283,7 +3286,7 @@ $(function () {
         $(this).prop('selectedIndex', 0);
     });
     $('#HRGroup').on('change', function () {
-
+        $('#Description').val('');
         var Descriptionval = $('#HRGroup').val();
         var GuardID = $('#GuardComplianceandlicense_GuardId').val();
         const token = $('input[name="__RequestVerificationToken"]').val();
@@ -3411,6 +3414,7 @@ $(function () {
     //Gurad License and Compliance Form start
     $('#tbl_guard_licensesAndCompliance tbody').on('click', 'button[name=btn_edit_guard_licenseAndCompliance]', function () {
         resetGuardLicenseandComplianceAddModal();
+       
         var data = gridGuardLicensesAndLicence.row($(this).parents('tr')).data();
 
         if (data.expiryDate) {
@@ -3428,6 +3432,7 @@ $(function () {
             $('#ComplianceDate').text('Issue Date');
         }
         $('#addGuardCompliancesLicenseModal').modal('show');
+        
     });
     $('#tbl_guard_licensesAndCompliance tbody').on('click', 'button[name=btn_delete_guard_licenseAndCompliance]', function () {
         var data = gridGuardLicensesAndLicence.row($(this).parents('tr')).data();
@@ -5019,6 +5024,22 @@ $('#LicanseTypeFilter').on('change', function () {
 
 });
 //for toggle areas - start
+
+
+    $('#togglePassword').on('click', function () {
+        // Get the password field
+        var passwordField = $('#Guard_Pin');
+        // Get the current type of the password field
+        var passwordFieldType = passwordField.attr('type');
+        // Toggle the type attribute
+        if (passwordFieldType === 'password') {
+            passwordField.attr('type', 'text');
+            $(this).html('<i class="fa fa-eye-slash" aria-hidden="true"></i>'); // Change icon to a closed eye
+        } else {
+            passwordField.attr('type', 'password');
+            $(this).html('<i class="fa fa-eye" aria-hidden="true"></i>'); // Change icon to an open eye
+        }
+    });
 
 });
 
