@@ -126,11 +126,14 @@
         //calculate month difference-start
         var date1 = new Date($('#ReportRequest_FromDate').val());
         var date2 = new Date($('#ReportRequest_ToDate').val());
+        
         var monthdiff = monthDiff(date1, date2);
         if (monthdiff > 12) {
             alert('Date Range is  greater than 12 months');
             return false;
         }
+        $('#Spanfromdate').text(formatDate($('#ReportRequest_FromDate').val()));
+        $('#Spantodate').text(formatDate($('#ReportRequest_ToDate').val()));
         //calculate month difference-end
         $('#loader-p').show();
         $.ajax({
@@ -184,6 +187,9 @@
             $('#loader-p').hide();
         });
     });
+
+
+   
 
 
     /************Chart in popup 13/12/2024 large Size Start ***************** */
@@ -1052,8 +1058,8 @@ function drawPieChartUsingChartJsChart(dataValue) {
 
 
     if (canvas2 !== null) {
-        const ctx = document.getElementById('pie_chart_ir_by_areaward1').getContext('2d');
-        window.myChart2 = new Chart(ctx, {
+        const ctx2 = document.getElementById('pie_chart_ir_by_areaward1').getContext('2d');
+        window.myChart2 = new Chart(ctx2, {
             type: 'pie',
             data: {
                 labels: labels,
@@ -1152,8 +1158,8 @@ function drawPieChartUsingChartJsChart(dataValue) {
 
 
     if (canvas3 !== null) {
-        const ctx = document.getElementById('pie_chart_ir_by_areaward3').getContext('2d');
-        window.myChart2 = new Chart(ctx, {
+        const ctx3 = document.getElementById('pie_chart_ir_by_areaward3').getContext('2d');
+        window.canvas3 = new Chart(ctx3, {
             type: 'pie',
             data: {
                 labels: labels,
@@ -1685,12 +1691,13 @@ function drawPieChartUsingChartJsChartColorCode(dataValue, colors) {
 
 
 $('#convert-to-pdf').click(function () {
-   
+    var currentDate = new Date();
+    var formattedDate = formatDate(currentDate);
     $('#loader-p').show();
     var element = $('#content-to-pdf');
     html2pdf(element[0], {
         margin: [0.5, 0, 0, 0],
-        filename: 'myfile.pdf',
+        filename: '' + formattedDate +' - - IR Statistics Report.pdf',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2 },
         jsPDF: { unit: 'in', format: 'a3', orientation: 'portrait' }
@@ -1698,3 +1705,16 @@ $('#convert-to-pdf').click(function () {
         $('#loader-p').hide();
     });
 });
+
+function formatDate(dateStr) {
+    var date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+        return null; // Invalid date
+    }
+
+    var day = String(date.getDate()).padStart(2, '0');
+    var month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+    var year = date.getFullYear();
+
+    return `${day}/${month}/${year}`;
+}
