@@ -2182,13 +2182,23 @@ $('#btnAddGuardLicenseKey').on('click', function () {
 function resetGuardLicenseandComplianceAddModal() {
     $('#GuardComplianceandlicense_Id').val('');
     $('#Description').val('');
-    $('#GuardComplianceAndLicense_ExpiryDate1').val('');
+    $('#LicanseTypeFilter').prop('checked', false);
+    $('#ComplianceDate').text('Expiry Date');
+    $("#GuardComplianceAndLicense_ExpiryDate1").val('');
+    $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', function () {
+        return new Date().toJSON().split('T')[0];
+    });
+    $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', '');
     $('#HRGroup').val('');
     $(".es-list").empty();
     $('#guardComplianceandlicense_fileName1').text('None');
     $('#GuardComplianceandlicense_FileName1').val('');
     $('#GuardComplianceandlicense_CurrentDateTime').val('');
     clearGuardValidationSummary('compliancelicanseValidationSummary');
+
+    if (fileuploadinfotable) {
+        fileuploadinfotableBody.empty();
+    }
 }
 $('#upload_complianceandlicanse_file').on('change', function () {
     const file = $(this).get(0).files.item(0);
