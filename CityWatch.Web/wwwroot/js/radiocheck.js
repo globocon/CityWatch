@@ -1597,7 +1597,9 @@ let gridGuardCompliancesLogDaily = $('#tbl_guard_compliances1').DataTable({
 
 $('#btnHRDetails').on('click', function () {
     $('#txt_guardKey').val('');
+    $('#txt_guardKeyNewPIN').val('');
     clearGuardValidationSummary('GuardLoginValidationSummaryHR');
+    clearGuardValidationSummary('GuardLoginValidationSummaryHRNewPIN');
     $.ajax({
         url: '/Admin/GuardSettings?handler=CheckIfPINSetForTheGuard',
         type: 'POST',
