@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Org.BouncyCastle.Crypto.Macs;
 using System;
@@ -1720,6 +1721,63 @@ namespace CityWatch.Web.Pages.Admin
 
             }
             return new JsonResult(new { AccessPermission, LoggedInUserId, GuId, SuccessCode, SuccessMessage });
+        }
+
+
+
+
+        public JsonResult OnPostCheckIfPINSetForTheGuard(int guardId)
+        {
+            var AccessPermission = false;
+            string SuccessMessage = string.Empty;
+            var guard = _guardDataProvider.GetGuardDetailsUsingId(guardId);
+            var firstGuard = guard.FirstOrDefault();
+            if (firstGuard != null && firstGuard.Pin != null)
+            {
+                SuccessMessage = "Pin alerady Set ";
+            }
+            else
+            {
+                AccessPermission = true;
+                SuccessMessage = "No PIN Set for you";
+
+            }
+
+            return new JsonResult(new { AccessPermission,SuccessMessage });
+        }
+
+
+        public JsonResult OnPostSaveNewPINSetForTheGuard(int guardId, string NewPIN)
+        {
+            var AccessPermission = false;
+            string SuccessMessage = string.Empty;
+            if (!string.IsNullOrEmpty(NewPIN))
+            {
+                var guard = _guardDataProvider.GetGuardDetailsUsingId(guardId);
+                var firstGuard = guard.FirstOrDefault();
+                if (firstGuard != null && firstGuard.Pin != null)
+                {
+                    SuccessMessage = "Pin alerady Set ";
+                }
+                else
+                {
+                    _guardDataProvider.SetGuardNewPIN(guardId, NewPIN);
+                    AccessPermission = true;
+                    SuccessMessage = "New PIN Set for you";
+
+                }
+
+            }
+            else
+            {
+              
+                    SuccessMessage = "Enter your New PIN";
+
+                
+
+            }
+
+            return new JsonResult(new { AccessPermission, SuccessMessage });
         }
 
     }

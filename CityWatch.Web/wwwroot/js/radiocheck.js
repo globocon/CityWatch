@@ -1598,7 +1598,106 @@ let gridGuardCompliancesLogDaily = $('#tbl_guard_compliances1').DataTable({
 $('#btnHRDetails').on('click', function () {
     $('#txt_guardKey').val('');
     clearGuardValidationSummary('GuardLoginValidationSummaryHR');
-    $('#loginHrEditGuard').modal('show');
+    $.ajax({
+        url: '/Admin/GuardSettings?handler=CheckIfPINSetForTheGuard',
+        type: 'POST',
+        data: {
+            guardId: $('#GuardLog_GuardLogin_GuardId').val()
+           
+        },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+
+        if (result.accessPermission) {
+            $('#loginHrNewPasswordSetGuard').modal('show');
+            $('#loginHrEditGuard').modal('hide');
+        }
+        else {
+            $('#loginHrNewPasswordSetGuard').modal('hide');
+            $('#loginHrEditGuard').modal('show');
+
+        }
+    }).fail(function () {
+    }).always(function () {
+        
+    });
+
+
+});
+
+
+
+
+$('#btnGuardHrUpdateNewPIN').on('click', function () {
+    clearGuardValidationSummary('GuardLoginValidationSummaryHRNewPIN');
+    const securityLicenseNo = $('#txt_guardKeyNewPIN').val();
+    $.ajax({
+        url: '/Admin/GuardSettings?handler=SaveNewPINSetForTheGuard',
+        type: 'POST',
+        data: {
+            guardId: $('#GuardLog_GuardLogin_GuardId').val(),
+            NewPIN: securityLicenseNo
+        },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+
+        if (result.accessPermission) {
+
+
+            $('#loginHrNewPasswordSetGuard').modal('hide');
+
+
+            $.ajax({
+                type: 'GET',
+                url: '/Admin/Guardsettings?handler=GuardLicenseAndCompliancForGuardse',
+                data: { guardId: $('#GuardLog_GuardLogin_GuardId').val() },
+            }).done(function (response) {
+                $('#loginHrEditGuard').modal('hide');
+                $('#addGuardModalnew').modal('show');
+                isPaused = true;
+                $('.btn-add-guard-addl-details').show();
+                $('#addGuardModal1').modal('show');
+                $('#GuardLicense_GuardId1').val(response[0].id);
+                $('#GuardCompliance_GuardId1').val(response[0].id);
+                $('#GuardComplianceandlicense_GuardId').val(response[0].id);
+                $('#GuardComplianceandlicense_LicenseNo').val(response[0].securityNo);
+
+                // ;
+                var selectedValues = [];
+                if (response[0].isRCAccess) {
+                    selectedValues.push(4);
+                }
+                if (response[0].isKPIAccess) {
+                    selectedValues.push(3);
+                }
+                if (response[0].isLB_KV_IR) {
+                    selectedValues.push(1);
+                }
+                if (response[0].isSTATS) {
+                    selectedValues.push(2);
+                }
+                selectedValues.forEach(function (value) {
+
+                    $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+                });
+                gridGuardLicensesLogDaily.ajax.reload();
+                gridGuardCompliancesLogDaily.ajax.reload();
+                $("#Guard_Access1").multiselect();
+                $("#Guard_Access1").val(selectedValues);
+                $("#Guard_Access1").multiselect("refresh");
+            });
+           
+        }
+        else {
+           
+            displayGuardValidationSummary('GuardLoginValidationSummaryHRNewPIN', result.successMessage);
+        }
+    }).fail(function () {
+    }).always(function () {
+
+    });
+
+
 });
 
 

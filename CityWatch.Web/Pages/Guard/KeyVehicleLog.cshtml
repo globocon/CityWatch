@@ -1126,6 +1126,46 @@
         </div>
     </div>
 </div>
+
+
+<div class="modal fade" id="loginHrNewPasswordSetGuard" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="loginHrEditGuardLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">Set your PIN for the first time</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <form id="frm_GuardLogin" method="post">
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <div class="input-group">
+                                    <label class="mt-2 mr-2">Enter New PIN</label><br />
+                                    <input class="form-control" type="password" id="txt_guardKeyNewPIN" />
+                                </div>
+                                <div>
+                                    <div class="mt-2" style="padding-left:167px">
+                                        <button type="button" class="btn btn-primary" id="btnGuardHrUpdateNewPIN" title="Get guard details">
+                                            <i class="fa fa-save mr-1"></i><span class="d-none d-md-inline-flex">Save PIN</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left">
+                    <div asp-validation-summary="All" id="GuardLoginValidationSummaryHRNewPIN"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 @section scripts {
     <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&callback=initialize&libraries=places"></script>
 

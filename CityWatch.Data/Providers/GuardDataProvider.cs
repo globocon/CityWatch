@@ -76,6 +76,7 @@ namespace CityWatch.Data.Providers
         public GuardComplianceAndLicense GetDescriptionUsed(HrGroup hrGroup, string Description, int GuardID);
 
         public List<Guard> GetGuardDetailsUsingId(int Id);
+        public void SetGuardNewPIN(int guardId, string NewPIN);
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -97,6 +98,19 @@ namespace CityWatch.Data.Providers
         public List<Guard> GetGuardDetailsUsingId(int Id)
         {
             return _context.Guards.Where(x => x.Id == Id).ToList(); ;
+
+        }
+
+        public void  SetGuardNewPIN(int guardId,string NewPIN)
+        {
+            var updateGuard = _context.Guards.SingleOrDefault(x => x.Id == guardId);
+            if (updateGuard != null)
+            {
+                updateGuard.Pin = NewPIN;
+                _context.SaveChanges();
+
+            }
+
 
         }
 
