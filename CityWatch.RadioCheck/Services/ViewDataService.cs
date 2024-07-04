@@ -23,7 +23,7 @@ namespace CityWatch.RadioCheck.Services
         public List<SelectListItem> GetClientSitesUsingLoginUserId(int guardId, string type = "");
         List<GuardViewModel> GetActiveGuards();
         List<SelectListItem> GetOfficerPositions(OfficerPositionFilterManning positionFilter = OfficerPositionFilterManning.SecurityOnly);
-
+        List<SelectListItem> ProviderList();
     }
 
     public class ViewDataService : IViewDataService
@@ -244,6 +244,25 @@ namespace CityWatch.RadioCheck.Services
                 items.Add(new SelectListItem(officerPosition.Name, officerPosition.Id.ToString()));
             }
 
+            return items;
+        }
+
+        public List<SelectListItem> ProviderList()
+        {
+            var items = new List<SelectListItem>()
+                {
+                    new SelectListItem("Select", "", true)
+                };
+            var KVID = _configDataProvider.GetKVLogField();
+            var providerlist = _configDataProvider.GetProviderList(KVID.Id);
+            foreach (var item in providerlist)
+            {
+                if (item.CompanyName != null)
+                {
+                    items.Add(new SelectListItem(item.CompanyName, item.CompanyName));
+                }
+
+            }
             return items;
         }
     }

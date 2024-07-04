@@ -41,8 +41,10 @@ namespace CityWatch.Web.Pages.Radio
         public int InActiveGuardCount { get; set; }
 
         public int ActiveGuardCount { get; set; }
-        public IActionResult OnGet()
+        public string DisplayItem { get; set; }
+        public IActionResult OnGet(string displayItem)
         {
+            DisplayItem = displayItem;
             var activeGuardDetails = _guardLogDataProvider.GetActiveGuardDetails();
             ActiveGuardCount = activeGuardDetails.Count();
             var inActiveGuardDetails = _guardLogDataProvider.GetInActiveGuardDetails();
