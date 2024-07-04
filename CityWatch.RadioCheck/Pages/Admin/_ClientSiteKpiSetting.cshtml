@@ -217,6 +217,13 @@
                     <div class="row">
                         <div class="col-md-12">
                             <button type="button" class="btn btn-danger" value="@idForDelete" id="delete_worker"><i class="fa fa-trash" aria-hidden="true"></i>&nbsp;Delete Worker</button>
+
+                            <div class="form-group row pt-2">
+                                <label class="col-form-label pl-3">CRM (Supplier)</label>
+                                <div class="col-md-3">
+                                    <select asp-for="@Model.ClientSiteManningGuardKpiSettings[rowIndexFirst].CrmSupplier" asp-items="@ViewDataService.ProviderList()" class="form-control"></select>
+                                </div>
+                            </div>
                             @for (int rowIndex = rowIndexFirst; rowIndex < (4 + rowIndexFirst); rowIndex++)
                             {
                                 /*Monthly Hours Start*/
@@ -353,6 +360,13 @@
                     <hr />
                     <div class="row">
                         <div class="col-md-12">
+                            <div class="form-group row pt-1">
+                                <label class="col-form-label pl-3">CRM (Supplier)</label>
+                                <div class="col-md-3">
+                                    <select asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[0].CrmSupplier" asp-items="@ViewDataService.ProviderList()" class="form-control"></select>
+                                </div>
+
+                            </div>
                             @for (int rowIndex2 = 0; rowIndex2 < 4; rowIndex2++)
                             {
                                 <div class="form-row">
