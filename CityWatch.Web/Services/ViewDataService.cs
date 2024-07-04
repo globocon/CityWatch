@@ -631,7 +631,7 @@ namespace CityWatch.Web.Services
             dt.Columns.Add("Bill To:");
             dt.Columns.Add("File Name");
             dt.Columns.Add("PSPF");
-            dt.Columns.Add("File Size");
+            dt.Columns.Add("File Size(KB)");
             dt.Columns.Add("Hash String");
             foreach (var data in dailyPatrolData)
             {
@@ -650,13 +650,13 @@ namespace CityWatch.Web.Services
                 row["Resp. Time"] = data.ResponseTime;
                 row["Alarm"] = data.Alarm;
                 row["Patrol Att."] = data.PatrolAttented;
-				row["Colour Code"] = data.ColorCode;
+				row["Colour Code"] = data.ColorCodeStr;
 				row["Action Taken"] = data.ActionTaken;
                 row["Notified By"] = data.NotifiedBy;
                 row["Bill To:"] = data.Billing;
                 row["File Name"] = data.fileNametodownload;
                 row["PSPF"] =  data.pspfname;               
-                row["File Size"] = await data.GetBlobSizeAsync();
+                row["File Size(Kb)"] = await data.GetBlobSizeAsync();
                 row["Hash String"] = data.hashvalue;
                 dt.Rows.Add(row);
             }
