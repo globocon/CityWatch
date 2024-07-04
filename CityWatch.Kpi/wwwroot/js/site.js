@@ -1167,6 +1167,7 @@ $(function () {
                             // This function will be executed after the content is loaded
                             console.log('Load operation completed!');
                             // You can add your additional code or actions here
+                            $('#kpi-tab').tab('show');
                             $('#contracted-manning-tab').tab('show');
 
                             window.sharedVariable = result.clientSiteId;
@@ -1178,8 +1179,8 @@ $(function () {
 
                             //alert('Removed the worker successfully');
                         });
-                        $('#kpi-settings-modal').modal('show');
-                        $("#kpi-settings-modal").appendTo("body");
+                        //$('#kpi-settings-modal').modal('show');
+                        //$("#kpi-settings-modal").appendTo("body");
                         currentDiv = 1;
                     }
                    
@@ -1307,6 +1308,7 @@ $(function () {
                     // This function will be executed after the content is loaded
                     console.log('Load operation completed!');                  
                     // You can add your additional code or actions here
+                    $('#kpi-tab').tab('show');
                     $('#contracted-manning-tab').tab('show');
                     window.sharedVariable = data.clientSiteId;
                     console.log('Load operation completed!');
@@ -1316,8 +1318,8 @@ $(function () {
                   //  $("#OtherSettingsNew").load('settingsLB?clientSiteId=53');
                   
                 });
-                $('#kpi-settings-modal').modal('show');
-                $("#kpi-settings-modal").appendTo("body");
+                //$('#kpi-settings-modal').modal('show');
+                //$("#kpi-settings-modal").appendTo("body");
                 currentDiv = 1;
               
             }

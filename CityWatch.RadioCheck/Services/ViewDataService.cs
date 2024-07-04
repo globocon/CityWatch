@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CityWatch.RadioCheck.Services
 {
+    
     public interface IViewDataService
     {
         List<GuardViewModel> GetGuards();
@@ -21,6 +22,8 @@ namespace CityWatch.RadioCheck.Services
         public List<SelectListItem> GetClientSites(string type = "");
         public List<SelectListItem> GetClientSitesUsingLoginUserId(int guardId, string type = "");
         List<GuardViewModel> GetActiveGuards();
+        List<SelectListItem> GetOfficerPositions(OfficerPositionFilterManning positionFilter = OfficerPositionFilterManning.SecurityOnly);
+
     }
 
     public class ViewDataService : IViewDataService
@@ -225,5 +228,23 @@ namespace CityWatch.RadioCheck.Services
         //    //var guardLogins = _guardDataProvider.GetGuardLogins(guards.Select(z => z.Id).ToArray());
         //    //return guards.Select(z => new GuardViewModel(z, guardLogins.Where(y => y.GuardId == z.Id))).ToList();
         //}
+
+        public List<SelectListItem> GetOfficerPositions(OfficerPositionFilterManning positionFilter = OfficerPositionFilterManning.All)
+        {
+            var items = new List<SelectListItem>()
+            {
+                new SelectListItem("Select", "", true),
+            };
+            var officerPositions = _configDataProvider.GetPositions();
+            foreach (var officerPosition in officerPositions.Where(z => positionFilter == OfficerPositionFilterManning.All ||
+                 positionFilter == OfficerPositionFilterManning.PatrolOnly && z.IsPatrolCar ||
+                 positionFilter == OfficerPositionFilterManning.NonPatrolOnly && !z.IsPatrolCar ||
+                 positionFilter == OfficerPositionFilterManning.SecurityOnly && z.Name.Contains("Security")))
+            {
+                items.Add(new SelectListItem(officerPosition.Name, officerPosition.Id.ToString()));
+            }
+
+            return items;
+        }
     }
 }
