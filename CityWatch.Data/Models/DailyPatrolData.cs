@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Hosting;
 using System.Configuration;
 using static System.Net.WebRequestMethods;
 using Azure;
+using System.Drawing.Imaging;
 
 
 namespace CityWatch.Data.Models
@@ -211,10 +212,22 @@ namespace CityWatch.Data.Models
         {
             get
             {
-                return _incidentReport.ColourCode;
+                
+                return _incidentReport.ColourCode;               
+               
+              
             }
         }
+        public string ColorCodeStr
+        {
+            get
+            {
 
+                int? colorCode = _incidentReport.ColourCode;
+
+                return _configDataProvider.GetFeedbackTemplates().SingleOrDefault(x => x.Id == colorCode)?.Name;
+            }
+        }
         public string fileNametodownload {
             get
             {
