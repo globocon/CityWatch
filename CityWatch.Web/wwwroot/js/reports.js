@@ -105,6 +105,8 @@
     window.myChart2;
     window.myChart3;
     window.myChart4;
+    window.myChart5;
+    window.myChart6;
     $('#btnPatrolReportSumbit').on('click', function () {
 
         if (window.myChart1 != undefined)
@@ -115,6 +117,10 @@
             window.myChart3.destroy();
         if (window.myChart4 != undefined)
             window.myChart4.destroy();
+        if (window.myChart5 != undefined)
+            window.myChart5.destroy();
+        if (window.myChart6 != undefined)
+            window.myChart6.destroy();
 
         $('#btnExportExcel').attr('href', '#');
         const fromDate = $('#date_from').val();
@@ -126,7 +132,7 @@
         //calculate month difference-start
         var date1 = new Date($('#ReportRequest_FromDate').val());
         var date2 = new Date($('#ReportRequest_ToDate').val());
-        
+
         var monthdiff = monthDiff(date1, date2);
         if (monthdiff > 12) {
             alert('Date Range is  greater than 12 months');
@@ -154,12 +160,12 @@
             $('#count_by_site').html(response.chartData.sitePercentage.length);
             $('#count_by_area_ward').html(response.chartData.areaWardPercentage.length);
 
-            $('#count_color_code').html(response.chartData.colorCodePercentage.length);            
-           // $('#count_by_ir').html(response.chartData.eventTypeCount.map(x => x.value).reduce((f, s) => f + s, 0));
+            $('#count_color_code').html(response.chartData.colorCodePercentage.length);
+            // $('#count_by_ir').html(response.chartData.eventTypeCount.map(x => x.value).reduce((f, s) => f + s, 0));
             /*to get the correct IR Count-start*/
             $('#count_by_ir').html(response.recordCount);
             $('#count_by_ir3').html(response.recordCount);
-           /*to get the correct IR Count - end*/
+            /*to get the correct IR Count - end*/
 
             /* expanding grapph - start*/
             drawPieChartLargeSize(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site1");
@@ -177,7 +183,7 @@
             $('#count_color_code3').html(response.chartData.colorCodePercentage.length);
             $('#txtDownloadfilename').val(response.fileName2);
 
-            
+
 
             drawPieChartUsingChartJsChart(response.chartData.areaWardPercentage);
             drawPieChartUsingChartJsChartColorCode(response.chartData.colorCodePercentage, response.chartData.feedbackTemplatesColour);
@@ -189,7 +195,7 @@
     });
 
 
-   
+
 
 
     /************Chart in popup 13/12/2024 large Size Start ***************** */
@@ -354,12 +360,12 @@
             width = svg.attr('width'),
             height = svg.attr('height'),
             radius = Math.min(width, height) / 2,
-            arcX = (width / 2)-190,
-            arcY = (height / 2)-3,
-            legendX = (width / 2) +215,
+            arcX = (width / 2) - 190,
+            arcY = (height / 2) - 3,
+            legendX = (width / 2) + 215,
             g = svg.append('g').attr('transform', 'translate(' + arcX + ',' + arcY + ')');
 
-        radius = radius-65;
+        radius = radius - 65;
         // Generate the pie
         var pie = d3.pie()
             .value(function (d) { return d.value; });
@@ -481,7 +487,7 @@
             .text(function (d, i) {
                 if (data[i].key.toLowerCase() == 'no/data')
                     return ' (0%)';
-                return truncate(data[i].key,45) + " (" + data[i].value + "%)";
+                return truncate(data[i].key, 45) + " (" + data[i].value + "%)";
             })
             .style("font-size", "10px")
             .attr("x", 11)
@@ -510,7 +516,7 @@
             legendX = (width / 2) + 5,
             g = svg.append('g').attr('transform', 'translate(' + arcX + ',' + arcY + ')');
 
-       
+
         // Generate the pie
         var pie = d3.pie()
             .value(function (d) { return d.value; });
@@ -864,7 +870,7 @@
                     return 0;
                 if (data[i].value > 0)
                     return data[i].value
-            }); 
+            });
     }
 });
 //calculate month difference-start
@@ -954,7 +960,7 @@ function drawPieChartUsingChartJsChart(dataValue) {
     var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
     if (canvas !== null) {
         const ctx = document.getElementById('pie_chart_ir_by_areaward').getContext('2d');
-       
+
         window.myChart1 = new Chart(ctx, {
             type: 'pie',
             data: {
@@ -1052,7 +1058,7 @@ function drawPieChartUsingChartJsChart(dataValue) {
 
         });
 
-       
+
     }
 
 
@@ -1159,7 +1165,7 @@ function drawPieChartUsingChartJsChart(dataValue) {
 
     if (canvas3 !== null) {
         const ctx3 = document.getElementById('pie_chart_ir_by_areaward3').getContext('2d');
-        window.canvas3 = new Chart(ctx3, {
+        window.myChart6 = new Chart(ctx3, {
             type: 'pie',
             data: {
                 labels: labels,
@@ -1536,7 +1542,7 @@ function drawPieChartUsingChartJsChartColorCode(dataValue, colors) {
 
     if (canvas3 !== null) {
         const ctx = document.getElementById('pie_chart_ir_by_colorcode3').getContext('2d');
-        window.myChart4 = new Chart(ctx, {
+        window.myChart5 = new Chart(ctx, {
             type: 'pie',
             data: {
                 labels: labels,
@@ -1629,8 +1635,8 @@ function drawPieChartUsingChartJsChartColorCode(dataValue, colors) {
     }
     function getColors(length) {
 
-       
-        
+
+
 
         let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
             "#7f7f7f", "#bcbd22", "#17becf",
@@ -1694,16 +1700,19 @@ $('#convert-to-pdf').click(function () {
     var currentDate = new Date();
     var formattedDate = formatDate(currentDate);
     $('#loader-p').show();
-    var element = $('#content-to-pdf');
-    html2pdf(element[0], {
-        margin: [0.5, 0, 0, 0],
-        filename: '' + formattedDate +' - - IR Statistics Report.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'a3', orientation: 'portrait' }
-    }).then(function () {
-        $('#loader-p').hide();
-    });
+    setTimeout(function () {
+        var element = $('#content-to-pdf');
+        html2pdf(element[0], {
+            margin: [0.5, 0, 0, 0],
+            filename: '' + formattedDate + ' - - IR Statistics Report.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'a3', orientation: 'portrait' }
+        }).then(function () {
+            $('#loader-p').hide();
+        });
+    }, 1000); // Simulated delay of 1 second
+
 });
 
 function formatDate(dateStr) {
