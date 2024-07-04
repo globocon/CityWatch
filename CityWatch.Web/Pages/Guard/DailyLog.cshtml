@@ -36,7 +36,7 @@
     <div class="col-md-5">
         <div class="float-right">
             @*<button type="button" class="btn btn-outline-primary" id="btnRefreshActivityStatus"><i class="fa fa-refresh" aria-hidden="true"></i> Refresh Now</button>*@
-            <button type="button" class="btn btn-outline-primary" id="btnHRDetails"><i class="fa fa-user" aria-hidden="true"></i>HR</button>
+            <button type="button" class="btn btn-outline-primary" id="btnHRDetails"><i class="fa fa-user mr-1" aria-hidden="true"></i>HR</button>
             <a class="btn btn-outline-primary" id="generate_log_AlldocketList" href="#">POI List</a>
             <a class="btn btn-outline-primary" href="SiteLogPdf?id=@Model.GuardLog.ClientSiteLogBookId&t=gl" target="_blank">Download PDF</a>
             <a class="btn btn-primary" href="#" id="guard_offduty">Off Duty</a>
@@ -765,25 +765,8 @@
                                         Where a document has no expiry,then use toggle and add the issue date instead
                                     </p>
                                 </div>
-                                @*   <div class="col-sm-4">Note:</div>
-                                <div class="col-sm-4">Licenses and inductions expire. Please ensure you add expiry so system can email you when your document needs to be updated</div> *@
-                                @*  <h6 style="color:red;font-size:11px">  </h6> *@
                             </div>
                         </div>
-
-                        @*  <div class="form-group col-md-6">
-                        <label class="form-label" id="DescLabel">Description</label>
-                        <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
-                        <input type="checkbox" class="custom-control-input" id="LicanseTypeFilter" name="positionfilterPatrolCar">
-                        <label class="custom-control-label" for="LicanseTypeFilter">License Type</label>
-                        </div>
-                        <input type="text" class="form-control" id="GuardComplianceAndLicense_Description1" name="GuardComplianceAndLicense.Description">
-                        <label class="form-label" id="LicenseLabel" style="display:none">License Type</label>
-                        <select class="form-control" id="GuardCompliance_LicenseType" style="display:none;" name="GuardComplianceAndLicense.LicenseType" asp-items="@Html.GetEnumSelectList<GuardLicenseType>().OrderBy(z => z.Text)">
-                        <option value="">Select</option>
-                        </select>
-
-                        </div> *@
                     </div>
 
                     <hr class="mb-1 mt-1" />
@@ -797,19 +780,8 @@
                         <div class="form-group col-md-4">
                             <button type="button" class="btn btn-outline-danger w-100" style="height:60px" id="delete_complianceandlicense_file"><i class="fa fa-trash fa-lg mr-2"></i>Delete</button>
                         </div>
-                        <div class="form-group col-md-12">
-                            @* <label class="form-label">Compliance Document: <span id="guardComplianceandlicense_fileName1">None</span></label> *@
-                            @* <p class="mt-2"> *@
-                            <input type="hidden" id="GuardComplianceandlicense_FileName1" name="GuardComplianceAndLicense.FileName" />
-                            @*<label class="btn btn-sm btn-outline-primary mb-0">
-                            <i class="fa fa-upload mr-2"></i>Upload
-                            <input type="file" id="upload_complianceandlicanse_file" accept=".jpg, .jpeg, .png, .bmp, .pdf" hidden>
-                            </label>*@
-                            @* <button type="button" class="btn btn-outline-danger btn-sm" id="delete_complianceandlicense_file"><i class="fa fa-trash mr-2"></i>Delete</button> *@
-                            @* <small class="form-text text-muted">
-                            Upload a file with extension .jpg, .jpeg, .png, .bmp, .pdf
-                            </small> *@
-                            @* </p> *@
+                        <div class="form-group col-md-12">                            
+                            <input type="hidden" id="GuardComplianceandlicense_FileName1" name="GuardComplianceAndLicense.FileName" />                            
                             <div class="container  pl-0" style="display:flex;font-size:11px;color:black">
                                 <p class="left-text text-danger">Note:</p>&nbsp;&nbsp;
                                 <p class="right-text">
@@ -830,11 +802,7 @@
                                 </p>
                             </div>
                         </div>
-
-                    </div>
-                    @*  <div class="form-row">
-
-                    </div> *@
+                    </div>                    
                     <div class="form-row pl-5">
                         <div class="form-group col-md-12 m-0">
                             <div asp-validation-summary="All" id="compliancelicanseValidationSummary1"></div>
