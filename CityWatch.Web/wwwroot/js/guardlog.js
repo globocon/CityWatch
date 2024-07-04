@@ -3092,21 +3092,22 @@ $(function () {
         clearGuardValidationSummary('licenseValidationSummary');
     }
     function resetGuardLicenseandComplianceAddModal() {
-        $('#GuardComplianceandlicense_Id').val('');
-        $('#HRGroup').val('');
+        $('#GuardComplianceandlicense_Id').val('');        
         $('#Description').val('');
-        $(".es-list").empty();
-        $('#GuardComplianceAndLicense_ExpiryDate1').val('');
-        
+        $('#LicanseTypeFilter').prop('checked', false);
+        $('#ComplianceDate').text('Expiry Date');
+        $('#IsDateFilterEnabledHidden').val(false)
+        $("#GuardComplianceAndLicense_ExpiryDate1").val('');
+        $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', function () {
+            return new Date().toJSON().split('T')[0];
+        });
+        $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', '');
+        $('#HRGroup').val('');
+        $(".es-list").empty();               
         $('#guardComplianceandlicense_fileName1').text('None');
         $('#GuardComplianceandlicense_FileName1').val('');
         $('#GuardComplianceandlicense_CurrentDateTime').val('');
-        $('#LicanseTypeFilter').prop('checked', false);
-        $('#ComplianceDate').text('Expiry Date');
-        clearGuardValidationSummary('compliancelicanseValidationSummary');
-        if (fileuploadinfotable) {
-            fileuploadinfotableBody.empty();
-        }
+        clearGuardValidationSummary('compliancelicanseValidationSummary');        
     }
 
     let gridGuardLicenses = $('#tbl_guard_licenses').DataTable({
@@ -4994,12 +4995,7 @@ $('#LicanseTypeFilter').on('change', function () {
     const filter = isChecked ? 1 : 2;
     if (filter == 1) {
         $('#ComplianceDate').text('Issue Date');
-        $('#IsDateFilterEnabledHidden').val(true)
-        //$("#LicenseTypedv").show();
-        //$("#RefernceNodv").hide();
-        //$("#LicenseLabel").show();
-        //$("#GuardCompliance_LicenseType").show();
-        //$("#DescLabel").hide();
+        $('#IsDateFilterEnabledHidden').val(true)        
         $("#GuardComplianceAndLicense_ExpiryDate1").val('');
         $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', function () {
             return new Date().toJSON().split('T')[0];
@@ -5008,13 +5004,7 @@ $('#LicanseTypeFilter').on('change', function () {
     }
     if (filter == 2) {
         $('#IsDateFilterEnabledHidden').val(false)
-        $('#ComplianceDate').text('Expiry Date');
-        //$("#LicenseTypedv").hide();
-        //$("#RefernceNodv").show();
-        //$("#LicenseLabel").hide();
-        //$("#GuardCompliance_LicenseType").hide();
-        //$("#DescLabel").show();
-        //$("#GuardComplianceAndLicense_Description1").show();
+        $('#ComplianceDate').text('Expiry Date');        
         $("#GuardComplianceAndLicense_ExpiryDate1").val('');
         $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', function () {
             return new Date().toJSON().split('T')[0];
