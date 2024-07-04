@@ -2428,13 +2428,16 @@ namespace CityWatch.Data.Providers
                                       .ToList();
                                         if (rcOffDutyStatus.Count == 0)
                                         {
+                                            
                                             var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
                                             {
                                                 ClientSiteId = manning.ClientSiteKpiSetting.ClientSiteId,
                                                 GuardId = 4,/* temp Guard(bruno) Id because forgin key  is set*/
                                                 GuardLoginTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None),/* Expected Time for Login
-                                    /* New Field Added for NotificationType only for manning notification*/
-                                                NotificationType = 1
+                                                /* New Field Added for NotificationType only for manning notification*/
+                                                NotificationType = 1,
+                                                /* added for show the crm CrmSupplier deatils in the 'no guard on duty' */
+                                                CRMSupplier = manning.CrmSupplier
                                             };
                                             _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
                                             _context.SaveChanges();

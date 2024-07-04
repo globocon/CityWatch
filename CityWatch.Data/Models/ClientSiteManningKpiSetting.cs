@@ -1,4 +1,5 @@
-﻿using Org.BouncyCastle.Asn1.Cms;
+﻿using iText.Svg.Renderers.Impl;
+using Org.BouncyCastle.Asn1.Cms;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -59,7 +60,9 @@ namespace CityWatch.Data.Models
 
        
         public int? IsPHO { get; set; }
-    }
+
+        public string CrmSupplier { get; set; }
+}
     public enum CustomDayOfWeek
     {
         Sunday = DayOfWeek.Sunday,

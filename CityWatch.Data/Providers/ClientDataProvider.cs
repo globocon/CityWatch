@@ -738,11 +738,12 @@ namespace CityWatch.Data.Providers
                             if (setting.ClientSiteManningPatrolCarKpiSettings.Where(x => x.DefaultValue == false).Count() > 0)
                             {
                                 var positionIdPatrolCar = setting.ClientSiteManningPatrolCarKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
+                                var CrmSupplier = setting.ClientSiteManningPatrolCarKpiSettings.Where(x => x.CrmSupplier != null).FirstOrDefault();
                                 //set the values for SettingsId and PositionId                       
                                 if (positionIdPatrolCar != null)
                                 {
                                     int? maxId = _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == setting.Id).Any() ? _context.ClientSiteManningKpiSettings.Where(x => x.SettingsId == setting.Id).Max(item => item.OrderId) : 0;
-                                    setting.ClientSiteManningPatrolCarKpiSettings.ForEach(x => { x.SettingsId = setting.Id; x.PositionId = positionIdPatrolCar.PositionId; x.OrderId = maxId + 1; });
+                                    setting.ClientSiteManningPatrolCarKpiSettings.ForEach(x => { x.SettingsId = setting.Id; x.PositionId = positionIdPatrolCar.PositionId;x.CrmSupplier = CrmSupplier.CrmSupplier; x.OrderId = maxId + 1; });
                                     if (setting.ClientSiteManningPatrolCarKpiSettings.Any())
                                     {
                                         _context.ClientSiteManningKpiSettings.AddRange(setting.ClientSiteManningPatrolCarKpiSettings);
@@ -762,12 +763,16 @@ namespace CityWatch.Data.Providers
                             if (setting.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == false).Count() > 0)
                             {
                                 var positionIdGuard = setting.ClientSiteManningGuardKpiSettings.Where(x => x.PositionId != 0).ToList();
+                               
                                 if (positionIdGuard != null)
                                 {
                                     foreach (var poId in positionIdGuard)
                                     {
                                         if (poId != null)
-                                            setting.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == poId.OrderId).ToList().ForEach(x => { x.SettingsId = setting.Id; x.PositionId = poId.PositionId; });
+                                        {
+                                            var CrmSupplier = setting.ClientSiteManningGuardKpiSettings.Where(x => x.CrmSupplier != null &&x.OrderId==poId.OrderId).FirstOrDefault();
+                                            setting.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == poId.OrderId).ToList().ForEach(x => { x.SettingsId = setting.Id; x.PositionId = poId.PositionId; x.CrmSupplier = CrmSupplier.CrmSupplier; });
+                                        }
 
                                     }
 
