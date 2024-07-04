@@ -19,6 +19,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Security.Policy;
+using System.Threading.Tasks;
 using static iText.Kernel.Pdf.Colorspace.PdfSpecialCs;
 
 namespace CityWatch.Web.Services
@@ -71,7 +72,7 @@ namespace CityWatch.Web.Services
 
         List<ClientType> GetUserClientTypesHavingAccess(int? userId);
         List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm);
-        DataTable PatrolDataToDataTable(List<DailyPatrolData> dailyPatrolData);
+        Task<DataTable> PatrolDataToDataTable(List<DailyPatrolData> dailyPatrolData);
 
         // Daily Guard Logs & Key Vehicle Logs
         bool CheckWandIsInUse(int smartWandId, int? guardId);
@@ -79,6 +80,7 @@ namespace CityWatch.Web.Services
         List<ClientSiteSmartWand> GetClientSiteSmartWands(int clientSiteId);
         List<GuardViewModel> GetGuards();
         List<KeyVehicleLogViewModel> GetKeyVehicleLogs(int logBookId, KvlStatusFilter kvlStatusFilter);
+        List<KeyVehicleLogViewModel> GetKeyVehicleLogsForIds(int logBookId);
         List<SelectListItem> GetKeyVehicleLogFieldsByType(KvlFieldType type, bool withoutSelect = false);
         List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRego(string truckRego);
         List<KeyVehicleLogProfileViewModel> GetKeyVehicleLogProfilesByRego(string truckRego, string poi);
@@ -133,6 +135,8 @@ namespace CityWatch.Web.Services
         List<SelectListItem> GetClientAreas(IncidentReportField ir);
         List<SelectListItem> GetClientSites(string type = "");
         List<HRGroups> GetHRGroups();
+
+        public List<SelectListItem> ProviderListNewwithSmallLetter { get; }
 
         //p1-202 site allocation-end
 
@@ -288,6 +292,28 @@ namespace CityWatch.Web.Services
                     if (item.CompanyName != null)
                     {
                         items.Add(new SelectListItem(item.CompanyName, item.CompanyName));
+                    }
+
+                }
+                return items;
+            }
+        }
+
+        public List<SelectListItem> ProviderListNewwithSmallLetter
+        {
+            get
+            {
+                var items = new List<SelectListItem>()
+                {
+                    new SelectListItem("Select", "", true)
+                };
+                var KVID = _configDataProvider.GetKVLogField();
+                var providerlist = _configDataProvider.GetProviderList(KVID.Id);
+                foreach (var item in providerlist)
+                {
+                    if (item.CompanyName != null)
+                    {
+                        items.Add(new SelectListItem(item.CompanyName, item.CompanyName.Trim().ToLower()));
                     }
 
                 }
@@ -581,13 +607,14 @@ namespace CityWatch.Web.Services
             var guardLogins = _guardDataProvider.GetGuardLogins(guards.Select(z => z.Id).ToArray());
             return guards.Select(z => new GuardViewModel(z, guardLogins.Where(y => y.GuardId == z.Id))).ToList();
         }
-
-        public DataTable PatrolDataToDataTable(List<DailyPatrolData> dailyPatrolData)
+        
+        public async Task<DataTable> PatrolDataToDataTable(List<DailyPatrolData> dailyPatrolData)
         {
             var dt = new DataTable("IR Statistics");
             dt.Columns.Add("Day");
             dt.Columns.Add("Date");
-            dt.Columns.Add("Control Room Job No.");
+          //  dt.Columns.Add("IR S/No");
+		    dt.Columns.Add("Control Room Job No.");
             dt.Columns.Add("Site");
             dt.Columns.Add("Address");
             dt.Columns.Add("Desp. Time");
@@ -598,16 +625,21 @@ namespace CityWatch.Web.Services
             dt.Columns.Add("Resp. Time");
             dt.Columns.Add("Alarm");
             dt.Columns.Add("Patrol Att.");
-            dt.Columns.Add("Action Taken");
+			dt.Columns.Add("Colour Code");
+			dt.Columns.Add("Action Taken");
             dt.Columns.Add("Notified By");
             dt.Columns.Add("Bill To:");
-
+            dt.Columns.Add("File Name");
+            dt.Columns.Add("PSPF");
+            dt.Columns.Add("File Size");
+            dt.Columns.Add("Hash String");
             foreach (var data in dailyPatrolData)
             {
                 var row = dt.NewRow();
                 row["Day"] = data.NameOfDay;
                 row["Date"] = data.Date;
-                row["Control Room Job No."] = data.ControlRoomJobNo;
+				//row["IR S/No"] = data.SerialNo;
+				row["Control Room Job No."] = data.ControlRoomJobNo;
                 row["Site"] = data.SiteName;
                 row["Address"] = data.SiteAddress;
                 row["Desp. Time"] = data.DespatchTime;
@@ -618,9 +650,14 @@ namespace CityWatch.Web.Services
                 row["Resp. Time"] = data.ResponseTime;
                 row["Alarm"] = data.Alarm;
                 row["Patrol Att."] = data.PatrolAttented;
-                row["Action Taken"] = data.ActionTaken;
+				row["Colour Code"] = data.ColorCode;
+				row["Action Taken"] = data.ActionTaken;
                 row["Notified By"] = data.NotifiedBy;
                 row["Bill To:"] = data.Billing;
+                row["File Name"] = data.fileNametodownload;
+                row["PSPF"] =  data.pspfname;               
+                row["File Size"] = await data.GetBlobSizeAsync();
+                row["Hash String"] = data.hashvalue;
                 dt.Rows.Add(row);
             }
 
@@ -655,6 +692,14 @@ namespace CityWatch.Web.Services
             return _guardLogDataProvider.GetKeyVehicleLogs(logBookId)
                 .Select(z => new KeyVehicleLogViewModel(z, kvlFields))
                 .Where(r => kvlStatusFilter == KvlStatusFilter.All || r.Status == kvlStatusFilter)
+               .ToList();
+        }
+
+        public List<KeyVehicleLogViewModel> GetKeyVehicleLogsForIds(int logBookId)
+        {
+            var kvlFields = _guardLogDataProvider.GetKeyVehicleLogFields();
+            return _guardLogDataProvider.GetKeyVehicleLogs(logBookId)
+                .Select(z => new KeyVehicleLogViewModel(z, kvlFields))
                .ToList();
         }
 

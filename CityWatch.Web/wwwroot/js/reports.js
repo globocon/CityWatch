@@ -44,10 +44,10 @@
             { data: 'totalMinsOnsite' },
             { data: 'responseTime' },
             { data: 'alarm' },
-            { data: 'patrolAttented' },
+            { data: 'patrolAttented' },           
             { data: 'actionTaken' },
             { data: 'notifiedBy' },
-            { data: 'billing' }
+            { data: 'billing' }           
         ],
         'createdRow': function (row, data, index) {
             // alarm
@@ -105,6 +105,8 @@
     window.myChart2;
     window.myChart3;
     window.myChart4;
+    window.myChart5;
+    window.myChart6;
     $('#btnPatrolReportSumbit').on('click', function () {
 
         if (window.myChart1 != undefined)
@@ -115,6 +117,10 @@
             window.myChart3.destroy();
         if (window.myChart4 != undefined)
             window.myChart4.destroy();
+        if (window.myChart5 != undefined)
+            window.myChart5.destroy();
+        if (window.myChart6 != undefined)
+            window.myChart6.destroy();
 
         $('#btnExportExcel').attr('href', '#');
         const fromDate = $('#date_from').val();
@@ -126,11 +132,14 @@
         //calculate month difference-start
         var date1 = new Date($('#ReportRequest_FromDate').val());
         var date2 = new Date($('#ReportRequest_ToDate').val());
+
         var monthdiff = monthDiff(date1, date2);
         if (monthdiff > 12) {
             alert('Date Range is  greater than 12 months');
             return false;
         }
+        $('#Spanfromdate').text(formatDate($('#ReportRequest_FromDate').val()));
+        $('#Spantodate').text(formatDate($('#ReportRequest_ToDate').val()));
         //calculate month difference-end
         $('#loader-p').show();
         $.ajax({
@@ -151,23 +160,30 @@
             $('#count_by_site').html(response.chartData.sitePercentage.length);
             $('#count_by_area_ward').html(response.chartData.areaWardPercentage.length);
 
-            $('#count_color_code').html(response.chartData.colorCodePercentage.length);            
-           // $('#count_by_ir').html(response.chartData.eventTypeCount.map(x => x.value).reduce((f, s) => f + s, 0));
+            $('#count_color_code').html(response.chartData.colorCodePercentage.length);
+            // $('#count_by_ir').html(response.chartData.eventTypeCount.map(x => x.value).reduce((f, s) => f + s, 0));
             /*to get the correct IR Count-start*/
             $('#count_by_ir').html(response.recordCount);
-           /*to get the correct IR Count - end*/
+            $('#count_by_ir3').html(response.recordCount);
+            /*to get the correct IR Count - end*/
 
             /* expanding grapph - start*/
             drawPieChartLargeSize(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site1");
+            drawPieChartLargeSizeForPdf(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site3");
+            $('#count_by_site3').html(response.chartData.sitePercentage.length);
             /* drawPieChartLargeSize(response.chartData.areaWardPercentage, response.recordCount, "svg#pie_chart_ir_by_areaward1");*/
             /* drawPieChartLargeSize(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode1");*/
             drawPieChartLargeSize(response.chartData.eventTypePercentage, response.recordCount, "svg#pie_chart_by_ireventype_quantity1");
+            drawPieChartLargeSizeForPdf2(response.chartData.eventTypePercentage, response.recordCount, "svg#pie_chart_by_ireventype_quantity3");
+            drawBarChart(response.chartData.eventTypeCount, response.recordCount, "svg#bar_chart_by_ireventype_quantity3");
             $('#count_by_site1').html(response.chartData.sitePercentage.length);
             $('#count_by_area_ward1').html(response.chartData.areaWardPercentage.length);
+            $('#count_by_area_ward3').html(response.chartData.areaWardPercentage.length);
             $('#count_color_code1').html(response.chartData.colorCodePercentage.length);
+            $('#count_color_code3').html(response.chartData.colorCodePercentage.length);
             $('#txtDownloadfilename').val(response.fileName2);
 
-            
+
 
             drawPieChartUsingChartJsChart(response.chartData.areaWardPercentage);
             drawPieChartUsingChartJsChartColorCode(response.chartData.colorCodePercentage, response.chartData.feedbackTemplatesColour);
@@ -177,6 +193,9 @@
             $('#loader-p').hide();
         });
     });
+
+
+
 
 
     /************Chart in popup 13/12/2024 large Size Start ***************** */
@@ -318,6 +337,308 @@
                 if (data[i].key.toLowerCase() == 'no/data')
                     return ' (0%)';
                 return truncate(data[i].key) + " (" + data[i].value + "%)";
+            })
+            .style("font-size", "10px")
+            .attr("x", 11)
+            .attr("y", 8);
+
+
+
+
+
+    }
+
+
+
+    function drawPieChartLargeSizeForPdf(data, recordCount, control) {
+
+        $(control).html('');
+
+        if (recordCount === 0) return;
+
+        var svg = d3.select(control),
+            width = svg.attr('width'),
+            height = svg.attr('height'),
+            radius = Math.min(width, height) / 2,
+            arcX = (width / 2) - 190,
+            arcY = (height / 2) - 3,
+            legendX = (width / 2) + 215,
+            g = svg.append('g').attr('transform', 'translate(' + arcX + ',' + arcY + ')');
+
+        radius = radius - 65;
+        // Generate the pie
+        var pie = d3.pie()
+            .value(function (d) { return d.value; });
+
+        // Generate the arcs
+        var arc = d3.arc()
+            .innerRadius(0)
+            .outerRadius(radius);
+
+        //Generate groups
+        var arcs = g.selectAll('arc')
+            .data(pie(data))
+            .enter()
+            .append('g')
+            .attr('class', 'arc');
+
+        //Draw arc paths
+        arcs.append('path')
+            .attr('stroke', function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return 'black'
+                else
+                    return '';
+            })
+            .attr('fill', function (d, i) { return getFillColor(d, i, data[i].key); })
+            .attr('d', arc);
+
+        //Append values on chart
+        arcs.append('text')
+            .attr('transform', function (d) { return 'translate(' + arc.centroid(d) + ')'; })
+            .style('font-size', "11px")
+            .attr('text-anchor', 'middle')
+            .text(function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return '0%';
+                if (data[i].value > 0)
+                    return data[i].value + '%';
+            });
+
+
+
+        // Draw labels outside the slices
+        var labels = arcs.append("text")
+            .attr("transform", function (d) {
+                var pos = arc.centroid(d);
+                var midAngle = Math.atan2(pos[1], pos[0]);
+                var x = Math.cos(midAngle) * (radius + 10);
+                var y = Math.sin(midAngle) * (radius + 10);
+                return "translate(" + x + "," + y + ")";
+            })
+            .attr("dy", "0.35em")
+            .attr("text-anchor", function (d) {
+                return (d.startAngle + d.endAngle) / 2 > Math.PI ? "end" : "start";
+            })
+            .text(function (d) { return d.data.label; });
+
+        // Draw leader lines
+        /*  arcs.append("line")
+              .attr("stroke", "black")
+              //.attr("x1", function (d) { return arc.centroid(d)[0]; })
+              .attr("x1", function (d) {
+                  var a = d.startAngle + (d.endAngle - d.startAngle) / 2 - Math.PI / 2;
+                  d.cx = Math.cos(a) * (radius - 1);
+                  return d.x = Math.cos(a) * (radius - 1);
+              })
+              // .attr("y1", function (d) { return arc.centroid(d)[1]; })
+              .attr("y1", function (d) {
+                  var a = d.startAngle + (d.endAngle - d.startAngle) / 2 - Math.PI / 2;
+                  d.cy = Math.sin(a) * (radius - 75);
+                  return d.y = Math.sin(a) * (radius - 1);
+  
+              })
+              .attr("x2", function (d) {
+                  var pos = arc.centroid(d);
+                  var midAngle = Math.atan2(pos[1], pos[0]);
+                  var x = Math.cos(midAngle) * (radius + 20);
+                  return x;
+              })
+              .attr("y2", function (d) {
+                  var pos = arc.centroid(d);
+                  var midAngle = Math.atan2(pos[1], pos[0]);
+                  var y = Math.sin(midAngle) * (radius + 20);
+                  return y;
+              });*/
+
+
+
+
+        arcs.select("text")
+            .attr("transform", function (d) {
+                var centroid = arc.centroid(d),
+                    x = centroid[0],
+                    y = centroid[1],
+                    h = Math.sqrt(x * x + y * y);
+                var angle = (d.startAngle + d.endAngle) / 2;
+                return "translate(" + (x / h * (radius + 1)) + ',' + (y / h * (radius + 1)) + ") rotate(" + (angle * 180 / Math.PI - 90) + ")";
+                /*return "translate(" + (x / h * (radius + 20)) + ',' + (y / h * (radius + 20)) + ")";*/
+            })
+            .style("text-anchor", function (d) {
+                return (d.endAngle + d.startAngle) / 2 > Math.PI ? "start" : "start";
+            });
+
+
+        //Generate legend
+        var legend = svg.selectAll("legend")
+            .data(pie(data))
+            .enter()
+            .append("g")
+            .attr("transform", function (d, i) { return "translate(" + legendX + "," + (i * 12 + 3) + ")"; });
+
+        //Append legend box
+        legend.append("rect")
+            .attr("width", 8)
+            .attr("height", 8)
+            .attr("fill", function (d, i) { return getFillColor(d, i, data[i].key); });
+
+        //Append legend text
+        legend.append("text")
+            .text(function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return ' (0%)';
+                return truncate(data[i].key, 45) + " (" + data[i].value + "%)";
+            })
+            .style("font-size", "10px")
+            .attr("x", 11)
+            .attr("y", 8);
+
+
+
+
+
+    }
+
+
+
+    function drawPieChartLargeSizeForPdf2(data, recordCount, control) {
+
+        $(control).html('');
+
+        if (recordCount === 0) return;
+
+        var svg = d3.select(control),
+            width = svg.attr('width'),
+            height = svg.attr('height'),
+            radius = Math.min(width, height) / 2,
+            arcX = width / 4,
+            arcY = height / 2,
+            legendX = (width / 2) + 5,
+            g = svg.append('g').attr('transform', 'translate(' + arcX + ',' + arcY + ')');
+
+
+        // Generate the pie
+        var pie = d3.pie()
+            .value(function (d) { return d.value; });
+
+        // Generate the arcs
+        var arc = d3.arc()
+            .innerRadius(0)
+            .outerRadius(radius);
+
+        //Generate groups
+        var arcs = g.selectAll('arc')
+            .data(pie(data))
+            .enter()
+            .append('g')
+            .attr('class', 'arc');
+
+        //Draw arc paths
+        arcs.append('path')
+            .attr('stroke', function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return 'black'
+                else
+                    return '';
+            })
+            .attr('fill', function (d, i) { return getFillColor(d, i, data[i].key); })
+            .attr('d', arc);
+
+        //Append values on chart
+        arcs.append('text')
+            .attr('transform', function (d) { return 'translate(' + arc.centroid(d) + ')'; })
+            .style('font-size', "11px")
+            .attr('text-anchor', 'middle')
+            .text(function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return '0%';
+                if (data[i].value > 0)
+                    return data[i].value + '%';
+            });
+
+
+
+        // Draw labels outside the slices
+        var labels = arcs.append("text")
+            .attr("transform", function (d) {
+                var pos = arc.centroid(d);
+                var midAngle = Math.atan2(pos[1], pos[0]);
+                var x = Math.cos(midAngle) * (radius + 10);
+                var y = Math.sin(midAngle) * (radius + 10);
+                return "translate(" + x + "," + y + ")";
+            })
+            .attr("dy", "0.35em")
+            .attr("text-anchor", function (d) {
+                return (d.startAngle + d.endAngle) / 2 > Math.PI ? "end" : "start";
+            })
+            .text(function (d) { return d.data.label; });
+
+        // Draw leader lines
+        /*  arcs.append("line")
+              .attr("stroke", "black")
+              //.attr("x1", function (d) { return arc.centroid(d)[0]; })
+              .attr("x1", function (d) {
+                  var a = d.startAngle + (d.endAngle - d.startAngle) / 2 - Math.PI / 2;
+                  d.cx = Math.cos(a) * (radius - 1);
+                  return d.x = Math.cos(a) * (radius - 1);
+              })
+              // .attr("y1", function (d) { return arc.centroid(d)[1]; })
+              .attr("y1", function (d) {
+                  var a = d.startAngle + (d.endAngle - d.startAngle) / 2 - Math.PI / 2;
+                  d.cy = Math.sin(a) * (radius - 75);
+                  return d.y = Math.sin(a) * (radius - 1);
+  
+              })
+              .attr("x2", function (d) {
+                  var pos = arc.centroid(d);
+                  var midAngle = Math.atan2(pos[1], pos[0]);
+                  var x = Math.cos(midAngle) * (radius + 20);
+                  return x;
+              })
+              .attr("y2", function (d) {
+                  var pos = arc.centroid(d);
+                  var midAngle = Math.atan2(pos[1], pos[0]);
+                  var y = Math.sin(midAngle) * (radius + 20);
+                  return y;
+              });*/
+
+
+
+
+        arcs.select("text")
+            .attr("transform", function (d) {
+                var centroid = arc.centroid(d),
+                    x = centroid[0],
+                    y = centroid[1],
+                    h = Math.sqrt(x * x + y * y);
+                var angle = (d.startAngle + d.endAngle) / 2;
+                return "translate(" + (x / h * (radius + 1)) + ',' + (y / h * (radius + 1)) + ") rotate(" + (angle * 180 / Math.PI - 90) + ")";
+                /*return "translate(" + (x / h * (radius + 20)) + ',' + (y / h * (radius + 20)) + ")";*/
+            })
+            .style("text-anchor", function (d) {
+                return (d.endAngle + d.startAngle) / 2 > Math.PI ? "start" : "start";
+            });
+
+
+        //Generate legend
+        var legend = svg.selectAll("legend")
+            .data(pie(data))
+            .enter()
+            .append("g")
+            .attr("transform", function (d, i) { return "translate(" + legendX + "," + (i * 12 + 3) + ")"; });
+
+        //Append legend box
+        legend.append("rect")
+            .attr("width", 8)
+            .attr("height", 8)
+            .attr("fill", function (d, i) { return getFillColor(d, i, data[i].key); });
+
+        //Append legend text
+        legend.append("text")
+            .text(function (d, i) {
+                if (data[i].key.toLowerCase() == 'no/data')
+                    return ' (0%)';
+                return truncate(data[i].key, 45) + " (" + data[i].value + "%)";
             })
             .style("font-size", "10px")
             .attr("x", 11)
@@ -549,7 +870,7 @@
                     return 0;
                 if (data[i].value > 0)
                     return data[i].value
-            }); 
+            });
     }
 });
 //calculate month difference-start
@@ -636,9 +957,10 @@ function drawPieChartUsingChartJsChart(dataValue) {
 
     var canvas = document.getElementById("pie_chart_ir_by_areaward");
     var canvas2 = document.getElementById("pie_chart_ir_by_areaward1");
+    var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
     if (canvas !== null) {
         const ctx = document.getElementById('pie_chart_ir_by_areaward').getContext('2d');
-       
+
         window.myChart1 = new Chart(ctx, {
             type: 'pie',
             data: {
@@ -736,14 +1058,14 @@ function drawPieChartUsingChartJsChart(dataValue) {
 
         });
 
-       
+
     }
 
 
 
     if (canvas2 !== null) {
-        const ctx = document.getElementById('pie_chart_ir_by_areaward1').getContext('2d');
-        window.myChart2 = new Chart(ctx, {
+        const ctx2 = document.getElementById('pie_chart_ir_by_areaward1').getContext('2d');
+        window.myChart2 = new Chart(ctx2, {
             type: 'pie',
             data: {
                 labels: labels,
@@ -839,6 +1161,107 @@ function drawPieChartUsingChartJsChart(dataValue) {
 
         });
     }
+
+
+    if (canvas3 !== null) {
+        const ctx3 = document.getElementById('pie_chart_ir_by_areaward3').getContext('2d');
+        window.myChart6 = new Chart(ctx3, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
     function getColors(length) {
         let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
             "#7f7f7f", "#bcbd22", "#17becf",
@@ -924,6 +1347,7 @@ function drawPieChartUsingChartJsChartColorCode(dataValue, colors) {
 
     var canvas = document.getElementById("pie_chart_ir_by_colorcode");
     var canvas2 = document.getElementById("pie_chart_ir_by_colorcode1");
+    var canvas3 = document.getElementById("pie_chart_ir_by_colorcode3");
     if (canvas !== null) {
         const ctx = document.getElementById('pie_chart_ir_by_colorcode').getContext('2d');
         window.myChart3 = new Chart(ctx, {
@@ -1114,10 +1538,105 @@ function drawPieChartUsingChartJsChartColorCode(dataValue, colors) {
 
         });
     }
+
+
+    if (canvas3 !== null) {
+        const ctx = document.getElementById('pie_chart_ir_by_colorcode3').getContext('2d');
+        window.myChart5 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: colors,
+                    borderColor: [
+                        'rgba(0, 0, 0, 1)'
+                    ],
+                    borderWidth: 0.1
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 50,
+                        right: 5,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + '%)'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
     function getColors(length) {
 
-       
-        
+
+
 
         let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
             "#7f7f7f", "#bcbd22", "#17becf",
@@ -1174,4 +1693,37 @@ function drawPieChartUsingChartJsChartColorCode(dataValue, colors) {
 
     //}
 
+}
+
+
+$('#convert-to-pdf').click(function () {
+    var currentDate = new Date();
+    var formattedDate = formatDate(currentDate);
+    $('#loader-p').show();
+    setTimeout(function () {
+        var element = $('#content-to-pdf');
+        html2pdf(element[0], {
+            margin: [0.5, 0, 0, 0],
+            filename: '' + formattedDate + ' - - IR Statistics Report.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'a3', orientation: 'portrait' }
+        }).then(function () {
+            $('#loader-p').hide();
+        });
+    }, 1000); // Simulated delay of 1 second
+
+});
+
+function formatDate(dateStr) {
+    var date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+        return null; // Invalid date
+    }
+
+    var day = String(date.getDate()).padStart(2, '0');
+    var month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+    var year = date.getFullYear();
+
+    return `${day}/${month}/${year}`;
 }

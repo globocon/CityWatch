@@ -574,8 +574,22 @@
 
                                             <button type="button" class="btn btn-danger" value="@idForDelete" id="delete_worker"><i class="fa fa-trash" aria-hidden="true"></i>&nbsp;Delete Worker</button>
 
+                                            <div class="form-group row pt-2">
+                                                <label class="col-form-label pl-3">CRM (Supplier)</label>
+                                                <div class="col-md-3">
+                                                     <select asp-for="@Model.ClientSiteManningGuardKpiSettings[rowIndexFirst].CrmSupplier" asp-items="@ViewDataService.ProviderList()" class="form-control"></select>
+                                                </div>
+                                            </div>
+                                            
+                                          
+
+
+
                                             @for (int rowIndex = rowIndexFirst; rowIndex < (4 + rowIndexFirst); rowIndex++)
                                             {
+
+
+
                                                 /*Monthly Hours Start*/
                                                 var monthilyHours = 0.0;
                                                 @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
@@ -594,10 +608,16 @@
                                                 }
 
                                                 /*Monthly Hours End*/
+
+
                                                 <div class="form-row">
                                                     <div class="col-md-3">
                                                         @if (rowIndextemp == 0)
                                                         {
+
+
+
+
 
                                                             <div class="d-flex flex-row justify-content-between">
                                                                 <label class="form-label">Position</label>
@@ -739,10 +759,29 @@
                                     <hr />
                                     <div class="row">
                                         <div class="col-md-12">
+
+
+                                            <div class="form-group row pt-1">
+                                                <label class="col-form-label pl-3">CRM (Supplier)</label>
+                                                <div class="col-md-3">
+                                                  <select asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[0].CrmSupplier" asp-items="@ViewDataService.ProviderList()" class="form-control"></select>
+                                                </div>
+                                               
+                                            </div>
+
+
+
+                                           
+
+
+
                                             @for (int rowIndex2 = 0; rowIndex2 < 4; rowIndex2++)
                                             {
                                                 <div class="form-row">
                                                     <div class="col-md-3">
+
+
+
                                                         @if (rowIndex2 == 0)
                                                         {
 
@@ -885,7 +924,7 @@
                 </div>
 
                 <div class="tab-pane" id="HRCompliance" role="tabpanel" aria-labelledby="hr-compliance-tab">
-                  <div class="container pt-3">
+                    <div class="container pt-3">
                         <iframe src="SinglePageCriticalDoc" frameBorder="0" allowtransparency="true" scrolling="no" style=" width: 100%; height: 710px;  overflow: hidden;"> </iframe>
                     </div>
                 </div>
@@ -966,7 +1005,7 @@
                                     <div class="col-md-12">
                                         <button type="button" class="btn btn-success" id="save_site_dropboxsettings"><i class="fa fa-save mr-2"></i>Save Dropbox Settings</button>
                                     </div>
-                                    
+
                                 </div>
                             </div>
                             <div class="col-md-6 border-left" style="border-left-width:5px !important; border-left-color:lightgray">

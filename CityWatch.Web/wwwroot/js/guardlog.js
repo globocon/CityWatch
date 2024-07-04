@@ -1,4 +1,6 @@
-﻿$(function () {
+﻿
+var FileuploadFileChanged = null;
+$(function () {
     function isLogbookExpired(logBookDate) {
         if (((new Date()).toLocaleDateString('en-AU') > new Date(logBookDate).toLocaleDateString('en-AU'))) {
             return true;
@@ -79,6 +81,10 @@
         buttonTextAlignment: 'left',
         includeSelectAllOption: true,
     });
+
+    $("#fileUpload").fileUpload();
+
+
     /*P1-203 ADMIN USER PROFILE-START*/
     //$('#Guard_Access').on('change', function () {
 
@@ -2636,11 +2642,13 @@
         { data: 'state', width: "5%" },
         { data: 'provider', width: "13%" },
         { data: 'clientSites', orderable: false, width: "15%" },
+        { data: 'pin', width: "1%" ,visible: false },
         {
             data: 'isActive', name: 'isactive', className: "text-center", width: "10%", 'render': function (value, type, data) {
                 return renderGuardActiveCell(value, type, data);
             }
         },
+
         {
             targets: -1,
             data: null,
@@ -2735,6 +2743,9 @@
         $('#Guard_Initial').val(data.initial);
         $('#Guard_State').val(data.state);
         $('#Guard_Provider').val(data.provider);
+        $('#Guard_Pin').val(data.pin);
+           
+       
         $('#Guard_Mobile').val(data.mobile)
         $('#Guard_Email').val(data.email)
         $('#Guard_Id').val(data.id);
@@ -2815,6 +2826,7 @@
         $('#Guard_Initial').val('');
         $('#Guard_State').val('');
         $('#Guard_Provider').val('');
+        $('#Guard_Pin').val('');
         $('#Guard_Email').val('');
         $('#Guard_Mobile').val('');
         $('#Guard_Mobile').val('+61 4');
@@ -3080,18 +3092,22 @@
         clearGuardValidationSummary('licenseValidationSummary');
     }
     function resetGuardLicenseandComplianceAddModal() {
-        $('#GuardComplianceandlicense_Id').val('');
-        $('#HRGroup').val('');
+        $('#GuardComplianceandlicense_Id').val('');        
         $('#Description').val('');
-        $(".es-list").empty();
-        $('#GuardComplianceAndLicense_ExpiryDate1').val('');
-        
+        $('#LicanseTypeFilter').prop('checked', false);
+        $('#ComplianceDate').text('Expiry Date');
+        $('#IsDateFilterEnabledHidden').val(false)
+        $("#GuardComplianceAndLicense_ExpiryDate1").val('');
+        $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', function () {
+            return new Date().toJSON().split('T')[0];
+        });
+        $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', '');
+        $('#HRGroup').val('');
+        $(".es-list").empty();               
         $('#guardComplianceandlicense_fileName1').text('None');
         $('#GuardComplianceandlicense_FileName1').val('');
         $('#GuardComplianceandlicense_CurrentDateTime').val('');
-        $('#LicanseTypeFilter').prop('checked', false);
-        $('#ComplianceDate').text('Expiry Date');
-        clearGuardValidationSummary('compliancelicanseValidationSummary');
+        clearGuardValidationSummary('compliancelicanseValidationSummary');        
     }
 
     let gridGuardLicenses = $('#tbl_guard_licenses').DataTable({
@@ -3171,14 +3187,20 @@
         columns: [
             { data: 'hrGroupText', width: "2%" },
             { data: 'description', width: "7%" },
-            { data: 'expiryDate', width: '2%', orderable: true },
+            {
+                data: 'expiryDate',
+                width: '2%',
+                orderable: true,
+               
+            },
             { data: 'fileName', width: '7%' },
+            { data: 'status', width: "1%" },
             {
                 targets: -1,
                 data: null,
                 defaultContent: '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance"><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
-                    '<button  class="btn btn-outline-danger mr-2" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash mr-2"></i>Delete</button>',
-                width: '5%'
+                    '<button  class="btn btn-outline-danger" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash"></i></button>',
+                width: '4%'
             }],
         columnDefs: [{
             targets: 3,
@@ -3187,15 +3209,62 @@
                 if (data)
                     return '<a href="/Uploads/Guards/License/' + row.licenseNo + '/' + row.fileUrl + '" target="_blank">' + data + '</a>';
                 return '-';
+            },
+
+        },
+            {
+                targets: 4, 
+                data: 'status',
+                render: function (data, type, row, meta) {
+                    var currentDate = new Date();
+                    var ExpiryDate = new Date(row.expiryDate);
+                    var timeDifference = ExpiryDate - currentDate;
+                    var daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+                    var  statusColor = 'green';
+                    if (daysDifference <= 45) {
+                         statusColor = 'yellow';
+                    }
+                    if (row.dateType==true) {
+                        statusColor = 'green';
+                    }
+                    if (ExpiryDate < currentDate) {
+                        statusColor = 'red';
+                    }
+                    return '<div style="display: flex; align-items: center; justify-content: center;"><div style="background-color:' + statusColor + '; width: 10px; height: 10px; border-radius: 50%;"></div></div>';
+                }
             }
-        }],
+        ],
         'createdRow': function (row, data, index) {
             if (data.expiryDate !== null) {
-                $('td', row).eq(2).html(getFormattedDate(new Date(data.expiryDate), null, ' '));
+                var formattedDate = getFormattedDate(new Date(data.expiryDate), null, ' ');
+                if (data.dateType === true) {
+                    formattedDate = formattedDate + '  (I)';
+                    $('td', row).eq(2).html(formattedDate);
+                }
+                else {
+                    $('td', row).eq(2).html(getFormattedDate(new Date(data.expiryDate), null, ' '));
+                }
+                
             }
         },
     });
+    gridGuardLicensesAndLicence.on('draw.dt', function () {
+        var tbody = $('#tbl_guard_licensesAndCompliance tbody');
+        var rows = tbody.find('tr');
+        var lastGroupValue = null;
 
+        rows.each(function (index, row) {
+            var currentGroupValue = $(row).find('td:eq(0)').text();
+
+            if (currentGroupValue !== lastGroupValue) {
+                lastGroupValue = currentGroupValue;
+
+                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 6));
+                headerRow.css('background-color', '#CCCCCC');
+                $(row).before(headerRow);
+            }
+        });
+    });
     //To get the data in description dropdown start
     $('#Description').attr('placeholder', 'Select');
     $('#Description').editableSelect({
@@ -3218,7 +3287,7 @@
         $(this).prop('selectedIndex', 0);
     });
     $('#HRGroup').on('change', function () {
-
+        $('#Description').val('');
         var Descriptionval = $('#HRGroup').val();
         var GuardID = $('#GuardComplianceandlicense_GuardId').val();
         const token = $('input[name="__RequestVerificationToken"]').val();
@@ -3346,6 +3415,7 @@
     //Gurad License and Compliance Form start
     $('#tbl_guard_licensesAndCompliance tbody').on('click', 'button[name=btn_edit_guard_licenseAndCompliance]', function () {
         resetGuardLicenseandComplianceAddModal();
+       
         var data = gridGuardLicensesAndLicence.row($(this).parents('tr')).data();
 
         if (data.expiryDate) {
@@ -3363,6 +3433,7 @@
             $('#ComplianceDate').text('Issue Date');
         }
         $('#addGuardCompliancesLicenseModal').modal('show');
+        
     });
     $('#tbl_guard_licensesAndCompliance tbody').on('click', 'button[name=btn_delete_guard_licenseAndCompliance]', function () {
         var data = gridGuardLicensesAndLicence.row($(this).parents('tr')).data();
@@ -3576,6 +3647,7 @@
         }
     });
     $('#btn_save_guard_compliancelicense').on('click', function () {
+       
         clearGuardValidationSummary('compliancelicanseValidationSummary');
 
         var ExpirayDateVal = $('#GuardComplianceAndLicense_ExpiryDate1').val();
@@ -3736,9 +3808,15 @@
     //});
 
     $('#upload_complianceandlicanse_file').on('change', function () {
-        const file = $(this).get(0).files.item(0);
-        const fileExtn = file.name.split('.').pop().toLowerCase();
-        if (!fileExtn || 'jpg,jpeg,png,bmp,pdf'.indexOf(fileExtn) < 0) {
+        const file = $(this).get(0).files; //.item(0); 
+        FileuploadFileChanged(file);
+    });
+
+    FileuploadFileChanged = function (allfile) {
+        const file = allfile.item(0); // allfile.get(0).files.item(0);
+        const fileExtn = "." + file.name.split('.').pop().toLowerCase();        
+        console.log('fileExtn: ' + fileExtn);
+        if (!fileExtn || allowedfiletypes.includes(fileExtn) == false) {
             alert('Please select a valid file type');
             return false;
         }
@@ -3751,12 +3829,14 @@
         formData.append('LicenseNo', $('#GuardComplianceandlicense_LicenseNo').val());
         formData.append('Description', cleanText);
         formData.append('HRID', $('#HRGroup').val());
+        formData.append('ExpiryDate', $('#GuardComplianceAndLicense_ExpiryDate1').val());
+        formData.append('DateType', $('#IsDateFilterEnabledHidden').val());
         if (Desc == '') {
-
-            (confirm('Please select Description'))
+            (confirm('Please select Description and Expiry/Issue Date'))
         }
         else {
-
+            fileprocess(allfile);
+            
             $.ajax({
                 type: 'POST',
                 url: '/Admin/GuardSettings?handler=UploadGuardAttachment',
@@ -3774,7 +3854,8 @@
                 $('#upload_complianceandlicanse_file').val('');
             });
         }
-    });
+
+    }
 
 
     $("#LoginConformationBtnRC").on('click', function () {
@@ -4914,27 +4995,41 @@ $('#LicanseTypeFilter').on('change', function () {
     const filter = isChecked ? 1 : 2;
     if (filter == 1) {
         $('#ComplianceDate').text('Issue Date');
-        $('#IsDateFilterEnabledHidden').val(true)
-        //$("#LicenseTypedv").show();
-        //$("#RefernceNodv").hide();
-        //$("#LicenseLabel").show();
-        //$("#GuardCompliance_LicenseType").show();
-        //$("#DescLabel").hide();
-        //$("#GuardComplianceAndLicense_Description1").hide();
+        $('#IsDateFilterEnabledHidden').val(true)        
+        $("#GuardComplianceAndLicense_ExpiryDate1").val('');
+        $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', function () {
+            return new Date().toJSON().split('T')[0];
+        });
+        $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', '');
     }
     if (filter == 2) {
         $('#IsDateFilterEnabledHidden').val(false)
-        $('#ComplianceDate').text('Expiry Date');
-        //$("#LicenseTypedv").hide();
-        //$("#RefernceNodv").show();
-        //$("#LicenseLabel").hide();
-        //$("#GuardCompliance_LicenseType").hide();
-        //$("#DescLabel").show();
-        //$("#GuardComplianceAndLicense_Description1").show();
-
+        $('#ComplianceDate').text('Expiry Date');        
+        $("#GuardComplianceAndLicense_ExpiryDate1").val('');
+        $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', function () {
+            return new Date().toJSON().split('T')[0];
+        });
+        $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', '');
     }
 
 });
 //for toggle areas - start
 
+
+    $('#togglePassword').on('click', function () {
+        // Get the password field
+        var passwordField = $('#Guard_Pin');
+        // Get the current type of the password field
+        var passwordFieldType = passwordField.attr('type');
+        // Toggle the type attribute
+        if (passwordFieldType === 'password') {
+            passwordField.attr('type', 'text');
+            $(this).html('<i class="fa fa-eye-slash" aria-hidden="true"></i>'); // Change icon to a closed eye
+        } else {
+            passwordField.attr('type', 'password');
+            $(this).html('<i class="fa fa-eye" aria-hidden="true"></i>'); // Change icon to an open eye
+        }
+    });
+
 });
+

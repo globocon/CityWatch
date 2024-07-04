@@ -30,9 +30,10 @@
         <i class="fa fa-calendar mr-2 text-secondary" aria-hidden="true"></i><b>Log Book Date: </b>@DateTime.Today.ToString("dd MMM yyyy (dddd)").ToUpper()
     </div>
     <div class="col-md-5" style="padding-left:69px;">
-        <button type="button" class="btn btn-outline-primary" id="btnHRDetails"><i class="fa fa-user" aria-hidden="true"></i>HR</button>
+        <button type="button" class="btn btn-outline-primary" id="btnHRDetails"><i class="fa fa-user mr-1" aria-hidden="true"></i>HR</button>
         <a class="btn btn-outline-primary" id="btn_kvl_pdf_POIList" href="#">POI List</a>
-        <a class="btn btn-outline-primary" id="btn_kvl_pdf_download" href="SiteLogPdf?id=@Model.KeyVehicleLog.ClientSiteLogBookId&t=vl" target="_blank">Download PDF</a>
+        @* <a class="btn btn-outline-primary d-none" id="btn_kvl_pdf_download" href="SiteLogPdf?id=@Model.KeyVehicleLog.ClientSiteLogBookId&t=vl" target="_blank">Download PDF</a> *@
+        <button type="button" class="btn btn-outline-primary" id="btn_kvl_pdf_generate" data-logbookid="@Model.KeyVehicleLog.ClientSiteLogBookId">Download PDF</button>
         <a class="btn btn-primary" href="#" id="keyvehicle_offduty">Off Duty</a>
     </div>
 </div>
@@ -680,6 +681,7 @@
                                                             <th>Description</th>
                                                             <th>Expiry Date</th>
                                                             <th>File</th>
+                                                            <th>Status</th>
                                                             <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
                                                         </tr>
                                                     </thead>
@@ -983,15 +985,14 @@
                         <h8 style="color:black;font-size:11px">HR 2=Client inductions    (client specific SOPs)</h8>
                         <h8 style="color:black;font-size:11px">HR 3=Special skills    (FLIR,WARDEN,COXSWAIN,etc)</h8>
                         <div class="row pt-3">
-                            <div class="form-group col-md-5">
+                            <div class="form-group col-md-5 col-lg-5 col-12">
                                 <label class="form-label">HR Group</label>
                                 <select class="form-control" id="HRGroup" name="GuardComplianceAndLicense.HrGroup" asp-items="@viewDataServiceNew.GetHRGroups( true)">
                                    @*  <option selected="selected" value="">Select</option> *@
                                 </select>
                             </div>
-                            <div class="form-group col-md-7" style="padding-left:0px">
+                            <div class="form-group col-md-7 col-lg-7 col-12">
                                 <label class="form-label" id="DescLabel">Description</label>
-
                                 <select name="GuardComplianceAndLicense.Description" id="Description" class="form-control" style="width:287px"></select>
                             </div>
                         </div>
@@ -1007,58 +1008,50 @@
                             </div>
                             <div class="form-group col-md-8 mb-1">
                                 <div class="container p-0" style="display:flex;font-size:11px;color:black">
-                                    <p class="left-text">Note:</p>&nbsp;&nbsp;
+                                    <p class="left-text text-danger">Note:</p>&nbsp;&nbsp;
                                     <p class="right-text">Licenses and inductions expire. Please ensure you add expiry so system can email you when your document needs to be updated.
                                         Where a document has no expiry,then use toggle and add the issue date instead
                                     </p>
                                 </div>
-                                @*   <div class="col-sm-4">Note:</div>
-                                <div class="col-sm-4">Licenses and inductions expire. Please ensure you add expiry so system can email you when your document needs to be updated</div> *@
-                                @*  <h6 style="color:red;font-size:11px">  </h6> *@
                             </div>
                         </div>
-
-                        @*  <div class="form-group col-md-6">
-                        <label class="form-label" id="DescLabel">Description</label>
-                        <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
-                        <input type="checkbox" class="custom-control-input" id="LicanseTypeFilter" name="positionfilterPatrolCar">
-                        <label class="custom-control-label" for="LicanseTypeFilter">License Type</label>
-                        </div>
-                        <input type="text" class="form-control" id="GuardComplianceAndLicense_Description1" name="GuardComplianceAndLicense.Description">
-                        <label class="form-label" id="LicenseLabel" style="display:none">License Type</label>
-                        <select class="form-control" id="GuardCompliance_LicenseType" style="display:none;" name="GuardComplianceAndLicense.LicenseType" asp-items="@Html.GetEnumSelectList<GuardLicenseType>().OrderBy(z => z.Text)">
-                        <option value="">Select</option>
-                        </select>
-
-                        </div> *@
                     </div>
 
                     <hr class="mb-1 mt-1" />
-                    <div class="form-row" style="height:162px;">
-                        <div class="form-group col-md-12">
+                    <div class="form-row">
+                        <div class="form-group col-md-12 mt-1">
                             <label class="form-label">Compliance Document: <span id="guardComplianceandlicense_fileName1">None</span></label>
-                            <p class="mt-2">
-                                <input type="hidden" id="GuardComplianceandlicense_FileName1" name="GuardComplianceAndLicense.FileName" />
-                                <label class="btn btn-sm btn-outline-primary mb-0">
-                                    <i class="fa fa-upload mr-2"></i>Upload
-                                    <input type="file" id="upload_complianceandlicanse_file" accept=".jpg, .jpeg, .png, .bmp, .pdf" hidden>
-                                </label>
-                                <button type="button" class="btn btn-outline-danger btn-sm" id="delete_complianceandlicense_file"><i class="fa fa-trash mr-2"></i>Delete</button>
-                                <small class="form-text text-muted">
-                                    Upload a file with extension .jpg, .jpeg, .png, .bmp, .pdf
-                                </small>
-                            </p>
+                        </div>
+                        <div class="form-group col-md-8">
+                            <div id="fileUpload"></div>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <button type="button" class="btn btn-outline-danger w-100" style="height:60px" id="delete_complianceandlicense_file"><i class="fa fa-trash fa-lg mr-2"></i>Delete</button>
+                        </div>
+                        <div class="form-group col-md-12">
+                            <input type="hidden" id="GuardComplianceandlicense_FileName1" name="GuardComplianceAndLicense.FileName" />                            
                             <div class="container  pl-0" style="display:flex;font-size:11px;color:black">
-                                <p class="left-text">Note:</p>&nbsp;&nbsp;
+                                <p class="left-text text-danger">Note:</p>&nbsp;&nbsp;
                                 <p class="right-text">
-                                    While Multiple files are able to be uploaded simultaneously,
-                                    the system will only allow files to be uploaded to one HR group.Therefore you may
-                                    need to make multiple separate uploads,based on variations to HR Group and description.
+                                    The system will only
+                                    allow
+                                    single
+                                    files to be uploaded to one HR group.
+                                    Therefore you
+                                    may need to make multiple separate uploads,
+                                    based on variations to HR Group and
+                                    description.
+                                    Where an older document already exists, don’t
+                                    ADD it again, simply
+                                    edit the existing document, upload the version over the top with new expiry
+                                    or issue date. If your licence expires and you are
+                                    issued a new number please
+                                    inform Admin; don’t add yourself as a new guard, Admin will edit the record.
                                 </p>
                             </div>
                         </div>
                     </div>
-                    <div class="form-row">
+                    <div class="form-row pl-5">
                         <div class="form-group col-md-12 m-0">
                             <div asp-validation-summary="All" id="compliancelicanseValidationSummary1"></div>
                         </div>
@@ -1068,6 +1061,87 @@
             <div class="modal-footer justify-content-start p-2">
                 <button type="button" class="btn btn-primary" id="btn_save_guard_compliancelicenseKey">Save Compliance</button>
                 <span id="schRunStatusNew" class="mt-2"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="loginHrEditGuard" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="loginHrEditGuardLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">HR Document PIN</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <form id="frm_GuardLogin" method="post">
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <div class="input-group">
+                                    <label class="mt-2 mr-2">Enter your PIN</label><br />
+                                    <input class="form-control" type="password" id="txt_guardKey" />
+                                </div>
+                                <div>
+
+                                    <div class="mt-2" style="padding-left:77px">
+                                        <button type="button" class="btn btn-primary" id="btnGuardHrUpdate" title="Get guard details">
+                                            <i class="fa fa-sign-in mr-2"></i><span class="d-none d-md-inline-flex">Get access permission</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left">
+                    <div asp-validation-summary="All" id="GuardLoginValidationSummaryHR" class="pl-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="loginHrNewPasswordSetGuard" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="loginHrEditGuardLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">Set your PIN for the first time</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <form id="frm_GuardLogin" method="post">
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <div class="input-group">
+                                    <label class="mt-2 mr-2">Enter New PIN</label><br />
+                                    <input class="form-control" type="password" id="txt_guardKeyNewPIN" />
+                                </div>
+                                <div>
+                                    <div class="mt-2" style="padding-left:167px">
+                                        <button type="button" class="btn btn-primary" id="btnGuardHrUpdateNewPIN" title="Get guard details">
+                                            <i class="fa fa-save mr-1"></i><span class="d-none d-md-inline-flex">Save PIN</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left">
+                    <div asp-validation-summary="All" id="GuardLoginValidationSummaryHRNewPIN" class="pl-3"></div>
+                </div>
             </div>
         </div>
     </div>

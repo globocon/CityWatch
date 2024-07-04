@@ -73,6 +73,10 @@ namespace CityWatch.Data.Providers
         List<CriticalDocumentsClientSites> GetCriticalDocs(int clientSiteID);
          ClientSite GetClientSiteID(string ClientSite);
         public DropboxDirectory GetDrobox();
+        public GuardComplianceAndLicense GetDescriptionUsed(HrGroup hrGroup, string Description, int GuardID);
+
+        public List<Guard> GetGuardDetailsUsingId(int Id);
+        public void SetGuardNewPIN(int guardId, string NewPIN);
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -87,6 +91,26 @@ namespace CityWatch.Data.Providers
         public List<Guard> GetGuards()
         {
             return _context.Guards.ToList();
+
+        }
+
+
+        public List<Guard> GetGuardDetailsUsingId(int Id)
+        {
+            return _context.Guards.Where(x => x.Id == Id).ToList(); ;
+
+        }
+
+        public void  SetGuardNewPIN(int guardId,string NewPIN)
+        {
+            var updateGuard = _context.Guards.SingleOrDefault(x => x.Id == guardId);
+            if (updateGuard != null)
+            {
+                updateGuard.Pin = NewPIN;
+                _context.SaveChanges();
+
+            }
+
 
         }
 
@@ -152,7 +176,7 @@ namespace CityWatch.Data.Providers
                 guard.IsActive = true;
                 initalsUsed = MakeGuardInitials(guard.Initial);
                 guard.Initial = initalsUsed;
-                guard.DateEnrolled = DateTime.Today;
+                guard.DateEnrolled = DateTime.Today;                
                 _context.Guards.Add(guard);
             }
             else
@@ -181,7 +205,7 @@ namespace CityWatch.Data.Providers
                 updateGuard.IsLB_KV_IR = guard.IsLB_KV_IR;
                 updateGuard.IsAdminPowerUser = guard.IsAdminPowerUser;
                 updateGuard.IsAdminGlobal = guard.IsAdminGlobal;
-
+                updateGuard.Pin = guard.Pin;
             }
 
             _context.SaveChanges();
@@ -626,6 +650,13 @@ namespace CityWatch.Data.Providers
                 .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
                 ThenBy(x => x.ReferenceNoAlphabets.Name).Where(z => z.HRGroups.Id == HRid).ToList();
             return descriptions;
+        }
+        public GuardComplianceAndLicense GetDescriptionUsed(HrGroup hrGroup, string Description, int GuardID)
+        {
+            var valueReturn = _context.GuardComplianceLicense
+          .Where(x => x.HrGroup == hrGroup && x.Description == Description && x.GuardId == GuardID)
+          .FirstOrDefault();
+            return valueReturn;
         }
         public GuardComplianceAndLicense GetDescriptionList(HrGroup hrGroup, string Description,int GuardID)
         {
