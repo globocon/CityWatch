@@ -478,14 +478,14 @@ namespace CityWatch.Data.Providers
         public List<GuardComplianceAndLicense> GetGuardLicensesandcompliance(int guardId)
         {
             // var LicenceType= _context.GuardLicenses.Where(x => x.GuardId == guardId).Select(x=>x.LicenseType).F
-            var result = _context.GuardComplianceLicense
-                 .Where(x => x.GuardId == guardId)
-                 .Include(z => z.Guard).ToList();
+            //var result = _context.GuardComplianceLicense
+            //     .Where(x => x.GuardId == guardId)
+               //  .Include(z => z.Guard).ToList();
             //GuardLicenseType? licenseType = null;
             // int intValueToCompare = 3;
 
 
-            result = _context.GuardComplianceLicense
+           var result = _context.GuardComplianceLicense
             .Where(x => x.GuardId == guardId)
             .Include(z => z.Guard)
             .Select(x => new GuardComplianceAndLicense

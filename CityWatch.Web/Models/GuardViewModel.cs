@@ -61,7 +61,14 @@ namespace CityWatch.Web.Models
         }
 
         public DateTime? DateEnrolled { get { return _guard.DateEnrolled; } }
-
+        public DateTime? LoginDate
+        {
+            get
+            {
+                var latestLogin = _guardLogins.OrderByDescending(gl => gl.LoginDate).FirstOrDefault();
+                return latestLogin?.LoginDate;
+            }
+        }
         public bool IsActive { get { return _guard.IsActive; } }
         public string Email { get { return _guard.Email; } }
         public string Mobile { get { return _guard.Mobile; } }
