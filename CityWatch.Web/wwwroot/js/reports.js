@@ -360,12 +360,12 @@
             width = svg.attr('width'),
             height = svg.attr('height'),
             radius = Math.min(width, height) / 2,
-            arcX = (width / 2) - 190,
+            arcX = (width / 2) -170,
             arcY = (height / 2) - 3,
-            legendX = (width / 2) + 215,
+            legendX = (width / 2) -30,
             g = svg.append('g').attr('transform', 'translate(' + arcX + ',' + arcY + ')');
 
-        radius = radius - 65;
+        radius = radius-27;
         // Generate the pie
         var pie = d3.pie()
             .value(function (d) { return d.value; });
@@ -487,7 +487,7 @@
             .text(function (d, i) {
                 if (data[i].key.toLowerCase() == 'no/data')
                     return ' (0%)';
-                return truncate(data[i].key, 45) + " (" + data[i].value + "%)";
+                return truncate(data[i].key, 40) + " (" + data[i].value + "%)";
             })
             .style("font-size", "10px")
             .attr("x", 11)
@@ -513,10 +513,10 @@
             radius = Math.min(width, height) / 2,
             arcX = width / 4,
             arcY = height / 2,
-            legendX = (width / 2) + 5,
+            legendX = (width / 2) -20,
             g = svg.append('g').attr('transform', 'translate(' + arcX + ',' + arcY + ')');
 
-
+        radius = radius - 27;
         // Generate the pie
         var pie = d3.pie()
             .value(function (d) { return d.value; });
@@ -638,7 +638,7 @@
             .text(function (d, i) {
                 if (data[i].key.toLowerCase() == 'no/data')
                     return ' (0%)';
-                return truncate(data[i].key, 45) + " (" + data[i].value + "%)";
+                return truncate(data[i].key, 40) + " (" + data[i].value + "%)";
             })
             .style("font-size", "10px")
             .attr("x", 11)
@@ -1559,8 +1559,8 @@ function drawPieChartUsingChartJsChartColorCode(dataValue, colors) {
             options: {
                 layout: {
                     padding: {
-                        left: 50,
-                        right: 5,
+                        left: 8,
+                        right: 2,
                         top: 20,
                         bottom: 20
                     }
@@ -1581,7 +1581,7 @@ function drawPieChartUsingChartJsChartColorCode(dataValue, colors) {
                         labels: {
                             font: {
                                 family: 'Arial',
-                                size: 11
+                                size: 10
                             },
 
                             boxWidth: 10,
@@ -1590,13 +1590,17 @@ function drawPieChartUsingChartJsChartColorCode(dataValue, colors) {
                                 const data = chart.data;
                                 if (data.labels.length && data.datasets.length) {
                                     const { labels: { pointStyle } } = chart.legend.options;
+                                    
 
                                     return data.labels.map((label, i) => {
+                                        
+                                        var truncatedLabel = label.length > 25 ? label.substring(0, 25) + '...' : label;
+
                                         const meta = chart.getDatasetMeta(0);
                                         const style = meta.controller.getStyle(i);
-
+                                       
                                         return {
-                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
+                                            text: `${truncatedLabel} (${data['datasets'][0].data[i]}%)`,
                                             fillStyle: style.backgroundColor,
                                             strokeStyle: style.borderColor,
                                             lineWidth: style.borderWidth,
@@ -1703,11 +1707,11 @@ $('#convert-to-pdf').click(function () {
     setTimeout(function () {
         var element = $('#content-to-pdf');
         html2pdf(element[0], {
-            margin: [0.5, 0, 0, 0],
+            margin: [0, 0, 0, 0],
             filename: '' + formattedDate + ' - - IR Statistics Report.pdf',
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2 },
-            jsPDF: { unit: 'in', format: 'a3', orientation: 'portrait' }
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
         }).then(function () {
             $('#loader-p').hide();
         });
