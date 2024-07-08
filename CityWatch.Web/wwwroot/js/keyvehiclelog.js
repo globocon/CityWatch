@@ -4449,16 +4449,19 @@ $(function () {
                         type: 'POST',
                         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
                     }).done(function (response) {
-                         siteidd = response.poc.clientSitePocIdsVehicleLog;
-                        var selectedValues = siteidd.split(',');
-                        $('#EmailPopup').val(siteidd); 
-                       
-                        selectedValues.forEach(function (value) {
-                            if (value === site.value) {
-                                option = '<option value="' + value + '" selected>' + site.text + '</option>';
-                            }
-                        });
+                        siteidd = response.poc.clientSitePocIdsVehicleLog;
+                        //p7-114 Docket Email for poc start -jisha check when poc is selected for the entry
+                        if (siteidd != null) {
+                            var selectedValues = siteidd.split(',');
+                            $('#EmailPopup').val(siteidd);
 
+                            selectedValues.forEach(function (value) {
+                                if (value === site.value) {
+                                    option = '<option value="' + value + '" selected>' + site.text + '</option>';
+                                }
+                            });
+                        }
+                        //p7-114 Docket Email for poc end -jisha check when poc is selected for the entry
                         // Append the option after the inner AJAX call is done
                         clientSiteControlKeyvehicle.append(option);
                         clientSiteControlKeyvehicle.multiselect('rebuild');
@@ -4511,8 +4514,11 @@ $(function () {
 
                     $('#stakeholderEmail').val(emailIndividual);
                 }
-
-                GetEmails(response.poc.clientSitePocIdsVehicleLog);
+                //p7-114 Docket Email for poc-start
+                if (response.poc.clientSitePocIdsVehicleLog != null) {
+                    GetEmails(response.poc.clientSitePocIdsVehicleLog);
+                    }
+                //p7 - 114 Docket Email for poc - end
             });
         }
 
