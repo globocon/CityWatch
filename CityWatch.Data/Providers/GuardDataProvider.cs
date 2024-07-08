@@ -77,6 +77,7 @@ namespace CityWatch.Data.Providers
 
         public List<Guard> GetGuardDetailsUsingId(int Id);
         public void SetGuardNewPIN(int guardId, string NewPIN);
+        List<HrSettings> GetHRDescFull();
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -781,6 +782,15 @@ namespace CityWatch.Data.Providers
         public DropboxDirectory GetDrobox()
         {
             return _context.DropboxDirectory.FirstOrDefault();
+        }
+        public List<HrSettings> GetHRDescFull()
+        {
+            var descriptions = _context.HrSettings.Include(z => z.HRGroups)
+                .Include(z => z.ReferenceNoNumbers)
+                .Include(z => z.ReferenceNoAlphabets)
+                .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
+                ThenBy(x => x.ReferenceNoAlphabets.Name).ToList();
+            return descriptions;
         }
     }
 }
