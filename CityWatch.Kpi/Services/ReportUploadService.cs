@@ -45,7 +45,7 @@ namespace CityWatch.Kpi.Services
             _reportGenerator = reportGenerator;
             _dropboxUploadService = dropboxUploadService;
             _importJobDataProvider = importJobDataProvider;
-            _importDataService= importDataService;
+            _importDataService = importDataService;
             _settings = settings.Value;
             _logger = logger;
             _reportRootDir = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf");
@@ -53,8 +53,8 @@ namespace CityWatch.Kpi.Services
 
         public async Task<bool> ProcessUpload(DateTime reportFromDate)
         {
-            var dropboxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken, 
-                _settings.DropboxRefreshToken, _settings.DropboxUserEmail);            
+            var dropboxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken,
+                _settings.DropboxRefreshToken, _settings.DropboxUserEmail);
 
             var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSettings().Where(x => !string.IsNullOrEmpty(x.DropboxImagesDir));
             foreach (var clientSiteKpiSetting in clientSiteKpiSettings)
@@ -73,13 +73,12 @@ namespace CityWatch.Kpi.Services
                     var fileName = _reportGenerator.GeneratePdfReport(clientSiteKpiSetting.ClientSiteId, reportFromDate, reportFromDate.AddMonths(1).AddDays(-1));
                     var fileToUpload = Path.Combine(_reportRootDir, "Output", fileName);
                     var dbxFilePath = $"{clientSiteKpiSetting.DropboxImagesDir}/FLIR - Wand Recordings - IRs - Daily Logs/{reportFromDate.Date.Year}/{reportFromDate.Date:yyyyMM} - {reportFromDate.Date.ToString("MMMM").ToUpper()} DATA/x - Site KPI Telematics & Statistics/{clientSiteKpiSetting.ClientSite.Name} - Daily KPI Reports - {reportFromDate.Date:MMM yyyy}.pdf";
-                    
+
                     await _dropboxUploadService.Upload(dropboxSettings, fileToUpload, dbxFilePath);
 
-                    if(clientSiteKpiSetting.MonthlyClientReport == true)
-                    {
-                        await CreateCustomDropboxFolders(clientSiteKpiSetting, dropboxSettings, reportFromDate);
-                    }
+                    await CreateExtraDropboxFolders(clientSiteKpiSetting, dropboxSettings, reportFromDate);
+                    await CreateCustomDropboxFolders(clientSiteKpiSetting, dropboxSettings, reportFromDate);
+
                 }
                 catch (Exception ex)
                 {
@@ -90,6 +89,26 @@ namespace CityWatch.Kpi.Services
             return true;
         }
 
+        private async Task CreateExtraDropboxFolders(ClientSiteKpiSetting clientSiteKpiSetting, DropboxSettings dropboxSettings, DateTime reportFromDate)
+        {
+            if (clientSiteKpiSetting.MonthlyClientReport == true)
+            {
+                var extraDbxFolderName = "x - Monthly Client Report";
+                var extraDbxFolderPath = $"{clientSiteKpiSetting.DropboxImagesDir}/FLIR - Wand Recordings - IRs - Daily Logs/{reportFromDate.Date.Year}/{reportFromDate.Date:yyyyMM} - {reportFromDate.Date.ToString("MMMM").ToUpper()} DATA/";
+                var dbxfldr = $"{extraDbxFolderPath}{extraDbxFolderName}";
+                try
+                {
+                    await _dropboxUploadService.CreateFolder(dropboxSettings, dbxfldr);
+                    _logger.LogInformation($"Extra dropbox folder {dbxfldr} created.");
+                }
+                catch (Exception exp)
+                {
+                    _logger.LogError(exp.Message);
+                    _logger.LogError(exp.InnerException.ToString());
+                }
+            }
+
+        }
         private async Task CreateCustomDropboxFolders(ClientSiteKpiSetting clientSiteKpiSetting, DropboxSettings dropboxSettings, DateTime reportFromDate)
         {
             var customDbxFolderPath = $"{clientSiteKpiSetting.DropboxImagesDir}/FLIR - Wand Recordings - IRs - Daily Logs/{reportFromDate.Date.Year}/{reportFromDate.Date:yyyyMM} - {reportFromDate.Date.ToString("MMMM").ToUpper()} DATA/";
