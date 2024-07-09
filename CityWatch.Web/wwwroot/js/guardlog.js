@@ -297,6 +297,12 @@ $(function () {
                         onGuardLoginDutyTimeChange(isOffDutyDateToday);
                     }
                 }
+                //HRList Status
+                $('#client_status_0').css('color', result.hR1);
+                $('#client_status_1').css('color', result.hR2);
+                $('#client_status_2').css('color', result.hR3);
+
+
             },
             complete: function () {
                 $('#loader').hide();
@@ -3221,25 +3227,33 @@ $(function () {
             },
 
         },
-        {
-            targets: 4,
-            data: 'status',
-            render: function (data, type, row, meta) {
-                var currentDate = new Date();
-                var ExpiryDate = new Date(row.expiryDate);
-                var timeDifference = ExpiryDate - currentDate;
-                var daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-                var statusColor = 'green';
-                if (daysDifference <= 45) {
-                    statusColor = 'yellow';
+            {
+                targets: 4, 
+                data: 'status',
+                render: function (data, type, row, meta) {
+                    var currentDate = new Date();
+                    var ExpiryDate = new Date(row.expiryDate);
+                    var timeDifference = ExpiryDate - currentDate;
+                    var daysDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+                    var statusColor = 'green';
+
+
+                    if (row.dateType == true) {
+                        statusColor = 'green';
+                    }
+                    else if (row.expiryDate != null) {
+                        if (daysDifference <= 45) {
+                            statusColor = 'yellow';
+                        }
+
+                        if (ExpiryDate < currentDate && row.dateType != true) {
+                            statusColor = 'red';
+                        }
+                    }
+
+
+                    return '<div style="display: flex; align-items: center; justify-content: center;"><div style="background-color:' + statusColor + '; width: 10px; height: 10px; border-radius: 50%;"></div></div>';
                 }
-                if (row.dateType == true) {
-                    statusColor = 'green';
-                }
-                if (ExpiryDate < currentDate) {
-                    statusColor = 'red';
-                }
-                return '<div style="display: flex; align-items: center; justify-content: center;"><div style="background-color:' + statusColor + '; width: 10px; height: 10px; border-radius: 50%;"></div></div>';
             }
         }
         ],

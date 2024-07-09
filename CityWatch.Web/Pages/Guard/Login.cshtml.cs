@@ -13,6 +13,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using static Dropbox.Api.TeamLog.SpaceCapsType;
 
@@ -336,10 +337,144 @@ namespace CityWatch.Web.Pages.Guard
                     AuthUserHelper.IsAdminGlobal = false;
                 }
             }
+            //HRList Status start 
+            var HR1 = "Grey";
+            var HR2 = "Grey";
+            var HR3 = "Grey";
+            var hrGroupStatusesNew = LEDStatusForLoginUser(guard.Id);
+            if (hrGroupStatusesNew != null && hrGroupStatusesNew.Count > 0)
+            {
 
-            return new JsonResult(new { guard, lastLogin });
+                var HR1List = hrGroupStatusesNew.Where(x => x.GroupName.Trim() == "HR1 (C4i)").ToList();
+                if (HR1List != null && HR1List.Count > 0)
+                {
+                    if (HR1List.Where(x => x.ColourCodeStatus == "Red").ToList().Count > 0)
+                    {
+                        HR1 = "Red";
+                    }
+                    else if (HR1List.Where(x => x.ColourCodeStatus == "Yellow").ToList().Count > 0)
+                    {
+                        HR1 = "Yellow";
+                    }
+                    else
+                    {
+                        HR1 = "Green";
+                    }
+                }
+                var HR2List = hrGroupStatusesNew.Where(x => x.GroupName.Trim() == "HR2 (Client)").ToList();
+                if (HR2List != null && HR2List.Count > 0)
+                {
+                    if (HR2List.Where(x => x.ColourCodeStatus == "Red").ToList().Count > 0)
+                    {
+                        HR2 = "Red";
+                    }
+                    else if (HR2List.Where(x => x.ColourCodeStatus == "Yellow").ToList().Count > 0)
+                    {
+                        HR2 = "Yellow";
+                    }
+                    else
+                    {
+                        HR2 = "Green";
+                    }
+                }
+                var HR3List = hrGroupStatusesNew.Where(x => x.GroupName.Trim() == "HR3 (Special)").ToList();
+                if (HR3List != null && HR3List.Count > 0)
+                {
+                    if (HR3List.Where(x => x.ColourCodeStatus == "Red").ToList().Count > 0)
+                    {
+                        HR3 = "Red";
+                    }
+                    else if (HR3List.Where(x => x.ColourCodeStatus == "Yellow").ToList().Count > 0)
+                    {
+                        HR3 = "Yellow";
+                    }
+                    else
+                    {
+                        HR3 = "Green";
+                    }
+                }
+            }
+            return new JsonResult(new { guard, lastLogin, HR1, HR2, HR3 });
         }
+        public List<HRGroupStatusNew> LEDStatusForLoginUser(int GuardID)
+        {
+            var MasterGroup = _guardDataProvider.GetHRDescFull();
+            var GuardDocumentDetails = _guardDataProvider.GetGuardLicensesandcompliance(GuardID);
+            var hrGroupStatusesNew = new List<HRGroupStatusNew>();
 
+            foreach (var item in MasterGroup)
+            {
+
+                var TemDescription = item.ReferenceNo + " " + item.Description.Trim();
+                var SelectedGuardDocument = GuardDocumentDetails.Where(x => x.Description == TemDescription).ToList();
+
+
+                if (SelectedGuardDocument.Count > 0)
+                {
+                    hrGroupStatusesNew.Add(new HRGroupStatusNew
+                    {
+
+                        Status = 1,
+                        GroupName = item.GroupName.Trim(),
+                        ColourCodeStatus = GuardledColourCodeGenerator(SelectedGuardDocument)
+
+                    });
+                }
+
+
+            }
+            var Temp = hrGroupStatusesNew;
+
+            return Temp;
+        }
+        public string GuardledColourCodeGenerator(List<GuardComplianceAndLicense> SelectedList)
+        {
+            var today = DateTime.Now;
+            var ColourCode = "Green";
+
+            if (SelectedList.Count > 0)
+            {
+                var SelectDatatype = SelectedList.Where(x => x.DateType == true).ToList();
+                if (SelectDatatype.Count > 0)
+                {
+                    ColourCode = "Green";
+                }
+                else
+                {
+                    if (SelectedList.FirstOrDefault() != null)
+                    {
+                        if (SelectedList.FirstOrDefault().ExpiryDate != null)
+                        {
+                            var ExpiryDate = SelectedList.FirstOrDefault().ExpiryDate;
+                            var timeDifference = ExpiryDate - today;
+
+                            if (ExpiryDate < today)
+                            {
+                                ColourCode = "Red";
+                            }
+                            else if ((ExpiryDate - DateTime.Now).Value.Days < 45)
+                            {
+                                var Date = (ExpiryDate - DateTime.Now).Value.Days;
+                                ColourCode = "Yellow";
+                            }
+                        }
+
+                    }
+
+
+
+                }
+            }
+            return ColourCode;
+        }
+        public class HRGroupStatusNew
+        {
+
+            public int Status { get; set; }
+
+            public string GroupName { get; set; }
+            public string ColourCodeStatus { get; set; }
+        }
         public JsonResult OnGetSmartWands(string siteName, int? guardId)
         {
             return new JsonResult(_viewDataService.GetSmartWands(siteName, guardId));
