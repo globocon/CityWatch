@@ -285,6 +285,8 @@ namespace CityWatch.Data.Providers
 
         List<FileDownloadAuditLogs> GetFileDownloadAuditLogsData(DateTime logFromDate, DateTime logToDate);
 
+        void CreateDownloadFileAuditLogEntry(FileDownloadAuditLogs fdal);
+
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -4814,6 +4816,15 @@ namespace CityWatch.Data.Providers
                 .Include(g => g.Guard)
                 .ToList();
             return r;
+        }
+
+        public void CreateDownloadFileAuditLogEntry(FileDownloadAuditLogs fdal)
+        {
+            if(fdal != null)
+            {
+                _context.Add(fdal);
+                _context.SaveChanges();
+            }
         }
 
 

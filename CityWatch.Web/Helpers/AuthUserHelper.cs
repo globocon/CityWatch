@@ -45,6 +45,22 @@ namespace CityWatch.Web.Helpers
                 
             }
         }
+
+        public static int? GetLoggedInUserId
+        {
+            get
+            {
+                int? userId = null;
+                var userClaims = _httpContextAccessor.HttpContext.User.Claims;
+                if (userClaims != null)
+                {
+                    userId = int.Parse(userClaims.Single(x => x.Type == ClaimTypes.Sid).Value);
+                }
+                return userId;
+
+            }
+        }
+
         public static bool IsAdminPowerUser { get; set; }
         public static bool IsAdminGlobal { get; set; }
     }
