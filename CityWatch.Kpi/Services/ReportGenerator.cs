@@ -49,6 +49,7 @@ namespace CityWatch.Kpi.Services
         private const string CELL_BG_ORANGE_IR_ALARM = "#ffdab3";
         private const string CELL_FONT_GREEN = "#008000";
         private const string CELL_FONT_RED = "#FF0000";
+        private const string CELL_FONT_YELLOW = "#FFFF00";
         private const string COLOR_WHITE = "#ffffff";
         private const string COLOR_GREY = "#666362";
 
@@ -1041,8 +1042,10 @@ namespace CityWatch.Kpi.Services
             if (hrValue == "Y")
                 return CELL_FONT_GREEN;
 
-            if (hrValue == "N" || hrValue == "E")
+            if (hrValue == "E")
                 return CELL_FONT_RED;
+            if (hrValue == "N")
+                return CELL_FONT_YELLOW;
 
             return string.Empty;
         }
