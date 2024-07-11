@@ -531,7 +531,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <textarea asp-for="@Model.Report.Feedback" class="form-control" id="feedbackTextarea" cols="30" rows="10"></textarea>
+                            <textarea asp-for="@Model.Report.Feedback" class="form-control"  cols="30" rows="10"></textarea>
                         </div>
                     </div>
                     <div class="form-row">
@@ -1012,7 +1012,7 @@
         }
 
         // Validate Feedback textarea
-        const feedbackTextarea = document.getElementById('feedbackTextarea');
+        const feedbackTextarea = document.getElementById('Report_Feedback');
         if (!feedbackTextarea.value.trim()) {
             new MessageModal({ message: "You cannot submit an IR without any Text or Information on the notes section." }).showWarning();
             return false;
