@@ -1641,7 +1641,19 @@ $(function () {
         });
 
         $('#InWeight, #TareWeight').on('blur', function () {
-            setCalculatedOutWeight();
+            //P7-123 Prevent Crash -start
+            if ($('#InWeight').val() > 999) {
+                new MessageModal({ message: "Please enter the value in tons. The maximum allowable value is 999" }).showWarning();
+                $('#InWeight').val('');
+            }
+            else if ($('#TareWeight').val() > 999) {
+                new MessageModal({ message: "Please enter the value in tons. The maximum allowable value is 999" }).showWarning();
+                $('#TareWeight').val('');
+            }
+            else {
+                setCalculatedOutWeight();
+            }
+            //P7-123 Prevent Crash -end
         });
 
         function setCalculatedOutWeight() {
@@ -1669,6 +1681,14 @@ $(function () {
             if ($(this).val())
                 new MessageModal({ message: "This field is automatic – are you sure you want to input a manual weight?" }).showWarning();
         });
+        //P7-123 Prevent Crash -start if manually we want to enter the out weight value and check if it is greater than 999
+        $('#OutWeight').on('blur', function () {
+            if ($(this).val() > 999) {
+                new MessageModal({ message: "Please enter the value in tons. The maximum allowable value is 999" }).showWarning();
+                setCalculatedOutWeight();
+            }
+        });
+        //P7-123 Prevent Crash -end 
 
         // HACK: Handle close of generic message popup
         $('#message-modal').on('hide.bs.modal', function () {
