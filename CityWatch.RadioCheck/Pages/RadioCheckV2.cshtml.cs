@@ -1704,7 +1704,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 else
                 {
                     status = false;
-                    message = "Please add site settings in KPI first to proceed with RCAction list.";
+                    message = "Please add site settings in KPI first to proceed with RC Action list.";
                 }
             }
             catch (Exception ex)
