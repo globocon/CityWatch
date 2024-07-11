@@ -2343,8 +2343,88 @@ $('#report_field_types').on('change', function () {
     });
 
     function fileDownloadsButtonRenderer(value, record) {
-        return '<div class="button-container-div"><a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a></div>'
+        return '<div class="button-container-div">' + 
+            '<button id="btnSopDownload" data-sop-filename="' + record.fileName + '" class="btn btn-outline-primary ml-2"><i class="fa fa-download mr-2"></i>Download</button>' +
+            '</div>'
     }
+
+    $('#mdlAuthGuardForSopDownload').on('show.bs.modal', function (event) {        
+        $('#GuardDownloadSop_SecurityNo').val('');
+    });
+    $('#mdlAuthGuardForSopDownload').on('hide.bs.modal', function (event) {
+        $('#sop_filename').val('');
+    });
+
+    $('#file_downloads tbody').on('click', '#btnSopDownload', function () {
+        const btn = $(this);
+        $('#sop_filename').val(btn.attr('data-sop-filename'));
+        $('#AuthGuardForSopDwnldValidationSummary').html('');
+        $('#mdlAuthGuardForSopDownload').modal('show');
+    });
+
+    $('#btnAuthGuardForSopDwnld').on('click', function () {
+        $('#AuthGuardForSopDwnldValidationSummary').html('');
+        const btn = $(this);
+        var filename_todownload = $('#sop_filename').val();
+        var Catg_todownload = $('#sop_catg_type').val();
+
+        $('#loader').show();
+       
+        var tmdata = {
+            'EventDateTimeLocal': null,
+            'EventDateTimeLocalWithOffset': null,
+            'EventDateTimeZone': null,
+            'EventDateTimeZoneShort': null,
+            'EventDateTimeUtcOffsetMinute': null,
+        };
+
+        /*fillRefreshLocalTimeZoneDetails(tmdata, "", false)*/
+
+        var DateTime = luxon.DateTime;
+        var dt1 = DateTime.local();
+        let tz = dt1.zoneName + ' ' + dt1.offsetNameShort;
+        let diffTZ = dt1.offset
+        let tzshrtnm = 'GMT' + dt1.toFormat('ZZ'); 
+        const eventDateTimeLocal = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS');
+        const eventDateTimeLocalWithOffset = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS Z');
+        tmdata.EventDateTimeLocal = eventDateTimeLocal;
+        tmdata.EventDateTimeLocalWithOffset = eventDateTimeLocalWithOffset;
+        tmdata.EventDateTimeZone = tz;
+        tmdata.EventDateTimeZoneShort = tzshrtnm;
+        tmdata.EventDateTimeUtcOffsetMinute = diffTZ;
+
+        $.ajax({
+            url: '/Incident/Downloads?handler=CheckAndCreateDownloadAuditLog',
+            type: 'POST',
+            data: {
+                guardLicNo: $('#GuardDownloadSop_SecurityNo').val(),
+                downloadCatg: Catg_todownload,
+                downloadFileName: filename_todownload,
+                tmdata: tmdata
+            },
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.success) {                
+                $('#mdlAuthGuardForSopDownload').modal('hide');                
+                // '<div class="button-container-div"><a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a></div>'
+                //var a = document.createElement('a');
+                //a.href = "/StaffDocs/" + filename_todownload;
+                //a.target = "_blank";
+                //a.click();
+                //a.remove();
+                var URL = "/StaffDocs/" + encodeURIComponent(filename_todownload);
+                window.open(URL, "_blank")
+            }
+            else {
+                $('#AuthGuardForSopDwnldValidationSummary').html(result.message);
+               // alert(result.message);
+            }
+        }).always(function () {
+            $('#loader').hide();
+        });
+
+         });
+
 
     const showStatusNotification = function (success, message) {
         if (success) {

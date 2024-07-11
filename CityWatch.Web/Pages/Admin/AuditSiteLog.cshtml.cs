@@ -83,7 +83,7 @@ namespace CityWatch.Web.Pages.Admin
             }
         */
 
-            public JsonResult OnPostDownloadDailyGuardLogZip(int clientSiteId, DateTime logFromDate, DateTime logToDate)
+        public JsonResult OnPostDownloadDailyGuardLogZip(int clientSiteId, DateTime logFromDate, DateTime logToDate)
         {
             var success = true;
             var message = string.Empty;
@@ -258,5 +258,12 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(_viewDataService.GetKeyVehicleLogAuditHistory(keyVehicleLogAuditLogRequest.VehicleRego).Where(x => keyVehicleLogAuditLogRequest.ClientSiteIds.Contains(x.GuardLogin.ClientSiteId)).ToList());
         }
         //to get audit log-end
+
+        public JsonResult OnPostGenerateDownloadFilesLog(DateTime logFromDate, DateTime logToDate)
+        {
+            var r = _viewDataService.GetFileDownloadAuditLogs(logFromDate, logToDate);
+            return new JsonResult(r);
+        }
+
     }
 }
