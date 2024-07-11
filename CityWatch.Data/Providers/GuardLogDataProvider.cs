@@ -1716,6 +1716,18 @@ namespace CityWatch.Data.Providers
 
 
             _context.SaveChanges();
+
+
+            var clientSiteRadioCheckActivityStatusToDelete_History = _context.ClientSiteRadioChecksActivityStatus_History.Where(x => x.LBId == id);
+            if (clientSiteRadioCheckActivityStatusToDelete_History == null)
+                throw new InvalidOperationException();
+            foreach (var item in clientSiteRadioCheckActivityStatusToDelete_History)
+            {
+                _context.Remove(item);
+            }
+
+
+            _context.SaveChanges();
         }
         public void SignOffClientSiteRadioCheckActivityStatusForLogBookEntry(int GuardId, int ClientSiteId)
         {
@@ -2045,6 +2057,17 @@ namespace CityWatch.Data.Providers
             if (clientSiteRadioCheckActivityStatusToDelete == null)
                 throw new InvalidOperationException();
             foreach (var item in clientSiteRadioCheckActivityStatusToDelete)
+            {
+                _context.Remove(item);
+            }
+
+            _context.SaveChanges();
+
+
+            var clientSiteRadioCheckActivityStatusToDelete_History = _context.ClientSiteRadioChecksActivityStatus_History.Where(x => x.KVId == id);
+            if (clientSiteRadioCheckActivityStatusToDelete_History == null)
+                throw new InvalidOperationException();
+            foreach (var item in clientSiteRadioCheckActivityStatusToDelete_History)
             {
                 _context.Remove(item);
             }

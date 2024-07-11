@@ -1109,14 +1109,17 @@ namespace CityWatch.Web.Pages.Guard
         //To Get the Emails Related to POC start
         public async Task<JsonResult> OnPostGetPOCEmailsSelected(string Emails)
         {
-            string[] values = Emails.Split(',');
+           
             List<string> pocEmails = new List<string>();
-
-            foreach (var item in values)
+            if (!string.IsNullOrEmpty(Emails))
             {
-                var poc = _guardLogDataProvider.GetEmailPOC(Convert.ToInt32(item));
-                var email = poc.Email;
-                pocEmails.Add(email);
+                string[] values = Emails.Split(',');
+                foreach (var item in values)
+                {
+                    var poc = _guardLogDataProvider.GetEmailPOC(Convert.ToInt32(item));
+                    var email = poc.Email;
+                    pocEmails.Add(email);
+                }
             }
 
             return new JsonResult(new { pocEmails });
