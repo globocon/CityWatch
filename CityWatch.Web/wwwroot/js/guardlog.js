@@ -3364,7 +3364,7 @@ $(function () {
         effects: 'slide'
     }).on('select.editable-select', function (e, li) {
         var check = '';
-        $('#GuardComplianceandlicense_fileName1').val('');
+        $('#GuardComplianceandlicense_FileName1').val('');
         $('#guardComplianceandlicense_fileName1').text('None');
         var sel = $('#Description option:selected');
         $(this).data('cur_val', sel);
@@ -3381,6 +3381,8 @@ $(function () {
     });
     $('#HRGroup').on('change', function () {
         $('#Description').val('');
+        $('#GuardComplianceandlicense_FileName1').val('');
+        $('#guardComplianceandlicense_fileName1').text('None');
         var Descriptionval = $('#HRGroup').val();
         var GuardID = $('#GuardComplianceandlicense_GuardId').val();
         const token = $('input[name="__RequestVerificationToken"]').val();
@@ -3748,6 +3750,7 @@ $(function () {
         var HrVal = $('#HRGroup').val();
         var DescVal = $('#Description').val();
         var FileVa = $('#guardComplianceandlicense_fileName1').html();
+        var hiddenValue = $('#GuardComplianceandlicense_FileName1').val();
         const messageHtml = '';
         $('#schRunStatusNew').html(messageHtml);
 
