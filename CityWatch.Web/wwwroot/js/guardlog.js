@@ -1814,6 +1814,74 @@ $(function () {
             keyVehicleLogReport.clear().rows.add(response).draw();
         });
     });
+    //p7-117 charts -start
+    function groupDataAndGetCounts(groupBy) {
+        var groupedData = {};
+        var counts = {};
+        var groupedDataArray = [0][0];
+
+        // Iterate over each row in the table
+        $('#myGrid tbody tr').each(function () {
+            var name = $(this).find('td:eq(0)').text(); // Get name from first column
+            var dateStr = $(this).find('td:eq(1)').text(); // Get date from second column
+            var amount = parseFloat($(this).find('td:eq(2)').text()); // Get amount from third column
+
+            var date = new Date(dateStr);
+            var groupKey;
+
+            // Determine grouping based on selected option
+            if (groupBy === 'week') {
+                // Group by week
+                var firstDayOfWeek = new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay());
+                groupKey = firstDayOfWeek.toISOString().slice(0, 10); // ISO string for the start of the week
+            } else if (groupBy === 'month') {
+                // Group by month
+                groupKey = date.getFullYear() + '-' + (date.getMonth() + 1); // Year-Month format
+            } else if (groupBy === 'year') {
+                // Group by year
+                groupKey = date.getFullYear(); // Year format
+            }
+
+            // Initialize group if it doesn't exist
+            if (!groupedData[groupKey]) {
+                groupedData[groupKey] = [];
+                counts[groupKey] = 0;
+            }
+
+            // Add data to the group
+            groupedData[groupKey].push({ name: name, amount: amount });
+            counts[groupKey]++;
+        });
+
+        return { groupedData: groupedData, counts: counts };
+    }
+
+    // Handle dropdown change
+    $('#drpDayOrMonthSort').change(function () {
+        var selectedOption = $(this).val();
+        var { groupedData, counts } = groupDataAndGetCounts(selectedOption);
+
+        // Output the counts
+        console.log('Counts:');
+        $.each(counts, function (key, value) {
+            console.log(key + ': ' + value);
+        });
+
+        // Example: Output the grouped data
+        console.log('Grouped Data:');
+        $.each(groupedData, function (key, value) {
+            console.log('Group: ' + key);
+            $.each(value, function (index, item) {
+                console.log('  Name: ' + item.name + ', Amount: ' + item.amount);
+            });
+        });
+
+        // You can modify or update UI based on counts or groupedData here
+    });
+});
+    
+    //p7-117 charts -end
+
     //code addded  to download Excel start for auditsite key vehicle-start
     $("#btnDownloadVklAuditExcel").click(function () {
         if ($('#vklClientSiteId').val().length === 0) {
