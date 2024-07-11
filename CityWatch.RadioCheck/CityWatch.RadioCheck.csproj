@@ -1,8 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
-		<AssemblyVersion>2.20.0.1</AssemblyVersion>
+		<AssemblyVersion>2.31.0.0</AssemblyVersion>
 	</PropertyGroup>
+	<ItemGroup>
+	  <Content Remove="wwwroot\Pdf\Template\IR_Form_Template.pdf" />
+	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Dropbox.Api" Version="6.25.0" />
 		<PackageReference Include="itext7" Version="7.2.0" />
@@ -29,5 +32,9 @@
 	<ItemGroup>
 	  <Folder Include="Logs\" />
 	  <Folder Include="wwwroot\lib\Notify\" />
+	  <Folder Include="wwwroot\Pdf\Archive\" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Include="wwwroot\Pdf\Template\IR_Form_Template.pdf" />
 	</ItemGroup>
 </Project>

@@ -6,6 +6,7 @@ using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
 using CityWatch.RadioCheck.Helpers;
 using CityWatch.RadioCheck.Services;
+using CityWatch.Web.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -37,15 +38,23 @@ builder.Services.AddScoped<IPatrolDataReportService, PatrolDataReportService>();
 builder.Services.AddScoped<IConfigDataProvider, ConfigDataProvider>();
 builder.Services.AddScoped<IGuardDataProvider, GuardDataProvider>();
 builder.Services.AddScoped<IGuardLogDataProvider, GuardLogDataProvider>();
-builder.Services.AddScoped<IRadioChecksActivityStatusService, RadioChecksActivityStatusService>();
+builder.Services.AddScoped<CityWatch.RadioCheck.Services.IRadioChecksActivityStatusService, CityWatch.RadioCheck.Services.RadioChecksActivityStatusService>();
 builder.Services.AddScoped<IUserDataProvider, UserDataProvider>();
 builder.Services.AddScoped<IUserAuthenticationService, UserAuthenticationService>();
 builder.Services.AddScoped<ISmsService, SmsService>();
 builder.Services.AddScoped<ISmsSenderProvider, SmsSenderProvider>();
 builder.Services.AddScoped<ISiteEventLogDataProvider, SiteEventLogDataProvider>();
 builder.Services.AddScoped<ISmsGlobalService, SmsGlobalService>();
-builder.Services.AddScoped<IViewDataService, ViewDataService>();
+builder.Services.AddScoped<CityWatch.RadioCheck.Services.IViewDataService, CityWatch.RadioCheck.Services.ViewDataService>();
 builder.Services.AddScoped<ISignalRNotificationService, SignalRNotificationService>();
+builder.Services.AddScoped<CityWatch.RadioCheck.Services.IClientSiteViewDataService, CityWatch.RadioCheck.Services.ClientSiteViewDataService>();
+builder.Services.AddScoped<CityWatch.RadioCheck.Services.IAuditLogViewDataService, CityWatch.RadioCheck.Services.AuditLogViewDataService>();
+
+builder.Services.AddScoped<IClientSiteWandDataProvider, ClientSiteWandDataProvider>();
+builder.Services.AddScoped<IGuardLoginDetailService, GuardLoginDetailService>();
+builder.Services.AddScoped<CityWatch.RadioCheck.Services.IGuardLogReportGenerator, CityWatch.RadioCheck.Services.GuardLogReportGenerator>();
+builder.Services.AddScoped<CityWatch.RadioCheck.Services.IGuardLogZipGenerator, CityWatch.RadioCheck.Services.GuardLogZipGenerator>();
+
 builder.Services.AddSession();
 builder.Services.AddRazorPages(options =>
 {

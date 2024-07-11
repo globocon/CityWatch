@@ -1,0 +1,61 @@
+﻿@using CityWatch.Web.Helpers;
+@using CityWatch.Web.Services;
+@inject IViewDataService viewDataService
+<div class="row">
+    <div class="col-md-12">
+        <form method="post" class="border-bottom">
+            <div class="form-row">
+                <div class="form-group col-md-2">
+                    <label class="mx-1" for="fusionClientType">Client Type</label>
+                    <select class="form-control" id="fusionClientType">
+                        <option value="">Select</option>
+                        @{
+                            var userClientTypes = viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId);
+                            var sortedClientTypes = userClientTypes.OrderByDescending(clientType => viewDataService.GetClientTypeCount(clientType.Id));
+                            sortedClientTypes = userClientTypes.OrderBy(clientType => clientType.Name);
+                            foreach (var clientType in sortedClientTypes)
+                            {
+                                var countClientType = viewDataService.GetClientTypeCount(clientType.Id);
+                                <option value="@clientType.Id">@clientType.Name (@countClientType)</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="form-group col-md-3">
+                    <label class="mx-1" for="fusionClientSiteId">Client Site</label>
+                    <select class="form-control mx-1" id="fusionClientSiteId"></select>
+               @*     <div class="form-check mt-1">
+                        <input type="checkbox" id="excludeSystemLog" class="form-check-input" />
+                        <label for="excludeSystemLog" class="form-check-label">Exclude System Logs</label>
+                    </div>*@
+                </div>
+                <div class="form-group col-md-2">
+                    <label class="mx-1" for="fusionAudtitFromDate">From Date</label>
+                    <input type="date" class="form-control" id="fusionAudtitFromDate" />
+                </div>
+                <div class="form-group col-md-2">
+                    <label class="mx-1" for="fusionAudtitToDate">To Date</label>
+                    <input type="hidden" id="fusionAudtitToDateVal" name="fusionAudtitToDateVal" value='@DateTime.Today.ToString("yyyy-MM-dd")'>
+                    <input type="date" class="form-control" id="fusionAudtitToDate">
+                </div>
+                <div class="form-group col-md-3">
+                    <label class="mx-1">&nbsp;</label>
+                    <div>
+                        <button type="button" class="btn btn-primary mx-1" id="btnGeneratefusionAuditReport">View Report</button>
+                        <button type="button" class="btn btn-primary" id="btnDownloadfusionAuditZip">Download Zip</button>
+                       
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="my-2">
+            <button type="button" id="expand_fusion_audits" class="btn btn-light">Expand All</button>
+            <button type="button" id="collapse_fusion_audits" class="btn btn-light">Collapse All</button>
+        </div>
+        <table class="table" id="fusion_site_log"></table>
+    </div>
+</div>

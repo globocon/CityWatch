@@ -282,6 +282,8 @@ namespace CityWatch.Data.Providers
 
         bool IsRClogbookStampRequired(string StampName);
 
+        public List<ClientSiteRadioChecksActivityStatus_History> GetGuardFusionLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
+
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -4801,6 +4803,23 @@ namespace CityWatch.Data.Providers
                     Req = true;
             }
             return Req;
+        }
+
+
+        public List<ClientSiteRadioChecksActivityStatus_History> GetGuardFusionLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
+        {
+            //var data = _context.ClientSiteRadioChecksActivityStatus_History
+            //.Where(z => z.ClientSiteId == clientSiteId )
+            //.ToList();
+
+            var data = _context.ClientSiteRadioChecksActivityStatus_History
+               .Where(z => z.ClientSiteId == clientSiteId && z.EventDateTime.Date >= logFromDate && z.EventDateTime.Date <= logToDate)
+               .ToList();
+
+            var returnData = data.OrderBy(z => z.EventDateTime)
+                .ToList();
+
+            return returnData;
         }
 
 

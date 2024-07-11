@@ -697,6 +697,21 @@ namespace CityWatch.RadioCheck.Pages.Admin
 
         }
 
+        public JsonResult OnGetClientSitesNew(int? page, int? limit, int? typeId, string searchTerm, string searchTermtwo)
+        {
+            GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            if (GuardId == 0)
+            {
+                return new JsonResult(_viewDataService.GetUserClientSitesHavingAccess(typeId, null, searchTerm, searchTermtwo));
+
+            }
+            else
+            {
+                return new JsonResult(_viewDataService.GetUserClientSitesHavingAccess(typeId, GuardId, searchTerm, searchTermtwo));
+
+            }
+        }
+
         public JsonResult OnGetRCLinkedDuressbyId(int id)
         {
 
