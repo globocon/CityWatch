@@ -3,6 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using CityWatch.Data.Enums;
+using CityWatch.Kpi.Services;
+using CityWatch.Data.Providers;
+using static Dropbox.Api.TeamLog.SpaceCapsType;
+using System.Text.RegularExpressions;
 
 namespace CityWatch.Kpi.Models
 {
@@ -11,19 +15,22 @@ namespace CityWatch.Kpi.Models
     {
         private readonly DateTime _date;
         private readonly DailyClientSiteKpi _dailyClientSiteKpi;
-        private readonly IEnumerable<GuardCompliance> _guardCompliance;
+        private readonly IEnumerable<GuardComplianceAndLicense> _guardCompliance;
+        private readonly IGuardDataProvider _guardDataProvider;
 
         private readonly Dictionary<int, Guard> _shift1Guards = new();
         private readonly Dictionary<int, Guard> _shift2Guards = new();
         private readonly Dictionary<int, Guard> _shift3Guards = new();
 
 
-        public DailyKpiGuard(DailyClientSiteKpi dailyClientSiteKpi, IEnumerable<GuardLogin> dayGuardLogins, IEnumerable<GuardCompliance> guardCompliances)
+        public DailyKpiGuard(DailyClientSiteKpi dailyClientSiteKpi, IEnumerable<GuardLogin> dayGuardLogins, IEnumerable<GuardComplianceAndLicense> guardCompliances, IGuardDataProvider guardDataProvider)
         {
             _dailyClientSiteKpi = dailyClientSiteKpi;
             _guardCompliance = guardCompliances;
+            _guardDataProvider = guardDataProvider;
 
             _date = dailyClientSiteKpi.Date;
+
             var shift1Start = new DateTime(_date.Year, _date.Month, _date.Day, 00, 01, 00);
             var shift1End = new DateTime(_date.Year, _date.Month, _date.Day, 07, 59, 00);
             var shift2Start = new DateTime(_date.Year, _date.Month, _date.Day, 08, 00, 00);
@@ -56,7 +63,8 @@ namespace CityWatch.Kpi.Models
             }
         }
         //Added For 3rd Page of Report start
-        public IEnumerable<GuardCompliance> GuardCompliance
+       
+        public IEnumerable<GuardComplianceAndLicense> GuardCompliance
         {
             get { return _guardCompliance; }
         }
@@ -111,10 +119,12 @@ namespace CityWatch.Kpi.Models
                 var hr1Values = new List<string>();
                 foreach (var guard in _shift1Guards)
                 {
+                    var ddd = _guardCompliance.Where(x => x.Id == 106).FirstOrDefault();
                     var hr1Compliance = _guardCompliance.FirstOrDefault(z => z.GuardId.Equals(guard.Value.Id) && z.HrGroup == HrGroup.HR1);
                     if (hr1Compliance != null)
                     {
-                        hr1Values.Add(GetHrValue(hr1Compliance));
+                        
+                                hr1Values.Add(GetHrValue(hr1Compliance));
                     }
                     else
                     {
@@ -274,6 +284,7 @@ namespace CityWatch.Kpi.Models
                     var hr1Compliance = _guardCompliance.FirstOrDefault(z => z.GuardId.Equals(guard.Value.Id) && z.HrGroup == HrGroup.HR1);
                     if (hr1Compliance != null)
                     {
+                        var gg= GetHrValue(hr1Compliance);
                         hr1Values.Add(GetHrValue(hr1Compliance));
                     }
                     else
@@ -326,19 +337,124 @@ namespace CityWatch.Kpi.Models
             }
         }
 
-        private string GetHrValue(GuardCompliance compliance)
+        private string GetHrValue(GuardComplianceAndLicense compliance)
         {
-            if (compliance.ExpiryDate.HasValue)
+            var HR = "";
+            var hrGroupStatusesNew = LEDStatusForLoginUser(compliance.GuardId);
+            if (hrGroupStatusesNew != null && hrGroupStatusesNew.Count > 0)
             {
-                if (compliance.ExpiryDate < _date)
-                    return "N";
-
-                if (compliance.ExpiryDate >= _date && 
-                    compliance.ExpiryDate <= _date.AddDays(45))
-                    return "E";
+                
+                var HR1List = hrGroupStatusesNew
+    .Where(x => Regex.Replace(x.GroupName, @"\s+", "") == Regex.Replace(compliance.HrGroupText, @"\s+", ""))
+    .ToList();
+                if (HR1List != null && HR1List.Count > 0)
+                {
+                    if (HR1List.Where(x => x.ColourCodeStatus == "Red").ToList().Count > 0)
+                    {
+                        HR = "E";
+                    }
+                    else if (HR1List.Where(x => x.ColourCodeStatus == "Yellow").ToList().Count > 0)
+                    {
+                        HR = "N";
+                        
+                    }
+                    else
+                    {
+                        HR = "Y";
+                    }
+                }
             }
+            return HR;
+            //if (compliance.ExpiryDate.HasValue)
+            //{
+            //    if (compliance.ExpiryDate < _date)
+            //        return "N";
 
-            return "Y";
+            //    if (compliance.ExpiryDate >= _date &&
+            //        compliance.ExpiryDate <= _date.AddDays(45))
+            //        return "E";
+            //}
+
+            //return "Y";
+        }
+        public List<HRGroupStatusNew> LEDStatusForLoginUser(int GuardID)
+        {
+            var MasterGroup = _guardDataProvider.GetHRDescFull();
+            var GuardDocumentDetails = _guardDataProvider.GetGuardLicensesandcompliance(GuardID);
+            var hrGroupStatusesNew = new List<HRGroupStatusNew>();
+
+            foreach (var item in MasterGroup)
+            {
+
+                var TemDescription = item.ReferenceNo + " " + item.Description.Trim();
+                var SelectedGuardDocument = GuardDocumentDetails.Where(x => x.Description == TemDescription).ToList();
+
+
+                if (SelectedGuardDocument.Count > 0)
+                {
+                    hrGroupStatusesNew.Add(new HRGroupStatusNew
+                    {
+
+                        Status = 1,
+                        GroupName = item.GroupName.Trim(),
+                        ColourCodeStatus = GuardledColourCodeGenerator(SelectedGuardDocument)
+
+                    });
+                }
+
+
+            }
+            var Temp = hrGroupStatusesNew;
+
+            return Temp;
+        }
+        public string GuardledColourCodeGenerator(List<GuardComplianceAndLicense> SelectedList)
+        {
+            var today = DateTime.Now;
+            var ColourCode = "Green";
+
+            if (SelectedList.Count > 0)
+            {
+                var SelectDatatype = SelectedList.Where(x => x.DateType == true).ToList();
+                if (SelectDatatype.Count > 0)
+                {
+                    ColourCode = "Green";
+                }
+                else
+                {
+                    if (SelectedList.FirstOrDefault() != null)
+                    {
+                        if (SelectedList.FirstOrDefault().ExpiryDate != null)
+                        {
+                            var ExpiryDate = SelectedList.FirstOrDefault().ExpiryDate;
+                            var timeDifference = ExpiryDate - today;
+
+                            if (ExpiryDate < today)
+                            {
+                                ColourCode = "Red";
+                            }
+                            else if ((ExpiryDate - DateTime.Now).Value.Days < 45)
+                            {
+                                var Date = (ExpiryDate - DateTime.Now).Value.Days;
+                                ColourCode = "Yellow";
+                            }
+                        }
+
+                    }
+
+
+
+                }
+            }
+            return ColourCode;
+        }
+        public class HRGroupStatusNew
+        {
+
+            public int Status { get; set; }
+
+            public string GroupName { get; set; }
+            public string ColourCodeStatus { get; set; }
         }
     }
 }

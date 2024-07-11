@@ -1,6 +1,14 @@
 ﻿
 var FileuploadFileChanged = null;
 $(function () {
+
+    // To fix the Datatable column header issue when hidden inside tab
+    $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+        $($.fn.dataTable.tables(true)).DataTable()
+            .columns.adjust()
+            .responsive.recalc();
+    });
+
     function isLogbookExpired(logBookDate) {
         if (((new Date()).toLocaleDateString('en-AU') > new Date(logBookDate).toLocaleDateString('en-AU'))) {
             return true;
@@ -210,20 +218,20 @@ $(function () {
     }
 
     $('#GuardLogin_Guard_SecurityNo').on('blur', function () {
-        
+
         $('#glValidationSummary').html('');
         const isNewGuard = $('#GuardLogin_IsNewGuard').is(':checked');
         if (isNewGuard)
             return;
-    
-        
+
+
         showGuardSearchResult('Enter Security License No and click Search');
         resetGuardLoginDetails();
 
         if ($(this).val() === '')
             return;
-      
-        
+
+
         $('#loader').show();
 
         $.ajax({
@@ -300,9 +308,9 @@ $(function () {
                 $('#loader').hide();
             }
         });
-     
+
     });
-   
+
     $('#GuardLogin_ClientType').on('change', function () {
         populateClientSites();
     });
@@ -348,7 +356,7 @@ $(function () {
         });
         //To Get the Critical Documents stop
     });
-   
+
 
 
 
@@ -375,7 +383,7 @@ $(function () {
         }).fail(function () {
             alert("An error occurred while checking licenses.");
         }).always(function () {
-            return res; 
+            return res;
         });
     }
 
@@ -427,7 +435,7 @@ $(function () {
     $('#btn_confrim_wand_use').on('click', function () {
         submitGuardLogin();
     });
-    
+
     //Pr-7-Task-120 Warning-Position Checkbox-Below lines are added-Manju -start-25-04-2024
 
     /* let isPositionModal;
@@ -548,38 +556,39 @@ $(function () {
                 if (result.success) {
                     //alert(result.strResult);
                     new MessageModal({
-                        message: result.strResult }).showWarning();
+                        message: result.strResult
+                    }).showWarning();
                     return;
                 } else {
                     // if guard is active then submit guard login
-                          $('#loader').show();
-            $.ajax({
-                url: '/Guard/Login?handler=LoginGuard',
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
-            }).done(function (result) {
-                if (result.success) {
-                    if (result.initalsChangedMessage !== '')
-                        alert(result.initalsChangedMessage);
+                    $('#loader').show();
+                    $.ajax({
+                        url: '/Guard/Login?handler=LoginGuard',
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+                    }).done(function (result) {
+                        if (result.success) {
+                            if (result.initalsChangedMessage !== '')
+                                alert(result.initalsChangedMessage);
 
-                    let toUrl = getTargetUrl(result.logBookType);
-                    if (toUrl === '') alert('Invalid logbook type');
-                    else {
-                        window.location.replace(toUrl);
-                        $('#btnGuardLogin').prop('disabled', true);
-                    }
-                } else {
-                    if (result.errors)
-                        displayGuardValidationSummary('glValidationSummary', result.errors)
-                    else
-                        alert(result.message)
-                }
-            }).always(function () {
-                $('#loader').hide();
-            });
+                            let toUrl = getTargetUrl(result.logBookType);
+                            if (toUrl === '') alert('Invalid logbook type');
+                            else {
+                                window.location.replace(toUrl);
+                                $('#btnGuardLogin').prop('disabled', true);
+                            }
+                        } else {
+                            if (result.errors)
+                                displayGuardValidationSummary('glValidationSummary', result.errors)
+                            else
+                                alert(result.message)
+                        }
+                    }).always(function () {
+                        $('#loader').hide();
+                    });
                 }
             }).fail(function () {
                 alert("An error occurred while checking guard license.");
@@ -2648,7 +2657,7 @@ $(function () {
         { data: 'state', width: "5%" },
         { data: 'provider', width: "13%" },
         { data: 'clientSites', orderable: false, width: "15%" },
-        { data: 'pin', width: "1%" ,visible: false },
+        { data: 'pin', width: "1%", visible: false },
         {
             data: 'isActive', name: 'isactive', className: "text-center", width: "10%", 'render': function (value, type, data) {
                 return renderGuardActiveCell(value, type, data);
@@ -2750,8 +2759,8 @@ $(function () {
         $('#Guard_State').val(data.state);
         $('#Guard_Provider').val(data.provider);
         $('#Guard_Pin').val(data.pin);
-           
-       
+
+
         $('#Guard_Mobile').val(data.mobile)
         $('#Guard_Email').val(data.email)
         $('#Guard_Id').val(data.id);
@@ -2847,7 +2856,7 @@ $(function () {
     $('#btn_save_guard').on('click', function () {
         clearGuardValidationSummary('glValidationSummary');
         $('#guard_saved_status').hide();
-        $('#Guard_IsActive').val($(cbIsActive).is(':checked'));   
+        $('#Guard_IsActive').val($(cbIsActive).is(':checked'));
         //$('#Guard_IsRCAccess').val($(cbIsRCAccess).is(':checked'));
         //$('#Guard_IsKPIAccess').val($(cbIsKPIAccess).is(':checked'));
         $.ajax({
@@ -3098,7 +3107,7 @@ $(function () {
         clearGuardValidationSummary('licenseValidationSummary');
     }
     function resetGuardLicenseandComplianceAddModal() {
-        $('#GuardComplianceandlicense_Id').val('');        
+        $('#GuardComplianceandlicense_Id').val('');
         $('#Description').val('');
         $('#LicanseTypeFilter').prop('checked', false);
         $('#ComplianceDate').text('Expiry Date');
@@ -3109,11 +3118,11 @@ $(function () {
         });
         $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', '');
         $('#HRGroup').val('');
-        $(".es-list").empty();               
+        $(".es-list").empty();
         $('#guardComplianceandlicense_fileName1').text('None');
         $('#GuardComplianceandlicense_FileName1').val('');
         $('#GuardComplianceandlicense_CurrentDateTime').val('');
-        clearGuardValidationSummary('compliancelicanseValidationSummary');        
+        clearGuardValidationSummary('compliancelicanseValidationSummary');
     }
 
     let gridGuardLicenses = $('#tbl_guard_licenses').DataTable({
@@ -3197,7 +3206,7 @@ $(function () {
                 data: 'expiryDate',
                 width: '2%',
                 orderable: true,
-               
+
             },
             { data: 'fileName', width: '7%' },
             { data: 'status', width: "1%" },
@@ -3245,8 +3254,8 @@ $(function () {
 
                     return '<div style="display: flex; align-items: center; justify-content: center;"><div style="background-color:' + statusColor + '; width: 10px; height: 10px; border-radius: 50%;"></div></div>';
                 }
-
             }
+        }
         ],
         'createdRow': function (row, data, index) {
             if (data.expiryDate !== null) {
@@ -3258,7 +3267,7 @@ $(function () {
                 else {
                     $('td', row).eq(2).html(getFormattedDate(new Date(data.expiryDate), null, ' '));
                 }
-                
+
             }
         },
     });
@@ -3286,7 +3295,8 @@ $(function () {
         effects: 'slide'
     }).on('select.editable-select', function (e, li) {
         var check = '';
-
+        $('#GuardComplianceandlicense_fileName1').val('');
+        $('#guardComplianceandlicense_fileName1').text('None');
         var sel = $('#Description option:selected');
         $(this).data('cur_val', sel);
         var display = sel.clone();
@@ -3349,6 +3359,7 @@ $(function () {
     });
 
 
+  
     var trig = 'mousedown';
     $('#Description').on("change", function () {
         var sel = $('#Description option:selected');
@@ -3429,7 +3440,7 @@ $(function () {
     //Gurad License and Compliance Form start
     $('#tbl_guard_licensesAndCompliance tbody').on('click', 'button[name=btn_edit_guard_licenseAndCompliance]', function () {
         resetGuardLicenseandComplianceAddModal();
-       
+
         var data = gridGuardLicensesAndLicence.row($(this).parents('tr')).data();
 
         if (data.expiryDate) {
@@ -3447,7 +3458,7 @@ $(function () {
             $('#ComplianceDate').text('Issue Date');
         }
         $('#addGuardCompliancesLicenseModal').modal('show');
-        
+
     });
     $('#tbl_guard_licensesAndCompliance tbody').on('click', 'button[name=btn_delete_guard_licenseAndCompliance]', function () {
         var data = gridGuardLicensesAndLicence.row($(this).parents('tr')).data();
@@ -3661,7 +3672,7 @@ $(function () {
         }
     });
     $('#btn_save_guard_compliancelicense').on('click', function () {
-       
+
         clearGuardValidationSummary('compliancelicanseValidationSummary');
 
         var ExpirayDateVal = $('#GuardComplianceAndLicense_ExpiryDate1').val();
@@ -3672,7 +3683,7 @@ $(function () {
         $('#schRunStatusNew').html(messageHtml);
 
         if (HrVal != '' && DescVal != '' && FileVa != 'None') {
-           
+
             if (ExpirayDateVal == '') {
                 if (confirm('Are you sure you not want to enter expiry Date')) {
                     $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
@@ -3764,8 +3775,8 @@ $(function () {
 
 
 
-        
-       
+
+
     });
 
     $('#btn_save_guard_compliance').on('click', function () {
@@ -3828,7 +3839,7 @@ $(function () {
 
     FileuploadFileChanged = function (allfile) {
         const file = allfile.item(0); // allfile.get(0).files.item(0);
-        const fileExtn = "." + file.name.split('.').pop().toLowerCase();        
+        const fileExtn = "." + file.name.split('.').pop().toLowerCase();
         console.log('fileExtn: ' + fileExtn);
         if (!fileExtn || allowedfiletypes.includes(fileExtn) == false) {
             alert('Please select a valid file type');
@@ -3850,7 +3861,7 @@ $(function () {
         }
         else {
             fileprocess(allfile);
-            
+
             $.ajax({
                 type: 'POST',
                 url: '/Admin/GuardSettings?handler=UploadGuardAttachment',
@@ -4411,623 +4422,623 @@ $(function () {
 
 
 
-// Task p6#73_TimeZone issue -- added by Binoy - Start
-function fillRefreshLocalTimeZoneDetails(formData, modelname, isform) {
-    // for reference https://moment.github.io/luxon/#/
-    var DateTime = luxon.DateTime;
-    var dt1 = DateTime.local();
-    let tz = dt1.zoneName + ' ' + dt1.offsetNameShort;
-    let diffTZ = dt1.offset
-    //let tzshrtnm = dt1.offsetNameShort;
-    let tzshrtnm = 'GMT' + dt1.toFormat('ZZ'); // Modified by binoy on 19-01-2024
+    // Task p6#73_TimeZone issue -- added by Binoy - Start
+    function fillRefreshLocalTimeZoneDetails(formData, modelname, isform) {
+        // for reference https://moment.github.io/luxon/#/
+        var DateTime = luxon.DateTime;
+        var dt1 = DateTime.local();
+        let tz = dt1.zoneName + ' ' + dt1.offsetNameShort;
+        let diffTZ = dt1.offset
+        //let tzshrtnm = dt1.offsetNameShort;
+        let tzshrtnm = 'GMT' + dt1.toFormat('ZZ'); // Modified by binoy on 19-01-2024
 
-    const eventDateTimeLocal = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS');
-    const eventDateTimeLocalWithOffset = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS Z');
-    if (isform) {
-        formData.append(modelname + ".EventDateTimeLocal", eventDateTimeLocal);
-        formData.append(modelname + ".EventDateTimeLocalWithOffset", eventDateTimeLocalWithOffset);
-        formData.append(modelname + ".EventDateTimeZone", tz);
-        formData.append(modelname + ".EventDateTimeZoneShort", tzshrtnm);
-        formData.append(modelname + ".EventDateTimeUtcOffsetMinute", diffTZ);
-    }
-    else {
-        formData.EventDateTimeLocal = eventDateTimeLocal;
-        formData.EventDateTimeLocalWithOffset = eventDateTimeLocalWithOffset;
-        formData.EventDateTimeZone = tz;
-        formData.EventDateTimeZoneShort = tzshrtnm;
-        formData.EventDateTimeUtcOffsetMinute = diffTZ;
-    }
-}
-
-// Task p6#73_TimeZone issue -- added by Binoy - End
-
-
-function initialize() {
-    var geocoder = new google.maps.Geocoder();
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function (position) {
-
-            gpsCoordinatesValues = position.coords.latitude + ',' + position.coords.longitude;
-            var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-            $("#hid_duressEnabledGpsCoordinates").val(gpsCoordinatesValues);
-            $("#hid_duressEnabledGpsCoordinatesDailyLog").val(gpsCoordinatesValues);
-            reverseGeocode(position.coords.latitude, position.coords.longitude);
-
-        });
-    }
-
-}
-
-
-
-function getDurressLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function (position) {
-            $("#duressEnabledGpsCoordinates").val(position.coords.latitude);
-            reverseGeocode(position.coords.latitude, position.coords.longitude);
-
-        });
-    }
-}
-
-
-function reverseGeocode(latitude, longitude) {
-    var latlng = new google.maps.LatLng(latitude, longitude);
-    var geocoder = new google.maps.Geocoder();
-    geocoder.geocode({ 'latLng': latlng }, function (results, status) {
-        if (status === google.maps.GeocoderStatus.OK) {
-            if (results[0]) {
-                var address = results[0].formatted_address;
-                $("#hid_duressEnabledAddress").val(address);
-                console.log('Reverse Geocoding Result: ', address);
-
-            } else {
-                console.error('No results found');
-            }
-        } else {
-            console.error('Geocoder failed due to: ' + status);
-        }
-    });
-}
-
-function getLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(showPosition, showError);
-    } else {
-        alert("Geolocation is not supported by this browser.");
-    }
-}
-
-/* Get Client Site duress Gps Rading end*/
-
-
-/*to get the warning - start*/
-$('#btn_confrim_wand_usok').on('click', function () {
-    $('#alert-wand-in-use-modal').modal('hide')
-})
-
-
-//To Generate All PO List start
-$('#generate_log_AlldocketList').on('click', function () {
-    $('#generate_kvl_docket_status').hide();
-    $('#download_kvl_docket').hide();
-    $('.print-docket-reason').prop('checked', false);
-    $('#cbxProofOfDelivery').prop('checked', false);
-    $('#cbxPOIList').prop('checked', true);
-    $('#otherReason').val('');
-    $('#otherReason').attr('disabled', true);
-    $('#stakeholderEmail').val('');
-
-
-    $('#generate_logbook_AlldocketList').show();
-    $('#generate_kvl_docket').hide();
-    $('#print-manual-docket-modal').modal('show')
-    //$('#printDocketForKvlId').val(data.detail.id);
-    //if (data.detail.personOfInterest != null) {
-    //    $('#titlePOIWarningPrint').attr('hidden', false);
-    //    $('#imagesirenprint').attr('hidden', false);
-    //}
-    //else {
-    //    $('#titlePOIWarningPrint').attr('hidden', true);
-    //    $('#imagesirenprint').attr('hidden', true);
-    //}
-});
-
-$('#generate_logbook_AlldocketList').on('click', function () {
-    $('#generate_kvl_docket_status').hide();
-
-    const checkedReason = $('.print-docket-reason:checkbox:checked');
-    if (checkedReason.length === 0) {
-        $('#generate_kvl_docket_status').html('<i class="fa fa-times-circle text-danger"></i> Please select a reason').show();
-        return false;
-    }
-    $('#generate_kvl_docket_status').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i> Generating Manual Docket. Please wait...').show();
-    $('#download_kvl_docket').hide();
-    $('#generate_log_AlldocketList').attr('disabled', true);
-
-    var ids = [];
-    //$.ajax({
-    //    url: '/Admin/AuditSiteLog?handler=KeyVehicleLogProfiles',
-    //    data: { truckRego: null, poi: 'POI' },
-    //    type: 'GET',
-    //    dataType: 'json',
-    //    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    //}).done(function (result) { 
-    //    var ids = [];
-    //    result.forEach(function (item) {
-    //        ids.push(item.detail.id);
-
-    //    });
-    $.ajax({
-        url: '/Guard/KeyVehicleLog?handler=GenerateManualDocketList',
-        data: {
-            IsGlobal: false,
-            option: $(checkedReason).val(),
-            otherReason: $('#otherReason').val(),
-            stakeholderEmails: $('#stakeholderEmail').val(),
-            clientSiteId: $('#ClientSiteID').val(),
-            blankNoteOnOrOff: $('#IsBlankNoteOn').val(),
-            ids: ids,
-        },
-        type: 'POST',
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (response) {
-
-        if (response.statusCode === -1) {
-            $('#generate_kvl_docket_status').html('<i class="fa fa-times-circle text-danger mr-2"></i> Any POI not found for the login site').show();
+        const eventDateTimeLocal = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS');
+        const eventDateTimeLocalWithOffset = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS Z');
+        if (isform) {
+            formData.append(modelname + ".EventDateTimeLocal", eventDateTimeLocal);
+            formData.append(modelname + ".EventDateTimeLocalWithOffset", eventDateTimeLocalWithOffset);
+            formData.append(modelname + ".EventDateTimeZone", tz);
+            formData.append(modelname + ".EventDateTimeZoneShort", tzshrtnm);
+            formData.append(modelname + ".EventDateTimeUtcOffsetMinute", diffTZ);
         }
         else {
-
-            $('#generate_log_AlldocketList').attr('disabled', false);
-            $('#download_kvl_docket').show();
-            $('#download_kvl_docket').attr('href', response.fileName);
-
-            let statusClass = 'fa-check-circle-o text-success mr-2';
-            let statusMessage = 'A copy of the docket is on the Dropbox, and where applicable, has been emailed to relevant stakeholders';
-            if (response.statusCode !== 0) {
-                statusClass = 'fa-exclamation-triangle text-warning mr-2';
-                statusMessage = 'Docket created successfully. But sending the email or uploading to Dropbox failed.';
-            }
-            $('#generate_kvl_docket_status').html('<i class="fa ' + statusClass + '"></i>' + statusMessage).show();
+            formData.EventDateTimeLocal = eventDateTimeLocal;
+            formData.EventDateTimeLocalWithOffset = eventDateTimeLocalWithOffset;
+            formData.EventDateTimeZone = tz;
+            formData.EventDateTimeZoneShort = tzshrtnm;
+            formData.EventDateTimeUtcOffsetMinute = diffTZ;
         }
+    }
+
+    // Task p6#73_TimeZone issue -- added by Binoy - End
+
+
+    function initialize() {
+        var geocoder = new google.maps.Geocoder();
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+
+                gpsCoordinatesValues = position.coords.latitude + ',' + position.coords.longitude;
+                var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+                $("#hid_duressEnabledGpsCoordinates").val(gpsCoordinatesValues);
+                $("#hid_duressEnabledGpsCoordinatesDailyLog").val(gpsCoordinatesValues);
+                reverseGeocode(position.coords.latitude, position.coords.longitude);
+
+            });
+        }
+
+    }
+
+
+
+    function getDurressLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+                $("#duressEnabledGpsCoordinates").val(position.coords.latitude);
+                reverseGeocode(position.coords.latitude, position.coords.longitude);
+
+            });
+        }
+    }
+
+
+    function reverseGeocode(latitude, longitude) {
+        var latlng = new google.maps.LatLng(latitude, longitude);
+        var geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ 'latLng': latlng }, function (results, status) {
+            if (status === google.maps.GeocoderStatus.OK) {
+                if (results[0]) {
+                    var address = results[0].formatted_address;
+                    $("#hid_duressEnabledAddress").val(address);
+                    console.log('Reverse Geocoding Result: ', address);
+
+                } else {
+                    console.error('No results found');
+                }
+            } else {
+                console.error('Geocoder failed due to: ' + status);
+            }
+        });
+    }
+
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(showPosition, showError);
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+    }
+
+    /* Get Client Site duress Gps Rading end*/
+
+
+    /*to get the warning - start*/
+    $('#btn_confrim_wand_usok').on('click', function () {
+        $('#alert-wand-in-use-modal').modal('hide')
+    })
+
+
+    //To Generate All PO List start
+    $('#generate_log_AlldocketList').on('click', function () {
+        $('#generate_kvl_docket_status').hide();
+        $('#download_kvl_docket').hide();
+        $('.print-docket-reason').prop('checked', false);
+        $('#cbxProofOfDelivery').prop('checked', false);
+        $('#cbxPOIList').prop('checked', true);
+        $('#otherReason').val('');
+        $('#otherReason').attr('disabled', true);
+        $('#stakeholderEmail').val('');
+
+
+        $('#generate_logbook_AlldocketList').show();
+        $('#generate_kvl_docket').hide();
+        $('#print-manual-docket-modal').modal('show')
+        //$('#printDocketForKvlId').val(data.detail.id);
+        //if (data.detail.personOfInterest != null) {
+        //    $('#titlePOIWarningPrint').attr('hidden', false);
+        //    $('#imagesirenprint').attr('hidden', false);
+        //}
+        //else {
+        //    $('#titlePOIWarningPrint').attr('hidden', true);
+        //    $('#imagesirenprint').attr('hidden', true);
+        //}
     });
-});
 
+    $('#generate_logbook_AlldocketList').on('click', function () {
+        $('#generate_kvl_docket_status').hide();
 
+        const checkedReason = $('.print-docket-reason:checkbox:checked');
+        if (checkedReason.length === 0) {
+            $('#generate_kvl_docket_status').html('<i class="fa fa-times-circle text-danger"></i> Please select a reason').show();
+            return false;
+        }
+        $('#generate_kvl_docket_status').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i> Generating Manual Docket. Please wait...').show();
+        $('#download_kvl_docket').hide();
+        $('#generate_log_AlldocketList').attr('disabled', true);
 
+        var ids = [];
+        //$.ajax({
+        //    url: '/Admin/AuditSiteLog?handler=KeyVehicleLogProfiles',
+        //    data: { truckRego: null, poi: 'POI' },
+        //    type: 'GET',
+        //    dataType: 'json',
+        //    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        //}).done(function (result) { 
+        //    var ids = [];
+        //    result.forEach(function (item) {
+        //        ids.push(item.detail.id);
 
-
-
-
-/*});*/
-//To Generate All PO List stop
-
-$('#btncalendarEventModal').on('click', function () {
-    $('#calendarEventModal').modal('show');
-});
-let calendarEventsDetails = $('#calendarEventsDetails').grid({
-    dataSource: '/Radio/RadioCheckNew?handler=BroadcastCalendarEventsByDate',
-    uiLibrary: 'bootstrap4',
-    iconsLibrary: 'fontawesome',
-    primaryKey: 'id',
-    columns: [
-        { width: 130, field: 'id', title: 'Id', hidden: true },
-        { width: 450, field: 'textMessage', title: 'Events' },
-        { width: 100, field: 'formattedStartDate', title: 'Start' },
-        { width: 100, field: 'formattedExpiryDate', title: 'Expiry' },
-    ],
-
-});
-//let calendarEventsDetails = $('#calendarEventsDetails').DataTable({
-//    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
-//    ordering: true,
-//    info: false,
-//    searching: true,
-//    autoWidth: false,
-//    fixedHeader: false,
-//    "scrollY": "300px", // Set the desired height for the scrollable area
-//    "paging": false,
-//    "footer": true,
-//    ajax: {
-//        url: '/Radio/RadioCheckNew?handler=BroadcastCalendarEventsByDate',
-//        datatype: 'json',
-
-//        dataSrc: ''
-//    },
-//    columns: [
-//        { data: 'id', visible: false, title: 'id' },
-//        {
-//            data: 'textMessage',
-//            width: '20%',
-//           // title: 'Events'
-//        },
-//        {
-//            data: 'formattedStartDate',
-//            width: '20%',
-//          //  title: 'Start'
-
-//        },
-//        {
-//            data: 'formattedExpiryDate',
-//            width: '9%',
-//           // title: 'Expiry',
-
-//        },
-
-
-
-
-//    ],
-
-//});
-
-//calculate month difference-start
-
-function monthDiff(d1, d2) {
-    var months;
-    months = (d2.getFullYear() - d1.getFullYear()) * 12;
-    months -= d1.getMonth();
-    months += d2.getMonth();
-    return months <= 0 ? 0 : months;
-}
-//calculate month difference-end
-
-/*to view thw audit log report-start*/
-$('#vehicle_key_log_audit_history').DataTable({
-    autoWidth: false,
-    paging: true,
-    ordering: false,
-    info: false,
-    searching: false,
-    pageLength: 10,
-    data: [],
-    columns: [
-
-        { data: 'auditTimeString', width: '32%' },
-        { data: 'guardLogin.guard.initial', width: '15%' },
-        { data: 'auditMessage' },
-    ],
-});
-$('#btnGenerateVklAuditLogReport').on('click', function () {
-    if ($('#vklClientSiteId').val().length === 0) {
-        alert('Please select a client site');
-        return;
-    }
-    $('#KeyVehicleLogAuditLogRequest_ClientSiteId').val($('#vklClientSiteId').val());
-    var item = $('#KeyVehicleLogAuditLogRequest_VehicleRego').val();
-    var item2 = $('#KeyVehicleLogAuditLogRequest_PersonName').val();
-    var item3 = $('#KeyVehicleLogAuditLogRequest_KeyNo').val();
-    if (((item == null || item == '') && (item2 == null || item2 == '') && (item3 == null || item3 == ''))) {
-        new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
-    }
-    else if ((item != '') && (item2 != '') && (item3 != '')) {
-        new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
-    }
-    else if ((item != '') && (item2 != '')) {
-        new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
-    }
-    else if ((item != '') && (item3 != '')) {
-        new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
-    }
-    else if ((item2 != '') && (item3 != '')) {
-        new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
-    }
-    else {
-        $('#loader').show();
+        //    });
         $.ajax({
-            // url: '/Admin/AuditSiteLog?handler=AuditHistory&vehicleRego=' + item,
-            url: '/Admin/AuditSiteLog?handler=AuditHistory',
-            type: 'GET',
-            dataType: 'json',
-            data: $('#form_kvl_auditlog_request').serialize(),
+            url: '/Guard/KeyVehicleLog?handler=GenerateManualDocketList',
+            data: {
+                IsGlobal: false,
+                option: $(checkedReason).val(),
+                otherReason: $('#otherReason').val(),
+                stakeholderEmails: $('#stakeholderEmail').val(),
+                clientSiteId: $('#ClientSiteID').val(),
+                blankNoteOnOrOff: $('#IsBlankNoteOn').val(),
+                ids: ids,
+            },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (response) {
-            if (item != '') {
-                $('#vkl-auditlog-modal').find('#vkl-profile-title-rego').html('Truck Rego: ' + item);
+
+            if (response.statusCode === -1) {
+                $('#generate_kvl_docket_status').html('<i class="fa fa-times-circle text-danger mr-2"></i> Any POI not found for the login site').show();
             }
-            if (item2 != '') {
-                $('#vkl-auditlog-modal').find('#vkl-profile-title-rego').html('Individual Name: ' + item2);
+            else {
+
+                $('#generate_log_AlldocketList').attr('disabled', false);
+                $('#download_kvl_docket').show();
+                $('#download_kvl_docket').attr('href', response.fileName);
+
+                let statusClass = 'fa-check-circle-o text-success mr-2';
+                let statusMessage = 'A copy of the docket is on the Dropbox, and where applicable, has been emailed to relevant stakeholders';
+                if (response.statusCode !== 0) {
+                    statusClass = 'fa-exclamation-triangle text-warning mr-2';
+                    statusMessage = 'Docket created successfully. But sending the email or uploading to Dropbox failed.';
+                }
+                $('#generate_kvl_docket_status').html('<i class="fa ' + statusClass + '"></i>' + statusMessage).show();
             }
-            if (item3 != '') {
-                $('#vkl-auditlog-modal').find('#vkl-profile-title-rego').html('Key No: ' + item3);
+        });
+    });
+
+
+
+
+
+
+
+    /*});*/
+    //To Generate All PO List stop
+
+    $('#btncalendarEventModal').on('click', function () {
+        $('#calendarEventModal').modal('show');
+    });
+    let calendarEventsDetails = $('#calendarEventsDetails').grid({
+        dataSource: '/Radio/RadioCheckNew?handler=BroadcastCalendarEventsByDate',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        columns: [
+            { width: 130, field: 'id', title: 'Id', hidden: true },
+            { width: 450, field: 'textMessage', title: 'Events' },
+            { width: 100, field: 'formattedStartDate', title: 'Start' },
+            { width: 100, field: 'formattedExpiryDate', title: 'Expiry' },
+        ],
+
+    });
+    //let calendarEventsDetails = $('#calendarEventsDetails').DataTable({
+    //    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+    //    ordering: true,
+    //    info: false,
+    //    searching: true,
+    //    autoWidth: false,
+    //    fixedHeader: false,
+    //    "scrollY": "300px", // Set the desired height for the scrollable area
+    //    "paging": false,
+    //    "footer": true,
+    //    ajax: {
+    //        url: '/Radio/RadioCheckNew?handler=BroadcastCalendarEventsByDate',
+    //        datatype: 'json',
+
+    //        dataSrc: ''
+    //    },
+    //    columns: [
+    //        { data: 'id', visible: false, title: 'id' },
+    //        {
+    //            data: 'textMessage',
+    //            width: '20%',
+    //           // title: 'Events'
+    //        },
+    //        {
+    //            data: 'formattedStartDate',
+    //            width: '20%',
+    //          //  title: 'Start'
+
+    //        },
+    //        {
+    //            data: 'formattedExpiryDate',
+    //            width: '9%',
+    //           // title: 'Expiry',
+
+    //        },
+
+
+
+
+    //    ],
+
+    //});
+
+    //calculate month difference-start
+
+    function monthDiff(d1, d2) {
+        var months;
+        months = (d2.getFullYear() - d1.getFullYear()) * 12;
+        months -= d1.getMonth();
+        months += d2.getMonth();
+        return months <= 0 ? 0 : months;
+    }
+    //calculate month difference-end
+
+    /*to view thw audit log report-start*/
+    $('#vehicle_key_log_audit_history').DataTable({
+        autoWidth: false,
+        paging: true,
+        ordering: false,
+        info: false,
+        searching: false,
+        pageLength: 10,
+        data: [],
+        columns: [
+
+            { data: 'auditTimeString', width: '32%' },
+            { data: 'guardLogin.guard.initial', width: '15%' },
+            { data: 'auditMessage' },
+        ],
+    });
+    $('#btnGenerateVklAuditLogReport').on('click', function () {
+        if ($('#vklClientSiteId').val().length === 0) {
+            alert('Please select a client site');
+            return;
+        }
+        $('#KeyVehicleLogAuditLogRequest_ClientSiteId').val($('#vklClientSiteId').val());
+        var item = $('#KeyVehicleLogAuditLogRequest_VehicleRego').val();
+        var item2 = $('#KeyVehicleLogAuditLogRequest_PersonName').val();
+        var item3 = $('#KeyVehicleLogAuditLogRequest_KeyNo').val();
+        if (((item == null || item == '') && (item2 == null || item2 == '') && (item3 == null || item3 == ''))) {
+            new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
+        }
+        else if ((item != '') && (item2 != '') && (item3 != '')) {
+            new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
+        }
+        else if ((item != '') && (item2 != '')) {
+            new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
+        }
+        else if ((item != '') && (item3 != '')) {
+            new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
+        }
+        else if ((item2 != '') && (item3 != '')) {
+            new MessageModal({ message: "<b>Please select any one of the 3 options<p></p><p>1. Vehicle Reg</p><p>2. Individual Name</p><p>3. Key No</p> </b>" }).showWarning();
+        }
+        else {
+            $('#loader').show();
+            $.ajax({
+                // url: '/Admin/AuditSiteLog?handler=AuditHistory&vehicleRego=' + item,
+                url: '/Admin/AuditSiteLog?handler=AuditHistory',
+                type: 'GET',
+                dataType: 'json',
+                data: $('#form_kvl_auditlog_request').serialize(),
+            }).done(function (response) {
+                if (item != '') {
+                    $('#vkl-auditlog-modal').find('#vkl-profile-title-rego').html('Truck Rego: ' + item);
+                }
+                if (item2 != '') {
+                    $('#vkl-auditlog-modal').find('#vkl-profile-title-rego').html('Individual Name: ' + item2);
+                }
+                if (item3 != '') {
+                    $('#vkl-auditlog-modal').find('#vkl-profile-title-rego').html('Key No: ' + item3);
+                }
+                $('#vkl-auditlog-modal').modal('show');
+                $('#vehicle_key_log_audit_history').DataTable().clear().rows.add(response).draw();
+                $('#loader').hide();
+            });
+        }
+    });
+
+    let ActiveGuardsLogBookDetails = $('#ActiveGuardsLogBookDetails').DataTable({
+        autoWidth: false,
+        ordering: false,
+        searching: false,
+        paging: false,
+        info: false,
+        ajax: {
+            url: '/Admin/GuardSettings?handler=LastTimeLogin',
+            data: function (d) {
+                d.guardId = $('#txtGuardId').val();
+
+            },
+            dataSrc: ''
+        },
+        columns: [
+
+            {
+                data: 'eventDateTime',
+                width: "10%",
+                render: function (data, type, row) {
+                    // Convert the date string to a JavaScript Date object
+                    var date = new Date(data);
+
+                    // Format the date to display only the date part without the time
+                    var formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    var additionalData = row.eventDateTimeZoneShort;
+                    if (additionalData != null) {
+                        return formattedDate + ' (' + additionalData + ')';
+                    }
+                    else {
+                        return formattedDate
+                    }
+
+                }
             }
-            $('#vkl-auditlog-modal').modal('show');
-            $('#vehicle_key_log_audit_history').DataTable().clear().rows.add(response).draw();
-            $('#loader').hide();
+
+        ],
+
+
+    });
+    /*to view thw audit log report-end*/
+
+    //for toggle areas - start
+    //for time slot - start 
+    $('#chk_cs_time_slot').on('change', function () {
+
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_tn_no_load').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_tn_no_load').prop('checked', true);
+        }
+        $('#chk_cs_Is_Time_Slot').val(isChecked);
+    });
+    $('#chk_cs_tn_no_load').on('change', function () {
+
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_time_slot').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_time_slot').prop('checked', true);
+        }
+        $('#chk_cs_Is_Time_Slot').val(isChecked);
+    });
+    //for time slot - end
+    //for VWI  - start 
+    $('#chk_cs_vwi').on('change', function () {
+
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_Manifest').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_Manifest').prop('checked', true);
+        }
+        $('#chk_cs_Is_VWI').val(isChecked);
+    });
+    $('#chk_cs_Manifest').on('change', function () {
+
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_vwi').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_vwi').prop('checked', true);
+        }
+        $('#chk_cs_Is_VWI').val(isChecked);
+    });
+    //for VWI areas - start 
+    //for sender  - start 
+    $('#chk_cs_Sender').on('change', function () {
+
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_Receiver').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_Receiver').prop('checked', true);
+        }
+        $('#chk_cs_Is_Sender').val(isChecked);
+    });
+    $('#chk_cs_Receiver').on('change', function () {
+
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_Sender').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_Sender').prop('checked', true);
+        }
+        $('#chk_cs_Is_Sender').val(isChecked);
+    });
+    //for sender - end
+    //for Reels  - start 
+    $('#chk_cs_Reels').on('change', function () {
+
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_QTY').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_QTY').prop('checked', true);
+        }
+        $('#chk_cs_Is_Reels').val(isChecked);
+    });
+    $('#chk_cs_QTY').on('change', function () {
+
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_Reels').prop('checked', false);
+        }
+        else {
+            $('#chk_cs_Reels').prop('checked', true);
+        }
+        $('#chk_cs_Is_Reels').val(isChecked);
+    });
+    //for Reels - start
+    $('#btnSaveToggleKeys').on('click', function () {
+        var toggleType;
+        var IsActive;
+
+        if ($('#chk_cs_time_slot').is(":checked")) {
+            $('#chk_cs_Is_Time_Slot').val(true);
+
+        }
+        else {
+            $('#chk_cs_Is_Time_Slot').val(false);
+
+        }
+        if ($('#chk_cs_vwi').is(":checked")) {
+            $('#chk_cs_Is_VWI').val(true);
+
+        }
+        else {
+            $('#chk_cs_Is_VWI').val(false);
+
+        }
+        if ($('#chk_cs_Sender').is(":checked")) {
+            $('#chk_cs_Is_Sender').val(true);
+
+        }
+        else {
+            $('#chk_cs_Is_Sender').val(false);
+
+        }
+        if ($('#chk_cs_Reels').is(":checked")) {
+            $('#chk_cs_Is_Reels').val(true);
+
+        }
+        else {
+            $('#chk_cs_Is_Reels').val(false);
+
+        }
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=SaveToggleType',
+            type: 'POST',
+            data: {
+                siteId: $('#gl_client_site_id').val(),
+                timeslottoggleTypeId: 1,
+                timeslotIsActive: $('#chk_cs_Is_Time_Slot').val(),
+                vwitoggleTypeId: 2,
+                vwiIsActive: $('#chk_cs_Is_VWI').val(),
+                sendertoggleTypeId: 3,
+                senderIsActive: $('#chk_cs_Is_Sender').val(),
+                reelstoggleTypeId: 4,
+                reelsIsActive: $('#chk_cs_Is_Reels').val(),
+            },
+            headers: { 'RequestVerificationToken': token }
+        }).done(function () {
+            alert("Saved Successfully")
+        }).fail(function () {
+            console.log("error");
+        });
+    });
+
+    function GetClientSiteToggle() {
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=ClientSiteToggle',
+            type: 'GET',
+            data: {
+                siteId: $('#gl_client_site_id').val()
+            },
+            headers: { 'RequestVerificationToken': token }
+        }).done(function (response) {
+            for (var i = 0; i < response.length; i++) {
+
+                if (response[i].toggleTypeId == 1) {
+                    $('#chk_cs_Is_Time_Slot').val(response[i].isActive);
+                    if (response[i].isActive == true) {
+                        $('#chk_cs_time_slot').prop('checked', true);
+                        $('#chk_cs_tn_no_load').prop('checked', false);
+                    }
+                    else {
+                        $('#chk_cs_time_slot').prop('checked', false);
+                        $('#chk_cs_tn_no_load').prop('checked', true);
+                    }
+
+                }
+                if (response[i].toggleTypeId == 2) {
+                    $('#chk_cs_Is_VWI').val(response[i].isActive);
+                    if (response[i].isActive == true) {
+                        $('#chk_cs_vwi').prop('checked', true);
+                        $('#chk_cs_Manifest').prop('checked', false);
+                    }
+                    else {
+                        $('#chk_cs_vwi').prop('checked', false);
+                        $('#chk_cs_Manifest').prop('checked', true);
+                    }
+
+                }
+                if (response[i].toggleTypeId == 3) {
+                    $('#chk_cs_Is_Sender').val(response[i].isActive);
+                    if (response[i].isActive == true) {
+                        $('#chk_cs_Sender').prop('checked', true);
+                        $('#chk_cs_Receiver').prop('checked', false);
+                    }
+                    else {
+                        $('#chk_cs_Sender').prop('checked', false);
+                        $('#chk_cs_Receiver').prop('checked', true);
+                    }
+
+                }
+                if (response[i].toggleTypeId == 4) {
+                    $('#chk_cs_Is_Reels').val(response[i].isActive);
+                    if (response[i].isActive == true) {
+                        $('#chk_cs_Reels').prop('checked', true);
+                        $('#chk_cs_QTY').prop('checked', false);
+                    }
+                    else {
+                        $('#chk_cs_Reels').prop('checked', false);
+                        $('#chk_cs_QTY').prop('checked', true);
+                    }
+
+                }
+
+            }
+
+        }).fail(function () {
+            console.log("error");
         });
     }
-});
 
-let ActiveGuardsLogBookDetails = $('#ActiveGuardsLogBookDetails').DataTable({
-    autoWidth: false,
-    ordering: false,
-    searching: false,
-    paging: false,
-    info: false,
-    ajax: {
-        url: '/Admin/GuardSettings?handler=LastTimeLogin',
-        data: function (d) {
-            d.guardId = $('#txtGuardId').val();
+    $('#LicanseTypeFilter').on('change', function () {
+        const isChecked = $(this).is(':checked');
 
-        },
-        dataSrc: ''
-    },
-    columns: [
-
-        {
-            data: 'eventDateTime',
-            width: "10%",
-            render: function (data, type, row) {
-                // Convert the date string to a JavaScript Date object
-                var date = new Date(data);
-
-                // Format the date to display only the date part without the time
-                var formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                var additionalData = row.eventDateTimeZoneShort;
-                if (additionalData != null) {
-                    return formattedDate + ' (' + additionalData + ')';
-                }
-                else {
-                    return formattedDate
-                }
-
-            }
+        const filter = isChecked ? 1 : 2;
+        if (filter == 1) {
+            $('#ComplianceDate').text('Issue Date');
+            $('#IsDateFilterEnabledHidden').val(true)
+            $("#GuardComplianceAndLicense_ExpiryDate1").val('');
+            $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', function () {
+                return new Date().toJSON().split('T')[0];
+            });
+            $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', '');
+        }
+        if (filter == 2) {
+            $('#IsDateFilterEnabledHidden').val(false)
+            $('#ComplianceDate').text('Expiry Date');
+            $("#GuardComplianceAndLicense_ExpiryDate1").val('');
+            $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', function () {
+                return new Date().toJSON().split('T')[0];
+            });
+            $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', '');
         }
 
-    ],
-
-
-});
-/*to view thw audit log report-end*/
-
-//for toggle areas - start
-//for time slot - start 
-$('#chk_cs_time_slot').on('change', function () {
-
-    const isChecked = $(this).is(':checked');
-    if (isChecked == true) {
-        $('#chk_cs_tn_no_load').prop('checked', false);
-    }
-    else {
-        $('#chk_cs_tn_no_load').prop('checked', true);
-    }
-    $('#chk_cs_Is_Time_Slot').val(isChecked);
-});
-$('#chk_cs_tn_no_load').on('change', function () {
-
-    const isChecked = $(this).is(':checked');
-    if (isChecked == true) {
-        $('#chk_cs_time_slot').prop('checked', false);
-    }
-    else {
-        $('#chk_cs_time_slot').prop('checked', true);
-    }
-    $('#chk_cs_Is_Time_Slot').val(isChecked);
-});
-//for time slot - end
-//for VWI  - start 
-$('#chk_cs_vwi').on('change', function () {
-
-    const isChecked = $(this).is(':checked');
-    if (isChecked == true) {
-        $('#chk_cs_Manifest').prop('checked', false);
-    }
-    else {
-        $('#chk_cs_Manifest').prop('checked', true);
-    }
-    $('#chk_cs_Is_VWI').val(isChecked);
-});
-$('#chk_cs_Manifest').on('change', function () {
-
-    const isChecked = $(this).is(':checked');
-    if (isChecked == true) {
-        $('#chk_cs_vwi').prop('checked', false);
-    }
-    else {
-        $('#chk_cs_vwi').prop('checked', true);
-    }
-    $('#chk_cs_Is_VWI').val(isChecked);
-});
-//for VWI areas - start 
-//for sender  - start 
-$('#chk_cs_Sender').on('change', function () {
-
-    const isChecked = $(this).is(':checked');
-    if (isChecked == true) {
-        $('#chk_cs_Receiver').prop('checked', false);
-    }
-    else {
-        $('#chk_cs_Receiver').prop('checked', true);
-    }
-    $('#chk_cs_Is_Sender').val(isChecked);
-});
-$('#chk_cs_Receiver').on('change', function () {
-
-    const isChecked = $(this).is(':checked');
-    if (isChecked == true) {
-        $('#chk_cs_Sender').prop('checked', false);
-    }
-    else {
-        $('#chk_cs_Sender').prop('checked', true);
-    }
-    $('#chk_cs_Is_Sender').val(isChecked);
-});
-//for sender - end
-//for Reels  - start 
-$('#chk_cs_Reels').on('change', function () {
-
-    const isChecked = $(this).is(':checked');
-    if (isChecked == true) {
-        $('#chk_cs_QTY').prop('checked', false);
-    }
-    else {
-        $('#chk_cs_QTY').prop('checked', true);
-    }
-    $('#chk_cs_Is_Reels').val(isChecked);
-});
-$('#chk_cs_QTY').on('change', function () {
-
-    const isChecked = $(this).is(':checked');
-    if (isChecked == true) {
-        $('#chk_cs_Reels').prop('checked', false);
-    }
-    else {
-        $('#chk_cs_Reels').prop('checked', true);
-    }
-    $('#chk_cs_Is_Reels').val(isChecked);
-});
-//for Reels - start
-$('#btnSaveToggleKeys').on('click', function () {
-    var toggleType;
-    var IsActive;
-
-    if ($('#chk_cs_time_slot').is(":checked")) {
-        $('#chk_cs_Is_Time_Slot').val(true);
-
-    }
-    else {
-        $('#chk_cs_Is_Time_Slot').val(false);
-
-    }
-    if ($('#chk_cs_vwi').is(":checked")) {
-        $('#chk_cs_Is_VWI').val(true);
-
-    }
-    else {
-        $('#chk_cs_Is_VWI').val(false);
-
-    }
-    if ($('#chk_cs_Sender').is(":checked")) {
-        $('#chk_cs_Is_Sender').val(true);
-
-    }
-    else {
-        $('#chk_cs_Is_Sender').val(false);
-
-    }
-    if ($('#chk_cs_Reels').is(":checked")) {
-        $('#chk_cs_Is_Reels').val(true);
-
-    }
-    else {
-        $('#chk_cs_Is_Reels').val(false);
-
-    }
-    const token = $('input[name="__RequestVerificationToken"]').val();
-    $.ajax({
-        url: '/Admin/GuardSettings?handler=SaveToggleType',
-        type: 'POST',
-        data: {
-            siteId: $('#gl_client_site_id').val(),
-            timeslottoggleTypeId: 1,
-            timeslotIsActive: $('#chk_cs_Is_Time_Slot').val(),
-            vwitoggleTypeId: 2,
-            vwiIsActive: $('#chk_cs_Is_VWI').val(),
-            sendertoggleTypeId: 3,
-            senderIsActive: $('#chk_cs_Is_Sender').val(),
-            reelstoggleTypeId: 4,
-            reelsIsActive: $('#chk_cs_Is_Reels').val(),
-        },
-        headers: { 'RequestVerificationToken': token }
-    }).done(function () {
-        alert("Saved Successfully")
-    }).fail(function () {
-        console.log("error");
     });
-});
-
-function GetClientSiteToggle() {
-    const token = $('input[name="__RequestVerificationToken"]').val();
-    $.ajax({
-        url: '/Admin/GuardSettings?handler=ClientSiteToggle',
-        type: 'GET',
-        data: {
-            siteId: $('#gl_client_site_id').val()
-        },
-        headers: { 'RequestVerificationToken': token }
-    }).done(function (response) {
-        for (var i = 0; i < response.length; i++) {
-
-            if (response[i].toggleTypeId == 1) {
-                $('#chk_cs_Is_Time_Slot').val(response[i].isActive);
-                if (response[i].isActive == true) {
-                    $('#chk_cs_time_slot').prop('checked', true);
-                    $('#chk_cs_tn_no_load').prop('checked', false);
-                }
-                else {
-                    $('#chk_cs_time_slot').prop('checked', false);
-                    $('#chk_cs_tn_no_load').prop('checked', true);
-                }
-
-            }
-            if (response[i].toggleTypeId == 2) {
-                $('#chk_cs_Is_VWI').val(response[i].isActive);
-                if (response[i].isActive == true) {
-                    $('#chk_cs_vwi').prop('checked', true);
-                    $('#chk_cs_Manifest').prop('checked', false);
-                }
-                else {
-                    $('#chk_cs_vwi').prop('checked', false);
-                    $('#chk_cs_Manifest').prop('checked', true);
-                }
-
-            }
-            if (response[i].toggleTypeId == 3) {
-                $('#chk_cs_Is_Sender').val(response[i].isActive);
-                if (response[i].isActive == true) {
-                    $('#chk_cs_Sender').prop('checked', true);
-                    $('#chk_cs_Receiver').prop('checked', false);
-                }
-                else {
-                    $('#chk_cs_Sender').prop('checked', false);
-                    $('#chk_cs_Receiver').prop('checked', true);
-                }
-
-            }
-            if (response[i].toggleTypeId == 4) {
-                $('#chk_cs_Is_Reels').val(response[i].isActive);
-                if (response[i].isActive == true) {
-                    $('#chk_cs_Reels').prop('checked', true);
-                    $('#chk_cs_QTY').prop('checked', false);
-                }
-                else {
-                    $('#chk_cs_Reels').prop('checked', false);
-                    $('#chk_cs_QTY').prop('checked', true);
-                }
-
-            }
-
-        }
-
-    }).fail(function () {
-        console.log("error");
-    });
-}
-
-$('#LicanseTypeFilter').on('change', function () {
-    const isChecked = $(this).is(':checked');
-
-    const filter = isChecked ? 1 : 2;
-    if (filter == 1) {
-        $('#ComplianceDate').text('Issue Date');
-        $('#IsDateFilterEnabledHidden').val(true)        
-        $("#GuardComplianceAndLicense_ExpiryDate1").val('');
-        $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', function () {
-            return new Date().toJSON().split('T')[0];
-        });
-        $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', '');
-    }
-    if (filter == 2) {
-        $('#IsDateFilterEnabledHidden').val(false)
-        $('#ComplianceDate').text('Expiry Date');        
-        $("#GuardComplianceAndLicense_ExpiryDate1").val('');
-        $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', function () {
-            return new Date().toJSON().split('T')[0];
-        });
-        $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', '');
-    }
-
-});
-//for toggle areas - start
+    //for toggle areas - start
 
 
     $('#togglePassword').on('click', function () {
@@ -5044,6 +5055,125 @@ $('#LicanseTypeFilter').on('change', function () {
             $(this).html('<i class="fa fa-eye" aria-hidden="true"></i>'); // Change icon to an open eye
         }
     });
+
+    /* ##### Download Log Audit Start ##### */
+
+    var currdate = new Date();
+    $('#dwnlogAuditFromDate').val(currdate.toISOString().substring(0, 10));
+    $('#dwnlogAuditToDate').val(currdate.toISOString().substring(0, 10));
+
+    let tbldownloadlogaudit = $('#tbl_downloadlog_audit').DataTable({
+        dom: 'lBfrtip',
+        buttons: [
+            //{
+            //    extend: 'copy',
+            //    text: '<i class="fa fa-copy"></i>',
+            //    titleAttr: 'Copy',
+            //    className: 'btn btn-md mr-2 btn-copy'
+            //},            
+            {
+                extend: 'excel',
+                text: '<i class="fa fa-file-excel-o"></i>',
+                titleAttr: 'Excel',
+                className: 'btn btn-md mr-2 btn-excel',
+                title: 'Files download/viewed audit logs'
+            },
+            {
+                extend: 'pdf',
+                text: '<i class="fa fa-file-pdf-o"></i>',
+                titleAttr: 'PDF',
+                className: 'btn btn-md mr-2 btn-pdf',
+                /*orientation: 'landscape',*/
+                pageSize: 'A4',
+                /*messageTop: 'Files download/viewed audit logs.',*/
+                /*download: 'open',*/
+                title: 'Files download/viewed audit logs'
+            },
+            //{
+            //    extend: 'print',
+            //    text: '<i class="fa fa-print"></i>',
+            //    titleAttr: 'Print',
+            //    className: 'btn btn-md mr-2 btn-print'
+            //}
+        ],
+        lengthMenu: [[75, 100, -1], [75, 100, "All"]],
+        pageLength: 100,
+        hidden: true,
+        paging: true,
+        ordering: false,
+        order: [[groupColumn, 'asc']],
+        info: true,
+        searching: true,
+        autoWidth: false,
+        scrollX: true,
+        data: [],
+        columns: [
+        { data: 'id', title: 'Event ID', visible: false },
+        { data: 'user.userName', title: 'User', width: "10%" },
+        { data: 'guard.name', title: 'Guard Name', width: "15%" },
+        { data: 'guard.securityNo', title: 'Security Number', width: "10%" },
+        { data: 'ipAddress', title: 'IP Address', width: "10%" },
+        { data: 'dwnlCatagory', title: 'Categories', width: "15%" },
+        { data: 'dwnlFileName', title: 'File Name', width: "20%" },
+        {
+            data: 'eventDateTime', title: 'Download/View Time', width: "20%", 'render': function (value) {
+                const date = new Date(value);
+                var DateTime = luxon.DateTime;
+                var dt1 = DateTime.fromJSDate(date);
+                var dt = dt1.toFormat('dd LLL yyyy @ HH:mm') + ' Hrs'; // + record.eventDateTimeZoneShort;
+                return dt;
+            }
+        },
+    ],
+        drawCallback: function () {
+            var api = this.api();
+            var rows = api.rows({ page: 'current' }).nodes();
+            var last = null;
+
+            //api.column(groupColumn, { page: 'current' })
+            //    .data()
+            //    .each(function (group, i) {
+            //        if (last !== group) {
+            //            $(rows)
+            //                .eq(i)
+            //                .before('<tr class="group bg-light text-dark"><td colspan="25">' + group + '</td></tr>');
+
+            //            last = group;
+            //        }
+            //    });
+        },
+    });
+
+$("#btnGenerateDwnlog").on('click', function () {
+    //calculate month difference-start
+    var date1 = new Date($('#dwnlogAuditFromDate').val());
+    var date2 = new Date($('#dwnlogAuditToDate').val());
+    if (date1 > date2) {
+        alert('From date cannot be before To date.')
+        return false;
+    }
+    $('#loader').show();
+    $.ajax({
+        url: '/Admin/AuditSiteLog?handler=GenerateDownloadFilesLog',
+        type: 'POST',
+        dataType: 'json',
+        data: {
+            logFromDate: $('#dwnlogAuditFromDate').val(),
+            logToDate: $('#dwnlogAuditToDate').val()
+        },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (response) {
+        $('#loader').hide();
+        tbldownloadlogaudit.clear().rows.add(response).draw();
+    }).always(function () {
+        $('#loader').hide();
+    });
+
+});
+    //code added  to download Excel start for Download Log Audit-end
+
+
+    /* ##### Download Log Audit End ##### */
 
 });
 

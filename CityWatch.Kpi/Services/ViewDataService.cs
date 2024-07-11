@@ -291,7 +291,7 @@ namespace CityWatch.Kpi.Services
         {
             var dailyClientSiteKpis = _kpiDataProvider.GetDailyClientSiteKpis(clientSiteId, fromDate, toDate).ToList();
             var guardLogins = _guardDataProvider.GetGuardLogins(clientSiteId, fromDate, toDate).ToList();
-            var guardCompliances = _guardDataProvider.GetAllGuardCompliances();
+            var guardCompliances = _guardDataProvider.GetAllGuardLicensesAndCompliances();
             foreach (var guardLogin in guardLogins)
             {
                 // Trim OnDuty and OffDuty dates to login date
@@ -306,7 +306,7 @@ namespace CityWatch.Kpi.Services
                     guardLogin.OffDuty = new DateTime(guardLogin.LoginDate.Year, guardLogin.LoginDate.Month, guardLogin.LoginDate.Day, 23, 59, 00); ;
                 }
             }
-            return dailyClientSiteKpis.Select(z => new DailyKpiGuard(z, guardLogins.Where(y => y.LoginDate.ToString("yyyyMMdd") == z.Date.ToString("yyyyMMdd")), guardCompliances)).ToList();
+            return dailyClientSiteKpis.Select(z => new DailyKpiGuard(z, guardLogins.Where(y => y.LoginDate.ToString("yyyyMMdd") == z.Date.ToString("yyyyMMdd")), guardCompliances, _guardDataProvider)).ToList();
         }
         //To  get the details of Gurad in 3rd page of report start
         public List<GuardLogin> GetKpiGuardDetailsData(int clientSiteId, DateTime fromDate, DateTime toDate)

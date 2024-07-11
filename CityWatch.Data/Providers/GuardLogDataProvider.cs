@@ -19,6 +19,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Xml.Linq;
 using static Dropbox.Api.Team.GroupSelector;
 using static Dropbox.Api.TeamLog.EventCategory;
@@ -95,7 +96,7 @@ namespace CityWatch.Data.Providers
         public Guard GetGuards(int guardId);
         //logBookId entry for radio checklist-end
         public KeyVehicleLog GetCompanyDetailsVehLog(string companyName);
-        
+
         //for getting logBook details of the  guard-start
         List<RadioCheckListGuardLoginData> GetActiveGuardlogBookDetails(int clientSiteId, int guardId);
         //for getting logBook details of the  guard-end
@@ -111,7 +112,7 @@ namespace CityWatch.Data.Providers
         //for getting Key Vehicle history of the  guard-start
         List<KeyVehicleLog> GetActiveGuardKeyVehicleHistory(int clientSiteId, int guardId);
         //for getting Key Vehicle history of the  guard-end
-        
+
         //for getting smartwand history of the  guard-start
         List<SmartWandScanGuardHistory> GetActiveGuardSwHistory(int clientSiteId, int guardId);
         //for getting smartwand history of the  guard-end
@@ -281,6 +282,10 @@ namespace CityWatch.Data.Providers
         public List<RCLinkedDuressClientSites> getallClientSitesLinkedDuress(int siteId);
 
         bool IsRClogbookStampRequired(string StampName);
+
+        List<FileDownloadAuditLogs> GetFileDownloadAuditLogsData(DateTime logFromDate, DateTime logToDate);
+
+        void CreateDownloadFileAuditLogEntry(FileDownloadAuditLogs fdal);
 
     }
 
@@ -700,7 +705,7 @@ namespace CityWatch.Data.Providers
 
                     /* update already existing CRM Company details for the keyVehicleLog for fix the issue(the company details are taking frm keyVehicleLog RC and other modules  ) */
                     if (keyVehicleLog.Website != string.Empty || keyVehicleLog.Email != string.Empty
-                        || keyVehicleLog.CompanyABN != string.Empty || keyVehicleLog.CompanyLandline !=string.Empty)
+                        || keyVehicleLog.CompanyABN != string.Empty || keyVehicleLog.CompanyLandline != string.Empty)
                     {
                         var CRMdetails = GetKeyVehicleLogs(keyVehicleLog.VehicleRego.Trim());
                         if (CRMdetails.Count != 0)
@@ -821,8 +826,8 @@ namespace CityWatch.Data.Providers
                 /* this condition added for prevent duplicate kV p7 103 issue 30112023 dileep
                   the insert with entity framework shows some key reference issue ,so query using
                  */
-                    var checkifAlreadyExist = _context.KeyVehicleLogs.Where(x => x.InitialCallTime == keyVehicleLog.InitialCallTime
-                && x.EntryTime == keyVehicleLog.EntryTime && x.SentInTime == keyVehicleLog.SentInTime && x.VehicleRego == keyVehicleLog.VehicleRego).ToList();
+                var checkifAlreadyExist = _context.KeyVehicleLogs.Where(x => x.InitialCallTime == keyVehicleLog.InitialCallTime
+            && x.EntryTime == keyVehicleLog.EntryTime && x.SentInTime == keyVehicleLog.SentInTime && x.VehicleRego == keyVehicleLog.VehicleRego).ToList();
                 if (checkifAlreadyExist.Count == 0)
                 {
                     _context.Database.ExecuteSqlRaw(
@@ -1915,8 +1920,8 @@ namespace CityWatch.Data.Providers
             return gl;
         }
         //for getting Key Vehicle history of the guard-end
-        
-        
+
+
         //for getting SmartWand history of the guard-start
         public List<SmartWandScanGuardHistory> GetActiveGuardSwHistory(int clientSiteId, int guardId)
         {
@@ -2013,21 +2018,22 @@ namespace CityWatch.Data.Providers
             return allvalues;
         }
         //for getting  SW details of the  guard-end
-        public Guard GetGuards(int guardId)      {
+        public Guard GetGuards(int guardId)
+        {
 
             return _context.Guards.Where(x => x.Id == guardId).FirstOrDefault();
         }
-        
+
         public KeyVehicleLog GetCompanyDetailsVehLog(string companyName)
         {
             if (companyName == null)
             {
                 // Handle the case where companyName is null
-                return null; 
+                return null;
             }
-      
+
             return _context.KeyVehicleLogs.FirstOrDefault(x => x.CompanyName == companyName);
-            
+
         }
         public void DeleteClientSiteRadioCheckActivityStatusForKeyVehicleEntry(int id)
         {
@@ -2428,7 +2434,7 @@ namespace CityWatch.Data.Providers
                                       .ToList();
                                         if (rcOffDutyStatus.Count == 0)
                                         {
-                                            
+
                                             var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
                                             {
                                                 ClientSiteId = manning.ClientSiteKpiSetting.ClientSiteId,
@@ -4568,24 +4574,24 @@ namespace CityWatch.Data.Providers
                 if (newId != 0)
                 {
                     // Sites 
-                    
-                        foreach (var siteId in selctedSites)
+
+                    foreach (var siteId in selctedSites)
+                    {
+                        HrSettingsClientSites HrSettingsClientSites = new HrSettingsClientSites()
                         {
-                            HrSettingsClientSites HrSettingsClientSites = new HrSettingsClientSites()
-                            {
 
-                                ClientSiteId = siteId,
-                                HrSettingsId = newId
+                            ClientSiteId = siteId,
+                            HrSettingsId = newId
 
-                            };
+                        };
 
 
-                            _context.HrSettingsClientSites.Add(HrSettingsClientSites);
-                            _context.SaveChanges();
+                        _context.HrSettingsClientSites.Add(HrSettingsClientSites);
+                        _context.SaveChanges();
 
-                        }
+                    }
 
-                    
+
                     // State
                     if (selectedStates.Count() != 0)
                     {
@@ -4622,56 +4628,56 @@ namespace CityWatch.Data.Providers
                     hrSettingsToUpdate.Description = hrSettings.Description;
                     _context.SaveChanges();
                 }
-               
-                    var hrremoveSites = _context.HrSettingsClientSites.Where(x => x.HrSettingsId == hrSettings.Id).ToList();
-                    if (hrremoveSites != null)
+
+                var hrremoveSites = _context.HrSettingsClientSites.Where(x => x.HrSettingsId == hrSettings.Id).ToList();
+                if (hrremoveSites != null)
+                {
+                    _context.HrSettingsClientSites.RemoveRange(hrremoveSites);
+                    _context.SaveChanges();
+
+                }
+                foreach (var siteId in selctedSites)
+                {
+                    HrSettingsClientSites HrSettingsClientSites = new HrSettingsClientSites()
                     {
-                        _context.HrSettingsClientSites.RemoveRange(hrremoveSites);
-                        _context.SaveChanges();
 
-                    }
-                    foreach (var siteId in selctedSites)
+                        ClientSiteId = siteId,
+                        HrSettingsId = hrSettings.Id
+
+                    };
+
+                    _context.HrSettingsClientSites.Add(HrSettingsClientSites);
+                    _context.SaveChanges();
+
+                }
+
+
+
+
+
+                var hrremoveStates = _context.HrSettingsClientStates.Where(x => x.HrSettingsId == hrSettings.Id).ToList();
+                if (hrremoveStates != null)
+                {
+                    _context.HrSettingsClientStates.RemoveRange(hrremoveStates);
+                    _context.SaveChanges();
+
+                }
+                foreach (var State in selectedStates)
+                {
+                    HrSettingsClientStates HrSettingsStates = new HrSettingsClientStates()
                     {
-                        HrSettingsClientSites HrSettingsClientSites = new HrSettingsClientSites()
-                        {
 
-                            ClientSiteId = siteId,
-                            HrSettingsId = hrSettings.Id
+                        State = State,
+                        HrSettingsId = hrSettings.Id
 
-                        };
+                    };
 
-                        _context.HrSettingsClientSites.Add(HrSettingsClientSites);
-                        _context.SaveChanges();
+                    _context.HrSettingsClientStates.Add(HrSettingsStates);
+                    _context.SaveChanges();
 
-                    }
-
-                
+                }
 
 
-             
-                    var hrremoveStates = _context.HrSettingsClientStates.Where(x => x.HrSettingsId == hrSettings.Id).ToList();
-                    if (hrremoveStates != null)
-                    {
-                        _context.HrSettingsClientStates.RemoveRange(hrremoveStates);
-                        _context.SaveChanges();
-
-                    }
-                    foreach (var State in selectedStates)
-                    {
-                        HrSettingsClientStates HrSettingsStates = new HrSettingsClientStates()
-                        {
-
-                            State = State,
-                            HrSettingsId = hrSettings.Id
-
-                        };
-
-                        _context.HrSettingsClientStates.Add(HrSettingsStates);
-                        _context.SaveChanges();
-
-                    }
-
-               
 
 
 
@@ -4743,7 +4749,7 @@ namespace CityWatch.Data.Providers
         public Guard GetGuardsWtihProviderNumber(int guardId)
         {
 
-            var guards= _context.Guards.Where(x => x.Id == guardId).FirstOrDefault();
+            var guards = _context.Guards.Where(x => x.Id == guardId).FirstOrDefault();
             if (guards != null)
             {
                 if (guards.Provider != null)
@@ -4756,11 +4762,11 @@ namespace CityWatch.Data.Providers
                     guards.ProviderNo = string.Empty;
 
                 }
-                
+
 
             }
 
-            
+
 
             return guards;
         }
@@ -4801,6 +4807,24 @@ namespace CityWatch.Data.Providers
                     Req = true;
             }
             return Req;
+        }
+
+        public List<FileDownloadAuditLogs> GetFileDownloadAuditLogsData(DateTime logFromDate, DateTime logToDate)
+        {
+            var r = _context.FileDownloadAuditLogs.Where(x => x.EventDateTime.Date >= logFromDate.Date && x.EventDateTime.Date <= logToDate.Date)
+                .Include(u => u.User)
+                .Include(g => g.Guard)
+                .ToList();
+            return r;
+        }
+
+        public void CreateDownloadFileAuditLogEntry(FileDownloadAuditLogs fdal)
+        {
+            if(fdal != null)
+            {
+                _context.Add(fdal);
+                _context.SaveChanges();
+            }
         }
 
 
