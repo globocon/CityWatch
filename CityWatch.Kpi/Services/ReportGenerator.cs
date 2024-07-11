@@ -49,6 +49,7 @@ namespace CityWatch.Kpi.Services
         private const string CELL_BG_ORANGE_IR_ALARM = "#ffdab3";
         private const string CELL_FONT_GREEN = "#008000";
         private const string CELL_FONT_RED = "#FF0000";
+        private const string CELL_FONT_YELLOW = "#FFFF00";
         private const string COLOR_WHITE = "#ffffff";
         private const string COLOR_GREY = "#666362";
 
@@ -772,7 +773,37 @@ namespace CityWatch.Kpi.Services
             int numColumns = monthlyDataGuardCompliance.Count;
             float[] columnPercentages = new float[largestNumber + 2];
 
-            var kpiGuardTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
+            // #### P1#213S_Colum width -- 11-07-2024 - Binoy Start
+            var rc = UnitValue.CreatePercentArray(largestNumber + 2);
+            var totcols = largestNumber + 2;
+            var tottblwidth = 523; // Total width of Table as per iText7 documentation
+            var restcolwidth = ((tottblwidth - 130) / (totcols - 2));
+            int j = 0;
+            foreach (var r in rc)
+            {
+                if (j == 0)
+                {
+                    r.SetValue(80);
+                    r.SetUnitType(UnitValue.POINT);
+                }
+                else if (j == 1)
+                {
+                    r.SetValue(50);
+                    r.SetUnitType(UnitValue.POINT);
+                }
+                else
+                {
+                    r.SetValue(restcolwidth);
+                    r.SetUnitType(UnitValue.POINT);
+                }
+                j++;
+            }
+                        
+            var kpiGuardTable = new Table(rc).UseAllAvailableWidth();
+            // #### P1#213S_Colum width -- 11-07-2024 - Binoy End
+
+            //var kpiGuardTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
+
             CreateGuardDetailsNewHeader(kpiGuardTable, monthlyDataGuard, hrGroupName, Id, clientSiteId, ClientSiteState);
 
             var GropuNamee1 = RemoveBrackets(hrGroupName);
@@ -798,7 +829,7 @@ namespace CityWatch.Kpi.Services
                     monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsComplianceAndLicenseHR(guard.Id, hrGroup);
                 }
                 //var monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsComplianceAndLicense(guard.Id);
-                kpiGuardTable.AddCell(CreateDataCell(guard.Name));
+                kpiGuardTable.AddCell(CreateDataCell(guard.Name.Length > 16 ? guard.Name[..16] : guard.Name));
                 kpiGuardTable.AddCell(CreateDataCell(guard.SecurityNo));
 
                 var HTList1 = _viewDataService.GetHRSettings(Id);
@@ -1041,8 +1072,10 @@ namespace CityWatch.Kpi.Services
             if (hrValue == "Y")
                 return CELL_FONT_GREEN;
 
-            if (hrValue == "N" || hrValue == "E")
+            if (hrValue == "E")
                 return CELL_FONT_RED;
+            if (hrValue == "N")
+                return CELL_FONT_YELLOW;
 
             return string.Empty;
         }
@@ -1169,14 +1202,14 @@ namespace CityWatch.Kpi.Services
         private void CreateGuardDetailsNewHeader(Table table, List<GuardLogin> monthlyDataGuard, string hrGroupname, int id, int clientSiteId, string ClientSiteState)
         {
             float[] columnWidths = { 100f, 200f, 100f }; // Adjust these values as needed
-            if (hrGroupname == "HR3 (Special)")
-            {
-                table.SetWidth(UnitValue.CreatePointValue(500));
-            }
-            else
-            {
-                table.SetWidth(UnitValue.CreatePointValue(400));
-            }
+            //if (hrGroupname == "HR3 (Special)")
+            //{
+            //    table.SetWidth(UnitValue.CreatePointValue(500));
+            //}
+            //else
+            //{
+            //    table.SetWidth(UnitValue.CreatePointValue(400));
+            //}
 
             try
             {

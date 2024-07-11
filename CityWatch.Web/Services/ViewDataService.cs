@@ -140,6 +140,8 @@ namespace CityWatch.Web.Services
 
         //p1-202 site allocation-end
 
+        List<FileDownloadAuditLogs> GetFileDownloadAuditLogs(DateTime logFromDate, DateTime logToDate);
+
     }
 
     public class ViewDataService : IViewDataService
@@ -1475,5 +1477,10 @@ namespace CityWatch.Web.Services
         }
 
         //p1-213 Critical Documents stop
+
+        public List<FileDownloadAuditLogs> GetFileDownloadAuditLogs(DateTime logFromDate, DateTime logToDate)
+        {
+            return _guardLogDataProvider.GetFileDownloadAuditLogsData(logFromDate, logToDate);
+        }
     }
 }

@@ -3,30 +3,85 @@
 @{
     ViewData["Title"] = "CityWatch Security | Downloads";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.Downloads;
+    var doctype = "";
+    var doctypeid = "";
+    if (!string.IsNullOrEmpty(HttpContext.Request.Query["type"]))
+    {
+        if (HttpContext.Request.Query["type"].ToString().Trim() == "1")
+        {
+            doctype = "Company SOP's";
+            doctypeid = "1";
+        }
+        else if (HttpContext.Request.Query["type"].ToString().Trim() == "2")
+        {           
+            doctype = "C4i Training";
+            doctypeid = "2";
+        }
+        else if (HttpContext.Request.Query["type"].ToString().Trim() == "3")
+        {           
+            doctype = "Forms & Templates";
+            doctypeid = "3";
+        }
+
+    }
+
 }
+@Html.AntiForgeryToken()
 <div class="row mt-3">
     <div class="col-md-12 ">
-        @if(!string.IsNullOrEmpty(HttpContext.Request.Query["type"]))
-        {
-            if (HttpContext.Request.Query["type"].ToString().Trim() == "1")
-            {
-                <h4>Company SOP's</h4>
-            }
-            else if (HttpContext.Request.Query["type"].ToString().Trim() == "2")
-            {
-                <h4>C4i Training</h4>
-
-            }
-            else if (HttpContext.Request.Query["type"].ToString().Trim() == "3")
-            {
-                <h4>Forms & Templates</h4>
-            }
-            
-        }
+        <h4>@doctype</h4>
         <div class="mb-5"></div>
         <table class="table" id="file_downloads"></table>                    
     </div>
+    <div>
+        <input type="hidden" id="sop_catg_type_id" value="@doctypeid" />
+        <input type="hidden" id="sop_catg_type" value="@doctype" />
+    </div>
 </div>
+
+<!----------------- Guard Details Modal -------------------->
+<div class="modal fade" id="mdlAuthGuardForSopDownload" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="AuthenticateGuardForSopDownload" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">Security License No</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        @* <div class="d-flex flex-sm-row flex-column justify-content-between">
+                            <label class="col-form-label">Security License No.</label>                            
+                        </div> *@
+                        <div class="input-group">
+                            <input class="form-control" id="GuardDownloadSop_SecurityNo">
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-primary" id="btnAuthGuardForSopDwnld" title="Authenticate guard"><i class="fa fa-key mr-2"></i><span class="d-none d-md-inline-flex">Download</span></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row pb-2">
+                    <div id="guardSearchResult" class="text-muted col-md-12" style="font-size:0.9rem">
+                        Enter Security License No. and click Download
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left">
+                    <div id="AuthGuardForSopDwnldValidationSummary" class="pl-1 text-danger" style="font-size:0.9rem"></div>
+                </div>
+            </div>
+            <div>                
+                <input type="hidden" id="sop_filename" />
+            </div>
+        </div>
+    </div>
+</div>
+
+
 @section PageHeader {
     <h3 class="text-center">Downloads</h3>    
 }

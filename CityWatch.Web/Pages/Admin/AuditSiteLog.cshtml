@@ -8,6 +8,17 @@
     ViewData["Title"] = "CityWatch Security | Audit Site Logs";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.AuditSiteLogs;
 }
+
+@section PageHeader{
+    <style>
+        div.dataTables_length {
+            margin-right: 1em;
+        }
+    </style>
+}
+
+
+
 <div id="loader"></div>
 <div class="full-width">
     <ul class="nav nav-tabs" role="tablist">
@@ -18,7 +29,12 @@
             <a class="nav-link" id="vehicle-key-log-tab" data-toggle="tab" href="#keyVehicleLog" role="tab" aria-controls="keyVehicleLog" aria-selected="false">Key & Vehicle Logs</a>
         </li>
         <li class="nav-item">
+
             <a class="nav-link" id="fusion_log" data-toggle="tab" href="#fusion" role="tab" aria-controls="fusionlog" aria-selected="false">Fusion</a>
+         </li>
+        <li class="nav-item">
+            <a class="nav-link" id="download-log-tab" data-toggle="tab" href="#downloadLog" role="tab" aria-controls="downloadLog" aria-selected="false">Download Logs</a>
+
         </li>
         <li class="nav-item">
             <a class="nav-link" id="key-vehicle-log-profile-tab" data-toggle="tab" href="#keyVehicleLogProfile" role="tab" aria-controls="keyVehicleLogProfile" aria-selected="false">Visitor Profiles</a>
@@ -32,7 +48,10 @@
             <partial name="_KeyVehicleAuditSiteLog" model="Model"></partial>
         </div>
         <div class="tab-pane fade py-3" id="fusion" role="tabpanel" aria-labelledby="fusion-tab">
-            <partial name="_FusionGuardSiteLog"></partial>
+            <partial name="_FusionGuardSiteLog"></partial> 
+        </div>
+        <div class="tab-pane fade py-3" id="downloadLog" role="tabpanel" aria-labelledby="download-key-log-tab">
+            <partial name="_DownloadAuditSiteLog"></partial>
         </div>
         <div class="tab-pane fade py-3" id="keyVehicleLogProfile" role="tabpanel" aria-labelledby="key-vehicle-log-profile-tab">
             <partial name="_VisitorProfileAuditSiteLog"></partial>

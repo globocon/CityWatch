@@ -83,7 +83,7 @@ namespace CityWatch.Web.Pages.Admin
             }
         */
 
-            public JsonResult OnPostDownloadDailyGuardLogZip(int clientSiteId, DateTime logFromDate, DateTime logToDate)
+        public JsonResult OnPostDownloadDailyGuardLogZip(int clientSiteId, DateTime logFromDate, DateTime logToDate)
         {
             var success = true;
             var message = string.Empty;
@@ -259,6 +259,7 @@ namespace CityWatch.Web.Pages.Admin
         }
         //to get audit log-end
 
+
         //fusion Start
         public JsonResult OnGetDailyGuardFusionSiteLogs(int pageNo, int limit, int clientSiteId,
                                                     DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
@@ -291,6 +292,13 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { success, message, fileName = @Url.Content($"~/Pdf/FromDropbox/{zipFileName}") });
         }
-        //fusion end
+
+        public JsonResult OnPostGenerateDownloadFilesLog(DateTime logFromDate, DateTime logToDate)
+        {
+            var r = _viewDataService.GetFileDownloadAuditLogs(logFromDate, logToDate);
+            return new JsonResult(r);
+        }
+
+
     }
 }
