@@ -3255,7 +3255,7 @@ $(function () {
                     return '<div style="display: flex; align-items: center; justify-content: center;"><div style="background-color:' + statusColor + '; width: 10px; height: 10px; border-radius: 50%;"></div></div>';
                 }
             }
-        }
+        
         ],
         'createdRow': function (row, data, index) {
             if (data.expiryDate !== null) {
