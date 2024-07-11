@@ -531,7 +531,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <textarea asp-for="@Model.Report.Feedback" class="form-control" cols="30" rows="10"></textarea>
+                            <textarea asp-for="@Model.Report.Feedback" class="form-control" id="feedbackTextarea" cols="30" rows="10"></textarea>
                         </div>
                     </div>
                     <div class="form-row">
@@ -1011,23 +1011,46 @@
             return false;
         }
 
+        // Validate Feedback textarea
+        const feedbackTextarea = document.getElementById('feedbackTextarea');
+        if (!feedbackTextarea.value.trim()) {
+            new MessageModal({ message: "You cannot submit an IR without any Text or Information on the notes section." }).showWarning();
+            return false;
+        }
+
         const mainForm = document.getElementById("cwsir-form");
         const attachments = mainForm.querySelectorAll('input[name="Report.Attachments"]');
+       
         if (attachments.length > 0) {
             attachments.forEach(function (item) {
                 mainForm.removeChild(item);
+                
             });
         }
 
         const attachmentList = document.getElementById('files-to-upload').getElementsByTagName('li');
-        for (let i = 0; i < attachmentList.length; i++) {
-            const input = document.createElement('input');
-            input.setAttribute('name', 'Report.Attachments');
-            input.setAttribute('value', attachmentList[i].innerText.trim());
-            input.setAttribute('type', 'hidden');
-            mainForm.appendChild(input);
+      
+       if (attachmentList.length === 0) {       
+           
+            const confirmationModal = new ConfirmationModal('confirmation', {
+                message: 'Are you sure you want to submit this IR without a photo to support your claim or observations?',
+                onYes: function () { submitForm(mainForm); }
+            });
+            confirmationModal.showConfirmation();
+        } else {
+            for (let i = 0; i < attachmentList.length; i++) {
+                const input = document.createElement('input');
+                input.setAttribute('name', 'Report.Attachments');
+                input.setAttribute('value', attachmentList[i].innerText.trim());
+                input.setAttribute('type', 'hidden');
+                mainForm.appendChild(input);
+            }
+            submitForm(mainForm);
         }
+    }
 
+    function submitForm(mainForm) {
+         
         const input = document.createElement('input');
         input.setAttribute('name', 'Report.DisableEmail');
         input.setAttribute('value', document.getElementById("Report.DisableEmail").checked);
