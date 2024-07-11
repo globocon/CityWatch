@@ -404,7 +404,7 @@ $(function () {
             { title: 'Schedule', renderer: scheduleRenderer, width: 120 },
             { field: 'nextRunOn', title: 'Next Run', renderer: function (value, record) { return renderNextRunOn(value, record); }, width: 75 },
             { field: 'emailTo', title: 'Email Recipients', width: 100 },
-            { width: 110, renderer: schButtonRenderer },
+            { width: 150, renderer: schButtonRenderer },
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -422,11 +422,12 @@ $(function () {
 
     function schButtonRenderer(value, record) {
         let buttonHtml = '';
-        buttonHtml += '<button class="btn btn-outline-primary mt-2 d-block" data-toggle="modal" data-target="#run-schedule-modal" data-sch-id="' + record.id + '""><i class="fa fa-play mr-2" aria-hidden="true"></i>Run</button>';
-        buttonHtml += '<button class="btn btn-outline-primary mr-2 mt-2 d-block" data-toggle="modal" data-target="#schedule-modal" data-sch-id="' + record.id + '" ';
+        buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#run-schedule-modal" data-sch-id="' + record.id + '""><i class="fa fa-play mr-2" aria-hidden="true"></i>Run</button>';
+        buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#schedule-modal" data-sch-id="' + record.id + '" ';
         buttonHtml += 'data-action="editSchedule"><i class="fa fa-pencil mr-2"></i>Edit</button>';
-        buttonHtml += '<button class="btn btn-outline-danger mt-2 del-schedule d-block" data-sch-id="' + record.id + '""><i class="fa fa-trash mr-2" aria-hidden="true"></i>Delete</button>';
-        return buttonHtml;
+        buttonHtml += '<button class="btn btn-outline-danger del-schedule mr-2 mt-2" data-sch-id="' + record.id + '""><i class="fa fa-trash mr-2" aria-hidden="true"></i>Delete</button>';
+        buttonHtml += '<button class=" btn mr-2 " data-toggle="modal" data-target="#schedule-modal" data-sch-id="' + record.id + '" ';
+        buttonHtml += 'data-action="copySchedule"><i class="fa fa-copy fa-2x mr-2"></i></button>'; return buttonHtml;
     }
 
     $('#kpi_send_schedules').on('click', '.del-schedule', function () {
@@ -490,6 +491,60 @@ $(function () {
         });
     }
 
+    //P2-103 Duplicate Settings-start
+    function scheduleModalOnCopy(scheduleId) {
+        $('#loader').show();
+        $.ajax({
+            url: '/Admin/Settings?handler=KpiSendSchedule&id=' + scheduleId,
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+            const dateToday = new Date().toISOString().split('T')[0];
+            $('#startDate').val(dateToday);
+            $('#startDate').attr('min', dateToday);
+
+            const dateEnd = '2100-01-01'
+            $('#endDate').val(dateEnd.split('T')[0]);
+            /*$('#startDate').val(data.startDate.split('T')[0]);*/
+            //if (data.endDate)
+            //    $('#endDate').val(data.endDate.split('T')[0]);
+            $('#endDate').attr('min', new Date().toISOString().split('T')[0]);
+            $('#frequency').val(data.frequency).change();
+            $('#frequency option[value="' + data.frequency + '"]').attr('selected', true);
+            $('#time').val(data.time);
+            $('#nextRunOn').val(data.nextRunOn);
+            $('#emailTo').val(data.emailTo);
+            $('#emailBcc').val(data.emailBcc)
+            $('#coverSheetType').val(data.coverSheetType);
+            $('#cbCoverSheetType').prop('checked', data.coverSheetType === 1);
+            $('#isPaused').val(data.isPaused);
+            $('#cbIsPaused').prop('checked', !data.isPaused);
+            $('#cbIsPausedStatus').html(data.isPaused ? 'Paused' : 'Active');
+            $('#isHrTimerPaused').val(data.isHrTimerPaused);
+            $('#hrTimerIsPaused').prop('checked', !data.isHrTimerPaused);
+            $('#hrTimerIsPausedStatus').html(data.isHrTimerPaused ? 'Paused' : 'Active');
+            $("textarea[id='KpiSendScheduleSummaryNote_Notes']").val('');
+            $.each(data.kpiSendScheduleClientSites, function (index, item) {
+                $('#selectedSites').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
+                updateSelectedSitesCount();
+            });
+            //$('#projectName').val(data.projectName);
+            $('#summaryNote1').val(data.summaryNote1);
+            $('#summaryNote2').val(data.summaryNote2);
+            $('#KpiSendScheduleSummaryNote_ScheduleId').val(data.id);
+            $('#KpiSendScheduleSummaryNote_ForMonth').val(data.noteForThisMonth.forMonth);
+            $("textarea[id='KpiSendScheduleSummaryNote_Notes']").val(data.noteForThisMonth.notes);
+            $('#KpiSendScheduleSummaryNote_Id').val(data.noteForThisMonth.id);
+            $('#lblRemainingCount').html(getNoteLength(data.noteForThisMonth.notes));
+            $('#summaryNoteMonth').val((new Date()).getMonth() + 1);
+            $('#summaryNoteYear').val((new Date()).getFullYear());
+            setSummaryImage(data.kpiSendScheduleSummaryImage);
+        }).always(function () {
+            $('#loader').hide();
+        });
+    }
+
+    //P2-103 Duplicate Settings-end
     function clearSummaryImage() {
         $('#summary_image').html('-');
         $('#summary_image_updated').html('-');
@@ -651,7 +706,9 @@ $(function () {
         const dateToday = new Date().toISOString().split('T')[0];
         $('#startDate').val(dateToday);
         $('#startDate').attr('min', dateToday);
-        $('#endDate').attr('min', dateToday);
+        const dateEnd = '2100-01-01'
+        $('#endDate').val(dateEnd.split('T')[0]);
+        //$('#endDate').attr('min', dateToday);
         $("textarea[id='KpiSendScheduleSummaryNote_Notes']").val('');
         $('#summaryNoteMonth').val((new Date()).getMonth() + 1);
         $('#summaryNoteYear').val((new Date()).getFullYear());
@@ -777,7 +834,15 @@ $(function () {
             schId = button.data('sch-id');
             scheduleModalOnEdit(schId);
         } else {
-            scheduleModalOnAdd();
+            //P2-103 Duplicate Settings-start
+            const isCopy = button.data('action') !== undefined && button.data('action') === 'copySchedule';
+            if (isCopy) {
+                schId = button.data('sch-id');
+                scheduleModalOnCopy(schId);
+            } else {
+                scheduleModalOnAdd();
+            }
+            //P2-103 Duplicate Settings-end
         }
 
         showHideSchedulePopupTabs(isEdit);
