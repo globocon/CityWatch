@@ -3286,7 +3286,8 @@ $(function () {
         effects: 'slide'
     }).on('select.editable-select', function (e, li) {
         var check = '';
-
+        $('#GuardComplianceandlicense_fileName1').val('');
+        $('#guardComplianceandlicense_fileName1').text('None');
         var sel = $('#Description option:selected');
         $(this).data('cur_val', sel);
         var display = sel.clone();
@@ -3349,6 +3350,7 @@ $(function () {
     });
 
 
+  
     var trig = 'mousedown';
     $('#Description').on("change", function () {
         var sel = $('#Description option:selected');
