@@ -29,6 +29,8 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
     <link rel="stylesheet" href="~/lib/bootstrap-multiselect/css/bootstrap-multiselect.min.css" />
+    <link rel="stylesheet" href="~/lib/select2/css/select2.min.css" />
+    <link rel="stylesheet" href="~/lib/ttskch/select2-bootstrap4-theme/dist/select2-bootstrap4.min.css" />
     <link href="~/css/site.css" rel="stylesheet" />
 </head>
 <body class="d-flex flex-column">
@@ -63,11 +65,11 @@
                     </div>
 
                 }
-                <div class="col-4 text-right">
+                @*<div class="col-4 text-right">
                     Auto refresh in <span id="clockRefresh">03 min 00 sec</span>
                     <button type="button" class="btn btn-sm btn-success" id="btnRefreshActivityStatus"><i class="fa fa-refresh" aria-hidden="true"></i> Refresh Now</button>
 
-                </div>
+                </div>*@
 
 
             </div>
@@ -106,7 +108,7 @@
 
                     </div>
                     <div>
-                       
+
 
                         <a href="@Url.Page("/Fusion")" class="nav-link py-0"><i class="fa fa-snowflake-o mr-2"></i>Fusion</a>
 
@@ -146,6 +148,7 @@
     <script src="~/lib/luxon/luxon.min.js" asp-append-version="true"></script>
     <!-- For SignalR notification-->
     <script src="~/lib/signalr/dist/browser/signalr.min.js"></script>
+    <script src="~/lib/select2/js/select2.min.js"></script>
     <script src="~/js/radiocheck.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)

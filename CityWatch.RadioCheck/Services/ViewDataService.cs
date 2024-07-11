@@ -9,6 +9,7 @@ using System.Linq;
 using CityWatch.Web.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace CityWatch.RadioCheck.Services
 {
@@ -24,6 +25,7 @@ namespace CityWatch.RadioCheck.Services
         List<GuardViewModel> GetActiveGuards();
         List<SelectListItem> GetOfficerPositions(OfficerPositionFilterManning positionFilter = OfficerPositionFilterManning.SecurityOnly);
         List<SelectListItem> ProviderList();
+        List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm, string searchTermtwo);
     }
 
     public class ViewDataService : IViewDataService
@@ -33,14 +35,17 @@ namespace CityWatch.RadioCheck.Services
         private readonly IConfigDataProvider _configDataProvider;
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly CityWatchDbContext _context;
+        private readonly IUserDataProvider _userDataProvider;
 
         public ViewDataService(IClientDataProvider clientDataProvider,
             IKpiDataProvider kpiDataProvider,
+            IUserDataProvider userDataProvider,
             IConfigDataProvider configDataProvider,
             IGuardDataProvider guardDataProvider, CityWatchDbContext context)
         {
             _clientDataProvider = clientDataProvider;
             _kpiDataProvider = kpiDataProvider;
+            _userDataProvider = userDataProvider;
             _configDataProvider = configDataProvider;
             _guardDataProvider = guardDataProvider;
             _context = context;
@@ -215,6 +220,31 @@ namespace CityWatch.RadioCheck.Services
                 return sites;
 
             }
+        }
+
+
+        public List<ClientSite> GetUserClientSitesHavingAccess(int? typeId, int? userId, string searchTerm, string searchTermtwo)
+        {
+            var results = new List<ClientSite>();
+            var clientSites = _clientDataProvider.GetClientSites(typeId);
+            if (userId == null)
+                results = clientSites;
+            else
+            {
+
+                
+                var allUserAccess = _userDataProvider.GetUserClientSiteAccess(userId);
+                var clientSiteIds = allUserAccess.Select(x => x.ClientSite.Id).Distinct().ToList();
+                results = clientSites.Where(x => clientSiteIds.Contains(x.Id)).ToList();
+            }
+
+            if (!string.IsNullOrEmpty(searchTerm))
+                results = results.Where(x => x.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                (!string.IsNullOrEmpty(x.Address) && x.Address.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))).ToList();
+            if (!string.IsNullOrEmpty(searchTermtwo))
+                results = results.Where(x => !string.IsNullOrEmpty(x.Emails) && x.Emails.Contains(searchTermtwo, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            return results;
         }
         public List<GuardViewModel> GetActiveGuards()
         {

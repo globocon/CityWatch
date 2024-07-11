@@ -4607,5 +4607,192 @@ $('#client_site_RadioSearch').on('click', '.del-schedule', function () {
         console.log('Invalid data-sch-id format');
     }
 });
+// funsion Start
+const today = new Date();
+const start = new Date(today.getFullYear(), today.getMonth(), 2);
+//Start fusion report in auditlog08072024
+$('#fusionAudtitFromDate').val(start.toISOString().substr(0, 10));
+var systemDate = $('#fusionAudtitToDateVal').val();
+//var dateObject = new Date().toISOString().substr(0, 10);
+$('#fusionAudtitToDate').val(systemDate);
+
+let gridsitefusionLog;
+gridsitefusionLog = $('#fusion_site_log').grid({
+    dataSource: '/Fusion?handler=DailyGuardFusionSiteLogs',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    grouping: { groupBy: 'Date' },
+    primaryKey: 'id',
+    columns: [
+        { field: 'clientSiteId', hidden: true },
+        { field: 'notificationCreatedTime', title: 'Time', width: 100, renderer: function (value, record) { return renderDateTimefusion(value, record, false); } },
+        {
+            field: 'notes', title: 'Event / Notes', width: 350,
+            renderer: function (value, record) {
+                var activityType = record.activityType == undefined ? '' : record.activityType.trim();
+                if (activityType == 'IR') {
+
+                    return record.notes + '<br>' + '<a href="https://c4istorage1.blob.core.windows.net/irfiles/' + record.notes.substr(0, 8) + '/' + record.notes + '" target="_blank">Click here</a>';
+                }
+                else {
+                    return record.notes;
+                }
+            }
+        },
+        { field: 'activityType', title: 'Source', width: 50 },
+        { field: 'guardName', title: 'Guard Initials', width: 150, renderer: renderGuardInitialColumn }
+    ],
+    paramNames: { page: 'pageNo' },
+    pager: { limit: 100, sizes: [10, 50, 100, 500] }
+});
+
+
+$('#fusionClientSiteId').select2({
+    placeholder: 'Select',
+    theme: 'bootstrap4'
+});
+
+$('#fusionClientSiteId').on('change', function () {
+    gridsitefusionLog.clear();
+});
+
+$('#fusionClientType').on('change', function () {
+    gridsitefusionLog.clear();
+    const clientTypeId = $(this).val();
+    const clientSiteControl = $('#fusionClientSiteId');
+    clientSiteControl.html('');
+    $.ajax({
+    
+        url: '/Admin/Settings?handler=ClientSitesNew&typeId=' + clientTypeId,
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            $('#fusionClientSiteId').append(new Option('Select', '', true, true));
+            data.map(function (site) {
+                $('#fusionClientSiteId').append(new Option(site.name, site.id, false, false));
+            });
+
+
+        }
+    });
+
+
+});
+
+
+
+
+$('#expand_fusion_audits').on('click', function () {
+    gridsitefusionLog.expandAll();
+});
+
+$('#collapse_fusion_audits').on('click', function () {
+    gridsitefusionLog.collapseAll();
+});
+
+
+
+function renderDateTimefusion(value, record) {
+    // p6#73 timezone bug - Modified by binoy 29-01-2024
+    if (record.eventDateTime != null && record.eventDateTime != '') {
+        const date = new Date(record.eventDateTime);
+        var DateTime = luxon.DateTime;
+        var dt1 = DateTime.fromJSDate(date);
+        var dt = dt1.toFormat('dd LLL yyyy @ HH:mm') + ' Hrs ' + record.eventDateTimeZoneShort;
+        return dt;
+    }
+    else if (value !== '') {
+        const date = new Date(value);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        let day = date.getDate();
+
+        if (day < 10) {
+            day = '0' + day;
+        }
+
+        return day + ' ' + months[date.getMonth()] + ' ' + date.getFullYear() + ' @ ' + date.toLocaleString('en-Au', { hourCycle: 'h23', timeStyle: 'short' }) + ' Hrs';
+    }
+}
+
+if (gridsitefusionLog) {
+    const bg_color_pale_yellow = '#fcf8d1';
+    const bg_color_pale_red = '#ffcccc';
+    const bg_color_white = '#ffffff';
+    const irEntryTypeIsAlarm = 2;
+
+    gridsitefusionLog.on('rowDataBound', function (e, $row, id, record) {
+        let rowColor = bg_color_white;
+        if (record.irEntryType) {
+            rowColor = record.irEntryType === irEntryTypeIsAlarm ? bg_color_pale_red : bg_color_pale_yellow;
+        }
+        $row.css('background-color', rowColor);
+    });
+}
+
+
+$('#btnGeneratefusionAuditReport').on('click', function () {
+
+    if ($('#fusionClientSiteId').val() === '') {
+        alert('Please select a client site');
+        return;
+    }
+    gridsitefusionLog.clear();
+    gridsitefusionLog.reload({
+        clientSiteId: $('#fusionClientSiteId').val(),
+        logFromDate: $('#fusionAudtitFromDate').val(),
+        logToDate: $('#fusionAudtitToDate').val(),
+        excludeSystemLogs: 0
+    });
+});
+
+
+let logBookTypeForAuditZipfusion;
+$('#btnDownloadfusionAuditZip').on('click', function () {
+
+    logBookTypeForAuditZipfusion = 1;
+    if ($('#fusionClientSiteId').val() === '') {
+        alert('Please select a client site');
+        return;
+    }
+    $('#auditfusionlog-zip-modal').modal('show');
+});
+
+
+$('#auditfusionlog-zip-modal').on('show.bs.modal', function (event) {
+    $('#btn-auditfusionlog-zip-download').attr('href', '#');
+    $('#btn-auditfusionlog-zip-download').hide();
+    $('#auditfusionlog-zip-msg').show();
+
+    if (logBookTypeForAuditZipfusion === 1)
+        downloadDailyGuardfusionLogZipFile();
+
+});
+
+
+
+function downloadDailyGuardfusionLogZipFile() {
+    $.ajax({
+        url: '/Fusion?handler=DownloadDailyFusionGuardLogZip',
+        type: 'POST',
+        dataType: 'json',
+        data: {
+            clientSiteId: $('#fusionClientSiteId').val(),
+            logFromDate: $('#fusionAudtitFromDate').val(),
+            logToDate: $('#fusionAudtitToDate').val()
+        },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (response) {
+        if (!response.success) {
+            $('#auditfusionlog-zip-modal').modal('hide');
+            new MessageModal({ message: 'Failed to generate zip file. ' + response.message }).showError();
+        } else {
+            $('#btn-auditfusionlog-zip-download').attr('href', response.fileName);
+            $('#btn-auditfusionlog-zip-download').show();
+            $('#auditfusionlog-zip-msg').hide();
+        }
+    });
+}
+
+     //end fusion report in auditlog08072024
 
 

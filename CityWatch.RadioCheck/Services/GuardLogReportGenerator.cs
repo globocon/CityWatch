@@ -28,7 +28,7 @@ using static System.Net.WebRequestMethods;
 using IO = System.IO;
 
 
-namespace CityWatch.Web.Services
+namespace CityWatch.RadioCheck.Services
 {
 
     public interface IGuardLogReportGenerator
@@ -566,7 +566,12 @@ namespace CityWatch.Web.Services
         {
             var clientSiteSetting = _clientDataProvider.GetClientSiteKpiSetting(clientSiteId);
             if (clientSiteSetting != null && !string.IsNullOrEmpty(clientSiteSetting.SiteImage))
-                return $"{new Uri(_settings.KpiWebUrl)}{clientSiteSetting.SiteImage}";
+            {
+                if (!string.IsNullOrEmpty(_settings.KpiWebUrl))
+                {
+                    return $"{new Uri(_settings.KpiWebUrl)}{clientSiteSetting.SiteImage}";
+                }
+            }
             return string.Empty;
         }
 
@@ -669,6 +674,7 @@ namespace CityWatch.Web.Services
 
                 var paragraph = new Paragraph().SetFontSize(CELL_FONT_SIZE);
                 paragraph.Add(entry.ActivityType);
+
                 //if (entry.GpsCoordinates != null && entry.GpsCoordinates != "")
                 //{
                 //    paragraph.Add(siteImage);
@@ -708,8 +714,8 @@ namespace CityWatch.Web.Services
                 //Added To display GPS stop
 
                 reportDataTable.AddCell(cell);
-
-                reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).Add(new Paragraph(entry.GuardName.Trim()).SetFontSize(CELL_FONT_SIZE)));
+                //reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).Add(new Paragraph(entry.ActivityType).SetFontSize(CELL_FONT_SIZE)));
+                reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).Add(new Paragraph(entry.GuardName).SetFontSize(CELL_FONT_SIZE)));
             }
 
             return reportDataTable;

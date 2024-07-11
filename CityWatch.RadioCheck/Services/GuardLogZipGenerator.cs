@@ -5,6 +5,7 @@ using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
+using CityWatch.Web.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Options;
 using System;
@@ -14,20 +15,19 @@ using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CityWatch.Web.Services
+namespace CityWatch.RadioCheck.Services
 {
     public interface IGuardLogZipGenerator
     {
         Task<string> GenerateZipFile(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate, LogBookType logBookType);
         Task<string> GenerateFusionZipFile(int[] clientSiteIds, DateTime logFromDate, DateTime logToDate, LogBookType logBookType);
-        string GenerateZipFile(KeyVehicleLogAuditLogRequest kvlAuditLogRequest);
+       
     }
 
     public class GuardLogZipGenerator : IGuardLogZipGenerator
     {
         private readonly IClientDataProvider _clientDataProvider;
         private readonly IGuardLogReportGenerator _guardLogReportGenerator;
-        private readonly IKeyVehicleLogReportGenerator _keyVehicleLogReportGenerator;
         private readonly IDropboxService _dropboxService;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly Settings _settings;
@@ -35,14 +35,12 @@ namespace CityWatch.Web.Services
 
         public GuardLogZipGenerator(IClientDataProvider clientDataProvider,
             IGuardLogReportGenerator guardLogReportGenerator,
-            IKeyVehicleLogReportGenerator keyVehicleLogReportGenerator,
             IDropboxService dropboxService,
             IWebHostEnvironment webHostEnvironment,
             IOptions<Settings> settings)
         {
             _clientDataProvider = clientDataProvider;
-            _guardLogReportGenerator = guardLogReportGenerator;
-            _keyVehicleLogReportGenerator = keyVehicleLogReportGenerator;
+            _guardLogReportGenerator = guardLogReportGenerator;            
             _dropboxService = dropboxService;
             _webHostEnvironment = webHostEnvironment;
             _settings = settings.Value;
@@ -96,33 +94,7 @@ namespace CityWatch.Web.Services
             return GetZipFileName(zipFolderPath, logFromDate, logToDate, fileNamePart);
         }
 
-        public string GenerateZipFile(KeyVehicleLogAuditLogRequest kvlAuditLogRequest)
-        {
-            if (kvlAuditLogRequest.ClientSiteIds.Length <= 0)
-            {
-                return string.Empty;
-            }
-
-            var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(kvlAuditLogRequest.ClientSiteIds).ToList();
-            if (!clientSiteKpiSettings.Any())
-            {
-                return string.Empty;
-            }
-
-            var zipFolderPath = GetZipFolderPath();
-            var fileNamePart = clientSiteKpiSettings.Count > 1 ? "Multiple Sites" : clientSiteKpiSettings[0].ClientSite.Name;
-
-            foreach (var clientSiteKpiSetting in clientSiteKpiSettings)
-            {
-                var clientSiteLogBooks = _clientDataProvider.GetClientSiteLogBooks(clientSiteKpiSetting.ClientSiteId, kvlAuditLogRequest.LogBookType, kvlAuditLogRequest.LogFromDate, kvlAuditLogRequest.LogToDate);
-                if (!clientSiteLogBooks.Any())
-                    continue;
-
-                CreateLogBookReports(clientSiteLogBooks.Select(z => z.Id).ToList(), zipFolderPath, kvlAuditLogRequest);
-            }
-
-            return GetZipFileName(zipFolderPath, kvlAuditLogRequest.LogFromDate, kvlAuditLogRequest.LogToDate, fileNamePart);
-        }
+      
 
         private string GetZipFolderPath()
         {
@@ -190,19 +162,7 @@ namespace CityWatch.Web.Services
             }
         }
 
-        private void CreateLogBookReports(List<int> logBookIds, string zipFolderPath, KeyVehicleLogAuditLogRequest kvlAuditLogRequest)
-        {
-            foreach (var logBookId in logBookIds)
-            {
-                var fileName = GetLogFileName(logBookId, kvlAuditLogRequest);
-                if (!string.IsNullOrEmpty(fileName))
-                {
-                    var reportFilePath = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", fileName);
-                    File.Copy(reportFilePath, Path.Combine(zipFolderPath, fileName));
-                    File.Delete(reportFilePath);
-                }
-            }
-        }
+       
 
         private static string GetDailyLogBookName(string dropboxImagesDir, ClientSiteLogBook clientSiteLogBook)
         {
@@ -216,16 +176,12 @@ namespace CityWatch.Web.Services
             if (logBook.Type == LogBookType.DailyGuardLog)
                 return _guardLogReportGenerator.GeneratePdfReport(logBook.Id);
 
-            if (logBook.Type == LogBookType.VehicleAndKeyLog)
-                return _keyVehicleLogReportGenerator.GeneratePdfReport(logBook.Id);
+        
 
             return fileName;
         }
 
-        private string GetLogFileName(int logBookId, KeyVehicleLogAuditLogRequest kvlAuditLogRequest)
-        {
-            return _keyVehicleLogReportGenerator.GeneratePdfReport(logBookId, kvlAuditLogRequest);
-        }
+        
 
 
         /* Fusion Report download */
