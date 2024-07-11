@@ -5,8 +5,8 @@ $(function () {
     // To fix the Datatable column header issue when hidden inside tab
     $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
         $($.fn.dataTable.tables(true)).DataTable()
-            .columns.adjust()
-            .responsive.recalc();
+            .columns.adjust();
+            //.responsive.recalc();
     });
 
     function isLogbookExpired(logBookDate) {
