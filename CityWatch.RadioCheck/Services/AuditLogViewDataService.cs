@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace CityWatch.Web.Services
+namespace CityWatch.RadioCheck.Services
 {
     public interface IAuditLogViewDataService
     {

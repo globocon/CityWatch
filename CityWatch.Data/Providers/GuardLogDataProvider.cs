@@ -283,9 +283,13 @@ namespace CityWatch.Data.Providers
 
         bool IsRClogbookStampRequired(string StampName);
 
+
+        public List<ClientSiteRadioChecksActivityStatus_History> GetGuardFusionLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs);
+
         List<FileDownloadAuditLogs> GetFileDownloadAuditLogsData(DateTime logFromDate, DateTime logToDate);
 
         void CreateDownloadFileAuditLogEntry(FileDownloadAuditLogs fdal);
+
 
     }
 
@@ -4825,6 +4829,23 @@ namespace CityWatch.Data.Providers
                 _context.Add(fdal);
                 _context.SaveChanges();
             }
+        }
+
+
+        public List<ClientSiteRadioChecksActivityStatus_History> GetGuardFusionLogs(int clientSiteId, DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
+        {
+            //var data = _context.ClientSiteRadioChecksActivityStatus_History
+            //.Where(z => z.ClientSiteId == clientSiteId )
+            //.ToList();
+
+            var data = _context.ClientSiteRadioChecksActivityStatus_History
+               .Where(z => z.ClientSiteId == clientSiteId && z.EventDateTime.Date >= logFromDate && z.EventDateTime.Date <= logToDate)
+               .ToList();
+
+            var returnData = data.OrderBy(z => z.EventDateTime)
+                .ToList();
+
+            return returnData;
         }
 
 

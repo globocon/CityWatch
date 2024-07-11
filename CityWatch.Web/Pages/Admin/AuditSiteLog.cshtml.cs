@@ -259,11 +259,46 @@ namespace CityWatch.Web.Pages.Admin
         }
         //to get audit log-end
 
+
+        //fusion Start
+        public JsonResult OnGetDailyGuardFusionSiteLogs(int pageNo, int limit, int clientSiteId,
+                                                    DateTime logFromDate, DateTime logToDate, bool excludeSystemLogs)
+        {
+            var start = (pageNo - 1) * limit;
+            var dailyGuardLogs = _auditLogViewDataService.GetAuditGuardFusionLogs(clientSiteId, logFromDate, logToDate, excludeSystemLogs);
+            var records = dailyGuardLogs.Skip(start).Take(limit).ToList();
+            return new JsonResult(new { records, total = dailyGuardLogs.Count });
+        }
+
+
+        public JsonResult OnPostDownloadDailyFusionGuardLogZip(int clientSiteId, DateTime logFromDate, DateTime logToDate)
+        {
+            var success = true;
+            var message = string.Empty;
+            var zipFileName = string.Empty;
+
+            try
+            {
+                zipFileName = _guardLogZipGenerator.GenerateFusionZipFile(new int[] { clientSiteId }, logFromDate, logToDate, LogBookType.DailyGuardLog).Result;
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+
+                if (ex.InnerException != null)
+                    message = ex.InnerException.Message;
+            }
+
+            return new JsonResult(new { success, message, fileName = @Url.Content($"~/Pdf/FromDropbox/{zipFileName}") });
+        }
+
         public JsonResult OnPostGenerateDownloadFilesLog(DateTime logFromDate, DateTime logToDate)
         {
             var r = _viewDataService.GetFileDownloadAuditLogs(logFromDate, logToDate);
             return new JsonResult(r);
         }
+
 
     }
 }

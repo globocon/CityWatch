@@ -199,6 +199,8 @@ namespace CityWatch.Data.Providers
         GlobalComplianceAlertEmail GetEmail();
         public DropboxDirectory GetDropboxDir();
 
+        public List<ClientSiteRadioChecksActivityStatus_History> GetClientSiteFunsionLogBooks(int clientSiteId, LogBookType type, DateTime fromDate, DateTime toDate);
+
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -2156,6 +2158,14 @@ namespace CityWatch.Data.Providers
         public DropboxDirectory GetDropboxDir()
         {
             return _context.DropboxDirectory.FirstOrDefault();
+        }
+
+
+        public List<ClientSiteRadioChecksActivityStatus_History> GetClientSiteFunsionLogBooks(int clientSiteId, LogBookType type, DateTime fromDate, DateTime toDate)
+        {
+            return _context.ClientSiteRadioChecksActivityStatus_History
+                .Where(z => z.ClientSiteId == clientSiteId && z.EventDateTime.Date >= fromDate && z.EventDateTime.Date <= toDate)
+                .ToList();
         }
 
     }
