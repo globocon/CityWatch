@@ -1080,6 +1080,10 @@ $(function () {
                 $('#TruckConfigure').val(result1.truckConfigText[0].name);
             })
 
+            // (For adding auto entry in IR vechile select. This function is available in Register.cshtml)
+            //Added by Binoy for task P7#124 Remove Step - 04-07-2024
+            onbtnAddNewPlateLoadedEntryClick(); 
+
             //new change for trailer rego start 21032024
             if (result.keyVehicleLogProfile.vehicleRego != null) {
                 loadAuditHistory(result.keyVehicleLogProfile.vehicleRego);
