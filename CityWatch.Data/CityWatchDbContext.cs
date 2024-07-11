@@ -121,6 +121,9 @@ namespace CityWatch.Data
         public DbSet<CriticalDocumentDescriptions> CriticalDocumentDescriptions { get; set; }
         public DbSet<DropboxDirectory> DropboxDirectory { get; set; }
 
+        public DbSet<ClientSiteRadioChecksActivityStatus_History> ClientSiteRadioChecksActivityStatus_History { get; set; }
+        
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<GuardLog>()
