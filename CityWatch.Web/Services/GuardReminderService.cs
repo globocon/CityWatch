@@ -115,7 +115,7 @@ namespace CityWatch.Web.Services
                             toAddress = guardlicenseemail;
                             if (!string.IsNullOrEmpty(guardlicenseprovideremail))
                             {
-                                toAddress = ',' +guardlicenseprovideremail;
+                                toAddress = toAddress+ ',' +guardlicenseprovideremail;
 
                             }
                             
