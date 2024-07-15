@@ -201,6 +201,19 @@
             <input type="hidden" asp-for="@Model.Id" />
             <input type="hidden" asp-for="@Model.ClientSiteId" />
             <input type="hidden" id="hidCount" value="@count" />
+
+            @*Scheduler is Active Start15072024*@
+            <div class="form-row ml-2">
+                <div class="col-md-3">
+                    <div class="d-flex flex-row">
+                        <label class="form-label pr-2">Schedule is Active</label>
+                        <div class="custom-control custom-switch custom-control-inline" title="Switch between schedule is Active or not">
+                            <input type="checkbox" class="custom-control-input" asp-for="@Model.ScheduleisActive" id="scheduleisActive" name="scheduleisActive">
+                            <label class="custom-control-label" for="scheduleisActive"></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
             @*display Already Existing Mannings*@
 
             @*Check if default value or orginal data exist*@

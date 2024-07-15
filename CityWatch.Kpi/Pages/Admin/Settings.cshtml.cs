@@ -204,8 +204,10 @@ namespace CityWatch.Kpi.Pages.Admin
             {
                 // Default TuneDowngradeBuffer = 1
                 if (clientSiteKpiSetting.TuneDowngradeBuffer.GetValueOrDefault() == 0)
+                {
                     clientSiteKpiSetting.TuneDowngradeBuffer = 1;
-
+                }
+                clientSiteKpiSetting.ScheduleisActive = true;
                 _clientDataProvider.SaveClientSiteKpiSetting(clientSiteKpiSetting);
             }
             catch

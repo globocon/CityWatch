@@ -556,9 +556,26 @@
                             <input type="hidden" id="hidCount" value="@count" />
                             @*display Already Existing Mannings*@
 
+                          @*Scheduler is Active Start15072024*@
+                            <div class="form-row ml-2">
+                                <div class="col-md-3">
+                                    <div class="d-flex flex-row">
+                                        <label class="form-label pr-2">Schedule is Active</label>
+                                        <div class="custom-control custom-switch custom-control-inline" title="Switch between schedule is Active or not">
+                                            <input type="checkbox" class="custom-control-input" asp-for="@Model.ScheduleisActive" id="scheduleisActive" name="scheduleisActive" >
+                                            <label class="custom-control-label" for="scheduleisActive"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                           </div>
+                            @*Scheduler is Active end15072024*@
                             @*Check if default value or orginal data exist*@
                             @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == true).Count() == 0)
                             {
+                                
+
+
+
                                 @*Get All Distinct order Id *@
                                 var distinctOrderIds = Model.ClientSiteManningGuardKpiSettings.Select(order => order.OrderId).Distinct();
                                 @for (int rowIndexFirst = 0; rowIndexFirst < Model.ClientSiteManningGuardKpiSettings.Count(); rowIndexFirst = rowIndexFirst + 8)
@@ -577,11 +594,11 @@
                                             <div class="form-group row pt-2">
                                                 <label class="col-form-label pl-3">CRM (Supplier)</label>
                                                 <div class="col-md-3">
-                                                     <select asp-for="@Model.ClientSiteManningGuardKpiSettings[rowIndexFirst].CrmSupplier" asp-items="@ViewDataService.ProviderList()" class="form-control"></select>
+                                                    <select asp-for="@Model.ClientSiteManningGuardKpiSettings[rowIndexFirst].CrmSupplier" asp-items="@ViewDataService.ProviderList()" class="form-control"></select>
                                                 </div>
                                             </div>
-                                            
-                                          
+
+
 
 
 
@@ -760,18 +777,20 @@
                                     <div class="row">
                                         <div class="col-md-12">
 
+                                           
+
 
                                             <div class="form-group row pt-1">
                                                 <label class="col-form-label pl-3">CRM (Supplier)</label>
                                                 <div class="col-md-3">
-                                                  <select asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[0].CrmSupplier" asp-items="@ViewDataService.ProviderList()" class="form-control"></select>
+                                                    <select asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[0].CrmSupplier" asp-items="@ViewDataService.ProviderList()" class="form-control"></select>
                                                 </div>
-                                               
+
                                             </div>
 
 
 
-                                           
+
 
 
 
