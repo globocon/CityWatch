@@ -200,7 +200,7 @@ namespace CityWatch.Data.Providers
         public DropboxDirectory GetDropboxDir();
 
         public List<ClientSiteRadioChecksActivityStatus_History> GetClientSiteFunsionLogBooks(int clientSiteId, LogBookType type, DateTime fromDate, DateTime toDate);
-
+        public string GetKeyVehiclogWithProviders(string providerName);
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -2000,6 +2000,15 @@ namespace CityWatch.Data.Providers
                 .ThenInclude(z => z.ClientSite)
 
                 .ToList();
+
+
+        }
+
+        public string GetKeyVehiclogWithProviders(string providerName)
+        {
+
+            return _context.KeyVehicleLogs.Where(z => z.CompanyName == providerName && z.PersonType == 195).FirstOrDefault().Email;
+            
 
 
         }
