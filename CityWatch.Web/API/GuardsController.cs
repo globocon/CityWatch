@@ -29,8 +29,8 @@ namespace CityWatch.Web.API
         [HttpGet]
         public bool Reminder()
         {
-            //if (_webHostEnvironment.IsDevelopment())
-            //    throw new NotSupportedException("Not supported in development environment");
+            if (_webHostEnvironment.IsDevelopment())
+                throw new NotSupportedException("Not supported in development environment");
             try
             {
                 _guardDocumentEmailService.Process();
