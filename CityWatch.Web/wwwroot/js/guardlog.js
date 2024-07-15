@@ -1821,23 +1821,23 @@ $(function () {
         var groupedDataArray = [0][0];
 
         // Iterate over each row in the table
-        $('#myGrid tbody tr').each(function () {
-            var name = $(this).find('td:eq(0)').text(); // Get name from first column
-            var dateStr = $(this).find('td:eq(1)').text(); // Get date from second column
-            var amount = parseFloat($(this).find('td:eq(2)').text()); // Get amount from third column
+        $('#vkl_site_log tbody tr').each(function () {
+           // var name = $(this).find('td:eq(0)').text(); // Get name from first column
+            var dateStr = $(this).find('td:eq(0)').text(); // Get date from second column
+            //var amount = parseFloat($(this).find('td:eq(2)').text()); // Get amount from third column
 
             var date = new Date(dateStr);
             var groupKey;
 
             // Determine grouping based on selected option
-            if (groupBy === 'week') {
+            if (groupBy === 'Week') {
                 // Group by week
                 var firstDayOfWeek = new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay());
-                groupKey = firstDayOfWeek.toISOString().slice(0, 10); // ISO string for the start of the week
-            } else if (groupBy === 'month') {
+                groupKey = firstDayOfWeek.toISOString.slice(0, 10); // ISO string for the start of the week
+            } else if (groupBy === 'Month') {
                 // Group by month
                 groupKey = date.getFullYear() + '-' + (date.getMonth() + 1); // Year-Month format
-            } else if (groupBy === 'year') {
+            } else if (groupBy === 'Year') {
                 // Group by year
                 groupKey = date.getFullYear(); // Year format
             }
@@ -1849,7 +1849,7 @@ $(function () {
             }
 
             // Add data to the group
-            groupedData[groupKey].push({ name: name, amount: amount });
+            groupedData[groupKey].push({ name: groupKey, amount: counts[groupKey]++ });
             counts[groupKey]++;
         });
 
@@ -5113,5 +5113,4 @@ $('#LicanseTypeFilter').on('change', function () {
         }
     });
 
-});
 
