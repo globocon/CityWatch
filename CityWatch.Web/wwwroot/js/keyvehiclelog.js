@@ -1546,7 +1546,7 @@ $(function () {
                     $('#titlePOIWarning').attr('hidden', true);
                     $('#imagesiren').attr('hidden', true);
                     $('#kvl_list_plates').val('');
-                    $('#VehicleRego').val('');
+                    //$('#VehicleRego').val('');
                 }
             }
             //$('#IsPOIAlert').val(isChecked);
