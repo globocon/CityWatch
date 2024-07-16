@@ -914,7 +914,7 @@
             <div class="modal-body">
                 <div class="row m-0">
                     <div class="col-md-12">
-                        <form id="frm_add_guard">
+                        <form id="frm_add_guard" autocomplete="off">
                             <input type="hidden" id="Guard_Id" name="Guard.Id" />
                             <div class="form-group row">
                                 <label class="col-md-2 col-form-label">Guard Name</label>
@@ -942,6 +942,10 @@
                                 </div>
                                 <label class="col-md-1 col-form-label">Email</label>
                                 <div class="col-md-3">
+                                    @*this is avoid auto fill values Start*@
+                                    <input type="text" style="display:none;" aria-hidden="true">
+                                    <input type="text" style="display:none;" id="LoginUser_UserName" aria-hidden="true">
+                                    @*this is avoid auto fill values end  *@
                                     <input type="text" class="form-control" id="Guard_Email" name="Guard.Email" autocomplete="off">
                                 </div>
                             </div>
