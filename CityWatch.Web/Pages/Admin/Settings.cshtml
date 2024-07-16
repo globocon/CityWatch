@@ -942,7 +942,7 @@
                                 </div>
                                 <label class="col-md-1 col-form-label">Email</label>
                                 <div class="col-md-3">
-                                    <input type="text" class="form-control" id="Guard_Email" name="Guard.Email">
+                                    <input type="text" class="form-control" id="Guard_Email" name="Guard.Email" autocomplete="off">
                                 </div>
                             </div>
                             <div class="form-group row">
@@ -978,7 +978,8 @@
                                     <input type="hidden" id="Guard_IsActive" name="Guard.IsActive">
                                 </div>
                                 <div class="pr-0" style="width:60px;">
-                                    <input type="password" class="form-control" id="Guard_Pin" name="Guard.Pin" style="width:60px;">
+                                    <input type="password" style="display:none;" aria-hidden="true">
+                                    <input type="password" class="form-control" id="Guard_Pin" name="Guard.Pin" style="width:60px;" autocomplete="off">
                                    
                                 </div>
                                 <span id="togglePassword" class="p-1"><i class="fa fa-eye-slash" aria-hidden="true"></i></span>
