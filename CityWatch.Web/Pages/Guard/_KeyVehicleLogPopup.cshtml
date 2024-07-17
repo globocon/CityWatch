@@ -314,7 +314,7 @@
                         </div>
 
                     </div>
-                    <div class="form-row">
+                   <div class="form-row">
                         <div class="form-group col-md-8">
                             <div class="form-row">
                                 <div class="form-group col-md-6">
@@ -384,47 +384,46 @@
         </div>
         <div class="col-md-6">
             <div class="form-row">
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-3">
                     <label>Company Name</label>
                     <input class="form-control" type="text" asp-for="@Model.CompanyName" autocomplete="off" />
                 </div>
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-3">
                     <label>Individuals Name</label>
                     @{
                         var personName = @Model.PersonName ?? "Unknown";
                     }
                     <input class="form-control" type="text" value="@personName" asp-for="@Model.PersonName" />
                 </div>
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-3">
                     <label>Type of Individual</label>
                     <select asp-for="@Model.PersonType" class="form-control" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.IndividualType)"></select>
                 </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-3">
                     <label>Mobile Number</label>
                     @{
                         var mobileNumber = @Model.MobileNumber ?? "+61 (0) ";
                     }
                     <input class="form-control" value="@mobileNumber" type="text" asp-for="@Model.MobileNumber" />
                 </div>
-                <div class="form-group col-md-4">
+            </div>
+           <div class="form-row" style="margin-bottom: 2px;">
+              
+                <div class="form-group col-md-3">
                     <label>Entry Reason</label>
                     <select asp-for="@Model.EntryReason" class="form-control" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.EntryReason)"></select>
                 </div>
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-3">
                     <label>Product</label>
                     <select class="form-control" id="list_product" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.ProductType, true)"></select>
                     <input type="hidden" asp-for="@Model.Product" />
                     <input type="hidden" asp-for="@Model.ProductOther" />
                 </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-3">
                     <label>Customer Ref</label>
                     <input class="form-control" type="text" asp-for="@Model.CustomerRef" />
                 </div>
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-3">
                     <div class="d-flex flex-row justify-content-between">
                         <label id="lblIsVXI">VWI</label>
 
@@ -432,14 +431,13 @@
                         <div class="custom-control custom-switch duty-day-switch">
                             <input type="checkbox" class="custom-control-input" id="cbIsVWI">
                             <label class="custom-control-label" for="cbIsVWI"></label>
-
-
-
                             <input hidden asp-for="@Model.IsVWI" />
                         </div>
                     </div>
                     <input class="form-control" type="text" asp-for="@Model.Vwi" />
                 </div>
+            </div>
+            <div class="form-row" style="margin-bottom: 2px;">
                 <div class="form-group col-md-4">
                     <div class="d-flex flex-row justify-content-between">
                         <label id="lblIsSender">Sender Address</label>
@@ -451,18 +449,21 @@
                     </div>
                     <input type="text" class="form-control" asp-for="@Model.Sender">
                 </div>
-            </div>
-            <div class="form-row">
-                <div class=" form-group col-md-6">
+                 <div class=" form-group col-md-4">
                     <label>Email (individual)</label>
+                    <div>
                     <input class="form-control" type="text" asp-for="@Model.Emailindividual" />
+                    </div>
                 </div>
-                <div class=" form-group col-md-6">
+                <div class=" form-group col-md-4">
                     <label>Email (company)</label>
+                    <div>
                     <input class="form-control" type="text" asp-for="@Model.EmailCompany" />
+                    </div>
                 </div>
             </div>
-            <div class="form-row" style="height:79px">
+         
+            <div class="form-row " style="height:79px">
                 <div class=" form-group col-md-4">
                     <label>Site POC</label>
 
@@ -481,8 +482,6 @@
                     <select class="form-control" asp-for="@Model.ClientSiteLocationId" asp-items="@clientViewDataService.GetClientSiteLocations(new int[] { Model.ClientSiteLogBook.ClientSiteId })">
                     </select>
                 </div>
-
-
 
                 @*<div class="form-group col-md-1">
                 <label class="mb-5"></label>
@@ -506,11 +505,6 @@
                         <label id="lbl_IsPOIAlert">POI Alert.</label>
                         </div>*@
                     </div>
-
-
-
-
-
 
                 </div>
 
@@ -541,9 +535,9 @@
             </ul>
             <div class="tab-content">
                 <div class="tab-pane fade show active p-2" id="kvl-notes" role="tabpanel" aria-labelledby="kvl-notes-tab">
-                    <div class="form-row">
+                   <div class="form-row">
                         <div class="form-group col-md-12">
-                            <div class="form-row">
+                           <div class="form-row">
                                 <label class="col-md-1">Notes</label>
 
                                 <span style="font-size:0.8rem;font:italic" class="col-md-11">
@@ -551,7 +545,7 @@
                                 </span>
                             </div>
 
-                            <textarea class="form-control" rows="5" maxlength="512" asp-for="@Model.Notes"></textarea>
+                            <textarea class="form-control" rows="4" maxlength="512" asp-for="@Model.Notes"></textarea>
                             <span style="font-size:0.8rem" class="d-block">
                                 You can add new notes above. But never delete the previous or existing entries (Add entries: Z-A)
                             </span>
@@ -614,7 +608,7 @@
                     </div>
                 </div>
                 <div class="tab-pane fade p-2" id="kvl-photo" role="tabpanel" aria-labelledby="kvl-photo-tab">
-                    <div class="form-row">
+                   <div class="form-row">
 
                         <div class="form-group col-md-4 box text-center  ml-5 mt-2 " style="height:130px; width:130px;">
                             <a id="imagepersondisplay" href="" target="_blank">
@@ -637,7 +631,10 @@
 
                 </div>
             </div>
-        </div>
+           <div class="text-right">
+            <button class="btn btn-success save_new_vehicle_and_key_log">Save Entry</button>
+            </div>
+        </div>       
     </div>
 
     <div class="row">
