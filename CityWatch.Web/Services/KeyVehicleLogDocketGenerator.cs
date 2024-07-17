@@ -1518,11 +1518,11 @@ namespace CityWatch.Web.Services
 
 
             int personType = Convert.ToInt32(keyVehicleLogViewModel.Detail.PersonType);
+            
             var IndividulaName = _guardLogDataProvider.GetIndividualType(personType);
-            if (string.IsNullOrEmpty(keyVehicleLogViewModel.Detail.CompanyName)
-                && string.IsNullOrEmpty(keyVehicleLogViewModel.Detail.CompanyName)
-                 && string.IsNullOrEmpty(keyVehicleLogViewModel.Detail.PersonName)
-                )
+            //var Image1 = keyVehicleLogViewModel.Detail.CompanyName + "-" + IndividulaName.Name + "-" + keyVehicleLogViewModel.Detail.PersonName + ".jpg";
+            if (!string.IsNullOrEmpty(keyVehicleLogViewModel.Detail.PersonName))
+                
             {
                 var Image = keyVehicleLogViewModel.Detail.CompanyName + "-" + IndividulaName.Name + "-" + keyVehicleLogViewModel.Detail.PersonName + ".jpg";
 
