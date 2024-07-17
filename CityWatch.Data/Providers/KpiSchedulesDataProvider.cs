@@ -161,6 +161,8 @@ namespace CityWatch.Data.Providers
                 schedule.CoverSheetType = sendSchedule.CoverSheetType;
                 schedule.EmailBcc = sendSchedule.EmailBcc;
                 schedule.IsHrTimerPaused = sendSchedule.IsHrTimerPaused;
+                schedule.IsCriticalDocumentDownselect = sendSchedule.IsCriticalDocumentDownselect;
+                schedule.CriticalGroupNameID = sendSchedule.CriticalGroupNameID;
 
                 if (updateClientSites)
                     schedule.KpiSendScheduleClientSites = sendSchedule.KpiSendScheduleClientSites;

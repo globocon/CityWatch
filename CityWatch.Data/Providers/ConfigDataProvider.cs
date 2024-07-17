@@ -2,6 +2,7 @@
 using Dropbox.Api.Users;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1.BC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -85,6 +86,7 @@ namespace CityWatch.Data.Providers
         public CriticalDocuments GetCriticalDocByIdandGuardId(int CriticalID, int GuardId);
         void DeleteCriticalDoc(int id);
         public HrSettings GetHrSettingById(int CriticalID);
+        void RemoveCriticalDownSelect(CriticalDocuments CriticalDoc);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -683,6 +685,15 @@ namespace CityWatch.Data.Providers
             }
             return Group;
         }
+        public void RemoveCriticalDownSelect(CriticalDocuments CriticalDoc)
+        {
+            var Document= _context.KpiSendSchedules.FirstOrDefault(z => z.CriticalGroupNameID == CriticalDoc.Id.ToString());
+            if (Document != null) {
+                Document.IsCriticalDocumentDownselect = false;
+                Document.CriticalGroupNameID = null;
+                _context.SaveChanges();
+            }
+        }
         public void SaveCriticalDoc(CriticalDocuments CriticalDoc, bool updateClientSites1 = false)
         {
             var DesriptionDoc= _context.CriticalDocuments.Include(z => z.CriticalDocumentDescriptions).SingleOrDefault(z => z.Id == CriticalDoc.Id);
@@ -703,7 +714,7 @@ namespace CityWatch.Data.Providers
                 Document.HRGroupID = CriticalDoc.HRGroupID;
                 Document.ClientTypeId = CriticalDoc.ClientTypeId;
                 Document.GroupName = CriticalDoc.GroupName;
-
+                Document.IsCriticalDocumentDownselect = CriticalDoc.IsCriticalDocumentDownselect;
 
                 if (updateClientSites1)
                     Document.CriticalDocumentsClientSites = CriticalDoc.CriticalDocumentsClientSites;

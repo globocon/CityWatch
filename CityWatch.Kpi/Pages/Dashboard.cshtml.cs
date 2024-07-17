@@ -158,6 +158,7 @@ namespace CityWatch.Kpi.Pages
                     Date = startDate.ToString("MMM yyyy")
                 };
                 var data = _viewDataService.GetKpiReportData(siteId, startDate, endDate);
+                
                 var fileName = _kpiReportGenerator.GeneratePdfReport(siteId, startDate, endDate);
                 return new JsonResult(new { success = true, header, data, fileName });
             }

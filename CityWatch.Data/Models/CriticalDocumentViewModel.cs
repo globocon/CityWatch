@@ -25,6 +25,7 @@ namespace CityWatch.Data.Models
         public string HRGroupName { get; set; }
         public string ReferenceNO { get; set; }
         public string GroupName { get; set; }
+        public bool IsCriticalDocumentDownselect { get; set; }
         public static CriticalDocuments ToDataModel(CriticalDocumentViewModel viewModel)
         {
             int maxLength = Math.Max(viewModel.ClientSiteIds.Length, viewModel.DescriptionIds.Length);
@@ -65,7 +66,8 @@ namespace CityWatch.Data.Models
                 ClientTypeId = viewModel.ClientTypeId,
                 GroupName=viewModel.GroupName,
                 CriticalDocumentsClientSites = criticalDocumentsClientSites,
-                CriticalDocumentDescriptions= criticalDocumentsDescription
+                CriticalDocumentDescriptions= criticalDocumentsDescription,
+                IsCriticalDocumentDownselect=viewModel.IsCriticalDocumentDownselect
             };
         }
         public static CriticalDocumentViewModel FromDataModel(CriticalDocuments dataModel)
@@ -80,6 +82,7 @@ namespace CityWatch.Data.Models
                 HRGroupName = string.Join(", ", dataModel.CriticalDocumentDescriptions.Select(z => z.HRSettings.HRGroups.Name).Distinct()),
                 ReferenceNO = string.Join(", ", dataModel.CriticalDocumentDescriptions.Select(z => z.HRSettings.ReferenceNo).Distinct()),
                 GroupName = dataModel.GroupName,
+                IsCriticalDocumentDownselect=dataModel.IsCriticalDocumentDownselect
             };
         }
 
