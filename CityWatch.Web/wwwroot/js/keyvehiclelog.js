@@ -4455,6 +4455,20 @@ $(function () {
         const clientSiteControlKeyvehicle = $('#multiselectVehiclelogDocket');
         clientSiteControlKeyvehicle.html('');
         var siteidd = "";
+        var data = keyVehicleLog.row($(this).parents('tr')).data();
+        $('#stakeholderEmail').val('');
+        //p7-114 Docket Email for poc-start for batch docket
+        var uncheckedCount = 0;
+        $("#vehicle_key_daily_log  input[type=checkbox]").each(function () {
+            var isChecked1 = $(this).is(':checked');
+            if (isChecked1 == true) {
+                uncheckedCount++;
+            }
+
+
+
+        });
+        //p7-114 Docket Email for poc-end for batch docket
         //To get the Drodown values start
         $.ajax({
             url: '/Guard/KeyVehicleLog?handler=POCSDropdown',
@@ -4473,16 +4487,22 @@ $(function () {
                         type: 'POST',
                         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
                     }).done(function (response) {
-                         siteidd = response.poc.clientSitePocIdsVehicleLog;
-                        var selectedValues = siteidd.split(',');
-                        $('#EmailPopup').val(siteidd); 
-                       
-                        selectedValues.forEach(function (value) {
-                            if (value === site.value) {
-                                option = '<option value="' + value + '" selected>' + site.text + '</option>';
+                        siteidd = response.poc.clientSitePocIdsVehicleLog;
+                        //p7-114 Docket Email for poc start -jisha check when poc is selected for the entry
+                        if (siteidd != null) {
+                            var selectedValues = siteidd.split(',');
+                            $('#EmailPopup').val(siteidd);
+                            //p7-114 Docket Email for poc-start for batch docket
+                            if (uncheckedCount <= 1) { 
+                                selectedValues.forEach(function (value) {
+                                    if (value === site.value) {
+                                        option = '<option value="' + value + '" selected>' + site.text + '</option>';
+                                    }
+                                });
                             }
-                        });
-
+                            //p7-114 Docket Email for poc-end for batch docket
+                        }
+                        //p7-114 Docket Email for poc end -jisha check when poc is selected for the entry
                         // Append the option after the inner AJAX call is done
                         clientSiteControlKeyvehicle.append(option);
                         clientSiteControlKeyvehicle.multiselect('rebuild');
@@ -4492,24 +4512,16 @@ $(function () {
         });
          //To get the Drodown values stop
 
-        var data = keyVehicleLog.row($(this).parents('tr')).data();
-        $('#stakeholderEmail').val(''); 
-        var uncheckedCount = 0;
-        $("#vehicle_key_daily_log  input[type=checkbox]").each(function () {
-            var isChecked1 = $(this).is(':checked');
-            if (isChecked1 == true) {
-                uncheckedCount++;
-            }
-
-            
-           
-        });
+       
 
         var checkedCount = $('.custom-control-input:checked').length;
         if (uncheckedCount > 1) {
 
 
             $('#stakeholderEmail').val('');
+          
+           
+
         }
         else {
             $.ajax({
@@ -4535,8 +4547,11 @@ $(function () {
 
                     $('#stakeholderEmail').val(emailIndividual);
                 }
-
-                GetEmails(response.poc.clientSitePocIdsVehicleLog);
+                //p7-114 Docket Email for poc-start for single docket
+                if (response.poc.clientSitePocIdsVehicleLog != null) {
+                    GetEmails(response.poc.clientSitePocIdsVehicleLog);
+                    }
+                //p7 - 114 Docket Email for poc - end
             });
         }
 
