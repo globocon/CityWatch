@@ -268,5 +268,7 @@ namespace CityWatch.Data.Models
 
             };
         }
+
+        public bool ScheduleisActive { get; set; }
     }
 }

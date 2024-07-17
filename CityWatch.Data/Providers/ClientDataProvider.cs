@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Org.BouncyCastle.Asn1.Esf;
 using Org.BouncyCastle.Utilities;
+using SMSGlobal.Response;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -732,6 +733,16 @@ namespace CityWatch.Data.Providers
 
                 if (setting != null)
                 {
+
+                    //update the value of the ScheduleisActive Start
+
+
+                    _context.ClientSiteKpiSettings
+                    .Where(u => u.Id == setting.Id)
+                     .ExecuteUpdate(b => b.SetProperty(u => u.ScheduleisActive, setting.ScheduleisActive)
+                     );
+                    //update the value of the ScheduleisActive end
+
                     if (setting.ClientSiteManningGuardKpiSettings.Any() || setting.ClientSiteManningPatrolCarKpiSettings.Any())
                     {
 
