@@ -1296,6 +1296,7 @@ namespace CityWatch.Kpi.Pages.Admin
             {
                 var CriticalDoc = CriticalDocumentViewModel.ToDataModel(CriticalDocModel);
                 _configDataProvider.SaveCriticalDoc(CriticalDoc, true);
+               
             }
             catch (Exception ex)
             {

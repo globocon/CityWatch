@@ -32,7 +32,7 @@ namespace CityWatch.Kpi.Services
 {
     public interface IReportGenerator
     {
-        string GeneratePdfReport(int clientSiteId, DateTime fromDate, DateTime toDate, bool isHrTimerPaused = false);
+        string GeneratePdfReport(int clientSiteId, DateTime fromDate, DateTime toDate, bool isHrTimerPaused = false,bool IsDownselect=false, int CriticalDocumentID=0);
     }
 
     public class ReportGenerator : IReportGenerator
@@ -91,7 +91,7 @@ namespace CityWatch.Kpi.Services
                 IO.Directory.CreateDirectory(_graphImageRootDir);
         }
 
-        public string GeneratePdfReport(int clientSiteId, DateTime fromDate, DateTime toDate, bool isHrTimerPaused)
+        public string GeneratePdfReport(int clientSiteId, DateTime fromDate, DateTime toDate, bool isHrTimerPaused,bool IsDownselect,int CriticalDocumentID)
         {
             var _clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(clientSiteId);
             if (_clientSiteKpiSetting == null)
@@ -142,10 +142,10 @@ namespace CityWatch.Kpi.Services
 
                         doc.Add(headerTable);
                         var hrGroupName = HRGroupList[i];
-                        var tableGuardDetailsData = CreateGuardDetailsLicenseAndCompliance(monthlyDataGuard, monthlyDataGuardCompliance, hrGroupName.Name, hrGroupName.Id, clientSiteId, ClientSiteState);
+                        var tableGuardDetailsData = CreateGuardDetailsLicenseAndCompliance(monthlyDataGuard, monthlyDataGuardCompliance, hrGroupName.Name, hrGroupName.Id, clientSiteId, ClientSiteState, IsDownselect, CriticalDocumentID);
                         doc.Add(tableGuardDetailsData);
                         doc.Add(new Paragraph("\n"));
-                        var tableGuardDetailsData1 = CreateGuardDetailsLicenseAndComplianceHR(monthlyDataGuard, monthlyDataGuardCompliance, hrGroupName.Name, hrGroupName.Id, clientSiteId, ClientSiteState);
+                        var tableGuardDetailsData1 = CreateGuardDetailsLicenseAndComplianceHR(monthlyDataGuard, monthlyDataGuardCompliance, hrGroupName.Name, hrGroupName.Id, clientSiteId, ClientSiteState, IsDownselect, CriticalDocumentID);
                         doc.Add(tableGuardDetailsData1);
                     }
                 }
@@ -717,7 +717,7 @@ namespace CityWatch.Kpi.Services
 
             return kpiGuardTable;
         }
-        private Table CreateGuardDetailsLicenseAndCompliance(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance, string hrGroupName, int Id, int clientSiteId, string ClientSiteState)
+        private Table CreateGuardDetailsLicenseAndCompliance(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance, string hrGroupName, int Id, int clientSiteId, string ClientSiteState,bool IsDownselect,int CriticalDocumentID)
         {
 
             var guards = monthlyDataGuard
@@ -737,7 +737,15 @@ namespace CityWatch.Kpi.Services
                 //var monthlyDataGuardComplianceData = _viewDataService.GetKpiGuardDetailsComplianceAndLicense(guard.Id);
                 complianceDataCounts.Add(monthlyDataGuardComplianceData.Count);
             }
-            var HTList = _viewDataService.GetHRSettings(Id);
+            var HTList = new List<HrSettings>();
+            if (IsDownselect == true)
+            {
+                HTList = _viewDataService.GetHRSettingsCriticalDoc(Id,CriticalDocumentID);
+            }
+            else
+            {
+                HTList = _viewDataService.GetHRSettings(Id);
+            }
             int referenceNoCount = 0;
 
             foreach (var item in HTList)
@@ -772,12 +780,17 @@ namespace CityWatch.Kpi.Services
 
             int numColumns = monthlyDataGuardCompliance.Count;
             float[] columnPercentages = new float[largestNumber + 2];
-
+            
             // #### P1#213S_Colum width -- 11-07-2024 - Binoy Start
             var rc = UnitValue.CreatePercentArray(largestNumber + 2);
-            var totcols = largestNumber + 2;
-            var tottblwidth = 523; // Total width of Table as per iText7 documentation
-            var restcolwidth = ((tottblwidth - 130) / (totcols - 2));
+            int restcolwidth=0;
+            if (largestNumber > 0) {
+                var totcols = largestNumber + 2;
+                var tottblwidth = 523; // Total width of Table as per iText7 documentation
+                 restcolwidth = ((tottblwidth - 130) / (totcols - 2));
+            }
+             
+
             int j = 0;
             foreach (var r in rc)
             {
@@ -804,7 +817,7 @@ namespace CityWatch.Kpi.Services
 
             //var kpiGuardTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
 
-            CreateGuardDetailsNewHeader(kpiGuardTable, monthlyDataGuard, hrGroupName, Id, clientSiteId, ClientSiteState);
+            CreateGuardDetailsNewHeader(kpiGuardTable, monthlyDataGuard, hrGroupName, Id, clientSiteId, ClientSiteState,IsDownselect,CriticalDocumentID);
 
             var GropuNamee1 = RemoveBrackets(hrGroupName);
             int maxComplianceCount = 0;
@@ -833,7 +846,7 @@ namespace CityWatch.Kpi.Services
                 kpiGuardTable.AddCell(CreateDataCell(guard.SecurityNo));
 
                 var HTList1 = _viewDataService.GetHRSettings(Id);
-                
+
                 var FilterHR = new List<FilteredHrSettings>();
                 foreach (var item in HTList)
                 {
@@ -881,8 +894,8 @@ namespace CityWatch.Kpi.Services
                         var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
                         var filteredItem = new FilteredHrSettings
                         {
-                             
-                        Id = item.Id,
+
+                            Id = item.Id,
                             Description = item.Description,
                             ReferenceNo = item.ReferenceNo,
                             hrSettingsClientSites = SelctedSiteExist,
@@ -899,7 +912,7 @@ namespace CityWatch.Kpi.Services
 
                 for (int i = 0; i < largestNumber; i++)
                 {
-                    var HRDesc = (FilterHR[i].ReferenceNo+ FilterHR[i].Description).Trim().Replace(" ", ""); 
+                    var HRDesc = (FilterHR[i].ReferenceNo + FilterHR[i].Description).Trim().Replace(" ", "");
                     var test = monthlyDataGuardComplianceData.Select(x => x.Description.Trim().Replace(" ", "")).FirstOrDefault();
                     var matchingDescription = monthlyDataGuardComplianceData
                     .Where(data => data.Description.Trim().Replace(" ", "") == HRDesc)
@@ -910,7 +923,7 @@ namespace CityWatch.Kpi.Services
                     }
                     var cellColor = "";
                     DateTime? alertDate = null;
-                    
+
                     var SelectedDesc = FilterHR
             .Where(x => matchingDescription != null && matchingDescription.Description != null && x.Description.Trim() == matchingDescription.Description.Trim())
              .FirstOrDefault();
@@ -1000,7 +1013,7 @@ namespace CityWatch.Kpi.Services
             string pattern = @"\[.*?\]|\{.*?\}|\(.*?\)";
             return Regex.Replace(input, pattern, string.Empty);
         }
-        private Table CreateGuardDetailsLicenseAndComplianceHR(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance, string hrGroupName, int Id, int clientSiteId, string ClientSiteState)
+        private Table CreateGuardDetailsLicenseAndComplianceHR(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance, string hrGroupName, int Id, int clientSiteId, string ClientSiteState,bool IsDownselect, int CriticalDocumentID)
         {
 
             float[] columnPercentages = new float[2];
@@ -1008,8 +1021,16 @@ namespace CityWatch.Kpi.Services
 
 
             CreateGuardDetailsNewHeaderHR(kpiGuardTable1, monthlyDataGuard, hrGroupName, Id);
-
-            var HTList = _viewDataService.GetHRSettings(Id);
+            var HTList = new List<HrSettings>();
+            if (IsDownselect==true)
+            {
+                HTList = _viewDataService.GetHRSettingsCriticalDoc(Id, CriticalDocumentID);
+            }
+            else
+            {
+                HTList = _viewDataService.GetHRSettings(Id);
+            }
+             
             if (HTList.Count > 0)
             {
                 foreach (var item in HTList)
@@ -1199,7 +1220,7 @@ namespace CityWatch.Kpi.Services
                 throw;
             }
         }
-        private void CreateGuardDetailsNewHeader(Table table, List<GuardLogin> monthlyDataGuard, string hrGroupname, int id, int clientSiteId, string ClientSiteState)
+        private void CreateGuardDetailsNewHeader(Table table, List<GuardLogin> monthlyDataGuard, string hrGroupname, int id, int clientSiteId, string ClientSiteState,bool IsDownselect,int CriticalDocumentID)
         {
             float[] columnWidths = { 100f, 200f, 100f }; // Adjust these values as needed
             //if (hrGroupname == "HR3 (Special)")
@@ -1233,7 +1254,15 @@ namespace CityWatch.Kpi.Services
                 }
 
                 int[] countsArray = complianceDataCounts.ToArray();
-                var HTList = _viewDataService.GetHRSettings(id);
+                var HTList = new List<HrSettings>();
+                if (IsDownselect == true)
+                {
+                    HTList = _viewDataService.GetHRSettingsCriticalDoc(id, CriticalDocumentID);
+                }
+                else
+                {
+                    HTList = _viewDataService.GetHRSettings(id);
+                }
 
 
 

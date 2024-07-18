@@ -9,10 +9,11 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static Dropbox.Api.Files.WriteMode;
 
 
 namespace CityWatch.Kpi.Services
-{ 
+{
     public interface IViewDataService
     {
         List<SelectListItem> ClientTypes { get; }
@@ -47,6 +48,8 @@ namespace CityWatch.Kpi.Services
         List<ClientType> GetUserClientTypesHavingAccess(int? userId);
         List<HRGroups> GetHRGroupslist();
         List<SelectListItem> ProviderList();
+        List<SelectListItem> CriticalGroupNameList();
+        List<HrSettings> GetHRSettingsCriticalDoc(int HRID,int CriticalDocumentID);
     }
 
     public class ViewDataService : IViewDataService
@@ -131,6 +134,22 @@ namespace CityWatch.Kpi.Services
                 return items;
 
             }
+
+        }
+        public List<SelectListItem> CriticalGroupNameList()
+        {
+            var GroupName = _context.CriticalDocuments.Where(x => x.IsCriticalDocumentDownselect == true).ToList();
+            var items = new List<SelectListItem>() { new SelectListItem("Select", "", true) };
+            foreach (var item in GroupName)
+            {
+                if (!items.Any(cus => cus.Text == item.GroupName))
+                {
+
+                    items.Add(new SelectListItem($"{item.GroupName}", item.Id.ToString()));
+                }
+            }
+
+            return items;
 
         }
         public List<SelectListItem> ClientTypesUsingLoginUserId(int guardId)
@@ -342,13 +361,45 @@ namespace CityWatch.Kpi.Services
         {
 
             return _context.HrSettings.Include(z => z.HRGroups)
+            .Include(z => z.hrSettingsClientSites)
+            .Include(z => z.hrSettingsClientStates)
+            .Include(z => z.ReferenceNoNumbers)
+            .Include(z => z.ReferenceNoAlphabets)
+            .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
+            ThenBy(x => x.ReferenceNoAlphabets.Name).Where(z => z.HRGroups.Id == HRID).ToList();
+
+
+        }
+        public List<HrSettings> GetHRSettingsCriticalDoc(int HRID,int CriticalDocumentID)
+        {
+            var result = _context.CriticalDocuments.Include(z => z.CriticalDocumentsClientSites)
+                .Include(z => z.CriticalDocumentDescriptions)
+                .Where(x => x.IsCriticalDocumentDownselect == true && x.Id == CriticalDocumentID).ToList();
+            var hrSettings = _context.HrSettings
+                .Include(z => z.HRGroups)
                 .Include(z => z.hrSettingsClientSites)
                 .Include(z => z.hrSettingsClientStates)
                 .Include(z => z.ReferenceNoNumbers)
                 .Include(z => z.ReferenceNoAlphabets)
-                .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
-                ThenBy(x => x.ReferenceNoAlphabets.Name).Where(z => z.HRGroups.Id == HRID).ToList();
+                .OrderBy(x => x.HRGroups.Name)
+                .ThenBy(x => x.ReferenceNoNumbers.Name)
+                .ThenBy(x => x.ReferenceNoAlphabets.Name)
+                .Where(z => z.HRGroups.Id == HRID)
+                .ToList();
+            var matchingHrSettings = new List<HrSettings>();
+            foreach (var document in result)
+            {
+                foreach (var description in document.CriticalDocumentDescriptions)
+                {
+                    var matchedHrSettings = hrSettings
+                 .Where(h => h.Id == description.DescriptionID)
+                 .ToList();
 
+                    matchingHrSettings.AddRange(matchedHrSettings);
+                }
+            }
+            return matchingHrSettings;
+            
 
         }
 

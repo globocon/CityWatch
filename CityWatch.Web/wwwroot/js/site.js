@@ -3602,7 +3602,21 @@ $('#DescriptionDoc').on('change', function () {
 function updateSelectedDescCount() {
     $('#selectedDescCountDoc').text($('#selectedDescDoc option').length);
 }
+$('#CrIsDownselect').on('change', function () {
+    const isChecked = $(this).is(':checked');
 
+    const filter = isChecked ? 1 : 2;
+    if (filter == 1) {
+      
+        $('#IsDownselectonly').val(true)
+        
+        
+    }
+    if (filter == 2) {
+        $('#IsDownselectonly').val(false)
+       
+    }
+});
 $('#btnSaveCriticalDoc').on('click', function () {
     $("input[name=clientSiteIds]").remove();
     var options = $('#selectedSitesDoc option');
@@ -3733,6 +3747,7 @@ $('#Critical-modal').on('shown.bs.modal', function (event) {
 });
 function clearCriticalModal() {
     $('#CriticalDocId').val('0');
+    $('#CrIsDownselect').prop('checked', false);
     //$('#clientTypeNameDoc').html('');
     $('#clientTypeNameDoc').val('');
    $("#clientTypeNameDoc").multiselect("refresh");
@@ -3764,6 +3779,11 @@ function CriticalModelOnEdit(CriticalDocId) {
     }).done(function (data) {
         $('#CriticalDocId').val(data.id);
         $('#GroupName').val(data.groupName);
+        if (data.isCriticalDocumentDownselect == true) {
+            $('#CrIsDownselect').prop('checked', true);
+            $('#IsDownselectonly').val(true)
+           
+        }
         $.each(data.criticalDocumentsClientSites, function (index, item) {
             $('#selectedSitesDoc').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
             //$('#selectedDescDoc').append('<option value="' + item.hrSettings.id + '">' + item.hrSettings.description + '</option>');

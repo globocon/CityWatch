@@ -49,6 +49,8 @@ namespace CityWatch.Kpi.Models
         public string EmailBcc { get; set; }
 
         public bool IsHrTimerPaused { get; set; }
+        public bool IsCriticalDocumentDownselect { get; set; }
+        public string CriticalGroupNameID { get; set; }
 
         public static KpiSendSchedule ToDataModel(KpiSendScheduleViewModel viewModel)
         {
@@ -68,7 +70,9 @@ namespace CityWatch.Kpi.Models
                 SummaryNote2 = viewModel.SummaryNote2,
                 CoverSheetType = viewModel.CoverSheetType,
                 EmailBcc = viewModel.EmailBcc,
-                IsHrTimerPaused = viewModel.IsHrTimerPaused
+                IsHrTimerPaused = viewModel.IsHrTimerPaused,
+                IsCriticalDocumentDownselect=viewModel.IsCriticalDocumentDownselect,
+                CriticalGroupNameID=viewModel.CriticalGroupNameID,
             };
         }
 
@@ -92,7 +96,9 @@ namespace CityWatch.Kpi.Models
                 SummaryNote2 = dataModel.SummaryNote2,
                 CoverSheetType = dataModel.CoverSheetType,
                 EmailBcc = dataModel.EmailBcc,
-                IsHrTimerPaused = dataModel.IsHrTimerPaused
+                IsHrTimerPaused = dataModel.IsHrTimerPaused,
+                IsCriticalDocumentDownselect=dataModel.IsCriticalDocumentDownselect,
+                CriticalGroupNameID=dataModel.CriticalGroupNameID,
             };
         }
     }

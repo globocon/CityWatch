@@ -1177,6 +1177,10 @@ namespace CityWatch.Web.Pages.Admin
             {
                 var CriticalDoc = CriticalDocumentViewModel.ToDataModel(CriticalDocModel);
                 _configDataProvider.SaveCriticalDoc(CriticalDoc, true);
+                if (CriticalDocModel.IsCriticalDocumentDownselect == false)
+                {
+                    _configDataProvider.RemoveCriticalDownSelect(CriticalDoc);
+                }
             }
             catch (Exception ex)
             {
@@ -1228,6 +1232,7 @@ namespace CityWatch.Web.Pages.Admin
                     ClientTypeId = document.ClientTypeId,
                     HRGroupID = document.HRGroupID,
                     GroupName = document.GroupName,
+                    IsCriticalDocumentDownselect=document.IsCriticalDocumentDownselect,
                     CriticalDocumentsClientSites = document.CriticalDocumentsClientSites.Select(cs => new CriticalDocumentsClientSites
                     {
                         Id = cs.Id,
