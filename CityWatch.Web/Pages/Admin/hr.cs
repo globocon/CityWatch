@@ -1070,6 +1070,7 @@ namespace CityWatch.Web.Pages.Admin
                     {
                         newFileName = Description + extension;
                         fileName = RefNo + "_" + newFileName;
+                        fileName = GetFilename(fileName);
                     }
                     else if (dateType == "true")
                     {
@@ -1078,6 +1079,7 @@ namespace CityWatch.Web.Pages.Admin
                         formattedDate = parsedDate.ToString("dd MMM yy").ToUpper();
                         newFileName = Description + "-" + "doi " + formattedDate + extension;
                         fileName = RefNo + "_" + newFileName;
+                        fileName = GetFilename(fileName);
                     }
                     else
                     {
@@ -1086,6 +1088,7 @@ namespace CityWatch.Web.Pages.Admin
                         formattedDate = parsedDate.ToString("dd MMM yy").ToUpper();
                         newFileName = Description + "-" + "exp " + formattedDate + extension;
                         fileName = RefNo + "_" + newFileName;
+                        fileName = GetFilename(fileName);
                     }
 
 
@@ -1124,7 +1127,12 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, fileName, CurrentDate });
         }
 
-
+        public string GetFilename(string filename)
+        {
+            // Use Regex to replace problematic characters with an underscore
+            string newFilename = Regex.Replace(filename, @"[\/\\?%*:|""<>]", "_");
+            return newFilename;
+        }
 
         public IActionResult OnGetGuardLicenseAndCompliance(int guardId)
         {
