@@ -375,7 +375,9 @@ namespace CityWatch.Kpi.Services
                     //await _importDataService.Run(jobId);
 
                     // Create Pdf Report
-                    var fileName = _kpiReportGenerator.GeneratePdfReport(siteId, reportStartDate, reportEndDate, schedule.IsHrTimerPaused);
+                    var IsDownselect = schedule.IsCriticalDocumentDownselect;
+                    int CriticalDocumentID = Convert.ToInt32(schedule.CriticalGroupNameID);
+                    var fileName = _kpiReportGenerator.GeneratePdfReport(siteId, reportStartDate, reportEndDate, schedule.IsHrTimerPaused, IsDownselect, CriticalDocumentID);
                     if (string.IsNullOrEmpty(fileName))
                     {
                         statusLog.AppendFormat("Site {0} - Error creating pdf. ", siteId);

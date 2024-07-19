@@ -204,8 +204,10 @@ namespace CityWatch.Kpi.Pages.Admin
             {
                 // Default TuneDowngradeBuffer = 1
                 if (clientSiteKpiSetting.TuneDowngradeBuffer.GetValueOrDefault() == 0)
+                {
                     clientSiteKpiSetting.TuneDowngradeBuffer = 1;
-
+                }
+                clientSiteKpiSetting.ScheduleisActive = true;
                 _clientDataProvider.SaveClientSiteKpiSetting(clientSiteKpiSetting);
             }
             catch
@@ -1294,6 +1296,7 @@ namespace CityWatch.Kpi.Pages.Admin
             {
                 var CriticalDoc = CriticalDocumentViewModel.ToDataModel(CriticalDocModel);
                 _configDataProvider.SaveCriticalDoc(CriticalDoc, true);
+               
             }
             catch (Exception ex)
             {

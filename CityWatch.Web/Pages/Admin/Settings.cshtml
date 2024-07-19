@@ -629,6 +629,7 @@
                                             <th>CRM (Supplier)</th>
                                             <th>Sites</th>
                                             <th>Pin</th>
+                                            <th></th>
                                             <th>Active</th>
                                             <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
                                         </tr>
@@ -913,7 +914,7 @@
             <div class="modal-body">
                 <div class="row m-0">
                     <div class="col-md-12">
-                        <form id="frm_add_guard">
+                        <form id="frm_add_guard" autocomplete="off">
                             <input type="hidden" id="Guard_Id" name="Guard.Id" />
                             <div class="form-group row">
                                 <label class="col-md-2 col-form-label">Guard Name</label>
@@ -941,7 +942,11 @@
                                 </div>
                                 <label class="col-md-1 col-form-label">Email</label>
                                 <div class="col-md-3">
-                                    <input type="text" class="form-control" id="Guard_Email" name="Guard.Email">
+                                    @*this is avoid auto fill values Start*@
+                                    <input type="text" style="display:none;" aria-hidden="true">
+                                    <input type="text" style="display:none;" id="LoginUser_UserName" aria-hidden="true">
+                                    @*this is avoid auto fill values end  *@
+                                    <input type="text" class="form-control" id="Guard_Email" name="Guard.Email" autocomplete="off">
                                 </div>
                             </div>
                             <div class="form-group row">
@@ -977,7 +982,8 @@
                                     <input type="hidden" id="Guard_IsActive" name="Guard.IsActive">
                                 </div>
                                 <div class="pr-0" style="width:60px;">
-                                    <input type="password" class="form-control" id="Guard_Pin" name="Guard.Pin" style="width:60px;">
+                                    <input type="password" style="display:none;" aria-hidden="true">
+                                    <input type="password" class="form-control" id="Guard_Pin" name="Guard.Pin" style="width:60px;" autocomplete="off">
                                    
                                 </div>
                                 <span id="togglePassword" class="p-1"><i class="fa fa-eye-slash" aria-hidden="true"></i></span>
@@ -1215,7 +1221,7 @@
         <div class="modal-content">
             <div class="modal-header col-md-12">
 
-                <h5 class="modal-title col-md-8">Last data guard signed in</h5>
+                <h5 class="modal-title col-md-8">Last sign-in data for guard</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>

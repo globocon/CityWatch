@@ -5,8 +5,8 @@ $(function () {
     // To fix the Datatable column header issue when hidden inside tab
     $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
         $($.fn.dataTable.tables(true)).DataTable()
-            .columns.adjust()
-            .responsive.recalc();
+            .columns.adjust();
+            //.responsive.recalc();
     });
 
     function isLogbookExpired(logBookDate) {
@@ -2622,7 +2622,24 @@ $(function () {
 
     function renderGuardActiveCell(value, type, data) {
         if (type === 'display') {
-            let cellValue = value ? '<i class="fa fa-check-circle text-success"></i>' + '[' + '<a href="#guardLogBookInfoModal" id="btnLogBookDetailsByGuard">1</a>' + ']<input type="hidden" id="GuardId" value="' + data.id + '">' : '<i class="fa fa-times-circle text-danger"></i>';
+            let cellValue;
+
+            if (value) {
+                // Check if data.guardlogins.logindate is present
+                if (data.loginDate) {
+                    cellValue = '<i class="fa fa-check-circle text-success"></i>' +
+                        '[' +
+                        '<a href="#guardLogBookInfoModal" id="btnLogBookDetailsByGuard">1</a>' +
+                        ']<input type="hidden" id="GuardId" value="' + data.id + '">';
+                } else {
+                    cellValue = '<i class="fa fa-check-circle text-success"></i>' +
+                        '<input type="hidden" id="GuardId" value="' + data.id + '">';
+                }
+            } else {
+                cellValue = '<i class="fa fa-times-circle text-danger"></i>';
+            }
+
+            // Add enrollment date if available
             if (data.dateEnrolled) {
                 cellValue += '<br/> <span class="small">Enrolled: ' + getFormattedDate(new Date(data.dateEnrolled), null, ' ') + '</span>';
             }
@@ -2660,6 +2677,7 @@ $(function () {
         { data: 'provider', width: "13%" },
         { data: 'clientSites', orderable: false, width: "15%" },
         { data: 'pin', width: "1%", visible: false },
+        { data: 'loginDate', visible: false },
         {
             data: 'isActive', name: 'isactive', className: "text-center", width: "10%", 'render': function (value, type, data) {
                 return renderGuardActiveCell(value, type, data);
@@ -2811,12 +2829,61 @@ $(function () {
         $('#guardLogBookInfoModal').modal('show');
         var GuardId = $(this).closest("td").find('#GuardId').val();
         $('#txtGuardId').val(GuardId);
-        ActiveGuardsLogBookDetails.ajax.reload();
-
+        //ActiveGuardsLogBookDetails.ajax.reload();
+        fetchGuardLogBookDetails(GuardId);
     });
 
+    function fetchGuardLogBookDetails(guardId) {
+        $.ajax({
+            url: '/Admin/GuardSettings?handler=LastTimeLogin',
+            method: 'GET',
+            data: { guardId: guardId },
+            success: function (data) {
+                // Destroy the existing DataTable instance if it exists
+                if ($.fn.DataTable.isDataTable('#ActiveGuardsLogBookDetails')) {
+                    $('#ActiveGuardsLogBookDetails').DataTable().destroy();
+                }
 
+                $('#ActiveGuardsLogBookDetails').DataTable({
+                    autoWidth: false,
+                    ordering: false,
+                    searching: false,
+                    paging: false,
+                    info: false,
+                    data: data, // Use the data fetched from the AJAX request
+                    columns: [
+                        {
+                            data: 'eventDateTime',
+                            width: "10%",
+                            render: function (data, type, row) {
+                                // Convert the date string to a JavaScript Date object
+                                var date = new Date(data);
 
+                                // Format the date to display only the date part without the time
+                                var formattedDate = date.toLocaleDateString('en-GB', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    second: '2-digit'
+                                });
+                                var additionalData = row.eventDateTimeZoneShort;
+                                if (additionalData != null) {
+                                    return formattedDate + ' (' + additionalData + ')';
+                                } else {
+                                    return formattedDate;
+                                }
+                            }
+                        }
+                    ]
+                });
+            },
+            error: function (xhr, status, error) {
+                console.error('Error fetching data:', error);
+            }
+        });
+    }
 
 
     $('#btn_add_guard_top, #btn_add_guard_bottom').on('click', function () {
@@ -3297,7 +3364,7 @@ $(function () {
         effects: 'slide'
     }).on('select.editable-select', function (e, li) {
         var check = '';
-        $('#GuardComplianceandlicense_fileName1').val('');
+        $('#GuardComplianceandlicense_FileName1').val('');
         $('#guardComplianceandlicense_fileName1').text('None');
         var sel = $('#Description option:selected');
         $(this).data('cur_val', sel);
@@ -3314,6 +3381,8 @@ $(function () {
     });
     $('#HRGroup').on('change', function () {
         $('#Description').val('');
+        $('#GuardComplianceandlicense_FileName1').val('');
+        $('#guardComplianceandlicense_fileName1').text('None');
         var Descriptionval = $('#HRGroup').val();
         var GuardID = $('#GuardComplianceandlicense_GuardId').val();
         const token = $('input[name="__RequestVerificationToken"]').val();
@@ -3681,6 +3750,7 @@ $(function () {
         var HrVal = $('#HRGroup').val();
         var DescVal = $('#Description').val();
         var FileVa = $('#guardComplianceandlicense_fileName1').html();
+        var hiddenValue = $('#GuardComplianceandlicense_FileName1').val();
         const messageHtml = '';
         $('#schRunStatusNew').html(messageHtml);
 
@@ -4750,46 +4820,46 @@ $(function () {
         }
     });
 
-    let ActiveGuardsLogBookDetails = $('#ActiveGuardsLogBookDetails').DataTable({
-        autoWidth: false,
-        ordering: false,
-        searching: false,
-        paging: false,
-        info: false,
-        ajax: {
-            url: '/Admin/GuardSettings?handler=LastTimeLogin',
-            data: function (d) {
-                d.guardId = $('#txtGuardId').val();
+    //let ActiveGuardsLogBookDetails = $('#ActiveGuardsLogBookDetails').DataTable({
+    //    autoWidth: false,
+    //    ordering: false,
+    //    searching: false,
+    //    paging: false,
+    //    info: false,
+    //    ajax: {
+    //        url: '/Admin/GuardSettings?handler=LastTimeLogin',
+    //        data: function (d) {
+    //            d.guardId = $('#txtGuardId').val();
 
-            },
-            dataSrc: ''
-        },
-        columns: [
+    //        },
+    //        dataSrc: ''
+    //    },
+    //    columns: [
 
-            {
-                data: 'eventDateTime',
-                width: "10%",
-                render: function (data, type, row) {
-                    // Convert the date string to a JavaScript Date object
-                    var date = new Date(data);
+    //        {
+    //            data: 'eventDateTime',
+    //            width: "10%",
+    //            render: function (data, type, row) {
+    //                // Convert the date string to a JavaScript Date object
+    //                var date = new Date(data);
 
-                    // Format the date to display only the date part without the time
-                    var formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                    var additionalData = row.eventDateTimeZoneShort;
-                    if (additionalData != null) {
-                        return formattedDate + ' (' + additionalData + ')';
-                    }
-                    else {
-                        return formattedDate
-                    }
+    //                // Format the date to display only the date part without the time
+    //                var formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    //                var additionalData = row.eventDateTimeZoneShort;
+    //                if (additionalData != null) {
+    //                    return formattedDate + ' (' + additionalData + ')';
+    //                }
+    //                else {
+    //                    return formattedDate
+    //                }
 
-                }
-            }
+    //            }
+    //        }
 
-        ],
+    //    ],
 
 
-    });
+    //});
     /*to view thw audit log report-end*/
 
     //for toggle areas - start

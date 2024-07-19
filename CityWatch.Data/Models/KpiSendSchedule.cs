@@ -106,6 +106,8 @@ namespace CityWatch.Data.Models
         public string EmailBcc { get; set; }
 
         public bool IsHrTimerPaused { get; set; }
+        public bool IsCriticalDocumentDownselect { get; set; }
+        public string CriticalGroupNameID { get; set; }
 
         public List<KpiSendScheduleSummaryNote> KpiSendScheduleSummaryNotes { get; set; }
 

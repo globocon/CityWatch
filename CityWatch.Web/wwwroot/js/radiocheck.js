@@ -2353,7 +2353,8 @@ $('#Description').editableSelect({
     //filter: false,
     effects: 'slide'
 }).on('select.editable-select', function (e, li) {
-
+    $('#GuardComplianceandlicense_FileName1').val('');
+    $('#guardComplianceandlicense_fileName1').text('None');
 });
 $('#HRGroup').on('change', function () {
 
@@ -2361,6 +2362,8 @@ $('#HRGroup').on('change', function () {
     ulClients.html('');
 
     var Descriptionval = $('#HRGroup').val();
+    $('#GuardComplianceandlicense_FileName1').val('');
+    $('#guardComplianceandlicense_fileName1').text('None');
     if (Descriptionval == 1) {
         //$('#Description').val('CV,LICENSES,C4i Training');
         var Desc1Val = 'CV,LICENSES,C4i Training';

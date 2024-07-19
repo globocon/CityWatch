@@ -426,7 +426,7 @@ $(function () {
         buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#schedule-modal" data-sch-id="' + record.id + '" ';
         buttonHtml += 'data-action="editSchedule"><i class="fa fa-pencil mr-2"></i>Edit</button>';
         buttonHtml += '<button class="btn btn-outline-danger del-schedule mr-2 mt-2" data-sch-id="' + record.id + '""><i class="fa fa-trash mr-2" aria-hidden="true"></i>Delete</button>';
-        buttonHtml += '<button class=" btn mr-2 " data-toggle="modal" data-target="#schedule-modal" data-sch-id="' + record.id + '" ';
+        buttonHtml += '<button class=" btn mr-2 p-0" data-toggle="modal" data-target="#schedule-modal" data-sch-id="' + record.id + '" ';
         buttonHtml += 'data-action="copySchedule"><i class="fa fa-copy fa-2x mr-2"></i></button>'; return buttonHtml;
     }
 
@@ -452,6 +452,15 @@ $(function () {
             type: 'GET',
             dataType: 'json',
         }).done(function (data) {
+            if (data.isCriticalDocumentDownselect == true) {
+                $('#cbIsDownselect').prop('checked', true);
+                $('#CriticalGroupNameID').prop('disabled', false);
+                $('#IsDownselect').val(true)
+            }
+            else {
+                $('#CriticalGroupNameID').prop('disabled', true);
+            }
+            $('#CriticalGroupNameID').val(data.criticalGroupNameID);
             $('#scheduleId').val(data.id);
             $('#startDate').val(data.startDate.split('T')[0]);
             if (data.endDate)
@@ -715,6 +724,8 @@ $(function () {
     }
 
     function clearScheduleModal() {
+        $('#cbIsDownselect').prop('checked', false);
+        $('#CriticalGroupNameID').val('');
         $('#scheduleId').val('0');
         $('#clientTypeName').val('');
         $('#clientSites').html('<option value="">Select</option>');
@@ -847,7 +858,22 @@ $(function () {
 
         showHideSchedulePopupTabs(isEdit);
     });
+    $('#cbIsDownselect').on('change', function () {
+        const isChecked = $(this).is(':checked');
 
+        const filter = isChecked ? 1 : 2;
+        if (filter == 1) {
+
+            $('#IsDownselect').val(true)
+            $('#CriticalGroupNameID').prop('disabled', false);
+
+        }
+        if (filter == 2) {
+            $('#IsDownselect').val(false)
+            $('#CriticalGroupNameID').prop('disabled', true);
+            $('#CriticalGroupNameID').val('');
+        }
+    });
     $('#btnSaveSchedule').on('click', function () {
         $("input[name=clientSiteIds]").remove();
         var options = $('#selectedSites option');
@@ -855,7 +881,14 @@ $(function () {
             const elem = '<input type="hidden" name="clientSiteIds" value="' + $(this).val() + '">';
             $('#frm_kpi_schedule').append(elem);
         });
-
+        if ($('#cbIsDownselect').is(':checked')) {
+            
+            if (!$('#CriticalGroupNameID').val()) {
+                
+                alert('Please select a value in  Policy Group.');
+                return; 
+            }
+        }
         $.ajax({
             url: '/Admin/Settings?handler=SaveKpiSendSchedule',
             type: 'POST',
