@@ -414,56 +414,59 @@
                             <input type="hidden" asp-for="@Model.ClientSiteId" />
                             <div class="row">
                                 <div class="col-md-8">
-                                    <div class="form-row">
-                                        <div class="form-group col-md-2">
-                                            <label class="form-label" asp-for="@Model.KoiosClientSiteId"></label>
+                                    <div class="form-row" style="margin-bottom: 1px;">
+                                        <div class="form-group col-md-2" style="margin-bottom: 1px;">
+                                             <label class="form-label" asp-for="@Model.KoiosClientSiteId"></label>
                                             <input class="form-control w-80px" asp-for="@Model.KoiosClientSiteId">
                                         </div>
                                         <div class="form-group col-md-2">
                                             <label class="form-label" asp-for="@Model.KoiosClientSiteIdB"></label>
-                                            <input class="form-control w-80px" asp-for="@Model.KoiosClientSiteIdB">
+                                            <input class="form-control w80px" asp-for="@Model.KoiosClientSiteIdB">
                                         </div>
-                                    </div>
-                                    <div class="form-row">
+                                         </div>
+                                    <div class="form-row" style="margin-bottom: 1px;" >
                                         <div class="form-group col-md-4">
-                                            <label class="form-label" asp-for="@Model.PhotoPointsPerPatrol"></label>
-                                            <input class="form-control w-80px daily-img-target" asp-for="@Model.PhotoPointsPerPatrol">
-                                        </div>
-                                        <div class="form-group col-md-4">
-                                            <label class="form-label" asp-for="@Model.WandPointsPerPatrol"></label>
-                                            <input class="form-control w-80px daily-wand-target" asp-for="@Model.WandPointsPerPatrol">
+                                            <label class="form-label" asp-for="@Model.PhotoPointsPerPatrol" style="white-space: nowrap; overflow: hidden;">Photo Points Per Patrol</label>
+
+                                            <input class="form-control w-80px  daily-img-target" asp-for="@Model.PhotoPointsPerPatrol">
                                         </div>
                                         <div class="form-group col-md-4">
-                                            <label class="form-label" asp-for="@Model.TuneDowngradeBuffer"></label>
-                                            <input type="number" min="1" class="form-control w-80px daily-img-target" asp-for="@Model.TuneDowngradeBuffer">
+                                            <label class="form-label" asp-for="@Model.WandPointsPerPatrol" style="white-space: nowrap; overflow: hidden;">Wand Points Per Patrol</label>
+                                            <input class="form-control w-80px  daily-wand-target" asp-for="@Model.WandPointsPerPatrol">
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label class="form-label" asp-for="@Model.TuneDowngradeBuffer" style="white-space: nowrap; overflow: hidden;">Tune Downgrade Buffer</label>
+                                            <input type="number" min="1" class="form-control w-80px daily-img-target " asp-for="@Model.TuneDowngradeBuffer">
                                         </div>
                                     </div>
                                 </div>
+                               
                                 <div class="col-md-4">
-                                    <div>
-                                        <h6 class="font-weight-bold">Site Image (200x112)</h6>
-                                        @{
-                                            var siteImage = !string.IsNullOrEmpty(Model.SiteImage) ? Model.SiteImage : "//via.placeholder.com/200x112.png?text=No Image";
-                                        }
-                                        <img src="@siteImage" width="200" height="112" id="img_site_image" class="img-fluid" />
-                                        <input type="hidden" asp-for="@Model.SiteImage" value="@Model.SiteImage" />
-                                    </div>
-                                    <div class="mt-2">
-                                        <label class="btn btn-sm btn-outline-primary">
-                                            <i class="fa fa-upload mr-2"></i>Replace Image
-                                            <input type="file" id="upload_site_image" accept=".jpg" hidden>
-                                        </label>
-                                    </div>
-                                </div>
+
+                            <div>
+                                <h6 class="font-weight-bold">Site Image (200x100)</h6>
+                                @{
+                                    var siteImage = !string.IsNullOrEmpty(Model.SiteImage) ? Model.SiteImage : "//via.placeholder.com/200x100.png?text=No Image";
+                                }
+                                <img src="@siteImage" width="200" height="100" id="img_site_image" class="img-fluid" />
+                                <input type="hidden" asp-for="@Model.SiteImage" value="@Model.SiteImage" />
                             </div>
-                            <hr />
-                            <div class="row">
+                            <div class="mt-2">
+                                <label class="btn btn-sm btn-outline-primary">
+                                    <i class="fa fa-upload mr-2"></i>Replace Image
+                                    <input type="file" id="upload_site_image" accept=".jpg" hidden>
+                                </label>
+                            </div>
+                        </div>                            
+                            </div>
+                            <hr style="margin-top: 0; margin-bottom: 0;">
+                            <div class="form-row" style="margin-bottom: 1px;">
                                 <div class="col-md-12">
                                     @for (int rowIndex = 0; rowIndex < 6; rowIndex++)
                                     {
                                         <div class="form-row">
                                             <div class="col-md-2">
-                                                <label class="form-label">@rowTitle[rowIndex]</label>
+                                                <label class="form-label mb-1">@rowTitle[rowIndex]</label>
                                             </div>
                                             @for (var colIndex = 0; colIndex < 7; colIndex++)
                                             {
@@ -471,29 +474,29 @@
                                                     @switch (rowIndex)
                                                     {
                                                         case 0:
-                                                            <label class="form-label">@Model.ClientSiteDayKpiSettings[colIndex].WeekDay.ToString().Substring(0, 3)</label>
+                                                            <label class="form-label mb-1">@Model.ClientSiteDayKpiSettings[colIndex].WeekDay.ToString().Substring(0, 3)</label>
                                                             break;
                                                         case 1:
-                                                            <input class="form-control mb-2" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].EmpHours">
+                                                            <input class="form-control-new mb-1" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].EmpHours">
                                                             break;
                                                         case 2:
-                                                            <div class="custom-control custom-switch patrol-frequency-switch mb-3">
-                                                                <input type="checkbox" class="custom-control-input patrol-frequency" data-index="@colIndex"
+                                                            <div class="custom-control custom-switch patrol-frequency-switch mb-1">
+                                                                <input type="checkbox" class="custom-control-input patrol-frequency mb-1" data-index="@colIndex"
                                                                        id="@($"Chk_ClientSiteDayKpiSettings_{colIndex}_PatrolFrequency")" @(Convert.ToBoolean(Model.ClientSiteDayKpiSettings[colIndex].PatrolFrequency) ? "checked=checked" : "")>
-                                                                <label class="custom-control-label" for="@($"Chk_ClientSiteDayKpiSettings_{colIndex}_PatrolFrequency")">
+                                                                <label class="custom-control-label mb-1" style="white-space: nowrap;" for="@($"Chk_ClientSiteDayKpiSettings_{colIndex}_PatrolFrequency")">
                                                                     @(Convert.ToBoolean(Model.ClientSiteDayKpiSettings[colIndex].PatrolFrequency) ? "per day" : "per hr")
                                                                 </label>
                                                                 <input type="hidden" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].PatrolFrequency" />
                                                             </div>
                                                             break;
                                                         case 3:
-                                                            <input class="form-control mb-2 patrols-count" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].NoOfPatrols" data-index="@colIndex">
+                                                            <input class="form-control-new mb-0 patrols-count" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].NoOfPatrols" data-index="@colIndex">
                                                             break;
                                                         case 4:
-                                                            <input class="form-control mb-2" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].ImagesTarget" readonly>
+                                                            <input class="form-control-new mb-0" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].ImagesTarget" readonly>
                                                             break;
                                                         case 5:
-                                                            <input class="form-control mb-2" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].WandScansTarget" readonly>
+                                                            <input class="form-control-new mb-0" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].WandScansTarget" readonly>
                                                             break;
                                                     }
                                                     <input type="hidden" asp-for="@Model.ClientSiteDayKpiSettings[colIndex].WeekDay" />
@@ -504,34 +507,42 @@
                                     }
                                 </div>
                             </div>
-                            <hr />
+                            <hr style="margin-top: 0; margin-bottom: 0;">
+
                             <div class="row">
                                 <div class="col-md-8">
                                     <div class="form-row my-2">
-                                        <div class="col-md-6">
+                                        <div class="col-md-12">
                                             <h6 class="font-weight-bold d-inline">Site Statistics</h6>
                                         </div>
                                     </div>
                                     <div class="form-row">
-                                        <div class="form-group col-md-4">
+                                        <div class="form-group col-md-3">
                                             <label class="form-label" asp-for="@Model.ExpPatrolDuration"></label>
                                             <input class="form-control w-80px daily-wand-target" asp-for="@Model.ExpPatrolDuration">
                                         </div>
-                                        <div class="form-group col-md-4">
+                                        <div class="form-group col-md-3">
                                             <label class="form-label" asp-for="@Model.MinPatrolFreq"></label>
                                             <input class="form-control w-80px daily-wand-target" asp-for="@Model.MinPatrolFreq">
                                         </div>
-                                        <div class="form-group col-md-4">
+                                        <div class="form-group col-md-3">
                                             <label class="form-label" asp-for="@Model.MinImagesPerPatrol"></label>
                                             <input class="form-control w-80px daily-wand-target" asp-for="@Model.MinImagesPerPatrol">
+                                        </div>
+                                        <div class="form-group col-md-3 align-self-end">
+                                        <label class="form-label"></label>
+                                            <button type="button" class="btn btn-success" id="save_site_settings"><i class="fa fa-save mr-2"></i>Save Settings</button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <button type="button" class="btn btn-success" id="save_site_settings"><i class="fa fa-save mr-2"></i>Save Settings</button>
+                           
+
                         </form>
                     </div>
                 </div>
+
+
                 @*New Tab for contracted-manning start*@
                 <div class="tab-pane" id="contractedmanningSettings" role="tabpanel" aria-labelledby="contracted-manning-tab">
                     <div class="container pt-3">
