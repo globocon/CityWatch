@@ -3451,6 +3451,10 @@ $(function () {
 
     $('#btnAddGuardLicense').on('click', function () {
         resetGuardLicenseandComplianceAddModal();
+        $("#ComplianceHiddenDiv").css({
+            "pointer-events": "",
+            "opacity": ""
+        }).removeAttr("disabled");
         const messageHtml2 = '';
         $('#schRunStatusNew').html(messageHtml2);
         $('#addGuardCompliancesLicenseModal').modal('show');
@@ -3511,7 +3515,10 @@ $(function () {
     //Gurad License and Compliance Form start
     $('#tbl_guard_licensesAndCompliance tbody').on('click', 'button[name=btn_edit_guard_licenseAndCompliance]', function () {
         resetGuardLicenseandComplianceAddModal();
-
+        $("#ComplianceHiddenDiv").css({
+            "pointer-events": "none",
+            "opacity": "0.5"
+        }).attr("disabled", "disabled");
         var data = gridGuardLicensesAndLicence.row($(this).parents('tr')).data();
 
         if (data.expiryDate) {
