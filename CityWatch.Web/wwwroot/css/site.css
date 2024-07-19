@@ -58,15 +58,7 @@ body {
     /* Margin bottom by footer height */
     font-family: 'Inter', sans-serif;
     min-height: 100vh;
-    overflow-y: scroll;
     
-    scrollbar-width: none;
-    
-}
-*::-webkit-scrollbar {
-    width: 0px; /* Remove scrollbar space */
-    height: 0px;
-    background: transparent; /* Optional: just make scrollbar invisible */
 }
 
 .footer {
