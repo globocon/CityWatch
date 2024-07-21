@@ -315,10 +315,10 @@
         </table>
     </div>
 </div>
-<div class="modal" tabindex="-1" role="dialog" id="vkl-modal">
-    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header col-md-12">
+<div class="modal" tabindex="-1" role="dialog" id="vkl-modal" style="margin-bottom:0;">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document" style="max-height: 95%;">
+        <div class="modal-content" style="margin-bottom:0;">
+            <div class="modal-header col-md-12">         
 
                 
                 <h6 class="modal-title col-md-5">Add a new log book entry</h6>
@@ -329,10 +329,10 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body pb-0">
+            <div class="modal-body pb-0 mt-0 pt-0">
                 <partial name="_KeyVehicleLogPopup" for="@Model.KeyVehicleLog" />
             </div>
-            <div class="modal-footer justify-content-between">
+            <div class="modal-footer justify-content-between p-1">
                 <button class="btn btn-success save_new_vehicle_and_key_log">Save Entry</button>
                 <button class="btn btn-success save_new_vehicle_and_key_log">Save Entry</button>
             </div>

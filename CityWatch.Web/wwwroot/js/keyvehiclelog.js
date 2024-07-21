@@ -606,7 +606,7 @@ $(function () {
                 keyVehicleLog.ajax.reload();
                 $('#vkl-modal').modal('hide');
             } else {
-                displayValidationSummary(result.errors);
+                displayValidationSummary(result.errors);           
             }
         }).always(function () {
             $('#loader').hide();

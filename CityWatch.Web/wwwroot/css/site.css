@@ -6,6 +6,10 @@ a.navbar-brand {
     word-break: break-all;
 }
 
+.custom-control-log {
+    margin-bottom: 0 !important;
+    margin-top: 0 !important;
+}
 /* Provide sufficient contrast against white background */
 a {
     color: #0366d6;
