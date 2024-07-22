@@ -953,7 +953,9 @@ $(function () {
             $deleteBtn = $('<button class="btn btn-outline-danger mt-2" data-id="' + record.id + '"><i class="fa fa-trash mr-2"></i>Delete</button>'),
             $updateBtn = $('<button class="btn btn-outline-success mr-2" data-id="' + record.id + '"><i class="fa fa-check-circle mr-2"></i>Update</button>').hide(),
             $cancelBtn = $('<button class="btn btn-outline-primary mt-2" data-id="' + record.id + '"><i class="fa fa-times-circle mr-2"></i>Cancel</button>').hide();
-
+            //p6-102 Add Photo -start
+        $imageBtn = $('<button class="btn btn-outline-primary mt-2" data-id="' + record.id + '"><i class="fa fa-camera mr-1"></i><i class="fa fa-plus"></i></button>')
+            //p6-102 Add Photo -end
         $editBtn.on('click', function (e) {
             gridGuardLog.edit($(this).data('id'));
             $editBtn.hide();
@@ -982,13 +984,58 @@ $(function () {
             gridGuardLog.removeRow($(this).data('id'));
         });
 
-
-
+        //p6-102 Add Photo -start
+        $imageBtn.on('click', function (e) {
+            $('#dgl-image-modal').modal('show');
+            $('#chbIsTwentyfivePercentOfPage').prop('checked', false)
+          
+            $('#chbIsAttachmentToRear').prop('checked', true)
+        });
+        //p6-102 Add Photo -end
         $displayEl.append($editBtn)
             .append($deleteBtn)
             .append($updateBtn)
-            .append($cancelBtn);
+            .append($cancelBtn)
+            .append($imageBtn);
+
     }
+    //p6-102 Add Photo -start
+    $('#chbIsAttachmentToRear').on('change', function () {
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+
+            $('#IsTwentyfivePercentOfPage').val(false);
+            $('#chbIsTwentyfivePercentOfPage').prop('checked', false)
+            
+
+        }
+
+        $('#IsAttachmentToRear').val(isChecked);
+
+    });
+    $('#chbIsTwentyfivePercentOfPage').on('change', function () {
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+
+            $('#IsAttachmentToRear').val(false);
+            $('#chbIsAttachmentToRear').prop('checked', false)
+        
+
+        }
+        $('#IsTwentyfivePercentOfPage').val(isChecked);
+
+    });
+    $('#btnIsRearOrTwentyfivePercent').on('click', function () {
+        
+
+        $('#IsRearOrTwentyfivePercentfileInput').click();
+
+
+
+
+    });
+    
+    //p6-102 Add Photo -end
     /*to display the popup to acknowledge the message-start*/
     $('#guard_daily_log tbody').on('click', '#btnAcknowledgeButton', function (value, record) {
         /*timer pause while editing*/
