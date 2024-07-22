@@ -677,10 +677,15 @@ namespace CityWatch.Data.Providers
         public List<SelectListItem> GetDescList(int HRGroupId)
         {
             var Group = new List<SelectListItem>();
+            var descriptions = _context.HrSettings.Include(z => z.HRGroups)
+       .Include(z => z.ReferenceNoNumbers)
+       .Include(z => z.ReferenceNoAlphabets)
+       .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
+       ThenBy(x => x.ReferenceNoAlphabets.Name).Where(z => z.HRGroups.Id == HRGroupId).ToList();
             var mapping = _context.HrSettings.Where(x => x.HRGroupId == HRGroupId).ToList();
-            foreach (var item in mapping)
+            foreach (var item in descriptions)
             {
-                Group.Add(new SelectListItem(item.Description, item.Id.ToString()));
+                Group.Add(new SelectListItem(item.ReferenceNo+ "&nbsp;&nbsp;&nbsp;&nbsp;" +  item.Description, item.Id.ToString()));
 
             }
             return Group;
