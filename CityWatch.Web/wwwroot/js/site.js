@@ -3790,7 +3790,7 @@ function CriticalModelOnEdit(CriticalDocId) {
             updateSelectedSitesCount();
         });
         $.each(data.criticalDocumentDescriptions, function (index, item) {
-            $('#selectedDescDoc').append('<option value="' + item.hrSettings.id + '">' + item.hrSettings.description + '</option>');
+            $('#selectedDescDoc').append('<option value="' + item.hrSettings.id + '">' + item.hrSettings.referenceNoNumbers.name + item.hrSettings.referenceNoAlphabets.name + '&nbsp;&nbsp;&nbsp;' + item.hrSettings.description + '</option>');
             updateSelectedSitesCount();
         });
        
