@@ -1580,7 +1580,7 @@ namespace CityWatch.Data.Providers
                         ActivityType = clientSiteActivity.ActivityType,
                         OnDuty = clientSiteActivity.OnDuty,
                         OffDuty = clientSiteActivity.OffDuty,
-                        ActivityDescription = "Edited"
+                        ActivityDescription =  clientSiteActivity.ActivityDescription!=string.Empty? clientSiteActivity.ActivityDescription: "Edited"
                     });
 
                 }
@@ -1614,6 +1614,7 @@ namespace CityWatch.Data.Providers
                         KVId = clientSiteActivity.KVId,
                         LBId = clientSiteActivity.LBId,
                         ActivityType = clientSiteActivity.ActivityType,
+                        ActivityDescription= clientSiteActivity.ActivityDescription,
                         OnDuty = clientSiteActivity.OnDuty,
                         OffDuty = clientSiteActivity.OffDuty,
                         GuardLoginTimeLocal = clientSiteActivity.GuardLoginTimeLocal,
@@ -1642,6 +1643,7 @@ namespace CityWatch.Data.Providers
                     clientSiteActivityToUpdate.KVId = clientSiteActivity.KVId;
                     clientSiteActivityToUpdate.LBId = clientSiteActivity.LBId;
                     clientSiteActivityToUpdate.ActivityType = clientSiteActivity.ActivityType;
+                    clientSiteActivityToUpdate.ActivityDescription = clientSiteActivity.ActivityDescription;
                 }
 
                 _context.SaveChanges();

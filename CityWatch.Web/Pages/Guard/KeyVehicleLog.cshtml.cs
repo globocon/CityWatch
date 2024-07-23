@@ -290,7 +290,8 @@ namespace CityWatch.Web.Pages.Guard
                         GuardId = KeyVehicleLog.GuardLogin.GuardId,
                         LastKVCreatedTime = DateTime.Now,
                         KVId = KeyVehicleLog.Id,
-                        ActivityType = "KV"
+                        ActivityType = "KV",
+                        ActivityDescription="Edit KV"
                     };
 
                     _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
@@ -355,7 +356,8 @@ namespace CityWatch.Web.Pages.Guard
                             GuardId = guardId,
                             LastKVCreatedTime = DateTime.Now,
                             KVId = KeyVehicleLog.Id,
-                            ActivityType = "KV"
+                            ActivityType = "KV",
+                            ActivityDescription= "KV Edit"
                         };
                         _guardLogDataProvider.EditRadioChecklistEntry(clientsiteRadioCheckEdit);
                         var ClientSiteRadioChecksActivityDetails = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == guardId && x.ClientSiteId != KeyVehicleLog.GuardLogin.ClientSiteId);
@@ -454,8 +456,8 @@ namespace CityWatch.Web.Pages.Guard
 
                 var guardId = _guardLogDataProvider.GetGuardLogins(Convert.ToInt32(HttpContext.Session.GetInt32("GuardLoginId"))).Select(x => x.GuardId).FirstOrDefault();
                 var ClientSiteRadioChecksActivityDetailsCheck = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == guardId && x.ClientSiteId == keyVehicleLogAuditHistory.KeyVehicleLog.GuardLogin.ClientSiteId && x.KVId == keyVehicleLogAuditHistory.KeyVehicleLog.Id);
-                if (ClientSiteRadioChecksActivityDetailsCheck.Count() == 0)
-                {
+                //if (ClientSiteRadioChecksActivityDetailsCheck.Count() == 0)
+                //{
 
 
                     var clientsiteRadioCheckEdit = new ClientSiteRadioChecksActivityStatus()
@@ -464,7 +466,8 @@ namespace CityWatch.Web.Pages.Guard
                         GuardId = guardId,
                         LastKVCreatedTime = DateTime.Now,
                         KVId = KeyVehicleLog.Id,
-                        ActivityType = "KV"
+                        ActivityType = "KV",
+                        ActivityDescription= "KV Exit"
                     };
                     _guardLogDataProvider.EditRadioChecklistEntry(clientsiteRadioCheckEdit);
                     var ClientSiteRadioChecksActivityDetails = _guardLogDataProvider.GetClientSiteRadioChecksActivityDetails().Where(x => x.GuardId == guardId && x.ClientSiteId != keyVehicleLogAuditHistory.KeyVehicleLog.GuardLogin.ClientSiteId);
@@ -476,7 +479,7 @@ namespace CityWatch.Web.Pages.Guard
                         }
 
                     }
-                }
+                //}
                 //}
                 //for rc entry-end
 
