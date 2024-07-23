@@ -13,6 +13,8 @@ namespace CityWatch.Data.Models
         public DateTime StartDate { get; set; }
         public DateTime ExpiryDate { get; set; }
         public bool RepeatYearly { get; set; }
+        public bool IsPublicHoliday { get; set; }
+        
 
         [NotMapped]
         public string FormattedStartDate { get { return StartDate.ToString("dd-MMM-yyyy"); } }

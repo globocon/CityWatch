@@ -1659,6 +1659,7 @@ namespace CityWatch.Data.Providers
                     StartDate = calendarEvents.StartDate,
                     ReferenceNo = calendarEvents.ReferenceNo,
                     RepeatYearly = calendarEvents.RepeatYearly,
+                    IsPublicHoliday= calendarEvents.RepeatYearly,
                 };
                 _context.BroadcastBannerCalendarEvents.Add(calendarEventsnew);
             }
@@ -1673,6 +1674,7 @@ namespace CityWatch.Data.Providers
                 calendarEventsUpdate.StartDate = calendarEvents.StartDate;
                 calendarEventsUpdate.ReferenceNo = calendarEvents.ReferenceNo;
                 calendarEventsUpdate.RepeatYearly = calendarEvents.RepeatYearly;
+                calendarEventsUpdate.IsPublicHoliday = calendarEvents.IsPublicHoliday;
             }
             _context.SaveChanges();
         }
