@@ -1659,7 +1659,7 @@ namespace CityWatch.Data.Providers
                     StartDate = calendarEvents.StartDate,
                     ReferenceNo = calendarEvents.ReferenceNo,
                     RepeatYearly = calendarEvents.RepeatYearly,
-                    IsPublicHoliday= calendarEvents.RepeatYearly,
+                    IsPublicHoliday= calendarEvents.IsPublicHoliday,
                 };
                 _context.BroadcastBannerCalendarEvents.Add(calendarEventsnew);
             }
