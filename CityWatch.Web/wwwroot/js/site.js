@@ -3415,6 +3415,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHrSettings.hide();
         gridLicenseTypes.hide();
         gridCriticalDocument.show();
+        gridCriticalDocument.reload();
         $('#add_hr_settings').hide();
         $('#SettingsDiv').hide();
     }
@@ -3669,32 +3670,17 @@ gridCriticalDocument = $('#tbl_CriticalDocument').grid({
        /* { field: 'clientTypes', title: 'Client Types', width: 100 },*/
         { field: 'clientSites', title: 'Client Sites', width: 170 },
         {
-            field: 'descriptions', title: 'Mandatory HR Documents', width: 180,
-            renderer: function (value, record) {
-                function splitFirstComma(str) {
-                    const index = str.indexOf(',');
-                    if (index === -1) {
-                        return [str, '']; // If there's no comma, return the string and an empty string
-                    }
-                    return [str.substring(0, index), str.substring(index + 1).trim()];
-                }
-                var descriptions = splitFirstComma(record.descriptions);
-                var referenceNos = splitFirstComma(record.referenceNO);
+            field: 'descriptions', title: 'Mandatory HR Documents', width: 230,
+            renderer: function (value, record) {                           
                 var html = '<table>';
-                html += '<tbody>';
-                for (var i = 0; i < descriptions.length; i++) {
-                    var des = descriptions[i];
-                    if (des!='') {
-                        html += '<tr><td style="width: 58px;">' + record.hrGroupName + '</td><td style="width: 40px;">' + referenceNos[i] + '</td><td>' + descriptions[i] + '</td></tr>';
-                    }
-
-                }
+                html += '<tbody>';                
+                html += '<tr><td style="width: 68px;">' + record.hrGroupName + '</td><td style="width: 40px;">' + record.referenceNO + '</td><td>' + record.descriptions + '</td></tr>';
                 html += '</tbody>';
                 html += '</table>';
                 return html;
             }
         },
-        { width: 110, renderer: schButtonRenderer },
+        { width: 80, renderer: schButtonRenderer },
 
     ],
     initialized: function (e) {
