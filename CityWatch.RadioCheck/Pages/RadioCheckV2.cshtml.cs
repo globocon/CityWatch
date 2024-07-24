@@ -23,6 +23,7 @@ using CityWatch.RadioCheck.Helpers;
 using CityWatch.RadioCheck.Services;
 
 using iText.Kernel.Crypto.Securityhandler;
+using System.Net.NetworkInformation;
 
 namespace CityWatch.RadioCheck.Pages.Radio
 {
@@ -187,9 +188,195 @@ namespace CityWatch.RadioCheck.Pages.Radio
         public IActionResult OnGetClientSiteActivityStatus(string clientSiteIds)
         {
             var activeGuardDetails = _guardLogDataProvider.GetActiveGuardDetails();
-            return new JsonResult(activeGuardDetails);
+            var activeGuardDetailModels = activeGuardDetails.Select(detail => new RadioCheckListGuardData
+            {
+                ClientSiteId = detail.ClientSiteId,
+                GuardId = detail.GuardId,
+                SiteName = detail.SiteName,
+                Address = detail.Address,
+                GPS = detail.GPS,
+                GuardName=detail.GuardName,
+                LogBook=detail.LogBook,
+                KeyVehicle=detail.KeyVehicle,
+                IncidentReport=detail.IncidentReport,
+                SmartWands=detail.SmartWands,
+                RcStatus=detail.RcStatus,
+                RcColor=detail.RcColor,
+                Status=detail.Status,
+                RcColorId=detail.RcColorId,
+                OnlySiteName=detail.OnlySiteName,
+                LatestDate=detail.LatestDate,
+                ShowColor=detail.ShowColor,
+                hasmartwand=detail.hasmartwand,
+                HR1= CalculateHr1GroupStatus(detail.GuardId),
+                HR2= CalculateHr2GroupStatus(detail.GuardId),
+                HR3= CalculateHr3GroupStatus(detail.GuardId)
+                // Map other properties as needed
+            }).ToList();
+            return new JsonResult(activeGuardDetailModels);
         }
+        //code added for HR LED Start
+        public string CalculateHr1GroupStatus(int guardId)
+        {
+            var HR1 = "Grey";
+            var hrGroupStatusesNew = LEDStatusForLoginUser(guardId);
 
+            if (hrGroupStatusesNew != null && hrGroupStatusesNew.Count > 0)
+            {
+                var HR1List = hrGroupStatusesNew.Where(x => x.GroupName.Trim() == "HR1 (C4i)").ToList();
+                if (HR1List != null && HR1List.Count > 0)
+                {
+                    if (HR1List.Any(x => x.ColourCodeStatus == "Red"))
+                    {
+                        HR1= "Red";
+                    }
+                    else if (HR1List.Any(x => x.ColourCodeStatus == "Yellow"))
+                    {
+                        HR1= "Yellow";
+                    }
+                    else
+                    {
+                        HR1= "Green";
+                    }
+                }
+            }
+
+            return HR1; 
+        }
+        public string CalculateHr2GroupStatus(int guardId)
+        {
+            var HR2 = "Grey";
+            var hrGroupStatusesNew = LEDStatusForLoginUser(guardId);
+
+            if (hrGroupStatusesNew != null && hrGroupStatusesNew.Count > 0)
+            {
+                var HR2List = hrGroupStatusesNew.Where(x => x.GroupName.Trim() == "HR2 (Client)").ToList();
+                if (HR2List != null && HR2List.Count > 0)
+                {
+                    if (HR2List.Where(x => x.ColourCodeStatus == "Red").ToList().Count > 0)
+                    {
+                        HR2= "Red";
+                    }
+                    else if (HR2List.Where(x => x.ColourCodeStatus == "Yellow").ToList().Count > 0)
+                    {
+                        HR2= "Yellow";
+                    }
+                    else
+                    {
+                        HR2= "Green";
+                    }
+                }
+            }
+
+            return HR2; 
+        }
+        public string CalculateHr3GroupStatus(int guardId)
+        {
+            var HR3 = "Grey";
+            var hrGroupStatusesNew = LEDStatusForLoginUser(guardId);
+
+            if (hrGroupStatusesNew != null && hrGroupStatusesNew.Count > 0)
+            {
+                var HR3List = hrGroupStatusesNew.Where(x => x.GroupName.Trim() == "HR3 (Special)").ToList();
+                if (HR3List != null && HR3List.Count > 0)
+                {
+                    if (HR3List.Where(x => x.ColourCodeStatus == "Red").ToList().Count > 0)
+                    {
+                        HR3= "Red";
+                    }
+                    else if (HR3List.Where(x => x.ColourCodeStatus == "Yellow").ToList().Count > 0)
+                    {
+                        HR3= "Yellow";
+                    }
+                    else
+                    {
+                        HR3= "Green";
+                    }
+                }
+            }
+
+            return HR3;
+        }
+        public List<HRGroupStatusNew> LEDStatusForLoginUser(int GuardID)
+        {
+            var MasterGroup = _guardDataProvider.GetHRDescFull();
+            var GuardDocumentDetails = _guardDataProvider.GetGuardLicensesandcompliance(GuardID);
+            var hrGroupStatusesNew = new List<HRGroupStatusNew>();
+
+            foreach (var item in MasterGroup)
+            {
+
+                var TemDescription = item.ReferenceNo + " " + item.Description.Trim();
+                var SelectedGuardDocument = GuardDocumentDetails.Where(x => x.Description == TemDescription).ToList();
+
+
+                if (SelectedGuardDocument.Count > 0)
+                {
+                    hrGroupStatusesNew.Add(new HRGroupStatusNew
+                    {
+
+                        Status = 1,
+                        GroupName = item.GroupName.Trim(),
+                        ColourCodeStatus = GuardledColourCodeGenerator(SelectedGuardDocument)
+
+                    });
+                }
+
+
+            }
+            var Temp = hrGroupStatusesNew;
+
+            return Temp;
+        }
+        public string GuardledColourCodeGenerator(List<GuardComplianceAndLicense> SelectedList)
+        {
+            var today = DateTime.Now;
+            var ColourCode = "Green";
+
+            if (SelectedList.Count > 0)
+            {
+                var SelectDatatype = SelectedList.Where(x => x.DateType == true).ToList();
+                if (SelectDatatype.Count > 0)
+                {
+                    ColourCode = "Green";
+                }
+                else
+                {
+                    if (SelectedList.FirstOrDefault() != null)
+                    {
+                        if (SelectedList.FirstOrDefault().ExpiryDate != null)
+                        {
+                            var ExpiryDate = SelectedList.FirstOrDefault().ExpiryDate;
+                            var timeDifference = ExpiryDate - today;
+
+                            if (ExpiryDate < today)
+                            {
+                                ColourCode = "Red";
+                            }
+                            else if ((ExpiryDate - DateTime.Now).Value.Days < 45)
+                            {
+                                var Date = (ExpiryDate - DateTime.Now).Value.Days;
+                                ColourCode = "Yellow";
+                            }
+                        }
+
+                    }
+
+
+
+                }
+            }
+            return ColourCode;
+        }
+        public class HRGroupStatusNew
+        {
+
+            public int Status { get; set; }
+
+            public string GroupName { get; set; }
+            public string ColourCodeStatus { get; set; }
+        }
+        //code added for HR LED Stop
         public IActionResult OnGetClientSiteInActivityStatus(string clientSiteIds)
         {
             var inActiveGuardDetails = _guardLogDataProvider.GetInActiveGuardDetails();

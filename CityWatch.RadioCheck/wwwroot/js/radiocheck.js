@@ -446,6 +446,42 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             width: '20%',
 
         },
+        {
+            data: 'hR1',
+            width: '3%',
+            className: "text-center",
+           
+            render: function (value, type, data) {
+                if (value == 'Green') return '<i class="fa fa-circle text-success"></i>';
+                if (value == 'Red') return '<i class="fa fa-circle text-danger"></i>';
+                if (value == 'Yellow') return '<i class="fa fa-circle text-warning"></i>';
+                if (value == 'Grey') return '<i class="fa fa-circle text-muted"></i>';
+            }
+        },
+        {
+            data: 'hR2',
+            width: '3%',
+            className: "text-center",
+            
+            render: function (value, type, data) {
+                if (value =='Green') return '<i class="fa fa-circle text-success"></i>';
+                if (value == 'Red') return '<i class="fa fa-circle text-danger"></i>';
+                if (value == 'Yellow') return '<i class="fa fa-circle text-warning"></i>';
+                if (value == 'Grey') return '<i class="fa fa-circle text-muted"></i>';
+            }
+        },
+        {
+            data: 'hR3',
+            width: '3%',
+            className: "text-center",
+            
+            render: function (value, type, data) {
+                if (value == 'Green') return '<i class="fa fa-circle text-success"></i>';
+                if (value == 'Red') return '<i class="fa fa-circle text-danger"></i>';
+                if (value == 'Yellow') return '<i class="fa fa-circle text-warning"></i>';
+                if (value == 'Grey') return '<i class="fa fa-circle text-muted"></i>';
+            }
+        },
         // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- End - 31-01-2024
     ],
 
@@ -3372,6 +3408,42 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             visible: false,
             width: '20%',
 
+        },
+        {
+            data: 'hR1',
+            width: '3%',
+            className: "text-center",
+
+            render: function (value, type, data) {
+                if (value == 'Green') return '<i class="fa fa-circle text-success"></i>';
+                if (value == 'Red') return '<i class="fa fa-circle text-danger"></i>';
+                if (value == 'Yellow') return '<i class="fa fa-circle text-warning"></i>';
+                if (value == 'Grey') return '<i class="fa fa-circle text-muted"></i>';
+            }
+        },
+        {
+            data: 'hR2',
+            width: '3%',
+            className: "text-center",
+
+            render: function (value, type, data) {
+                if (value == 'Green') return '<i class="fa fa-circle text-success"></i>';
+                if (value == 'Red') return '<i class="fa fa-circle text-danger"></i>';
+                if (value == 'Yellow') return '<i class="fa fa-circle text-warning"></i>';
+                if (value == 'Grey') return '<i class="fa fa-circle text-muted"></i>';
+            }
+        },
+        {
+            data: 'hR3',
+            width: '3%',
+            className: "text-center",
+
+            render: function (value, type, data) {
+                if (value == 'Green') return '<i class="fa fa-circle text-success"></i>';
+                if (value == 'Red') return '<i class="fa fa-circle text-danger"></i>';
+                if (value == 'Yellow') return '<i class="fa fa-circle text-warning"></i>';
+                if (value == 'Grey') return '<i class="fa fa-circle text-muted"></i>';
+            }
         },
         // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- End - 31-01-2024
 
