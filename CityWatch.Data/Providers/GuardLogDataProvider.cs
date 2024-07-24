@@ -13,6 +13,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -2451,7 +2452,7 @@ namespace CityWatch.Data.Providers
                                 bool iflogbookentryexist = false;
                                 foreach (var log in checkSiteLogBook)
                                 {
-                                    var checklogbookEntryInSpecificTiming = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == log.Id && (x.EventDateTime >= dateTime && x.EventDateTime <= dateendTime)).ToList();
+                                    var checklogbookEntryInSpecificTiming = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == log.Id && x.EventType != (int)GuardLogEventType.NoGuardLogin && (x.EventDateTime >= dateTime && x.EventDateTime <= dateendTime)).ToList();
                                     if (checklogbookEntryInSpecificTiming.Count != 0)
                                     {
                                         iflogbookentryexist = true;
@@ -2482,6 +2483,9 @@ namespace CityWatch.Data.Providers
                                             };
                                             _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
                                             _context.SaveChanges();
+
+                                            CreateLogBookStampForNoGuard(manning.ClientSiteKpiSetting.ClientSiteId, dateTime, dateendTime);
+
                                         }
                                     }
                                 }
@@ -2512,7 +2516,32 @@ namespace CityWatch.Data.Providers
             }
         }
 
-
+        public void CreateLogBookStampForNoGuard(int ClientSiteID,DateTime dateTime, DateTime dateendTime)
+        {
+            /* Check if NoGuardLogin event type exists in the logbook for the date if not create entry */           
+            var logbookdate = DateTime.Today;
+            var logbooktype = LogBookType.DailyGuardLog;
+            var logBookId = GetClientSiteLogBookIdByLogBookMaxID(ClientSiteID, logbooktype, out logbookdate);            
+            var checklogbookEntry = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == logBookId && x.EventType == (int)GuardLogEventType.NoGuardLogin).ToList();
+            if (checklogbookEntry.Count < 1 )
+            {
+                var guardLog = new GuardLog()
+                {
+                    ClientSiteLogBookId = logBookId,
+                    EventDateTime = DateTime.Now,
+                    Notes = "No Guard on Duty",
+                    EventType = (int)GuardLogEventType.NoGuardLogin,
+                    IsSystemEntry = true,
+                    EventDateTimeLocal = TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
+                    EventDateTimeLocalWithOffset = TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
+                    EventDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
+                    EventDateTimeZoneShort = TimeZoneHelper.GetCurrentTimeZoneShortName(),
+                    EventDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
+                    PlayNotificationSound = false
+                };
+                SaveGuardLog(guardLog);
+            }            
+        }
 
 
         public void GetGuardManningDetailsForPublicHolidays()
