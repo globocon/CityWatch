@@ -910,9 +910,18 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
+            @{
+                var dlgAttachments = ViewData["DailyGuardLog_Attachments"] as List<string>;
+                var dglAttachmentsCount = dlgAttachments != null ? dlgAttachments.Count : 0;
+                var dglKeys = ViewData["DailyGuardLog_Keys"] as List<ClientSiteKey>;
+                var dglKeysCount = dglKeys != null ? dglKeys.Count : 0;
+                var dglAttachmentRootPath = ViewData["DailyGuardLog_FilesPathRoot"] as string;
+            }
             <div class="modal-body pb-0">
+                
                 <div class="form-row">
                     <div class="col-md-12">
+                        <input type="hidden" id="GuardimagedataId" />
                         <input type="checkbox" id="chbIsAttachmentToRear" checked />
                         <label for="chbIsAttachmentToRear"> Add as attachment to rear (Full Page)</label>
                         <input type="hidden" id="IsAttachmentToRear" />
@@ -923,6 +932,14 @@
                         <input type="checkbox" id="chbIsTwentyfivePercentOfPage" />
                         <label for="chbIsTwentyfivePercentOfPage"> Add within field(25% of the Page) </label>
                         <input type="hidden" id="IsTwentyfivePercentOfPage" />
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-12">
+
+                        <ul id="dgl-attachment-list" class="list-group d-block w-auto pt-2">
+                            <li class="list-group-item"></li>
+                        </ul>
                     </div>
                 </div>
             </div>

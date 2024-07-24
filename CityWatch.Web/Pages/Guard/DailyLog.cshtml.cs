@@ -22,6 +22,54 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Web;
+using CityWatch.Common.Models;
+using CityWatch.Common.Services;
+using CityWatch.Data.Helpers;
+using CityWatch.Data.Models;
+using CityWatch.Data.Providers;
+using CityWatch.Web.Helpers;
+using CityWatch.Web.Models;
+using CityWatch.Web.Services;
+using iText.IO.Image;
+using MailKit.Net.Smtp;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using MimeKit;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using IO = System.IO;
+
+using DocumentFormat.OpenXml.Bibliography;
+
+
+using iText.IO.Font.Constants;
+
+using iText.Kernel.Colors;
+//using iText.Kernel.Geom;
+using iText.Kernel.Pdf;
+using iText.Layout;
+using iText.Layout.Borders;
+using iText.Layout.Element;
+using iText.Layout.Properties;
+using Serilog;
+using static Dropbox.Api.TeamLog.EventCategory;
+using System.Net.Http;
+using static Dropbox.Api.Paper.PaperDocPermissionLevel;
+using System.Reflection;
+using DocumentFormat.OpenXml.Spreadsheet;
+using Microsoft.EntityFrameworkCore.SqlServer.Query.Internal;
 
 namespace CityWatch.Web.Pages.Guard
 {
@@ -37,6 +85,7 @@ namespace CityWatch.Web.Pages.Guard
         private readonly ISiteEventLogDataProvider _SiteEventLogDataProvider;
         private readonly ISmsSenderProvider _smsSenderProvider;
         private readonly IWebHostEnvironment _webHostEnvironment;
+
 
         [BindProperty]
         public GuardLog GuardLog { get; set; }
@@ -113,6 +162,21 @@ namespace CityWatch.Web.Pages.Guard
             var guardLogs = _guardLogDataProvider.GetGuardLogswithKvLogData(logBookId, logBookDate ?? DateTime.Today)
                 .OrderByDescending(z => z.Id)
                 .ThenByDescending(z => z.EventDateTime);
+            foreach(var guardlog in guardLogs)
+            {
+                var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(guardlog.Id);
+                foreach(var guardLogImage in guardlogImages)
+                {
+                    if (guardLogImage.IsRearfile == true)
+                    {
+                        guardlog.Notes=guardlog.Notes + "</br>See attached file <a href =\""+ guardLogImage.ImagePath + "\" target=\"_blank\">" + Path.GetFileName(guardLogImage.ImagePath) +"</a>";
+                    }
+                    if (guardLogImage.IsTwentyfivePercentfile == true)
+                    {
+                        guardlog.Notes = guardlog.Notes + "</br> <a href =\""+ guardLogImage.ImagePath +" \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\"/></a>";
+                    }
+                }
+            }
             return new JsonResult(guardLogs);
         }
 
@@ -862,9 +926,128 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(new { success, message });
         }
 
+        public IActionResult OnGetDailyGuardLog(int id)
+        {
+            
+            if (id != 0)
+            {
+               
+                    
+                    /* Change in Attachement*/
+                    ViewData["DailyGuardLog_Attachments"] = _viewDataService.GetDailyGuardLogAttachments(
+                        IO.Path.Combine(_webHostEnvironment.WebRootPath, "DGlUploads"), id.ToString())
+                        .ToList();
+                    ViewData["DailyGuardLog_FilesPathRoot"] = "/DGlUploads/" + id.ToString();
+                    
+                
+            }
 
+            return new PartialViewResult
+            {
+                ViewName = "_KeyVehicleLogPopup",
+                ViewData = new ViewDataDictionary<GuardLog>(ViewData)
+            };
+        }
+        public JsonResult OnPostRearFileUpload()
+        {
+            var success = false;
+            var files = Request.Form.Files;
+            int id = 0;
+            foreach (string key in Request.Form.Keys)
+            {
+                
+                // Retrieve the value using the key
+                 id = Convert.ToInt32(Request.Form[key]);
+            }
+                if (files.Count == 1)
+            {
+                var file = files[0];
+                if (file.Length > 0)
+                {
+                    try
+                    {
+                        var uploadFileName = Path.GetFileName(file.FileName);
+                        string reportReference = HttpContext.Session.GetString("ReportReference");
+                        var folderPath = Path.Combine(Path.Combine(_webHostEnvironment.WebRootPath, "DglUploads", id.ToString()), "RearFiles");
+                        if (!Directory.Exists(folderPath))
+                            Directory.CreateDirectory(folderPath);
+                        using (var stream = System.IO.File.Create(Path.Combine(folderPath, uploadFileName)))
+                        {
+                            file.CopyTo(stream);
+                        }
+                        //var folderPathnew = Path.Combine(Path.Combine("https://localhost:44356/", "DglUploads", id.ToString()), "RearFiles");
+                        var folderPathnew = Path.Combine(Path.Combine("https://cws-ir.com/", "DglUploads", id.ToString()), "RearFiles");
 
+                        var LogImages = new GuardLogsDocumentImages()
+                        {
+                            GuardLogId = id,
+                            ImagePath = Path.Combine(folderPathnew, uploadFileName),
+                            IsRearfile = true
+                        };
 
+                        _guardLogDataProvider.SaveGuardLogDocumentImages(LogImages);
+                        success = true;
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                }
+            }
+
+            return new JsonResult(new {  success });
+        }
+
+        public JsonResult OnPostTwentyfivePercentFileUpload()
+        {
+            var success = false;
+            var files = Request.Form.Files;
+            int id = 0;
+            foreach (string key in Request.Form.Keys)
+            {
+
+                // Retrieve the value using the key
+                id = Convert.ToInt32(Request.Form[key]);
+            }
+            if (files.Count == 1)
+            {
+                var file = files[0];
+                if (file.Length > 0)
+                {
+                    try
+                    {
+                        var uploadFileName = Path.GetFileName(file.FileName);
+                        string reportReference = HttpContext.Session.GetString("ReportReference");
+                        var folderPath = Path.Combine(Path.Combine(_webHostEnvironment.WebRootPath, "DglUploads", id.ToString()), "TwentyfivePercentFiles");
+                        if (!Directory.Exists(folderPath))
+                            Directory.CreateDirectory(folderPath);
+                        using (var stream = System.IO.File.Create(Path.Combine(folderPath, uploadFileName)))
+                        {
+                            file.CopyTo(stream);
+                        }
+
+                        //var folderPathnew = Path.Combine(Path.Combine("https://localhost:44356/", "DglUploads", id.ToString()), "TwentyfivePercentFiles");
+                        var folderPathnew = Path.Combine(Path.Combine("https://cws-ir.com/", "DglUploads", id.ToString()), "TwentyfivePercentFiles");
+
+                        var LogImages = new GuardLogsDocumentImages()
+                        {
+                            GuardLogId = id,
+                            ImagePath = Path.Combine(folderPathnew, uploadFileName),
+                            IsTwentyfivePercentfile = true
+                        };
+
+                        _guardLogDataProvider.SaveGuardLogDocumentImages(LogImages);
+                        success = true;
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                }
+            }
+
+            return new JsonResult(new {  success });
+        }
     }
 
 
