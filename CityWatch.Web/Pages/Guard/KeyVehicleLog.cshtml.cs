@@ -283,18 +283,21 @@ namespace CityWatch.Web.Pages.Guard
                             KeyVehicleLog.GuardLogin = logbookcl;
                         }
                     }
-
-                    var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                    if (KeyVehicleLog.GuardLoginId == HttpContext.Session.GetInt32("GuardLoginId"))
                     {
-                        ClientSiteId = KeyVehicleLog.GuardLogin.ClientSiteId,
-                        GuardId = KeyVehicleLog.GuardLogin.GuardId,
-                        LastKVCreatedTime = DateTime.Now,
-                        KVId = KeyVehicleLog.Id,
-                        ActivityType = "KV",
-                        ActivityDescription="Edit KV"
-                    };
+                        var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                        {
+                            ClientSiteId = KeyVehicleLog.GuardLogin.ClientSiteId,
+                            GuardId = KeyVehicleLog.GuardLogin.GuardId,
+                            LastKVCreatedTime = DateTime.Now,
+                            KVId = KeyVehicleLog.Id,
+                            ActivityType = "KV",
+                            ActivityDescription = "Edit KV"
+                        };
 
-                    _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
+                        _guardLogDataProvider.SaveRadioChecklistEntry(clientsiteRadioCheck);
+
+                    }
                 }
                 //logBookId entry for radio checklist-end
 
