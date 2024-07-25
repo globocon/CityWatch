@@ -949,11 +949,14 @@ $(function () {
 
         /*to get the control room notification - end*/
 
-        var $editBtn = $('<button class="btn btn-outline-primary mr-2" data-id="' + record.id + '"><i class="fa fa-pencil mr-2"></i>Edit</button>'),
+        var $editBtn = $('<button class="btn btn-outline-primary mr-1 p-1" data-id="' + record.id + '"><i class="fa fa-pencil mr-2"></i>Edit</button>'),
+            //p6-102 Add Photo -start
+            $imageBtn = $('<button class="btn btn-outline-primary p-1" data-id="' + record.id + '"><i class="fa fa-camera mr-1"></i><i class="fa fa-plus"></i></button>')
+            //p6-102 Add Photo -end
             $deleteBtn = $('<button class="btn btn-outline-danger mt-2" data-id="' + record.id + '"><i class="fa fa-trash mr-2"></i>Delete</button>'),
             $updateBtn = $('<button class="btn btn-outline-success mr-2" data-id="' + record.id + '"><i class="fa fa-check-circle mr-2"></i>Update</button>').hide(),
             $cancelBtn = $('<button class="btn btn-outline-primary mt-2" data-id="' + record.id + '"><i class="fa fa-times-circle mr-2"></i>Cancel</button>').hide();
-
+            
         $editBtn.on('click', function (e) {
             gridGuardLog.edit($(this).data('id'));
             $editBtn.hide();
@@ -982,13 +985,165 @@ $(function () {
             gridGuardLog.removeRow($(this).data('id'));
         });
 
-
-
+        //p6-102 Add Photo -start
+        $imageBtn.on('click', function (e) {
+            $('#dgl-image-modal').modal('show');
+            $('#chbIsTwentyfivePercentOfPage').prop('checked', false);
+            $('#GuardimagedataId').val($(this).data('id'));
+            $('#chbIsAttachmentToRear').prop('checked', true);
+           // loadDlgImagePopup($(this).data('id'), false);
+        });
+        //p6-102 Add Photo -end
         $displayEl.append($editBtn)
+            .append($imageBtn)
             .append($deleteBtn)
             .append($updateBtn)
             .append($cancelBtn);
+            
+
     }
+    //p6-102 Add Photo -start
+    //function loadDlgImagePopup(id, isNewEntry) {
+
+
+    //    $("#kvl-attachment-list").empty();
+    //    for (var attachIndex = 0; attachIndex < result.attachments.length; attachIndex++) {
+    //        const file = result.attachments[attachIndex];
+    //        const attachment_id = 'attach_' + attachIndex;
+    //        const li = document.createElement('li');
+    //        li.id = attachment_id;
+    //        li.className = 'list-group-item';
+    //        li.dataset.index = attachIndex;
+    //        let liText = document.createTextNode(file);
+    //        const icon = document.createElement("i");
+    //        icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-kvl-attachment';
+    //        icon.title = 'Delete';
+    //        icon.style = 'cursor:pointer';
+    //        li.appendChild(liText);
+    //        li.appendChild(icon);
+    //        const anchorTag = document.createElement("a");
+    //        anchorTag.href = '/KvlUploads/' + $('#VehicleRego').val() + "/" + file;
+    //        anchorTag.target = "_blank";
+    //        const icon2 = document.createElement("i");
+    //        icon2.className = 'fa fa-download ml-2 text-primary';
+    //        icon2.title = 'Download';
+    //        icon2.style = 'cursor:pointer';
+    //        anchorTag.appendChild(icon2);
+    //        li.appendChild(anchorTag);
+    //        document.getElementById('kvl-attachment-list').append(li);
+
+
+
+    //    }
+
+    //}
+    $('#chbIsAttachmentToRear').on('change', function () {
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+
+            $('#IsTwentyfivePercentOfPage').val(false);
+            $('#chbIsTwentyfivePercentOfPage').prop('checked', false)
+            
+
+        }
+
+        $('#IsAttachmentToRear').val(isChecked);
+
+    });
+    $('#chbIsTwentyfivePercentOfPage').on('change', function () {
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+
+            $('#IsAttachmentToRear').val(false);
+            $('#chbIsAttachmentToRear').prop('checked', false)
+        
+
+        }
+        $('#IsTwentyfivePercentOfPage').val(isChecked);
+
+    });
+    $('#IsAttachmentToRear').val(true);
+    $('#btnIsRearOrTwentyfivePercent').on('click', function () {
+        
+
+        $('#IsRearOrTwentyfivePercentfileInput').click();
+
+
+
+
+    });
+    $('#IsRearOrTwentyfivePercentfileInput').on('change', function () {
+
+        const file = $(this).get(0).files.item(0);
+        
+            
+        if ($('#IsAttachmentToRear').val() === 'true') {
+            const fileForm = new FormData();
+            fileForm.append('file', file);
+            fileForm.append('logId', $('#GuardimagedataId').val());
+            fileForm.append('url', window.location.origin);
+
+
+
+
+            $.ajax({
+                url: '/Guard/DailyLog?handler=RearFileUpload',
+                type: 'POST',
+                data: fileForm,
+                processData: false,
+                contentType: false,
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+            }).done(function (data) {
+
+                if (data.success) {
+                    $('#dgl-image-modal').modal('hide');
+                    gridGuardLog.clear();
+                    gridGuardLog.reload();
+                }
+
+
+            }).fail(function () {
+              //  showStatusNotification(false, 'Something went wrong');
+            }).always(function () {
+
+            });
+
+        }
+        if ($('#IsTwentyfivePercentOfPage').val() === 'true') {
+            const fileForm = new FormData();
+            fileForm.append('file', file);
+            fileForm.append('logId', $('#GuardimagedataId').val());
+            fileForm.append('url', window.location.origin);
+
+
+
+
+            $.ajax({
+                url: '/Guard/DailyLog?handler=TwentyfivePercentFileUpload',
+                type: 'POST',
+                data:fileForm,
+                processData: false,
+                contentType: false,
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+            }).done(function (data) {
+
+                if (data.success) {
+
+                    $('#dgl-image-modal').modal('hide');
+                    gridGuardLog.clear();
+                    gridGuardLog.reload();
+                }
+
+
+            }).fail(function () {
+                showStatusNotification(false, 'Something went wrong');
+            }).always(function () {
+
+            });
+        }
+        
+    });
+    //p6-102 Add Photo -end
     /*to display the popup to acknowledge the message-start*/
     $('#guard_daily_log tbody').on('click', '#btnAcknowledgeButton', function (value, record) {
         /*timer pause while editing*/

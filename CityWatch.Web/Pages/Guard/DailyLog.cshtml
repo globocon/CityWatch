@@ -898,7 +898,58 @@
         </div>
     </div>
 </div>
+<div class="modal" tabindex="-1" role="dialog" id="dgl-image-modal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
 
+                <h5 class="modal-title col-md-8"><i class="fa fa-camera mr-1"></i><i class="fa fa-plus"></i>Add Image into LB</h5>
+                @*<h5 style="color:red; text-align:right" class="col-md-6 ml-5" id="titlePOIWarning" hidden>POI Warning</h5>
+                <i id="imagesiren" hidden><img  id="img1" src="~/images/ziren.png" height="25px;" /></i>*@
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            @{
+                var dlgAttachments = ViewData["DailyGuardLog_Attachments"] as List<string>;
+                var dglAttachmentsCount = dlgAttachments != null ? dlgAttachments.Count : 0;
+                var dglKeys = ViewData["DailyGuardLog_Keys"] as List<ClientSiteKey>;
+                var dglKeysCount = dglKeys != null ? dglKeys.Count : 0;
+                var dglAttachmentRootPath = ViewData["DailyGuardLog_FilesPathRoot"] as string;
+            }
+            <div class="modal-body pb-0">
+                
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <input type="hidden" id="GuardimagedataId" />
+                        <input type="checkbox" id="chbIsAttachmentToRear" checked />
+                        <label for="chbIsAttachmentToRear"> Add as attachment to rear (Full Page)</label>
+                        <input type="hidden" id="IsAttachmentToRear" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <input type="checkbox" id="chbIsTwentyfivePercentOfPage" />
+                        <label for="chbIsTwentyfivePercentOfPage"> Add within field(25% of the Page) </label>
+                        <input type="hidden" id="IsTwentyfivePercentOfPage" />
+                    </div>
+                </div>
+              @*  <div class="row mt-2">
+                    <div class="col-md-12">
+
+                        <ul id="dgl-attachment-list" class="list-group d-block w-auto pt-2">
+                            <li class="list-group-item"></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>*@
+            <div class="modal-footer justify-content-between">
+                <button class="btn btn-primary " id="btnIsRearOrTwentyfivePercent"><i class="fa fa-plus"></i>Add</button>
+                <input type="file" id="IsRearOrTwentyfivePercentfileInput" style="display: none;" accept=".jpg, .jpeg, .bmp, .gif" multiple hidden>
+            </div>
+        </div>
+    </div>
+</div>
 @Html.AntiForgeryToken()
 @section PageHeader {
     <h3 class="text-center">LOGBOOK PORTAL</h3>

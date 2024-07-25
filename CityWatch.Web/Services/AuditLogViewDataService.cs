@@ -3,7 +3,9 @@ using CityWatch.Data.Providers;
 using CityWatch.Web.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
 
 namespace CityWatch.Web.Services
 {
@@ -33,6 +35,23 @@ namespace CityWatch.Web.Services
             var dailyGuardLogs = new List<GuardLogViewModel>();
             foreach (var group in dailyGuardLogGroups)
             {
+                //p6-102 add photo-start
+                foreach (var guardlog in group)
+                {
+                    var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(guardlog.Id);
+                    foreach (var guardLogImage in guardlogImages)
+                    {
+                        if (guardLogImage.IsRearfile == true)
+                        {
+                            guardlog.Notes = guardlog.Notes + "</br>See attached file <a href =\"" + guardLogImage.ImagePath + "\" target=\"_blank\">" + Path.GetFileName(guardLogImage.ImagePath) + "</a>";
+                        }
+                        if (guardLogImage.IsTwentyfivePercentfile == true)
+                        {
+                            guardlog.Notes = guardlog.Notes + "</br> <a href =\"" + guardLogImage.ImagePath + " \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\"/></a>";
+                        }
+                    }
+                }
+                //p6-102 add photo-end
                 var patrolCarLogs = patrolCarLogGroups.Where(z => z.ClientSiteLogBookId == group.Key);
                 if (patrolCarLogs.Any())
                 {

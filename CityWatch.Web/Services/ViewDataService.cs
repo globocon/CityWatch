@@ -141,6 +141,7 @@ namespace CityWatch.Web.Services
         //p1-202 site allocation-end
 
         List<FileDownloadAuditLogs> GetFileDownloadAuditLogs(DateTime logFromDate, DateTime logToDate);
+        IEnumerable<string> GetDailyGuardLogAttachments(string uploadsDir, string reportReference);
 
     }
 
@@ -1481,6 +1482,22 @@ namespace CityWatch.Web.Services
         public List<FileDownloadAuditLogs> GetFileDownloadAuditLogs(DateTime logFromDate, DateTime logToDate)
         {
             return _guardLogDataProvider.GetFileDownloadAuditLogsData(logFromDate, logToDate);
+        }
+        public IEnumerable<string> GetDailyGuardLogAttachments(string uploadsDir, string reportReference)
+        {
+            if (!string.IsNullOrEmpty(reportReference))
+            {
+                var folderPath = Path.Combine(uploadsDir, reportReference);
+                if (Directory.Exists(folderPath))
+                {
+                    var files = Directory.GetFiles(folderPath);
+                    if (files.Any())
+                    {
+                        return files.Select(z => Path.GetFileName(z));
+                    }
+                }
+            }
+            return Enumerable.Empty<string>();
         }
     }
 }

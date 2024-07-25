@@ -20,8 +20,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Reflection.Metadata.Ecma335;
 using System.Xml.Linq;
+using static Dropbox.Api.Files.WriteMode;
 using static Dropbox.Api.Team.GroupSelector;
 using static Dropbox.Api.TeamLog.EventCategory;
 using static Dropbox.Api.TeamLog.TimeUnit;
@@ -290,6 +292,10 @@ namespace CityWatch.Data.Providers
         List<FileDownloadAuditLogs> GetFileDownloadAuditLogsData(DateTime logFromDate, DateTime logToDate);
 
         void CreateDownloadFileAuditLogEntry(FileDownloadAuditLogs fdal);
+        void SaveGuardLogDocumentImages(GuardLogsDocumentImages guardLogDocumentImages);
+
+
+        List<GuardLogsDocumentImages> GetGuardLogDocumentImaes(int LogId);
 
         void GetGuardManningDetailsForPublicHolidays();
 
@@ -5011,8 +5017,44 @@ namespace CityWatch.Data.Providers
 
             return returnData;
         }
+        //p6-102 Add Photo -start
+        public void SaveGuardLogDocumentImages(GuardLogsDocumentImages guardLogDocumentImages)
+        {
+            if (guardLogDocumentImages.Id == 0)
+            {
+                _context.GuardLogsDocumentImages.Add(new GuardLogsDocumentImages()
+                {
+                    ImagePath = guardLogDocumentImages.ImagePath,
+                    IsRearfile = guardLogDocumentImages.IsRearfile,
+                    IsTwentyfivePercentfile = guardLogDocumentImages.IsTwentyfivePercentfile,
+                    GuardLogId = guardLogDocumentImages.GuardLogId
+
+                });
+            }
+            //else
+            //{
+            //    var guardLogToUpdate = _context.GuardLogsDocumentImages.SingleOrDefault(x => x.Id == guardLogDocumentImages.Id);
+            //    if (guardLogToUpdate == null)
+            //        throw new InvalidOperationException();
+
+            //    guardLogToUpdate.Notes = guardLogDocumentImages.Notes;
+            //}
+            _context.SaveChanges();
+        }
+        public List<GuardLogsDocumentImages> GetGuardLogDocumentImaes(int LogId)
+        {
+            var result = new List<GuardLogsDocumentImages>();
+           result = _context.GuardLogsDocumentImages
+                          .Where(z => z.GuardLogId==LogId)
+                          .OrderBy(z => z.ImagePath)
+                          .ToList();
+
+                    
+            return result;
+        }
 
 
+        //p6-102 Add Photo -end
     }
 
 }
