@@ -949,13 +949,14 @@ $(function () {
 
         /*to get the control room notification - end*/
 
-        var $editBtn = $('<button class="btn btn-outline-primary mr-2" data-id="' + record.id + '"><i class="fa fa-pencil mr-2"></i>Edit</button>'),
+        var $editBtn = $('<button class="btn btn-outline-primary mr-1 p-1" data-id="' + record.id + '"><i class="fa fa-pencil mr-2"></i>Edit</button>'),
+            //p6-102 Add Photo -start
+            $imageBtn = $('<button class="btn btn-outline-primary p-1" data-id="' + record.id + '"><i class="fa fa-camera mr-1"></i><i class="fa fa-plus"></i></button>')
+            //p6-102 Add Photo -end
             $deleteBtn = $('<button class="btn btn-outline-danger mt-2" data-id="' + record.id + '"><i class="fa fa-trash mr-2"></i>Delete</button>'),
             $updateBtn = $('<button class="btn btn-outline-success mr-2" data-id="' + record.id + '"><i class="fa fa-check-circle mr-2"></i>Update</button>').hide(),
             $cancelBtn = $('<button class="btn btn-outline-primary mt-2" data-id="' + record.id + '"><i class="fa fa-times-circle mr-2"></i>Cancel</button>').hide();
-            //p6-102 Add Photo -start
-        $imageBtn = $('<button class="btn btn-outline-primary mt-2" data-id="' + record.id + '"><i class="fa fa-camera mr-1"></i><i class="fa fa-plus"></i></button>')
-            //p6-102 Add Photo -end
+            
         $editBtn.on('click', function (e) {
             gridGuardLog.edit($(this).data('id'));
             $editBtn.hide();
@@ -994,10 +995,11 @@ $(function () {
         });
         //p6-102 Add Photo -end
         $displayEl.append($editBtn)
+            .append($imageBtn)
             .append($deleteBtn)
             .append($updateBtn)
-            .append($cancelBtn)
-            .append($imageBtn);
+            .append($cancelBtn);
+            
 
     }
     //p6-102 Add Photo -start
@@ -1079,7 +1081,7 @@ $(function () {
             const fileForm = new FormData();
             fileForm.append('file', file);
             fileForm.append('logId', $('#GuardimagedataId').val());
-
+            fileForm.append('url', window.location.origin);
 
 
 
@@ -1111,7 +1113,7 @@ $(function () {
             const fileForm = new FormData();
             fileForm.append('file', file);
             fileForm.append('logId', $('#GuardimagedataId').val());
-
+            fileForm.append('url', window.location.origin);
 
 
 

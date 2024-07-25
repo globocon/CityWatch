@@ -953,11 +953,21 @@ namespace CityWatch.Web.Pages.Guard
             var success = false;
             var files = Request.Form.Files;
             int id = 0;
+            string url = string.Empty;
             foreach (string key in Request.Form.Keys)
             {
-                
+
                 // Retrieve the value using the key
-                 id = Convert.ToInt32(Request.Form[key]);
+                bool isNumeric1 = int.TryParse(Request.Form[key], out _);
+                if (isNumeric1)
+                {
+                    id = Convert.ToInt32(Request.Form[key]);
+                }
+                else
+                {
+                    url = Request.Form[key].ToString();
+                }
+                
             }
                 if (files.Count == 1)
             {
@@ -976,7 +986,7 @@ namespace CityWatch.Web.Pages.Guard
                             file.CopyTo(stream);
                         }
                         //var folderPathnew = Path.Combine(Path.Combine("https://localhost:44356/", "DglUploads", id.ToString()), "RearFiles");
-                        var folderPathnew = Path.Combine(Path.Combine("https://cws-ir.com/", "DglUploads", id.ToString()), "RearFiles");
+                        var folderPathnew = Path.Combine(Path.Combine(url+"/", "DglUploads", id.ToString()), "RearFiles");
 
                         var LogImages = new GuardLogsDocumentImages()
                         {
@@ -1003,11 +1013,19 @@ namespace CityWatch.Web.Pages.Guard
             var success = false;
             var files = Request.Form.Files;
             int id = 0;
+            string url = string.Empty;
             foreach (string key in Request.Form.Keys)
             {
 
-                // Retrieve the value using the key
-                id = Convert.ToInt32(Request.Form[key]);
+                bool isNumeric1 = int.TryParse(Request.Form[key], out _);
+                if (isNumeric1)
+                {
+                    id = Convert.ToInt32(Request.Form[key]);
+                }
+                else
+                {
+                    url = Request.Form[key].ToString();
+                }
             }
             if (files.Count == 1)
             {
@@ -1027,7 +1045,7 @@ namespace CityWatch.Web.Pages.Guard
                         }
 
                         //var folderPathnew = Path.Combine(Path.Combine("https://localhost:44356/", "DglUploads", id.ToString()), "TwentyfivePercentFiles");
-                        var folderPathnew = Path.Combine(Path.Combine("https://cws-ir.com/", "DglUploads", id.ToString()), "TwentyfivePercentFiles");
+                        var folderPathnew = Path.Combine(Path.Combine(url+ "/", "DglUploads", id.ToString()), "TwentyfivePercentFiles");
 
                         var LogImages = new GuardLogsDocumentImages()
                         {
