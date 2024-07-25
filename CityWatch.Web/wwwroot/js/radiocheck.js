@@ -2179,6 +2179,10 @@ $('#btnAddGuardLicenseKey').on('click', function () {
     resetGuardLicenseandComplianceAddModal();
     const messageHtml2 = '';
     $('#schRunStatusNew').html(messageHtml2);
+    $("#ComplianceHiddenDiv").css({
+        "pointer-events": "",
+        "opacity": ""
+    }).removeAttr("disabled");
     $('#addGuardCompliancesLicenseModal').modal('show');
 });
 function resetGuardLicenseandComplianceAddModal() {
@@ -2500,6 +2504,10 @@ $('#btn_save_guard_compliancelicenseKey').on('click', function () {
 
 $('#tbl_guard_licensesAndComplianceKey tbody').on('click', 'button[name=btn_edit_guard_licenseAndCompliance]', function () {
     resetGuardLicenseandComplianceAddModal();
+    $("#ComplianceHiddenDiv").css({
+        "pointer-events": "none",
+        "opacity": "0.5"
+    }).attr("disabled", "disabled");
     var data = gridGuardLicensesAndLicenceKey.row($(this).parents('tr')).data();
 
     if (data.expiryDate) {

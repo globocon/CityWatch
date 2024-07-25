@@ -677,10 +677,15 @@ namespace CityWatch.Data.Providers
         public List<SelectListItem> GetDescList(int HRGroupId)
         {
             var Group = new List<SelectListItem>();
+            var descriptions = _context.HrSettings.Include(z => z.HRGroups)
+       .Include(z => z.ReferenceNoNumbers)
+       .Include(z => z.ReferenceNoAlphabets)
+       .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
+       ThenBy(x => x.ReferenceNoAlphabets.Name).Where(z => z.HRGroups.Id == HRGroupId).ToList();
             var mapping = _context.HrSettings.Where(x => x.HRGroupId == HRGroupId).ToList();
-            foreach (var item in mapping)
+            foreach (var item in descriptions)
             {
-                Group.Add(new SelectListItem(item.Description, item.Id.ToString()));
+                Group.Add(new SelectListItem(item.ReferenceNo+ "&nbsp;&nbsp;&nbsp;&nbsp;" +  item.Description, item.Id.ToString()));
 
             }
             return Group;
@@ -725,22 +730,9 @@ namespace CityWatch.Data.Providers
         }
         public List<CriticalDocuments> GetCriticalDocs()
         {
-            var sss1 = _context.CriticalDocuments
-    .Include(z => z.CriticalDocumentsClientSites)
-        .ThenInclude(y => y.ClientSite)
-            .ThenInclude(cs => cs.ClientType)
-    .Include(z => z.CriticalDocumentDescriptions)
-            .ThenInclude(y => y.HRSettings)
-     .ThenInclude(z => z.HRGroups)
-     .Include(z => z.CriticalDocumentDescriptions)
-    .ThenInclude(y => y.HRSettings)
-        .ThenInclude(z => z.ReferenceNoNumbers)
-         .Include(z => z.CriticalDocumentDescriptions)
-    .ThenInclude(y => y.HRSettings)
-     .ThenInclude(z => z.ReferenceNoAlphabets)
-    .ToList();
+            
 
-            return _context.CriticalDocuments
+            var document1= _context.CriticalDocuments
     .Include(z => z.CriticalDocumentsClientSites)
         .ThenInclude(y => y.ClientSite)
             .ThenInclude(cs => cs.ClientType)
@@ -753,7 +745,25 @@ namespace CityWatch.Data.Providers
          .Include(z => z.CriticalDocumentDescriptions)
     .ThenInclude(y => y.HRSettings)
      .ThenInclude(z => z.ReferenceNoAlphabets)
+     .Select(d => new
+     {
+         CriticalDocument = d,
+         SortedDescriptions = d.CriticalDocumentDescriptions
+            .Where(desc => desc.HRSettings != null && desc.HRSettings.ReferenceNoNumbers != null && desc.HRSettings.ReferenceNoAlphabets != null)
+            .OrderBy(desc => desc.HRSettings.ReferenceNoNumbers)
+            .ThenBy(d => d.HRSettings.ReferenceNoAlphabets)
+            .ToList()
+     })
     .ToList();
+            var sortedDocuments = document1.Select(doc =>
+            {
+                var criticalDocument = doc.CriticalDocument;
+                criticalDocument.CriticalDocumentDescriptions = doc.SortedDescriptions;
+                return criticalDocument;
+            }).ToList();
+
+            return sortedDocuments;
+
 
         }
         public CriticalDocuments GetCriticalDocById(int CriticalID)
@@ -772,8 +782,8 @@ namespace CityWatch.Data.Providers
    .ThenInclude(y => y.HRSettings)
     .ThenInclude(z => z.ReferenceNoAlphabets)
   .SingleOrDefault(x => x.Id == CriticalID);
-
-            return _context.CriticalDocuments
+           
+            var document= _context.CriticalDocuments
    .Include(z => z.CriticalDocumentsClientSites)
        .ThenInclude(y => y.ClientSite)
            .ThenInclude(cs => cs.ClientType)
@@ -786,7 +796,25 @@ namespace CityWatch.Data.Providers
         .Include(z => z.CriticalDocumentDescriptions)
    .ThenInclude(y => y.HRSettings)
     .ThenInclude(z => z.ReferenceNoAlphabets)
-  .SingleOrDefault(x => x.Id == CriticalID);
+  .Where(x => x.Id == CriticalID)
+    .Select(d => new
+    {
+        CriticalDocument = d,
+        SortedDescriptions = d.CriticalDocumentDescriptions
+            .Where(desc => desc.HRSettings != null && desc.HRSettings.ReferenceNoNumbers != null && desc.HRSettings.ReferenceNoAlphabets != null)
+            .OrderBy(desc => desc.HRSettings.ReferenceNoNumbers)
+            .ThenBy(d => d.HRSettings.ReferenceNoAlphabets)
+            .ToList()
+    })
+    .SingleOrDefault();
+
+            if (document != null)
+            {
+                document.CriticalDocument.CriticalDocumentDescriptions = document.SortedDescriptions;
+                return document.CriticalDocument;
+            }
+
+            return null;
         }
 
 

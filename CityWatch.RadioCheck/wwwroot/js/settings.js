@@ -290,6 +290,7 @@ gridBroadCastBannerCalendarEvents = $('#BroadCastBannerCalendarEvents').grid({
         { width: 160, field: 'formattedStartDate', title: 'Start', type: 'date', format: 'dd-mmm-yyyy', editor: true },
         { width: 160, field: 'formattedExpiryDate', title: 'Expiry', type: 'date', format: 'dd-mmm-yyyy', editor: true },
         { width: 100, field: 'repeatYearly', title: 'Repeat', type: 'checkbox', align: 'center', editor: true },
+        { width: 100, field: 'isPublicHoliday', title: 'PH', type: 'checkbox', align: 'center', editor: true },
     ],
     initialized: function (e) {
         $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');

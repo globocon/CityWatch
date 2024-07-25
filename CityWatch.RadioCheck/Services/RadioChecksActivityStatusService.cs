@@ -217,6 +217,7 @@ namespace CityWatch.RadioCheck.Services
             /* Insert the message */
             /* if any gurad login remove the message */
             _guardLogDataProvider.GetGuardManningDetails(DateTime.Now.DayOfWeek);
+            _guardLogDataProvider.GetGuardManningDetailsForPublicHolidays();
         }
 
         public void Process3()

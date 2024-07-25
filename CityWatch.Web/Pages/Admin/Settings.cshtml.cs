@@ -1190,22 +1190,21 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { success, message });
         }
-        public JsonResult OnGetCriticalDocumentList(int type, string searchTerm)
+        public JsonResult OnGetCriticalDocumentList()
         {
             int GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             if (GuardId == 0)
             {
-                var ddd = _configDataProvider.GetCriticalDocs()
-                    .Select(z => CriticalDocumentViewModel.FromDataModel(z));
-                return new JsonResult(_configDataProvider.GetCriticalDocs()
-                    .Select(z => CriticalDocumentViewModel.FromDataModel(z)));
+                var crdoclist = _configDataProvider.GetCriticalDocs();
+                var crdoclist2 = crdoclist.Select(z => CriticalDocumentViewModel.FromDataModelForDisplay(z));
+                return new JsonResult(crdoclist2);
 
 
             }
             else
             {
                 return new JsonResult(_configDataProvider.GetCriticalDocs()
-                   .Select(z => CriticalDocumentViewModel.FromDataModel(z)));
+                   .Select(z => CriticalDocumentViewModel.FromDataModelForDisplay(z)));
                 //return new JsonResult(_kpiSchedulesDataProvider.GetAllSendSchedulesUisngGuardId(GuardId)
                 //   .Select(z => KpiSendScheduleViewModel.FromDataModel(z))
                 //   .Where(z => z.CoverSheetType == (CoverSheetType)type && (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))

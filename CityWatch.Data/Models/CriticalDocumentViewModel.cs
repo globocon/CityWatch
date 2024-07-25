@@ -86,5 +86,21 @@ namespace CityWatch.Data.Models
             };
         }
 
+        public static CriticalDocumentViewModel FromDataModelForDisplay(CriticalDocuments dataModel)
+        {
+            return new CriticalDocumentViewModel()
+            {
+                Id = dataModel.Id,
+                ClientSiteIds = dataModel.CriticalDocumentsClientSites.Select(z => z.ClientSiteId).ToArray(),
+                ClientTypes = string.Join(",\n", dataModel.CriticalDocumentsClientSites.Select(z => z.ClientSite.ClientType.Name.Replace("\n", "").Trim()).Distinct()),
+                ClientSites = string.Join(",\n", dataModel.CriticalDocumentsClientSites.Select(z => z.ClientSite.Name.Replace("\n", "").Trim()).Distinct()),
+                Descriptions = string.Join(",\n", dataModel.CriticalDocumentDescriptions.Select(z => z.HRSettings.Description.Replace("\n", "").Trim()).Distinct()),
+                HRGroupName = string.Join(",\n", dataModel.CriticalDocumentDescriptions.Select(z => z.HRSettings.HRGroups.Name.Replace("\n", "").Trim()).Distinct()),
+                ReferenceNO = string.Join(",\n", dataModel.CriticalDocumentDescriptions.Select(z => z.HRSettings.ReferenceNo.Replace("\n","").Trim()).Distinct()),
+                GroupName = dataModel.GroupName,
+                IsCriticalDocumentDownselect = dataModel.IsCriticalDocumentDownselect
+            };
+        }
+
     }
 }

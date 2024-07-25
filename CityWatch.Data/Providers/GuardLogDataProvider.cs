@@ -13,6 +13,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -293,7 +294,12 @@ namespace CityWatch.Data.Providers
         void CreateDownloadFileAuditLogEntry(FileDownloadAuditLogs fdal);
         void SaveGuardLogDocumentImages(GuardLogsDocumentImages guardLogDocumentImages);
 
+
         List<GuardLogsDocumentImages> GetGuardLogDocumentImaes(int LogId);
+
+        void GetGuardManningDetailsForPublicHolidays();
+
+
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -1583,7 +1589,7 @@ namespace CityWatch.Data.Providers
                         ActivityType = clientSiteActivity.ActivityType,
                         OnDuty = clientSiteActivity.OnDuty,
                         OffDuty = clientSiteActivity.OffDuty,
-                        ActivityDescription = "Edited"
+                        ActivityDescription =  clientSiteActivity.ActivityDescription!=string.Empty? clientSiteActivity.ActivityDescription: "Edited"
                     });
 
                 }
@@ -1617,6 +1623,7 @@ namespace CityWatch.Data.Providers
                         KVId = clientSiteActivity.KVId,
                         LBId = clientSiteActivity.LBId,
                         ActivityType = clientSiteActivity.ActivityType,
+                        ActivityDescription= clientSiteActivity.ActivityDescription,
                         OnDuty = clientSiteActivity.OnDuty,
                         OffDuty = clientSiteActivity.OffDuty,
                         GuardLoginTimeLocal = clientSiteActivity.GuardLoginTimeLocal,
@@ -1645,6 +1652,7 @@ namespace CityWatch.Data.Providers
                     clientSiteActivityToUpdate.KVId = clientSiteActivity.KVId;
                     clientSiteActivityToUpdate.LBId = clientSiteActivity.LBId;
                     clientSiteActivityToUpdate.ActivityType = clientSiteActivity.ActivityType;
+                    clientSiteActivityToUpdate.ActivityDescription = clientSiteActivity.ActivityDescription;
                 }
 
                 _context.SaveChanges();
@@ -2431,7 +2439,7 @@ namespace CityWatch.Data.Providers
                 /*IsPHO check if its a public holyday */
                 /*ScheduleisActive activate for particular  Site*/
                 var clientSiteManningKpiSettings = _context.ClientSiteManningKpiSettings.Include(x => x.ClientSiteKpiSetting).
-                    Where(x => x.WeekDay == currentDay && x.Type == "2" && x.IsPHO != 1 && x.ClientSiteKpiSetting.ScheduleisActive==true).ToList();
+                    Where(x => x.WeekDay == currentDay && x.Type == "2" && x.IsPHO != 1 && x.ClientSiteKpiSetting.ScheduleisActive == true).ToList();
                 foreach (var manning in clientSiteManningKpiSettings)
                 {
                     if (manning.EmpHoursStart != null && manning.EmpHoursEnd != null)
@@ -2450,7 +2458,7 @@ namespace CityWatch.Data.Providers
                                 bool iflogbookentryexist = false;
                                 foreach (var log in checkSiteLogBook)
                                 {
-                                    var checklogbookEntryInSpecificTiming = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == log.Id && (x.EventDateTime >= dateTime && x.EventDateTime <= dateendTime)).ToList();
+                                    var checklogbookEntryInSpecificTiming = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == log.Id && x.EventType != (int)GuardLogEventType.NoGuardLogin && (x.EventDateTime >= dateTime && x.EventDateTime <= dateendTime)).ToList();
                                     if (checklogbookEntryInSpecificTiming.Count != 0)
                                     {
                                         iflogbookentryexist = true;
@@ -2481,6 +2489,9 @@ namespace CityWatch.Data.Providers
                                             };
                                             _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
                                             _context.SaveChanges();
+
+                                            CreateLogBookStampForNoGuard(manning.ClientSiteKpiSetting.ClientSiteId, dateTime, dateendTime);
+
                                         }
                                     }
                                 }
@@ -2502,6 +2513,135 @@ namespace CityWatch.Data.Providers
 
                     }
                 }
+
+
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+
+        public void CreateLogBookStampForNoGuard(int ClientSiteID,DateTime dateTime, DateTime dateendTime)
+        {
+            /* Check if NoGuardLogin event type exists in the logbook for the date if not create entry */           
+            var logbookdate = DateTime.Today;
+            var logbooktype = LogBookType.DailyGuardLog;
+            var logBookId = GetClientSiteLogBookIdByLogBookMaxID(ClientSiteID, logbooktype, out logbookdate);            
+            var checklogbookEntry = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == logBookId && x.EventType == (int)GuardLogEventType.NoGuardLogin).ToList();
+            if (checklogbookEntry.Count < 1 )
+            {
+                var guardLog = new GuardLog()
+                {
+                    ClientSiteLogBookId = logBookId,
+                    EventDateTime = DateTime.Now,
+                    Notes = "No Guard on Duty",
+                    EventType = (int)GuardLogEventType.NoGuardLogin,
+                    IsSystemEntry = true,
+                    EventDateTimeLocal = TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
+                    EventDateTimeLocalWithOffset = TimeZoneHelper.GetCurrentTimeZoneCurrentTimeWithOffset(),
+                    EventDateTimeZone = TimeZoneHelper.GetCurrentTimeZone(),
+                    EventDateTimeZoneShort = TimeZoneHelper.GetCurrentTimeZoneShortName(),
+                    EventDateTimeUtcOffsetMinute = TimeZoneHelper.GetCurrentTimeZoneOffsetMinute(),
+                    PlayNotificationSound = false
+                };
+                SaveGuardLog(guardLog);
+            }            
+        }
+
+
+        public void GetGuardManningDetailsForPublicHolidays()
+        {
+            try
+            {
+                //Check today is a public Holiday
+
+                var IftodayIsAPublicHolday = _context.BroadcastBannerCalendarEvents.Where(x => x.IsPublicHoliday == true && x.StartDate.Date == DateTime.Today.Date).ToList();
+
+
+                if (IftodayIsAPublicHolday.Count != 0 && IftodayIsAPublicHolday != null)
+                {
+                    /* get the manning details for public holdday*/
+                    /* type 2 for avoid petrol car*/
+                    /*IsPHO check if its a public holyday */
+                    /*ScheduleisActive activate for particular  Site*/
+                    var clientSiteManningKpiSettings = _context.ClientSiteManningKpiSettings.Include(x => x.ClientSiteKpiSetting).
+                        Where(x => x.Type == "2" && x.IsPHO == 1 && x.EmpHoursStart !=null && x.EmpHoursEnd!=null && x.ClientSiteKpiSetting.ScheduleisActive == true).ToList();
+                    foreach (var manning in clientSiteManningKpiSettings)
+                    {
+                        if (manning.EmpHoursStart != null && manning.EmpHoursEnd != null)
+                        {
+                            /* Check the number of logins in Rc status */
+                            var numberOfLogin = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == null).Count() == 0;
+                            if (numberOfLogin)
+                            {
+                                /* No login found */
+                                /* find the emp Hours  Start time -5 (ie show notification 5 min before the guard login in the site) */
+                                var dateTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None).AddMinutes(-5);
+                                var dateendTime = DateTime.ParseExact(manning.EmpHoursEnd, "H:mm", null, System.Globalization.DateTimeStyles.None).AddMinutes(1);
+                                if (DateTime.Now >= dateTime && DateTime.Now <= dateendTime)
+                                {
+                                    /* Check if anylogbook entery exits in that timing */
+                                    var checkSiteLogBook = _context.ClientSiteLogBooks.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.Date == DateTime.Now.Date).ToList();
+                                    bool iflogbookentryexist = false;
+                                    foreach (var log in checkSiteLogBook)
+                                    {
+                                        var checklogbookEntryInSpecificTiming = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == log.Id && (x.EventDateTime >= dateTime && x.EventDateTime <= dateendTime)).ToList();
+                                        if (checklogbookEntryInSpecificTiming.Count != 0)
+                                        {
+                                            iflogbookentryexist = true;
+                                        }
+                                    }
+
+                                    if (!iflogbookentryexist)
+                                    {
+                                        var radioChecklist = _context.ClientSiteRadioChecksActivityStatus.Where(z => z.GuardId == 4 && z.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && z.GuardLoginTime != null && z.NotificationType == 1)
+                                          .ToList();
+                                        if (radioChecklist.Count == 0)
+                                        {
+                                            /* Check if any off duty status checked for this row */
+                                            var rcOffDutyStatus = _context.ClientSiteRadioChecks.Where(z => z.GuardId == 4 && z.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && z.CheckedAt.Date == DateTime.Today.Date && z.Status == "Off Duty")
+                                          .ToList();
+                                            if (rcOffDutyStatus.Count == 0)
+                                            {
+
+                                                var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                                                {
+                                                    ClientSiteId = manning.ClientSiteKpiSetting.ClientSiteId,
+                                                    GuardId = 4,/* temp Guard(bruno) Id because forgin key  is set*/
+                                                    GuardLoginTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None),/* Expected Time for Login
+                                                /* New Field Added for NotificationType only for manning notification*/
+                                                    NotificationType = 1,
+                                                    /* added for show the crm CrmSupplier deatils in the 'no guard on duty' */
+                                                    CRMSupplier = manning.CrmSupplier
+                                                };
+                                                _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
+                                                _context.SaveChanges();
+                                            }
+                                        }
+                                    }
+                                }
+
+                            }
+                            else
+                            {
+                                /* if login  found  remove the notification*/
+                                var notificationCountIsZero = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1).Count() == 0;
+                                if (!notificationCountIsZero)
+                                {
+                                    /* Remove notification because login found */
+                                    var notificationDetails = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.GuardLoginTime != null && x.NotificationType == 1);
+                                    _context.ClientSiteRadioChecksActivityStatus.RemoveRange(notificationDetails);
+                                    _context.SaveChanges();
+                                }
+                            }
+
+                        }
+
+                    }
+                }
+
+
 
 
             }
@@ -4854,7 +4994,7 @@ namespace CityWatch.Data.Providers
 
         public void CreateDownloadFileAuditLogEntry(FileDownloadAuditLogs fdal)
         {
-            if(fdal != null)
+            if (fdal != null)
             {
                 _context.Add(fdal);
                 _context.SaveChanges();
