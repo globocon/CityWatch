@@ -5,10 +5,17 @@ a.navbar-brand {
     text-align: center;
     word-break: break-all;
 }
+
+
+.custom-control-log {
+    margin-bottom: 0 !important;
+    margin-top: 0 !important;
+}
 .main-container {
     margin-top: 0px; /* Decreased margin at the top */
     padding-bottom: 0px; /* Space for links at the bottom */
    
+
 }
 /* Provide sufficient contrast against white background */
 a {
