@@ -29,7 +29,10 @@ namespace CityWatch.Data.Models
         public int ShowColor { get; set; }
 
         public int hasmartwand { get; set; }
-        
+        public string HR1 { get; set; }
+        public string HR2 { get; set; }
+        public string HR3 { get; set; }
+
     }
 
 }
