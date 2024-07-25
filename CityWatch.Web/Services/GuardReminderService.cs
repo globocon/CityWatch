@@ -2,6 +2,7 @@
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using DocumentFormat.OpenXml.Office2013.Word;
+using Dropbox.Api.Files;
 using Dropbox.Api.Team;
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.Options;
@@ -25,14 +26,16 @@ namespace CityWatch.Web.Services
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly EmailOptions _emailOptions;
         public readonly IClientDataProvider _clientDataProvider;
+        private readonly IEmailLogDataProvider _emailLogDataProvider;
 
         public GuardReminderService(IGuardDataProvider guardDataProvider,
             IOptions<EmailOptions> emailOptions,
-            IClientDataProvider clientDataProvider)
+            IClientDataProvider clientDataProvider, IEmailLogDataProvider emailLogDataProvider)
         {
             _guardDataProvider = guardDataProvider;
             _emailOptions = emailOptions.Value;
             _clientDataProvider = clientDataProvider;
+            _emailLogDataProvider = emailLogDataProvider;
         }
 
         //public void Process()
@@ -259,6 +262,27 @@ namespace CityWatch.Web.Services
                     HtmlBody = mailBodyHtml
                 };
                 message.Body = builder.ToMessageBody();
+
+                /* Save log email Start 24072024 manju*/
+                string toAddressForSplit = string.Join(", ", message.To.Select(a => a.ToString()));
+                string bccAddressForSplit = string.Join(", ", message.Bcc.Select(a => a.ToString()));
+                _emailLogDataProvider.SaveEmailLog(
+                    new EmailAuditLog()
+                    {
+                        UserID = 1,
+                        GuardID = 1,
+                        IPAddress = string.Empty,
+                        ToAddress = toAddressForSplit,
+                        BCCAddress = bccAddressForSplit,
+                        Module = "Document Expiry",
+                        Type= "Guard Reminder Service",
+                        EmailSubject=message.Subject,
+                        AttachmentFileName= string.Empty,
+                        SendingDate = DateTime.Now   
+                    }
+                 ); 
+                /* Save log for email end*/
+               
                 using var client = new SmtpClient();
                 client.Connect(_emailOptions.SmtpServer, _emailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
                 if (!string.IsNullOrEmpty(_emailOptions.SmtpUserName) &&

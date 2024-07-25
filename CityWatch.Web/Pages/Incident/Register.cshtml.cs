@@ -31,6 +31,7 @@ using System.Text;
 using System.Security.Cryptography;
 using DocumentFormat.OpenXml.Vml.Spreadsheet;
 using Dropbox.Api.Files;
+using static MailKit.Net.Imap.ImapEvent;
 
 
 
@@ -52,7 +53,7 @@ namespace CityWatch.Web.Pages.Incident
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly IConfiguration _configuration;
         private readonly ISiteEventLogDataProvider _SiteEventLogDataProvider;
-
+        private readonly IEmailLogDataProvider _emailLogDataProvider;
         [BindProperty]
         public IncidentRequest Report { get; set; }
         public List<SelectListItem> ClientSites { get; set; }
@@ -74,7 +75,8 @@ namespace CityWatch.Web.Pages.Incident
             IIncidentReportGenerator incidentReportGenerator,
             IGuardLogDataProvider guardLogDataProvider,
             IConfiguration configuration,
-            ISiteEventLogDataProvider siteEventLogDataProvider
+            ISiteEventLogDataProvider siteEventLogDataProvider,
+            IEmailLogDataProvider emailLogDataProvider
             )
         {
             _WebHostEnvironment = webHostEnvironment;
@@ -89,6 +91,7 @@ namespace CityWatch.Web.Pages.Incident
             _guardLogDataProvider = guardLogDataProvider;
             _configuration = configuration;
             _SiteEventLogDataProvider = siteEventLogDataProvider;
+            _emailLogDataProvider = emailLogDataProvider;
         }
         public IConfigDataProvider ConfigDataProiver { get { return _configDataProvider; } }
         public IActionResult OnGet()
@@ -525,7 +528,25 @@ namespace CityWatch.Web.Pages.Incident
             };
             builder.Attachments.Add(fileName);
             message.Body = builder.ToMessageBody();
-
+            /* Save log email Start 24072024 manju*/
+            string toAddressForSplit = string.Join(", ", message.To.Select(a => a.ToString()));
+            string bccAddressForSplit = string.Join(", ", message.Bcc.Select(a => a.ToString()));
+            _emailLogDataProvider.SaveEmailLog(
+                new EmailAuditLog()
+                {
+                    UserID = 1,
+                    GuardID = 1,
+                    IPAddress = string.Empty,
+                    ToAddress = toAddressForSplit,
+                    BCCAddress = bccAddressForSplit,
+                    Module = "IncidentRegister",
+                    Type = "Register",
+                    EmailSubject = message.Subject,
+                    AttachmentFileName = string.Empty,
+                    SendingDate = DateTime.Now
+                }
+             );
+            /* Save log for email end*/
             using (var client = new SmtpClient())
             {
                 client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
@@ -687,6 +708,25 @@ namespace CityWatch.Web.Pages.Incident
             /* Add attachment to mail if Size <=12 MB end*/
 
             message.Body = builder.ToMessageBody();
+            /* Save log email Start 24072024 manju*/
+            string toAddressForSplit = string.Join(", ", message.To.Select(a => a.ToString()));
+            string bccAddressForSplit = string.Join(", ", message.Bcc.Select(a => a.ToString()));
+            _emailLogDataProvider.SaveEmailLog(
+                new EmailAuditLog()
+                {
+                    UserID = 1,
+                    GuardID = 1,
+                    IPAddress = string.Empty,
+                    ToAddress = toAddressForSplit,
+                    BCCAddress = bccAddressForSplit,
+                    Module = "IncidentRegister",
+                    Type = "Register",
+                    EmailSubject = message.Subject,
+                    AttachmentFileName = string.Empty,
+                    SendingDate = DateTime.Now
+                }
+             );
+            /* Save log for email end*/
             using (var client = new SmtpClient())
             {
                 client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);

@@ -36,10 +36,10 @@ namespace CityWatch.RadioCheck.Pages.Radio
         private readonly Settings _settings;
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly IViewDataService _viewDataService;
-
+        private readonly IEmailLogDataProvider _emailLogDataProvider;
         public RadioCheckNewModel(IGuardLogDataProvider guardLogDataProvider, IOptions<EmailOptions> emailOptions,
             IConfiguration configuration, ISmsSenderProvider smsSenderProvider, IClientDataProvider clientDataProvider, IGuardDataProvider guardDataProvider,
-            IOptions<Settings> settings, IViewDataService viewDataService)
+            IOptions<Settings> settings, IViewDataService viewDataService, IEmailLogDataProvider emailLogDataProvider)
         {
             _guardLogDataProvider = guardLogDataProvider;
             _EmailOptions = emailOptions.Value;
@@ -49,6 +49,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
             _settings = settings.Value;
             _guardDataProvider = guardDataProvider;
             _viewDataService = viewDataService;
+            _emailLogDataProvider = emailLogDataProvider;
         }
         public int UserId { get; set; }
         public int GuardId { get; set; }
@@ -423,7 +424,25 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     };
 
                     messagenew.Body = builder.ToMessageBody();
-
+                    /* Save log email Start 24072024 manju*/
+                    string toAddressForSplit = string.Join(", ", messagenew.To.Select(a => a.ToString()));
+                    string bccAddressForSplit = string.Join(", ", messagenew.Bcc.Select(a => a.ToString()));
+                    _emailLogDataProvider.SaveEmailLog(
+                        new EmailAuditLog()
+                        {
+                            UserID = 1,
+                            GuardID = 1,
+                            IPAddress = string.Empty,
+                            ToAddress = toAddressForSplit,
+                            BCCAddress = bccAddressForSplit,
+                            Module = "RadioCheck",
+                            Type = "RadioCheckV2",
+                            EmailSubject = messagenew.Subject,
+                            AttachmentFileName = string.Empty,
+                            SendingDate = DateTime.Now
+                        }
+                     );
+                    /* Save log for email end*/
                     using (var client = new SmtpClient())
                     {
                         client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
@@ -540,7 +559,25 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     };
 
                     messagenew.Body = builder.ToMessageBody();
-
+                    /* Save log email Start 24072024 manju*/
+                    string toAddressForSplit = string.Join(", ", messagenew.To.Select(a => a.ToString()));
+                    string bccAddressForSplit = string.Join(", ", messagenew.Bcc.Select(a => a.ToString()));
+                    _emailLogDataProvider.SaveEmailLog(
+                        new EmailAuditLog()
+                        {
+                            UserID = 1,
+                            GuardID = 1,
+                            IPAddress = string.Empty,
+                            ToAddress = toAddressForSplit,
+                            BCCAddress = bccAddressForSplit,
+                            Module = "RadioCheck",
+                            Type = "RadioCheckV2",
+                            EmailSubject = messagenew.Subject,
+                            AttachmentFileName = string.Empty,
+                            SendingDate = DateTime.Now
+                        }
+                     );
+                    /* Save log for email end*/
                     using (var client = new SmtpClient())
                     {
                         client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
@@ -755,7 +792,25 @@ namespace CityWatch.RadioCheck.Pages.Radio
                         };
 
                         messagenew.Body = builder.ToMessageBody();
-
+                        /* Save log email Start 24072024 manju*/
+                        string toAddressForSplit = string.Join(", ", messagenew.To.Select(a => a.ToString()));
+                        string bccAddressForSplit = string.Join(", ", messagenew.Bcc.Select(a => a.ToString()));
+                        _emailLogDataProvider.SaveEmailLog(
+                            new EmailAuditLog()
+                            {
+                                UserID = 1,
+                                GuardID = 1,
+                                IPAddress = string.Empty,
+                                ToAddress = toAddressForSplit,
+                                BCCAddress = bccAddressForSplit,
+                                Module = "RadioCheck",
+                                Type = "RadioCheckV2",
+                                EmailSubject = messagenew.Subject,
+                                AttachmentFileName = string.Empty,
+                                SendingDate = DateTime.Now
+                            }
+                         );
+                        /* Save log for email end*/
                         using (var client = new SmtpClient())
                         {
                             client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
@@ -892,7 +947,25 @@ namespace CityWatch.RadioCheck.Pages.Radio
                             };
 
                             messagenew.Body = builder.ToMessageBody();
-
+                            /* Save log email Start 24072024 manju*/
+                            string toAddressForSplit = string.Join(", ", messagenew.To.Select(a => a.ToString()));
+                            string bccAddressForSplit = string.Join(", ", messagenew.Bcc.Select(a => a.ToString()));
+                            _emailLogDataProvider.SaveEmailLog(
+                                new EmailAuditLog()
+                                {
+                                    UserID = 1,
+                                    GuardID = 1,
+                                    IPAddress = string.Empty,
+                                    ToAddress = toAddressForSplit,
+                                    BCCAddress = bccAddressForSplit,
+                                    Module = "RadioCheck",
+                                    Type = "RadioCheckV2",
+                                    EmailSubject = messagenew.Subject,
+                                    AttachmentFileName = string.Empty,
+                                    SendingDate = DateTime.Now
+                                }
+                             );
+                            /* Save log for email end*/
                             using (var client = new SmtpClient())
                             {
                                 client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
@@ -1026,7 +1099,25 @@ namespace CityWatch.RadioCheck.Pages.Radio
                             };
 
                             messagenew.Body = builder.ToMessageBody();
-
+                            /* Save log email Start 24072024 manju*/
+                            string toAddressForSplit = string.Join(", ", messagenew.To.Select(a => a.ToString()));
+                            string bccAddressForSplit = string.Join(", ", messagenew.Bcc.Select(a => a.ToString()));
+                            _emailLogDataProvider.SaveEmailLog(
+                                new EmailAuditLog()
+                                {
+                                    UserID = 1,
+                                    GuardID = 1,
+                                    IPAddress = string.Empty,
+                                    ToAddress = toAddressForSplit,
+                                    BCCAddress = bccAddressForSplit,
+                                    Module = "RadioCheck",
+                                    Type = "RadioCheckV2",
+                                    EmailSubject = messagenew.Subject,
+                                    AttachmentFileName = string.Empty,
+                                    SendingDate = DateTime.Now
+                                }
+                             );
+                            /* Save log for email end*/
                             using (var client = new SmtpClient())
                             {
                                 client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
@@ -1162,7 +1253,25 @@ namespace CityWatch.RadioCheck.Pages.Radio
                         };
 
                         messagenew.Body = builder.ToMessageBody();
-
+                        /* Save log email Start 24072024 manju*/
+                        string toAddressForSplit = string.Join(", ", messagenew.To.Select(a => a.ToString()));
+                        string bccAddressForSplit = string.Join(", ", messagenew.Bcc.Select(a => a.ToString()));
+                        _emailLogDataProvider.SaveEmailLog(
+                            new EmailAuditLog()
+                            {
+                                UserID = 1,
+                                GuardID = 1,
+                                IPAddress = string.Empty,
+                                ToAddress = toAddressForSplit,
+                                BCCAddress = bccAddressForSplit,
+                                Module = "RadioCheck",
+                                Type = "RadioCheckV2",
+                                EmailSubject = messagenew.Subject,
+                                AttachmentFileName = string.Empty,
+                                SendingDate = DateTime.Now
+                            }
+                         );
+                        /* Save log for email end*/
                         using (var client = new SmtpClient())
                         {
                             client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
@@ -1330,7 +1439,25 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 };
 
                 messagenew.Body = builder.ToMessageBody();
-
+                /* Save log email Start 24072024 manju*/
+                string toAddressForSplit = string.Join(", ", messagenew.To.Select(a => a.ToString()));
+                string bccAddressForSplit = string.Join(", ", messagenew.Bcc.Select(a => a.ToString()));
+                _emailLogDataProvider.SaveEmailLog(
+                    new EmailAuditLog()
+                    {
+                        UserID = 1,
+                        GuardID = 1,
+                        IPAddress = string.Empty,
+                        ToAddress = toAddressForSplit,
+                        BCCAddress = bccAddressForSplit,
+                        Module = "RadioCheck",
+                        Type = "RadioCheckV2",
+                        EmailSubject = messagenew.Subject,
+                        AttachmentFileName = string.Empty,
+                        SendingDate = DateTime.Now
+                    }
+                 );
+                /* Save log for email end*/
                 using (var client = new SmtpClient())
                 {
                     client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);

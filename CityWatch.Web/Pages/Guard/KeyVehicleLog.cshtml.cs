@@ -67,7 +67,7 @@ namespace CityWatch.Web.Pages.Guard
         private readonly ISiteEventLogDataProvider _SiteEventLogDataProvider;
         private readonly string _imageRootDir;
         private readonly ISmsSenderProvider _smsSenderProvider;
-
+        private readonly IEmailLogDataProvider _emailLogDataProvider;
 
         public KeyVehicleLogModel(IWebHostEnvironment webHostEnvironment,
             IGuardLogDataProvider guardLogDataProvider,
@@ -81,7 +81,8 @@ namespace CityWatch.Web.Pages.Guard
             ILogger<KeyVehicleLogModel> logger,
             IAppConfigurationProvider appConfigurationProvider,
             ISiteEventLogDataProvider siteEventLogDataProvider,
-            ISmsSenderProvider smsSenderProvider
+            ISmsSenderProvider smsSenderProvider,
+            IEmailLogDataProvider emailLogDataProvider
             )
         {
             _guardLogDataProvider = guardLogDataProvider;
@@ -98,6 +99,7 @@ namespace CityWatch.Web.Pages.Guard
             _imageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
             _SiteEventLogDataProvider = siteEventLogDataProvider;
             _smsSenderProvider = smsSenderProvider;
+            _emailLogDataProvider = emailLogDataProvider;
         }
 
         [BindProperty]
@@ -1610,7 +1612,25 @@ namespace CityWatch.Web.Pages.Guard
                 };
 
                 messagenew.Body = builder.ToMessageBody();
-
+                /* Save log email Start 24072024 manju*/
+                string toAddressForSplit = string.Join(", ", messagenew.To.Select(a => a.ToString()));
+                string bccAddressForSplit = string.Join(", ", messagenew.Bcc.Select(a => a.ToString()));
+                _emailLogDataProvider.SaveEmailLog(
+                    new EmailAuditLog()
+                    {
+                        UserID = 1,
+                        GuardID = 1,
+                        IPAddress = string.Empty,
+                        ToAddress = toAddressForSplit,
+                        BCCAddress = bccAddressForSplit,
+                        Module = "Guard- KeyVehicleLog",
+                        Type = "C4i Duress Enable - Global Duress Email Alert",
+                        EmailSubject = messagenew.Subject,
+                        AttachmentFileName = string.Empty,
+                        SendingDate = DateTime.Now
+                    }
+                 );
+                /* Save log for email end*/
                 using (var client = new SmtpClient())
                 {
                     client.Connect(_emailOptions.SmtpServer, _emailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
@@ -1723,7 +1743,25 @@ namespace CityWatch.Web.Pages.Guard
             builder.Attachments.Add(Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
             message.Body = builder.ToMessageBody();
             message.Subject = $"Manual Docket PrintOut for ID No / Car or Truck Rego: {vehicleRego}";
-
+            /* Save log email Start 24072024 manju*/
+            string toAddressForSplit = string.Join(", ", message.To.Select(a => a.ToString()));
+            string bccAddressForSplit = string.Join(", ", message.Bcc.Select(a => a.ToString()));
+            _emailLogDataProvider.SaveEmailLog(
+                new EmailAuditLog()
+                {
+                    UserID = 1,
+                    GuardID = 1,
+                    IPAddress = string.Empty,
+                    ToAddress = toAddressForSplit,
+                    BCCAddress = bccAddressForSplit,
+                    Module = "Guard- KeyVehicleLog",
+                    Type = "KeyVehicleLog",
+                    EmailSubject = message.Subject,
+                    AttachmentFileName = string.Empty,
+                    SendingDate = DateTime.Now
+                }
+             );
+            /* Save log for email end*/
             using (var client = new SmtpClient())
             {
                 client.Connect(_emailOptions.SmtpServer, _emailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);

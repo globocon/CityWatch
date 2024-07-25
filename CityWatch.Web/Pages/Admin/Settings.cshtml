@@ -82,6 +82,9 @@
             <li class="nav-item" @hideTabStyle>
                 <a class="nav-link p-2" id="c4isettings-tab" data-toggle="tab" href="#c4isettings" role="tab" aria-controls="c4isettings" aria-selected="false">C4i Core</a>
             </li>
+            <li class="nav-item" style="display: none;">
+                <a class="nav-link p-2" id="emaillog-tab" data-toggle="tab" href="#emaillog" role="tab" aria-controls="emaillog" aria-selected="false">Email Logs</a>
+            </li>
         }
         else
         {
@@ -723,6 +726,15 @@
                 <div class="row">
                     <div class="col-md-12 justify-content-center">
                         <table class="table" id="user_client_access"></table>
+                    </div>
+                </div>
+            </div>
+             <div class="tab-pane fade py-3" id="emaillog" role="tabpanel" aria-labelledby="emaillog-tab">
+       
+                <div class="row">
+                    <div class="col-md-12">
+                        <table class="table" id="email_log"></table>
+
                     </div>
                 </div>
             </div>

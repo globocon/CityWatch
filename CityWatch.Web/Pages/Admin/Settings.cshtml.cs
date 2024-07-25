@@ -32,13 +32,14 @@ namespace CityWatch.Web.Pages.Admin
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IViewDataService _viewDataService;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
-
+        private readonly IEmailLogDataProvider _emailLogDataProvider;
         public SettingsModel(IWebHostEnvironment webHostEnvironment,
             IClientDataProvider clientDataProvider,
             IConfigDataProvider configDataProvider,
             IUserDataProvider userDataProvider,
             IViewDataService viewDataService,
-            IGuardLogDataProvider guardLogDataProvider)
+            IGuardLogDataProvider guardLogDataProvider,
+            IEmailLogDataProvider emailLogDataProvider)
         {
             _guardLogDataProvider = guardLogDataProvider;
             _clientDataProvider = clientDataProvider;
@@ -46,6 +47,7 @@ namespace CityWatch.Web.Pages.Admin
             _userDataProvider = userDataProvider;
             _webHostEnvironment = webHostEnvironment;
             _viewDataService = viewDataService;
+            _emailLogDataProvider = emailLogDataProvider;
         }
         public string IsAdminminOrPoweruser=string.Empty;
         public HrSettings HrSettings;
@@ -1336,7 +1338,11 @@ namespace CityWatch.Web.Pages.Admin
             var DropboxDir = _clientDataProvider.GetDropboxDir();
             return new JsonResult(new { Email = Email.Email, DropboxDir = DropboxDir.DropboxDir });
         }
-      
+        //P6#98 List email log in settings tab
+        public JsonResult OnGetEmailLogs()
+        {
+            return new JsonResult(_emailLogDataProvider.GetEmailLogs());
+        }
 
     }
 }

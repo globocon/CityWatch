@@ -16,6 +16,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
+using static IEmailAuditLogService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,7 +55,8 @@ builder.Services.AddScoped<IClientSiteWandDataProvider, ClientSiteWandDataProvid
 builder.Services.AddScoped<IGuardLoginDetailService, GuardLoginDetailService>();
 builder.Services.AddScoped<CityWatch.RadioCheck.Services.IGuardLogReportGenerator, CityWatch.RadioCheck.Services.GuardLogReportGenerator>();
 builder.Services.AddScoped<CityWatch.RadioCheck.Services.IGuardLogZipGenerator, CityWatch.RadioCheck.Services.GuardLogZipGenerator>();
-
+builder.Services.AddScoped<IEmailLogDataProvider, EmailLogDataProvider>();
+builder.Services.AddScoped<IEmailAuditLogService, EmailAuditLogService>();
 builder.Services.AddSession();
 builder.Services.AddRazorPages(options =>
 {

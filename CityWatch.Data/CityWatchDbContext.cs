@@ -122,7 +122,7 @@ namespace CityWatch.Data
         public DbSet<DropboxDirectory> DropboxDirectory { get; set; }
 
         public DbSet<ClientSiteRadioChecksActivityStatus_History> ClientSiteRadioChecksActivityStatus_History { get; set; }
-        
+        public DbSet<EmailAuditLog> EmailAuditLog { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

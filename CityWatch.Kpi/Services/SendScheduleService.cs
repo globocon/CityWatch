@@ -42,7 +42,7 @@ namespace CityWatch.Kpi.Services
         private readonly IClientDataProvider _clientDataProvider;
         private readonly ILogger<SendScheduleService> _logger;
         private readonly Settings _settings;
-
+        private readonly IEmailLogDataProvider _emailLogDataProvider;
         public SendScheduleService(IWebHostEnvironment webHostEnvironment,
             IOptions<EmailOptions> emailOptions,
             IImportJobDataProvider importJobDataProvider,
@@ -53,7 +53,8 @@ namespace CityWatch.Kpi.Services
             IViewDataService viewDataService,
             IClientDataProvider clientDataProvider,
             ILogger<SendScheduleService> logger,            
-            IOptions<Settings> settings)
+            IOptions<Settings> settings,
+            IEmailLogDataProvider emailLogDataProvider)
         {
             _webHostEnvironment = webHostEnvironment;
             _emailOptions = emailOptions.Value;
@@ -66,6 +67,7 @@ namespace CityWatch.Kpi.Services
             _clientDataProvider = clientDataProvider;
             _logger = logger;
             _settings = settings.Value;
+            _emailLogDataProvider = emailLogDataProvider;
         }
 
         public async Task<string> ProcessSchedule(KpiSendSchedule schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload)
@@ -302,7 +304,25 @@ namespace CityWatch.Kpi.Services
             };
             builder.Attachments.Add(fileName);
             message.Body = builder.ToMessageBody();
-
+            /* Save log email Start 24072024 manju*/
+            string toAddressForSplit = string.Join(", ", message.To.Select(a => a.ToString()));
+            string bccAddressForSplit = string.Join(", ", message.Bcc.Select(a => a.ToString()));
+            _emailLogDataProvider.SaveEmailLog(
+                new EmailAuditLog()
+                {
+                    UserID = 1,
+                    GuardID = 1,
+                    IPAddress = string.Empty,
+                    ToAddress = toAddressForSplit,
+                    BCCAddress = bccAddressForSplit,
+                    Module = "KPI-Schedule Service",
+                    Type = "Report",
+                    EmailSubject = message.Subject,
+                    AttachmentFileName = fileName,
+                    SendingDate = DateTime.Now
+                }
+             ); 
+            /* Save log for email end*/
             using (var client = new SmtpClient())
             {
                 client.Connect(_emailOptions.SmtpServer, _emailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);

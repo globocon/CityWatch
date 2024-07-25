@@ -27,13 +27,15 @@ namespace CityWatch.Web.Pages.Radio
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly EmailOptions _EmailOptions;
         private readonly IConfiguration _configuration;
+        private readonly IEmailLogDataProvider _emailLogDataProvider;
         public InActiveGuardSinglePage(IGuardLogDataProvider guardLogDataProvider, IOptions<EmailOptions> emailOptions,
-            IConfiguration configuration)
+            IConfiguration configuration, IEmailLogDataProvider emailLogDataProvider)
         {
 
             _guardLogDataProvider = guardLogDataProvider;
             _EmailOptions = emailOptions.Value;
             _configuration = configuration;
+            _emailLogDataProvider = emailLogDataProvider;
         }
         public int UserId { get; set; }
         public int GuardId { get; set; }
@@ -314,7 +316,25 @@ namespace CityWatch.Web.Pages.Radio
                     };
 
                     messagenew.Body = builder.ToMessageBody();
-
+                    /* Save log email Start 24072024 manju*/
+                    string toAddressForSplit = string.Join(", ", messagenew.To.Select(a => a.ToString()));
+                    string bccAddressForSplit = string.Join(", ", messagenew.Bcc.Select(a => a.ToString()));
+                    _emailLogDataProvider.SaveEmailLog(
+                        new EmailAuditLog()
+                        {
+                            UserID = 1,
+                            GuardID = 1,
+                            IPAddress = string.Empty,
+                            ToAddress = toAddressForSplit,
+                            BCCAddress = bccAddressForSplit,
+                            Module = "RC- In-Active Guard",
+                            Type = "In-Active Guard Single Page",
+                            EmailSubject = messagenew.Subject,
+                            AttachmentFileName = string.Empty,
+                            SendingDate = DateTime.Now
+                        }
+                     );
+                    /* Save log for email end*/
                     using (var client = new SmtpClient())
                     {
                         client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
@@ -366,7 +386,25 @@ namespace CityWatch.Web.Pages.Radio
                     };
 
                     messagenew.Body = builder.ToMessageBody();
-
+                    /* Save log email Start 24072024 manju*/
+                    string toAddressForSplit = string.Join(", ", messagenew.To.Select(a => a.ToString()));
+                    string bccAddressForSplit = string.Join(", ", messagenew.Bcc.Select(a => a.ToString()));
+                    _emailLogDataProvider.SaveEmailLog(
+                        new EmailAuditLog()
+                        {
+                            UserID = 1,
+                            GuardID = 1,
+                            IPAddress = string.Empty,
+                            ToAddress = toAddressForSplit,
+                            BCCAddress = bccAddressForSplit,
+                            Module = "RC- In-Active Guard",
+                            Type = "In-Active Guard Single Page",
+                            EmailSubject = messagenew.Subject,
+                            AttachmentFileName = string.Empty,
+                            SendingDate = DateTime.Now
+                        }
+                     );
+                    /* Save log for email end*/
                     using (var client = new SmtpClient())
                     {
                         client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
@@ -419,7 +457,25 @@ namespace CityWatch.Web.Pages.Radio
                     };
 
                     messagenew.Body = builder.ToMessageBody();
-
+                    /* Save log email Start 24072024 manju*/
+                    string toAddressForSplit = string.Join(", ", messagenew.To.Select(a => a.ToString()));
+                    string bccAddressForSplit = string.Join(", ", messagenew.Bcc.Select(a => a.ToString()));
+                    _emailLogDataProvider.SaveEmailLog(
+                        new EmailAuditLog()
+                        {
+                            UserID = 1,
+                            GuardID = 1,
+                            IPAddress = string.Empty,
+                            ToAddress = toAddressForSplit,
+                            BCCAddress = bccAddressForSplit,
+                            Module = "RC- In-Active Guard",
+                            Type = "In-Active Guard Single Page",
+                            EmailSubject = messagenew.Subject,
+                            AttachmentFileName = string.Empty,
+                            SendingDate = DateTime.Now
+                        }
+                     );
+                    /* Save log for email end*/
                     using (var client = new SmtpClient())
                     {
                         client.Connect(_EmailOptions.SmtpServer, _EmailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);

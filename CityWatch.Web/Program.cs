@@ -16,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
+using static IEmailAuditLogService;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -62,6 +63,9 @@ builder.Services.AddScoped<ISmsService, SmsService>();
 builder.Services.AddScoped<ISmsSenderProvider, SmsSenderProvider>();
 builder.Services.AddScoped<ISmsGlobalService, SmsGlobalService>();
 builder.Services.AddScoped<ISignalRNotificationService, SignalRNotificationService>();
+builder.Services.AddScoped<IEmailLogDataProvider, EmailLogDataProvider>();
+builder.Services.AddScoped<IEmailAuditLogService, EmailAuditLogService>();
+
 
 builder.Services.AddRazorPages(options =>
 {

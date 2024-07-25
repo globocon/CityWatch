@@ -37,7 +37,7 @@ namespace CityWatch.Web.Pages.Guard
         private readonly ISiteEventLogDataProvider _SiteEventLogDataProvider;
         private readonly ISmsSenderProvider _smsSenderProvider;
         private readonly IWebHostEnvironment _webHostEnvironment;
-
+        private readonly IEmailLogDataProvider _emailLogDataProvider;
         [BindProperty]
         public GuardLog GuardLog { get; set; }
 
@@ -53,7 +53,8 @@ namespace CityWatch.Web.Pages.Guard
              ILogger<DailyLogModel> logger,
              ISiteEventLogDataProvider siteEventLogDataProvider,
              ISmsSenderProvider smsSenderProvider,
-             IWebHostEnvironment webHostEnvironment)
+             IWebHostEnvironment webHostEnvironment,
+             IEmailLogDataProvider emailLogDataProvider)
         {
             _guardDataProvider = guardDataProvider;
             _guardLogDataProvider = guardLogDataProvider;
@@ -65,6 +66,7 @@ namespace CityWatch.Web.Pages.Guard
             _SiteEventLogDataProvider = siteEventLogDataProvider;
             _smsSenderProvider = smsSenderProvider;
             _webHostEnvironment = webHostEnvironment;
+            _emailLogDataProvider = emailLogDataProvider;
         }
 
         public void OnGet()
@@ -746,7 +748,25 @@ namespace CityWatch.Web.Pages.Guard
                 };
 
                 messagenew.Body = builder.ToMessageBody();
-
+                /* Save log email Start 24072024 manju*/
+                string toAddressForSplit = string.Join(", ", messagenew.To.Select(a => a.ToString()));
+                string bccAddressForSplit = string.Join(", ", messagenew.Bcc.Select(a => a.ToString()));
+                _emailLogDataProvider.SaveEmailLog(
+                    new EmailAuditLog()
+                    {
+                        UserID = 1,
+                        GuardID = 1,
+                        IPAddress = string.Empty,
+                        ToAddress = toAddressForSplit,
+                        BCCAddress = bccAddressForSplit,
+                        Module = "Guard-DailyLog",
+                        Type = "DailyLog",
+                        EmailSubject = messagenew.Subject,
+                        AttachmentFileName = string.Empty,
+                        SendingDate = DateTime.Now
+                    }
+                 );
+                /* Save log for email end*/
                 using (var client = new SmtpClient())
                 {
                     client.Connect(_emailOptions.SmtpServer, _emailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);

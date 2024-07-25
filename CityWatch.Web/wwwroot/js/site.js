@@ -4082,6 +4082,54 @@ $('#HrState').multiselect({
     includeSelectAllOption: true,
 });
 
-//p1-213 document step L end 
+//p1-213 document step L end
+//P6#98 Make rows red if there is duplication checked sending date and subject
+
+function highlightDuplicateRows() {
+    var gridRows = $('#email_log tbody tr'); // Get all rows in the grid body
+    var seen = {};
+    gridRows.each(function () {
+        var row = $(this);
+        var toAddress = row.find('td').eq(3).text().trim(); 
+        var emailSubject = row.find('td').eq(7).text().trim(); 
+        var sendingDate = row.find('td').eq(9).text().trim(); 
+        // Combine relevant fields to create a unique key
+        var key = toAddress + emailSubject + sendingDate;
+
+        if (seen[key]) {
+            // If the combination of fields has been seen before, highlight the row
+            row.css('background-color', 'red');
+        } else {
+            seen[key] = true;
+        }
+    });
+}
 
 
+
+//p6#98 Duplicate emails -Email log grid
+let gridEmails;
+gridEmails = $('#email_log').grid({
+    dataSource: '/Admin/Settings?handler=EmailLogs',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    columns: [
+        { field: 'userId', hidden: true },
+        { field: 'guardId', hidden: true },
+        { field: 'ipAddress', hidden: true },
+        { field: 'toAddress', title: 'To Address', width: 180 },
+        { field: 'bccAddress', title: 'Bcc', width: 180 },
+        { field: 'module', title: 'Module', width: 200 },
+        { field: 'type', title: 'Type', width: 200 },
+        { field: 'emailSubject', title: 'Email Subject', width: 200 },
+        { field: 'attachmentFileName', title: 'Attachment Name', width: 150 },
+        { field: 'sendingDate', title: 'Date', width: 100 },
+        { field: 'status', title: 'Status', hidden: true }
+
+    ],
+    dataBound: function (e) {
+        highlightDuplicateRows(); 
+    }
+});
+//p6#98 Duplicate emails -Email log grid -end
