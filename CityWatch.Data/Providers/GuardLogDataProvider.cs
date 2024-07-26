@@ -1590,7 +1590,7 @@ namespace CityWatch.Data.Providers
                         ActivityType = clientSiteActivity.ActivityType,
                         OnDuty = clientSiteActivity.OnDuty,
                         OffDuty = clientSiteActivity.OffDuty,
-                        ActivityDescription =  clientSiteActivity.ActivityDescription!=string.Empty? clientSiteActivity.ActivityDescription: "Edited"
+                        ActivityDescription = clientSiteActivity.ActivityDescription != string.Empty ? clientSiteActivity.ActivityDescription : "Edited"
                     });
 
                 }
@@ -1624,7 +1624,7 @@ namespace CityWatch.Data.Providers
                         KVId = clientSiteActivity.KVId,
                         LBId = clientSiteActivity.LBId,
                         ActivityType = clientSiteActivity.ActivityType,
-                        ActivityDescription= clientSiteActivity.ActivityDescription,
+                        ActivityDescription = clientSiteActivity.ActivityDescription,
                         OnDuty = clientSiteActivity.OnDuty,
                         OffDuty = clientSiteActivity.OffDuty,
                         GuardLoginTimeLocal = clientSiteActivity.GuardLoginTimeLocal,
@@ -2523,14 +2523,14 @@ namespace CityWatch.Data.Providers
             }
         }
 
-        public void CreateLogBookStampForNoGuard(int ClientSiteID,DateTime dateTime, DateTime dateendTime)
+        public void CreateLogBookStampForNoGuard(int ClientSiteID, DateTime dateTime, DateTime dateendTime)
         {
-            /* Check if NoGuardLogin event type exists in the logbook for the date if not create entry */           
+            /* Check if NoGuardLogin event type exists in the logbook for the date if not create entry */
             var logbookdate = DateTime.Today;
             var logbooktype = LogBookType.DailyGuardLog;
-            var logBookId = GetClientSiteLogBookIdByLogBookMaxID(ClientSiteID, logbooktype, out logbookdate);            
+            var logBookId = GetClientSiteLogBookIdByLogBookMaxID(ClientSiteID, logbooktype, out logbookdate);
             var checklogbookEntry = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == logBookId && x.EventType == (int)GuardLogEventType.NoGuardLogin).ToList();
-            if (checklogbookEntry.Count < 1 )
+            if (checklogbookEntry.Count < 1)
             {
                 var guardLog = new GuardLog()
                 {
@@ -2547,7 +2547,7 @@ namespace CityWatch.Data.Providers
                     PlayNotificationSound = false
                 };
                 SaveGuardLog(guardLog);
-            }            
+            }
         }
 
 
@@ -2567,7 +2567,7 @@ namespace CityWatch.Data.Providers
                     /*IsPHO check if its a public holyday */
                     /*ScheduleisActive activate for particular  Site*/
                     var clientSiteManningKpiSettings = _context.ClientSiteManningKpiSettings.Include(x => x.ClientSiteKpiSetting).
-                        Where(x => x.Type == "2" && x.IsPHO == 1 && x.EmpHoursStart !=null && x.EmpHoursEnd!=null && x.ClientSiteKpiSetting.ScheduleisActive == true).ToList();
+                        Where(x => x.Type == "2" && x.IsPHO == 1 && x.EmpHoursStart != null && x.EmpHoursEnd != null && x.ClientSiteKpiSetting.ScheduleisActive == true).ToList();
                     foreach (var manning in clientSiteManningKpiSettings)
                     {
                         if (manning.EmpHoursStart != null && manning.EmpHoursEnd != null)
@@ -4703,15 +4703,12 @@ namespace CityWatch.Data.Providers
         }
         public List<KeyVehicleLog> GetKeyVehicleLogsWithKeyNo(string KeyNo)
         {
-            var results = _context.KeyVehicleLogs.Where(z => z.KeyNo.Contains(KeyNo));
+            var results = _context.KeyVehicleLogs
+           .Where(z => z.KeyNo != null && z.KeyNo.Contains(KeyNo))
+           .OrderByDescending(z => z.Id)
+           .ToList();
 
-            //results.Include(x => x.ClientSiteLogBook)
-            //    .Include(x => x.GuardLogin)
-            //    .Include(x => x.ClientSiteLocation)
-            //    .Include(x => x.ClientSitePoc)
-            //    .Load();
-
-            return results.OrderByDescending(z => z.Id).ToList();
+            return results;            
         }
         public List<KeyVehicleLogAuditHistory> GetAuditHistoryWithKeyVehicleLogId(int id)
         {
@@ -5045,12 +5042,12 @@ namespace CityWatch.Data.Providers
         public List<GuardLogsDocumentImages> GetGuardLogDocumentImaes(int LogId)
         {
             var result = new List<GuardLogsDocumentImages>();
-           result = _context.GuardLogsDocumentImages
-                          .Where(z => z.GuardLogId==LogId)
-                          .OrderBy(z => z.ImagePath)
-                          .ToList();
+            result = _context.GuardLogsDocumentImages
+                           .Where(z => z.GuardLogId == LogId)
+                           .OrderBy(z => z.ImagePath)
+                           .ToList();
 
-                    
+
             return result;
         }
 

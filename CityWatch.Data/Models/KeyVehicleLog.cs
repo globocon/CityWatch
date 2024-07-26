@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
 namespace CityWatch.Data.Models
@@ -50,7 +51,8 @@ namespace CityWatch.Data.Models
         public string Website { get; set; }
         public string CRMId { get; set; }
         public string BDMList { get; set; }
-
+                
+        [MaybeNull]
         public int PlateId { get; set; }
 
 
