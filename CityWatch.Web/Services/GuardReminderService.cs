@@ -333,6 +333,26 @@ namespace CityWatch.Web.Services
                 HtmlBody = mailBodyHtml
             };
             message.Body = builder.ToMessageBody();
+            /* Save log email Start 24072024 manju*/
+            string toAddressForSplit = string.Join(", ", message.To.Select(a => a.ToString()));
+            string bccAddressForSplit = string.Join(", ", message.Bcc.Select(a => a.ToString()));
+            _emailLogDataProvider.SaveEmailLog(
+                new EmailAuditLog()
+                {
+                    UserID = 1,
+                    GuardID = 1,
+                    IPAddress = string.Empty,
+                    ToAddress = toAddressForSplit,
+                    BCCAddress = bccAddressForSplit,
+                    Module = "Guard Reminder Service",
+                    Type = "CityWatch-Services-Guard Reminder Service",
+                    EmailSubject = message.Subject,
+                    AttachmentFileName = string.Empty,
+                    SendingDate = DateTime.Now
+                }
+             );
+            /* Save log for email end*/
+
             using var client = new SmtpClient();
             client.Connect(_emailOptions.SmtpServer, _emailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
             if (!string.IsNullOrEmpty(_emailOptions.SmtpUserName) &&

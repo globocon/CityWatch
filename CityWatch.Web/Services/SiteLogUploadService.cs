@@ -32,7 +32,7 @@ namespace CityWatch.Web.Services
         private readonly Settings _settings;
         private readonly string _reportRootDir;
         private readonly IDropboxService _dropboxUploadService;
-
+        private readonly IEmailLogDataProvider _emailLogDataProvider;
         public SiteLogUploadService(IClientDataProvider clientDataProvider,
             IGuardLogReportGenerator guardLogReportGenerator,
             IKeyVehicleLogReportGenerator keyVehicleLogReportGenerator,
@@ -40,7 +40,8 @@ namespace CityWatch.Web.Services
             IOptions<EmailOptions> emailOptions,
             IWebHostEnvironment webHostEnvironment,
             ILogger<SiteLogUploadService> logger,
-            IOptions<Settings> settings)
+            IOptions<Settings> settings,
+            IEmailLogDataProvider emailLogDataProvider)
         {
             _clientDataProvider = clientDataProvider;
             _guardLogReportGenerator = guardLogReportGenerator;
@@ -51,6 +52,7 @@ namespace CityWatch.Web.Services
             _logger = logger;
             _settings = settings.Value;
             _reportRootDir = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf");
+            _emailLogDataProvider = emailLogDataProvider;
         }
 
         public void ProcessDailyGuardLogs()
@@ -160,9 +162,28 @@ namespace CityWatch.Web.Services
                     HtmlBody = messageHtml
                 };
                 builder.Attachments.Add(fileName);
-                message.Body = builder.ToMessageBody();
+                message.Body = builder.ToMessageBody();  
+                    /* Save log email Start 24072024 manju*/
+                    string toAddressForSplit = string.Join(", ", message.To.Select(a => a.ToString()));
+                    string bccAddressForSplit = string.Join(", ", message.Bcc.Select(a => a.ToString()));
+                    _emailLogDataProvider.SaveEmailLog(
+                        new EmailAuditLog()
+                        {
+                            UserID = 1,
+                            GuardID = 1,
+                            IPAddress = string.Empty,
+                            ToAddress = toAddressForSplit,
+                            BCCAddress = bccAddressForSplit,
+                            Module = "Site Log Upload Service",
+                            Type = "CityWtch-Services-Site Log Upload",
+                            EmailSubject = message.Subject,
+                            AttachmentFileName = string.Empty,
+                            SendingDate = DateTime.Now
+                        }
+                     );
+                    /* Save log for email end*/
 
-                using var client = new MailKit.Net.Smtp.SmtpClient();
+                    using var client = new MailKit.Net.Smtp.SmtpClient();
                 client.Connect(_emailOptions.SmtpServer, _emailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
                 if (!string.IsNullOrEmpty(_emailOptions.SmtpUserName) &&
                     !string.IsNullOrEmpty(_emailOptions.SmtpPassword))
