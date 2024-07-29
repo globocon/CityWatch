@@ -951,10 +951,10 @@ $(function () {
 
         var $editBtn = $('<button class="btn btn-outline-primary mr-1 p-1" data-id="' + record.id + '"><i class="fa fa-pencil mr-2"></i>Edit</button>'),
             //p6-102 Add Photo -start
-            $imageBtn = $('<button class="btn btn-outline-primary p-1" data-id="' + record.id + '"><i class="fa fa-camera mr-1"></i><i class="fa fa-plus"></i></button>')
+            $imageBtn = $('<button class="btn btn-outline-primary p-1 " data-id="' + record.id + '"><i class="fa fa-camera mr-1"></i><i class="fa fa-plus"></i></button>'),
             //p6-102 Add Photo -end
             $deleteBtn = $('<button class="btn btn-outline-danger mt-2" data-id="' + record.id + '"><i class="fa fa-trash mr-2"></i>Delete</button>'),
-            $updateBtn = $('<button class="btn btn-outline-success mr-2" data-id="' + record.id + '"><i class="fa fa-check-circle mr-2"></i>Update</button>').hide(),
+            $updateBtn = $('<button class="btn btn-outline-success mr-2 mt-2" data-id="' + record.id + '"><i class="fa fa-check-circle mr-2"></i>Update</button>').hide(),
             $cancelBtn = $('<button class="btn btn-outline-primary mt-2" data-id="' + record.id + '"><i class="fa fa-times-circle mr-2"></i>Cancel</button>').hide();
             
         $editBtn.on('click', function (e) {
