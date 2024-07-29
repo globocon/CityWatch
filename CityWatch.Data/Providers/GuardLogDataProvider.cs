@@ -4204,7 +4204,7 @@ namespace CityWatch.Data.Providers
         //code added for client site dropdown starts
         public List<ClientType> GetUserClientTypesHavingAccess(int? userId)
         {
-            var clientTypes = GetClientTypes();
+            var clientTypes = GetClientTypes().Where(x=>x.IsActive==true).ToList();
             if (userId == null)
                 return clientTypes;
 
