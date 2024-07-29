@@ -4976,8 +4976,11 @@ $(function () {
                     $('#vkl-auditlog-modal').find('#vkl-profile-title-rego').html('Key No: ' + item3);
                 }
                 $('#vkl-auditlog-modal').modal('show');
-                $('#vehicle_key_log_audit_history').DataTable().clear().rows.add(response).draw();
+                $('#vehicle_key_log_audit_history').DataTable().clear().rows.add(response).draw();                
+            }).always(function () {
                 $('#loader').hide();
+            }).fail(function () {
+                alert('Unable to generate audit log. Something went wrong...');
             });
         }
     });
