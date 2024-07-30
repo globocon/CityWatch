@@ -4,6 +4,7 @@ using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
 using CityWatch.Web.Helpers;
+using DocumentFormat.OpenXml.ExtendedProperties;
 using iText.IO.Image;
 using iText.Kernel.Colors;
 using iText.Kernel.Events;
@@ -24,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using static Dropbox.Api.Files.WriteMode;
 using static System.Net.WebRequestMethods;
 using IO = System.IO;
 
@@ -364,12 +366,51 @@ namespace CityWatch.Web.Services
             reportDataTable.AddHeaderCell(new Cell().SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_GREY_DARK)).Add(new Paragraph("Time").SetFontSize(CELL_FONT_SIZE)));
             reportDataTable.AddHeaderCell(new Cell().SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_GREY_DARK)).Add(new Paragraph("Event / Notes with Guard Initials").SetFontSize(CELL_FONT_SIZE)));
             reportDataTable.AddHeaderCell(new Cell().SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_GREY_DARK)).Add(new Paragraph("GPS").SetFontSize(CELL_FONT_SIZE)));
-
+            
             foreach (var entry in guardLog)
             {
+                //p6-102 Add photo -start
+                var reportDataTable2 = new Table(UnitValue.CreatePercentArray(new float[] { 10, 90, 4 })).UseAllAvailableWidth();
+                var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(entry.Id);
+                //Paragraph notesParagraphnew = new Paragraph("See attached file  ").SetFontSize(CELL_FONT_SIZE);
+                Paragraph notesParagraphnew= new Paragraph().SetFontSize(CELL_FONT_SIZE);
+                Paragraph notesParagraphImage = new Paragraph().SetFontSize(CELL_FONT_SIZE);
+                foreach (var guardLogImage in guardlogImages)
+                {
+                    var reportDataTablenew = new Table(UnitValue.CreatePercentArray(new float[] { 10, 90, 4 })).UseAllAvailableWidth();
+                    Paragraph notesParagraphnew1 = new Paragraph("See attached file  ").SetFontSize(CELL_FONT_SIZE);
+                    if (guardLogImage.IsRearfile == true)
+                    {
+                        
+                        string baseUrl = guardLogImage.ImagePath;
+                        string url = $"{baseUrl}";
+                        string linkText = IO.Path.GetFileName(guardLogImage.ImagePath);
+
+
+                        var link = new Link(linkText, PdfAction.CreateURI(url))
+                        .SetFontColor(DeviceGray.BLACK)
+                        .SetFontColor(ColorConstants.BLUE);
+                        
+                        notesParagraphnew1.Add(link);
+                       
+                        notesParagraphnew.Add(notesParagraphnew1);
+                      
+
+                   
+                    }
+                    if (guardLogImage.IsTwentyfivePercentfile == true)
+                    {
+                        var logimage = new Image(ImageDataFactory.Create(guardLogImage.ImagePath))
+                       .SetWidth(UnitValue.CreatePercentValue(27));
+                        logimage.SetTextAlignment(TextAlignment.RIGHT);
+                        notesParagraphImage.Add(logimage);
+                        
+                    }
+                }
+                //p6 - 102 Add photo -end
                 //Commented the following line and for fixing the time issue 29/01/2024 dileep//
                 //reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).Add(new Paragraph($"{entry.EventDateTime:HH:mm} hrs").SetFontSize(CELL_FONT_SIZE)));
-                
+
 
                 reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).Add(new Paragraph(getEventDateTimeUTCformat(entry)).SetFontSize(CELL_FONT_SIZE)));
                 //Commented the following line and for fixing the time issue 29/01/2024 dileep end//
@@ -410,13 +451,25 @@ namespace CityWatch.Web.Services
                         .SetFontColor(ColorConstants.BLUE);
                     notesParagraph.Add(link);
                 }
-                
-                reportDataTable.AddCell(new Cell()
-                 .SetKeepTogether(true)
-                 .SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f))
-                 .SetBackgroundColor(WebColors.GetRGBColor(bgColor))
-                 .Add(notesParagraph));
+                if (guardlogImages.Count > 0)
+                {
 
+                    reportDataTable.AddCell(new Cell()
+                     .SetKeepTogether(true)
+                     .SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f))
+                     .SetBackgroundColor(WebColors.GetRGBColor(bgColor))
+                     .Add(notesParagraph)
+                     .Add(notesParagraphImage)
+                     .Add(notesParagraphnew));
+                }
+                else
+                {
+                    reportDataTable.AddCell(new Cell()
+                     .SetKeepTogether(true)
+                     .SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f))
+                     .SetBackgroundColor(WebColors.GetRGBColor(bgColor))
+                     .Add(notesParagraph));
+                }
                 var cell = new Cell()
                 .SetKeepTogether(true)
                 .SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f))

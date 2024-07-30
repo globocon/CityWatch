@@ -951,7 +951,9 @@ $(function () {
 
         var $editBtn = $('<button class="btn btn-outline-primary mr-1 p-1" data-id="' + record.id + '"><i class="fa fa-pencil mr-2"></i>Edit</button>'),
             //p6-102 Add Photo -start
-            $imageBtn = $('<button class="btn btn-outline-primary p-1 " data-id="' + record.id + '"><i class="fa fa-camera mr-1"></i><i class="fa fa-plus"></i></button>'),
+
+            $imageBtn = $('<button class="btn btn-outline-primary p-1" data-id="' + record.id + '"><i class="fa fa-camera mr-1"></i><i class="fa fa-plus"></i></button>'),
+
             //p6-102 Add Photo -end
             $deleteBtn = $('<button class="btn btn-outline-danger mt-2" data-id="' + record.id + '"><i class="fa fa-trash mr-2"></i>Delete</button>'),
             $updateBtn = $('<button class="btn btn-outline-success mr-2 mt-2" data-id="' + record.id + '"><i class="fa fa-check-circle mr-2"></i>Update</button>').hide(),
@@ -1072,74 +1074,97 @@ $(function () {
 
 
     });
-    $('#IsRearOrTwentyfivePercentfileInput').on('change', function () {
+    $('#IsRearOrTwentyfivePercentfileInput').on('change', function (e) {
+        $('#loader').show();
+        //const file = $(this).get(0).files.item(0);
 
-        const file = $(this).get(0).files.item(0);
-        
-            
+        //const file = $(this).get(0).files; 
+        const file = this; 
+
         if ($('#IsAttachmentToRear').val() === 'true') {
-            const fileForm = new FormData();
-            fileForm.append('file', file);
-            fileForm.append('logId', $('#GuardimagedataId').val());
-            fileForm.append('url', window.location.origin);
+            for (let i = 0; i < file.files.length; i++) {
+              
+                const fileForm = new FormData();
+                //fileForm.append('file', file);
+                // fileForm.append('file', file.files.item(i));
+                fileForm.append('file', file.files.item(i))
+                fileForm.append('logId', $('#GuardimagedataId').val());
+                fileForm.append('url', window.location.origin);
 
 
 
 
-            $.ajax({
-                url: '/Guard/DailyLog?handler=RearFileUpload',
-                type: 'POST',
-                data: fileForm,
-                processData: false,
-                contentType: false,
-                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
-            }).done(function (data) {
+                $.ajax({
+                    url: '/Guard/DailyLog?handler=RearFileUpload',
+                    type: 'POST',
+                    data: fileForm,
+                    processData: false,
+                    contentType: false,
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+                }).done(function (data) {
 
-                if (data.success) {
-                    $('#dgl-image-modal').modal('hide');
-                    gridGuardLog.clear();
-                    gridGuardLog.reload();
-                }
+                    if (data.success) {
+                        
+                            if (i == file.files.length - 1) {
+                                $('#loader').hide();
+                                $('#dgl-image-modal').modal('hide');
+                                gridGuardLog.clear();
+                                gridGuardLog.reload();
+                                $('#IsAttachmentToRear').val(true);
+
+                                $('#IsTwentyfivePercentOfPage').val(false);
+                            }
+
+                    }
 
 
-            }).fail(function () {
-              //  showStatusNotification(false, 'Something went wrong');
-            }).always(function () {
+                }).fail(function () {
+                    //  showStatusNotification(false, 'Something went wrong');
+                    $('#loader').hide();
+                }).always(function () {
 
-            });
-
+                });
+            }
+            
         }
         if ($('#IsTwentyfivePercentOfPage').val() === 'true') {
-            const fileForm = new FormData();
-            fileForm.append('file', file);
-            fileForm.append('logId', $('#GuardimagedataId').val());
-            fileForm.append('url', window.location.origin);
+           
+            for (let i = 0; i < file.files.length; i++) {
+                const fileForm = new FormData();
+                fileForm.append('file', file.files.item(i));
+                fileForm.append('logId', $('#GuardimagedataId').val());
+                fileForm.append('url', window.location.origin);
 
 
 
 
-            $.ajax({
-                url: '/Guard/DailyLog?handler=TwentyfivePercentFileUpload',
-                type: 'POST',
-                data:fileForm,
-                processData: false,
-                contentType: false,
-                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
-            }).done(function (data) {
+                $.ajax({
+                    url: '/Guard/DailyLog?handler=TwentyfivePercentFileUpload',
+                    type: 'POST',
+                    data: fileForm,
+                    processData: false,
+                    contentType: false,
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+                }).done(function (data) {
 
-                if (data.success) {
+                    if (data.success) {
+                        if (i == file.files.length - 1) {
+                            $('#loader').hide();
+                            $('#dgl-image-modal').modal('hide');
+                            gridGuardLog.clear();
+                            gridGuardLog.reload();
 
-                    $('#dgl-image-modal').modal('hide');
-                    gridGuardLog.clear();
-                    gridGuardLog.reload();
-                }
+                        }
+                    }
 
 
-            }).fail(function () {
-                showStatusNotification(false, 'Something went wrong');
-            }).always(function () {
+                }).fail(function () {
+                    showStatusNotification(false, 'Something went wrong');
+                    $('#loader').hide();
+                }).always(function () {
 
-            });
+                });
+            }
         }
         
     });
