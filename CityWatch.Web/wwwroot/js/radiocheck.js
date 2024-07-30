@@ -2407,33 +2407,35 @@ $('#btn_save_guard_compliancelicenseKey').on('click', function () {
     if (HrVal != '' && DescVal != '' && FileVa != 'None') {
       
         if (ExpirayDateVal == '') {
-            if (confirm('Are you sure you not want to enter expiry Date')) {
-                $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
-                $('#loader').show();
-                $.ajax({
-                    url: '/Admin/GuardSettings?handler=SaveGuardComplianceandlicanseNew',
-                    data: $('#frm_add_complianceandlicense').serialize(),
-                    type: 'POST',
-                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                }).done(function (result) {
-                    if (result.status) {
-                        $('#addGuardCompliancesLicenseModal').modal('hide');
-                        const messageHtml1 = '';
-                        $('#schRunStatusNew').html(messageHtml1);
-                        gridGuardLicensesAndLicenceKey.ajax.reload();
 
-                        if (!result.dbxUploaded) {
-                            // displayGuardValidationSummary('compliancelicanseValidationSummary1', 'Compliance details saved successfully. However, upload to Dropbox failed.');
-                        }
-                    } else {
-                        const messageHtml = '';
-                        $('#schRunStatusNew').html(messageHtml);
-                        displayGuardValidationSummary('compliancelicanseValidationSummary1', result.message);
-                    }
-                }).always(function () {
-                    $('#loader').hide();
-                });
-            }
+            alert('Please Enter the Expiry Date or Date of issue');
+            //if (confirm('Are you sure you not want to enter expiry Date')) {
+            //    $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
+            //    $('#loader').show();
+            //    $.ajax({
+            //        url: '/Admin/GuardSettings?handler=SaveGuardComplianceandlicanseNew',
+            //        data: $('#frm_add_complianceandlicense').serialize(),
+            //        type: 'POST',
+            //        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            //    }).done(function (result) {
+            //        if (result.status) {
+            //            $('#addGuardCompliancesLicenseModal').modal('hide');
+            //            const messageHtml1 = '';
+            //            $('#schRunStatusNew').html(messageHtml1);
+            //            gridGuardLicensesAndLicenceKey.ajax.reload();
+
+            //            if (!result.dbxUploaded) {
+            //                // displayGuardValidationSummary('compliancelicanseValidationSummary1', 'Compliance details saved successfully. However, upload to Dropbox failed.');
+            //            }
+            //        } else {
+            //            const messageHtml = '';
+            //            $('#schRunStatusNew').html(messageHtml);
+            //            displayGuardValidationSummary('compliancelicanseValidationSummary1', result.message);
+            //        }
+            //    }).always(function () {
+            //        $('#loader').hide();
+            //    });
+            //}
         }
         else {
             $('#loader').show();
