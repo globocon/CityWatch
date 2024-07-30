@@ -392,7 +392,7 @@ namespace CityWatch.Web.Services
                         .SetFontColor(ColorConstants.BLUE);
                         
                         notesParagraphnew1.Add(link);
-                        notesParagraphnew.Inlines.Add(new LineBreak());
+                       
                         notesParagraphnew.Add(notesParagraphnew1);
                       
 
