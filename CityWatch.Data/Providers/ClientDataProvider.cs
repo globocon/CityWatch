@@ -322,6 +322,7 @@ namespace CityWatch.Data.Providers
            .Where(z => z.UserId == userId)
            .Select(z => z.ClientSite)
            .Distinct()
+           .OrderBy(x=>x.Name)
            .ToList();
 
         }
