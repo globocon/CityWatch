@@ -1153,6 +1153,9 @@ $(function () {
                             $('#dgl-image-modal').modal('hide');
                             gridGuardLog.clear();
                             gridGuardLog.reload();
+                            $('#IsAttachmentToRear').val(true);
+
+                            $('#IsTwentyfivePercentOfPage').val(false);
 
                         }
                     }
