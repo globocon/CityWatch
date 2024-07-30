@@ -53,6 +53,7 @@ namespace CityWatch.Kpi.Pages.Admin
 
         public IImportJobDataProvider ImportJobDataProvider { get { return _importJobDataProvider; } }
         public int GuardId { get; set; }
+        public int userId { get; set; }
         public SettingsModel(IWebHostEnvironment webHostEnvironment,
             IViewDataService viewDataService,
             IImportDataService importDataService,
@@ -90,23 +91,30 @@ namespace CityWatch.Kpi.Pages.Admin
         {
             ReportRequest = new KpiRequest();
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            userId= HttpContext.Session.GetInt32("loginUserId") ?? 0;
             var claimsIdentity = User.Identity as ClaimsIdentity;
             if (claimsIdentity != null && claimsIdentity.IsAuthenticated)
             {   /* admin login only*/
                 ReportRequest = new KpiRequest();
                 HttpContext.Session.SetInt32("GuardId", 0);
+                HttpContext.Session.SetInt32("loginUserId", 0);
                 return Page();
             }
             else if (GuardId != 0)
             {
                 /* When guard Login*/
                 HttpContext.Session.SetInt32("GuardId", GuardId);
+                if (userId != 0)
+                {
+                    HttpContext.Session.SetInt32("loginUserId", userId);
+                }
                 return Page();
-            }
+            }         
             else
             {
                 /*unauthorized login*/
                 HttpContext.Session.SetInt32("GuardId", 0);
+                HttpContext.Session.SetInt32("loginUserId", 0);
                 return Redirect(Url.Page("/Account/Login"));
             }
         }
@@ -149,9 +157,12 @@ namespace CityWatch.Kpi.Pages.Admin
                 if (clientType != null)
                 {
                     var clientSites = _clientDataProvider.GetUserClientSites(type, searchTerm);
-                    GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
-                    if (GuardId != 0)
-                        clientSites = _clientDataProvider.GetClientSitesUsingGuardId(GuardId);
+                    //GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+                    //if (GuardId != 0)
+                    //    clientSites = _clientDataProvider.GetClientSitesUsingGuardId(GuardId);
+                    userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
+                    if (userId != 0)
+                        clientSites = _clientDataProvider.GetClientSitesUsingLoginUser(userId).Where(x=>x.ClientType.Id== clientType.Id).ToList();
                     var clientSiteWithSettings = _clientDataProvider.GetClientSiteKpiSettings().Select(z => z.ClientSiteId).ToList();
 
                     return new JsonResult(clientSites.Select(z => new
@@ -171,9 +182,12 @@ namespace CityWatch.Kpi.Pages.Admin
                 else
                 {
                     var clientSites = _clientDataProvider.GetUserClientSites(type, searchTerm);
-                    GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
-                    if (GuardId != 0)
-                        clientSites = _clientDataProvider.GetClientSitesUsingGuardId(GuardId);
+                    //GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+                    //if (GuardId != 0)
+                    //    clientSites = _clientDataProvider.GetClientSitesUsingGuardId(GuardId);
+                    userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
+                    if (userId != 0)
+                        clientSites = _clientDataProvider.GetClientSitesUsingLoginUser(userId);
                     var clientSiteWithSettings = _clientDataProvider.GetClientSiteKpiSettings().Select(z => z.ClientSiteId).ToList();
 
                     return new JsonResult(clientSites.Select(z => new

@@ -36,7 +36,8 @@ $(function () {
         const option = $(this).val();
         if (!option)
             return;
-        var guardId = $("#hid_guardId").val();
+        var guardId = $("#hid_userId").val();
+       
         $.ajax({
             url: '/dashboard?handler=ClientSitesUsingUserId&type=' + encodeURIComponent(option) + "&&guardId=" + encodeURIComponent(guardId),
             type: 'GET',

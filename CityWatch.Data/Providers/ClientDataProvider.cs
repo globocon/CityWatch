@@ -202,6 +202,7 @@ namespace CityWatch.Data.Providers
 
         public List<ClientSiteRadioChecksActivityStatus_History> GetClientSiteFunsionLogBooks(int clientSiteId, LogBookType type, DateTime fromDate, DateTime toDate);
         public string GetKeyVehiclogWithProviders(string providerName);
+        public List<ClientSite> GetClientSitesUsingLoginUser(int? userId);
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -308,6 +309,17 @@ namespace CityWatch.Data.Providers
         {
             return _context.GuardLogins
            .Where(z => z.GuardId == GuardId)
+           .Select(z => z.ClientSite)
+           .Distinct()
+           .ToList();
+
+        }
+
+
+        public List<ClientSite> GetClientSitesUsingLoginUser(int? userId)
+        {
+            return _context.UserClientSiteAccess            
+           .Where(z => z.UserId == userId)
            .Select(z => z.ClientSite)
            .Distinct()
            .ToList();
