@@ -2,6 +2,7 @@
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
+using CityWatch.Data.Services;
 using CityWatch.Web.Models;
 using DocumentFormat.OpenXml.Drawing.Diagrams;
 using DocumentFormat.OpenXml.Office.CustomUI;
@@ -154,6 +155,7 @@ namespace CityWatch.Web.Services
         private readonly IUserDataProvider _userDataProvider;
         private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
         private readonly IGuardSettingsDataProvider _guardSettingsDataProvider;
+        private readonly ILogbookDataService _logbookDataService;
 
         public ViewDataService(IClientDataProvider clientDataProvider,
             IConfigDataProvider configDataProvider,
@@ -161,7 +163,8 @@ namespace CityWatch.Web.Services
             IClientSiteWandDataProvider clientSiteWandDataProvider,
             IGuardDataProvider guardDataProvider,
             IGuardLogDataProvider guardLogDataProvider,
-            IGuardSettingsDataProvider guardSettingsDataProvider)
+            IGuardSettingsDataProvider guardSettingsDataProvider,
+            ILogbookDataService logbookDataService)
         {
             _clientDataProvider = clientDataProvider;
             _configDataProvider = configDataProvider;
@@ -170,6 +173,7 @@ namespace CityWatch.Web.Services
             _guardDataProvider = guardDataProvider;
             _guardLogDataProvider = guardLogDataProvider;
             _guardSettingsDataProvider = guardSettingsDataProvider;
+            _logbookDataService = logbookDataService;
         }
 
         public List<SelectListItem> Genders
@@ -945,26 +949,8 @@ namespace CityWatch.Web.Services
         }
 
         public int GetNewClientSiteLogBookId(int clientSiteId, LogBookType logBookType)
-        {
-            int newLogBookId;
-            var clientSiteLogBook = _clientDataProvider.GetClientSiteLogBook(clientSiteId, logBookType, DateTime.Today);
-            if (clientSiteLogBook != null)
-            {
-                newLogBookId = clientSiteLogBook.Id;
-            }
-            else
-            {
-                var newClientSiteLogBook = new ClientSiteLogBook()
-                {
-                    ClientSiteId = clientSiteId,
-                    Type = logBookType,
-                    Date = DateTime.Today,
-                    DbxUploaded = false
-                };
-                newLogBookId = _clientDataProvider.SaveClientSiteLogBook(newClientSiteLogBook);
-            }
-
-            return newLogBookId;
+        { 
+            return _logbookDataService.GetNewOrExistingClientSiteLogBookId(clientSiteId, logBookType);
         }
 
         public string GetClientSiteKeyDescription(int keyId, int clientSiteId)

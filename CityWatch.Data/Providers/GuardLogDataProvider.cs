@@ -1,6 +1,7 @@
 ﻿using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
+using CityWatch.Data.Services;
 using Dropbox.Api.Files;
 using Dropbox.Api.Users;
 using iText.Commons.Actions.Contexts;
@@ -305,10 +306,13 @@ namespace CityWatch.Data.Providers
     public class GuardLogDataProvider : IGuardLogDataProvider
     {
         private readonly CityWatchDbContext _context;
+        private readonly ILogbookDataService _logbookDataService;
 
-        public GuardLogDataProvider(CityWatchDbContext context)
+        public GuardLogDataProvider(CityWatchDbContext context,
+            ILogbookDataService logbookDataService)
         {
             _context = context;
+            _logbookDataService = logbookDataService;
         }
 
         public List<GuardLog> GetGuardLogs(int logBookId, DateTime logDate)
@@ -2525,18 +2529,22 @@ namespace CityWatch.Data.Providers
 
         public void CreateLogBookStampForNoGuard(int ClientSiteID,DateTime dateTime, DateTime dateendTime)
         {
-            /* Check if NoGuardLogin event type exists in the logbook for the date if not create entry */           
+            /* Check if NoGuardLogin event type exists in the logbook for the date if not create entry */
+            // Check if Logbook id exists for the date create new logbookid
             var logbookdate = DateTime.Today;
             var logbooktype = LogBookType.DailyGuardLog;
-            var logBookId = GetClientSiteLogBookIdByLogBookMaxID(ClientSiteID, logbooktype, out logbookdate);            
+            //var logBookId = GetClientSiteLogBookIdByLogBookMaxID(ClientSiteID, logbooktype, out logbookdate);
+            var logBookId =  _logbookDataService.GetNewOrExistingClientSiteLogBookId(ClientSiteID, logbooktype);
+            var ClientSiteName = GetClientSites(ClientSiteID).FirstOrDefault().Name; 
             var checklogbookEntry = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == logBookId && x.EventType == (int)GuardLogEventType.NoGuardLogin).ToList();
+            var subject = "No Guard on Duty";
             if (checklogbookEntry.Count < 1 )
             {
                 var guardLog = new GuardLog()
                 {
                     ClientSiteLogBookId = logBookId,
                     EventDateTime = DateTime.Now,
-                    Notes = "No Guard on Duty",
+                    Notes = subject,
                     EventType = (int)GuardLogEventType.NoGuardLogin,
                     IsSystemEntry = true,
                     EventDateTimeLocal = TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
@@ -2547,6 +2555,8 @@ namespace CityWatch.Data.Providers
                     PlayNotificationSound = false
                 };
                 SaveGuardLog(guardLog);
+
+                LogBookEntryFromRcControlRoomMessages(0, 0, subject, ClientSiteName, IrEntryType.Alarm, 1, 0, guardLog);
             }            
         }
 
