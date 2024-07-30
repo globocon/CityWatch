@@ -969,7 +969,7 @@ namespace CityWatch.Web.Pages.Guard
                 }
                 
             }
-                if (files.Count == 1)
+            if (files.Count == 1)
             {
                 var file = files[0];
                 if (file.Length > 0)
@@ -986,7 +986,7 @@ namespace CityWatch.Web.Pages.Guard
                             file.CopyTo(stream);
                         }
                         //var folderPathnew = Path.Combine(Path.Combine("https://localhost:44356/", "DglUploads", id.ToString()), "RearFiles");
-                        var folderPathnew = Path.Combine(Path.Combine(url+"/", "DglUploads", id.ToString()), "RearFiles");
+                        var folderPathnew = Path.Combine(Path.Combine(url + "/", "DglUploads", id.ToString()), "RearFiles");
 
                         var LogImages = new GuardLogsDocumentImages()
                         {
