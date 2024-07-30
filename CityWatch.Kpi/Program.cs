@@ -43,6 +43,7 @@ builder.Services.AddScoped<IUserDataProvider, UserDataProvider>();
 builder.Services.AddScoped <IClientSiteWandDataProvider,ClientSiteWandDataProvider>();
 builder.Services.AddScoped<IGuardLogDataProvider, GuardLogDataProvider>();
 builder.Services.AddScoped<IGuardSettingsDataProvider, GuardSettingsDataProvider>();
+builder.Services.AddScoped<ILogbookDataService, LogbookDataService>();
 builder.Services.AddSession();
 builder.Services.AddRazorPages(options =>
 {
