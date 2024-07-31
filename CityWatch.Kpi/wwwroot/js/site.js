@@ -1094,20 +1094,20 @@ $(function () {
         var SearchTextbox = $("#search_sites_settings");
         var searchText = SearchTextbox.val();
         if (searchText.length >= 3) {     
-            gridClientSiteSettings.reload({ type: $('#cs_client_type').val(), searchTerm: $(this).val() });
+            gridClientSiteSettings.reload({ type: $('#cs_client_type').val(), searchTerm: $(this).val(), userId: $('#hid_userIdSettings').val() });
        
         }
       
     });
     $('#btnSearchSites').on('click', function () {
-        gridClientSiteSettings.reload({ type: $('#cs_client_type').val(), searchTerm: $('#search_sites_settings').val() });
+        gridClientSiteSettings.reload({ type: $('#cs_client_type').val(), searchTerm: $('#search_sites_settings').val(), userId: $('#hid_userIdSettings').val() });
     });
 
     $('#cs_client_type').on('change', function () {
         var SearchTextbox = $("#search_sites_settings");
         SearchTextbox.val("");
         var searchitem = '';
-        gridClientSiteSettings.reload({ type: $(this).val(), searchTerm: searchitem });
+        gridClientSiteSettings.reload({ type: $(this).val(), searchTerm: searchitem, userId: $('#hid_userIdSettings').val() });
     });
     /*code added for search client stop */
     var currentDiv = 1;
@@ -1387,7 +1387,7 @@ $(function () {
             alert('Saved successfully');
             $('#kpi-settings-modal').modal('hide');
             gridClientSiteSettings.clear();
-            gridClientSiteSettings.reload({ type: $('#cs_client_type').val() });
+            gridClientSiteSettings.reload({ type: $('#cs_client_type').val(), userId: $('#hid_userIdSettings').val() });
         }).fail(function () { });
     });
 
