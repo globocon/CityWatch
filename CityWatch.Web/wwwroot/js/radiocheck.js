@@ -2217,6 +2217,7 @@ FileuploadFileChanged = function (allfile) {
         return false;
     }
     var Desc = $('#Description').val();
+    var expiryDate = $('#GuardComplianceAndLicense_ExpiryDate1').val();
     Desc = Desc.substring(3);
     var cleanText = Desc.replace(/[✔️❌]/g, '').trim();
     const formData = new FormData();
@@ -2229,6 +2230,10 @@ FileuploadFileChanged = function (allfile) {
     formData.append('DateType', $('#IsDateFilterEnabledHidden').val());
     if (Desc == '') {
         (confirm('Please select Description and Expiry/Issue Date'))
+    }
+    if (expiryDate == '')
+    {
+        (confirm('Please select Expiry/Issue Date'))
     }
     else {
         fileprocess(allfile);
