@@ -2,6 +2,8 @@
 @model CityWatch.Kpi.Pages.Admin.SettingsModel
 @{
 }
+<input type="hidden" id="hid_userIdSettings" name="hiddenField" value="@Model.userId" />
+<input type="hidden" id="hid_guardIdSettings" name="hiddenField" value="@Model.GuardId" />
 <div id="loader"></div>
 <div class="container-fluid" style="width:80%">
     <ul class="nav nav-tabs" id="settingsTab" role="tablist">

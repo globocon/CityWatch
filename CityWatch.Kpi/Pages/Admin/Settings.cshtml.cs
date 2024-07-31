@@ -91,7 +91,7 @@ namespace CityWatch.Kpi.Pages.Admin
         {
             ReportRequest = new KpiRequest();
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
-            userId= HttpContext.Session.GetInt32("loginUserId") ?? 0;
+            userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
             var claimsIdentity = User.Identity as ClaimsIdentity;
             if (claimsIdentity != null && claimsIdentity.IsAuthenticated)
             {   /* admin login only*/
@@ -109,7 +109,7 @@ namespace CityWatch.Kpi.Pages.Admin
                     HttpContext.Session.SetInt32("loginUserId", userId);
                 }
                 return Page();
-            }         
+            }
             else
             {
                 /*unauthorized login*/
@@ -149,7 +149,7 @@ namespace CityWatch.Kpi.Pages.Admin
 
         //code added to search client name start
 
-        public JsonResult OnGetClientSiteWithSettings(string type, string searchTerm)
+        public JsonResult OnGetClientSiteWithSettings(string type, string searchTerm, int userId)
         {
             if (!string.IsNullOrEmpty(type) || !string.IsNullOrEmpty(searchTerm))
             {
@@ -160,9 +160,9 @@ namespace CityWatch.Kpi.Pages.Admin
                     //GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
                     //if (GuardId != 0)
                     //    clientSites = _clientDataProvider.GetClientSitesUsingGuardId(GuardId);
-                    userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
+                    //userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
                     if (userId != 0)
-                        clientSites = _clientDataProvider.GetClientSitesUsingLoginUser(userId).Where(x=>x.ClientType.Id== clientType.Id).ToList();
+                        clientSites = _clientDataProvider.GetClientSitesUsingLoginUser(userId, searchTerm).Where(x => x.ClientType.Id == clientType.Id).ToList();
                     var clientSiteWithSettings = _clientDataProvider.GetClientSiteKpiSettings().Select(z => z.ClientSiteId).ToList();
 
                     return new JsonResult(clientSites.Select(z => new
@@ -185,9 +185,9 @@ namespace CityWatch.Kpi.Pages.Admin
                     //GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
                     //if (GuardId != 0)
                     //    clientSites = _clientDataProvider.GetClientSitesUsingGuardId(GuardId);
-                    userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
+                    //userId = HttpContext.Session.GetInt32("loginUserId") ?? 0;
                     if (userId != 0)
-                        clientSites = _clientDataProvider.GetClientSitesUsingLoginUser(userId);
+                        clientSites = _clientDataProvider.GetClientSitesUsingLoginUser(userId, searchTerm);
                     var clientSiteWithSettings = _clientDataProvider.GetClientSiteKpiSettings().Select(z => z.ClientSiteId).ToList();
 
                     return new JsonResult(clientSites.Select(z => new
@@ -196,7 +196,7 @@ namespace CityWatch.Kpi.Pages.Admin
                         ClientTypeName = z.ClientType.Name,
                         ClientSiteName = z.Name,
                         HasSettings = clientSiteWithSettings.Any(x => x == z.Id),
-                       z.SiteEmail
+                        z.SiteEmail
                     }));
                 }
             }
@@ -769,12 +769,12 @@ namespace CityWatch.Kpi.Pages.Admin
             // Generate the PDF file
             DateTime date = new DateTime(reportYear, reportMonth, 1);
             string filename = $"{reportYear}{reportMonth.ToString("00")} - {FileNameHelper.GetSanitizedFileNamePart(schedule.ProjectName)} - Monthly Report - {date.ToString("MMM").ToUpper()} {reportYear}";
-            byte[] pdfBytes = _sendScheduleService.ProcessDownload(schedule, new DateTime(reportYear, reportMonth, 1), ignoreRecipients, false);            
+            byte[] pdfBytes = _sendScheduleService.ProcessDownload(schedule, new DateTime(reportYear, reportMonth, 1), ignoreRecipients, false);
             Response.Headers["Content-Disposition"] = $"inline; filename={filename}";
             // Return the PDF file as a download
             return File(pdfBytes, "application/pdf", filename + ".pdf");
         }
-        
+
         //Menu chage -start
         public JsonResult OnGetSmartWandSettings(int clientSiteId)
         {
@@ -1077,7 +1077,7 @@ namespace CityWatch.Kpi.Pages.Admin
         /*key settings - end*/
         //for toggle areas - start 
         public void OnPostSaveToggleType(int siteId, int timeslottoggleTypeId, bool timeslotIsActive, int vwitoggleTypeId, bool vwiIsActive,
-            int sendertoggleTypeId, bool senderIsActive, int reelstoggleTypeId, bool reelsIsActive,int trailerRegoTypeId,bool isISOVINAcive)
+            int sendertoggleTypeId, bool senderIsActive, int reelstoggleTypeId, bool reelsIsActive, int trailerRegoTypeId, bool isISOVINAcive)
         {
 
             _clientDataProvider.SaveClientSiteToggle(siteId, timeslottoggleTypeId, timeslotIsActive);
@@ -1111,7 +1111,7 @@ namespace CityWatch.Kpi.Pages.Admin
         //for ring fence-end
         public JsonResult OnGetClientSiteEmail(int clientSiteId)
         {
-           
+
             return new JsonResult(_clientDataProvider.GetNewClientSites(clientSiteId));
         }
 
@@ -1159,16 +1159,16 @@ namespace CityWatch.Kpi.Pages.Admin
                 _clientDataProvider.SaveKpiSettingsCustomDropboxFolder(record);
                 success = true;
 
-               await CheckAndCreateCustomDropBoxFolder(record);
+                await CheckAndCreateCustomDropBoxFolder(record);
             }
             catch (Exception ex)
             {
-             message = ex.Message;
+                message = ex.Message;
             }
 
             return new JsonResult(new { success, message });
         }
-        
+
         private async Task<bool> CheckAndCreateCustomDropBoxFolder(ClientSiteKpiSettingsCustomDropboxFolder record)
         {
             try
@@ -1310,7 +1310,7 @@ namespace CityWatch.Kpi.Pages.Admin
             {
                 var CriticalDoc = CriticalDocumentViewModel.ToDataModel(CriticalDocModel);
                 _configDataProvider.SaveCriticalDoc(CriticalDoc, true);
-               
+
             }
             catch (Exception ex)
             {
