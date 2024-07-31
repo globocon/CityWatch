@@ -2481,21 +2481,24 @@ namespace CityWatch.Data.Providers
                                       .ToList();
                                         if (rcOffDutyStatus.Count == 0)
                                         {
-
-                                            var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                                            if (!CheckIfAnyEntryexistInRadioCheckStatus(manning.ClientSiteKpiSetting.ClientSiteId))
                                             {
-                                                ClientSiteId = manning.ClientSiteKpiSetting.ClientSiteId,
-                                                GuardId = 4,/* temp Guard(bruno) Id because forgin key  is set*/
-                                                GuardLoginTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None),/* Expected Time for Login
+                                                var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                                                {
+                                                    ClientSiteId = manning.ClientSiteKpiSetting.ClientSiteId,
+                                                    GuardId = 4,/* temp Guard(bruno) Id because forgin key  is set*/
+                                                    GuardLoginTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None),/* Expected Time for Login
                                                 /* New Field Added for NotificationType only for manning notification*/
-                                                NotificationType = 1,
-                                                /* added for show the crm CrmSupplier deatils in the 'no guard on duty' */
-                                                CRMSupplier = manning.CrmSupplier
-                                            };
-                                            _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
-                                            _context.SaveChanges();
+                                                    NotificationType = 1,
+                                                    /* added for show the crm CrmSupplier deatils in the 'no guard on duty' */
+                                                    CRMSupplier = manning.CrmSupplier
+                                                };
+                                                _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
+                                                _context.SaveChanges();
 
-                                            CreateLogBookStampForNoGuard(manning.ClientSiteKpiSetting.ClientSiteId, dateTime, dateendTime);
+                                                CreateLogBookStampForNoGuard(manning.ClientSiteKpiSetting.ClientSiteId, dateTime, dateendTime);
+
+                                            }
 
                                         }
                                     }
@@ -2561,6 +2564,26 @@ namespace CityWatch.Data.Providers
         }
 
 
+
+        /* in some time the no guard shows when guard is active in the two hour list
+         * this function will check if any Activity Status in the radio status list 
+         */
+        public bool CheckIfAnyEntryexistInRadioCheckStatus(int ClientSiteId)
+        {
+            var numberofactiveRowExistintheRadioStatus =_context.ClientSiteRadioChecksActivityStatus.Where(x =>  x.ClientSiteId == ClientSiteId && x.GuardLoginTime == null).ToList();
+            if(numberofactiveRowExistintheRadioStatus.Count!=0)
+            {
+                return true;
+
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+
+
         public void GetGuardManningDetailsForPublicHolidays()
         {
             try
@@ -2597,7 +2620,7 @@ namespace CityWatch.Data.Providers
                                     bool iflogbookentryexist = false;
                                     foreach (var log in checkSiteLogBook)
                                     {
-                                        var checklogbookEntryInSpecificTiming = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == log.Id && (x.EventDateTime >= dateTime && x.EventDateTime <= dateendTime)).ToList();
+                                        var checklogbookEntryInSpecificTiming = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == log.Id && x.EventType != (int)GuardLogEventType.NoGuardLogin && (x.EventDateTime >= dateTime && x.EventDateTime <= dateendTime)).ToList();
                                         if (checklogbookEntryInSpecificTiming.Count != 0)
                                         {
                                             iflogbookentryexist = true;
@@ -2615,19 +2638,22 @@ namespace CityWatch.Data.Providers
                                           .ToList();
                                             if (rcOffDutyStatus.Count == 0)
                                             {
-
-                                                var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                                                if (!CheckIfAnyEntryexistInRadioCheckStatus(manning.ClientSiteKpiSetting.ClientSiteId))
                                                 {
-                                                    ClientSiteId = manning.ClientSiteKpiSetting.ClientSiteId,
-                                                    GuardId = 4,/* temp Guard(bruno) Id because forgin key  is set*/
-                                                    GuardLoginTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None),/* Expected Time for Login
+                                                    var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                                                    {
+                                                        ClientSiteId = manning.ClientSiteKpiSetting.ClientSiteId,
+                                                        GuardId = 4,/* temp Guard(bruno) Id because forgin key  is set*/
+                                                        GuardLoginTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None),/* Expected Time for Login
                                                 /* New Field Added for NotificationType only for manning notification*/
-                                                    NotificationType = 1,
-                                                    /* added for show the crm CrmSupplier deatils in the 'no guard on duty' */
-                                                    CRMSupplier = manning.CrmSupplier
-                                                };
-                                                _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
-                                                _context.SaveChanges();
+                                                        NotificationType = 1,
+                                                        /* added for show the crm CrmSupplier deatils in the 'no guard on duty' */
+                                                        CRMSupplier = manning.CrmSupplier
+                                                    };
+                                                    _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
+                                                    _context.SaveChanges();
+
+                                                }
                                             }
                                         }
                                     }
