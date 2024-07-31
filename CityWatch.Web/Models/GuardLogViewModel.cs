@@ -23,7 +23,7 @@ namespace CityWatch.Web.Models
             EventDateTimeZoneShort = guardLog.EventDateTimeZoneShort;
             IsIRReportTypeEntry = guardLog.IsIRReportTypeEntry;
             GpsCoordinates = guardLog.GpsCoordinates;
-
+            EventType = guardLog.EventType;
 
         }
 
@@ -96,5 +96,6 @@ namespace CityWatch.Web.Models
         public bool IsIRReportTypeEntry { get; set; }
 
         public string GpsCoordinates  { get; set; }
+        public int EventType { get; set; }
     }
 }

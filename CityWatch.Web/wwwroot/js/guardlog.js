@@ -1187,18 +1187,28 @@ $(function () {
         const bg_color_pale_yellow = '#fcf8d1';
         const bg_color_pale_red = '#ffcccc';
         const irEntryTypeIsAlarm = 2;
+        const noguardonduty_eventType = 1;
 
         gridGuardLog.on('rowDataBound', function (e, $row, id, record) {
             if (record.irEntryType) {
-                $row.css('background-color', record.irEntryType === irEntryTypeIsAlarm ? bg_color_pale_red : record.rcLogbookStamp ? bg_color_pale_red : bg_color_pale_yellow);
+                if (record.irEntryType === irEntryTypeIsAlarm || record.rcLogbookStamp) {
+                    $row.css('background-color', bg_color_pale_red);
+                } else {
+                    $row.css('background-color', bg_color_pale_yellow);
+                }
                 /* add for check if dark mode is on start*/
                 if ($('#toggleDarkMode').is(':checked')) {
                     $row.css('color', '#333');
                     //$row.css('background-color', record.irEntryType === irEntryTypeIsAlarm ? bg_color_pale_red : bg_color_pale_yellow);
                 }
                 /* add for check if dark mode is on end*/
+            } else if (record.eventType === noguardonduty_eventType) {
+                $row.css('background-color', bg_color_pale_red);
+                if ($('#toggleDarkMode').is(':checked')) {
+                    $row.css('color', '#333');
+                    //$row.css('background-color', record.irEntryType === irEntryTypeIsAlarm ? bg_color_pale_red : bg_color_pale_yellow);
+                }
             }
-
         });
         gridGuardLog.on('rowSelect', function (e, $row, id, record) {
             /*timer pause while editing*/
@@ -1505,11 +1515,14 @@ $(function () {
         const bg_color_pale_red = '#ffcccc';
         const bg_color_white = '#ffffff';
         const irEntryTypeIsAlarm = 2;
+        const noguardonduty_eventType = 1;
 
         gridsiteLog.on('rowDataBound', function (e, $row, id, record) {
             let rowColor = bg_color_white;
             if (record.irEntryType) {
                 rowColor = record.irEntryType === irEntryTypeIsAlarm ? bg_color_pale_red : bg_color_pale_yellow;
+            } else if (record.eventType === noguardonduty_eventType) {
+                rowColor = bg_color_pale_red;
             }
             $row.css('background-color', rowColor);
         });
