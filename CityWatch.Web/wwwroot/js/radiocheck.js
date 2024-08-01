@@ -2233,7 +2233,7 @@ FileuploadFileChanged = function (allfile) {
     }
     if (expiryDate == '')
     {
-        (confirm('Please select Expiry/Issue Date'))
+        (confirm('Please select the Expiry Date or Issue Date first, and then attach the document'))
     }
     else {
         fileprocess(allfile);

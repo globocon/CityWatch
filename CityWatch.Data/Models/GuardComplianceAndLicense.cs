@@ -23,7 +23,7 @@ namespace CityWatch.Data.Models
         
         public DateTime? ExpiryDate { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Please ensure a file is attached before saving a new compliance.All HR Groups require a genuine file to be attached of the licence or certificate.")]
         public string FileName { get; set; }
 
         [NotMapped]
