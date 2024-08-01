@@ -60,6 +60,13 @@ namespace CityWatch.Web.Services
         private readonly string _reportRootDir;
         private readonly string _imageRootDir;
 
+        //p6-102 Add photo -start
+        private const float MAX_IMAGE_WIDTH = 600;
+        private const float MAX_IMAGE_HEIGHT = 800;
+        private const float SCALE_FACTOR = 0.92f;
+        private const int ROTATION_ANGLE_DEG = 270;
+        //p6-102 Add photo -end
+
         public GuardLogReportGenerator(IWebHostEnvironment webHostEnvironment,
             IClientDataProvider clientDataProvider,
             IClientSiteWandDataProvider clientSiteWandDataProvider,
@@ -126,12 +133,60 @@ namespace CityWatch.Web.Services
             var footer = CreateFooter();
             pdfDoc.AddEventHandler(PdfDocumentEvent.END_PAGE, new TableFooterEventHandler(footer));
 
+            //p6-102 Add photo -start
+            var index = 1;
+            foreach (var entry in _guardLogs)
+            {
+                
+
+                var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(entry.Id);
+                //Paragraph notesParagraphnew = new Paragraph("See attached file  ").SetFontSize(CELL_FONT_SIZE);
+
+                foreach (var guardLogImage in guardlogImages)
+                {
+
+                    if (guardLogImage.IsRearfile == true)
+                    {
+                      //  var docImage = new Document(pdfDoc);
+                        var image = AttachImageToPdf(pdfDoc, ++index, guardLogImage.ImagePath);
+                        doc.Add(image);
+                      //  docImage.Close();
+                    }
+                }
+            }
+            //p6-102 Add photo -end
             doc.Close();
             pdfDoc.Close();
 
             return IO.Path.GetFileName(reportPdf);
         }
+        //p6-102 Add photo -start
+        private Image AttachImageToPdf(PdfDocument pdfDocument, int index, string imagePath)
+        {
+            var pageSize = new PageSize(pdfDocument.GetFirstPage().GetPageSize());
+            pdfDocument.AddNewPage(index, pageSize);
+            var imageData = ImageDataFactory.Create(imagePath);
+            var image = new Image(imageData);
+            bool rotateImage = image.GetImageWidth() > image.GetImageHeight();
+            bool scaleImage = image.GetImageWidth() > MAX_IMAGE_WIDTH || image.GetImageHeight() > MAX_IMAGE_HEIGHT;
 
+            if (rotateImage)
+            {
+                image.SetRotationAngle(ROTATION_ANGLE_DEG * (Math.PI / 180));
+                if (scaleImage)
+                    image.ScaleToFit(PageSize.A4.GetHeight() * SCALE_FACTOR, PageSize.A4.GetWidth() * SCALE_FACTOR);
+            }
+            else
+            {
+                if (scaleImage)
+                    image.ScaleToFit(PageSize.A4.GetWidth() * SCALE_FACTOR, PageSize.A4.GetHeight() * SCALE_FACTOR);
+            }
+
+            var bottom = rotateImage ? pageSize.GetTop() : pageSize.GetTop() - image.GetImageScaledHeight();
+            image.SetFixedPosition(index, 0, bottom);
+            return image;
+        }
+        //p6-102 Add photo -end
         private string GetReportPdfFilePath(ClientSiteLogBook clientsiteLogBook, string version)
         {
             var reportPdfPath = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{clientsiteLogBook.Date:yyyyMMdd} - Daily Guard Log - {FileNameHelper.GetSanitizedFileNamePart(clientsiteLogBook.ClientSite.Name)} - {version}.pdf");
@@ -390,8 +445,8 @@ namespace CityWatch.Web.Services
                         var link = new Link(linkText, PdfAction.CreateURI(url))
                         .SetFontColor(DeviceGray.BLACK)
                         .SetFontColor(ColorConstants.BLUE);
-                        
-                        notesParagraphnew1.Add(link);
+
+                         notesParagraphnew1.Add(link);
                        
                         notesParagraphnew.Add(notesParagraphnew1);
                       
