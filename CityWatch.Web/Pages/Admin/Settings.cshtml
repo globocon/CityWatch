@@ -925,9 +925,11 @@
                                 <div class="col-md-2">
                                     <input type="text" class="form-control" id="Guard_Initial" name="Guard.Initial">
                                 </div>
-                                <label class="col-md-1 col-form-label">Mobile</label>
+                                
+                                <label class="col-md-1 col-form-label">CRM (Supplier)</label>
                                 <div class="col-md-3">
-                                    <input type="text" class="form-control" id="Guard_Mobile" name="Guard.Mobile" value="+61 4">
+                                    @*  <input type="text" class="form-control" id="Guard_Provider" name="Guard.Provider"> *@
+                                    <select id="Guard_Provider" name="Guard.Provider" asp-items="@Model.ViewDataService.ProviderList" class="form-control"></select>
                                 </div>
 
                             </div>
@@ -940,18 +942,7 @@
                                 <div class="col-md-2">
                                     <select id="Guard_State" name="Guard.State" asp-items="@Model.ViewDataService.LicenseStates" class="form-control"></select>
                                 </div>
-                                <label class="col-md-1 col-form-label">Email</label>
-                                <div class="col-md-3">
-                                    @*this is avoid auto fill values Start*@
-                                    <input type="text" style="display:none;" aria-hidden="true">
-                                    <input type="text" style="display:none;" id="LoginUser_UserName" aria-hidden="true">
-                                    @*this is avoid auto fill values end  *@
-                                    <input type="text" class="form-control" id="Guard_Email" name="Guard.Email" autocomplete="off">
-                                </div>
-                            </div>
-                            <div class="form-group row">
-
-                                <label class="col-md-2 form-check-label">Access</label>
+                                <label class="col-md-1 form-check-label">Access</label>
                                 <div class="col-md-3">
                                     <select class="form-control" multiple="multiple" id="Guard_Access" name="Guard.GuardAccess">
                                         @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal)
@@ -976,22 +967,61 @@
 
 
                                 </div>
+                                
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-md-2 col-form-label">Mobile</label>
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control" id="Guard_Mobile" name="Guard.Mobile" value="+61 4">
+                                </div>
+                                <label class="col-md-1"for="Guard_Gender">Gender</label>
+                                <div class="col-md-2">
+                                <select class="form-control" id="Guard_Gender" name="Guard.Gender">
+                                    <option selected="selected" value="">Select</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Non-Binary">Non-Binary</option>
+                                    <option value="Not Stated">Not Stated</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                                </div>
+                                <label class="col-md-1 form-check-label pr-0">RC Bypass</label>
+                                <div class="pr-1 pl-3">
+                                    <input type="checkbox" class="form-check" id="cbIsRCBypass">
+                                    <input type="hidden" id="Guard_IsRCBypass" name="Guard.IsRCBypass">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+
+                                <label class="col-md-2 col-form-label">Email</label>
+                                <div class="col-md-3">
+                                    @*this is avoid auto fill values Start*@
+                                    <input type="text" style="display:none;" aria-hidden="true">
+                                    <input type="text" style="display:none;" id="LoginUser_UserName" aria-hidden="true">
+                                    @*this is avoid auto fill values end  *@
+                                    <input type="text" class="form-control" id="Guard_Email" name="Guard.Email" autocomplete="off">
+                                </div>
+                                <label class="col-md-1 col-form-label">HR Pin</label>
+                                <div class="pr-0 pl-3" >
+                                    <input type="password" style="display:none;" aria-hidden="true">
+                                    <input type="password" class="form-control" id="Guard_Pin" name="Guard.Pin" style="width:120px;" autocomplete="off">
+                                   
+                                </div>
+                                <div class="pr-4 pl-3">
+                                    <span id="togglePassword" class=""><i class="fa fa-eye-slash" aria-hidden="true"></i></span>
+                                </div>
+                                
+                                
                                 <label class="col-md-1 form-check-label">Is Active</label>
                                 <div class="pr-1 pl-3">
                                     <input type="checkbox" class="form-check" id="cbIsActive">
                                     <input type="hidden" id="Guard_IsActive" name="Guard.IsActive">
                                 </div>
-                                <div class="pr-0" style="width:60px;">
-                                    <input type="password" style="display:none;" aria-hidden="true">
-                                    <input type="password" class="form-control" id="Guard_Pin" name="Guard.Pin" style="width:60px;" autocomplete="off">
-                                   
-                                </div>
-                                <span id="togglePassword" class="p-1"><i class="fa fa-eye-slash" aria-hidden="true"></i></span>
-                                <label class="form-label text-right" style="width: 164px;">CRM (Supplier)</label>
-                                <div class="col-md-3">
+                                @*<label class="form-label text-right" style="width: 164px;">CRM (Supplier)</label>*@
+                                @*<div class="col-md-3">*@
                                     @*  <input type="text" class="form-control" id="Guard_Provider" name="Guard.Provider"> *@
-                                    <select id="Guard_Provider" name="Guard.Provider" asp-items="@Model.ViewDataService.ProviderList" class="form-control"></select>
-                                </div>
+                                    @*<select id="Guard_Provider" name="Guard.Provider" asp-items="@Model.ViewDataService.ProviderList" class="form-control"></select>*@
+                                @*</div>*@
                             </div>
 
 

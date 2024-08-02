@@ -41,6 +41,9 @@ namespace CityWatch.Data.Models
             get;
             set ;
         }
+        //p1-224 RC Bypass For HR -start
+        public string Gender { get; set; }
+        //p1-224 RC Bypass For HR -start
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             var errors = new List<ValidationResult>();
@@ -53,7 +56,10 @@ namespace CityWatch.Data.Models
 
             if (string.IsNullOrEmpty(Initial))
                 errors.Add(new ValidationResult("Guard Initial is required"));
-
+            //p1-224 RC Bypass For HR -start
+            if (string.IsNullOrEmpty(Gender))
+                errors.Add(new ValidationResult("Gender is required"));
+            //p1-224 RC Bypass For HR -end
             //if (string.IsNullOrEmpty(Email))
             //    errors.Add(new ValidationResult("Guard Email is required"));
 
@@ -104,5 +110,8 @@ namespace CityWatch.Data.Models
         public bool IsRCAccess { get; set; }
         public bool IsKPIAccess { get; set; }
         public bool IsReActive { get; set; }
+        //p1-224 RC Bypass For HR -start
+        public bool IsRCBypass { get; set; }
+        //p1-224 RC Bypass For HR -end
     }
 }
