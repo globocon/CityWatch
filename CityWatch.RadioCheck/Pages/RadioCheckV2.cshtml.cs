@@ -24,6 +24,10 @@ using CityWatch.RadioCheck.Services;
 
 using iText.Kernel.Crypto.Securityhandler;
 using System.Net.NetworkInformation;
+using CityWatch.RadioCheck.Models;
+using System.Net.Http;
+using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace CityWatch.RadioCheck.Pages.Radio
 {
@@ -65,6 +69,11 @@ namespace CityWatch.RadioCheck.Pages.Radio
         public string DisplayItem { get; set; }
         public IActionResult OnGet(string displayItem)
         {
+
+            //This Api call for update the values of the tables Start
+             CallApi();
+            //This Api call for update the values of the tables end
+
             DisplayItem = displayItem;
 
             var activeGuardDetails = _guardLogDataProvider.GetActiveGuardDetails();
@@ -154,7 +163,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 return Redirect(Url.Page("/Account/Login"));
             }
 
-
+          
         }
         //code added to save the duress button start
         public JsonResult OnPostSaveDuress()
@@ -2001,5 +2010,41 @@ namespace CityWatch.RadioCheck.Pages.Radio
         }
 
         #endregion RcActionListEdit
+
+        #region api call
+        /// <summary>
+        /// this is used for regresh the radio status table when page refresh
+        /// </summary>
+        /// <returns></returns>
+        public async Task<IActionResult> CallApi()
+        {
+            try
+            {
+                var results = new RootObject();
+                using (var client = new HttpClient())
+                {
+                    var url = $"https://rc.cws-ir.com/api/RadioChecksActivityStatus/RadioChecksActivityStatus";
+                    HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, url);
+                    request.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+                    HttpResponseMessage response = await client.SendAsync(request);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        return StatusCode((int)response.StatusCode, $"API call failed with status code: {response.StatusCode}");
+
+                    }
+                   
+                }
+                return StatusCode(200, $"Success");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
+        }
+
+        #endregion
+
+
     }
 }
