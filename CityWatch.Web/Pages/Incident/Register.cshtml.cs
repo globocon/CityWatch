@@ -292,6 +292,7 @@ namespace CityWatch.Web.Pages.Incident
                             Phone = item.Mobile,
                             LicenseNumber = item.SecurityNo,
                             Email = item.Email,
+                            Gender=item.Gender,
 
                         },
                     };

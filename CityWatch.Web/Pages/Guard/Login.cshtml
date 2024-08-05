@@ -84,11 +84,22 @@
                     <label>Full Name</label>
                     <input type="text" class="form-control" asp-for="@Model.GuardLogin.Guard.Name" />
                 </div>
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-2">
                     <label>Initials</label>
                     <input type="text" class="form-control" asp-for="@Model.GuardLogin.Guard.Initial" />
                 </div>
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-2">
+                    <label>Gender</label>
+                    <select class="form-control" asp-for="@Model.GuardLogin.Guard.Gender">
+                        <option selected="selected" value="">Select</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Non-Binary">Non-Binary</option>
+                        <option value="Not Stated">Not Stated</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-2">
                     <label>State</label>
                     <select class="form-control" asp-for="@Model.GuardLogin.Guard.State" asp-items="@Model.ViewDataService.States"></select>
                 </div>
