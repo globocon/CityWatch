@@ -48,7 +48,7 @@ namespace CityWatch.Web.Services
         private const string COLOR_GREY_LIGHT = "#a6a6a6";        
         private const string COLOR_PALE_YELLOW = "#fcf8d1";
         private const string COLOR_PALE_RED = "#ffcccc";
-
+        private const string FONT_COLOR_BLACK = "#000000";
         private const string REPORT_DIR = "Output";
         private const float CELL_FONT_SIZE = 7f;
 
@@ -147,10 +147,15 @@ namespace CityWatch.Web.Services
 
                     if (guardLogImage.IsRearfile == true)
                     {
-                      //  var docImage = new Document(pdfDoc);
+                        //  var docImage = new Document(pdfDoc);
                         var image = AttachImageToPdf(pdfDoc, ++index, guardLogImage.ImagePath);
                         doc.Add(image);
-                      //  docImage.Close();
+
+
+                        
+                        var paraName = new Paragraph($"File Name: {IO.Path.GetFileName(guardLogImage.ImagePath)}").SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLACK));
+                        doc.Add(paraName);
+                        //  docImage.Close();
                     }
                 }
             }
@@ -841,7 +846,7 @@ namespace CityWatch.Web.Services
             }
 
 
-        }
+    }
 
     }
 }
