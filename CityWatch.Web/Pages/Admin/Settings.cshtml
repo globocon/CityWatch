@@ -713,6 +713,34 @@
                                         </div>
                                     </div>
                                 </div>
+                               @*  Timesheet *@
+                                <div id="TimesheetDiv" style="display:none">
+                                    <div class="col-md-12">
+                                    <div class="form-group row">
+                                        <div class="col-md-3">
+                                            <label class="form-label" id="Week">select week</label>
+                                                <select class="form-control" id="week" name="week">
+                                                    <option value="">Select</option>
+                                                    <option value="Monday">Monday</option>
+                                                    <option value="Tuesday">Tuesday</option>
+                                                    <option value="Wednesday">Wednesday</option>
+                                                    <option value="Thursday">Thursday</option>
+                                                    <option value="Friday">Friday</option>
+                                                    <option value="saturday">saturday</option>
+                                                    <option value="Sunday">Sunday</option>
+                                                </select>
+                                        </div>
+                                            <div class="col-md-3">
+                                                <label for="time">Exec. Time</label>
+                                                <input type="time" class="form-control" id="timeTimesheet" name="timeTimesheet">
+                                            </div>
+                                        <div class="col-md-3" style="padding-top:28px">
+                                            <button class="btn btn-success" id="add_Timesheet">Save</button>
+                                        </div>
+                                    </div>
+                                    </div>
+                                   
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1244,6 +1272,49 @@
 
             </div>
 
+        </div>
+    </div>
+</div>
+<!----------------- Timesheet Modal -------------------->
+<div class="modal fade" id="timesheetModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="guardInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered  ">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-calendar mr-2"></i>Timesheet</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <input type="hidden" id="TimesheetGuard_Id"  />
+                        <div class="form-group">
+                            <label for="startDate">Start Date</label>
+                            <input type="date" class="form-control" id="startDate" name="startDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="endDate">End Date</label>
+                            <input type="date" class="form-control" id="endDate" name="endDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="frequency">Frequency</label>
+                            <select class="form-control" id="frequency" name="frequency">
+                                <option value="">Select</option>
+                                <option value="0">Daily</option>
+                                <option value="1">Weekly</option>
+                                <option value="2">Monthly</option>
+                            </select>
+                        </div>
+                       
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <button type="button" id="btnDownloadTimesheet" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Download</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

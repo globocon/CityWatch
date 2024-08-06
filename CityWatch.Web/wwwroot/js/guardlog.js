@@ -2842,7 +2842,7 @@ $(function () {
         {
             targets: -1,
             data: null,
-            defaultContent: '<button  class="btn btn-outline-primary mr-2" name="btn_edit_guard"><i class="fa fa-pencil mr-2"></i>Edit</button>',
+            defaultContent: '<button  class="btn btn-outline-primary mr-2" name="btn_edit_guard"><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + '<img src="/images/Timesheet.jpg" style="width:60%" alt="Image" class="clickable-image" style="cursor: pointer;" alt="Timesheet" name="btn_timesheet"/>',
             orderable: false,
             className: "text-center",
             width: "8%"
@@ -2979,6 +2979,122 @@ $(function () {
         $("#Guard_Access").val(selectedValues);
         $("#Guard_Access").multiselect("refresh");
     });
+    $('#guard_settings tbody').on('click', 'img[name=btn_timesheet]', function () {
+        $('#TimesheetGuard_Id').val('-1');
+        $('#startDate').val('');
+        $('#endDate').val('');
+        var data = guardSettings.row($(this).parents('tr')).data();
+        $('#TimesheetGuard_Id').val(data.id);
+        $('#timesheetModal').modal('show');
+    });
+    // Download Timesheet start
+
+    //    $('#btnDownloadTimesheet').on('click', function () {
+    //    $.ajax({
+    //        type: 'GET',
+    //        url: '/Admin/Settings?handler=DownloadTimesheet',
+    //        data: {
+    //            startdate: $('#startDate').val(),
+    //            endDate: $('#endDate').val(),
+    //            frequency: $('#frequency').val(),
+    //            guradid: $('#Guard_Id').val(),
+    //        },
+    //        xhrFields: {
+    //            responseType: 'blob' // For handling binary data
+    //        },
+    //        success: function (data, textStatus, request) {
+    //            var contentDispositionHeader = request.getResponseHeader('Content-Disposition');
+    //            var fileName = '';
+    //            var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+    //            var matches = filenameRegex.exec(contentDispositionHeader);
+    //            var downloadedFileName = matches !== null && matches[1] ? matches[1].replace(/['"]/g, '') : fileName;
+    //            // Create a Blob with the PDF data and initiate the download
+    //            var blob = new Blob([data], { type: 'application/pdf' });
+    //            // // Create a temporary anchor element to trigger the download
+    //            //var url = window.URL.createObjectURL(blob);
+    //            // // Open the PDF in a new tab
+    //            //var newTab = window.open(url, '_blank');
+
+    //            const URL = window.URL || window.webkitURL;
+    //            const displayNameHash = encodeURIComponent(`#displayName=${downloadedFileName}`);
+    //            const bloburl = URL.createObjectURL(blob);
+    //            const objectUrl = URL.createObjectURL(blob) + displayNameHash;
+    //            const windowUrl = window.location.origin; // + window.location.pathname;
+    //            const viewerUrl = `${windowUrl}/lib/Pdfjs/web/viewer.html?file=`;
+    //            var newTab = window.open(`${viewerUrl}${objectUrl}`);
+    //            if (!newTab) {
+    //                // If the new tab was blocked, fallback to downloading the file
+    //                var a = document.createElement('a');
+    //                a.href = bloburl;
+    //                a.download = downloadedFileName;
+    //                a.click();
+    //            }
+
+    //            URL.revokeObjectURL(bloburl);
+    //            URL.revokeObjectURL(objectUrl);
+
+    //            //if (!newTab) {
+    //            //    // If the new tab was blocked, fallback to downloading the file
+    //            //    var a = document.createElement('a');
+    //            //    a.href = url;
+    //            //    a.download = downloadedFileName;
+    //            //    a.click();
+    //            //}
+    //            //window.URL.revokeObjectURL(url);
+    //        },
+    //        error: function () {
+    //            alert('Error while downloading the PDF.');
+    //        }
+    //    }).done(function (result) {
+
+    //    });
+    //});
+    $('#btnDownloadTimesheet').on('click', function (e) {
+        var startDate = $('#startDate').val();
+        var endDate = $('#endDate').val();
+
+        // Check if both startDate and endDate have values
+        if (!startDate || !endDate) {
+            alert("Please select both start date and end date.");
+            return; // Exit the function if validation fails
+        }
+
+
+      
+
+        $.ajax({
+            url: '/Admin/Settings?handler=DownloadTimesheet',
+            data: {
+                startdate: $('#startDate').val(),
+               endDate: $('#endDate').val(),
+                frequency: $('#frequency').val(),
+                guradid: $('#TimesheetGuard_Id').val(),
+            },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (response) {
+            if (response.statusCode === -1) {
+               
+            } else {
+
+
+               
+
+
+                var newTab = window.open(response.fileName, '_blank');
+                if (!newTab) {
+                   
+                    var a = document.createElement('a');
+                    a.href = response.fileName;
+                    a.download = "TimeSheet_Report";
+                    a.click();
+                }
+                
+            }
+        });
+    });
+   
+    //Download Timesheet stop
     $('#guard_settings tbody').on('click', '#btnLogBookDetailsByGuard', function () {
 
         $('#guardLogBookInfoModal').modal('show');

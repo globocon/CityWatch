@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using static Dropbox.Api.TeamLog.ActorLogInfo;
 using static Dropbox.Api.TeamLog.EventCategory;
 
@@ -32,13 +33,15 @@ namespace CityWatch.Web.Pages.Admin
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IViewDataService _viewDataService;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
+        private readonly ITimesheetReportGenerator _TimesheetReportGenerator;
 
         public SettingsModel(IWebHostEnvironment webHostEnvironment,
             IClientDataProvider clientDataProvider,
             IConfigDataProvider configDataProvider,
             IUserDataProvider userDataProvider,
             IViewDataService viewDataService,
-            IGuardLogDataProvider guardLogDataProvider)
+            IGuardLogDataProvider guardLogDataProvider,
+             ITimesheetReportGenerator TimesheetReportGenerator)
         {
             _guardLogDataProvider = guardLogDataProvider;
             _clientDataProvider = clientDataProvider;
@@ -46,6 +49,7 @@ namespace CityWatch.Web.Pages.Admin
             _userDataProvider = userDataProvider;
             _webHostEnvironment = webHostEnvironment;
             _viewDataService = viewDataService;
+            _TimesheetReportGenerator = TimesheetReportGenerator;
         }
         public string IsAdminminOrPoweruser=string.Empty;
         public HrSettings HrSettings;
@@ -1329,13 +1333,82 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { status = DroboxDir, message = message });
         }
+        public JsonResult OnPostSaveTimesheet(string weekname, string time)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.TimesheetSave(weekname, time);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = weekname, message = message });
+        }
         public JsonResult OnGetSettingsDetails()
         {
             var Email = _clientDataProvider.GetEmail();
             var DropboxDir = _clientDataProvider.GetDropboxDir();
             return new JsonResult(new { Email = Email.Email, DropboxDir = DropboxDir.DropboxDir });
         }
-      
+        public JsonResult OnGetTimesheetDetails()
+        {
+            var Timesheet = _clientDataProvider.GetTimesheetDetails();
+            if (Timesheet!=null)
+            {
+                return new JsonResult(new { Week = Timesheet.weekName, Time = Timesheet.Time });
+            }
+            else
+            {
+                return new JsonResult(new { Week = "", Time = "" });
+            }
+            
+        }
 
+        // To download Timesheet-Task 212
+        //public IActionResult OnGetDownloadTimesheet(string startdate, string endDate, string frequency, int guradid)
+        //{
+        //    int siteid = 465;
+
+        //    DateTime Start = DateTime.Parse(startdate);
+        //    DateTime end = DateTime.Parse(endDate);
+        //    var fileName = _TimesheetReportGenerator.GeneratePdfTimesheetReport(siteid);
+        //    //var fileName = _ReportGenerator.GeneratePdfTimesheetReport(siteid);
+
+        //    return File("application/pdf", fileName + ".pdf");
+        //}
+        public async Task<JsonResult> OnPostDownloadTimesheet(string startdate, string endDate, string frequency, int guradid)
+        {
+           
+            var fileName = string.Empty;
+            var statusCode = 0;
+            int id = 1;
+            try
+            {
+
+                fileName = _TimesheetReportGenerator.GeneratePdfTimesheetReport(startdate, endDate, guradid);
+
+
+
+
+
+            }
+            catch (Exception ex)
+            {
+               
+            }
+
+            if (string.IsNullOrEmpty(fileName))
+                return new JsonResult(new { fileName, message = "Failed to generate pdf", statusCode = -1 });
+
+
+            
+
+            return new JsonResult(new { fileName = @Url.Content($"~/Pdf/Output/{fileName}"), statusCode });
+        }
     }
 }

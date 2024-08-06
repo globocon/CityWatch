@@ -25,6 +25,7 @@ using CityWatch.Common.Models;
 using CityWatch.Kpi.Helpers;
 using Microsoft.Extensions.Options;
 using CityWatch.Common.Services;
+using System.Security.Policy;
 
 namespace CityWatch.Kpi.Pages.Admin
 {
@@ -45,6 +46,7 @@ namespace CityWatch.Kpi.Pages.Admin
         public readonly IConfigDataProvider _configDataProvider;
         private readonly Settings _settings;
         private readonly IDropboxService _dropboxUploadService;
+        
 
         [BindProperty]
         public KpiRequest ReportRequest { get; set; }
@@ -67,7 +69,8 @@ namespace CityWatch.Kpi.Pages.Admin
              IGuardDataProvider guardDataProvider,
              IConfigDataProvider configDataProvider,
              IOptions<Settings> settings,
-             IDropboxService dropboxUploadService)
+             IDropboxService dropboxUploadService
+             )
         {
             _webHostEnvironment = webHostEnvironment;
             _viewDataService = viewDataService;
@@ -84,6 +87,7 @@ namespace CityWatch.Kpi.Pages.Admin
             _configDataProvider = configDataProvider;
             _settings = settings.Value;
             _dropboxUploadService = dropboxUploadService;
+            
         }
 
         public IActionResult OnGet()
@@ -760,7 +764,7 @@ namespace CityWatch.Kpi.Pages.Admin
             // Return the PDF file as a download
             return File(pdfBytes, "application/pdf", filename + ".pdf");
         }
-        
+       
         //Menu chage -start
         public JsonResult OnGetSmartWandSettings(int clientSiteId)
         {

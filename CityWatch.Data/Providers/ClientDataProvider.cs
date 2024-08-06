@@ -202,6 +202,11 @@ namespace CityWatch.Data.Providers
 
         public List<ClientSiteRadioChecksActivityStatus_History> GetClientSiteFunsionLogBooks(int clientSiteId, LogBookType type, DateTime fromDate, DateTime toDate);
         public string GetKeyVehiclogWithProviders(string providerName);
+        public string GetGuardlogName(int GuardID, DateTime enddate);
+        public string GetGuardlogSite(int GuardID, DateTime enddate);
+        public List<GuardLogin> GetLoginDetailsGuard(int GuardID, DateTime startdate, DateTime enddate);
+        public void TimesheetSave(string weekname, string time);
+        public TimeSheet GetTimesheetDetails();
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -393,6 +398,7 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.Notes)
                 .ToList();
         }
+        
 
         public ClientSiteKpiSetting GetClientSiteKpiSetting(int clientSiteId)
         {
@@ -414,8 +420,50 @@ namespace CityWatch.Data.Providers
             }
             return clientSiteKpiSetting;
         }
+        public List<GuardLogin> GetLoginDetailsGuard(int GuardID,DateTime startdate, DateTime enddate)
+        {
+            return _context.GuardLogins
+        .Where(gl => gl.GuardId == GuardID && gl.LoginDate.Date >= startdate.Date && gl.LoginDate.Date <= enddate.Date)
+        .ToList();
 
-        public List<ClientSiteKpiSetting> GetClientSiteKpiSetting(int[] clientSiteIds)
+
+        }
+        public string GetGuardlogName(int GuardID, DateTime enddate)
+        {
+            var TimesheetName = "";
+            var guardLogin = _context.GuardLogins
+     .FirstOrDefault(x => x.GuardId == GuardID && x.LoginDate.Date == enddate.Date);
+            if (guardLogin!=null)
+            {
+                if (guardLogin.SmartWandId != null)
+                {
+                    var Name = _context.ClientSiteSmartWands.Where(x => x.Id == guardLogin.SmartWandId).FirstOrDefault();
+                    TimesheetName = Name.SmartWandId;
+                }
+                else
+                {
+                    var Name = _context.IncidentReportPositions.Where(x => x.Id == guardLogin.PositionId).FirstOrDefault();
+                    TimesheetName = Name.Name;
+                }
+            }
+
+            return TimesheetName;
+
+
+        }
+        public string GetGuardlogSite(int GuardID, DateTime enddate)
+        {
+            var SiteName = "";
+            var guardLogin = _context.GuardLogins
+     .FirstOrDefault(x => x.GuardId == GuardID && x.LoginDate.Date == enddate.Date);
+            if (guardLogin != null)
+            {
+                 var SiteName1 = _context.ClientSites.Where(x => x.Id == guardLogin.ClientSiteId).FirstOrDefault();
+                SiteName = SiteName1.Name;
+            }
+            return SiteName;
+        }
+            public List<ClientSiteKpiSetting> GetClientSiteKpiSetting(int[] clientSiteIds)
         {
             var clientSiteKpiSetting = _context.ClientSiteKpiSettings
                 .Include(x => x.ClientSite)
@@ -1556,6 +1604,33 @@ namespace CityWatch.Data.Providers
             }
 
         }
+        public void TimesheetSave(string weekname,string time)
+        {
+            if (!string.IsNullOrEmpty(weekname))
+            {
+
+
+                var TimesheetUpdate = _context.TimeSheet.Where(x => x.Id != 0).ToList();
+                if (TimesheetUpdate != null)
+                {
+                    if (TimesheetUpdate.Count != 0)
+                    {
+                        _context.TimeSheet.RemoveRange(TimesheetUpdate);
+                        _context.SaveChanges();
+                    }
+                }
+                var TimeSheetnew = new TimeSheet()
+                {
+                    weekName = weekname,
+                    Time=time
+                };
+                _context.TimeSheet.Add(TimeSheetnew);
+
+
+                _context.SaveChanges();
+            }
+
+        }
         public void DeafultMailBox(string Email)
         {
             if (!string.IsNullOrEmpty(Email))
@@ -2188,6 +2263,10 @@ namespace CityWatch.Data.Providers
             return _context.ClientSiteRadioChecksActivityStatus_History
                 .Where(z => z.ClientSiteId == clientSiteId && z.EventDateTime.Date >= fromDate && z.EventDateTime.Date <= toDate)
                 .ToList();
+        }
+        public TimeSheet GetTimesheetDetails()
+        {
+            return _context.TimeSheet.FirstOrDefault();
         }
 
     }
