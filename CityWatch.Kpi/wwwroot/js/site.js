@@ -1440,8 +1440,17 @@ $(function () {
 
             }
             else if (data.success ==5) {
-                alert('Please enter a valid time for Start and End. These are invalid times ' + data.erorrMessage+' .');
+                alert('Please enter a valid time for Start and End in the format of HH:mm and in the range of 00:01 - 23:59. These are invalid times ' + data.erorrMessage+' .');
                 
+            }
+
+            else if (data.success == 6) {
+                alert('Please enter the clocks must be in the range of 00:01 - 23:59. These are invalid ' + data.erorrMessage + ' .');
+
+            }
+            else if (data.success == 7) {
+                alert('Please make sure you fill out the three boxes(start, end, and workers) for a day or make them blank.Please ensure workers have a value and cannot be blank when a clock is set. ' + data.erorrMessage + ' .');
+
             }
            
         }).fail(function () { });

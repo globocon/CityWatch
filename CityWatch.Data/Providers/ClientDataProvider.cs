@@ -1,6 +1,7 @@
 ﻿using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using iText.Commons.Actions.Contexts;
+using iText.Layout.Borders;
 using iText.Layout.Element;
 using iText.StyledXmlParser.Jsoup.Safety;
 using Microsoft.AspNetCore.DataProtection;
@@ -203,6 +204,9 @@ namespace CityWatch.Data.Providers
         public List<ClientSiteRadioChecksActivityStatus_History> GetClientSiteFunsionLogBooks(int clientSiteId, LogBookType type, DateTime fromDate, DateTime toDate);
         public string GetKeyVehiclogWithProviders(string providerName);
         public List<ClientSite> GetClientSitesUsingLoginUser(int? userId, string searchTerm);
+        public string CheckRulesOneinKpiManningInput(ClientSiteKpiSetting settings);
+        public string CheckRulesTwoinKpiManningInput(ClientSiteKpiSetting settings);
+        
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -910,10 +914,190 @@ namespace CityWatch.Data.Providers
             }
             return InvalidInputs.TrimEnd(',');
         }
+
         public bool IsValidTimeFormat(string input)
         {
-            TimeSpan dummyOutput;
-            return TimeSpan.TryParse(input, out dummyOutput);
+            TimeSpan inputTimeSpan;
+            if (!TimeSpan.TryParseExact(input, "hh\\:mm", null, out inputTimeSpan))
+            {
+                return false;
+            }
+            else
+            {
+                return TimeSpan.TryParse(input, out inputTimeSpan);
+            }
+            
+            
+        }
+
+        /*
+        ISSUE#131      
+        Clocks must be in a range of 00:01 ~ 23:59; there is no 00:00 allowed
+        Currently 00:00 is allowed, as is 00:0, etc. minimum value is BLANK or 00:01*/
+        public string CheckRulesOneinKpiManningInput(ClientSiteKpiSetting settings)
+        {
+            var invalidInputs = string.Empty;
+            if (settings != null)
+            {
+                foreach (var listItem in settings.ClientSiteManningGuardKpiSettings)
+                {
+                    if (!IsValidTime(listItem.EmpHoursStart))
+                    {
+                        invalidInputs += listItem.EmpHoursStart + ",";
+                    }
+
+                    if (!IsValidTime(listItem.EmpHoursEnd))
+                    {
+                        invalidInputs += listItem.EmpHoursEnd + ",";
+                    }
+                }
+
+                foreach (var listItem2 in settings.ClientSiteManningPatrolCarKpiSettings)
+                {
+                    if (!IsValidTime(listItem2.EmpHoursStart))
+                    {
+                        invalidInputs += listItem2.EmpHoursStart + ",";
+                    }
+
+                    if (!IsValidTime(listItem2.EmpHoursEnd))
+                    {
+                        invalidInputs += listItem2.EmpHoursEnd + ",";
+                    }
+                }
+            }
+            return invalidInputs.TrimEnd(',');
+        }
+
+        static bool IsValidTime(string time)
+        {
+            if (string.IsNullOrEmpty(time)) return true; // Assuming null or empty is valid
+
+            TimeSpan inputTimeSpan;
+            if (!TimeSpan.TryParse(time, out inputTimeSpan))
+            {
+                return false;
+            }
+
+            TimeSpan startTime = new TimeSpan(0, 1, 0);  // 00:01
+            TimeSpan endTime = new TimeSpan(23, 59, 0);  // 23:59
+
+            return inputTimeSpan >= startTime && inputTimeSpan <= endTime;
+        }
+
+        /*Rule2
+         * Workers must have a value; it can not be blank once there is a clock set Currently
+        Blank is allowed even when clocks blank above it or have inputs Blank must only be allowed when clocks blank*/
+        public string CheckRulesTwoinKpiManningInput(ClientSiteKpiSetting settings)
+        {
+            var invalidInputs = string.Empty;
+            if (settings != null)
+            {
+                foreach (var listItem in settings.ClientSiteManningGuardKpiSettings)
+                {
+                    //if (!IsWorkerValid(listItem.EmpHoursStart, listItem.EmpHoursEnd, listItem.NoOfPatrols))
+                    //{
+                    //    invalidInputs += $"Invalid worker entry for times {listItem.EmpHoursStart} - {listItem.EmpHoursEnd},";
+                    //}
+                   
+                    if (!AreAllValuesPresent(listItem.EmpHoursStart, listItem.EmpHoursEnd, listItem.NoOfPatrols))
+                    {
+                        string notnullVlaue = string.Empty;
+                        string  nullVlaue = string.Empty;
+                        invalidInputs += "Incomplete entry for ";
+                        if (string.IsNullOrEmpty(listItem.EmpHoursStart))
+                        {
+                            nullVlaue += " Start : __:__ ";
+                        }
+                        else
+                        {
+                            notnullVlaue+= " Start :"+ listItem.EmpHoursStart;
+
+                        }
+                        if (string.IsNullOrEmpty(listItem.EmpHoursEnd))
+                        {
+                            nullVlaue += " End : __:__ ";
+                        }
+                        else
+                        {
+                            notnullVlaue += " End :"+ listItem.EmpHoursEnd;
+                        }
+                        if(listItem.NoOfPatrols==0 || listItem.NoOfPatrols ==null)
+                        {
+                            nullVlaue += " Worker : _ ";
+                        }
+                        else
+                        {
+                            notnullVlaue += " Worker : "+listItem.NoOfPatrols.ToString();
+                        }
+                      
+
+                        invalidInputs +=  notnullVlaue+ nullVlaue+ ", ";
+                    }
+                }
+                foreach (var listItem2 in settings.ClientSiteManningPatrolCarKpiSettings)
+                {
+                    if (!IsWorkerValid(listItem2.EmpHoursStart, listItem2.EmpHoursEnd, listItem2.NoOfPatrols))
+                    {
+                        invalidInputs += $"Invalid worker entry for times {listItem2.EmpHoursStart} - {listItem2.EmpHoursEnd},";
+                    }
+                    if (!AreAllValuesPresent(listItem2.EmpHoursStart, listItem2.EmpHoursEnd, listItem2.NoOfPatrols))
+                    {
+                        invalidInputs += $"Incomplete entry for times' {listItem2.EmpHoursStart}' - ' {listItem2.EmpHoursEnd} with worker '{listItem2.NoOfPatrols}', ";
+                    }
+                }
+
+               
+
+
+            }
+            return invalidInputs.TrimEnd(',');
+        }
+
+        static bool IsWorkerValid(string startTime, string endTime, int? worker)
+        {
+            bool timesNotNull = !string.IsNullOrEmpty(startTime) && !string.IsNullOrEmpty(endTime);
+            bool workerNotNull = worker != null;
+
+            if (timesNotNull && !workerNotNull)
+            {
+                return false;
+            }
+
+            if (!timesNotNull && workerNotNull)
+            {
+                return false;
+            }
+
+
+
+            return true;
+        }
+
+        static bool AreAllValuesPresent(string startTime, string endTime, int? worker)
+        {
+
+
+            bool timesNotNull = !string.IsNullOrEmpty(startTime) || !string.IsNullOrEmpty(endTime);
+            if(!string.IsNullOrEmpty(startTime) || !string.IsNullOrEmpty(endTime))
+            {
+                timesNotNull = true;
+            }
+            else
+            {
+                timesNotNull = false;
+            }
+
+            bool workerNotNull = worker != null;
+
+            if (timesNotNull && workerNotNull)
+                return true;
+            else if (!timesNotNull && !workerNotNull)
+                return true;
+            else
+                return false;
+
+            // Check if either all values are present or all are absent
+            //return (timesNotNull || workerNotNull) || (!timesNotNull && !workerNotNull);
         }
         public List<ClientSite> GetNewClientSites()
         {
