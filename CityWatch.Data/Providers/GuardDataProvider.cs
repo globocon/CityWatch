@@ -207,6 +207,10 @@ namespace CityWatch.Data.Providers
                 updateGuard.IsAdminPowerUser = guard.IsAdminPowerUser;
                 updateGuard.IsAdminGlobal = guard.IsAdminGlobal;
                 updateGuard.Pin = guard.Pin;
+                //p1-224 RC Bypass For HR -start
+                updateGuard.Gender = guard.Gender;
+                updateGuard.IsRCBypass = guard.IsRCBypass;
+                //p1-224 RC Bypass For HR -end
             }
 
             _context.SaveChanges();

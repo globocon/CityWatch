@@ -191,6 +191,9 @@ $(function () {
         highlightDutyDay('lblOffDutyToday');
         highlightDutyDay('lblOffDutyTomorrow', false);
         $('#guardShiftDayTime').html('N/A');
+       /* p1 - 224 RC Bypass for IR - start*/
+        $('#GuardLogin_Guard_Gender').val('');
+        //p1 - 224 RC Bypass for IR - end
     }
 
     function clearGuardValidationSummary(validationControl) {
@@ -272,6 +275,9 @@ $(function () {
                     $('#GuardLogin_Guard_Email').val(result.guard.email);
                     $('#GuardLogin_Guard_Mobile').val(result.guard.mobile);
                     $('#GuardLogin_Guard_Initial').val(result.guard.initial);
+                    /* p1 - 224 RC Bypass for IR - start*/
+                    $('#GuardLogin_Guard_Gender').val(result.guard.gender);
+                    //p1 - 224 RC Bypass for IR - end
                     $('#guardLoginDetails').show();
                     $('#GuardLogin_Guard_Id').val(result.guard.id);
 
@@ -2874,6 +2880,7 @@ $(function () {
         { data: 'clientSites', orderable: false, width: "15%" },
         { data: 'pin', width: "1%", visible: false },
         { data: 'loginDate', visible: false },
+        { data: 'gender', width: "10%" },
         {
             data: 'isActive', name: 'isactive', className: "text-center", width: "10%", 'render': function (value, type, data) {
                 return renderGuardActiveCell(value, type, data);
@@ -2988,7 +2995,11 @@ $(function () {
         $('#GuardCompliance_GuardId').val(data.id);
         $('#GuardComplianceandlicense_GuardId').val(data.id);
         $('#GuardComplianceandlicense_LicenseNo').val(data.securityNo);
-
+        //p1-224 RC Bypass For HR -start
+        $('#Guard_IsRCBypass').val(data.isRCBypass);
+        $('#cbIsRCBypass').prop('checked', data.isRCBypass);
+        $('#Guard_Gender').val(data.gender);
+        //p1-224 RC Bypass For HR -end
         // ;
         var selectedValues = [];
         if (data.isAdminGlobal) {
@@ -3228,9 +3239,16 @@ $(function () {
         $('#Guard_Mobile').val('+61 4');
         $('#Guard_Id').val('-1');
         $('#cbIsActive').prop('checked', true);
+        //p1-224 RC Bypass For HR -start
         $('#cbIsRCAccess').prop('checked', false);
         $('#cbIsKPIAccess').prop('checked', false);
+        $('#Guard_IsRCBypass').val(false);
+        $('#cbIsRCBypass').prop('checked', false);
+        //p1-224 RC Bypass For HR -end
         $('#glValidationSummary').html('');
+        //p1-224 RC Bypass For HR -start
+        $('#Guard_Gender').val('');
+        //p1-224 RC Bypass For HR -end
         $(".multiselect-option input[type=checkbox]").prop("checked", false);
     }
 
@@ -3238,6 +3256,7 @@ $(function () {
         clearGuardValidationSummary('glValidationSummary');
         $('#guard_saved_status').hide();
         $('#Guard_IsActive').val($(cbIsActive).is(':checked'));
+        $('#Guard_IsRCBypass').val($(cbIsRCBypass).is(':checked'));
         //$('#Guard_IsRCAccess').val($(cbIsRCAccess).is(':checked'));
         //$('#Guard_IsKPIAccess').val($(cbIsKPIAccess).is(':checked'));
         $.ajax({

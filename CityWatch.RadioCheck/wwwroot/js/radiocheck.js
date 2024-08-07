@@ -979,6 +979,7 @@ $('#guardInfoModal').on('shown.bs.modal', function (event) {
     $('#lbl_guard_mobile').html('');
     $('#lbl_guard_provider').html('');
     $('#lbl_guard_provider_no').html('');
+    $('#lbl_guard_gender').html('');
     
 
     const button = $(event.relatedTarget);
@@ -992,6 +993,7 @@ $('#guardInfoModal').on('shown.bs.modal', function (event) {
         $('#lbl_guard_name').html('&nbsp;&nbsp;&nbsp;' + result.name);
         $('#lbl_guard_security_no').html('&nbsp;&nbsp;&nbsp;' + result.securityNo);
         $('#lbl_guard_state').html('&nbsp;&nbsp;&nbsp;' + result.state);
+        $('#lbl_guard_gender').html('&nbsp;&nbsp;&nbsp;' + result.gender);
         $('#lbl_guard_email').html('&nbsp;&nbsp;&nbsp;' + result.email);
         $('#lbl_guard_mobile').html('&nbsp;&nbsp;&nbsp;' + result.mobile);
         var provider = result.provider ? result.provider : '';

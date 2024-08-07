@@ -78,8 +78,11 @@ namespace CityWatch.Web.Models
         public bool IsAdminGlobal { get { return _guard.IsAdminGlobal; } }
         public bool IsAdminPowerUser { get { return _guard.IsAdminPowerUser; } }
         public bool IsSTATS { get { return _guard.IsSTATS; } }
+        //p1-224 RC Bypass For HR -start
+        public bool IsRCBypass { get { return _guard.IsRCBypass; } }
 
-       
-       
+        public string Gender { get { return _guard.Gender; } }
+        //p1-224 RC Bypass For HR -end
+
     }
 }
