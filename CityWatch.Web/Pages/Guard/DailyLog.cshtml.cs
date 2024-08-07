@@ -169,11 +169,11 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     if (guardLogImage.IsRearfile == true)
                     {
-                        guardlog.Notes=guardlog.Notes + "</br>See attached file <a href =\""+ guardLogImage.ImagePath + "\" target=\"_blank\">" + Path.GetFileName(guardLogImage.ImagePath) +"</a>";
+                        guardlog.Notes=guardlog.Notes + "</br>See attached file <a href =\""+ guardLogImage.ImagePath + "\" target=\"_blank\">" + Path.GetFileName(guardLogImage.ImagePath) + "</a><i class=\"fa fa-trash mr-2 btn-delete-dgl-attachment\"data-id=\"" + guardLogImage.Id + "\"></i>";
                     }
                     if (guardLogImage.IsTwentyfivePercentfile == true)
                     {
-                        guardlog.Notes = guardlog.Notes + "</br> <a href =\""+ guardLogImage.ImagePath +" \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\"/></a>";
+                        guardlog.Notes = guardlog.Notes + "</br> <a href =\""+ guardLogImage.ImagePath +" \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\"/></a></br><i class=\"fa fa-trash mr-2 btn-delete-dgl-attachment\"data-id=\"" + guardLogImage.Id + "\"></i>";
                     }
                 }
             }
@@ -1065,6 +1065,62 @@ namespace CityWatch.Web.Pages.Guard
             }
 
             return new JsonResult(new {  success });
+        }
+        public JsonResult OnPostDeleteAttachment(int id)
+
+        {
+
+            var success = false;
+            var message = "Success";
+            try
+            {
+                if (id != 0)
+                {
+                    var image = _guardLogDataProvider.GetGuardLogDocumentImaesById(id);
+                    var filePath = string.Empty;
+                    foreach (var item in image)
+                    {
+
+                        if (item.IsRearfile == true)
+                        {
+                            filePath = IO.Path.Combine(_webHostEnvironment.WebRootPath, "DglUploads", id.ToString(), "RearFiles", IO.Path.GetFileName(item.ImagePath));
+                            if (IO.File.Exists(filePath))
+                            {
+
+                                IO.File.Delete(filePath);
+                                success = true;
+
+
+                            }
+
+                        }
+                        if (item.IsTwentyfivePercentfile == true)
+                        {
+                            filePath = IO.Path.Combine(_webHostEnvironment.WebRootPath, "DglUploads", id.ToString(), "TwentyfivePercentFiles", IO.Path.GetFileName(item.ImagePath));
+                            if (IO.File.Exists(filePath))
+                            {
+
+                                IO.File.Delete(filePath);
+                                success = true;
+
+
+                            }
+
+                        }
+                        _guardLogDataProvider.DeleteGuardLogDocumentImaes(id);
+                    }
+
+                }
+
+
+
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = "Error " + ex.Message;
+            }
+            return new JsonResult(new { success, message });
         }
     }
 

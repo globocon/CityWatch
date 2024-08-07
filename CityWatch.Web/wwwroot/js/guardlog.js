@@ -1171,6 +1171,28 @@ $(function () {
         }
         
     });
+    $('#guard_daily_log tbody').on('click', '#btn-delete-dgl-attachment', function (value, record) {
+        
+        var id = $(this).data('id');
+        if (confirm('Are you sure want to remove this attachment?')) {
+           
+            $.ajax({
+                url: '/Guard/DailyLog?handler=DeleteAttachment',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    id: id
+                   
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.success==true) {
+                    gridGuardLog.clear();
+                    gridGuardLog.reload();
+                }
+            });
+        }
+    });
     //p6-102 Add Photo -end
     /*to display the popup to acknowledge the message-start*/
     $('#guard_daily_log tbody').on('click', '#btnAcknowledgeButton', function (value, record) {
