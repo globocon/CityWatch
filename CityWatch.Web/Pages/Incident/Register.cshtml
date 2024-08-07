@@ -325,6 +325,7 @@
                                     <input asp-for="@Model.Report.DateLocation.PatrolInternal" class="form-check-input">
                                 </div>
                                 <div class="pt-3" style="font-size:0.8rem">NOTE: If WAND points do not exist, or are missing you <u>must</u> take photos <b>AND</b> mention in notes that there are NO WAND points</div>
+                                <div class="pt-3" style="font-size:0.8rem;text-align:center"><b><u>AS.4421-2011</u></b></div>
                             </div>
                         </div>
                         <div class="form-group col-md-8 col-ipad-100">
@@ -397,6 +398,14 @@
                                     <input asp-for="@Model.Report.DateLocation.ClientSiteLiveGps" />
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-4 col-ipad-50 mb-0" style="font-size:0.8rem">
+                            <p class="mb-0">
+                                Class 2 - Low Priority (late to close, faults) < 60 mins
+                                <br>Class 3 - Standard Security Alarm Response < 45 mins
+                            </p>
                         </div>
                     </div>
                 </div>

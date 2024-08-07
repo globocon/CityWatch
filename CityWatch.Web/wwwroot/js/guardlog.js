@@ -319,42 +319,42 @@ $(function () {
         const isPosition = $('#GuardLogin_IsPosition').is(':checked');
         getSmartWandOrOfficerPosition(isPosition);
         $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
-        //To Get the Critical Documents start
-        var ClientSiteName = $('#GuardLogin_ClientSiteName').val();
-        $.ajax({
-            url: '/Guard/Login?handler=CriticalDocumentsList&ClientSiteName=' + ClientSiteName,
-            type: 'GET',
-            dataType: 'json',
-        }).done(function (result) {
-            var ss = 'kk';
-            console.log(result);
-            if (result.length == 0) {
-                $('#client_status_0').css('color', 'red');
-                $('#client_status_1').css('color', 'red');
-            }
-            else if (result[0].hrSettings) {
-                var HRGroupID = result[0].hrSettings.hrGroupId;
-                if (HRGroupID == 1) {
-                    $('#client_status_0').css('color', 'green');
-                    $('#client_status_1').css('color', 'red');
-                    $('#client_status_2').css('color', 'red');
-                }
-                else if (HRGroupID == 2) {
-                    $('#client_status_1').css('color', 'green');
-                    $('#client_status_2').css('color', 'red');
-                    $('#client_status_0').css('color', 'red');
-                }
-                else {
-                    $('#client_status_2').css('color', 'green');
-                    $('#client_status_0').css('color', 'red');
-                    $('#client_status_1').css('color', 'red');
-                }
-            }
+        ////To Get the Critical Documents start
+        //var ClientSiteName = $('#GuardLogin_ClientSiteName').val();
+        //$.ajax({
+        //    url: '/Guard/Login?handler=CriticalDocumentsList&ClientSiteName=' + ClientSiteName,
+        //    type: 'GET',
+        //    dataType: 'json',
+        //}).done(function (result) {
+        //    var ss = 'kk';
+        //    console.log(result);
+        //    if (result.length == 0) {
+        //        $('#client_status_0').css('color', 'red');
+        //        $('#client_status_1').css('color', 'red');
+        //    }
+        //    else if (result[0].hrSettings) {
+        //        var HRGroupID = result[0].hrSettings.hrGroupId;
+        //        if (HRGroupID == 1) {
+        //            $('#client_status_0').css('color', 'green');
+        //            $('#client_status_1').css('color', 'red');
+        //            $('#client_status_2').css('color', 'red');
+        //        }
+        //        else if (HRGroupID == 2) {
+        //            $('#client_status_1').css('color', 'green');
+        //            $('#client_status_2').css('color', 'red');
+        //            $('#client_status_0').css('color', 'red');
+        //        }
+        //        else {
+        //            $('#client_status_2').css('color', 'green');
+        //            $('#client_status_0').css('color', 'red');
+        //            $('#client_status_1').css('color', 'red');
+        //        }
+        //    }
 
-        }).always(function () {
-            $('#loader').hide();
-        });
-        //To Get the Critical Documents stop
+        //}).always(function () {
+        //    $('#loader').hide();
+        //});
+        ////To Get the Critical Documents stop
     });
 
 
@@ -951,7 +951,9 @@ $(function () {
 
         var $editBtn = $('<button class="btn btn-outline-primary mr-1 p-1" data-id="' + record.id + '"><i class="fa fa-pencil mr-2"></i>Edit</button>'),
             //p6-102 Add Photo -start
-            $imageBtn = $('<button class="btn btn-outline-primary p-1 " data-id="' + record.id + '"><i class="fa fa-camera mr-1"></i><i class="fa fa-plus"></i></button>'),
+
+            $imageBtn = $('<button class="btn btn-outline-primary p-1" data-id="' + record.id + '"><i class="fa fa-camera mr-1"></i><i class="fa fa-plus"></i></button>'),
+
             //p6-102 Add Photo -end
             $deleteBtn = $('<button class="btn btn-outline-danger mt-2" data-id="' + record.id + '"><i class="fa fa-trash mr-2"></i>Delete</button>'),
             $updateBtn = $('<button class="btn btn-outline-success mr-2 mt-2" data-id="' + record.id + '"><i class="fa fa-check-circle mr-2"></i>Update</button>').hide(),
@@ -1072,74 +1074,100 @@ $(function () {
 
 
     });
-    $('#IsRearOrTwentyfivePercentfileInput').on('change', function () {
+    $('#IsRearOrTwentyfivePercentfileInput').on('change', function (e) {
+        $('#loader').show();
+        //const file = $(this).get(0).files.item(0);
 
-        const file = $(this).get(0).files.item(0);
-        
-            
+        //const file = $(this).get(0).files; 
+        const file = this; 
+
         if ($('#IsAttachmentToRear').val() === 'true') {
-            const fileForm = new FormData();
-            fileForm.append('file', file);
-            fileForm.append('logId', $('#GuardimagedataId').val());
-            fileForm.append('url', window.location.origin);
+            for (let i = 0; i < file.files.length; i++) {
+              
+                const fileForm = new FormData();
+                //fileForm.append('file', file);
+                // fileForm.append('file', file.files.item(i));
+                fileForm.append('file', file.files.item(i))
+                fileForm.append('logId', $('#GuardimagedataId').val());
+                fileForm.append('url', window.location.origin);
 
 
 
 
-            $.ajax({
-                url: '/Guard/DailyLog?handler=RearFileUpload',
-                type: 'POST',
-                data: fileForm,
-                processData: false,
-                contentType: false,
-                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
-            }).done(function (data) {
+                $.ajax({
+                    url: '/Guard/DailyLog?handler=RearFileUpload',
+                    type: 'POST',
+                    data: fileForm,
+                    processData: false,
+                    contentType: false,
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+                }).done(function (data) {
 
-                if (data.success) {
-                    $('#dgl-image-modal').modal('hide');
-                    gridGuardLog.clear();
-                    gridGuardLog.reload();
-                }
+                    if (data.success) {
+                        
+                            if (i == file.files.length - 1) {
+                                $('#loader').hide();
+                                $('#dgl-image-modal').modal('hide');
+                                gridGuardLog.clear();
+                                gridGuardLog.reload();
+                                $('#IsAttachmentToRear').val(true);
+
+                                $('#IsTwentyfivePercentOfPage').val(false);
+                            }
+
+                    }
 
 
-            }).fail(function () {
-              //  showStatusNotification(false, 'Something went wrong');
-            }).always(function () {
+                }).fail(function () {
+                    //  showStatusNotification(false, 'Something went wrong');
+                    $('#loader').hide();
+                }).always(function () {
 
-            });
-
+                });
+            }
+            
         }
         if ($('#IsTwentyfivePercentOfPage').val() === 'true') {
-            const fileForm = new FormData();
-            fileForm.append('file', file);
-            fileForm.append('logId', $('#GuardimagedataId').val());
-            fileForm.append('url', window.location.origin);
+           
+            for (let i = 0; i < file.files.length; i++) {
+                const fileForm = new FormData();
+                fileForm.append('file', file.files.item(i));
+                fileForm.append('logId', $('#GuardimagedataId').val());
+                fileForm.append('url', window.location.origin);
 
 
 
 
-            $.ajax({
-                url: '/Guard/DailyLog?handler=TwentyfivePercentFileUpload',
-                type: 'POST',
-                data:fileForm,
-                processData: false,
-                contentType: false,
-                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
-            }).done(function (data) {
+                $.ajax({
+                    url: '/Guard/DailyLog?handler=TwentyfivePercentFileUpload',
+                    type: 'POST',
+                    data: fileForm,
+                    processData: false,
+                    contentType: false,
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+                }).done(function (data) {
 
-                if (data.success) {
+                    if (data.success) {
+                        if (i == file.files.length - 1) {
+                            $('#loader').hide();
+                            $('#dgl-image-modal').modal('hide');
+                            gridGuardLog.clear();
+                            gridGuardLog.reload();
+                            $('#IsAttachmentToRear').val(true);
 
-                    $('#dgl-image-modal').modal('hide');
-                    gridGuardLog.clear();
-                    gridGuardLog.reload();
-                }
+                            $('#IsTwentyfivePercentOfPage').val(false);
+
+                        }
+                    }
 
 
-            }).fail(function () {
-                showStatusNotification(false, 'Something went wrong');
-            }).always(function () {
+                }).fail(function () {
+                    showStatusNotification(false, 'Something went wrong');
+                    $('#loader').hide();
+                }).always(function () {
 
-            });
+                });
+            }
         }
         
     });
@@ -1159,18 +1187,28 @@ $(function () {
         const bg_color_pale_yellow = '#fcf8d1';
         const bg_color_pale_red = '#ffcccc';
         const irEntryTypeIsAlarm = 2;
+        const noguardonduty_eventType = 1;
 
         gridGuardLog.on('rowDataBound', function (e, $row, id, record) {
             if (record.irEntryType) {
-                $row.css('background-color', record.irEntryType === irEntryTypeIsAlarm ? bg_color_pale_red : record.rcLogbookStamp ? bg_color_pale_red : bg_color_pale_yellow);
+                if (record.irEntryType === irEntryTypeIsAlarm || record.rcLogbookStamp) {
+                    $row.css('background-color', bg_color_pale_red);
+                } else {
+                    $row.css('background-color', bg_color_pale_yellow);
+                }
                 /* add for check if dark mode is on start*/
                 if ($('#toggleDarkMode').is(':checked')) {
                     $row.css('color', '#333');
                     //$row.css('background-color', record.irEntryType === irEntryTypeIsAlarm ? bg_color_pale_red : bg_color_pale_yellow);
                 }
                 /* add for check if dark mode is on end*/
+            } else if (record.eventType === noguardonduty_eventType) {
+                $row.css('background-color', bg_color_pale_red);
+                if ($('#toggleDarkMode').is(':checked')) {
+                    $row.css('color', '#333');
+                    //$row.css('background-color', record.irEntryType === irEntryTypeIsAlarm ? bg_color_pale_red : bg_color_pale_yellow);
+                }
             }
-
         });
         gridGuardLog.on('rowSelect', function (e, $row, id, record) {
             /*timer pause while editing*/
@@ -1477,11 +1515,14 @@ $(function () {
         const bg_color_pale_red = '#ffcccc';
         const bg_color_white = '#ffffff';
         const irEntryTypeIsAlarm = 2;
+        const noguardonduty_eventType = 1;
 
         gridsiteLog.on('rowDataBound', function (e, $row, id, record) {
             let rowColor = bg_color_white;
             if (record.irEntryType) {
                 rowColor = record.irEntryType === irEntryTypeIsAlarm ? bg_color_pale_red : bg_color_pale_yellow;
+            } else if (record.eventType === noguardonduty_eventType) {
+                rowColor = bg_color_pale_red;
             }
             $row.css('background-color', rowColor);
         });
@@ -4035,34 +4076,36 @@ $(function () {
         if (HrVal != '' && DescVal != '' && FileVa != 'None') {
 
             if (ExpirayDateVal == '') {
-                if (confirm('Are you sure you not want to enter expiry Date')) {
-                    $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
-                    $('#loader').show();
-                    $.ajax({
-                        url: '/Admin/GuardSettings?handler=SaveGuardComplianceandlicanse',
-                        data: $('#frm_add_complianceandlicense').serialize(),
-                        type: 'POST',
-                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-                    }).done(function (result) {
-                        if (result.status) {
-                            $('#addGuardCompliancesLicenseModal').modal('hide');
-                            const messageHtml1 = '';
-                            $('#schRunStatusNew').html(messageHtml1);
-                            gridGuardLicensesAndLicence.ajax.reload();
 
-                            if (!result.dbxUploaded) {
-                                displayGuardValidationSummary('compliancelicanseValidationSummary', 'Compliance details saved successfully. However, upload to Dropbox failed.');
-                            }
-                        } else {
-                            const messageHtml1 = '';
-                            $('#schRunStatusNew').html(messageHtml1);
-                            displayGuardValidationSummary('compliancelicanseValidationSummary', result.message);
-                        }
-                    }).always(function () {
-                        $('#loader').hide();
-                    });
+                alert('Please Enter the Expiry Date or Date of issue');
+                //if (confirm('Are you sure you not want to enter expiry Date')) {
+                //    $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
+                //    $('#loader').show();
+                //    $.ajax({
+                //        url: '/Admin/GuardSettings?handler=SaveGuardComplianceandlicanse',
+                //        data: $('#frm_add_complianceandlicense').serialize(),
+                //        type: 'POST',
+                //        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                //    }).done(function (result) {
+                //        if (result.status) {
+                //            $('#addGuardCompliancesLicenseModal').modal('hide');
+                //            const messageHtml1 = '';
+                //            $('#schRunStatusNew').html(messageHtml1);
+                //            gridGuardLicensesAndLicence.ajax.reload();
 
-                }
+                //            if (!result.dbxUploaded) {
+                //                displayGuardValidationSummary('compliancelicanseValidationSummary', 'Compliance details saved successfully. However, upload to Dropbox failed.');
+                //            }
+                //        } else {
+                //            const messageHtml1 = '';
+                //            $('#schRunStatusNew').html(messageHtml1);
+                //            displayGuardValidationSummary('compliancelicanseValidationSummary', result.message);
+                //        }
+                //    }).always(function () {
+                //        $('#loader').hide();
+                //    });
+
+                //}
             }
             else {
                 $('#schRunStatusNew').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Please wait...');
@@ -4196,6 +4239,7 @@ $(function () {
             return false;
         }
         var Desc = $('#Description').val();
+        var expiryDate = $('#GuardComplianceAndLicense_ExpiryDate1').val();
         Desc = Desc.substring(3);
         var cleanText = Desc.replace(/[✔️❌]/g, '').trim();
         const formData = new FormData();
@@ -4208,6 +4252,9 @@ $(function () {
         formData.append('DateType', $('#IsDateFilterEnabledHidden').val());
         if (Desc == '') {
             (confirm('Please select Description and Expiry/Issue Date'))
+        }
+        if (expiryDate == '') {
+            (confirm('Please select the Expiry Date or Issue Date first, and then attach the document'))
         }
         else {
             fileprocess(allfile);

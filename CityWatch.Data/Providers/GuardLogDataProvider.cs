@@ -1,6 +1,7 @@
 ﻿using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
+using CityWatch.Data.Services;
 using Dropbox.Api.Files;
 using Dropbox.Api.Users;
 using iText.Commons.Actions.Contexts;
@@ -305,10 +306,13 @@ namespace CityWatch.Data.Providers
     public class GuardLogDataProvider : IGuardLogDataProvider
     {
         private readonly CityWatchDbContext _context;
+        private readonly ILogbookDataService _logbookDataService;
 
-        public GuardLogDataProvider(CityWatchDbContext context)
+        public GuardLogDataProvider(CityWatchDbContext context,
+            ILogbookDataService logbookDataService)
         {
             _context = context;
+            _logbookDataService = logbookDataService;
         }
 
         public List<GuardLog> GetGuardLogs(int logBookId, DateTime logDate)
@@ -2477,21 +2481,24 @@ namespace CityWatch.Data.Providers
                                       .ToList();
                                         if (rcOffDutyStatus.Count == 0)
                                         {
-
-                                            var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                                            if (!CheckIfAnyEntryexistInRadioCheckStatus(manning.ClientSiteKpiSetting.ClientSiteId))
                                             {
-                                                ClientSiteId = manning.ClientSiteKpiSetting.ClientSiteId,
-                                                GuardId = 4,/* temp Guard(bruno) Id because forgin key  is set*/
-                                                GuardLoginTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None),/* Expected Time for Login
+                                                var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                                                {
+                                                    ClientSiteId = manning.ClientSiteKpiSetting.ClientSiteId,
+                                                    GuardId = 4,/* temp Guard(bruno) Id because forgin key  is set*/
+                                                    GuardLoginTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None),/* Expected Time for Login
                                                 /* New Field Added for NotificationType only for manning notification*/
-                                                NotificationType = 1,
-                                                /* added for show the crm CrmSupplier deatils in the 'no guard on duty' */
-                                                CRMSupplier = manning.CrmSupplier
-                                            };
-                                            _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
-                                            _context.SaveChanges();
+                                                    NotificationType = 1,
+                                                    /* added for show the crm CrmSupplier deatils in the 'no guard on duty' */
+                                                    CRMSupplier = manning.CrmSupplier
+                                                };
+                                                _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
+                                                _context.SaveChanges();
 
-                                            CreateLogBookStampForNoGuard(manning.ClientSiteKpiSetting.ClientSiteId, dateTime, dateendTime);
+                                                CreateLogBookStampForNoGuard(manning.ClientSiteKpiSetting.ClientSiteId, dateTime, dateendTime);
+
+                                            }
 
                                         }
                                     }
@@ -2525,18 +2532,22 @@ namespace CityWatch.Data.Providers
 
         public void CreateLogBookStampForNoGuard(int ClientSiteID,DateTime dateTime, DateTime dateendTime)
         {
-            /* Check if NoGuardLogin event type exists in the logbook for the date if not create entry */           
+            /* Check if NoGuardLogin event type exists in the logbook for the date if not create entry */
+            // Check if Logbook id exists for the date create new logbookid
             var logbookdate = DateTime.Today;
             var logbooktype = LogBookType.DailyGuardLog;
-            var logBookId = GetClientSiteLogBookIdByLogBookMaxID(ClientSiteID, logbooktype, out logbookdate);            
+            //var logBookId = GetClientSiteLogBookIdByLogBookMaxID(ClientSiteID, logbooktype, out logbookdate);
+            var logBookId =  _logbookDataService.GetNewOrExistingClientSiteLogBookId(ClientSiteID, logbooktype);
+            var ClientSiteName = GetClientSites(ClientSiteID).FirstOrDefault().Name; 
             var checklogbookEntry = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == logBookId && x.EventType == (int)GuardLogEventType.NoGuardLogin).ToList();
+            var subject = "No Guard on Duty";
             if (checklogbookEntry.Count < 1 )
             {
                 var guardLog = new GuardLog()
                 {
                     ClientSiteLogBookId = logBookId,
                     EventDateTime = DateTime.Now,
-                    Notes = "No Guard on Duty",
+                    Notes = subject,
                     EventType = (int)GuardLogEventType.NoGuardLogin,
                     IsSystemEntry = true,
                     EventDateTimeLocal = TimeZoneHelper.GetCurrentTimeZoneCurrentTime(),
@@ -2547,7 +2558,29 @@ namespace CityWatch.Data.Providers
                     PlayNotificationSound = false
                 };
                 SaveGuardLog(guardLog);
+
+                LogBookEntryFromRcControlRoomMessages(0, 0, subject, ClientSiteName, IrEntryType.Alarm, 1, 0, guardLog);
             }            
+        }
+
+
+
+        /* in some time the no guard shows when guard is active in the two hour list
+         * this function will check if any Activity Status in the radio status list 
+         */
+        public bool CheckIfAnyEntryexistInRadioCheckStatus(int ClientSiteId)
+        {
+            var numberofactiveRowExistintheRadioStatus =_context.ClientSiteRadioChecksActivityStatus.Where(x =>  x.ClientSiteId == ClientSiteId && x.GuardLoginTime == null).ToList();
+            if(numberofactiveRowExistintheRadioStatus.Count!=0)
+            {
+                return true;
+
+            }
+            else
+            {
+                return false;
+            }
+
         }
 
 
@@ -2587,7 +2620,7 @@ namespace CityWatch.Data.Providers
                                     bool iflogbookentryexist = false;
                                     foreach (var log in checkSiteLogBook)
                                     {
-                                        var checklogbookEntryInSpecificTiming = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == log.Id && (x.EventDateTime >= dateTime && x.EventDateTime <= dateendTime)).ToList();
+                                        var checklogbookEntryInSpecificTiming = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == log.Id && x.EventType != (int)GuardLogEventType.NoGuardLogin && (x.EventDateTime >= dateTime && x.EventDateTime <= dateendTime)).ToList();
                                         if (checklogbookEntryInSpecificTiming.Count != 0)
                                         {
                                             iflogbookentryexist = true;
@@ -2605,19 +2638,22 @@ namespace CityWatch.Data.Providers
                                           .ToList();
                                             if (rcOffDutyStatus.Count == 0)
                                             {
-
-                                                var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                                                if (!CheckIfAnyEntryexistInRadioCheckStatus(manning.ClientSiteKpiSetting.ClientSiteId))
                                                 {
-                                                    ClientSiteId = manning.ClientSiteKpiSetting.ClientSiteId,
-                                                    GuardId = 4,/* temp Guard(bruno) Id because forgin key  is set*/
-                                                    GuardLoginTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None),/* Expected Time for Login
+                                                    var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                                                    {
+                                                        ClientSiteId = manning.ClientSiteKpiSetting.ClientSiteId,
+                                                        GuardId = 4,/* temp Guard(bruno) Id because forgin key  is set*/
+                                                        GuardLoginTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None),/* Expected Time for Login
                                                 /* New Field Added for NotificationType only for manning notification*/
-                                                    NotificationType = 1,
-                                                    /* added for show the crm CrmSupplier deatils in the 'no guard on duty' */
-                                                    CRMSupplier = manning.CrmSupplier
-                                                };
-                                                _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
-                                                _context.SaveChanges();
+                                                        NotificationType = 1,
+                                                        /* added for show the crm CrmSupplier deatils in the 'no guard on duty' */
+                                                        CRMSupplier = manning.CrmSupplier
+                                                    };
+                                                    _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
+                                                    _context.SaveChanges();
+
+                                                }
                                             }
                                         }
                                     }
@@ -4204,7 +4240,7 @@ namespace CityWatch.Data.Providers
         //code added for client site dropdown starts
         public List<ClientType> GetUserClientTypesHavingAccess(int? userId)
         {
-            var clientTypes = GetClientTypes();
+            var clientTypes = GetClientTypes().Where(x=>x.IsActive==true).ToList();
             if (userId == null)
                 return clientTypes;
 

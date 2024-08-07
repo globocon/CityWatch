@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Http;
+using Microsoft.IdentityModel.Tokens;
 
 namespace CityWatch.Kpi.Pages
 {
@@ -56,12 +57,14 @@ namespace CityWatch.Kpi.Pages
             /* For Guard Login using securityLicenseNo the office staff UserId*/
             string loginUserId = Request.Query["lud"];
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            var loginUserIdNew = HttpContext.Session.GetInt32("loginUserId") ?? 0;
             if (!string.IsNullOrEmpty(securityLicenseNo) && !string.IsNullOrEmpty(loginUserId) && !string.IsNullOrEmpty(LoginGuardId))
             {
                 ReportRequest = new KpiRequest();
                 UserId = int.Parse(loginUserId);
                 GuardId = int.Parse(LoginGuardId);
                 HttpContext.Session.SetInt32("GuardId", GuardId);
+                HttpContext.Session.SetInt32("loginUserId", UserId);
                 return Page();
             }
             // Check if the user is authenticated(Normal Admin Login)
@@ -69,17 +72,23 @@ namespace CityWatch.Kpi.Pages
             {   /*Old Code for admin only*/
                 ReportRequest = new KpiRequest();
                 HttpContext.Session.SetInt32("GuardId", 0);
+                HttpContext.Session.SetInt32("loginUserId", 0);
                 return Page();
             }
             else if(GuardId!=0)
             {
              
                 HttpContext.Session.SetInt32("GuardId", GuardId);
+                if (loginUserIdNew != 0)
+                {
+                    HttpContext.Session.SetInt32("loginUserId", loginUserIdNew);
+                }
                 return Page();
-            }
+            }           
             else
             {
                 HttpContext.Session.SetInt32("GuardId", 0);
+                HttpContext.Session.SetInt32("loginUserId", 0);
                 return Redirect(Url.Page("/Account/Login"));
             }
         }
@@ -92,14 +101,13 @@ namespace CityWatch.Kpi.Pages
         /// <returns></returns>
         public IActionResult OnGetClientSitesUsingUserId(string type, string guardId)
         {
-            if (string.IsNullOrEmpty(guardId))
+            if (string.IsNullOrEmpty(guardId) || guardId=="0")
             {
                 return new JsonResult(_viewDataService.GetClientSites(type));
             }
             else
             {
-                return new JsonResult(_viewDataService.GetClientSitesUsingLoginUserId(int.Parse(guardId), type));
-
+                return new JsonResult(_viewDataService.GetClientSitesUsingLoginUserIdNew(int.Parse(guardId), type));
             }
 
         }

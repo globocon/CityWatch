@@ -2,6 +2,7 @@
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
+using CityWatch.Data.Services;
 using CityWatch.Web.Models;
 using DocumentFormat.OpenXml.Drawing.Diagrams;
 using DocumentFormat.OpenXml.Office.CustomUI;
@@ -154,6 +155,7 @@ namespace CityWatch.Web.Services
         private readonly IUserDataProvider _userDataProvider;
         private readonly IClientSiteWandDataProvider _clientSiteWandDataProvider;
         private readonly IGuardSettingsDataProvider _guardSettingsDataProvider;
+        private readonly ILogbookDataService _logbookDataService;
 
         public ViewDataService(IClientDataProvider clientDataProvider,
             IConfigDataProvider configDataProvider,
@@ -161,7 +163,8 @@ namespace CityWatch.Web.Services
             IClientSiteWandDataProvider clientSiteWandDataProvider,
             IGuardDataProvider guardDataProvider,
             IGuardLogDataProvider guardLogDataProvider,
-            IGuardSettingsDataProvider guardSettingsDataProvider)
+            IGuardSettingsDataProvider guardSettingsDataProvider,
+            ILogbookDataService logbookDataService)
         {
             _clientDataProvider = clientDataProvider;
             _configDataProvider = configDataProvider;
@@ -170,6 +173,7 @@ namespace CityWatch.Web.Services
             _guardDataProvider = guardDataProvider;
             _guardLogDataProvider = guardLogDataProvider;
             _guardSettingsDataProvider = guardSettingsDataProvider;
+            _logbookDataService = logbookDataService;
         }
 
         public List<SelectListItem> Genders
@@ -945,26 +949,8 @@ namespace CityWatch.Web.Services
         }
 
         public int GetNewClientSiteLogBookId(int clientSiteId, LogBookType logBookType)
-        {
-            int newLogBookId;
-            var clientSiteLogBook = _clientDataProvider.GetClientSiteLogBook(clientSiteId, logBookType, DateTime.Today);
-            if (clientSiteLogBook != null)
-            {
-                newLogBookId = clientSiteLogBook.Id;
-            }
-            else
-            {
-                var newClientSiteLogBook = new ClientSiteLogBook()
-                {
-                    ClientSiteId = clientSiteId,
-                    Type = logBookType,
-                    Date = DateTime.Today,
-                    DbxUploaded = false
-                };
-                newLogBookId = _clientDataProvider.SaveClientSiteLogBook(newClientSiteLogBook);
-            }
-
-            return newLogBookId;
+        { 
+            return _logbookDataService.GetNewOrExistingClientSiteLogBookId(clientSiteId, logBookType);
         }
 
         public string GetClientSiteKeyDescription(int keyId, int clientSiteId)
@@ -983,11 +969,15 @@ namespace CityWatch.Web.Services
                 .Where(z => z.Name == "Law Enforcement" || z.Name == "Emergency Services" || z.Name == "Emergency Situation")
                 .ToDictionary(z => z.Name, z => z.Id);
 
-            var logsToCopy = _guardLogDataProvider.GetKeyVehicleLogs(previousDayLogBookId).Where(z => !z.ExitTime.HasValue &&
+            var previousDayLogs = _guardLogDataProvider.GetKeyVehicleLogs(previousDayLogBookId);
+
+            var logsToCopy = previousDayLogs.Where(z => !z.ExitTime.HasValue &&
                 ((kvlFieldsToLookup.TryGetValue("Law Enforcement", out int idLawEnforce) && z.PersonType == idLawEnforce) ||
                     (kvlFieldsToLookup.TryGetValue("Emergency Services", out int idEms) && z.PersonType == idEms) ||
                     (kvlFieldsToLookup.TryGetValue("Emergency Situation", out int idEmSituation) && z.EntryReason == idEmSituation) ||
                     !string.IsNullOrEmpty(z.KeyNo)));
+
+            
 
             if (logsToCopy.Any())
             {
@@ -1011,9 +1001,32 @@ namespace CityWatch.Web.Services
 
                     }
                 }
-
-
             }
+            // Task P7#129 Yellow wont roll over  - Binoy 29-07-2024 -- Start
+            // To rollover previous days pending yellow entries to new logbook
+            var pendinglogentries = previousDayLogs.Where(z => !z.ExitTime.HasValue && !z.EntryTime.HasValue && !z.SentInTime.HasValue && z.InitialCallTime.HasValue);
+            if(pendinglogentries.Count() > 0)
+            {
+                foreach (var logToCopy in pendinglogentries)
+                {                    
+                    logToCopy.Id = 0;
+                    logToCopy.InitialCallTime = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day, 00, 01, 0);                    
+                    logToCopy.ClientSiteLogBookId = logBookId;
+                    logToCopy.GuardLoginId = guardLoginId;
+                    logToCopy.CopiedFromId = logToCopy.Id;
+
+                    try
+                    {
+                        _guardLogDataProvider.InsertPreviousLogBook(logToCopy);
+                    }
+                    catch (Exception ex)
+                    {
+
+                    }
+                }
+            }
+            // Task P7#129 Yellow wont roll over  - Binoy 29-07-2024 -- End
+
         }
 
         public IEnumerable<string> GetKeyVehicleLogAttachments(string uploadsDir, string reportReference)

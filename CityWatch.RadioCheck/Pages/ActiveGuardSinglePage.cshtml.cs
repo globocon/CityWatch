@@ -16,6 +16,9 @@ using System.Linq;
 using System.Security.Claims;
 using static Dropbox.Api.TeamLog.EventCategory;
 using MailKit.Net.Smtp;
+using CityWatch.RadioCheck.Models;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace CityWatch.Web.Pages.Radio
 {
@@ -43,6 +46,9 @@ namespace CityWatch.Web.Pages.Radio
         public string DisplayItem { get; set; }
         public IActionResult OnGet(string displayItem)
         {
+            /*Api call Start */
+            CallApi();
+            /* Api call end */
             DisplayItem = displayItem;
             var activeGuardDetails = _guardLogDataProvider.GetActiveGuardDetails();
             ActiveGuardCount = activeGuardDetails.Count();
@@ -450,7 +456,7 @@ namespace CityWatch.Web.Pages.Radio
 
             return emailAddressList;
         }
-     
+
         //Send Text Notifications-end
 
 
@@ -464,7 +470,39 @@ namespace CityWatch.Web.Pages.Radio
         //    return new JsonResult(_guardLogDataProvider.GetGuards(id));
         //}
 
-       
+        #region api call
+        /// <summary>
+        /// this is used for regresh the radio status table when page refresh
+        /// </summary>
+        /// <returns></returns>
+        public async Task<IActionResult> CallApi()
+        {
+            try
+            {
+                var results = new RootObject();
+                using (var client = new HttpClient())
+                {
+                    var url = $"https://rc.cws-ir.com/api/RadioChecksActivityStatus/RadioChecksActivityStatus";
+                    HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, url);
+                    request.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+                    HttpResponseMessage response = await client.SendAsync(request);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        return StatusCode((int)response.StatusCode, $"API call failed with status code: {response.StatusCode}");
+
+                    }
+
+                }
+                return StatusCode(200, $"Success");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
+        }
+
+        #endregion
 
     }
 }

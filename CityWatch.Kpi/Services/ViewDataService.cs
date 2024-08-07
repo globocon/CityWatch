@@ -50,6 +50,10 @@ namespace CityWatch.Kpi.Services
         List<SelectListItem> ProviderList();
         List<SelectListItem> CriticalGroupNameList();
         List<HrSettings> GetHRSettingsCriticalDoc(int HRID,int CriticalDocumentID);
+
+        public List<SelectListItem> ClientTypesUsingLoginMainUserId(int userId);
+
+        public List<SelectListItem> GetClientSitesUsingLoginUserIdNew(int userId, string type = "");
     }
 
     public class ViewDataService : IViewDataService
@@ -189,6 +193,44 @@ namespace CityWatch.Kpi.Services
 
         }
 
+
+
+        public List<SelectListItem> ClientTypesUsingLoginMainUserId(int userId)
+        {
+            if (userId == 0)
+            {
+                var clientTypes = _clientDataProvider.GetClientTypes();
+                var items = new List<SelectListItem>() { new SelectListItem("Select", "", true) };
+                foreach (var item in clientTypes)
+                {
+                    var countClientType = GetClientTypeCount(item.Id);
+                    items.Add(new SelectListItem($"{item.Name} ({countClientType})", item.Name));
+                    //items.Add(new SelectListItem(item.Name, item.Name));
+                }
+
+                return items;
+            }
+            else
+            {
+
+                var allUserAccess = _clientDataProvider.GetUserClientSiteAccess(userId);
+                var distinctType= allUserAccess.Select(x=>x.ClientSite.ClientType).Distinct().OrderBy(x=>x.Name);
+                var items = new List<SelectListItem>() { new SelectListItem("Select", "", true) };
+                foreach (var item in distinctType)
+                {
+                   
+                        var countClientType = GetClientTypeCount(item.Id);
+                        items.Add(new SelectListItem($"{item.Name} ({countClientType})", item.Name));
+                        
+                    
+                }
+
+                return items;
+
+            }
+
+        }
+
         public List<SelectListItem> GetClientSites(string type = "")
         {
             var sites = new List<SelectListItem>();
@@ -205,13 +247,9 @@ namespace CityWatch.Kpi.Services
             if (guardId == 0)
             {
                 var sites = new List<SelectListItem>();
-                //var mapping = _clientDataProvider.GetClientSites(null).Where(x => x.ClientType.Name == type);
-                // var mapping = _context.UserClientSiteAccess
-                //.Where(x => x.ClientSite.ClientType.Name.Trim() == type.Trim() && x.ClientSite.IsActive == true)
-                //.Include(x => x.ClientSite)
-                //.Include(x => x.ClientSite.ClientType)
-                //.OrderBy(x => x.ClientSite.Name)
-                //.ToList();
+              
+
+
 
                 var mapping = _context.UserClientSiteAccess
                .Where(x => x.ClientSite.ClientType.Name.Trim() == type.Trim() && x.ClientSite.IsActive == true)
@@ -246,6 +284,41 @@ namespace CityWatch.Kpi.Services
                     {
                         sites.Add(new SelectListItem(item.ClientSite.Name, item.ClientSite.Id.ToString()));
                     }
+                }
+                return sites;
+
+            }
+        }
+
+
+
+        public List<SelectListItem> GetClientSitesUsingLoginUserIdNew(int userId, string type = "")
+        {
+            if (userId == 0)
+            {
+                var sites = new List<SelectListItem>();
+                sites = GetClientSites(null)
+               .Where(z => (string.IsNullOrEmpty(type)))
+                .ToList();
+                return sites;
+
+            }
+            else
+            {
+                var sites = new List<SelectListItem>();
+
+                var mapping = _context.UserClientSiteAccess
+               .Where(x => x.ClientSite.ClientType.Name.Trim() == type.Trim() && x.ClientSite.IsActive == true && x.UserId==userId)
+               .Include(x => x.ClientSite)
+               .Include(x => x.ClientSite.ClientType)
+               .Select(x => new { x.ClientSiteId, x.ClientSite.Name })
+            .Distinct().
+             OrderBy(x => x.Name).ToList();
+
+
+                foreach (var item in mapping)
+                {
+                    sites.Add(new SelectListItem(item.Name, item.ClientSiteId.ToString()));
                 }
                 return sites;
 

@@ -879,7 +879,7 @@ namespace CityWatch.Web.Pages.Admin
             if (UsedDesc != null && guardComplianceandlicense.Id == 0)
             {
                 status = false;
-                message = "This Document already used";
+                message = "The type of document you are trying to upload already exists. If it is a newer version, please EDIT the existing document instead, change the expiry date,and then add the latest document";
             }
             else
             {
@@ -949,7 +949,7 @@ namespace CityWatch.Web.Pages.Admin
             if (UsedDesc != null && guardComplianceandlicense.Id == 0)
             {
                 status = false;
-                message = "This Document already used";
+                message = "The type of document you are trying to upload already exists. If it is a newer version, please EDIT the existing document instead, change the expiry date,and then add the latest document";
             }
             else
             {
