@@ -169,11 +169,11 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     if (guardLogImage.IsRearfile == true)
                     {
-                        guardlog.Notes=guardlog.Notes + "</br>See attached file <a href =\""+ guardLogImage.ImagePath + "\" target=\"_blank\">" + Path.GetFileName(guardLogImage.ImagePath) + "</a><i class=\"fa fa-trash mr-2 text-danger btn-delete-dgl-attachment\"data-id=\"" + guardLogImage.Id + "\"title=\"Delete\" style=\"cursor: pointer;\"></i>";
+                        guardlog.Notes=guardlog.Notes + "</br>See attached file <a href =\""+ guardLogImage.ImagePath + "\" target=\"_blank\">" + Path.GetFileName(guardLogImage.ImagePath) + "</a><button class=\"btn btn-delete-dgl-attachment\"data-id=\"" + guardLogImage.Id + "\"><i class=\"fa fa-trash mr-2 text-danger btn-delete-dgl-attachment\"data-id=\"" + guardLogImage.Id + "\"title=\"Delete\" style=\"cursor: pointer;\"></i></button>";
                     }
                     if (guardLogImage.IsTwentyfivePercentfile == true)
                     {
-                        guardlog.Notes = guardlog.Notes + "</br> <a href =\""+ guardLogImage.ImagePath +" \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\"/></a></br><i class=\"fa fa-trash mr-2 text-danger btn-delete-dgl-attachment\"data-id=\"" + guardLogImage.Id + "\"title=\"Delete\" style=\"cursor: pointer;\"></i>";
+                        guardlog.Notes = guardlog.Notes + "</br> <a href =\""+ guardLogImage.ImagePath +" \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\"/></a></br><button class=\"btn btn-delete-dgl-attachment\"data-id=\"" + guardLogImage.Id + "\"><i class=\"fa fa-trash mr-2 text-danger btn-delete-dgl-attachment\"data-id=\"" + guardLogImage.Id + "\"title=\"Delete\" style=\"cursor: pointer;\"></i></button>";
                     }
                 }
             }
