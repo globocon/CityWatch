@@ -256,7 +256,32 @@ namespace CityWatch.Kpi.Pages.Admin
 
                             if (positionIdGuard != null || positionIdPatrolCar != null)
                             {
-                                success = _clientDataProvider.SaveClientSiteManningKpiSetting(clientSiteKpiSetting);
+                                var rulenumberOne = _clientDataProvider.CheckRulesOneinKpiManningInput(clientSiteKpiSetting);
+
+                                if (rulenumberOne.Trim() == string.Empty)
+                                {
+                                    var rulenumberTwo = _clientDataProvider.CheckRulesTwoinKpiManningInput(clientSiteKpiSetting);
+                                    if (rulenumberTwo.Trim() == string.Empty)
+                                    {
+                                        success = _clientDataProvider.SaveClientSiteManningKpiSetting(clientSiteKpiSetting);
+                                    }
+                                    else
+                                    {
+                                        erorrMessage = rulenumberTwo;
+                                        success = 7;
+
+                                    }
+
+                                }
+                                else
+                                {
+                                    erorrMessage = rulenumberOne;
+                                    success = 6;
+
+                                }
+
+
+
                             }
                             else
                             {
