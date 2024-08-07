@@ -62,7 +62,9 @@ builder.Services.AddScoped<ISmsService, SmsService>();
 builder.Services.AddScoped<ISmsSenderProvider, SmsSenderProvider>();
 builder.Services.AddScoped<ISmsGlobalService, SmsGlobalService>();
 builder.Services.AddScoped<ISignalRNotificationService, SignalRNotificationService>();
+builder.Services.AddScoped<ITimesheetReportGenerator, TimesheetReportGenerator>();
 builder.Services.AddScoped<ILogbookDataService, LogbookDataService>();
+
 
 builder.Services.AddRazorPages(options =>
 {

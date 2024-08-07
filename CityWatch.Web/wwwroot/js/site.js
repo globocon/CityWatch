@@ -3397,6 +3397,7 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_criticalDocuments').hide();
         $('#add_hr_settings').show();
         $('#SettingsDiv').hide();
+        $('#TimesheetDiv').hide();
     }
 
     else if ($('#hr_settings_fields_types').val() == 2) {
@@ -3408,6 +3409,7 @@ $('#hr_settings_fields_types').on('change', function () {
         $('#add_criticalDocuments').hide();
         $('#add_hr_settings').show();
         $('#SettingsDiv').hide();
+        $('#TimesheetDiv').hide();
     }
     else if ($('#hr_settings_fields_types').val() == 3) {
         $('#add_criticalDocuments').show();
@@ -3418,6 +3420,7 @@ $('#hr_settings_fields_types').on('change', function () {
         gridCriticalDocument.reload();
         $('#add_hr_settings').hide();
         $('#SettingsDiv').hide();
+        $('#TimesheetDiv').hide();
     }
     else if ($('#hr_settings_fields_types').val() == 4) {
         $('#add_criticalDocuments').hide();
@@ -3437,6 +3440,26 @@ $('#hr_settings_fields_types').on('change', function () {
             }
         });
         
+    }
+    else if ($('#hr_settings_fields_types').val() == 5) {
+        $('#TimesheetDiv').show();
+        $('#add_criticalDocuments').hide();
+        $('#add_hr_settings').hide();
+        gridHrSettings.hide();
+        gridLicenseTypes.hide();
+        gridCriticalDocument.hide();
+        gridCriticalDocument.reload();
+        $('#add_hr_settings').hide();
+        $('#SettingsDiv').hide();
+        $.ajax({
+            url: '/Admin/Settings?handler=TimesheetDetails',
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                $('#week').val(data.week)
+                $('#timeTimesheet').val(data.time)
+            }
+        });
     }
     else {
         gridLicenseTypes.hide();
@@ -3903,6 +3926,27 @@ $('#add_Dropbox').on('click', function () {
     })
 })
 //To save the Global Email Of Duress Button stop
+//Timesheet save 
+$('#add_Timesheet').on('click', function () {
+    const token = $('input[name="__RequestVerificationToken"]').val();
+    var weekname = $('#week').val();
+    var time = $('#timeTimesheet').val();
+    
+    // Check if weekname has a value
+    if (weekname) {
+        $.ajax({
+            url: '/Admin/Settings?handler=SaveTimesheet',
+            data: { weekname: weekname, time: time },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': token },
+        }).done(function (status) {
+            alert("Timesheet Details was saved successfully");
+        });
+    } else {
+        alert("Please select a week.");
+    }
+})
+//Timesheet stop
 //p1-213 critical Document stop
 $('#clientTypeNameDocHrDoc').multiselect({
     maxHeight: 400,

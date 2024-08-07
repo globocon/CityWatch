@@ -33,6 +33,7 @@ namespace CityWatch.Kpi.Services
     public interface IReportGenerator
     {
         string GeneratePdfReport(int clientSiteId, DateTime fromDate, DateTime toDate, bool isHrTimerPaused = false,bool IsDownselect=false, int CriticalDocumentID=0);
+        public string GeneratePdfTimesheetReport(int clientSiteId);
     }
 
     public class ReportGenerator : IReportGenerator
@@ -178,6 +179,32 @@ namespace CityWatch.Kpi.Services
             doc.Add(graphsTable);
 
             //NEWLY ADDED-END
+            doc.Close();
+            pdfDoc.Close();
+
+            return reportFileName;
+        }
+
+
+        public string GeneratePdfTimesheetReport(int clientSiteId)
+        {
+            var _clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(clientSiteId);
+            if (_clientSiteKpiSetting == null)
+                return string.Empty;
+
+            var reportFileName = $"{DateTime.Now.ToString("yyyyMMdd")} - {FileNameHelper.GetSanitizedFileNamePart(_clientSiteKpiSetting.ClientSite.Name)} - Daily KPI Reports -_{new Random().Next()}.pdf";
+            var reportPdf = IO.Path.Combine(_reportRootDir, REPORT_DIR, reportFileName);
+
+            var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
+            pdfDoc.SetDefaultPageSize(PageSize.A4.Rotate());
+            var doc = new Document(pdfDoc);
+            doc.SetMargins(PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN);
+
+            var headerTable = CreateReportHeader(_clientSiteKpiSetting);
+            doc.Add(headerTable);
+
+            
+           
             doc.Close();
             pdfDoc.Close();
 

@@ -14,6 +14,8 @@ namespace CityWatch.Data.Models
         CriticalDocuments = 3,
         [Display(Name = "Settings")]
         Settings = 4,
+        [Display(Name = "Timesheets")]
+        Timesheets = 5,
     }
     public enum HrCriticalType
     {
