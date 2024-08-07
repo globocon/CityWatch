@@ -1171,7 +1171,7 @@ $(function () {
         }
         
     });
-    $('#guard_daily_log tbody').on('click', '.btn-delete-dgl-attachment', function (value, record) {
+    $('#guard_daily_log tbody').on('click', '.btn-delete-dgl-attachment', function () {
         
         var id = $(this).data('id');
         if (confirm('Are you sure want to remove this attachment?')) {
