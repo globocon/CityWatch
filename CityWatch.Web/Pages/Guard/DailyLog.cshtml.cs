@@ -159,21 +159,26 @@ namespace CityWatch.Web.Pages.Guard
                 logBookDate = DateTime.Today;
             }
 
+            
             var guardLogs = _guardLogDataProvider.GetGuardLogswithKvLogData(logBookId, logBookDate ?? DateTime.Today)
                 .OrderByDescending(z => z.Id)
                 .ThenByDescending(z => z.EventDateTime);
-            foreach(var guardlog in guardLogs)
+            foreach (var guardlog in guardLogs)
             {
                 var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(guardlog.Id);
-                foreach(var guardLogImage in guardlogImages)
+                guardlog.NotesNew = string.Empty;
+                foreach (var guardLogImage in guardlogImages)
                 {
                     if (guardLogImage.IsRearfile == true)
                     {
-                        guardlog.Notes=guardlog.Notes + "</br>See attached file <a href =\""+ guardLogImage.ImagePath + "\" target=\"_blank\">" + Path.GetFileName(guardLogImage.ImagePath) + "</a><button class=\"btn btn-delete-dgl-attachment\"data-id=\"" + guardLogImage.Id + "\"><i class=\"fa fa-trash mr-2 text-danger btn-delete-dgl-attachment\"data-id=\"" + guardLogImage.Id + "\"title=\"Delete\" style=\"cursor: pointer;\"></i></button>";
+                        guardlog.Notes = guardlog.Notes+ "</br>See attached file <a href =\"" + guardLogImage.ImagePath + "\" target=\"_blank\">" + Path.GetFileName(guardLogImage.ImagePath) + "</a>";
+                        guardlog.NotesNew = guardlog.NotesNew + "</br>See attached file <a href =\"" + guardLogImage.ImagePath + "\" target=\"_blank\">" + Path.GetFileName(guardLogImage.ImagePath) + "</a>";
                     }
                     if (guardLogImage.IsTwentyfivePercentfile == true)
                     {
-                        guardlog.Notes = guardlog.Notes + "</br> <a href =\""+ guardLogImage.ImagePath +" \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\"/></a></br><button class=\"btn btn-delete-dgl-attachment\"data-id=\"" + guardLogImage.Id + "\"><i class=\"fa fa-trash mr-2 text-danger btn-delete-dgl-attachment\"data-id=\"" + guardLogImage.Id + "\"title=\"Delete\" style=\"cursor: pointer;\"></i></button>";
+                        guardlog.Notes = guardlog.Notes + "</br> <a href =\"" + guardLogImage.ImagePath + " \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\"/></a>";
+
+                        guardlog.NotesNew = guardlog.NotesNew + "</br> <a href =\"" + guardLogImage.ImagePath + " \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\"/></a>";
                     }
                 }
             }
@@ -1083,7 +1088,7 @@ namespace CityWatch.Web.Pages.Guard
 
                         if (item.IsRearfile == true)
                         {
-                            filePath = IO.Path.Combine(_webHostEnvironment.WebRootPath, "DglUploads", id.ToString(), "RearFiles", IO.Path.GetFileName(item.ImagePath));
+                            filePath = IO.Path.Combine(_webHostEnvironment.WebRootPath, "DglUploads", item.GuardLogId.ToString(), "RearFiles", IO.Path.GetFileName(item.ImagePath));
                             if (IO.File.Exists(filePath))
                             {
 
@@ -1096,7 +1101,7 @@ namespace CityWatch.Web.Pages.Guard
                         }
                         if (item.IsTwentyfivePercentfile == true)
                         {
-                            filePath = IO.Path.Combine(_webHostEnvironment.WebRootPath, "DglUploads", id.ToString(), "TwentyfivePercentFiles", IO.Path.GetFileName(item.ImagePath));
+                            filePath = IO.Path.Combine(_webHostEnvironment.WebRootPath, "DglUploads", item.GuardLogId.ToString(), "TwentyfivePercentFiles", IO.Path.GetFileName(item.ImagePath));
                             if (IO.File.Exists(filePath))
                             {
 
@@ -1121,6 +1126,18 @@ namespace CityWatch.Web.Pages.Guard
                 message = "Error " + ex.Message;
             }
             return new JsonResult(new { success, message });
+        }
+        public JsonResult OnGetGuardLogsDocumentImages(int id)
+        {
+
+
+            var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(id);
+            foreach(var item in guardlogImages)
+            {
+                item.ImageFile = IO.Path.GetFileName(item.ImagePath);
+            }
+
+            return new JsonResult(guardlogImages);
         }
     }
 
