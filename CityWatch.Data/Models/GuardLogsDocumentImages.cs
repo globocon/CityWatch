@@ -18,6 +18,8 @@ namespace CityWatch.Data.Models
         public int? GuardLogId { get; set; }
         [ForeignKey("GuardLogId")]
         public GuardLog GuardLog { get; set; }
+        [NotMapped]
+        public string ImageFile { get; set; }
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             throw new NotImplementedException();

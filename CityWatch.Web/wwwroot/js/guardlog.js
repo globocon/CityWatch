@@ -816,7 +816,7 @@ $(function () {
         columns: [
             { field: 'clientSiteId', hidden: true },
             { field: 'eventDateTime', title: 'Time', width: 100, renderer: function (value, record) { return renderTime(value, record, false); } },
-            { field: 'notes', title: 'Event / Notes', width: 450 },
+            { field: 'notes', title: 'Event / Notes', width: 450},
             {
                 field: 'guardInitials', title: 'Guard Initials', width: 80, renderer: function (value, record) {
                     var rtn = '';
@@ -834,6 +834,7 @@ $(function () {
             }
         ]
     };
+   
     $('#card_new_entry').hide();
 
     if ($('input[name="isEditable"]').val() !== 'false') {
@@ -880,7 +881,7 @@ $(function () {
         };
     }
 
-    function renderLogBookNotes(value, record, $cell) {
+    function renderLogBookNotes(value, $cell) {
         $cell.on('keydown', function (e) {
             /*timer pause while editing*/
             isPaused = true;
@@ -888,6 +889,9 @@ $(function () {
                 gridGuardLog.update(record.id);
             }
         });
+        if (record.isRearfile == true || record.isTwentyfivePercentfile == true) {
+            return record.notesNew;
+        }
         return record.notes;
     }
 
@@ -901,15 +905,17 @@ $(function () {
     }
     // Project 4 , Task 48, Audio notification, Added By Binoy -- End
 
-    function logBookNotesEditor($editorContainer, value) {
-
+    function logBookNotesEditor($editorContainer, value, record) {
+        if (record.notesNew != '') {
+            record.notes = record.notes.replace(record.notesNew, '')
+        }
         var yes = $('#IsAssignedLogBook').val();
         if (yes == 0) {
-            var textAreaForNotes = $('<textarea class="form-control" rows="4" maxlength="2048" onpaste="return false" >' + value + '</textarea > ');
+            var textAreaForNotes = $('<textarea class="form-control" rows="4" maxlength="2048" onpaste="return false" >' + record.notes + '</textarea > ');
             $editorContainer.append(textAreaForNotes);
         }
         else {
-            var textAreaForNotes = $('<textarea class="form-control" rows="4" maxlength="2048"  >' + value + '</textarea > ');
+            var textAreaForNotes = $('<textarea class="form-control" rows="4" maxlength="2048"  >' + record.notes + '</textarea > ');
             $editorContainer.append(textAreaForNotes);
         }
 
@@ -999,7 +1005,7 @@ $(function () {
             $('#chbIsTwentyfivePercentOfPage').prop('checked', false);
             $('#GuardimagedataId').val($(this).data('id'));
             $('#chbIsAttachmentToRear').prop('checked', true);
-           // loadDlgImagePopup($(this).data('id'), false);
+            loadDlgImagePopup($(this).data('id'), false);
         });
         //p6-102 Add Photo -end
         $displayEl.append($editBtn)
@@ -1011,40 +1017,105 @@ $(function () {
 
     }
     //p6-102 Add Photo -start
-    //function loadDlgImagePopup(id, isNewEntry) {
+    function loadDlgImagePopup(id, isNewEntry) {
+        $.ajax({
+            url: '/Guard/DailyLog?handler=GuardLogsDocumentImages&id='+ id,
+            type: 'GET',
+            dataType: 'json'
+        }).done(function (data) {
+            $("#dgl-attachment-list").empty();
+            
+            for (var attachIndex = 0; attachIndex < data.length; attachIndex++) {
+                const file = data[attachIndex].imagePath;
+                const attachment_id = data[attachIndex].id;
+                const li = document.createElement('li');
+                li.id = attachment_id;
+                li.className = 'list-group-item';
+                li.dataset.index = attachIndex;
+                let liText = document.createTextNode(data[attachIndex].imageFile);
+                const icon = document.createElement("i");
+                icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-dgl-attachment';
+               icon.title = 'Delete';
+                icon.style = 'cursor:pointer';
+                li.appendChild(liText);
+                li.appendChild(icon);
+                const anchorTag = document.createElement("a");
+                anchorTag.href =  file;
+                anchorTag.target = "_blank";
+                const icon2 = document.createElement("i");
+               icon2.className = 'fa fa-download ml-2 text-primary';
+                icon2.title = 'Download';
+                icon2.style = 'cursor:pointer';
+                anchorTag.appendChild(icon2);
+                li.appendChild(anchorTag);
+                document.getElementById('dgl-attachment-list').append(li);
+            }
+            
 
 
-    //    $("#kvl-attachment-list").empty();
-    //    for (var attachIndex = 0; attachIndex < result.attachments.length; attachIndex++) {
-    //        const file = result.attachments[attachIndex];
-    //        const attachment_id = 'attach_' + attachIndex;
-    //        const li = document.createElement('li');
-    //        li.id = attachment_id;
-    //        li.className = 'list-group-item';
-    //        li.dataset.index = attachIndex;
-    //        let liText = document.createTextNode(file);
-    //        const icon = document.createElement("i");
-    //        icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-kvl-attachment';
-    //        icon.title = 'Delete';
-    //        icon.style = 'cursor:pointer';
-    //        li.appendChild(liText);
-    //        li.appendChild(icon);
-    //        const anchorTag = document.createElement("a");
-    //        anchorTag.href = '/KvlUploads/' + $('#VehicleRego').val() + "/" + file;
-    //        anchorTag.target = "_blank";
-    //        const icon2 = document.createElement("i");
-    //        icon2.className = 'fa fa-download ml-2 text-primary';
-    //        icon2.title = 'Download';
-    //        icon2.style = 'cursor:pointer';
-    //        anchorTag.appendChild(icon2);
-    //        li.appendChild(anchorTag);
-    //        document.getElementById('kvl-attachment-list').append(li);
+        }).fail(function () {
+            //  showStatusNotification(false, 'Something went wrong');
+            //$('#loader').hide();
+        }).always(function () {
+
+        });
+
+        //$("#kvl-attachment-list").empty();
+        //for (var attachIndex = 0; attachIndex < result.attachments.length; attachIndex++) {
+        //    const file = result.attachments[attachIndex];
+        //    const attachment_id = 'attach_' + attachIndex;
+        //    const li = document.createElement('li');
+        //    li.id = attachment_id;
+        //    li.className = 'list-group-item';
+        //    li.dataset.index = attachIndex;
+        //    let liText = document.createTextNode(file);
+        //    const icon = document.createElement("i");
+        //    icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-kvl-attachment';
+        //    icon.title = 'Delete';
+        //    icon.style = 'cursor:pointer';
+        //    li.appendChild(liText);
+        //    li.appendChild(icon);
+        //    const anchorTag = document.createElement("a");
+        //    anchorTag.href = '/KvlUploads/' + $('#VehicleRego').val() + "/" + file;
+        //    anchorTag.target = "_blank";
+        //    const icon2 = document.createElement("i");
+        //    icon2.className = 'fa fa-download ml-2 text-primary';
+        //    icon2.title = 'Download';
+        //    icon2.style = 'cursor:pointer';
+        //    anchorTag.appendChild(icon2);
+        //    li.appendChild(anchorTag);
+        //    document.getElementById('kvl-attachment-list').append(li);
 
 
 
-    //    }
+        //}
 
-    //}
+    }
+    $('#dgl-attachment-list').on('click', '.btn-delete-dgl-attachment', function (event) {
+        if (confirm('Are you sure want to remove this attachment?')) {
+            var target = event.target;
+            const fileName = target.parentNode.innerText.trim();
+            const id = target.parentNode.id;
+            const vehicleRego = $('#VehicleRego').val()
+            $.ajax({
+                url: '/Guard/DailyLog?handler=DeleteAttachment',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    id: id,
+                    
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result) {
+                    target.parentNode.parentNode.removeChild(target.parentNode);
+                    gridGuardLog.clear();
+                    gridGuardLog.reload();
+                }
+            });
+        }
+    });
+
     $('#chbIsAttachmentToRear').on('change', function () {
         const isChecked = $(this).is(':checked');
         if (isChecked == true) {
@@ -1080,6 +1151,16 @@ $(function () {
 
 
     });
+    $('#btnIsRearOrTwentyfivePercentSaveAndClose').on('click', function () {
+
+
+        $('#dgl-image-modal').modal('hide');
+
+
+
+
+    });
+    
     $('#IsRearOrTwentyfivePercentfileInput').on('change', function (e) {
         $('#loader').show();
         //const file = $(this).get(0).files.item(0);
@@ -1113,12 +1194,13 @@ $(function () {
                         
                             if (i == file.files.length - 1) {
                                 $('#loader').hide();
-                                $('#dgl-image-modal').modal('hide');
+                                //$('#dgl-image-modal').modal('hide');
                                 gridGuardLog.clear();
                                 gridGuardLog.reload();
                                 $('#IsAttachmentToRear').val(true);
 
                                 $('#IsTwentyfivePercentOfPage').val(false);
+                                loadDlgImagePopup($('#GuardimagedataId').val(), false);
                             }
 
                     }
@@ -1156,12 +1238,13 @@ $(function () {
                     if (data.success) {
                         if (i == file.files.length - 1) {
                             $('#loader').hide();
-                            $('#dgl-image-modal').modal('hide');
+                            //$('#dgl-image-modal').modal('hide');
                             gridGuardLog.clear();
                             gridGuardLog.reload();
                             $('#IsAttachmentToRear').val(true);
 
                             $('#IsTwentyfivePercentOfPage').val(false);
+                            loadDlgImagePopup($('#GuardimagedataId').val(), false);
 
                         }
                     }
@@ -1177,6 +1260,7 @@ $(function () {
         }
         
     });
+  
     //p6-102 Add Photo -end
     /*to display the popup to acknowledge the message-start*/
     $('#guard_daily_log tbody').on('click', '#btnAcknowledgeButton', function (value, record) {
@@ -1220,15 +1304,19 @@ $(function () {
             /*timer pause while editing*/
             if (isPaused == true) {
                 isPaused = false;
+
             }
             else {
                 isPaused = true;
+                
             }
+           
 
         });
         gridGuardLog.on('rowUnselect', function (e, $row, id, record) {
             /*timer pause while editing*/
             isPaused = false;
+           
 
         });
         gridGuardLog.on('rowDataChanged', function (e, id, record) {

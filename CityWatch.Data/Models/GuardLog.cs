@@ -54,6 +54,8 @@ namespace CityWatch.Data.Models
         public bool IsIRReportTypeEntry { get; set; }
         public bool? RcLogbookStamp { get; set; } = false;
         public int EventType { get; set; } = 0;
+        [NotMapped]
+        public string NotesNew { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {

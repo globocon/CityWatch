@@ -300,7 +300,8 @@ namespace CityWatch.Data.Providers
 
         void GetGuardManningDetailsForPublicHolidays();
 
-
+        List<GuardLogsDocumentImages> GetGuardLogDocumentImaesById(int Id);
+        void DeleteGuardLogDocumentImaes(int id);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -5092,6 +5093,26 @@ namespace CityWatch.Data.Providers
 
 
         //p6-102 Add Photo -end
+        public List<GuardLogsDocumentImages> GetGuardLogDocumentImaesById(int Id)
+        {
+            var result = new List<GuardLogsDocumentImages>();
+            result = _context.GuardLogsDocumentImages
+                           .Where(z => z.Id == Id)
+                         
+                           .ToList();
+
+
+            return result;
+        }
+        public void DeleteGuardLogDocumentImaes(int id)
+        {
+            var guardLogDocumentImaes = _context.GuardLogsDocumentImages.SingleOrDefault(i => i.Id == id);
+            if (guardLogDocumentImaes != null)
+            {
+                _context.Remove(guardLogDocumentImaes);
+                _context.SaveChanges();
+            }
+        }
     }
 
 }
