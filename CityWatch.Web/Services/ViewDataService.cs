@@ -540,6 +540,8 @@ namespace CityWatch.Web.Services
                     company.EmailMessageUploadedOn,
                     company.FormattedEmailMessageUploaded,
                     company.BannerLogoPath,
+                    company.HyperlinkLabel,
+                    company.HyperlinkColour,
 
 
                 });

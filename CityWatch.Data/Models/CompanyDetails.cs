@@ -20,6 +20,8 @@ namespace CityWatch.Data.Models
         public string BannerLogoPath { get; set; }
         public string BannerMessage { get; set; }
         public string Hyperlink { get; set; }
+        public string HyperlinkLabel { get; set; }
+        public string HyperlinkColour { get; set; }
         public DateTime BannerMessageUploadedOn { get; set; }
 
         public string EmailMessage { get; set; }
