@@ -544,7 +544,7 @@ $(function () {
         // Task p6#73_TimeZone issue -- added by Binoy -- End
 
         if (mobileno == null || mobileno == '+61 4' || mobileno == '') {
-            new MessageModal({ message: "<b>The Control Room requires your personal mobile number in case of emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.<p> This request occurs only once. Please do not provide false numbers to trick system. It is an OH&S requirement we can contact you in an Emergency </p> </b>" }).showWarning();
+            new MessageModal({ message: " <p class=\"font-weight-bold\">The Control Room requires your personal mobile number in case of emergency. It will only be used if we cannot contact you during your shift and you have not responded to a radio check OR call to the allocated site number.</p> <p class=\"font-weight-bold\"> This request occurs only once. Please do not provide false numbers to trick system. It is an OH&S requirement we can contact you in an Emergency </p>" }).showWarning();
             console.log('after msg modal')
 
         }
