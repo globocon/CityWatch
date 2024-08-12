@@ -788,8 +788,10 @@ namespace CityWatch.Data.Providers
                     templateToUpdate.Hyperlink = companyDetails.Hyperlink;
                     templateToUpdate.EmailMessage = companyDetails.EmailMessage;
                     templateToUpdate.EmailMessageUploadedOn = DateTime.Now;
+                    //p1-225 Core Settings-start
                     templateToUpdate.HyperlinkColour = companyDetails.HyperlinkColour;
                     templateToUpdate.HyperlinkLabel = companyDetails.HyperlinkLabel;
+                    //p1-225 Core Settings-end
                 }
 
             }

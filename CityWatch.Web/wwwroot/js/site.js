@@ -2534,8 +2534,10 @@ $('#report_field_types').on('change', function () {
                 $("#txt_EmailMessage").val(data[i].emailMessage);
                 $("#img_PrimaryLogo").attr('src', data[i].primaryLogoPath);
                 $("#img_BannerLogo").attr('src', data[i].bannerLogoPath);
+                //p1-225 Core Settings-start
                 $("#txt_HyplerLinkLabel").val(data[i].hyperlinkLabel);
                 $("#txt_HyperlinkColor").val(data[i].hyperlinkColour);
+                //p1-225 Core Settings-end
             }
 
 
@@ -2655,8 +2657,10 @@ $('#report_field_types').on('change', function () {
                 BannerMessage: $("#txt_BannerMessage").val(),
                 Hyperlink: $("#txt_HyplerLink").val(),
                 EmailMessage: $("#txt_EmailMessage").val(),
+                //p1-225 Core Settings-start
                 HyperlinkLabel: $("#txt_HyplerLinkLabel").val(),
                 HyperlinkColour: $("#txt_HyperlinkColor").val()
+                //p1-225 Core Settings-end
             }
             $.ajax({
                 url: '/Admin/Settings?handler=CompanyDetails',
