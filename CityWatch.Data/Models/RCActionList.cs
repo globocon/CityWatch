@@ -26,6 +26,7 @@ namespace CityWatch.Data.Models
         public string Imagepath { get; set; }
         public string DateandTimeUpdated { get; set; }
         public int ClientSiteID { get; set; }
+        public bool IsRCBypass { get; set; }
 
         [ForeignKey("SettingsId")]
         [JsonIgnore]
