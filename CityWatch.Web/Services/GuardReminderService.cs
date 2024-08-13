@@ -309,13 +309,15 @@ namespace CityWatch.Web.Services
                 HtmlBody = mailBodyHtml
             };
             message.Body = builder.ToMessageBody();
-            using var client = new SmtpClient();
-            client.Connect(_emailOptions.SmtpServer, _emailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
-            if (!string.IsNullOrEmpty(_emailOptions.SmtpUserName) &&
-                !string.IsNullOrEmpty(_emailOptions.SmtpPassword))
-                client.Authenticate(_emailOptions.SmtpUserName, _emailOptions.SmtpPassword);
-            client.Send(message);
-            client.Disconnect(true);
+            using (var client = new SmtpClient())
+            {
+                client.Connect(_emailOptions.SmtpServer, _emailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                if (!string.IsNullOrEmpty(_emailOptions.SmtpUserName) &&
+                    !string.IsNullOrEmpty(_emailOptions.SmtpPassword))
+                    client.Authenticate(_emailOptions.SmtpUserName, _emailOptions.SmtpPassword);
+                client.Send(message);
+                client.Disconnect(true);
+            }
 
         }
 
