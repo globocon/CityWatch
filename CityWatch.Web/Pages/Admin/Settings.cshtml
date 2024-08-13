@@ -719,7 +719,7 @@
                                     <div class="col-md-12">
                                     <div class="form-group row">
                                         <div class="col-md-3">
-                                            <label class="form-label" id="Week">select week</label>
+                                            <label class="form-label" id="Week">select first day of the week</label>
                                                 <select class="form-control" id="week" name="week">
                                                     <option value="">Select</option>
                                                     <option value="Monday">Monday</option>
@@ -732,13 +732,26 @@
                                                 </select>
                                         </div>
                                             <div class="col-md-3">
-                                                <label for="time">Exec. Time</label>
-                                                <input type="time" class="form-control" id="timeTimesheet" name="timeTimesheet">
+                                                <label for="time">Report Frequency</label>
+                                                <select class="form-control" id="Reportfrequency" name="Reportfrequency">
+                                                    <option value="">Select</option>
+                                                    <option value="Today">Today</option>
+                                                    <option value="ThisWeek">This Week</option>
+                                                    <option value="Last2weeks">Last 2 weeks(fortnight)</option>
+                                                    <option value="Last4weeks">Last 4 weeks(month)</option>
+                                                    <option value="Month">Month Only</option>
+                                                </select>
                                             </div>
                                         <div class="col-md-3" style="padding-top:28px">
                                             <button class="btn btn-success" id="add_Timesheet">Save</button>
                                         </div>
                                     </div>
+                                    <div class="form-group row">
+                                            <div class="col-md-3">
+                                            <label class="form-label" id="Defaultmailbox">Default Mailbox</label>
+                                                <input type="text" class="form-control" name="mailbox" id="mailbox" />
+                                        </div>
+                                        </div>
                                     </div>
                                    
                                 </div>
@@ -1321,6 +1334,26 @@
                 <div class="row">
                     <div class="col-md-12">
                         <input type="hidden" id="TimesheetGuard_Id"  />
+                        <h>Instant Timesheet</h>
+                        <div class="form-group">
+                            <label for="frequency"></label>
+                            <select class="form-control" id="frequency" name="frequency">
+                                <option value="">Select</option>
+                                <option value="Today">Today</option>
+                                <option value="ThisWeek">This Week</option>
+                                <option value="Last2weeks">Last 2 weeks(fortnight)</option>
+                                <option value="Last4weeks">Last 4 weeks(month)</option>
+                                <option value="Month">Month Only</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <button type="button" id="btnDownloadTimesheetFrequency" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Download</button>
+                            </div>
+                        </div><br/>
+                        <h>Custom Timesheets</h><br />
+                         <div class="form-group">
+                             </div>
                         <div class="form-group">
                             <label for="startDate">Start Date</label>
                             <input type="date" class="form-control" id="startDate" name="startDate">
@@ -1329,15 +1362,7 @@
                             <label for="endDate">End Date</label>
                             <input type="date" class="form-control" id="endDate" name="endDate">
                         </div>
-                        <div class="form-group">
-                            <label for="frequency">Frequency</label>
-                            <select class="form-control" id="frequency" name="frequency">
-                                <option value="">Select</option>
-                                <option value="0">Daily</option>
-                                <option value="1">Weekly</option>
-                                <option value="2">Monthly</option>
-                            </select>
-                        </div>
+                    
                        
                     </div>
                 </div>

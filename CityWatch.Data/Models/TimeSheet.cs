@@ -10,6 +10,7 @@ namespace CityWatch.Data.Models
     {
         public int Id { get; set; }
         public string weekName { get; set; }
-        public string Time { get; set; }
+        public string Frequency { get; set; }
+        public string Email { get; set; }
     }
 }

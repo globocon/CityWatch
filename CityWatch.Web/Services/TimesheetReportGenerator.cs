@@ -229,7 +229,7 @@ namespace CityWatch.Web.Services
                .Add(new Paragraph().Add(new Text(text)))
                .SetFont(PdfHelper.GetPdfFont())
                .SetFontSize(CELL_FONT_SIZE)
-               .SetTextAlignment(TextAlignment.CENTER)
+               .SetTextAlignment(TextAlignment.LEFT)
                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
                .SetVerticalAlignment(VerticalAlignment.MIDDLE);
 
@@ -282,12 +282,55 @@ namespace CityWatch.Web.Services
                 return GuardTable;
             }
 
+            // Check if startDate and endDate are the same
+            if (startDate.Date == endDate.Date)
+            {
+                var GuardTable = CreateNewGuardTable();
+                int dailyTotalHours = 0;
+
+                // Only create a table for the specific day
+                string weekName = startDate.ToString("dddd");
+                GuardTable.AddCell(GetSiteValueCell(weekName));
+                GuardTable.AddCell(GetSiteValueCell(startDate.ToString("dd/MM/yyyy")));
+
+                var start = LoginDetails.FirstOrDefault(x => x.LoginDate.Date == startDate.Date);
+                if (start != null)
+                {
+                    GuardTable.AddCell(GetSiteValueCell(start.OnDuty.ToString("HH:mm")));
+                    TimeSpan? endDateDifference = null;
+
+                    if (start.OffDuty.HasValue)
+                    {
+                        endDateDifference = start.OffDuty.Value - start.OnDuty;
+                    }
+
+                    string enddate1 = string.Format("{0:D2}:{1:D2}", (int)endDateDifference.Value.TotalHours, endDateDifference.Value.Minutes);
+                    GuardTable.AddCell(GetSiteValueCell(enddate1));
+
+                    DateTime enddate = DateTime.ParseExact(enddate1, "HH:mm", CultureInfo.InvariantCulture);
+                    DateTime startd = DateTime.ParseExact(start.OnDuty.ToString("HH:mm"), "HH:mm", CultureInfo.InvariantCulture);
+
+                    TimeSpan TotalHrs = enddate - startd;
+                    int totalHrs = (int)TotalHrs.TotalHours;
+                    dailyTotalHours += totalHrs;
+                    GuardTable.AddCell(GetSiteValueCell(totalHrs.ToString()));
+                }
+                else
+                {
+                    GuardTable.AddCell(GetSiteValueCell(""));
+                    GuardTable.AddCell(GetSiteValueCell(""));
+                    GuardTable.AddCell(GetSiteValueCell(""));
+                }
+
+                return (new List<Table> { GuardTable }, dailyTotalHours);
+            }
+
+            // If not the same date, proceed with weekly logic
             DateTime currentDate = startDate;
             int weeksBetween = WeeksBetweenDates(startDate, endDate);
             string[] daysOfWeek = CultureInfo.CurrentCulture.DateTimeFormat.DayNames;
             int startDayIndex = Array.IndexOf(daysOfWeek, weekname);
 
-           
             while ((int)currentDate.DayOfWeek != startDayIndex)
             {
                 currentDate = currentDate.AddDays(1);
@@ -302,7 +345,6 @@ namespace CityWatch.Web.Services
                 var GuardTable = CreateNewGuardTable();
                 int weeklyTotalHours = 0;
 
-               
                 for (int j = 0; j < 7; j++)
                 {
                     string weekName = currentDate.ToString("dddd"); // e.g., "Monday"
@@ -310,7 +352,7 @@ namespace CityWatch.Web.Services
 
                     if (currentDate > endDate)
                     {
-                        GuardTable.AddCell(""); 
+                        GuardTable.AddCell("");
                     }
                     else
                     {
@@ -335,7 +377,6 @@ namespace CityWatch.Web.Services
                         DateTime enddate = DateTime.ParseExact(enddate1, "HH:mm", CultureInfo.InvariantCulture);
                         DateTime startd = DateTime.ParseExact(start.OnDuty.ToString("HH:mm"), "HH:mm", CultureInfo.InvariantCulture);
 
-                        
                         TimeSpan TotalHrs = enddate - startd;
                         int totalHrs = (int)TotalHrs.TotalHours;
                         weeklyTotalHours += totalHrs;
@@ -351,7 +392,6 @@ namespace CityWatch.Web.Services
                     currentDate = currentDate.AddDays(1);
                 }
 
-                
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
@@ -366,6 +406,7 @@ namespace CityWatch.Web.Services
 
 
 
+
         private int WeeksBetweenDates(DateTime startDate, DateTime endDate)
         {
             TimeSpan dateDifference = endDate - startDate;
@@ -376,9 +417,10 @@ namespace CityWatch.Web.Services
         {
             try
             {
-                float[] columnWidths = { 100f, 200f, 100f, 100f, 100f }; // Adjust these values as needed
-                                                                         // Total width of the table in points
-
+                float[] columnWidths = { 100f, 200f, 100f, 100f, 20f }; // Adjust these values as needed
+                                                                        // Total width of the table in points
+                table.SetWidth(UnitValue.CreatePointValue(280)); // Example total width in points, adjust as needed
+              
 
                 Color CELL_BG_GREY_HEADER = new DeviceRgb(211, 211, 211);
                 // const float CELL_WIDTH = 1f;
@@ -387,6 +429,8 @@ namespace CityWatch.Web.Services
                 table.AddCell(GetSiteValueCell("start"));
                 table.AddCell(GetSiteValueCell("Finish"));
                 table.AddCell(GetSiteValueCell("Total Hrs"));
+                
+
             }
             catch (Exception ex)
             {

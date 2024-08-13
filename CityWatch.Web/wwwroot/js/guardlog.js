@@ -3233,6 +3233,46 @@ $(function () {
             }
         });
     });
+    $('#btnDownloadTimesheetFrequency').on('click', function (e) {
+        var Frequency = $('#frequency').val();
+       
+        if (!frequency) {
+            alert("Please select Instant Timesheet.");
+            return; // Exit the function if validation fails
+        }
+
+
+
+
+        $.ajax({
+            url: '/Admin/Settings?handler=DownloadTimesheetFrequency',
+            data: {
+                frequency: $('#frequency').val(),
+                guradid: $('#TimesheetGuard_Id').val(),
+            },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (response) {
+            if (response.statusCode === -1) {
+
+            } else {
+
+
+
+
+
+                var newTab = window.open(response.fileName, '_blank');
+                if (!newTab) {
+
+                    var a = document.createElement('a');
+                    a.href = response.fileName;
+                    a.download = "TimeSheet_Report";
+                    a.click();
+                }
+
+            }
+        });
+    });
    
     //Download Timesheet stop
     $('#guard_settings tbody').on('click', '#btnLogBookDetailsByGuard', function () {
