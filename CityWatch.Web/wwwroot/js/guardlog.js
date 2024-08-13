@@ -3953,6 +3953,7 @@ $(function () {
         if (data.dateType == true) {
             $('#LicanseTypeFilter').prop('checked', true);
             $('#ComplianceDate').text('Issue Date');
+            $('#IsDateFilterEnabledHidden').val(true);
         }
         $('#addGuardCompliancesLicenseModal').modal('show');
 
