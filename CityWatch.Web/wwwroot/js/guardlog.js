@@ -3123,6 +3123,7 @@ $(function () {
         $('#TimesheetGuard_Id').val('-1');
         $('#startDate').val('');
         $('#endDate').val('');
+        $('#frequency').val('');
         var data = guardSettings.row($(this).parents('tr')).data();
         $('#TimesheetGuard_Id').val(data.id);
         $('#timesheetModal').modal('show');
