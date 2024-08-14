@@ -3375,27 +3375,27 @@ $(function () {
             const ws = XLSX.utils.aoa_to_sheet([[]]);
 
           
-            const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:J19'); // Ensure range is defined
-            for (let row = range.s.r; row <= range.e.r; row++) {
-                for (let col = range.s.c; col <= range.e.c; col++) {
-                    const cellAddress = { c: col, r: row };
-                    const cellRef = XLSX.utils.encode_cell(cellAddress);
-                    if (!ws[cellRef]) ws[cellRef] = {}; // Create the cell if it doesn't exist
-                    ws[cellRef].s = {
-                        fill: {
-                            fgColor: { rgb: "FFFF00" } // Yellow background color
-                        },
-                        font: {
-                            sz: 12, // Font size
-                            bold: false, // Font weight
-                            color: { rgb: "000000" } // Font color
-                        },
-                        alignment: {
-                            horizontal: "center" // Center align text
-                        }
-                    };
-                }
-            }
+            //const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:J19'); // Ensure range is defined
+            //for (let row = range.s.r; row <= range.e.r; row++) {
+            //    for (let col = range.s.c; col <= range.e.c; col++) {
+            //        const cellAddress = { c: col, r: row };
+            //        const cellRef = XLSX.utils.encode_cell(cellAddress);
+            //        if (!ws[cellRef]) ws[cellRef] = {}; // Create the cell if it doesn't exist
+            //        ws[cellRef].s = {
+            //            fill: {
+            //                fgColor: { rgb: "FFFF00" } // Yellow background color
+            //            },
+            //            font: {
+            //                sz: 12, // Font size
+            //                bold: false, // Font weight
+            //                color: { rgb: "000000" } // Font color
+            //            },
+            //            alignment: {
+            //                horizontal: "center" // Center align text
+            //            }
+            //        };
+            //    }
+            //}
 
             // Create the data rows
             const dataRows = [headers, ...rawData.map(item => [
