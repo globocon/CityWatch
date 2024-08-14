@@ -1213,8 +1213,15 @@
                                 <div class="form-group row ml-1 mt-5">
                                 <label class="form-check-label pr-0">RC Bypass</label>
                                 <div class="pr-1 pl-3">
-                                    <input type="checkbox"  id="cbIsRCBypassSite">
-                                    <input type="hidden" id="RCList_IsSiteRCBypass" name="RCActionList.IsRCBypass" value="@Model.rclistKP.IsRCBypass">
+                                @if(Model.rclistKP.IsRCBypass==true)
+                                {
+                                            <input type="checkbox"  id="cbIsRCBypassSite" checked>
+                                }
+                                        else
+                                        {
+                                           <input type="checkbox"  id="cbIsRCBypassSite"> 
+                                        }
+                                        <input type="hidden" id="RCList_IsSiteRCBypass" name="RCActionList.IsRCBypass" value="@Model.rclistKP.IsRCBypass">
                                 </div>
                                 </div>
                             </div>
