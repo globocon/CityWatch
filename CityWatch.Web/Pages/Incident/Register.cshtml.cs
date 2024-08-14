@@ -293,6 +293,7 @@ namespace CityWatch.Web.Pages.Incident
                             LicenseNumber = item.SecurityNo,
                             Email = item.Email,
                             Gender=item.Gender,
+                            LicenseState=item.State,
 
                         },
                     };
