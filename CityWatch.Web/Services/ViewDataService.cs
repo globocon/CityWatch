@@ -80,6 +80,7 @@ namespace CityWatch.Web.Services
         List<ClientSiteSmartWand> GetSmartWands(string siteName, int? guardId);
         List<ClientSiteSmartWand> GetClientSiteSmartWands(int clientSiteId);
         List<GuardViewModel> GetGuards();
+        List<GuardViewExcelModel> GetGuardsToExcel(bool active, bool inactive);
         List<KeyVehicleLogViewModel> GetKeyVehicleLogs(int logBookId, KvlStatusFilter kvlStatusFilter);
         List<KeyVehicleLogViewModel> GetKeyVehicleLogsForIds(int logBookId);
         List<SelectListItem> GetKeyVehicleLogFieldsByType(KvlFieldType type, bool withoutSelect = false);
@@ -614,7 +615,26 @@ namespace CityWatch.Web.Services
             var guardLogins = _guardDataProvider.GetGuardLogins(guards.Select(z => z.Id).ToArray());
             return guards.Select(z => new GuardViewModel(z, guardLogins.Where(y => y.GuardId == z.Id))).ToList();
         }
-        
+        public List<GuardViewExcelModel> GetGuardsToExcel(bool active, bool inactive)
+        {
+            var guards = _guardDataProvider.GetGuards();
+            var guardLogins = _guardDataProvider.GetGuardLogins(guards.Select(z => z.Id).ToArray());
+
+            // Filter the guards based on active and inactive statuses
+            if (active && !inactive)
+            {
+                guards = guards.Where(g => g.IsActive == true).OrderBy(x => x.Name).ToList();
+
+            }
+            else if (!active && inactive)
+            {
+                guards = guards.Where(g => g.IsActive == false).OrderBy(x => x.Name).ToList();
+            }
+
+            return guards.Select(z => new GuardViewExcelModel(z, guardLogins.Where(y => y.GuardId == z.Id), _guardDataProvider)).ToList();
+
+
+        }
         public async Task<DataTable> PatrolDataToDataTable(List<DailyPatrolData> dailyPatrolData)
         {
             var dt = new DataTable("IR Statistics");

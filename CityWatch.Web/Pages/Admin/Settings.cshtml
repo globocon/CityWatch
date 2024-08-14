@@ -598,15 +598,18 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group row">
-
-                                    <div class="col-md-1 offset-md-9 px-0 text-left">
+                                    <div class="col-md-2 text-left">
+                                    <a href="#" class="btn btn-primary" id="btnDownloadGuardLogExcel">Download Exl</a>
+                                    </div>
+                                    <div class="col-md-1 offset-md-6 px-0 text-left">
+                                        
                                         <input type="checkbox" class="form-check-input" id="chkbxfilterGuardActive">
                                         <label class="font-weight-normal" for="chkbxfilterGuardActive">Active</label>
                                         <br />
                                         <input type="checkbox" class="form-check-input" id="chkbxfilterGuardInActive">
                                         <label class="font-weight-normal" for="chkbxfilterGuardInActive">Non-Active</label>
                                     </div>
-                                    <div class="col-md-2 text-right">
+                                    <div class="col-md-3 text-right">
                                         <button class="btn btn-success mb-3" id="btn_add_guard_top"><i class="fa fa-plus mr-2"></i>Add Guard</button>
                                     </div>
                                     @*  <div class="col-md-2 text-right">
@@ -1463,4 +1466,7 @@
 <partial name="_irSettingsPopup" />
 @section scripts {
     <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&libraries=places"></script>
+    <script src="https://unpkg.com/gijgo@1.9.13/js/gijgo.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 }

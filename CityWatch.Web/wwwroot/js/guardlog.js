@@ -3208,7 +3208,103 @@ $(function () {
         });
     }
 
+    // P1#231 HR Download Excel for settings -start
+    $("#btnDownloadGuardLogExcel").click(async function () {
+        const activeChecked = $('#chkbxfilterGuardActive').is(':checked');
+        const inactiveChecked = $('#chkbxfilterGuardInActive').is(':checked');
+        const currentDateTime = new Date().toISOString().split('T')[0];
+        const fileName = `Guards - ${currentDateTime}.xlsx`;
 
+        $('#loader').show(); // Show loader
+
+        try {
+            // Fetch data from the server
+            const response = await $.ajax({
+                url: '/Admin/GuardSettings?handler=ExportGuardsToExcel',
+                type: 'GET',
+                dataType: "json",
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                data: { active: activeChecked, inactive: inactiveChecked }
+            });
+
+            $('#loader').hide(); // Hide loader
+            console.log(response.data);
+            // Ensure response contains data
+            const rawData = Array.isArray(response.data) ? response.data : [];
+            if (rawData.length === 0) {
+                console.error("No data available to export.");
+                alert("No data available to export.");
+                return;
+            }
+         
+            // Define headers and column widths
+            const headers = ['Name', 'Security No', 'Initial', 'State', 'Provider', 'Client Sites', 'Gender', 'Is Active', 'HR1 Status', 'HR2 Status', 'HR3 Status'];
+            const columnWidths = [20, 20, 10, 10, 20, 25, 15, 15,10,10,10]; // Example widths
+
+           
+     
+            const ws = XLSX.utils.aoa_to_sheet([[]]);
+
+          
+            const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:J19'); // Ensure range is defined
+            for (let row = range.s.r; row <= range.e.r; row++) {
+                for (let col = range.s.c; col <= range.e.c; col++) {
+                    const cellAddress = { c: col, r: row };
+                    const cellRef = XLSX.utils.encode_cell(cellAddress);
+                    if (!ws[cellRef]) ws[cellRef] = {}; // Create the cell if it doesn't exist
+                    ws[cellRef].s = {
+                        fill: {
+                            fgColor: { rgb: "FFFF00" } // Yellow background color
+                        },
+                        font: {
+                            sz: 12, // Font size
+                            bold: false, // Font weight
+                            color: { rgb: "000000" } // Font color
+                        },
+                        alignment: {
+                            horizontal: "center" // Center align text
+                        }
+                    };
+                }
+            }
+
+            // Create the data rows
+            const dataRows = [headers, ...rawData.map(item => [
+                item.name,
+                item.securityNo,
+                item.initial,
+                item.state,
+                item.provider,
+                item.clientSites.replace('<br />', ' '),
+                item.gender,
+                item.isActive ? 'TRUE' : 'FALSE', // Ensure values are strings
+                item.hR1Status,
+                item.hR2Status,
+                item.hR3Status
+            ])];
+
+            // Update the worksheet with headers and data
+            XLSX.utils.sheet_add_aoa(ws, dataRows);
+
+            // Set column widths
+            ws['!cols'] = columnWidths.map(width => ({ wch: width }));
+
+            // Create a new workbook and append the worksheet
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Guards');
+
+            // Write the file
+            XLSX.writeFile(wb, fileName);
+        } catch (error) {
+            $('#loader').hide(); // Hide loader in case of error
+            console.error('Error fetching or processing data:', error); // Log error
+            alert("An error occurred while exporting data.");
+        }
+    });
+
+    // P1#231 HR Download Excel for settings -end
+    
+    
     $('#btn_add_guard_top, #btn_add_guard_bottom').on('click', function () {
         gridGuardLicenses.clear().draw();
         gridGuardCompliances.clear().draw();
