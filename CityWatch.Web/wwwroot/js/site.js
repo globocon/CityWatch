@@ -3222,12 +3222,14 @@ gridHrSettings = $('#tbl_hr_settings').grid({
     },
     columns: [
         { field: 'id', hidden: true },
-        { field: 'groupName', width: '15%' }, // Show the HR Group column
-        { field: 'referenceNo', width: '20%' },
-        { field: 'description' },
+        { field: 'groupName', width: '10%' }, // Show the HR Group column
+        { field: 'referenceNo', width: '10%' },
+        { field: 'description', width: '30%' },
         { field: 'states' },
         { field: 'clientSitesSummary' },
-        { width: '20%', renderer: hrgroupButtonRenderer },
+        { width: '5%', renderer: hrgroupLockButtonRenderer },
+       
+        { width: '10%', renderer: hrgroupButtonRenderer },
     ],
     dataBound: function (e, records, totalRecords) {
         var tbody = $(e.target).find('tbody');
@@ -3242,7 +3244,7 @@ gridHrSettings = $('#tbl_hr_settings').grid({
             if (currentGroupValue !== lastGroupValue) {
                 lastGroupValue = currentGroupValue;
                
-                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 7).text(currentGroupValue));
+                var headerRow = $('<tr>').addClass('group-header').append($('<th>').attr('colspan', 8).text(currentGroupValue));
                 headerRow.css('background-color', '#CCCCCC');
                 $(row).before(headerRow);
             }
@@ -3250,13 +3252,27 @@ gridHrSettings = $('#tbl_hr_settings').grid({
     },
     initialized: function (e) {
         // Optionally, you can modify the appearance or behavior after the grid is initialized
+        $('#tbl_hr_settings thead tr th:last')
+            .prev() // Select the column before the last
+            .addClass('text-center')
+            .html('<i class="fa fa-lock" aria-hidden="true"></i>');
         $('#tbl_hr_settings thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
     }
 });
+
+function hrgroupLockButtonRenderer(value, record) {
+    return '<div class="text-center">' +
+        '<div class="custom-control custom-switch custom-control-inline"  title="Toggle">' +
+        '<input type="checkbox" class="custom-control-input" id="toggleDarkMode" name="toggle" disabled>' +
+        '<label class="custom-control-label" for="toggleDarkMode"></label>' +
+        '</div>' +
+
+        '</div>'
+}
 function hrgroupButtonRenderer(value, record) {
     return '<div class="text-center">' +
-        '<button id="btnEditHrGroup" data-doc-id="' + record.id + '" data-doc-hrgroupid="' + record.hrGroupId + '" data-doc-refnonumberid="' + record.referenceNoNumberId + '" data-doc-refalphnumberid="' + record.referenceNoAlphabetId + '" data-doc-description="' + record.description + '" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
-        '<button id="btnDeleteHrGroup" data-doc-id="' + record.id + '" class="btn btn-outline-danger"><i class="fa fa-trash mr-2"></i>Delete</button>' +
+        '<button id="btnEditHrGroup" data-doc-id="' + record.id + '" data-doc-hrgroupid="' + record.hrGroupId + '" data-doc-refnonumberid="' + record.referenceNoNumberId + '" data-doc-refalphnumberid="' + record.referenceNoAlphabetId + '" data-doc-description="' + record.description + '" class="btn btn-outline-primary mr-2"><i class="fa fa-pencil"></i></button>' +
+        '<button id="btnDeleteHrGroup" data-doc-id="' + record.id + '" class="btn btn-outline-danger"><i class="fa fa-trash"></i></button>' +
 
         '</div>'
 }
