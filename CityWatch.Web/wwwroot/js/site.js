@@ -3481,7 +3481,8 @@ $('#hr_settings_fields_types').on('change', function () {
             dataType: 'json',
             success: function (data) {
                 $('#week').val(data.week)
-                $('#timeTimesheet').val(data.time)
+                $('#Reportfrequency').val(data.time)
+                $('#mailbox').val(data.mailid)
             }
         });
     }
@@ -3954,13 +3955,21 @@ $('#add_Dropbox').on('click', function () {
 $('#add_Timesheet').on('click', function () {
     const token = $('input[name="__RequestVerificationToken"]').val();
     var weekname = $('#week').val();
-    var time = $('#timeTimesheet').val();
-    
-    // Check if weekname has a value
+    var frequency = $('#Reportfrequency').val();
+    var mailid = $('#mailbox').val();
+    var emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+
+  
+    if (!emailPattern.test(mailid)) {
+        alert("Please enter a valid email address.");
+        return; 
+    }
+   
     if (weekname) {
+       
         $.ajax({
             url: '/Admin/Settings?handler=SaveTimesheet',
-            data: { weekname: weekname, time: time },
+            data: { weekname: weekname, frequency: frequency, mailid: mailid },
             type: 'POST',
             headers: { 'RequestVerificationToken': token },
         }).done(function (status) {

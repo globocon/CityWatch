@@ -6,6 +6,7 @@ using CityWatch.Web.Models;
 using CityWatch.Web.Services;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Dropbox.Api.Files;
 using MailKit.Search;
 using Microsoft.AspNetCore.Components.Forms;
@@ -20,6 +21,7 @@ using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using static Dropbox.Api.FileRequests.GracePeriod;
 using static Dropbox.Api.TeamLog.ActorLogInfo;
 using static Dropbox.Api.TeamLog.EventCategory;
 
@@ -1333,13 +1335,13 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { status = DroboxDir, message = message });
         }
-        public JsonResult OnPostSaveTimesheet(string weekname, string time)
+        public JsonResult OnPostSaveTimesheet(string weekname, string frequency,string mailid)
         {
             var status = true;
             var message = "Success";
             try
             {
-                _clientDataProvider.TimesheetSave(weekname, time);
+                _clientDataProvider.TimesheetSave(weekname, frequency, mailid);
             }
             catch (Exception ex)
             {
@@ -1360,11 +1362,11 @@ namespace CityWatch.Web.Pages.Admin
             var Timesheet = _clientDataProvider.GetTimesheetDetails();
             if (Timesheet!=null)
             {
-                return new JsonResult(new { Week = Timesheet.weekName, Time = Timesheet.Time });
+                return new JsonResult(new { Week = Timesheet.weekName, Time = Timesheet.Frequency,mailid= Timesheet.Email });
             }
             else
             {
-                return new JsonResult(new { Week = "", Time = "" });
+                return new JsonResult(new { Week = "", Time = "", mailid="" });
             }
             
         }
@@ -1407,6 +1409,77 @@ namespace CityWatch.Web.Pages.Admin
 
 
             
+
+            return new JsonResult(new { fileName = @Url.Content($"~/Pdf/Output/{fileName}"), statusCode });
+        }
+
+        public async Task<JsonResult> OnPostDownloadTimesheetFrequency(string frequency, int guradid)
+        {
+
+            var fileName = string.Empty;
+            var statusCode = 0;
+            DateTime startDate = DateTime.MinValue;
+            DateTime endDate = DateTime.MinValue;
+            try
+            {
+                DateTime today = DateTime.Today;
+               
+                if (frequency == "ThisWeek")
+                {
+                    
+                    // Assuming the week starts on Monday and ends on Sunday
+                    int daysToSubtract = (int)today.DayOfWeek - (int)DayOfWeek.Monday;
+                    startDate = today.AddDays(-daysToSubtract);
+
+                    endDate = startDate.AddDays(6); 
+                }
+                else if (frequency == "Last2weeks")
+                {
+                    // Calculate the end of last week (Sunday)
+                    int daysToSubtract = (int)today.DayOfWeek - (int)DayOfWeek.Sunday + 7;
+                    endDate = today.AddDays(-daysToSubtract);
+
+                    // Start date is 13 days before the end date (2 weeks)
+                    startDate = endDate.AddDays(-13);
+                }
+                else if (frequency == "Last4weeks")
+                {
+                    // Calculate the end of last week (Sunday)
+                    int daysToSubtract = (int)today.DayOfWeek + 1; // daysToSubtract for the previous Sunday
+                    endDate = today.AddDays(-daysToSubtract);
+
+                    // Start date is 27 days before the end date (for four weeks)
+                    startDate = endDate.AddDays(-27);
+                }
+                else if (frequency == "Month")
+                {
+                    // Calculate the start date as the first day of the last month
+                    startDate = new DateTime(today.Year, today.Month, 1).AddMonths(-1);
+
+                    // Calculate the end date as the last day of the last month
+                    endDate = startDate.AddMonths(1).AddDays(-1);
+                }
+                else if (frequency == "Today")
+                {
+                    startDate = today;
+                    endDate = today;
+                }
+                string StartDate = startDate.ToString();
+                string EndDate = endDate.ToString();
+                fileName = _TimesheetReportGenerator.GeneratePdfTimesheetReport(StartDate, EndDate, guradid);
+
+
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+            if (string.IsNullOrEmpty(fileName))
+                return new JsonResult(new { fileName, message = "Failed to generate pdf", statusCode = -1 });
+
+
+
 
             return new JsonResult(new { fileName = @Url.Content($"~/Pdf/Output/{fileName}"), statusCode });
         }
