@@ -381,6 +381,11 @@ namespace CityWatch.Web.Pages.Admin
             });
         }
 
+        public JsonResult OnGetExportGuardsToExcel(bool active, bool inactive)
+        {
+            return new JsonResult(new { data = _viewDataService.GetGuardsToExcel(active,inactive) });
+            
+        }
         public JsonResult OnGetClientStates()
         {
             return new JsonResult(_configDataProvider.GetStates());
