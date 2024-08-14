@@ -4133,7 +4133,7 @@ $('#div_site_settings').on('click', '#save_site_manning_settings', function () {
         }
 
         else if (data.success == 6) {
-            alert('The clocks must be in the range of 00:01–23:59, and ' + data.erorrMessage + ' is an invalid input.');
+            alert('The clocks must be in the range of 00:01-23:59, and ' + data.erorrMessage + ' is an invalid input.');
 
         }
         else if (data.success == 7) {
