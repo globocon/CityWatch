@@ -711,7 +711,15 @@ $(function () {
             //gridClientSiteSettings.reload({ type: $('#cs_client_type').val() });
         }).fail(function () { });
     });
-     //RC Action List Save stop
+    //RC Action List Save stop
+    //p2 - 135 rc duress - start
+    $('#div_site_settings').on('change','#cbIsRCBypassSite', function () {
+
+        const isChecked = $(this).is(':checked');
+     
+        $('#RCList_IsSiteRCBypass').val(isChecked);
+    });
+    //p2 - 135 rc duress - start
     function scheduleModalOnAdd() {
         const dateToday = new Date().toISOString().split('T')[0];
         $('#startDate').val(dateToday);

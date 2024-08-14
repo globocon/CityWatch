@@ -602,6 +602,7 @@ namespace CityWatch.Data.Providers
                     RCToUpdate.Imagepath = RC.Imagepath;
                     RCToUpdate.DateandTimeUpdated = RC.DateandTimeUpdated;
                     RCToUpdate.ClientSiteID = RC.ClientSiteID;
+                    RCToUpdate.IsRCBypass = RC.IsRCBypass;
                 }
             }
             _context.SaveChanges();
