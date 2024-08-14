@@ -650,7 +650,7 @@
                                 <div class="form-group row">
                                     <label class="col-form-label col-md-2">Select a Field Type</label>
                                     <div class="col-md-5">
-                                        <select class="form-control" id="hr_settings_fields_types" asp-items="@Html.GetEnumSelectList<HrSettingsType>()">
+                                        <select class="form-control" id="hr_settings_fields_types" asp-items="@Html.GetEnumSelectList<HrSettingsType>().OrderBy(x=>x.Text)">
                                             <option value="">None</option>
                                         </select>
                                     </div>
@@ -958,8 +958,8 @@
                                     <input type="text" class="form-control" id="Guard_Initial" name="Guard.Initial">
                                 </div>
                                 
-                                <label class="col-md-1 col-form-label">CRM (Supplier)</label>
-                                <div class="col-md-3">
+                                <label class="col-form-label pl-3 pr-2">CRM (Supplier)</label>
+                                <div>
                                     @*  <input type="text" class="form-control" id="Guard_Provider" name="Guard.Provider"> *@
                                     <select id="Guard_Provider" name="Guard.Provider" asp-items="@Model.ViewDataService.ProviderList" class="form-control"></select>
                                 </div>
@@ -974,8 +974,8 @@
                                 <div class="col-md-2">
                                     <select id="Guard_State" name="Guard.State" asp-items="@Model.ViewDataService.LicenseStates" class="form-control"></select>
                                 </div>
-                                <label class="col-md-1 form-check-label">Access</label>
-                                <div class="col-md-3">
+                                <label class="form-check-label pl-3 pr-5">Access</label>
+                                <div style="width: 254px;padding-left: 19px;">
                                     <select class="form-control" multiple="multiple" id="Guard_Access" name="Guard.GuardAccess">
                                         @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal)
                                         {
@@ -1017,8 +1017,8 @@
                                     <option value="Other">Other</option>
                                 </select>
                                 </div>
-                                <label class="col-md-1 form-check-label pr-0">RC Bypass</label>
-                                <div class="pr-1 pl-3">
+                                <label class="form-check-label pl-3 pr-4">RC Bypass</label>
+                                <div style="padding-left: 18px;">
                                     <input type="checkbox" class="form-check" id="cbIsRCBypass">
                                     <input type="hidden" id="Guard_IsRCBypass" name="Guard.IsRCBypass">
                                 </div>
@@ -1044,8 +1044,8 @@
                                 </div>
                                 
                                 
-                                <label class="col-md-1 form-check-label">Is Active</label>
-                                <div class="pr-1 pl-3">
+                                <label class="form-check-label pl-3 pr-5">Is Active</label>
+                                <div class="pl-3">
                                     <input type="checkbox" class="form-check" id="cbIsActive">
                                     <input type="hidden" id="Guard_IsActive" name="Guard.IsActive">
                                 </div>

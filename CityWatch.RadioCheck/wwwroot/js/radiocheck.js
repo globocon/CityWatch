@@ -4133,11 +4133,11 @@ $('#div_site_settings').on('click', '#save_site_manning_settings', function () {
         }
 
         else if (data.success == 6) {
-            alert('Please enter the clocks must be in the range of 00:01 - 23:59. These are invalid ' + data.erorrMessage + ' .');
+            alert('The clocks must be in the range of 00:01–23:59, and ' + data.erorrMessage + ' is an invalid input.');
 
         }
         else if (data.success == 7) {
-            alert('Please make sure you fill out the three boxes(start, end, and workers) for a day or make them blank.Please ensure workers have a value and cannot be blank when a clock is set. ' + data.erorrMessage + ' .');
+            alert('Please make sure you fill out the three boxes (start, end, and workers) for a day or make them blank. Please ensure workers have a value and cannot be blank when a clock is set.');
 
         }
 
