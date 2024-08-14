@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Security.Cryptography;
 
 namespace CityWatch.Data.Models
 {
@@ -20,6 +21,10 @@ namespace CityWatch.Data.Models
         public string BannerLogoPath { get; set; }
         public string BannerMessage { get; set; }
         public string Hyperlink { get; set; }
+        //p1-225 Core Settings-start
+        public string HyperlinkLabel { get; set; }
+        public string HyperlinkColour { get; set; }
+        //p1-225 Core Settings-end
         public DateTime BannerMessageUploadedOn { get; set; }
 
         public string EmailMessage { get; set; }
