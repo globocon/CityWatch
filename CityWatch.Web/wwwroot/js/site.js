@@ -2537,6 +2537,7 @@ $('#report_field_types').on('change', function () {
                 //p1-225 Core Settings-start
                 $("#txt_HyplerLinkLabel").val(data[i].hyperlinkLabel);
                 $("#txt_HyperlinkColor").val(data[i].hyperlinkColour);
+                $("#txt_LogoHyplerLink").val(data[i].logoHyperlink);
                 //p1-225 Core Settings-end
             }
 
@@ -2659,7 +2660,8 @@ $('#report_field_types').on('change', function () {
                 EmailMessage: $("#txt_EmailMessage").val(),
                 //p1-225 Core Settings-start
                 HyperlinkLabel: $("#txt_HyplerLinkLabel").val(),
-                HyperlinkColour: $("#txt_HyperlinkColor").val()
+                HyperlinkColour: $("#txt_HyperlinkColor").val(),
+                LogoHyperlink: $("#txt_LogoHyplerLink").val(),
                 //p1-225 Core Settings-end
             }
             $.ajax({
