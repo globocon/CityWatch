@@ -75,7 +75,6 @@
             <li class="nav-item" @hideTabStyle>
                 <a class="nav-link p-2" id="uca-tab" data-toggle="tab" href="#uca" role="tab" aria-controls="uca" aria-selected="false">C4i Access Control</a>
             </li>
-
             <li class="nav-item" @hideTabStyle>
                 <a class="nav-link p-2" id="c4ihr-tab" data-toggle="tab" href="#c4ihr" role="tab" aria-controls="uca" aria-selected="false">C4i HR</a>
             </li>
@@ -85,9 +84,17 @@
         }
         else
         {
+            //Power User menu start
             <li class="nav-item">
                 <a class="nav-link p-2 active" id="c4ihr-tab" data-toggle="tab" href="#c4ihr" role="tab" aria-controls="uca" aria-selected="false">C4i HR</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link p-2" id="csite-tab" data-toggle="tab" href="#csite" role="tab" aria-controls="csite" aria-selected="false">IR Client Site</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link p-2" id="uca-tab" data-toggle="tab" href="#uca" role="tab" aria-controls="uca" aria-selected="false">C4i Access Control</a>
+            </li>
+              //Power User menu end
         }
     </ul>
     <div class="tab-content" id="settingsTabContent">
@@ -528,7 +535,7 @@
                         <div class="col-md-4">
                             <input type="text" id="txt_HyplerLinkLabel" class="form-control" />
                         </div>
-                        
+
                     </div>
                     <div class="form-group row">
                         <label class="col-form-label col-md-2">Banner Message</label>
@@ -549,7 +556,7 @@
                         <div class="col-md-4">
                             <input type="color" id="txt_HyperlinkColor" />
                         </div>
-                        
+
                     </div>
                     <div class="form-group row">
                         <label class="col-form-label col-md-2">Home Page Message2</label>
@@ -610,11 +617,11 @@
                             <div class="col-md-12">
                                 <div class="form-group row">
                                     <div class="col-md-2 text-left">
-                                       <a href="#" class="btn btn-primary mb-3" id="btnDownloadGuardLogExcel">Download <i class="fa fa-file-excel-o"></i></a>
+                                        <a href="#" class="btn btn-primary mb-3" id="btnDownloadGuardLogExcel">Download <i class="fa fa-file-excel-o"></i></a>
                                         <div id="loader"></div>
                                     </div>
                                     <div class="col-md-1 offset-md-6 px-0 text-left">
-                                        
+
                                         <input type="checkbox" class="form-check-input" id="chkbxfilterGuardActive">
                                         <label class="font-weight-normal" for="chkbxfilterGuardActive">Active</label>
                                         <br />
@@ -622,7 +629,7 @@
                                         <label class="font-weight-normal" for="chkbxfilterGuardInActive">Non-Active</label>
                                     </div>
                                     <div class="col-md-3 text-right">
-                                       
+
                                         <button class="btn btn-success mb-3" id="btn_add_guard_top"><i class="fa fa-plus mr-2"></i>Add Guard</button>
                                     </div>
                                     @*  <div class="col-md-2 text-right">
@@ -731,12 +738,12 @@
                                         </div>
                                     </div>
                                 </div>
-                               @*  Timesheet *@
+                                @*  Timesheet *@
                                 <div id="TimesheetDiv" style="display:none">
                                     <div class="col-md-12">
-                                    <div class="form-group row">
-                                        <div class="col-md-3">
-                                            <label class="form-label" id="Week">select first day of the week</label>
+                                        <div class="form-group row">
+                                            <div class="col-md-3">
+                                                <label class="form-label" id="Week">select first day of the week</label>
                                                 <select class="form-control" id="week" name="week">
                                                     <option value="">Select</option>
                                                     <option value="Monday">Monday</option>
@@ -747,7 +754,7 @@
                                                     <option value="saturday">saturday</option>
                                                     <option value="Sunday">Sunday</option>
                                                 </select>
-                                        </div>
+                                            </div>
                                             <div class="col-md-3">
                                                 <label for="time">Report Frequency</label>
                                                 <select class="form-control" id="Reportfrequency" name="Reportfrequency">
@@ -759,18 +766,18 @@
                                                     <option value="Month">Month Only</option>
                                                 </select>
                                             </div>
-                                        <div class="col-md-3" style="padding-top:28px">
-                                            <button class="btn btn-success" id="add_Timesheet">Save</button>
+                                            <div class="col-md-3" style="padding-top:28px">
+                                                <button class="btn btn-success" id="add_Timesheet">Save</button>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="form-group row">
+                                        <div class="form-group row">
                                             <div class="col-md-3">
-                                            <label class="form-label" id="Defaultmailbox">Default Mailbox</label>
+                                                <label class="form-label" id="Defaultmailbox">Default Mailbox</label>
                                                 <input type="text" class="form-control" name="mailbox" id="mailbox" />
-                                        </div>
+                                            </div>
                                         </div>
                                     </div>
-                                   
+
                                 </div>
                             </div>
                         </div>
@@ -787,7 +794,7 @@
             </div>
         }
         else
-        {
+        {  //Power User start
             <div class="tab-pane fade show active py-3" id="c4ihr" role="tabpanel" aria-labelledby="c4ihr-tab">
                 <ul class="nav nav-tabs" id="guardSettingsTab" role="tablist">
                     <li class="nav-item">
@@ -802,16 +809,26 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group row">
-                                    <div class="col-md-1 offset-md-9 px-0 text-left">
+                                    <div class="col-md-2 text-left">
+                                        <a href="#" class="btn btn-primary mb-3" id="btnDownloadGuardLogExcel">Download <i class="fa fa-file-excel-o"></i></a>
+                                        <div id="loader"></div>
+                                    </div>
+                                    <div class="col-md-1 offset-md-6 px-0 text-left">
+
                                         <input type="checkbox" class="form-check-input" id="chkbxfilterGuardActive">
                                         <label class="font-weight-normal" for="chkbxfilterGuardActive">Active</label>
                                         <br />
                                         <input type="checkbox" class="form-check-input" id="chkbxfilterGuardInActive">
                                         <label class="font-weight-normal" for="chkbxfilterGuardInActive">Non-Active</label>
                                     </div>
-                                    <div class="col-md-2 text-right">
+                                    <div class="col-md-3 text-right">
+
                                         <button class="btn btn-success mb-3" id="btn_add_guard_top"><i class="fa fa-plus mr-2"></i>Add Guard</button>
                                     </div>
+                                    @*  <div class="col-md-2 text-right">
+                                <button class="btn btn-success mb-3" id="btn_refresh_guard_top"><i class="fa fa-refresh mr-2"></i>Refresh</button>
+                                </div> *@
+
                                 </div>
                             </div>
                         </div>
@@ -827,6 +844,8 @@
                                             <th>State</th>
                                             <th>CRM (Supplier)</th>
                                             <th>Sites</th>
+                                            <th>Pin</th>
+                                            <th></th>
                                             <th>Gender</th>
                                             <th>Active</th>
                                             <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
@@ -847,7 +866,7 @@
                                 <div class="form-group row">
                                     <label class="col-form-label col-md-2">Select a Field Type</label>
                                     <div class="col-md-5">
-                                        <select class="form-control" id="hr_settings_fields_types" asp-items="@Html.GetEnumSelectList<HrSettingsType>()">
+                                        <select class="form-control" id="hr_settings_fields_types" asp-items="@Html.GetEnumSelectList<HrSettingsType>().OrderBy(x=>x.Text)">
                                             <option value="">None</option>
                                         </select>
                                     </div>
@@ -858,6 +877,7 @@
                             <div class="col-md-12">
                                 <div class="text-right">
                                     <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                                    <button class="btn btn-success mb-3" id="add_criticalDocuments" style="display:none"><i class="fa fa-plus mr-2"></i>Add Critical Documents</button>
                                 </div>
                             </div>
                             <div class="col-md-12">
@@ -872,13 +892,86 @@
                                             <th rowspan="2">Site</th>
                                             <th rowspan="2"></th>
                                             <th rowspan="2"></th>
-
                                         </tr>
-
-
                                     </thead>
                                 </table>
                                 <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
+
+                                <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
+                                <div id="SettingsDiv" style="display:none">
+                                    <div class="form-group row">
+                                        <div class="col-md-8">
+                                            <label class="form-label" id="DropboxImagesDir">Dropbox Directory</label>
+                                            <input class="form-control" id="DropboxDir">
+                                        </div>
+                                        <div class="col-md-3" style="padding-top:28px">
+                                            <button class="btn btn-success" id="add_Dropbox">Save</button>
+                                        </div>
+                                    </div>
+                                    <div class="card">
+                                        <div class="card-header d-flex justify-content-between">
+                                            <b><u>HR Compliance Alerts (Global)</u></b>
+                                            @* <div class="col text-right">
+
+                                        </div> *@
+                                        </div>
+
+                                        <div class="card-body row m-0">
+                                            <div class="col-md-12">
+                                                <div class="form-group row">
+                                                    <label for="hr_compliance_email" class="col-md-2 col-form-label">Email alert</label>
+                                                    <div class="col-md-3">
+                                                        <input type="email" class="form-control" id="hr_compliance_email">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <button class="btn btn-success" id="add_ComplianceEmail">Save</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                @*  Timesheet *@
+                                <div id="TimesheetDiv" style="display:none">
+                                    <div class="col-md-12">
+                                        <div class="form-group row">
+                                            <div class="col-md-3">
+                                                <label class="form-label" id="Week">select first day of the week</label>
+                                                <select class="form-control" id="week" name="week">
+                                                    <option value="">Select</option>
+                                                    <option value="Monday">Monday</option>
+                                                    <option value="Tuesday">Tuesday</option>
+                                                    <option value="Wednesday">Wednesday</option>
+                                                    <option value="Thursday">Thursday</option>
+                                                    <option value="Friday">Friday</option>
+                                                    <option value="saturday">saturday</option>
+                                                    <option value="Sunday">Sunday</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="time">Report Frequency</label>
+                                                <select class="form-control" id="Reportfrequency" name="Reportfrequency">
+                                                    <option value="">Select</option>
+                                                    <option value="Today">Today</option>
+                                                    <option value="ThisWeek">This Week</option>
+                                                    <option value="Last2weeks">Last 2 weeks(fortnight)</option>
+                                                    <option value="Last4weeks">Last 4 weeks(month)</option>
+                                                    <option value="Month">Month Only</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3" style="padding-top:28px">
+                                                <button class="btn btn-success" id="add_Timesheet">Save</button>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <div class="col-md-3">
+                                                <label class="form-label" id="Defaultmailbox">Default Mailbox</label>
+                                                <input type="text" class="form-control" name="mailbox" id="mailbox" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -886,6 +979,58 @@
                 </div>
             </div>
 
+            <div class="tab-pane fade py-3" id="csite" role="tabpanel" aria-labelledby="csite-tab">
+                <div class="row mb-3">
+                    <div class="col-md-10">
+                        <div class="form-group row">
+                            <label class="col-form-label ">Filter by Client Type</label>
+                            <div class="col-md-3">
+                                <select class="form-control" id="sel_client_type">
+                                    <option value="">All</option>
+                                    @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
+                                    {
+                                        <option value="@item.Id">@item.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            @*p1-192 client email search-start*@
+                            <label class="col-form-label">Email</label>
+                            <div class="input-group col-md-3">
+
+                                <input type="text" id="search_kw_client_site_email" class="form-control" placeholder="Search Client Email">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-primary" id="btnSearchClientEmail"><i class="fa fa-search"></i></button>
+                                </div>
+                            </div>
+                            @*p1-192 client email search-end*@
+                            <div class="input-group col-md-3">
+                                <input type="text" id="search_kw_client_site" class="form-control" placeholder="Search Client Site">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-primary" id="btnSearchClientSite"><i class="fa fa-search"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2 text-right" @hideTabStyle>
+                        <button class="btn btn-success mb-3" id="add_client_site"><i class="fa fa-plus mr-2"></i>Add Client Site</button>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <table class="table" id="client_site_settings"></table>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="tab-pane fade py-3" id="uca" role="tabpanel" aria-labelledby="uca-tab" >
+                <div class="row">
+                    <div class="col-md-12 justify-content-center">
+                        <table class="table" id="user_client_access"></table>
+                    </div>
+                </div>
+            </div>
+            //Power User end
         }
     </div>
 
@@ -986,7 +1131,7 @@
                                 <div class="col-md-2">
                                     <input type="text" class="form-control" id="Guard_Initial" name="Guard.Initial">
                                 </div>
-                                
+
                                 <label class="col-form-label pl-3 pr-2">CRM (Supplier)</label>
                                 <div>
                                     @*  <input type="text" class="form-control" id="Guard_Provider" name="Guard.Provider"> *@
@@ -1028,23 +1173,23 @@
 
 
                                 </div>
-                                
+
                             </div>
                             <div class="form-group row">
                                 <label class="col-md-2 col-form-label">Mobile</label>
                                 <div class="col-md-3">
                                     <input type="text" class="form-control" id="Guard_Mobile" name="Guard.Mobile" value="+61 4">
                                 </div>
-                                <label class="col-md-1"for="Guard_Gender">Gender</label>
+                                <label class="col-md-1" for="Guard_Gender">Gender</label>
                                 <div class="col-md-2">
-                                <select class="form-control" id="Guard_Gender" name="Guard.Gender">
-                                    <option selected="selected" value="">Select</option>
-                                    <option value="Male">Male</option>
-                                    <option value="Female">Female</option>
-                                    <option value="Non-Binary">Non-Binary</option>
-                                    <option value="Not Stated">Not Stated</option>
-                                    <option value="Other">Other</option>
-                                </select>
+                                    <select class="form-control" id="Guard_Gender" name="Guard.Gender">
+                                        <option selected="selected" value="">Select</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Non-Binary">Non-Binary</option>
+                                        <option value="Not Stated">Not Stated</option>
+                                        <option value="Other">Other</option>
+                                    </select>
                                 </div>
                                 <label class="form-check-label pl-3 pr-4">RC Bypass</label>
                                 <div style="padding-left: 18px;">
@@ -1063,16 +1208,16 @@
                                     <input type="text" class="form-control" id="Guard_Email" name="Guard.Email" autocomplete="off">
                                 </div>
                                 <label class="col-md-1 col-form-label">HR Pin</label>
-                                <div class="pr-0 pl-3" >
+                                <div class="pr-0 pl-3">
                                     <input type="password" style="display:none;" aria-hidden="true">
                                     <input type="password" class="form-control" id="Guard_Pin" name="Guard.Pin" style="width:120px;" autocomplete="off">
-                                   
+
                                 </div>
                                 <div class="pr-4 pl-3">
                                     <span id="togglePassword" class=""><i class="fa fa-eye-slash" aria-hidden="true"></i></span>
                                 </div>
-                                
-                                
+
+
                                 <label class="form-check-label pl-3 pr-5">Is Active</label>
                                 <div class="pl-3">
                                     <input type="checkbox" class="form-check" id="cbIsActive">
@@ -1080,8 +1225,8 @@
                                 </div>
                                 @*<label class="form-label text-right" style="width: 164px;">CRM (Supplier)</label>*@
                                 @*<div class="col-md-3">*@
-                                    @*  <input type="text" class="form-control" id="Guard_Provider" name="Guard.Provider"> *@
-                                    @*<select id="Guard_Provider" name="Guard.Provider" asp-items="@Model.ViewDataService.ProviderList" class="form-control"></select>*@
+                                @*  <input type="text" class="form-control" id="Guard_Provider" name="Guard.Provider"> *@
+                                @*<select id="Guard_Provider" name="Guard.Provider" asp-items="@Model.ViewDataService.ProviderList" class="form-control"></select>*@
                                 @*</div>*@
                             </div>
 
@@ -1351,7 +1496,7 @@
             <div class="modal-body">
                 <div class="row">
                     <div class="col-md-12">
-                        <input type="hidden" id="TimesheetGuard_Id"  />
+                        <input type="hidden" id="TimesheetGuard_Id" />
                         <h>Instant Timesheet</h>
                         <div class="form-group">
                             <label for="frequency"></label>
@@ -1368,10 +1513,10 @@
                             <div class="col-md-12">
                                 <button type="button" id="btnDownloadTimesheetFrequency" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Download</button>
                             </div>
-                        </div><br/>
+                        </div><br />
                         <h>Custom Timesheets</h><br />
-                         <div class="form-group">
-                             </div>
+                        <div class="form-group">
+                        </div>
                         <div class="form-group">
                             <label for="startDate">Start Date</label>
                             <input type="date" class="form-control" id="startDate" name="startDate">
@@ -1380,8 +1525,8 @@
                             <label for="endDate">End Date</label>
                             <input type="date" class="form-control" id="endDate" name="endDate">
                         </div>
-                    
-                       
+
+
                     </div>
                 </div>
                 <div class="row">
