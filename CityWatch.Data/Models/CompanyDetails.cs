@@ -24,6 +24,7 @@ namespace CityWatch.Data.Models
         //p1-225 Core Settings-start
         public string HyperlinkLabel { get; set; }
         public string HyperlinkColour { get; set; }
+        public string LogoHyperlink { get; set; }
         //p1-225 Core Settings-end
         public DateTime BannerMessageUploadedOn { get; set; }
 
