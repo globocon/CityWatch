@@ -1335,13 +1335,13 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { status = DroboxDir, message = message });
         }
-        public JsonResult OnPostSaveTimesheet(string weekname, string frequency,string mailid)
+        public JsonResult OnPostSaveTimesheet(string weekname, string frequency,string mailid,string dropbox)
         {
             var status = true;
             var message = "Success";
             try
             {
-                _clientDataProvider.TimesheetSave(weekname, frequency, mailid);
+                _clientDataProvider.TimesheetSave(weekname, frequency, mailid, dropbox);
             }
             catch (Exception ex)
             {
@@ -1362,11 +1362,11 @@ namespace CityWatch.Web.Pages.Admin
             var Timesheet = _clientDataProvider.GetTimesheetDetails();
             if (Timesheet!=null)
             {
-                return new JsonResult(new { Week = Timesheet.weekName, Time = Timesheet.Frequency,mailid= Timesheet.Email });
+                return new JsonResult(new { Week = Timesheet.weekName, Time = Timesheet.Frequency,mailid= Timesheet.Email,Dropbox= Timesheet .Dropbox});
             }
             else
             {
-                return new JsonResult(new { Week = "", Time = "", mailid="" });
+                return new JsonResult(new { Week = "", Time = "", mailid="", Dropbox="" });
             }
             
         }

@@ -12,5 +12,6 @@ namespace CityWatch.Data.Models
         public string weekName { get; set; }
         public string Frequency { get; set; }
         public string Email { get; set; }
+        public string Dropbox { get; set; }
     }
 }

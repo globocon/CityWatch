@@ -207,7 +207,7 @@ namespace CityWatch.Data.Providers
         public string GetGuardlogName(int GuardID, DateTime enddate);
         public string GetGuardlogSite(int GuardID, DateTime enddate);
         public List<GuardLogin> GetLoginDetailsGuard(int GuardID, DateTime startdate, DateTime enddate);
-        public void TimesheetSave(string weekname, string time, string mailid);
+        public void TimesheetSave(string weekname, string time, string mailid, string dropbox);
         public TimeSheet GetTimesheetDetails();
 
         public List<ClientSite> GetClientSitesUsingLoginUser(int? userId, string searchTerm);
@@ -1816,7 +1816,7 @@ namespace CityWatch.Data.Providers
             }
 
         }
-        public void TimesheetSave(string weekname,string time,string mailid)
+        public void TimesheetSave(string weekname,string time,string mailid,string dropbox)
         {
             if (!string.IsNullOrEmpty(weekname))
             {
@@ -1836,6 +1836,7 @@ namespace CityWatch.Data.Providers
                     weekName = weekname,
                     Frequency=time,
                     Email= mailid,
+                    Dropbox=dropbox,
                 };
                 _context.TimeSheet.Add(TimeSheetnew);
 
