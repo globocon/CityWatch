@@ -746,16 +746,18 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="form-group col-md-4">
-                                <label class="form-label" id="ComplianceDate" style="width:84px;">Expiry Date</label>
+                            <div class="form-group col-md-5 col-lg-5 col-12">
+                                <label class="form-label" id="ComplianceDate" style="width: 140px;">Expiry Date (DOE)</label>
                                 <input type="hidden" id="IsDateFilterEnabledHidden" name="GuardComplianceAndLicense.IsDateFilterEnabledHidden" />
-                                <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards" style="padding-bottom:5px">
+                                <div class="custom-control custom-switch custom-control-inline m-0" title="Switch between Patrol Car and Guards" style="padding-bottom:5px">
                                     <input type="checkbox" class="custom-control-input" id="LicanseTypeFilter">
                                     <label class="custom-control-label" for="LicanseTypeFilter"></label>
                                 </div>
-                                <input type="date" class="form-control" id="GuardComplianceAndLicense_ExpiryDate1" name="GuardComplianceAndLicense.ExpiryDate" min="@DateTime.Today.ToString("yyyy-MM-dd")">
+                                <div class="pr-3">
+                                    <input type="date" class="form-control" id="GuardComplianceAndLicense_ExpiryDate1" name="GuardComplianceAndLicense.ExpiryDate" min="@DateTime.Today.ToString("yyyy-MM-dd")">
+                                </div>
                             </div>
-                            <div class="form-group col-md-8 mb-1">
+                            <div class="form-group col-md-7 mb-1  pl-0">
                                 <div class="container p-0" style="display:flex;font-size:11px;color:black">
 
                                     <p class="left-text text-danger">Note:</p>&nbsp;&nbsp;
