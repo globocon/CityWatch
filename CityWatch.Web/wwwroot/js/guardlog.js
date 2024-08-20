@@ -1894,7 +1894,7 @@ $(function () {
         ordering: false,
         order: [[groupColumn, 'asc']],
         info: false,
-        searching: false,
+        searching: true,
         scrollX: true,
         data: [],
         columns: [
@@ -2147,6 +2147,10 @@ $(function () {
         }).done(function (response) {
             $('#loader').hide();
             keyVehicleLogReportnew.clear().rows.add(response).draw();
+            /*p1-218 search download select-start*/
+            var searchtext = keyVehicleLogReport.search();
+            keyVehicleLogReportnew.search(searchtext).draw();
+            /*p1-218 search download select-end*/
             var Key = 'Key & Vehicle Logs - ' + $('#vklAudtitFromDate').val() + ' to ' + $('#vklAudtitToDate').val();
 
             var type = 'xlsx';
