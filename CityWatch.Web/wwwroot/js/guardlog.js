@@ -3759,7 +3759,7 @@ $(function () {
         $('#GuardComplianceandlicense_Id').val('');
         $('#Description').val('');
         $('#LicanseTypeFilter').prop('checked', false);
-        $('#ComplianceDate').text('Expiry Date');
+        $('#ComplianceDate').text('Expiry Date (DOE)');
         $('#IsDateFilterEnabledHidden').val(false)
         $("#GuardComplianceAndLicense_ExpiryDate1").val('');
         $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', function () {
@@ -4113,7 +4113,7 @@ $(function () {
         $('#guardComplianceandlicense_fileName1').text(data.fileName ? data.fileName : 'None');
         if (data.dateType == true) {
             $('#LicanseTypeFilter').prop('checked', true);
-            $('#ComplianceDate').text('Issue Date');
+            $('#ComplianceDate').text('Issue Date (DOI)');
             $('#IsDateFilterEnabledHidden').val(true);
         }
         $('#addGuardCompliancesLicenseModal').modal('show');
@@ -5685,7 +5685,7 @@ $(function () {
 
         const filter = isChecked ? 1 : 2;
         if (filter == 1) {
-            $('#ComplianceDate').text('Issue Date');
+            $('#ComplianceDate').text('Issue Date (DOI)');
             $('#IsDateFilterEnabledHidden').val(true)
             $("#GuardComplianceAndLicense_ExpiryDate1").val('');
             $("#GuardComplianceAndLicense_ExpiryDate1").prop('max', function () {
@@ -5695,7 +5695,7 @@ $(function () {
         }
         if (filter == 2) {
             $('#IsDateFilterEnabledHidden').val(false)
-            $('#ComplianceDate').text('Expiry Date');
+            $('#ComplianceDate').text('Expiry Date (DOE)');
             $("#GuardComplianceAndLicense_ExpiryDate1").val('');
             $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', function () {
                 return new Date().toJSON().split('T')[0];

@@ -2189,7 +2189,7 @@ function resetGuardLicenseandComplianceAddModal() {
     $('#GuardComplianceandlicense_Id').val('');
     $('#Description').val('');
     $('#LicanseTypeFilter').prop('checked', false);
-    $('#ComplianceDate').text('Expiry Date');
+    $('#ComplianceDate').text('Expiry Date (DOE)');
     $('#IsDateFilterEnabledHidden').val(false)
     $("#GuardComplianceAndLicense_ExpiryDate1").val('');
     $("#GuardComplianceAndLicense_ExpiryDate1").prop('min', function () {
