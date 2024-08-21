@@ -3485,6 +3485,7 @@ $('#hr_settings_fields_types').on('change', function () {
                 $('#week').val(data.week)
                 $('#Reportfrequency').val(data.time)
                 $('#mailbox').val(data.mailid)
+                $('#Defaultdropbox').val(data.dropbox)
             }
         });
     }
@@ -3959,6 +3960,7 @@ $('#add_Timesheet').on('click', function () {
     var weekname = $('#week').val();
     var frequency = $('#Reportfrequency').val();
     var mailid = $('#mailbox').val();
+    var dropbox = $('#Defaultdropbox').val();
     var emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
 
   
@@ -3971,7 +3973,7 @@ $('#add_Timesheet').on('click', function () {
        
         $.ajax({
             url: '/Admin/Settings?handler=SaveTimesheet',
-            data: { weekname: weekname, frequency: frequency, mailid: mailid },
+            data: { weekname: weekname, frequency: frequency, mailid: mailid, dropbox: dropbox },
             type: 'POST',
             headers: { 'RequestVerificationToken': token },
         }).done(function (status) {
