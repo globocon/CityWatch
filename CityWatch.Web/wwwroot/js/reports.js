@@ -11,6 +11,7 @@
     loadDefaultDates();
 
     var patrolReport = $('#monthly_patrol_data').DataTable({
+        dom: 'lpftrip',
         lengthMenu: [[75, 100, -1], [75, 100, "All"]],
         pageLength: 100,
         paging: true,
@@ -56,7 +57,14 @@
             $('td', row).eq(13).addClass('action-taken');
         }
     });
-
+    var scrollHead = $(patrolReport.table().container()).find('.dataTables_scrollHead');
+    $(scrollHead).css({
+        'overflow-x': 'scroll'
+    }).on('scroll', function (e) {
+        var scrollBody = $(this).parent().find('.dataTables_scrollBody').get(0);
+        scrollBody.scrollLeft = this.scrollLeft;
+        $(scrollBody).trigger('scroll');
+    });
     $('#ReportRequest_DataFilter').on('change', function () {
         const reportType = $(this).val();
         if (reportType === '2')

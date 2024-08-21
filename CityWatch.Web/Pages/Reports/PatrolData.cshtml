@@ -87,32 +87,34 @@
     <div class="tab-content pt-3">
         <div class="tab-pane active" id="pd-report" role="tabpanel" aria-labelledby="pd-report-tab">
             <div id="monthly_patrol_data_wrapper">
-                <table id="monthly_patrol_data" class="table table-bordered table-sm" width="100%">
-                    <thead>
-                        <tr>
-                            <th>Day</th>
-                            <th>Date</th>
-                            <th>IR S/No</th>
-                            <th>
-                                <img src="~/images/downloadimage.jpg" style="width:25px;" />
-                            </th>
-                            <th>Control Room Job No</th>
-                            <th>Site</th>
-                            <th>Address</th>
-                            <th>Desp. Time</th>
-                            <th>Arrival</th>
-                            <th>Depart</th>
-                            <th>CWS SNo.</th>
-                            <th>Total Mins on Site</th>
-                            <th>Resp. Time</th>
-                            <th>Alarm</th>
-                            <th>Patrol Att.</th>
-                            <th>Action Taken</th>
-                            <th>Notified By</th>
-                            <th>Bill To</th>
-                        </tr>
-                    </thead>
-                </table>
+                <div class="large-table-container-2">
+                    <table id="monthly_patrol_data" class="table table-bordered table-sm" width="100%">
+                        <thead style="background-color: #C8C8C8; color:black">
+                            <tr>
+                                <th>Day</th>
+                                <th>Date</th>
+                                <th>IR S/No</th>
+                                <th>
+                                    <span style="color: Dodgerblue;"><i class="fa fa-download  fa-2x" aria-hidden="true"></i></span>
+                                </th>
+                                <th>Control Room Job No</th>
+                                <th>Site</th>
+                                <th>Address</th>
+                                <th>Desp. Time</th>
+                                <th>Arrival</th>
+                                <th>Depart</th>
+                                <th>CWS SNo.</th>
+                                <th>Total Mins on Site</th>
+                                <th>Resp. Time</th>
+                                <th>Alarm</th>
+                                <th>Patrol Att.</th>
+                                <th>Action Taken</th>
+                                <th>Notified By</th>
+                                <th>Bill To</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
             </div>
         </div>
         <div class="tab-pane" id="pd-chart" role="tabpanel" aria-labelledby="pd-chart-tab">
@@ -178,7 +180,7 @@
     </div>
     @*/*html to PDF content for the download PDF Start*/*@
     <div style="width: 1px;height: 1px; border: 0px none;position: relative ;overflow: hidden; ">
-       
+
         <div id="content-to-pdf" style="width:99%">
             <div class="page-break">
                 <div class="row pt-1">
