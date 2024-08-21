@@ -13,7 +13,15 @@
     var claimsIdentity = User.Identity as ClaimsIdentity;
     var companydetail = viewDataService.GetCompanyDetails().SingleOrDefault(x => x.Id == 1);
     var companydetailsprimarylogo = companydetail.PrimaryLogoPath;
+    var pageName = ViewContext.RouteData.Values["page"]?.ToString();
+    if (!string.IsNullOrEmpty(pageName))
+    {
+        if (pageName.Contains("RadioCheckV2"))
+        {
+            pageName = "home";
+        }
 
+    }
 }
 
 <!DOCTYPE html>
@@ -36,8 +44,15 @@
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom mb-3">
             <div class="container">
 
-
-                <a href="javascript:history.go(-1)" class="" nav-link py-0""><i class=" fa fa-home mr-2 mb-5"></i></a>
+                @if (pageName != "home")
+                {
+                    <a href="javascript:history.go(-1)" class="" nav-link py-0""><i class=" fa fa-home mr-2 mb-5"></i></a>
+                }
+                else
+                {
+                    // home page only
+                    <a href="https://www.cws-ir.com/" class="" nav-link py-0""><i class=" fa fa-home mr-2 mb-5"></i></a>
+                }
 
 
                 @*<a class="navbar-brand" href="https://www.citywatchsecurity.com.au" target="_blank">*@
@@ -88,8 +103,16 @@
                 </div>
                 <div class="col-sm-12 col-md-6 d-flex justify-content-center">
                     <div>
-                        <a href="http://rc.cws-ir.com/" class="nav-link py-0"><i class="fa fa-home mr-2"></i>Home Page</a>
+                         @if (pageName != "home")
+                        {
+                            <a href="/RadiocheckV2" class="nav-link py-0"><i class="fa fa-home mr-2"></i>Home Page</a>
 
+                        }
+                        else
+                        {
+                            //home page only
+                            <a href="https://www.cws-ir.com/" class="nav-link py-0"><i class="fa fa-home mr-2"></i>Home Page</a>
+                        }
                     </div>
                  @*   @if (User.Identity.IsAuthenticated || AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal)
                     {*@
