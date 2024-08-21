@@ -1002,9 +1002,9 @@ $(function () {
         //p6-102 Add Photo -start
         $imageBtn.on('click', function (e) {
             $('#dgl-image-modal').modal('show');
-            $('#chbIsTwentyfivePercentOfPage').prop('checked', false);
+            $('#chbIsTwentyfivePercentOfPage').prop('checked', true);
             $('#GuardimagedataId').val($(this).data('id'));
-            $('#chbIsAttachmentToRear').prop('checked', true);
+            $('#chbIsAttachmentToRear').prop('checked', false);
             loadDlgImagePopup($(this).data('id'), false);
         });
         //p6-102 Add Photo -end
