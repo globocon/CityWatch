@@ -244,7 +244,7 @@ namespace CityWatch.Data.Providers
         List<KeyVehicleLogVisitorPersonalDetail> GetPOIListFromVisitorPersonalDetails();
         RadioCheckLogbookSiteDetails GetRadiocheckLogbookDetails();
 
-        List<GuardLog> GetLastLoginNew(int GuradId);
+        List<GuardLogin> GetLastLoginNew(int GuradId);
 
         //p1-191 hr files task 3-start
         void SaveHRSettings(HrSettings hrSettings, int[] selectSites, string[] selectedStates);
@@ -1017,7 +1017,7 @@ namespace CityWatch.Data.Providers
             return _context.ClientSiteCustomFields.Where(z => z.ClientSiteId == clientSiteId).ToList();
         }
 
-        public List<GuardLog> GetLastLoginNew(int GuradId)
+        public List<GuardLogin> GetLastLoginNew(int GuradId)
         {
             try
             {
@@ -1026,7 +1026,7 @@ namespace CityWatch.Data.Providers
                 if (!guardLogins.Any())
                 {
                     // No records found for the provided GuradId, return an empty list
-                    return new List<GuardLog>();
+                    return new List<GuardLogin>();
                 }
 
                 var lastLoginDate = guardLogins
@@ -1041,23 +1041,22 @@ namespace CityWatch.Data.Providers
                 if (GuraLoginId == null)
                 {
                     // GuraLoginId is null, which means no corresponding record found, return an empty list
-                    return new List<GuardLog>();
+                    return new List<GuardLogin>();
                 }
 
                 var GuardLogGuraId = _context.GuardLogs.Where(x => x.GuardLoginId == GuraLoginId.Id);
 
-                var LastEventLoginDate = GuardLogGuraId.Select(x => x.EventDateTime.Date).Distinct()
+                var LastEventLoginDate = GuardLogGuraId.Select(x => x.EventDateTime.Date)
             .OrderByDescending(EventDateTime => EventDateTime)
             .Take(5)
             .ToList();
 
-                var result = _context.GuardLogs
-    .Where(x => LastEventLoginDate.Contains(x.EventDateTime.Date))
-    .AsEnumerable() 
-    .GroupBy(x => x.EventDateTime.Date)
-    .Select(g => g.OrderByDescending(x => x.EventDateTime).FirstOrDefault())
-    .OrderByDescending(x => x.EventDateTime)
-    .ToList();
+                var result = _context.GuardLogins
+     .Where(x => x.GuardId == GuradId)
+     .Include(x=>x.ClientSite)
+     .OrderByDescending(x => x.LoginDate)
+     .Take(5)
+     .ToList();
 
                 return result;
             }
@@ -1066,7 +1065,7 @@ namespace CityWatch.Data.Providers
                 // Handle the exception here (log it, return a specific error response, etc.)
                 // For now, we'll just return an empty list
                 Console.WriteLine($"An error occurred: {ex.Message}");
-                return new List<GuardLog>();
+                return new List<GuardLogin>();
             }
         }
         public int SaveClientSiteCustomFields(ClientSiteCustomField clientSiteCustomField)
