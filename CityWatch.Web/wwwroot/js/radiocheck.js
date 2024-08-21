@@ -2272,17 +2272,17 @@ let gridGuardLicensesAndLicenceKey = $('#tbl_guard_licensesAndComplianceKey').Da
         dataSrc: ''
     },
     columns: [
-        { data: 'hrGroupText', width: "2%" },
-        { data: 'description', width: "7%" },
-        { data: 'expiryDate', width: '3%', orderable: true },
-        { data: 'fileName', width: '7%' },
+        { data: 'hrGroupText', width: "12%" },
+        { data: 'description', width: "27%" },
+        { data: 'expiryDate', width: '15%', orderable: true },
+        { data: 'fileName', width: '30%' },
         { data: 'status', width: "1%" },
         {
             targets: -1,
             data: null,
             defaultContent: '<button type="button" class="btn btn-outline-primary mr-2" name="btn_edit_guard_licenseAndCompliance"><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;' +
                 '<button  class="btn btn-outline-danger mr-2" name="btn_delete_guard_licenseAndCompliance"><i class="fa fa-trash"></i></button>',
-            width: '4%'
+            width: '15%'
         }],
     columnDefs: [{
         targets: 3,
