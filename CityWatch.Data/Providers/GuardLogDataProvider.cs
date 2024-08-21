@@ -1046,12 +1046,18 @@ namespace CityWatch.Data.Providers
 
                 var GuardLogGuraId = _context.GuardLogs.Where(x => x.GuardLoginId == GuraLoginId.Id);
 
-                var LastEventLoginDate = GuardLogGuraId.Select(x => x.EventDateTime).Max();
+                var LastEventLoginDate = GuardLogGuraId.Select(x => x.EventDateTime.Date).Distinct()
+            .OrderByDescending(EventDateTime => EventDateTime)
+            .Take(5)
+            .ToList();
 
                 var result = _context.GuardLogs
-                    .Where(x => x.GuardLoginId == GuraLoginId.Id && x.EventDateTime.Date == LastEventLoginDate.Date)
-                    .Take(1)
-                    .ToList();
+    .Where(x => LastEventLoginDate.Contains(x.EventDateTime.Date))
+    .AsEnumerable() 
+    .GroupBy(x => x.EventDateTime.Date)
+    .Select(g => g.OrderByDescending(x => x.EventDateTime).FirstOrDefault())
+    .OrderByDescending(x => x.EventDateTime)
+    .ToList();
 
                 return result;
             }
