@@ -956,6 +956,7 @@ namespace CityWatch.Web.Pages.Guard
         public JsonResult OnPostRearFileUpload()
         {
             var success = false;
+            var message = "Uploaded successfully";
             var files = Request.Form.Files;
             int id = 0;
             string url = string.Empty;
@@ -982,6 +983,8 @@ namespace CityWatch.Web.Pages.Guard
                     try
                     {
                         var uploadFileName = Path.GetFileName(file.FileName);
+                        if (Path.GetExtension(file.FileName) != ".JPG" && Path.GetExtension(file.FileName) != ".jpg" && Path.GetExtension(file.FileName) != ".JPEG" && Path.GetExtension(file.FileName) != ".jpeg" && Path.GetExtension(file.FileName) != ".bmp" && Path.GetExtension(file.FileName) != ".BMP" && Path.GetExtension(file.FileName) != ".gif" && Path.GetExtension(file.FileName) != ".GIF")
+                            throw new ArgumentException("Unsupported file type. Please upload a .jpg/.jpeg/.bmp/.gif file");
                         string reportReference = HttpContext.Session.GetString("ReportReference");
                         var folderPath = Path.Combine(Path.Combine(_webHostEnvironment.WebRootPath, "DglUploads", id.ToString()), "RearFiles");
                         if (!Directory.Exists(folderPath))
@@ -1003,19 +1006,20 @@ namespace CityWatch.Web.Pages.Guard
                         _guardLogDataProvider.SaveGuardLogDocumentImages(LogImages);
                         success = true;
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-
+                        message = ex.Message;
                     }
                 }
             }
 
-            return new JsonResult(new {  success });
+            return new JsonResult(new {  success,message });
         }
 
         public JsonResult OnPostTwentyfivePercentFileUpload()
         {
             var success = false;
+            var message = "Uploaded successfully";
             var files = Request.Form.Files;
             int id = 0;
             string url = string.Empty;
@@ -1040,6 +1044,8 @@ namespace CityWatch.Web.Pages.Guard
                     try
                     {
                         var uploadFileName = Path.GetFileName(file.FileName);
+                        if (Path.GetExtension(file.FileName) != ".JPG" && Path.GetExtension(file.FileName) != ".jpg" && Path.GetExtension(file.FileName) != ".JPEG" && Path.GetExtension(file.FileName) != ".jpeg" && Path.GetExtension(file.FileName) != ".bmp" && Path.GetExtension(file.FileName) != ".BMP" && Path.GetExtension(file.FileName) != ".gif" && Path.GetExtension(file.FileName) != ".GIF")
+                            throw new ArgumentException("Unsupported file type. Please upload a .jpg/.jpeg/.bmp/.gif file");
                         string reportReference = HttpContext.Session.GetString("ReportReference");
                         var folderPath = Path.Combine(Path.Combine(_webHostEnvironment.WebRootPath, "DglUploads", id.ToString()), "TwentyfivePercentFiles");
                         if (!Directory.Exists(folderPath))
@@ -1062,14 +1068,14 @@ namespace CityWatch.Web.Pages.Guard
                         _guardLogDataProvider.SaveGuardLogDocumentImages(LogImages);
                         success = true;
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-
+                        message = ex.Message;
                     }
                 }
             }
 
-            return new JsonResult(new {  success });
+            return new JsonResult(new {  success,message });
         }
         public JsonResult OnPostDeleteAttachment(int id)
 
