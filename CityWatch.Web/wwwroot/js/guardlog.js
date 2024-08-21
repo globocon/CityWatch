@@ -2986,7 +2986,7 @@ $(function () {
         },
         { data: 'name', width: "10%" },
         { data: 'securityNo', width: "10%" },
-        { data: 'initial', orderable: false, width: "5%" },
+        { data: 'initial', width: "5%" },
         { data: 'state', width: "5%" },
         { data: 'provider', width: "13%" },
         { data: 'clientSites', orderable: false, width: "15%" },
