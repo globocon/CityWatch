@@ -3329,8 +3329,8 @@ $(function () {
                     data: data, // Use the data fetched from the AJAX request
                     columns: [
                         {
-                            data: 'eventDateTime',
-                            width: "10%",
+                            data: 'loginDate',
+                            width: "4%",
                             render: function (data, type, row) {
                                 // Convert the date string to a JavaScript Date object
                                 var date = new Date(data);
@@ -3351,7 +3351,17 @@ $(function () {
                                     return formattedDate;
                                 }
                             }
-                        }
+                        },
+                        {
+                            data: 'clientSite', width: "10%",
+                            render: function (data, type, row) {
+
+                                var name1 = data.name;
+
+                                return name1;
+                               
+                            }
+                        },
                     ]
                 });
             },
