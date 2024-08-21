@@ -1160,6 +1160,11 @@ $(function () {
 
 
     });
+    const showModal = function (message) {
+
+        $('#msg-modal .modal-body p').html(message);
+        $('#msg-modal').modal();
+    }
     
     $('#IsRearOrTwentyfivePercentfileInput').on('change', function (e) {
         $('#loader').show();
@@ -1174,6 +1179,14 @@ $(function () {
                 const fileForm = new FormData();
                 //fileForm.append('file', file);
                 // fileForm.append('file', file.files.item(i));
+              //  const file = file.files.item(i);
+                const fileExtn = file.files.item(i).name.split('.').pop();
+                // if (!fileExtn || fileExtn !== 'jpg' || fileExtn !=='JPG' || fileExtn !=='jpeg' || fileExtn !=='JPEG') {
+                if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'bmp' && fileExtn !== 'BMP' && fileExtn !== 'GIF' && fileExtn !== 'gif')) {
+                    showModal('Unsupported file type. Please upload a .jpg/.jpeg/.bmp/.gif file');
+                    $('#loader').hide();
+                    return false;
+                }
                 fileForm.append('file', file.files.item(i))
                 fileForm.append('logId', $('#GuardimagedataId').val());
                 fileForm.append('url', window.location.origin);
@@ -1219,6 +1232,13 @@ $(function () {
            
             for (let i = 0; i < file.files.length; i++) {
                 const fileForm = new FormData();
+                const fileExtn = file.files.item(i).name.split('.').pop();
+                // if (!fileExtn || fileExtn !== 'jpg' || fileExtn !=='JPG' || fileExtn !=='jpeg' || fileExtn !=='JPEG') {
+                if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'bmp' && fileExtn !== 'BMP' && fileExtn !== 'GIF' && fileExtn !== 'gif')) {
+                    showModal('Unsupported file type. Please upload a .jpg/.jpeg/.bmp/.gif file');
+                    $('#loader').hide();
+                    return false;
+                }
                 fileForm.append('file', file.files.item(i));
                 fileForm.append('logId', $('#GuardimagedataId').val());
                 fileForm.append('url', window.location.origin);
