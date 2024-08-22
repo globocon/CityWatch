@@ -1141,7 +1141,7 @@ $(function () {
         $('#IsTwentyfivePercentOfPage').val(isChecked);
 
     });
-    $('#IsAttachmentToRear').val(true);
+    $('#IsTwentyfivePercentOfPage').val(true);
     $('#btnIsRearOrTwentyfivePercent').on('click', function () {
         
 
