@@ -101,7 +101,7 @@
         $('#client_site_name').text(csnme)
         var choice = $('#modelchoice').val();
 
-        $('#div_site_settings').load('/Reports/PatrolData?handler=ClientSiteKpiSettings&site=' + csid, function () {
+        $('#div_site_settings').load('/Reports/PatrolData?handler=ClientSiteKpiSettings&site=' + csnme, function () {
             // This function will be executed after the content is loaded
             // window.sharedVariable = button.data('cs-id');
             // console.log('Load operation completed!');
