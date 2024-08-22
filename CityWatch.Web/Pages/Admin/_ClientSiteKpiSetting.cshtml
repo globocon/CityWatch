@@ -1,0 +1,481 @@
+﻿@using CityWatch.Web.Services
+@using CityWatch.Data.Enums
+@model CityWatch.Data.Models.ClientSiteKpiSetting
+@inject IViewDataService ViewDataService;
+@{
+    var rowTitle = new string[6] { "", "Daily Employee Hours", "Patrol Frequency", "No Of Patrols", "Image Target", "Wand Scans Target" };
+    var rowTitleManningGuard = new string[4] { "", "Start", "End", "Workers" };
+    var rowTitleManningPatrolCar = new string[4] { "", "Start", "End", "No of Patrols" };
+    var count = 0;
+    if (Model.ClientSiteManningGuardKpiSettings.Count != 0)
+        count++;
+    if (Model.ClientSiteManningPatrolCarKpiSettings.Count != 0)
+        count++;
+    var check = count;
+}
+
+<div id="div_kpi_rc_action_list" class="test">
+    @*Rc List start*@
+    <form id="frm_Kpi_ActionList">
+        <input type="hidden" id="Mdl_Settings_RCList_Id" name="RCActionList.Id" value="@Model.rclistKP.Id">
+        <input type="hidden" id="Mdl_Settings_RCList_ClientSiteID" name="RCActionList.ClientSiteID" value="@Model.rclistKP.ClientSiteID">
+        <input type="hidden" id="scheduleId" name="RCActionList.SettingsId" value="@Model.rclistKP.SettingsId">
+        <h6>Site Alarm SOP's:</h6>
+        <table class="table table-bordered tbl-settings" id="tbl_summaryImage">
+            <thead>
+                <tr>
+                    <th style="width:370px">File Name</th>
+                    <th style="width:370px">Date & Time Uploaded</th>
+                    <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    @{
+                        string[] myArray = { };
+                        var filename = "";
+                        var filebase64 = "";
+                        if (Model.rclistKP.Imagepath != null)
+                        {
+                            if (Model.rclistKP.Imagepath.Length > 0 && Model.rclistKP.Imagepath.Trim() != string.Empty)
+                            {
+                                myArray = Model.rclistKP.Imagepath.ToString().Split(":-:");
+                                filebase64 = myArray[1];
+                                filename = myArray[0];
+                            }
+                        }
+
+                        if (filename != string.Empty)
+                        {
+                            <td class="align-middle" id="summary_imageRC">@filename</td>
+                        }
+                        else
+                        {
+                            <td class="align-middle" id="summary_imageRC"></td>
+                        }
+
+                        if (Model.rclistKP.DateandTimeUpdated != null)
+                        {
+                            if (Model.rclistKP.DateandTimeUpdated.Length > 0 && Model.rclistKP.DateandTimeUpdated.Trim() != string.Empty)
+                            {
+                                <td class="align-middle" id="summary_image_updatedRC">@Model.rclistKP.DateandTimeUpdated</td>
+                            }
+                            else
+                            {
+                                <td class="align-middle" id="summary_image_updatedRC"></td>
+                            }
+                        }
+                        else
+                        {
+                            <td class="align-middle" id="summary_image_updatedRC"></td>
+                        }
+                    }
+                    <td class="text-center">
+                        <label class="btn btn-success mb-0">
+
+                            <i class="fa fa-upload mr-2"></i>Replace
+                            <input type="file" id="upload_summary_imageRcList" accept=".jpg, .jpeg, .png, .bmp, .pdf,.docx" hidden>
+
+                        </label>
+                        @{
+                            if (filename != string.Empty)
+                            {
+
+                                <a href="@filebase64" download="@filename" target="_blank" class="btn btn-outline-primary" id="download_summary_imageRCList"><i class="fa fa-download mr-2"></i>Download</a>
+                                <input type="hidden" id="Mdl_Settings_RCImagepath" name="RCActionList.Imagepath" value="@filename">
+                                <input type="hidden" id="Mdl_Settings_RCImageDateandTime" name="RCActionList.DateandTimeUpdated">
+                            }
+                            else
+                            {
+                                <input type="hidden" id="Mdl_Settings_RCImagepath" name="RCActionList.Imagepath">
+                                <input type="hidden" id="Mdl_Settings_RCImageDateandTime" name="RCActionList.DateandTimeUpdated">
+                                <a class="btn btn-outline-primary" id="download_summary_imageRCList"><i class="fa fa-download mr-2"></i>Download</a>
+                            }
+                        }
+
+                        <button class="btn btn-outline-primary btn-outline-danger" type="button" id="delete_summary_imageRC"><i class="fa fa-trash mr-2"></i>Delete</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="container">
+            <div class="row">
+                <div class="col ml-1 p-0">
+                    <h6>Site Access</h6>
+                </div>
+                <div class="col-6" style="padding-left: 44px;">
+                    <h6>Alarm Response</h6>
+                </div>
+                <div class="col">
+                </div>
+            </div>
+
+        </div>
+        <br />
+        <div class="row col-md-12">
+            <div class="row col-md-9">
+
+                <div class="form-group row ml-2">
+                    <label class="col-md-3 form-label text-left pl-0">Site Alarm Keypad Code</label>
+                    <div class="col-md-2">
+                        <input type="text" class="form-control" id="Mdl_Settings_Site_Alarm_Keypad_code" name="RCActionList.SiteAlarmKeypadCode" value="@Model.rclistKP.SiteAlarmKeypadCode">
+                    </div>
+                    <label class="col-form-label text-left">Action 1</label>
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" id="Mdl_Settings_Action1" name="RCActionList.Action1" value="@Model.rclistKP.Action1">
+                    </div>
+                </div>
+
+                <div class="form-group row ml-2">
+                    <label class="col-md-3 form-label text-left pl-0" style="padding-right: 56px;">Site Physical Key</label>
+                    <div class="col-md-2">
+                        <input type="text" class="form-control" id="Mdl_Settings_site_Physical_key" name="RCActionList.Sitephysicalkey" value="@Model.rclistKP.Sitephysicalkey">
+                    </div>
+                    <label class="col-form-label text-left">Action 2</label>
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" id="Mdl_Settings_Action2" name="RCActionList.Action2" value="@Model.rclistKP.Action2">
+                    </div>
+
+                </div>
+
+                <div class="form-group row row ml-2">
+                    <label class="col-md-3 form-label text-left pl-0">Site Combination Lock</label>
+                    <div class="col-md-2">
+                        <input type="text" class="form-control" id="Mdl_Settings_Site_Combination_Look" name="RCActionList.SiteCombinationLook" value="@Model.rclistKP.SiteCombinationLook">
+                    </div>
+                    <label class="col-form-label text-left">Action 3</label>
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" id="Mdl_Settings_Action3" name="RCActionList.Action3" value="@Model.rclistKP.Action3">
+                    </div>
+
+                </div>
+
+                <div class="form-group row row ml-2">
+                    <label class="col-md-3 form-label text-left pl-0" style="visibility:hidden">Site Combination Look</label>
+                    <div class="col-md-2">
+                        <input type="text" class="form-control" style="visibility:hidden">
+                    </div>
+                    <label class="col-form-label text-left">Action 4</label>
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" id="Mdl_Settings_Action4" name="RCActionList.Action4" value="@Model.rclistKP.Action4">
+                    </div>
+
+                </div>
+
+                <div class="form-group row row ml-2">
+                    <label class="col-md-3 form-label text-left pl-0" style="visibility:hidden">Site Combination Look</label>
+                    <div class="col-md-2">
+                        <input type="text" class="form-control" style="visibility:hidden">
+                    </div>
+                    <label class="col-form-label text-left">Action 5</label>
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" id="Mdl_Settings_Action5" name="RCActionList.Action5" value="@Model.rclistKP.Action5">
+                    </div>
+                </div>
+
+            </div>
+            <div class="form-group  col-md-3 p-0">
+                <label class="col-form-label">Comments for Control Room Operator</label>
+                <textarea id="Mdl_Settings_userInput" name="RCActionList.ControlRoomOperator" rows="4" cols="35">@Model.rclistKP.ControlRoomOperator</textarea>
+
+            </div>
+        </div>
+
+    </form>
+    <button type="button" class="btn btn-outline-danger mr-2" id="delete_site_RCList"><i class="fa fa-trash mr-2"></i>Delete</button>
+    <button type="button" class="btn btn-success" id="save_site_RC"><i class="fa fa-save mr-2"></i>Save RC Action List</button>
+    @*Rc List end*@
+</div>
+
+<div id="div_kpi_rc_contractedmanning" class="test">
+    <div class="container pt-3">
+        @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == false).Count() != 0 && (Model.ClientSiteManningPatrolCarKpiSettings.Where(x => x.DefaultValue == false).Count() != 0))
+        {
+            <div class="text-right"><button id="showDivButton" class="btn btn-success" disabled><i class="fa fa-plus" aria-hidden="true"></i> Add Worker</button></div>
+        }
+        else
+        {
+            <div class="text-right"><button id="showDivButton" class="btn btn-success"><i class="fa fa-plus" aria-hidden="true"></i> Add Worker</button></div>
+        }
+        <form id="frm_site_manning_settings">
+            <input type="hidden" asp-for="@Model.Id" />
+            <input type="hidden" asp-for="@Model.ClientSiteId" />
+            <input type="hidden" id="hidCount" value="@count" />
+
+            @*Scheduler is Active Start15072024*@
+            <div class="form-row ml-2">
+                <div class="col-md-3">
+                    <div class="d-flex flex-row">
+                        <label class="form-label pr-2">Schedule is Active</label>
+                        <div class="custom-control custom-switch custom-control-inline" title="Switch between schedule is Active or not">
+                            <input type="checkbox" class="custom-control-input" asp-for="@Model.ScheduleisActive" id="scheduleisActive" name="scheduleisActive">
+                            <label class="custom-control-label" for="scheduleisActive"></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @*display Already Existing Mannings*@
+
+            @*Check if default value or orginal data exist*@
+            @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == true).Count() == 0)
+            {
+                @*Get All Distinct order Id *@
+                var distinctOrderIds = Model.ClientSiteManningGuardKpiSettings.Select(order => order.OrderId).Distinct();
+                @for (int rowIndexFirst = 0; rowIndexFirst < Model.ClientSiteManningGuardKpiSettings.Count(); rowIndexFirst = rowIndexFirst + 8)
+                {
+                    var rowIndextemp = 0;
+                    var idForDelete = @Model.ClientSiteManningGuardKpiSettings[rowIndexFirst].SettingsId + "_" + @Model.ClientSiteManningGuardKpiSettings[rowIndexFirst].OrderId + "_" + @Model.ClientSiteId;
+
+                    <hr />
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button type="button" class="btn btn-danger" value="@idForDelete" id="delete_worker"><i class="fa fa-trash" aria-hidden="true"></i>&nbsp;Delete Worker</button>
+
+                            <div class="form-group row pt-2">
+                                <label class="col-form-label pl-3">CRM (Supplier)</label>
+                                <div class="col-md-3">
+                                    <select asp-for="@Model.ClientSiteManningGuardKpiSettings[rowIndexFirst].CrmSupplier" asp-items="@ViewDataService.ProviderList" class="form-control"></select>
+                                </div>
+                            </div>
+                            @for (int rowIndex = rowIndexFirst; rowIndex < (4 + rowIndexFirst); rowIndex++)
+                            {
+                                /*Monthly Hours Start*/
+                                var monthilyHours = 0.0;
+                                @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
+                                {
+                                    var totalMin = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId).Select(x => x.SumOfHours).Sum();
+                                    var guardQty = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId && x.NoOfPatrols != null).Select(x => x.NoOfPatrols ?? 0).FirstOrDefault();
+                                    if (totalMin != null && guardQty != null)
+                                        monthilyHours = Math.Round(((totalMin) * guardQty * 52.143) / 12);
+                                }
+                                else
+                                {
+                                    var guardQty = @Model.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == @Model.ClientSiteManningGuardKpiSettings[rowIndex].OrderId).Select(x => x.NoOfPatrols ?? 0).Sum();
+                                    monthilyHours = guardQty;
+                                }
+
+                                /*Monthly Hours End*/
+                                <div class="form-row">
+                                    <div class="col-md-3">
+                                        @if (rowIndextemp == 0)
+                                        {
+                                            <div class="d-flex flex-row justify-content-between">
+                                                <label class="form-label">Position</label>
+                                                <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
+                                                    @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
+                                                    {
+                                                        <input type="checkbox" class="custom-control-input" id="positionfilterGuard_@rowIndexFirst" disabled name="positionfilterGuard">
+                                                    }
+                                                    else
+                                                    {
+                                                        <input type="checkbox" class="custom-control-input" id="positionfilterGuard_@rowIndexFirst" disabled checked name="positionfilterGuard">
+
+                                                    }
+                                                    <label class="custom-control-label" for="positionfilterGuard">Patrol Car</label>
+                                                </div>
+                                            </div>
+                                        }
+                                        @if (rowIndextemp == 1)
+                                        {
+                                            <div class="form-group p-0">
+                                                @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
+                                                {
+                                                    <select asp-for="@Model.ClientSiteManningGuardKpiSettings[rowIndex].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilter.NonPatrolOnly)" class="form-control"></select>
+                                                }
+                                                else
+                                                {
+                                                    <select asp-for="@Model.ClientSiteManningGuardKpiSettings[rowIndex].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilter.PatrolOnly)" class="form-control"></select>
+                                                }
+                                            </div>
+                                        }
+                                        @*New Code for Monthly Hours Start*@
+
+                                        @if (rowIndextemp == 3)
+                                        {
+                                            <div class="d-flex flex-row justify-content-between">
+                                                @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
+                                                {
+                                                    <label class="form-label" id="lbl_MonthlyHrs">Monthly Hrs :</label>
+                                                }
+                                                else
+                                                {
+                                                    <label class="form-label" id="lbl_MonthlyHrs">Total Patrols :</label>
+                                                }
+                                                <div class="custom-control custom-switch custom-control-inline pl-0" title="Switch between Patrol Car and Guards">
+                                                    <input type="text" class="form-control mb-2 patrols-count" asp-for="@monthilyHours" id="monthlyHrs_@rowIndexFirst" name="monthlyHrs" style="width:120px" readonly />
+                                                </div>
+                                            </div>
+                                        }
+                                        @*New Code for Monthly Hours end*@
+                                    </div>
+                                    <div class="col-md-1 p-0">
+                                        @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
+                                        {
+                                            <label class="form-label">@rowTitleManningGuard[rowIndextemp]</label>
+                                        }
+                                        else
+                                        {
+                                            <label class="form-label">@rowTitleManningPatrolCar[rowIndextemp]</label>
+                                        }
+                                    </div>
+                                    @for (var colIndex = rowIndexFirst; colIndex < (8 + rowIndexFirst); colIndex++)
+                                    {
+                                        @if (@Model.ClientSiteManningGuardKpiSettings[colIndex] != null)
+                                        {
+                                            var headerLabel = string.Empty;
+                                            @if (@Model.ClientSiteManningGuardKpiSettings[colIndex].IsPHO == 1)
+                                            {
+                                                headerLabel = "PHO";
+                                            }
+                                            else
+                                            {
+                                                headerLabel = @Model.ClientSiteManningGuardKpiSettings[colIndex].WeekDay.ToString().Substring(0, 3);
+                                            }
+
+                                            <div class="col-md-1" id="divGuardInner_+@rowIndex+_+@colIndex">
+                                                @switch (rowIndextemp)
+                                                {
+                                                    case 0:
+                                                        //<label class="form-label">@Model.ClientSiteManningGuardKpiSettings[colIndex].WeekDay.ToString().Substring(0, 3)</label>
+                                                        <label class="form-label">@headerLabel</label>
+                                                        break;
+                                                    case 1:
+                                                        <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursStart">
+                                                        break;
+
+                                                    case 2:
+                                                        <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].EmpHoursEnd">
+                                                        break;
+                                                    case 3:
+                                                        <input class="form-control mb-2 patrols-count" min="0" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].NoOfPatrols" data-index="@colIndex">
+                                                        break;
+                                                }
+                                                <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].WeekDay" />
+                                                <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].Id" />
+                                                <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].OrderId" />
+                                                <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].Type" />
+                                                <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].SettingsId" />
+                                                <input type="hidden" asp-for="@Model.ClientSiteManningGuardKpiSettings[colIndex].IsPHO" />
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                                rowIndextemp++;
+                            }
+                        </div>
+                    </div>
+                }
+            }
+            @*Add New Mannings*@
+            @if (Model.ClientSiteManningPatrolCarKpiSettings.Where(x => x.DefaultValue == true).Count() != 0)
+            {
+                <div id="divPatrolCar" style="display: none;">
+                    <hr />
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group row pt-1">
+                                <label class="col-form-label pl-3">CRM (Supplier)</label>
+                                <div class="col-md-3">
+                                    <select asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[0].CrmSupplier" asp-items="@ViewDataService.ProviderList" class="form-control"></select>
+                                </div>
+
+                            </div>
+                            @for (int rowIndex2 = 0; rowIndex2 < 4; rowIndex2++)
+                            {
+                                <div class="form-row">
+                                    <div class="col-md-3">
+                                        @if (rowIndex2 == 0)
+                                        {
+
+                                            <div class="d-flex flex-row justify-content-between">
+                                                <label class="form-label">Position</label>
+                                                <div class="custom-control custom-switch custom-control-inline" title="Switch between Patrol Car and Guards">
+                                                    <input type="checkbox" class="custom-control-input" id="positionfilterPatrolCar" name="positionfilterPatrolCar">
+                                                    <label class="custom-control-label" for="positionfilterPatrolCar">Patrol Car</label>
+                                                </div>
+                                            </div>
+
+                                        }
+                                        @if (rowIndex2 == 1)
+                                        {
+                                            <div class="form-group p-0">
+                                                <select asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[rowIndex2].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilter.NonPatrolOnly)" class="form-control"></select>
+                                            </div>
+                                        }
+                                        @*New Code for Monthly Hours Start*@
+
+                                        @if (rowIndex2 == 3)
+                                        {
+
+                                            <div class="d-flex flex-row justify-content-between">
+                                                <label class="form-label" id="monthlyHrsTxtAddNew">Monthly Hrs :</label>
+                                                <div class="custom-control custom-switch custom-control-inline pl-0" title="Switch between Patrol Car and Guards">
+                                                    <input type="text" class="form-control mb-2 patrols-count" id="monthlyHrsAddNew" name="monthlyHrsAddNew" style="width:120px" readonly />
+                                                </div>
+                                            </div>
+
+                                        }
+                                        @*New Code for Monthly Hours end*@
+
+                                    </div>
+                                    <div class="col-md-1 p-0">
+                                        <label class="form-label" id="lbl_ManningPatrolCar_@rowIndex2">@rowTitleManningGuard[rowIndex2]</label>
+                                    </div>
+
+                                    @for (var colIndex2 = 0; colIndex2 < 8; colIndex2++)
+                                    {
+                                        var headerLabel2 = string.Empty;
+                                        @if (@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].IsPHO == 1)
+                                        {
+                                            headerLabel2 = "PHO";
+                                        }
+                                        else
+                                        {
+                                            headerLabel2 = @Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].WeekDay.ToString().Substring(0, 3);
+                                        }
+                                        <div class="col-md-1">
+                                            @switch (rowIndex2)
+                                            {
+                                                case 0:
+                                                    <label class="form-label">@headerLabel2</label>
+                                                    break;
+                                                case 1:
+                                                    <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].EmpHoursStart">
+                                                    break;
+                                                case 2:
+                                                    <input placeholder="--:--" onkeypress="return (event.charCode !=8 && event.charCode ==0 || ( event.charCode == 58 || (event.charCode >= 48 && event.charCode <= 57)))" class="form-control mb-2 decimal-input" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].EmpHoursEnd">
+                                                    break;
+                                                case 3:
+                                                    <input class="form-control mb-2 patrols-count" min="0" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].NoOfPatrols" data-index="@colIndex2">
+                                                    break;
+                                            }
+                                            <input asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].Type" value="2" style="display: none;">
+                                            <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].WeekDay" />
+                                            <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].Id" />
+                                            <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].OrderId" />
+                                            <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].SettingsId" />
+                                            <input type="hidden" asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[colIndex2].IsPHO" />
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @*Old Code*@
+
+            @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == true).Count() == 0)
+            {
+                <button type="button" class="btn btn-success" id="save_site_manning_settings"><i class="fa fa-save mr-2"></i>Save Settings</button>
+            }
+            else
+            {
+                <div id="divbtn" style="display: none;">
+                    <button type="button" class="btn btn-success" id="save_site_manning_settings"><i class="fa fa-save mr-2"></i>Save Settings</button>
+                </div>
+            }
+        </form>
+    </div>
+</div>

@@ -75,7 +75,47 @@
         $('#ReportRequest_ClientSites option:first').prop('selected', true);
         $('#ReportRequest_Position option:first').prop('selected', true);
     });
+    /*p3-132 Contracted manning button-start*/
+    $('#ReportRequest_DataFilter').val(2);
+    $('#patrol_report_controls').show();
+    $('#btncontractedmanning').on('click', function (event) {
+        var csnme = $('#ReportRequest_ClientTypes option:selected').text();
+        var csid = $('#ReportRequest_ClientSites option:selected').val();
+        if (csnme == '' || csid == '') {
+            console.log('Nothing selected...')
+            alert('Please select a site to edit.');
+            return;
+        }
 
+        $('#modelchoice').val('CONTRACTEDMANNING');
+        $('#kpi-settings-modal').modal('show');
+
+    });
+    $('#kpi-settings-modal').on('shown.bs.modal', function (event) {
+        ShowKpiModelChoice();
+    });
+    function ShowKpiModelChoice() {
+        $('#div_site_settings').html('');
+        var csnme = $('#ReportRequest_ClientSites option:selected').text();
+        var csid = $('#ReportRequest_ClientSites option:selected').val();
+        $('#client_site_name').text(csnme)
+        var choice = $('#modelchoice').val();
+
+        $('#div_site_settings').load('/Reports/PatrolData?handler=ClientSiteKpiSettings&site=' + csid, function () {
+            // This function will be executed after the content is loaded
+            // window.sharedVariable = button.data('cs-id');
+            // console.log('Load operation completed!');
+            // You can add your additional code or actions here
+            // console.log(csnme);    
+            if (choice == 'RCACTIONLIST')
+                $('#div_kpi_rc_contractedmanning').html('');
+            else if (choice == 'CONTRACTEDMANNING')
+                $('#div_kpi_rc_action_list').html('');
+        });
+    }
+
+    /*p3-132 Contracted manning button-end*/
+    $('#patrol_report_controls').show();
     $('#ReportRequest_ClientTypes').multiselect({
         maxHeight: 400,
         buttonWidth: '100%',

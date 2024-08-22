@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,16 +27,21 @@ namespace CityWatch.Web.Pages.Reports
         private readonly IPatrolDataReportService _irChartDataService;
         private readonly IIncidentReportGenerator _incidentReportGenerator;
         private readonly IConfigDataProvider _configDataProvider;
-
+        private readonly IClientDataProvider _clientDataProvider;
+        private readonly Settings _settings;
+        private readonly IGuardDataProvider _guardDataProvider;
         public PatrolDataModel(IViewDataService viewDataService, 
             IWebHostEnvironment webHostEnvironment,
-            IPatrolDataReportService irChartDataService, IIncidentReportGenerator incidentReportGenerator, IConfigDataProvider configurationProvider)
+            IPatrolDataReportService irChartDataService, IIncidentReportGenerator incidentReportGenerator, IConfigDataProvider configurationProvider,IClientDataProvider clientDataProvider, IOptions<Settings> settings, IGuardDataProvider guardDataProvider)
         {
             _viewDataService = viewDataService;
             _webHostEnvironment = webHostEnvironment;
             _irChartDataService = irChartDataService;
             _incidentReportGenerator = incidentReportGenerator;
             _configDataProvider = configurationProvider;
+            _clientDataProvider = clientDataProvider;
+            _settings = settings.Value;
+            _guardDataProvider = guardDataProvider;
         }
 
         [BindProperty]
@@ -126,8 +132,46 @@ namespace CityWatch.Web.Pages.Reports
 
         //public IActionResult OnGetFeedbackTemplateListByType()
         //{
-         
-        //}
 
+        //}
+        //p3-132 Contracted Manning Button-start
+        public PartialViewResult OnGetClientSiteKpiSettings(string site)
+        {
+            int siteId = _guardDataProvider.GetClientSiteID(site).Id;
+            var clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
+            clientSiteKpiSetting ??= new ClientSiteKpiSetting() { ClientSiteId = siteId };
+            if (clientSiteKpiSetting.rclistKP.ClientSiteID == 0)
+            {
+                clientSiteKpiSetting.rclistKP.ClientSiteID = siteId;
+
+            }
+            if (clientSiteKpiSetting.rclistKP.Imagepath != null)
+            {
+                if (clientSiteKpiSetting.rclistKP.Imagepath.Length > 0 && clientSiteKpiSetting.rclistKP.Imagepath.Trim() != "")
+                {
+                    clientSiteKpiSetting.rclistKP.Imagepath = clientSiteKpiSetting.rclistKP.Imagepath + ":-:" + ConvertFileToBase64(clientSiteKpiSetting.rclistKP.Imagepath);
+
+                }
+
+            }
+            return Partial("../admin/_ClientSiteKpiSetting", clientSiteKpiSetting);
+        }
+        public string ConvertFileToBase64(string imageName)
+        {
+            string rtnstring = "";
+
+            if (!string.IsNullOrEmpty(imageName))
+            {
+                var fileToConvert = Path.Combine(_settings.WebActionListKpiImageFolder, imageName);
+                if (System.IO.File.Exists(fileToConvert))
+                {
+                    byte[] AsBytes = System.IO.File.ReadAllBytes(fileToConvert);
+                    rtnstring = "data:application/octet-stream;base64," + Convert.ToBase64String(AsBytes);
+                }
+            }
+
+            return rtnstring;
+        }
+        //p3-132 Contracted Manning Button-end
     }
 }
