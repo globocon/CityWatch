@@ -16,11 +16,12 @@
     @model CityWatch.Web.Pages.LoginModel
 }*@
 @inject IUserDataProvider viewDataService
+@inject IConfigDataProvider dataProvider
 @*@inject LoginModel lgm*@
 @{
     var companydetail = viewDataService.GetCompanyDetails().SingleOrDefault(x=>x.Id==1);
     var companydetailsprimarylogo = companydetail.PrimaryLogoPath;
-
+    var alldocWithModeleName = dataProvider.GetStaffDocumentModuleDetails();
 }
 <html>
 <head>
@@ -79,6 +80,24 @@
 
                     <img src="@companydetail.PrimaryLogoPath" alt="cws logo" height="60px" />
                 </a>
+                @if (User.Identity.IsAuthenticated)
+                {
+                    if (alldocWithModeleName.Count == 0)
+                    {
+                        <a href="#" title="No documents found"><i class="fa fa-question-circle mr-2 mb-5" aria-hidden="true"></i></a>
+
+                    }
+                    else if (alldocWithModeleName.Count == 1)
+                    {
+                        var singleDoc = alldocWithModeleName.FirstOrDefault();
+                        <a href="/StaffDocs/@singleDoc.FileName" title="@singleDoc.FileName"><i class="fa fa-question-circle mr-2 mb-5" aria-hidden="true"></i></a>
+                    }
+                    else
+                    {
+                        var singleDoc = alldocWithModeleName.FirstOrDefault();
+                        <a href="/StaffDocs/@singleDoc.FileName" title="@singleDoc.FileName"><i class="fa fa-question-circle mr-2 mb-5" aria-hidden="true"></i></a>
+                    }
+                }
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse"
                         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>

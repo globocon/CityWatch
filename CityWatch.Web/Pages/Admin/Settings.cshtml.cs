@@ -6,6 +6,7 @@ using CityWatch.Web.Models;
 using CityWatch.Web.Services;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Office2010.Word;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Dropbox.Api.Files;
 using MailKit.Search;
@@ -53,7 +54,7 @@ namespace CityWatch.Web.Pages.Admin
             _viewDataService = viewDataService;
             _TimesheetReportGenerator = TimesheetReportGenerator;
         }
-        public string IsAdminminOrPoweruser=string.Empty;
+        public string IsAdminminOrPoweruser = string.Empty;
         public HrSettings HrSettings;
         public IncidentReportField IncidentReportField;
         public IViewDataService ViewDataService { get { return _viewDataService; } }
@@ -94,7 +95,7 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(_viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId));
         }
 
-        public JsonResult OnGetClientSites(int? page, int? limit, int? typeId, string searchTerm,string searchTermtwo)
+        public JsonResult OnGetClientSites(int? page, int? limit, int? typeId, string searchTerm, string searchTermtwo)
         {
             return new JsonResult(_viewDataService.GetUserClientSitesHavingAccess(typeId, AuthUserHelper.LoggedInUserId, searchTerm, searchTermtwo));
         }
@@ -173,7 +174,7 @@ namespace CityWatch.Web.Pages.Admin
                 //var useraccess = _clientDataProvider.GetUserAccessWithClientSiteId(id);
                 //if (useraccess.Count == 0)
                 //{
-                    _clientDataProvider.DeleteClientSite(id);
+                _clientDataProvider.DeleteClientSite(id);
                 //}
                 //else
                 //{
@@ -316,24 +317,24 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { success, message, dateTimeUpdated = dateTimeUpdated.ToString("dd MMM yyyy @ HH:mm") });
         }
-    //To get the default Email Path start
+        //To get the default Email Path start
         public JsonResult OnPostDefaultEmailUpdate(string defaultMailEdit)
         {
-            
+
             var success = false;
             var message = "Updated successfully";
-           
-                    try
-                    {
-                        _configDataProvider.SaveDefaultEmail(defaultMailEdit);
-                        success = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        message = ex.Message;
-                    }
-               
-           
+
+            try
+            {
+                _configDataProvider.SaveDefaultEmail(defaultMailEdit);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+
 
             return new JsonResult(new { success, message });
         }
@@ -422,7 +423,7 @@ namespace CityWatch.Web.Pages.Admin
                             FileName = file.FileName,
                             LastUpdated = DateTime.Now,
                             DocumentType = type
-                            
+
                         });
 
                         success = true;
@@ -508,11 +509,11 @@ namespace CityWatch.Web.Pages.Admin
                 {
 
                     status = _clientDataProvider.SaveClientSiteLinksPageType(ClientSiteLinksPageTyperecord);
-                    if (status ==-1)
+                    if (status == -1)
                     {
-                      
-                            message = "Same button name already exist";
-                        
+
+                        message = "Same button name already exist";
+
 
                     }
                 }
@@ -568,7 +569,7 @@ namespace CityWatch.Web.Pages.Admin
                 {
 
                     status = _clientDataProvider.DeleteClientSiteLinksPageType(TypeId);
-                   
+
                 }
             }
             catch (Exception ex)
@@ -641,15 +642,16 @@ namespace CityWatch.Web.Pages.Admin
                 }
 
                 if (reportfield.ClientSiteLinksTypeId != 0)
-                    success= _clientDataProvider.SaveSiteLinkDetails(reportfield);
-                if(success!=1)
-                {   if (success == 2)
+                    success = _clientDataProvider.SaveSiteLinkDetails(reportfield);
+                if (success != 1)
+                {
+                    if (success == 2)
                         message = "The title you have entered is already exists for this button. Please Use different Title or button.";
                     else if (success == 3)
                         message = "The title you have entered is already exists for this button. Please Use different Title or button.";
                     status = false;
                 }
-               
+
 
             }
             catch (Exception ex)
@@ -682,7 +684,7 @@ namespace CityWatch.Web.Pages.Admin
         {
             return new JsonResult(_clientDataProvider.GetSiteLinkDetailsUsingTypeAndState(type));
         }
-       
+
         public JsonResult OnGetUserClientAccess()
         {
             return new JsonResult(_viewDataService.GetAllUsersClientSiteAccess());
@@ -718,7 +720,7 @@ namespace CityWatch.Web.Pages.Admin
         public JsonResult OnGetReportFields(int typeId)
         {
             var fields = _configDataProvider.GetReportFieldsByType((ReportFieldType)typeId);
-           
+
             return new JsonResult(fields);
         }
 
@@ -767,16 +769,16 @@ namespace CityWatch.Web.Pages.Admin
 
         public JsonResult OnPostSavePSPF(IncidentReportPSPF record)
         {
-            int CountPSPF= _configDataProvider.GetLastValue();
-            if (record.IsDefault==true && CountPSPF >= 1)
+            int CountPSPF = _configDataProvider.GetLastValue();
+            if (record.IsDefault == true && CountPSPF >= 1)
             {
                 _configDataProvider.UpdateDefault();
             }
             var PsPFName = _configDataProvider.GetPSPFName(record.Name);
-            
-            if (record.Id== -1)
+
+            if (record.Id == -1)
             {
-              
+
                 int LastOne = _configDataProvider.GetLastValue();
                 if (LastOne != null)
                 {
@@ -795,23 +797,23 @@ namespace CityWatch.Web.Pages.Admin
 
                 }
             }
-            
+
             var success = false;
             var message = string.Empty;
             try
             {
-                if (PsPFName==record.Name && record.Id == -1)
+                if (PsPFName == record.Name && record.Id == -1)
                 {
-                    
+
                     success = false;
                 }
                 else
                 {
-                   
+
                     _configDataProvider.SavePSPF(record);
                     success = true;
                 }
-               
+
             }
             catch (Exception ex)
             {
@@ -827,7 +829,7 @@ namespace CityWatch.Web.Pages.Admin
             try
             {
                 int maxId = _configDataProvider.OnGetMaxIdIR();
-                var info = new IncidentReportField { Id = maxId, Name = Email, TypeId=ReportFieldType.Reimburse, EmailTo="" };
+                var info = new IncidentReportField { Id = maxId, Name = Email, TypeId = ReportFieldType.Reimburse, EmailTo = "" };
                 _configDataProvider.SaveReportField(info);
             }
             catch (Exception ex)
@@ -837,9 +839,9 @@ namespace CityWatch.Web.Pages.Admin
             }
 
             return new JsonResult(new { status = status, message = message });
-            
+
         }
-       
+
         //To save the IR Emaill CC End
         public JsonResult OnPostDeletePSPF(int id)
         {
@@ -1151,7 +1153,7 @@ namespace CityWatch.Web.Pages.Admin
         }
         //p1 - 202 site allocation-end
         //p1-213 Critical documents start
-        
+
         public IActionResult OnGetClientSitesDoc(string type)
         {
             int GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
@@ -1237,7 +1239,7 @@ namespace CityWatch.Web.Pages.Admin
                     ClientTypeId = document.ClientTypeId,
                     HRGroupID = document.HRGroupID,
                     GroupName = document.GroupName,
-                    IsCriticalDocumentDownselect=document.IsCriticalDocumentDownselect,
+                    IsCriticalDocumentDownselect = document.IsCriticalDocumentDownselect,
                     CriticalDocumentsClientSites = document.CriticalDocumentsClientSites.Select(cs => new CriticalDocumentsClientSites
                     {
                         Id = cs.Id,
@@ -1247,7 +1249,7 @@ namespace CityWatch.Web.Pages.Admin
                             Id = cs.ClientSite.Id,
                             Name = cs.ClientSite.Name,
                             //ClientTypeId = cs.ClientSite.ClientTypeId,
-                            
+
                         }
                     }).ToList(),
                     CriticalDocumentDescriptions = document.CriticalDocumentDescriptions.Select(desc => new CriticalDocumentDescriptions
@@ -1268,12 +1270,12 @@ namespace CityWatch.Web.Pages.Admin
                                 Id = desc.HRSettings.ReferenceNoAlphabets.Id,
                                 Name = desc.HRSettings.ReferenceNoAlphabets.Name
                             },
-                            HRGroups= desc.HRSettings.HRGroups == null ? null : new HRGroups
+                            HRGroups = desc.HRSettings.HRGroups == null ? null : new HRGroups
                             {
-                                Id=desc.HRSettings.HRGroups.Id,
-                                Name=desc.HRSettings.HRGroups.Name,
-                                IsDeleted=desc.HRSettings.HRGroups.IsDeleted
-                                
+                                Id = desc.HRSettings.HRGroups.Id,
+                                Name = desc.HRSettings.HRGroups.Name,
+                                IsDeleted = desc.HRSettings.HRGroups.IsDeleted
+
                             }
                         }
                     }).ToList()
@@ -1335,7 +1337,7 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { status = DroboxDir, message = message });
         }
-        public JsonResult OnPostSaveTimesheet(string weekname, string frequency,string mailid,string dropbox)
+        public JsonResult OnPostSaveTimesheet(string weekname, string frequency, string mailid, string dropbox)
         {
             var status = true;
             var message = "Success";
@@ -1360,15 +1362,15 @@ namespace CityWatch.Web.Pages.Admin
         public JsonResult OnGetTimesheetDetails()
         {
             var Timesheet = _clientDataProvider.GetTimesheetDetails();
-            if (Timesheet!=null)
+            if (Timesheet != null)
             {
-                return new JsonResult(new { Week = Timesheet.weekName, Time = Timesheet.Frequency,mailid= Timesheet.Email,Dropbox= Timesheet .Dropbox});
+                return new JsonResult(new { Week = Timesheet.weekName, Time = Timesheet.Frequency, mailid = Timesheet.Email, Dropbox = Timesheet.Dropbox });
             }
             else
             {
-                return new JsonResult(new { Week = "", Time = "", mailid="", Dropbox="" });
+                return new JsonResult(new { Week = "", Time = "", mailid = "", Dropbox = "" });
             }
-            
+
         }
 
         // To download Timesheet-Task 212
@@ -1385,7 +1387,7 @@ namespace CityWatch.Web.Pages.Admin
         //}
         public async Task<JsonResult> OnPostDownloadTimesheet(string startdate, string endDate, string frequency, int guradid)
         {
-           
+
             var fileName = string.Empty;
             var statusCode = 0;
             int id = 1;
@@ -1401,14 +1403,14 @@ namespace CityWatch.Web.Pages.Admin
             }
             catch (Exception ex)
             {
-               
+
             }
 
             if (string.IsNullOrEmpty(fileName))
                 return new JsonResult(new { fileName, message = "Failed to generate pdf", statusCode = -1 });
 
 
-            
+
 
             return new JsonResult(new { fileName = @Url.Content($"~/Pdf/Output/{fileName}"), statusCode });
         }
@@ -1423,15 +1425,15 @@ namespace CityWatch.Web.Pages.Admin
             try
             {
                 DateTime today = DateTime.Today;
-               
+
                 if (frequency == "ThisWeek")
                 {
-                    
+
                     // Assuming the week starts on Monday and ends on Sunday
                     int daysToSubtract = (int)today.DayOfWeek - (int)DayOfWeek.Monday;
                     startDate = today.AddDays(-daysToSubtract);
 
-                    endDate = startDate.AddDays(6); 
+                    endDate = startDate.AddDays(6);
                 }
                 else if (frequency == "Last2weeks")
                 {
@@ -1483,5 +1485,44 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { fileName = @Url.Content($"~/Pdf/Output/{fileName}"), statusCode });
         }
+
+
+        public JsonResult OnGetHelpDocValues()
+        {
+            List<helpDocttype> helpDoctypeList = new List<helpDocttype>();
+            helpDocttype objLB = new helpDocttype { Id = "LB", Name = "LB" };
+            helpDocttype objKV = new helpDocttype { Id = "KV", Name = "KV" };
+            helpDocttype objSW = new helpDocttype { Id = "SW", Name = "SW" };
+            helpDocttype objKPI = new helpDocttype { Id = "KPI", Name = "KPI" };
+            helpDocttype objHR = new helpDocttype { Id = "HR", Name = "HR" };
+            helpDocttype objRC = new helpDocttype { Id = "RC", Name = "RC" };
+            helpDoctypeList.Add(objLB);
+            helpDoctypeList.Add(objKV);
+            helpDoctypeList.Add(objSW);
+            helpDoctypeList.Add(objKPI);
+            helpDoctypeList.Add(objHR);
+            helpDoctypeList.Add(objRC);
+            return new JsonResult(helpDoctypeList);
+        }
+        public JsonResult OnPostUpdateDocumentModuleType(StaffDocument record)
+        {
+            var status = true;
+            var message = "Success";
+            _configDataProvider.UpdateStaffDocumentModuleType(new StaffDocument()
+            {
+                Id= record.Id,
+                LastUpdated= record.LastUpdated,
+                DocumentModuleName =record.DocumentModuleName
+                
+
+            });
+            return new JsonResult(new { status = status, message = message });
+        }
+
+    }
+    public class helpDocttype
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
     }
 }
