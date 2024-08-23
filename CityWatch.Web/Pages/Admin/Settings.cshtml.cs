@@ -1489,15 +1489,20 @@ namespace CityWatch.Web.Pages.Admin
 
         public JsonResult OnGetHelpDocValues()
         {
+            /* list box for helpdoc module select */
             List<helpDocttype> helpDoctypeList = new List<helpDocttype>();
+            helpDocttype objEmpty = new helpDocttype { Id = string.Empty, Name = string.Empty };
             helpDocttype objLB = new helpDocttype { Id = "LB", Name = "LB" };
             helpDocttype objKV = new helpDocttype { Id = "KV", Name = "KV" };
+            helpDocttype objIR = new helpDocttype { Id = "IR", Name = "IR" };
             helpDocttype objSW = new helpDocttype { Id = "SW", Name = "SW" };
             helpDocttype objKPI = new helpDocttype { Id = "KPI", Name = "KPI" };
             helpDocttype objHR = new helpDocttype { Id = "HR", Name = "HR" };
             helpDocttype objRC = new helpDocttype { Id = "RC", Name = "RC" };
+            helpDoctypeList.Add(objEmpty);
             helpDoctypeList.Add(objLB);
             helpDoctypeList.Add(objKV);
+            helpDoctypeList.Add(objIR);
             helpDoctypeList.Add(objSW);
             helpDoctypeList.Add(objKPI);
             helpDoctypeList.Add(objHR);
