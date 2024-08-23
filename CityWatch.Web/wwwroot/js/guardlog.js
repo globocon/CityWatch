@@ -1172,6 +1172,7 @@ $(function () {
 
         //const file = $(this).get(0).files; 
         const file = this; 
+       
 
         if ($('#IsAttachmentToRear').val() === 'true') {
             for (let i = 0; i < file.files.length; i++) {
@@ -1183,7 +1184,7 @@ $(function () {
                 const fileExtn = file.files.item(i).name.split('.').pop();
                 // if (!fileExtn || fileExtn !== 'jpg' || fileExtn !=='JPG' || fileExtn !=='jpeg' || fileExtn !=='JPEG') {
                 if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'bmp' && fileExtn !== 'BMP' && fileExtn !== 'GIF' && fileExtn !== 'gif')) {
-                    showModal('Unsupported file type. Please upload a .jpg/.jpeg/.bmp/.gif file');
+                    showModal('Unsupported file type. Please upload a .jpg,.jpeg,.bmp,.gif file');
                     $('#loader').hide();
                     return false;
                 }
@@ -1235,7 +1236,7 @@ $(function () {
                 const fileExtn = file.files.item(i).name.split('.').pop();
                 // if (!fileExtn || fileExtn !== 'jpg' || fileExtn !=='JPG' || fileExtn !=='jpeg' || fileExtn !=='JPEG') {
                 if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'bmp' && fileExtn !== 'BMP' && fileExtn !== 'GIF' && fileExtn !== 'gif')) {
-                    showModal('Unsupported file type. Please upload a .jpg/.jpeg/.bmp/.gif file');
+                    showModal('Unsupported file type. Please upload a .jpg,.jpeg,.bmp,.gif file');
                     $('#loader').hide();
                     return false;
                 }
@@ -1261,9 +1262,9 @@ $(function () {
                             //$('#dgl-image-modal').modal('hide');
                             gridGuardLog.clear();
                             gridGuardLog.reload();
-                            $('#IsAttachmentToRear').val(true);
+                            $('#IsAttachmentToRear').val(false);
 
-                            $('#IsTwentyfivePercentOfPage').val(false);
+                            $('#IsTwentyfivePercentOfPage').val(true);
                             loadDlgImagePopup($('#GuardimagedataId').val(), false);
 
                         }
