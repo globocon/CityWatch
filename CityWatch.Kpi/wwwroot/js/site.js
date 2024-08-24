@@ -2,7 +2,7 @@
  *  Fix for issues while opening one BS modal over another
  *  https://stackoverflow.com/questions/19305821/multiple-modals-overlay * 
  **/
-
+let globalClientSiteAddress = '';
 window.onload = function () {
     $.ajax({
         url: '/Admin/Settings?handler=KPIScheduleDeafultMailbox',
@@ -682,7 +682,7 @@ $(function () {
     /*Rc Action List Image Upload stop*/
 
     //RC Action List Save start
-   
+ 
     $('#div_site_settings').on('click', '#save_site_RC', function () {
         var List = $('#frm_ActionList').serialize();
         $.ajax({
@@ -1069,10 +1069,10 @@ $(function () {
 
     function settingsButtonRenderer(value, record) {
         return '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#kpi-settings-modal" ' +
-            'data-cs-id="' + record.id + '" data-cs-name="' + record.clientSiteName + '"data-cs-email="' + record.siteEmail + '" data-cs-landline="' + record.landLine + '" data-cs-duressemail="' + record.duressEmail + '" data-cs-duresssms="' + record.duressSms +
+            'data-cs-id="' + record.id + '" data-cs-name="' + record.clientSiteName + '" data-cs-email="' + record.siteEmail + '" data-cs-address="' + record.address + '" data-cs-landline="' + record.landLine + '" data-cs-duressemail="' + record.duressEmail + '" data-cs-duresssms="' + record.duressSms +
             '" data-cs-guardlog-emailto="' + record.guardLogEmailTo + '" data-cs-dbx-upload="' + record.siteUploadDailyLog +
             '"data-cs-datacollection-enabled ="' + record.dataCollectionEnabled + '"><i class="fa fa-pencil mr-2"></i>Edit</button>';
-
+       
     }
 
     gridClientSiteSettings = $('#kpi_client_site_settings').grid({
@@ -1084,6 +1084,7 @@ $(function () {
             { width: 150, field: 'clientTypeName', title: 'Client Type' },
             { width: 250, field: 'clientSiteName', title: 'Client Site' },
             { width: 250, field: 'siteEmail', title: 'Site Email', hidden: true },
+            { width: 250, field: 'address', title: 'Address', hidden: true },
             { width: 250, field: 'landLine', title: 'Site Land Line', hidden: true },
             { width: 250, field: 'guardLogEmailTo', title: 'Email Recipients', hidden: true },
             { width: 50, field: 'siteUploadDailyLog', title: 'Daily Log Dump?', renderer: function (value, record) { return value === true ? '<i class="fa fa-check-circle text-success"></i>' : ''; } },
@@ -1127,15 +1128,21 @@ $(function () {
         $("#OtherSettingsNew").load('CriticalDocumentNew');
         $('#div_site_settings').html('');
         const button = $(event.relatedTarget);
-        $('#client_site_name').text(button.data('cs-name'))
+        const siteName = button.data('cs-name');
+        const siteAddress = button.data('cs-address');
+        $('#client_site_name').text(siteName);
+        $('#client_site_address').text(siteAddress);
+        globalClientSiteAddress = siteAddress;
+  
        // $('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + button.data('cs-id'));
        
         $('#div_site_settings').load('/admin/settings?handler=ClientSiteKpiSettings&siteId=' + button.data('cs-id'), function () {
             // This function will be executed after the content is loaded
             window.sharedVariable = button.data('cs-id');
-            console.log('Load operation completed!');
+            console.log('Load operation completed!');            
             // You can add your additional code or actions here
-            console.log(button.data('cs-id'));     
+            console.log(button.data('cs-id'));
+            console.log(button.data('cs-address'));
             $('#_dropboxStatusDisplay').html('');
         });
     });
@@ -1416,7 +1423,7 @@ $(function () {
                     console.log('Load operation completed!');                  
                     // You can add your additional code or actions here
                     $('#kpi-tab').tab('show');
-                    $('#contracted-manning-tab').tab('show');
+                    $('#contracted-manning-tab').tab('show');                   
                     window.sharedVariable = data.clientSiteId;
                     console.log('Load operation completed!');
                     // You can add your additional code or actions here
@@ -1464,6 +1471,85 @@ $(function () {
         }).fail(function () { });
     });
 
+    $(document).on('click', '#printDivButton', function () {
+        $('#printDivButton').prop('disabled', true);
+        var currentDate = new Date();
+        var formattedDate = formatDate(currentDate);
+        var clientSiteId = $("#ClientSiteId").val();
+        var clientSiteName = $('#client_site_name').text();
+        var clientSiteAddress = globalClientSiteAddress;
+       
+        let content = document.getElementById('contractedmanningSettings').innerHTML;
+
+        let element = document.createElement('div');
+        element.id = 'temp-pdf-content'; // Assign an ID for easy reference
+        element.style.border = '1px solid black'; // Black border with solid style
+        element.style.padding = '10px'; // Padding inside the border
+        element.style.boxSizing = 'border-box';
+        element.style.marginTop = '20px'; // Top margin
+        element.style.marginLeft = '175px'; // Left margin
+        element.style.width = 'calc(100% - 40px)'; // Adjust width to fit within the page with margins
+        element.style.maxWidth = '800px';
+        element.style.backgroundColor = '#ffffff';
+        element.style.width = '100%';
+   
+        let heading = '<div style="text-align: center; color: red;">';
+        heading += '<span style="font-size: 1em; display: block;font-weight: bold;">Contracted Manning Schedule</span>';
+        heading += '<span style="font-size: 0.875em; display: block;">' + clientSiteName + '</span>';
+        heading += '<span style="font-size: 0.875em; display: block;">' + clientSiteAddress + '</span>';
+        heading += '</div>';
+
+        element.innerHTML = heading + content;
+        document.body.appendChild(element);
+        
+        // Hide all buttons with the class 'no-print'
+        let noPrintElements = element.getElementsByClassName('no-print');
+        for (let el of noPrintElements) {
+            el.style.display = 'none';
+        }    
+        
+        let opt = {
+            margin: [0, 0, 0, 0],
+            filename:  formattedDate + 'Contracted Manning.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+        };     
+        html2pdf().from(element).set(opt).toPdf().output('datauristring').then(function (pdfDataUri) {
+            // Create a new window and display the PDF
+            let newWindow = window.open('', '_blank');
+            if (newWindow) {
+                newWindow.document.write('<html><head><title>Contracted Manning Schedule-Print</title></head><body style="margin:0;justify-content: center;"><iframe width="100%" height="100%" src="' + pdfDataUri + '"></iframe></body></html>');
+                newWindow.document.close();
+            } else {
+                alert('Failed to open new window. Please check your browser settings.');
+            }
+
+            if (document.body.contains(element)) {
+                document.body.removeChild(element);
+            }
+
+            $('#printDivButton').prop('disabled', false);
+        }).catch(function (error) {
+            console.error('Error generating PDF:', error);
+            alert('Failed to generate PDF.');
+        });
+    });
+
+    
+    function formatDate(dateStr) {
+        var date = new Date(dateStr);
+        if (isNaN(date.getTime())) {
+            return null; // Invalid date
+        }
+
+        var day = String(date.getDate()).padStart(2, '0');
+        var month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+        var year = date.getFullYear();
+
+        return `${day}/${month}/${year}`;
+    }
+    
     $('#div_site_settings').on('click', '#showDivButton', function () {
         
         $('#divPatrolCar').show();
