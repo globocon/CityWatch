@@ -156,7 +156,7 @@
         calculateSumOfTextBoxValues();
 
         $.ajax({
-            url: '/Reports/PatrolData?handler=OfficerPositions&filter=' + filter,
+            url: '/Reports/PatrolData?handler=OfficerPositionsNew&filter=' + filter,
             type: 'GET',
             dataType: 'json'
         }).done(function (data) {
@@ -298,7 +298,7 @@
         $.ajax({
             url: '/Reports/PatrolData?handler=ClientSiteManningKpiSettings',
             type: 'POST',
-            data: $('#frm_site_manning_settingsnew').serialize(),
+            data: $('#frm_site_manning_settings').serialize(),
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
         }).done(function (data) {
             if (data.success == 1) {

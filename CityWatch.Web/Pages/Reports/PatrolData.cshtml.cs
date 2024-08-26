@@ -277,7 +277,10 @@ namespace CityWatch.Web.Pages.Reports
             }
             return new JsonResult(new { status, message, clientSiteId });
         }
-
+        public IActionResult OnGetOfficerPositionsNew(OfficerPositionFilter filter)
+        {
+            return new JsonResult(_viewDataService.GetOfficerPositionsNew((OfficerPositionFilter)filter));
+        }
         //p3-132 Contracted Manning Button-end
     }
 }

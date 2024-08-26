@@ -1,5 +1,10 @@
 ﻿@using CityWatch.Web.Services
+@using CityWatch.Data.Helpers
+@using CityWatch.Data.Models
+@using CityWatch.Data.Providers;
 @using CityWatch.Data.Enums
+@using Microsoft.Extensions.Configuration
+@using System.Security.Claims
 @model CityWatch.Data.Models.ClientSiteKpiSetting
 @inject IViewDataService ViewDataService;
 @{
@@ -26,7 +31,7 @@
         {
             <div class="text-right"><button id="showDivButton" class="btn btn-success"><i class="fa fa-plus" aria-hidden="true"></i> Add Worker</button></div>
         }
-        <form id="frm_site_manning_settingsnew">
+        <form id="frm_site_manning_settings">
             <input type="hidden" asp-for="@Model.Id" />
             <input type="hidden" asp-for="@Model.ClientSiteId" />
             <input type="hidden" id="hidCount" value="@count" />
@@ -111,11 +116,11 @@
                                             <div class="form-group p-0">
                                                 @if (@Model.ClientSiteManningGuardKpiSettings[rowIndex].Type == ((int)OfficerPositionFilterManning.NonPatrolOnly).ToString())
                                                 {
-                                                    <select asp-for="@Model.ClientSiteManningGuardKpiSettings[rowIndex].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilter.NonPatrolOnly)" class="form-control"></select>
+                                                    <select asp-for="@Model.ClientSiteManningGuardKpiSettings[rowIndex].PositionId" asp-items="@ViewDataService.GetOfficerPositionsNew(OfficerPositionFilter.NonPatrolOnly)" class="form-control"></select>
                                                 }
                                                 else
                                                 {
-                                                    <select asp-for="@Model.ClientSiteManningGuardKpiSettings[rowIndex].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilter.PatrolOnly)" class="form-control"></select>
+                                                    <select asp-for="@Model.ClientSiteManningGuardKpiSettings[rowIndex].PositionId" asp-items="@ViewDataService.GetOfficerPositionsNew(OfficerPositionFilter.PatrolOnly)" class="form-control"></select>
                                                 }
                                             </div>
                                         }
@@ -230,7 +235,7 @@
                                         @if (rowIndex2 == 1)
                                         {
                                             <div class="form-group p-0">
-                                                <select asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[rowIndex2].PositionId" asp-items="@ViewDataService.GetOfficerPositions(OfficerPositionFilter.NonPatrolOnly)" class="form-control"></select>
+                                                <select asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[rowIndex2].PositionId" asp-items="@ViewDataService.GetOfficerPositionsNew(OfficerPositionFilter.NonPatrolOnly)" class="form-control"></select>
                                             </div>
                                         }
                                         @*New Code for Monthly Hours Start*@
