@@ -704,7 +704,7 @@ namespace CityWatch.RadioCheck.Services
                     //                ((entry.IrEntryType == IrEntryType.Normal) || (entry.IrEntryType == IrEntryType.Notification) ? COLOR_PALE_YELLOW : COLOR_PALE_RED) :
                     //                COLOR_WHITE;
                     //Added To display GPS start
-                    var notes = entry.Notes;
+                    var notes = string.IsNullOrEmpty(entry.Notes)?string.Empty: entry.Notes;
                     var bgColor = COLOR_WHITE;
                     //    var imagePath = "wwwroot/images/GPSImage.png";
                     //    var siteImage = new Image(ImageDataFactory.Create(imagePath))
