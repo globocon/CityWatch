@@ -4552,6 +4552,15 @@ var guardSettings = $('#guard_settings_for_control_room').DataTable({
     autoWidth: false,
     ajax: '/GuardDetails?handler=ActiveGuards',
     columns: [
+        //p4-105 new button-start
+    {
+            className: 'dt-control',
+            orderable: false,
+            data: null,
+            width: '2%',
+            defaultContent: '',
+        },
+    //p4-105 new button-end
     { data: 'name', width: "22%" },
     { data: 'securityNo', width: "10%" },
     { data: 'initial', orderable: false, width: "3%" },
@@ -4560,7 +4569,6 @@ var guardSettings = $('#guard_settings_for_control_room').DataTable({
         {
             data: 'provider',
             width: '23%',
-            orderable: false,
             render: function (data, type, row) {
                 var provider = row.provider ? row.provider : ''; 
                 if (provider !== '') {
