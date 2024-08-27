@@ -941,9 +941,10 @@ namespace CityWatch.Kpi.Services
                 {
                     var HRDesc = (FilterHR[i].ReferenceNo + FilterHR[i].Description).Trim().Replace(" ", "");
                     var test = monthlyDataGuardComplianceData.Select(x => x.Description.Trim().Replace(" ", "")).FirstOrDefault();
+                    var normalizedHRDesc = HRDesc.Trim().Replace(" ", "").Replace("/", "");
                     var matchingDescription = monthlyDataGuardComplianceData
-                    .Where(data => data.Description.Trim().Replace(" ", "") == HRDesc)
-                    .FirstOrDefault();
+                        .Where(data => data.Description.Trim().Replace(" ", "").Replace("/", "") == normalizedHRDesc)
+                        .FirstOrDefault();
                     if (true)
                     {
 
