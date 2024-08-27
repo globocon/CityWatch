@@ -217,13 +217,14 @@
                             <label class="col-form-label" id="lbl_guard_email"></label>
                         </li>
                         <li class="row">
-                            <label class="col-md-4 col-form-label">CRM (Supplier):</label>
-                            <label class="col-form-label" id="lbl_guard_provider"></label>
+                                        <label class="col-md-4 col-form-label">CRM (Supplier):</label>
+                                        <label class="col-form-label" id="lbl_guard_provider"></label>
                         </li>
                         <li class="row">
                             <label class="col-md-4 col-form-label">No:</label>
-                            <label class="col-form-label" id="lbl_guard_provider_no"></label>
-                        </li>
+                             <label class="col-form-label" id="lbl_guard_provider_no"></label>
+                            <label class="col-md-4 col-form-label text-right " id="lbl_GuardDetailedDetails"></label>
+                         </li>
                     </ul>
                 </div>
             </div>
@@ -1153,9 +1154,45 @@
         </div>
     </div>
 </div>
+<div class="modal" tabindex="-1" role="dialog" id="specificGuardDetailsModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8"><i class="fa fa-vcard-o mr-2"></i><label id="lbl_specificGuardName"></label></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pb-0">
+                <div class="form-row">
+                    <div class="col-md-12 bg-info text-center mb-2">
+                        <input type="hidden" id="txt_SpecificGuardDetailsId" />
+                    </div>
+                    <div class="col-md-12" id="guardcontent">
+                        <table id="specificGuardDetailsTable" class="table table-bordered" style="width:99%;">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Name</th>
+                                    <th>License No</th>
+                                    <th>Initial</th>
+                                    <th>Mobile No</th>
+                                    <th>Email</th>
+                                    <th>CRM Supplier</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- logbook model popup end-->
 @Html.AntiForgeryToken()
 @section PageHeader {
     <h3 class="text-center">RADIO CHECKLIST</h3>
 }
+

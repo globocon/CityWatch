@@ -23,11 +23,11 @@ var tmzdata = {
 let connection;
 window.onload = function () {
     if (document.querySelector('#clockRefresh')) {
-        startClock();        
+        startClock();
     }
     if (document.querySelector('#txtSignalRConnectionUrl')) {
         connectToSignalRservice();
-    }    
+    }
 };
 $(document).ready(function () {
     $('[data-toggle="tooltip"]').tooltip();
@@ -39,7 +39,7 @@ $(document).ready(function () {
     });
 
     $(document).on('hidden.bs.modal', '.modal', () => $('.modal:visible').length && $(document.body).addClass('modal-open'));
-    
+
 });
 function startClock() {
     let timer = duration, minutes, seconds;
@@ -344,7 +344,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             width: '6%',
             className: "text-center",
             render: function (value, type, data) {
-                if (value === null) return 'N/A';                
+                if (value === null) return 'N/A';
                 if (value != 0)
                     return '<i class="fa fa-check-circle text-success rc-client-status"></i>' + ' [' + '<a href="#guardKeyVehicleInfoModal" id="btnKeyVehicleDetailsByGuard">' + value + '</a>' + '] <input type="hidden" id="ClientSiteId" value="' + data.clientSiteId + '"><input type="hidden" id="GuardId" value="' + data.guardId + '">';
                 else
@@ -386,9 +386,9 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             width: '2%',
             className: "text-center",
             render: function (value, type, data) {
-               
+
                 if (data.rcColorId != 1) {
-                   
+
                     if (value < 80)
                         return '<div class="p-1 mb-1" style="background: #AFE1AF;">' + value + '</div>';
                     if (value >= 80)
@@ -450,6 +450,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             data: 'hR1',
             width: '3%',
             className: "text-center",
+
             render: function (value, type, data) {
                 
 
@@ -465,6 +466,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             data: 'hR2',
             width: '3%',
             className: "text-center",
+
             render: function (value, type, data) {
                
 
@@ -473,12 +475,14 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                     (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
                         value == 'Yellow' ? 'warning' : 'muted') +
                     '"></i>';
+
             }
         },
         {
             data: 'hR3',
             width: '3%',
             className: "text-center",
+
             render: function (value, type, data) {
               
 
@@ -988,7 +992,7 @@ $('#guardInfoModal').on('shown.bs.modal', function (event) {
     $('#lbl_guard_provider').html('');
     $('#lbl_guard_provider_no').html('');
     $('#lbl_guard_gender').html('');
-    
+
 
     const button = $(event.relatedTarget);
     const id = button.data('id');
@@ -1014,14 +1018,18 @@ $('#guardInfoModal').on('shown.bs.modal', function (event) {
                 '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#crmSupplierDetailsModal" data-id="' + result.provider + '"></i>';
             $('#lbl_guard_provider').html(providerHtml);
         }
-           
+        /*p4-105 new button-start*/
+        //var guardDetailsHtml = '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#specificGuardDetailsModal" data-id="' + result.id + '"></i>';
+        var guardDetailsHtml = '<a href = "/GuardDetails?gId=' + result.id +'" target="_blank"><i class="fa fa-file-text fa-lg pl-5"></i></a>';
 
-       
+        $('#lbl_GuardDetailedDetails').html(guardDetailsHtml)
+
+        /*p4-105 new button-end*/
     }).fail(function () {
         alert("An error occurred while fetching guard details.");
     });
-    
-  
+
+
 });
 const renderGuardInitialColumn = function (value, record, $cell, $displayEl) {
     if (record.guardId !== null) {
@@ -1038,12 +1046,12 @@ $('#crmSupplierDetailsModal').on('shown.bs.modal', function (event) {
     $('#lbl_landline').html('');
     $('#lbl_email').html('');
     $('#lbl_website').html('');
-    
+
 
     const button = $(event.relatedTarget);
-   
+
     const compName = button.data('id');
-    
+
 
     $.ajax({
         url: '/GuardDetails?handler=CrmSupplierData',
@@ -1549,7 +1557,7 @@ let clientSiteActiveGuardsSWDetails = $('#clientSiteActiveGuardsSWDetails').Data
     drawCallback: function () {
         $('#clientSiteActiveGuardsSWDetails').closest('div.dataTables_scrollBody').css('overflow-x', 'hidden'); //Remove the x scrollbar
         $('#clientSiteActiveGuardsSWDetails').closest('div.dataTables_scrollBody').css('border-bottom', 0);
-       
+
         var api = this.api();
         var rows = api.rows({ page: 'current' }).nodes();
         var last = null;
@@ -1603,7 +1611,7 @@ $('#clientSiteActiveGuards tbody').on('click', '#btnIncidentReportdetails', func
 /*for incident report details of the guard - end*/
 
 /* for logbook history of the guard start*/
-function renderLogbookDateTime(value, record) {  
+function renderLogbookDateTime(value, record) {
     if (record.eventDateTimeLocal != null && record.eventDateTimeLocal != '') {
         const date = new Date(record.eventDateTimeLocal);
         var DateTime = luxon.DateTime;
@@ -1638,7 +1646,7 @@ let clientSiteActiveGuardsLogBookHistory = $('#clientSiteActiveGuardsLogBookHist
     'language': {
         'loadingRecords': '&nbsp;',
         'processing': 'Loading...Please wait...'
-    },     
+    },
     ajax: {
         url: '/RadioCheckV2?handler=ClientSitelogBookHistory',
         datatype: 'json',
@@ -1649,7 +1657,7 @@ let clientSiteActiveGuardsLogBookHistory = $('#clientSiteActiveGuardsLogBookHist
         dataSrc: ''
     },
     columns: [
-        { data: 'id', title: 'Id', visible: false },        
+        { data: 'id', title: 'Id', visible: false },
         {
             data: 'clientSiteLogBookId',
             width: '20%',
@@ -1671,7 +1679,7 @@ let clientSiteActiveGuardsLogBookHistory = $('#clientSiteActiveGuardsLogBookHist
                 return renderLogbookDateTime(value, data);
             }
         }
-    ]   
+    ]
 });
 
 $('#clientSiteActiveGuards tbody').on('dblclick', '#btnLogBookHistoryByGuard', function (value, record) {
@@ -1679,7 +1687,7 @@ $('#clientSiteActiveGuards tbody').on('dblclick', '#btnLogBookHistoryByGuard', f
     isPaused = true;
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
     var GuardId = $(this).attr("data-guardid");
-    var ClientSiteId = $(this).attr('data-clientsiteid');  
+    var ClientSiteId = $(this).attr('data-clientsiteid');
     var ClientSiteName = $(this).attr('data-clientsitename');
     $('#txtClientSiteId').val(ClientSiteId);
     $('#txtGuardId').val(GuardId);
@@ -1741,10 +1749,11 @@ let clientSiteActiveGuardsKeyVehicleHistory = $('#clientSiteActiveGuardsKeyVehic
         { data: 'id', title: 'Id', visible: false },
         { data: 'id', title: 'KeyVehicleLog Id', visible: false, width: '20%' },
         { data: 'vehicleRego', title: 'License No', width: '20%', visible: true },
-        { data: 'personName',width: '20%',title: 'Individual',className: "text-center", visible: true },
+        { data: 'personName', width: '20%', title: 'Individual', className: "text-center", visible: true },
         { data: 'companyName', width: '20%', title: 'Company', className: "text-center", visible: true },
-        { data: 'individualTitle',width: '20%',title: 'Activity',className: "text-center"},
-        { data: 'entryCreatedDateTimeLocal',width: '20%',title: 'Created Time',className: "text-center",
+        { data: 'individualTitle', width: '20%', title: 'Activity', className: "text-center" },
+        {
+            data: 'entryCreatedDateTimeLocal', width: '20%', title: 'Created Time', className: "text-center",
             render: function (value, type, data) {
                 return renderKvDateTime(value, data);
             }
@@ -1837,8 +1846,8 @@ let clientSiteActiveGuardsIncidentReportHistory = $('#clientSiteActiveGuardsInci
         dataSrc: ''
     },
     columns: [
-        { data: 'id', title: 'Id', visible: false },      
-        { data: 'id', title: 'IncidentReport Id', visible: true, width: '20%'},
+        { data: 'id', title: 'Id', visible: false },
+        { data: 'id', title: 'IncidentReport Id', visible: true, width: '20%' },
         {
             data: 'fileName',
             width: '60%',
@@ -1914,8 +1923,8 @@ let clientSiteActiveGuardsSmartWandHistory = $('#clientSiteActiveGuardsSwHistory
     },
     columns: [
         { data: 'id', title: 'Id', visible: false },
-        { data: 'templateName',width: '20%',title: 'Template Name'},
-        { data: 'smartWandId',width: '15%',title: 'Smart Wand'},
+        { data: 'templateName', width: '20%', title: 'Template Name' },
+        { data: 'smartWandId', width: '15%', title: 'Smart Wand' },
         { data: 'employeePhone', width: '22%', title: 'Smart Wand Number' },
         {
             data: 'inspectionStartDatetimeLocal', width: '25%', title: 'Inspection Start', className: "text-center",
@@ -2120,13 +2129,13 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
 
 
     const button = $(event.relatedTarget);
-    const id = button.data('id'); 
+    const id = button.data('id');
 
     $('#txtNotificationsCompanyId').val(id);
     $('#chkLB').prop('checked', true);
     $('#chkSiteEmail').prop('checked', false);
     $('#chkSMSPersonal').prop('checked', false);
-    $('#chkSMSSmartWand').prop('checked', false); 
+    $('#chkSMSSmartWand').prop('checked', false);
     $('#chkNationality').prop('checked', false);
     $('#chkSiteState').prop('checked', false);
     $('#chkSiteState').prop('checked', false);
@@ -2147,7 +2156,7 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     $('#txtPushNotificationMessage').val('');
     clearGuardValidationSummary('PushNotificationsValidationSummary');
     var clientSiteId = $('#txtNotificationsCompanyId').val();
-    $('#Site_Alarm_Keypad_code').val('');    
+    $('#Site_Alarm_Keypad_code').val('');
     $('#site_Physical_key').val('');
     $('#Action1').val('');
     $('#Action2').val('');
@@ -2169,11 +2178,11 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
     $('#pn_sitegpsmap').addClass("disabled-anchor-link");
     //$('#pn_sitegpsmap').prop('disabled', true);
     $('#btncontractedmanning').prop('disabled', true);
-        
+
 
     var inpcallfun = $('#inpCallingFunction').val();
     if (inpcallfun != 'STEPBUTTON') {
-        
+
         $.ajax({
             url: '/RadioCheckV2?handler=GetClientType',
             type: 'POST',
@@ -2190,7 +2199,7 @@ $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
             }
         });
 
-        
+
     } else {
 
         const clientSiteControl = $('#dglClientSiteIdActionList');
@@ -2504,23 +2513,23 @@ $('#dglClientSiteIdActionList').on('change', function () {
             } else {
                 $('#download_imageRCList').removeAttr('href');
                 $('#download_imageRCList').removeAttr('download');
-            }      
-            
-        }       
+            }
+
+        }
     });
     if (clientSiteId)
         $('#btncontractedmanning').prop('disabled', false);
-        
+
 
     // Get Site Address and map Details
     getSiteAddressAndMapDetails(clientSiteId);
     sitebuttonSelectedClientSiteId = -1;
 });
 
-function getSiteAddressAndMapDetails(clientSiteId) {    
+function getSiteAddressAndMapDetails(clientSiteId) {
     $('#pn_client_site_address').val('');
     $('#pn_sitegpsmap').attr('href', "javascript:void(0)");
-    $('#pn_sitegpsmap').addClass("disabled-anchor-link");    
+    $('#pn_sitegpsmap').addClass("disabled-anchor-link");
     $.ajax({
         url: '/RadioCheckV2?handler=GetClientsiteAddressAndMapDetails',
         type: 'POST',
@@ -2529,16 +2538,16 @@ function getSiteAddressAndMapDetails(clientSiteId) {
         },
         dataType: 'json',
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (data) {        
+    }).done(function (data) {
         var html = '';
         if (data) {
             $('#pn_client_site_address').val(data.address);
-            if (data.gps != null) {                
+            if (data.gps != null) {
                 var gpslink = 'https://www.google.com/maps?q=' + data.gps;
                 $('#pn_sitegpsmap').attr('href', gpslink);
                 $('#pn_sitegpsmap').removeClass("disabled-anchor-link");
             }
-        }        
+        }
     });
 }
 
@@ -2549,7 +2558,7 @@ $('#btncopytoclipboard').on('click', function () {
         alert('Please select a site.');
         return;
     }
-        
+
     /*Copy to clipboard*/
     var textToCopy = "";
     var nwl = "\r\n";
@@ -2558,28 +2567,28 @@ $('#btncopytoclipboard').on('click', function () {
     var cl_site = $("#dglClientSiteIdActionList option[value='" + $('#dglClientSiteIdActionList').val() + "']").text() + nwl;
     var cl_address = $('#pn_client_site_address').val() + nwl;
     var cl_gps = ($('#pn_sitegpsmap').prop('href') == "javascript:void(0)" ? "" : $('#pn_sitegpsmap').prop('href')) + nwl + nwl;
-    var cl_keypadcode = $('#Site_Alarm_Keypad_code').val() + nwl;           
-    var cl_phykey = $('#site_Physical_key').val() + nwl; 
-    var cl_cmblock = $('#Site_Combination_Look').val() + nwl; 
-    var cl_act1 = $('#Action1').val() + nwl; 
+    var cl_keypadcode = $('#Site_Alarm_Keypad_code').val() + nwl;
+    var cl_phykey = $('#site_Physical_key').val() + nwl;
+    var cl_cmblock = $('#Site_Combination_Look').val() + nwl;
+    var cl_act1 = $('#Action1').val() + nwl;
     var cl_act2 = $('#Action2').val() + nwl;
     var cl_act3 = $('#Action3').val() + nwl;
     var cl_act4 = $('#Action4').val() + nwl;
     var cl_act5 = $('#Action5').val() + nwl;
     var cl_txtcoment = $('#txtComments').val() + nwl;
     var cl_txtmsgactlist = $('#txtMessageActionList').val() + nwl;
-                
+
     textToCopy = `Client Type: ${cl_type}`;
     textToCopy += `Client Site: ${cl_site}`;
     textToCopy += `Address: ${cl_address}`;
     textToCopy += `Google Map Link: ${cl_gps}`;
     textToCopy += "Site Access" + nwl;
-    textToCopy += "===========" + nwl;    
+    textToCopy += "===========" + nwl;
     textToCopy += `Alarm Keypad Code: ${cl_keypadcode}`;
     textToCopy += `Physical key: ${cl_phykey}`;
     textToCopy += `Combination Lock: ${cl_cmblock}${nwl}`;
     textToCopy += "Alarm Response" + nwl;
-    textToCopy += "==============" + nwl;     
+    textToCopy += "==============" + nwl;
     textToCopy += `Action 1: ${cl_act1}`;
     textToCopy += `Action 2: ${cl_act2}`;
     textToCopy += `Action 3: ${cl_act3}`;
@@ -2589,7 +2598,7 @@ $('#btncopytoclipboard').on('click', function () {
     textToCopy += `New Outgoing Message: ${cl_txtmsgactlist}`;
     navigator.clipboard.writeText(textToCopy)
         .then(() => { alert('Copied to clipboard.') })
-        .catch((error) => {alert(`Copy failed. Error: ${error}`) })
+        .catch((error) => { alert(`Copy failed. Error: ${error}`) })
 });
 
 
@@ -3348,7 +3357,7 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
                 }
                 else {
                     return '<i class="fa fa-times-circle text-text-muted rc-client-status" style="color:#B8B8B8"></i>'
-                   // return '<button type="button" class="btn" id="btnSwHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
+                    // return '<button type="button" class="btn" id="btnSwHistoryByGuard" data-clientsitename="' + data.onlySiteName + '" data-clientsiteid="' + data.clientSiteId + '" data-guardid="' + data.guardId + '"><i class="fa fa-times-circle text-danger rc-client-status"></i></button>';
                 }
             }
         },
@@ -4374,7 +4383,7 @@ function ShowKpiModelChoice() {
         // You can add your additional code or actions here
         // console.log(csnme);    
         if (choice == 'RCACTIONLIST')
-            $('#div_kpi_rc_contractedmanning').html('');            
+            $('#div_kpi_rc_contractedmanning').html('');
         else if (choice == 'CONTRACTEDMANNING')
             $('#div_kpi_rc_action_list').html('');
     });
@@ -4395,14 +4404,14 @@ function getFormattedDate(value, withTime) {
     }
 }
 
-$('#btn_Edit_ActionList').on('click', function (event) {       
+$('#btn_Edit_ActionList').on('click', function (event) {
     var csnme = $('#dglClientSiteIdActionList option:selected').text();
     var csid = $('#dglClientSiteIdActionList option:selected').val();
     if (csnme == '' || csid == '') {
         console.log('Nothing selected...')
         alert('Please select a site to edit.');
         return;
-    }      
+    }
 
     $('#modelchoice').val('RCACTIONLIST');
     $('#kpi-settings-modal').modal('show');
@@ -4508,8 +4517,8 @@ $('#div_site_settings').on('click', '#save_site_RC', function () {
             $('#kpi-settings-modal').modal('hide');
         }
         else {
-            alert(result.message);            
-        }       
+            alert(result.message);
+        }
     }).fail(function () { });
 });
 //RC Action List Save stop
@@ -4560,30 +4569,395 @@ var guardSettings = $('#guard_settings_for_control_room').DataTable({
     autoWidth: false,
     ajax: '/GuardDetails?handler=ActiveGuards',
     columns: [
-    { data: 'name', width: "22%" },
-    { data: 'securityNo', width: "10%" },
-    { data: 'initial', orderable: false, width: "3%" },
-    { data: 'mobile', width: "15%" },
-    { data: 'email', width: "11%" },
+        //p4-105 new button-start
+        {
+            className: 'dt-control',
+            orderable: false,
+            data: null,
+            width: '2%',
+            defaultContent: '',
+        },
+        //p4-105 new button-end
+        { data: 'name', width: "22%" },
+        { data: 'securityNo', width: "10%" },
+        { data: 'initial', orderable: false, width: "3%" },
+        { data: 'mobile', width: "15%" },
+        { data: 'email', width: "11%" },
         {
             data: 'provider',
             width: '23%',
-            orderable: false,
             render: function (data, type, row) {
-                var provider = row.provider ? row.provider : ''; 
+                var provider = row.provider ? row.provider : '';
                 if (provider !== '') {
                     return '&nbsp;&nbsp;&nbsp;' + provider +
                         '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#crmSupplierDetailsModal" data-id="' + provider + '"></i>';
                 } else {
-                    return ''; 
+                    return '';
                 }
             }
         }
 
-    ]
+    ],
+    'createdRow': function (row, data, index) {
+        //if (data.detail.initialCallTime !== null) {
+        //    $('td', row).eq(1).html(convertDateTimeString(data.detail.initialCallTime));
+        //    /*to display the color yellow-start*/
+        //    if (data.detail.entryTime == null && data.detail.sentInTime == null && data.detail.exitTime == null) {
+        //        $('td', row).eq(1).addClass('initial-call-colour');
+        //        $('td', row).eq(2).addClass('initial-call-colour');
+        //        $('td', row).eq(3).addClass('initial-call-colour');
+        //        $('td', row).eq(4).addClass('initial-call-colour');
+        //        $('td', row).eq(5).addClass('initial-call-colour');
+        //        $('td', row).eq(6).addClass('initial-call-colour');
+        //        $('td', row).eq(7).addClass('initial-call-colour');
+        //        $('td', row).eq(8).addClass('initial-call-colour');
+        //        $('td', row).eq(9).addClass('initial-call-colour');
+        //        $('td', row).eq(10).addClass('initial-call-colour');
+        //        $('td', row).eq(11).addClass('initial-call-colour');
+        //    }
+        //    /*to display the color yellow-end*/
+        //}
+        //if (data.detail.entryTime !== null) {
+        //    $('td', row).eq(2).html(convertDateTimeString(data.detail.entryTime));
+        //    /*to display the color green for entry time-start*/
+        //    if (data.detail.sentInTime == null && data.detail.exitTime == null) {
+        //        $('td', row).eq(1).addClass('entry-time-colour');
+        //        $('td', row).eq(2).addClass('entry-time-colour');
+        //        $('td', row).eq(3).addClass('entry-time-colour');
+        //        $('td', row).eq(4).addClass('entry-time-colour');
+        //        $('td', row).eq(5).addClass('entry-time-colour');
+        //        $('td', row).eq(6).addClass('entry-time-colour');
+        //        $('td', row).eq(7).addClass('entry-time-colour');
+        //        $('td', row).eq(8).addClass('entry-time-colour');
+        //        $('td', row).eq(9).addClass('entry-time-colour');
+        //        $('td', row).eq(10).addClass('entry-time-colour');
+        //        $('td', row).eq(11).addClass('entry-time-colour');
+        //    }
+        //    /*to display the color green for entry time-end*/
+        //}
+        //if (data.detail.sentInTime !== null) {
+        //    $('td', row).eq(3).html(convertDateTimeString(data.detail.sentInTime));
+        //    /*to display the color green for sent in time-start*/
+        //    if (data.detail.exitTime == null) {
+        //        $('td', row).eq(1).addClass('entry-time-colour');
+        //        $('td', row).eq(2).addClass('entry-time-colour');
+        //        $('td', row).eq(3).addClass('entry-time-colour');
+        //        $('td', row).eq(4).addClass('entry-time-colour');
+        //        $('td', row).eq(5).addClass('entry-time-colour');
+        //        $('td', row).eq(6).addClass('entry-time-colour');
+        //        $('td', row).eq(7).addClass('entry-time-colour');
+        //        $('td', row).eq(8).addClass('entry-time-colour');
+        //        $('td', row).eq(9).addClass('entry-time-colour');
+        //        $('td', row).eq(10).addClass('entry-time-colour');
+        //        $('td', row).eq(11).addClass('entry-time-colour');
+        //    }
+        //    /*to display the color green for sent in time-end*/
+        //}
+        //if (data.detail.exitTime !== null) {
+        //    $('td', row).eq(4).html(convertDateTimeString(data.detail.exitTime));
+        //    /*to display the color green for exit  time-start*/
+
+        //    $('td', row).eq(1).addClass('exit-time-colour');
+        //    $('td', row).eq(2).addClass('exit-time-colour');
+        //    $('td', row).eq(3).addClass('exit-time-colour');
+        //    $('td', row).eq(4).addClass('exit-time-colour');
+        //    $('td', row).eq(5).addClass('exit-time-colour');
+        //    $('td', row).eq(6).addClass('exit-time-colour');
+        //    $('td', row).eq(7).addClass('exit-time-colour');
+        //    $('td', row).eq(8).addClass('exit-time-colour');
+        //    $('td', row).eq(9).addClass('exit-time-colour');
+        //    $('td', row).eq(10).addClass('exit-time-colour');
+        //    $('td', row).eq(11).addClass('exit-time-colour');
+
+        //    /*to display the color green for exit  time-end*/
+        //}
+        //if (data.detail.exitTime == null) {
+        //    $('td', row).eq(4).html('<button type="button" class="btn btn-success btn-exit-quick">E</button> ');
+        //}
+    }
 });
 /*p4-16 Data dump task1-end*/
 
+/*P4-105 NEW BUTTON-START*/
+$('#guard_settings_for_control_room tbody').on('click', 'td.dt-control', function () {
+    var tr = $(this).closest('tr');
+    var row = guardSettings.row(tr);
+
+    if (row.child.isShown()) {
+        row.child.hide();
+        tr.removeClass('shown');
+    } else {
+        row.child();
+        row.child(format_guard_settings_for_control_room_child_row(row.data()), 'bg-light').show();
+        tr.addClass('shown');
+    }
+});
+function fetchGuardLogBookDetails(guardId) {
+    $.ajax({
+        url: '/GuardDetails?handler=LastTimeLogin',
+        method: 'GET',
+        data: { guardId: guardId },
+        success: function (data) {
+            // Destroy the existing DataTable instance if it exists
+            if ($.fn.DataTable.isDataTable('#ActiveGuardsLogBookDetails')) {
+                $('#ActiveGuardsLogBookDetails').DataTable().destroy();
+            }
+
+            $('#ActiveGuardsLogBookDetails').DataTable({
+                autoWidth: false,
+                ordering: false,
+                searching: false,
+                paging: false,
+                info: false,
+                data: data, // Use the data fetched from the AJAX request
+                columns: [
+                    {
+                        data: 'loginDate',
+                        width: "50%",
+                        render: function (data, type, row) {
+                            // Convert the date string to a JavaScript Date object
+                            var date = new Date(data);
+
+                            // Format the date to display only the date part without the time
+                            var formattedDate = date.toLocaleDateString('en-GB', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit'
+                            });
+                            var additionalData = row.eventDateTimeZoneShort;
+                            if (additionalData != null) {
+                                return formattedDate + ' (' + additionalData + ')';
+                            } else {
+                                return formattedDate;
+                            }
+                        }
+                    },
+                    {
+                        data: 'clientSite', width: "100%",
+                        render: function (data, type, row) {
+
+                            var name1 = data.name;
+
+                            return name1;
+
+                        }
+                    },
+                ]
+            });
+        },
+        error: function (xhr, status, error) {
+            console.error('Error fetching data:', error);
+        }
+    });
+}
+$('#guard_settings_for_control_room tbody').on('click', '#btnLogBookDetailsByGuard', function () {
+    $('#guardLogBookInfoModal').modal('show');
+    isPaused = true;
+    var GuardName = $(this).closest("tr").find("td").eq(0).text();
+    var GuardId = $(this).closest("tr").find('td').eq(3).find('#GuardId').val();
+    var ClientSiteId = $(this).closest("tr").find('td').eq(1).find('#ClientSiteId').val();
+    $('#txtClientSiteId').val(ClientSiteId);
+    $('#txtGuardId').val(GuardId);
+    // $('#lbl_GuardActivityHeader').val($(this).closest("tr").find("td").eq(2).text() + 'Log Book Details');
+    $('#lbl_GuardActivityHeader').text(GuardName + '-' + 'Log Book Details');
+    fetchGuardLogBookDetails(GuardId)
+});
+function format_guard_settings_for_control_room_child_row(d) {
+    if (d.isActive) {
+        // Check if data.guardlogins.logindate is present
+        if (d.loginDate) {
+            cellValue = '<i class="fa fa-check-circle text-success"></i>' +
+                '[' +
+                '<a href="#guardLogBookInfoModal" id="btnLogBookDetailsByGuard">1</a>' +
+                ']<input type="hidden" id="GuardId" value="' + d.id + '">';
+        } else {
+            cellValue = '<i class="fa fa-check-circle text-success"></i>' +
+                '<input type="hidden" id="GuardId" value="' + d.id + '">';
+        }
+    } else {
+
+        cellValue = '<i class="fa fa-times-circle text-danger"></i>';
+    }
+    return (
+        '</td>' +
+        '<table cellpadding="7" class="col-md-12" cellspacing="0"  border="0" style="padding-left:50px;">' +
+        '<tr>' +
+        '<th  style="background-color:#EAF0ED"><center>State</center></th>' +
+        '<th  style="background-color:#EAF0ED"><center>Gender</center></th>' +
+        '<th  style="background-color:#EAF0ED"><center>Sites</center></th>' +
+        '<th  style="background-color:#EAF0ED"><center>Active</center></th>' +
+
+        '</tr>' +
+        '<tr>' +
+        '<td>' + convertDbString(d.state) + '</td>' +
+        '<td>' + convertDbString(d.gender) + '</td>' +
+        '<td>' + convertDbString(d.clientSites) + '</td>' +
+        '<td>' + cellValue + '</td>' +
+
+        '</tr>' +
+
+        '</table>'
+    );
+
+}
+function convertDbString(value) { return (value === null || value === undefined) ? '' : value; }
+let guardDetailsSettings = $('#specificGuardDetailsTable').DataTable({
+    pageLength: 10,
+    autoWidth: false,
+   
+    columns: [
+        //p4-105 new button-start
+        {
+            className: 'dt-control',
+            orderable: false,
+            data: null,
+            width: '2%',
+            defaultContent: '',
+        },
+        //p4-105 new button-end
+        { data: 'name', width: "22%" }
+        //{ data: 'securityNo', width: "10%" },
+        //{ data: 'initial', orderable: false, width: "3%" },
+        //{ data: 'mobile', width: "15%" },
+        //{ data: 'email', width: "11%" },
+        //{
+        //    data: 'provider',
+        //    width: '23%',
+        //    render: function (data, type, row) {
+        //        var provider = row.provider ? row.provider : '';
+        //        if (provider !== '') {
+        //            return '&nbsp;&nbsp;&nbsp;' + provider +
+        //                '<i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#crmSupplierDetailsModal" data-id="' + provider + '"></i>';
+        //        } else {
+        //            return '';
+        //        }
+        //    }
+        //}
+
+    ],
+    'createdRow': function (row, data, index) {
+        var name = data.name
+        //if (data.detail.initialCallTime !== null) {
+        //    $('td', row).eq(1).html(convertDateTimeString(data.detail.initialCallTime));
+        //    /*to display the color yellow-start*/
+        //    if (data.detail.entryTime == null && data.detail.sentInTime == null && data.detail.exitTime == null) {
+        //        $('td', row).eq(1).addClass('initial-call-colour');
+        //        $('td', row).eq(2).addClass('initial-call-colour');
+        //        $('td', row).eq(3).addClass('initial-call-colour');
+        //        $('td', row).eq(4).addClass('initial-call-colour');
+        //        $('td', row).eq(5).addClass('initial-call-colour');
+        //        $('td', row).eq(6).addClass('initial-call-colour');
+        //        $('td', row).eq(7).addClass('initial-call-colour');
+        //        $('td', row).eq(8).addClass('initial-call-colour');
+        //        $('td', row).eq(9).addClass('initial-call-colour');
+        //        $('td', row).eq(10).addClass('initial-call-colour');
+        //        $('td', row).eq(11).addClass('initial-call-colour');
+        //    }
+        //    /*to display the color yellow-end*/
+        //}
+        //if (data.detail.entryTime !== null) {
+        //    $('td', row).eq(2).html(convertDateTimeString(data.detail.entryTime));
+        //    /*to display the color green for entry time-start*/
+        //    if (data.detail.sentInTime == null && data.detail.exitTime == null) {
+        //        $('td', row).eq(1).addClass('entry-time-colour');
+        //        $('td', row).eq(2).addClass('entry-time-colour');
+        //        $('td', row).eq(3).addClass('entry-time-colour');
+        //        $('td', row).eq(4).addClass('entry-time-colour');
+        //        $('td', row).eq(5).addClass('entry-time-colour');
+        //        $('td', row).eq(6).addClass('entry-time-colour');
+        //        $('td', row).eq(7).addClass('entry-time-colour');
+        //        $('td', row).eq(8).addClass('entry-time-colour');
+        //        $('td', row).eq(9).addClass('entry-time-colour');
+        //        $('td', row).eq(10).addClass('entry-time-colour');
+        //        $('td', row).eq(11).addClass('entry-time-colour');
+        //    }
+        //    /*to display the color green for entry time-end*/
+        //}
+        //if (data.detail.sentInTime !== null) {
+        //    $('td', row).eq(3).html(convertDateTimeString(data.detail.sentInTime));
+        //    /*to display the color green for sent in time-start*/
+        //    if (data.detail.exitTime == null) {
+        //        $('td', row).eq(1).addClass('entry-time-colour');
+        //        $('td', row).eq(2).addClass('entry-time-colour');
+        //        $('td', row).eq(3).addClass('entry-time-colour');
+        //        $('td', row).eq(4).addClass('entry-time-colour');
+        //        $('td', row).eq(5).addClass('entry-time-colour');
+        //        $('td', row).eq(6).addClass('entry-time-colour');
+        //        $('td', row).eq(7).addClass('entry-time-colour');
+        //        $('td', row).eq(8).addClass('entry-time-colour');
+        //        $('td', row).eq(9).addClass('entry-time-colour');
+        //        $('td', row).eq(10).addClass('entry-time-colour');
+        //        $('td', row).eq(11).addClass('entry-time-colour');
+        //    }
+        //    /*to display the color green for sent in time-end*/
+        //}
+        //if (data.detail.exitTime !== null) {
+        //    $('td', row).eq(4).html(convertDateTimeString(data.detail.exitTime));
+        //    /*to display the color green for exit  time-start*/
+
+        //    $('td', row).eq(1).addClass('exit-time-colour');
+        //    $('td', row).eq(2).addClass('exit-time-colour');
+        //    $('td', row).eq(3).addClass('exit-time-colour');
+        //    $('td', row).eq(4).addClass('exit-time-colour');
+        //    $('td', row).eq(5).addClass('exit-time-colour');
+        //    $('td', row).eq(6).addClass('exit-time-colour');
+        //    $('td', row).eq(7).addClass('exit-time-colour');
+        //    $('td', row).eq(8).addClass('exit-time-colour');
+        //    $('td', row).eq(9).addClass('exit-time-colour');
+        //    $('td', row).eq(10).addClass('exit-time-colour');
+        //    $('td', row).eq(11).addClass('exit-time-colour');
+
+        //    /*to display the color green for exit  time-end*/
+        //}
+        //if (data.detail.exitTime == null) {
+        //    $('td', row).eq(4).html('<button type="button" class="btn btn-success btn-exit-quick">E</button> ');
+        //}
+    },
+    drawCallback: function () {
+        var api = this.api();
+        var rows = api.rows({ page: 'current' }).nodes();
+        var last = null;
+
+        api.column(groupColumn, { page: 'current' })
+            .data()
+            .each(function (group, i) {
+                if (last !== group) {
+                    $(rows)
+                        .eq(i)
+                        .before('<tr class="group bg-light text-dark"><td colspan="25">' + group + '</td></tr>');
+
+                    last = group;
+                }
+            });
+    },
+});
+$('#specificGuardDetailsModal').on('shown.bs.modal', function (event) {
+    isPaused = true;
+
+
+
+    const button = $(event.relatedTarget);
+
+    $('#txt_SpecificGuardDetailsId').val(button.data('id'));
+
+
+    //guardDetailsSettings.ajax.reload();
+    $.ajax({
+        url: '/RadioCheckV2?handler=Guards&id='+ $('#txt_SpecificGuardDetailsId').val(),
+        type: 'GET',
+        dataType: 'json',
+        //data: function (d) { d.id = $('#txt_SpecificGuardDetailsId').val(); }
+    })
+        .done(function (response) {
+            $('#guardcontent').html(response.name);
+            guardDetailsSettings.clear().rows.add(response).draw();
+        });
+
+});
+/*P4 - 105 NEW BUTTON - END*/
 $('#search_client_siteSteps').on('keyup', function (e) {
 
     var inputValue = $(this).val();
@@ -4639,7 +5013,7 @@ $('#client_site_RadioSearch').on('click', '.del-schedule', function () {
         const typeId = fields[2];
 
         $('#dglClientTypeActionList option').each(function () {
-          
+
             if ($(this).val() === typeId) {
                 $(this).prop('selected', true);
                 return false;
@@ -4657,7 +5031,7 @@ $('#client_site_RadioSearch').on('click', '.del-schedule', function () {
             }
         });
 
-       
+
 
         $('#logbook-modalRadio').modal('hide');
         $('#search_client_siteSteps').val('');
@@ -4672,7 +5046,7 @@ $('#client_site_RadioSearch').on('click', '.del-schedule', function () {
         }).done(function (data) {
             if (data != null) {
 
-                $('#dglClientSiteIdActionList').val(clientsiteid);                
+                $('#dglClientSiteIdActionList').val(clientsiteid);
                 $('#Site_Alarm_Keypad_code').val(data.siteAlarmKeypadCode);
                 $('#Action1').val(data.action1);
                 $('#site_Physical_key').val(data.sitephysicalkey);
@@ -4691,7 +5065,7 @@ $('#client_site_RadioSearch').on('click', '.del-schedule', function () {
                     $('#download_imageRCList').removeAttr('href');
                     $('#download_imageRCList').removeAttr('download');
                 }
-               
+
 
 
             }
@@ -4741,7 +5115,7 @@ gridsitefusionLog = $('#fusion_site_log').grid({
 });
 
 
-$('#fusionClientSiteId').select2({
+$('#fusionClientSiteId').select({
     placeholder: 'Select',
     theme: 'bootstrap4'
 });
@@ -4756,7 +5130,7 @@ $('#fusionClientType').on('change', function () {
     const clientSiteControl = $('#fusionClientSiteId');
     clientSiteControl.html('');
     $.ajax({
-    
+
         url: '/Admin/Settings?handler=ClientSitesNew&typeId=' + clientTypeId,
         type: 'GET',
         dataType: 'json',
