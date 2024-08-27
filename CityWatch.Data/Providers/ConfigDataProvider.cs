@@ -87,6 +87,10 @@ namespace CityWatch.Data.Providers
         void DeleteCriticalDoc(int id);
         public HrSettings GetHrSettingById(int CriticalID);
         void RemoveCriticalDownSelect(CriticalDocuments CriticalDoc);
+
+        public void UpdateStaffDocumentModuleType(StaffDocument staffdocument);
+
+        public List<StaffDocument> GetStaffDocumentModuleDetails();
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -222,8 +226,25 @@ namespace CityWatch.Data.Providers
                 {
                     documentToUpdate.FileName = staffdocument.FileName;
                     documentToUpdate.LastUpdated = staffdocument.LastUpdated;
+                    
                 }
             }
+            _context.SaveChanges();
+        }
+
+        public void UpdateStaffDocumentModuleType(StaffDocument staffdocument)
+        {
+            if (staffdocument.Id != 0)
+            {
+                var documentToUpdate = _context.StaffDocuments.SingleOrDefault(x => x.Id == staffdocument.Id);
+                if (documentToUpdate != null)
+                {
+                    /*Only update module typle field*/
+                    documentToUpdate.LastUpdated = staffdocument.LastUpdated;
+                    documentToUpdate.DocumentModuleName = staffdocument.DocumentModuleName;
+                }
+            }
+           
             _context.SaveChanges();
         }
 
@@ -865,6 +886,16 @@ namespace CityWatch.Data.Providers
 
             _context.CriticalDocuments.Remove(recordToDelete);
             _context.SaveChanges();
+        }
+
+
+        public List<StaffDocument> GetStaffDocumentModuleDetails()
+        {
+
+           return _context.StaffDocuments.Where(x => x.DocumentModuleName.Trim() != string.Empty).ToList();
+              
+
+            
         }
         //p1-213 critical documents stop
     }

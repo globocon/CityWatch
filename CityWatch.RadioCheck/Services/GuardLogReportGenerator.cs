@@ -579,64 +579,98 @@ namespace CityWatch.RadioCheck.Services
 
         public string GeneratePdfReportForFusion(List<ClientSiteRadioChecksActivityStatus_History> funsionLog)
         {
-           
-            if (funsionLog.Count == 0 || funsionLog==null)
-                return string.Empty;
-
-            var version = "v" + Assembly.GetExecutingAssembly().GetName().Version.ToString();
-
-            var reportPdfPath = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{funsionLog.FirstOrDefault().EventDateTime:yyyyMMdd} - Fusion Guard Log - {FileNameHelper.GetSanitizedFileNamePart(funsionLog.FirstOrDefault().SiteName)} - {version}.pdf");
-
-            if (IO.File.Exists(reportPdfPath))
-                IO.File.Delete(reportPdfPath);
-
-            var reportPdf = reportPdfPath;
-            int? ClientSiteId = funsionLog.FirstOrDefault().ClientSiteId;
-            var clientSiteLogBooks = _clientDataProvider.GetClientSiteLogBooks(ClientSiteId.Value, LogBookType.DailyGuardLog, funsionLog.FirstOrDefault().EventDateTime.Date, funsionLog.FirstOrDefault().EventDateTime.Date);
-            //var _guardLogs = _guardLogDataProvider.GetGuardLogs(clientSiteLogBooks.FirstOrDefault().Id, funsionLog.FirstOrDefault().EventDateTime.Date);
-
-            var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
-            pdfDoc.SetDefaultPageSize(PageSize.A4);
-            var doc = new Document(pdfDoc);
-            doc.SetMargins(15f, 30f, 40f, 30f);
-
-            var headerTable = CreateReportHeader(clientSiteLogBooks.FirstOrDefault().ClientSite, version);
-            doc.Add(headerTable);
-
-            doc.Add(new Paragraph("On-Duty Guard Details")
-                .SetFontColor(WebColors.GetRGBColor(COLOR_NAVY_BLUE))
-                .SetFontSize(CELL_FONT_SIZE * 1.5f)
-                .SetMarginTop(5));
-
-            var guardDetails = CreateGuardDetails(clientSiteLogBooks.FirstOrDefault());
-            doc.Add(guardDetails);
-
-            doc.Add(new Paragraph("Log Book")
-                .SetFontColor(WebColors.GetRGBColor(COLOR_NAVY_BLUE))
-                .SetFontSize(CELL_FONT_SIZE * 1.5f)
-                .SetMarginTop(5));
-
-            var customFieldLogs = _guardLogDataProvider.GetCustomFieldLogs(clientSiteLogBooks.FirstOrDefault().Id).ToList();
-            var patrolCarLogs = _guardLogDataProvider.GetPatrolCarLogs(clientSiteLogBooks.FirstOrDefault().Id).ToList();
-            if (customFieldLogs.Any() || patrolCarLogs.Any())
+            if (funsionLog == null || funsionLog.Count == 0)
             {
-                var addlFieldLogs = CreateCustomFieldAndPatrolCarLogsTable(customFieldLogs, patrolCarLogs);
-                doc.Add(addlFieldLogs);
+                return string.Empty;
             }
 
-            var tableData = CreateReportDataForFusion(funsionLog);
-            doc.Add(tableData);
+            string reportPdfPath = string.Empty;
+            PdfDocument pdfDoc = null;
 
-            var logNotes = CreateNotes(clientSiteLogBooks.FirstOrDefault().ClientSite.Id);
-            doc.Add(logNotes);
+            try
+            {
+                var version = "v" + Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                var firstLog = funsionLog.FirstOrDefault();
 
-            var footer = CreateFooter();
-            pdfDoc.AddEventHandler(PdfDocumentEvent.END_PAGE, new TableFooterEventHandler(footer));
+                if (firstLog == null)
+                {
+                    return string.Empty;
+                }
 
-            doc.Close();
-            pdfDoc.Close();
+                reportPdfPath = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{firstLog.EventDateTime:yyyyMMdd} - Fusion Guard Log - {FileNameHelper.GetSanitizedFileNamePart(firstLog.SiteName)} - {version}.pdf");
 
-            return IO.Path.GetFileName(reportPdf);
+                if (IO.File.Exists(reportPdfPath))
+                {
+                    IO.File.Delete(reportPdfPath);
+                }
+
+                int? clientSiteId = firstLog.ClientSiteId;
+                var clientSiteLogBooks = _clientDataProvider.GetClientSiteLogBooks(clientSiteId.Value, LogBookType.DailyGuardLog, firstLog.EventDateTime.Date, firstLog.EventDateTime.Date);
+
+                if (clientSiteLogBooks == null || !clientSiteLogBooks.Any())
+                {
+                    return string.Empty;
+                }
+
+                pdfDoc = new PdfDocument(new PdfWriter(reportPdfPath));
+                pdfDoc.SetDefaultPageSize(PageSize.A4);
+                var doc = new Document(pdfDoc);
+                doc.SetMargins(15f, 30f, 40f, 30f);
+
+                var headerTable = CreateReportHeader(clientSiteLogBooks.FirstOrDefault().ClientSite, version);
+                doc.Add(headerTable);
+
+                doc.Add(new Paragraph("On-Duty Guard Details")
+                    .SetFontColor(WebColors.GetRGBColor(COLOR_NAVY_BLUE))
+                    .SetFontSize(CELL_FONT_SIZE * 1.5f)
+                    .SetMarginTop(5));
+
+                var guardDetails = CreateGuardDetails(clientSiteLogBooks.FirstOrDefault());
+                doc.Add(guardDetails);
+
+                doc.Add(new Paragraph("Log Book")
+                    .SetFontColor(WebColors.GetRGBColor(COLOR_NAVY_BLUE))
+                    .SetFontSize(CELL_FONT_SIZE * 1.5f)
+                    .SetMarginTop(5));
+
+                var customFieldLogs = _guardLogDataProvider.GetCustomFieldLogs(clientSiteLogBooks.FirstOrDefault().Id).ToList();
+                var patrolCarLogs = _guardLogDataProvider.GetPatrolCarLogs(clientSiteLogBooks.FirstOrDefault().Id).ToList();
+
+                if (customFieldLogs.Any() || patrolCarLogs.Any())
+                {
+                    var addlFieldLogs = CreateCustomFieldAndPatrolCarLogsTable(customFieldLogs, patrolCarLogs);
+                    doc.Add(addlFieldLogs);
+                }
+
+                var tableData = CreateReportDataForFusion(funsionLog);
+                if (tableData != null)
+                {
+                    doc.Add(tableData);
+                }
+
+                var logNotes = CreateNotes(clientSiteLogBooks.FirstOrDefault().ClientSite.Id);
+                if (logNotes != null)
+                {
+                    doc.Add(logNotes);
+                }
+
+                var footer = CreateFooter();
+                pdfDoc.AddEventHandler(PdfDocumentEvent.END_PAGE, new TableFooterEventHandler(footer));
+
+                doc.Close();
+                pdfDoc.Close();
+
+                return IO.Path.GetFileName(reportPdfPath);
+            }
+            catch (Exception ex)
+            {
+                // Log exception details (ex.Message) as needed
+                if (pdfDoc != null && !pdfDoc.IsClosed())
+                {
+                    pdfDoc.Close();
+                }
+                return string.Empty;
+            }
         }
 
 
@@ -645,6 +679,8 @@ namespace CityWatch.RadioCheck.Services
         {
             var reportDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 6,75,4, 15 })).UseAllAvailableWidth();
 
+          
+
             reportDataTable.AddHeaderCell(new Cell().SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_GREY_DARK)).Add(new Paragraph("Time").SetFontSize(CELL_FONT_SIZE)));
             reportDataTable.AddHeaderCell(new Cell().SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_GREY_DARK)).Add(new Paragraph("Event / Notes").SetFontSize(CELL_FONT_SIZE)));
             reportDataTable.AddHeaderCell(new Cell().SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_GREY_DARK)).Add(new Paragraph("Source").SetFontSize(CELL_FONT_SIZE)));
@@ -652,70 +688,80 @@ namespace CityWatch.RadioCheck.Services
 
             foreach (var entry in guardLog)
             {
-                //Commented the following line and for fixing the time issue 29/01/2024 dileep//
-                //reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).Add(new Paragraph($"{entry.EventDateTime:HH:mm} hrs").SetFontSize(CELL_FONT_SIZE)));
 
-
-                reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).Add(new Paragraph(getEventDateTimeUTCformat(entry)).SetFontSize(CELL_FONT_SIZE)));
-                //Commented the following line and for fixing the time issue 29/01/2024 dileep end//
-                //var notes = entry.IrEntryType.HasValue ?
-                //                    entry.Notes :
-                //                    (string.IsNullOrEmpty(entry.GuardLogin.Guard.Initial) ? $"{entry.Notes} ;" : $"{entry.Notes} ;{entry.GuardLogin.Guard.Initial}");
-                //var bgColor = entry.IrEntryType.HasValue ?
-                //                ((entry.IrEntryType == IrEntryType.Normal) || (entry.IrEntryType == IrEntryType.Notification) ? COLOR_PALE_YELLOW : COLOR_PALE_RED) :
-                //                COLOR_WHITE;
-                //Added To display GPS start
-                var notes = entry.Notes;
-                var bgColor = COLOR_WHITE;
-                //    var imagePath = "wwwroot/images/GPSImage.png";
-                //    var siteImage = new Image(ImageDataFactory.Create(imagePath))
-                //    .SetWidth(UnitValue.CreatePercentValue(27));
-                //    siteImage.SetTextAlignment(TextAlignment.RIGHT);
-
-                var paragraph = new Paragraph().SetFontSize(CELL_FONT_SIZE);
-                paragraph.Add(entry.ActivityType);
-
-                //if (entry.GpsCoordinates != null && entry.GpsCoordinates != "")
-                //{
-                //    paragraph.Add(siteImage);
-                //}
-
-                //var urlWithTargetBlank = $"https://www.google.com/maps?q={entry.GpsCoordinates}&target=_blank";
-                //var linkAction = PdfAction.CreateURI(urlWithTargetBlank);
-                //siteImage.SetAction(linkAction);
-
-                Paragraph notesParagraph = new Paragraph(notes).SetFontSize(CELL_FONT_SIZE);
-                if (entry.ActivityType == "IR")
+                try
                 {
-                    var IncidentReport = entry.Notes + ".pdf";
-                    string baseUrl = "https://c4istorage1.blob.core.windows.net/irfiles/";
-                    string url = $"{baseUrl}{IncidentReport.Substring(0, 8)}/{IncidentReport}";
-                    string linkText = "          click here";
+                    //Commented the following line and for fixing the time issue 29/01/2024 dileep//
+                    //reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).Add(new Paragraph($"{entry.EventDateTime:HH:mm} hrs").SetFontSize(CELL_FONT_SIZE)));
 
 
-                    var link = new Link(linkText, PdfAction.CreateURI(url))
-                        .SetFontColor(DeviceGray.BLACK)
-                        .SetFontColor(ColorConstants.BLUE);
-                    notesParagraph.Add(link);
+                    reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).Add(new Paragraph(getEventDateTimeUTCformat(entry)).SetFontSize(CELL_FONT_SIZE)));
+                    //Commented the following line and for fixing the time issue 29/01/2024 dileep end//
+                    //var notes = entry.IrEntryType.HasValue ?
+                    //                    entry.Notes :
+                    //                    (string.IsNullOrEmpty(entry.GuardLogin.Guard.Initial) ? $"{entry.Notes} ;" : $"{entry.Notes} ;{entry.GuardLogin.Guard.Initial}");
+                    //var bgColor = entry.IrEntryType.HasValue ?
+                    //                ((entry.IrEntryType == IrEntryType.Normal) || (entry.IrEntryType == IrEntryType.Notification) ? COLOR_PALE_YELLOW : COLOR_PALE_RED) :
+                    //                COLOR_WHITE;
+                    //Added To display GPS start
+                    var notes = string.IsNullOrEmpty(entry.Notes)?string.Empty: entry.Notes;
+                    var bgColor = COLOR_WHITE;
+                    //    var imagePath = "wwwroot/images/GPSImage.png";
+                    //    var siteImage = new Image(ImageDataFactory.Create(imagePath))
+                    //    .SetWidth(UnitValue.CreatePercentValue(27));
+                    //    siteImage.SetTextAlignment(TextAlignment.RIGHT);
+
+                    var paragraph = new Paragraph().SetFontSize(CELL_FONT_SIZE);
+                    paragraph.Add(entry.ActivityType);
+
+                    //if (entry.GpsCoordinates != null && entry.GpsCoordinates != "")
+                    //{
+                    //    paragraph.Add(siteImage);
+                    //}
+
+                    //var urlWithTargetBlank = $"https://www.google.com/maps?q={entry.GpsCoordinates}&target=_blank";
+                    //var linkAction = PdfAction.CreateURI(urlWithTargetBlank);
+                    //siteImage.SetAction(linkAction);
+
+                    Paragraph notesParagraph = new Paragraph(notes).SetFontSize(CELL_FONT_SIZE);
+                    if (entry.ActivityType == "IR")
+                    {
+                        var IncidentReport = entry.Notes + ".pdf";
+                        string baseUrl = "https://c4istorage1.blob.core.windows.net/irfiles/";
+                        string url = $"{baseUrl}{IncidentReport.Substring(0, 8)}/{IncidentReport}";
+                        string linkText = "          click here";
+
+
+                        var link = new Link(linkText, PdfAction.CreateURI(url))
+                            .SetFontColor(DeviceGray.BLACK)
+                            .SetFontColor(ColorConstants.BLUE);
+                        notesParagraph.Add(link);
+                    }
+
+                    reportDataTable.AddCell(new Cell()
+                     .SetKeepTogether(true)
+                     .SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f))
+                     .SetBackgroundColor(WebColors.GetRGBColor(bgColor))
+                     .Add(notesParagraph));
+
+                    var cell = new Cell()
+                    .SetKeepTogether(true)
+                    .SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f))
+                    .SetBackgroundColor(WebColors.GetRGBColor(bgColor));
+
+                    cell.Add(paragraph);
+                    //Added To display GPS stop
+
+                    reportDataTable.AddCell(cell);
+                    //reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).Add(new Paragraph(entry.ActivityType).SetFontSize(CELL_FONT_SIZE)));
+                    reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).Add(new Paragraph(entry.GuardName).SetFontSize(CELL_FONT_SIZE)));
+
                 }
+                catch(Exception ex)
+                {
 
-                reportDataTable.AddCell(new Cell()
-                 .SetKeepTogether(true)
-                 .SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f))
-                 .SetBackgroundColor(WebColors.GetRGBColor(bgColor))
-                 .Add(notesParagraph));
 
-                var cell = new Cell()
-                .SetKeepTogether(true)
-                .SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f))
-                .SetBackgroundColor(WebColors.GetRGBColor(bgColor));
-
-                cell.Add(paragraph);
-                //Added To display GPS stop
-
-                reportDataTable.AddCell(cell);
-                //reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).Add(new Paragraph(entry.ActivityType).SetFontSize(CELL_FONT_SIZE)));
-                reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).Add(new Paragraph(entry.GuardName).SetFontSize(CELL_FONT_SIZE)));
+                }
             }
 
             return reportDataTable;

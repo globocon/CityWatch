@@ -75,7 +75,293 @@
         $('#ReportRequest_ClientSites option:first').prop('selected', true);
         $('#ReportRequest_Position option:first').prop('selected', true);
     });
+    /*p3-132 Contracted manning button-start*/
+    $('#ReportRequest_DataFilter').val(2);
+    $('#patrol_report_controls').show();
+    $('#btncontractedmanning').on('click', function (event) {
+        //var csnme = $('#ReportRequest_ClientTypes option:selected').text();
+        //var csid = $('#ReportRequest_ClientSites option:selected').val();
+        
+        //if (csnme == '' || csid == '') {
+        //    console.log('Nothing selected...')
+        //    alert('Please select a site to edit.');
+        //    return;
+        //}
+        var clienttype = $('#ReportRequest_ClientTypes').val();
+        var clientsite = $('#ReportRequest_ClientSites').val();
 
+        if (clienttype.length == 0 || clientsite.length == 0) {
+            console.log('Nothing selected...')
+            alert('Please select a site to edit.');
+            return;
+        }
+        if (clienttype.length > 1)
+        {
+            console.log('More than one client type selected...')
+            alert('More than one client type is selected. Please select only one client type');
+            return;
+        }
+        if (clientsite.length > 1) {
+            console.log('More than one client site selected...')
+            alert('More than one client site is selected. Please select only one client site');
+            return;
+        }
+        $('#modelchoice').val('CONTRACTEDMANNING');
+        $('#kpi-settings-modal').modal('show');
+
+    });
+    $('#kpi-settings-modal').on('shown.bs.modal', function (event) {
+        ShowKpiModelChoice();
+    });
+    function ShowKpiModelChoice() {
+        $('#div_site_settings').html('');
+        var csnme = $('#ReportRequest_ClientSites option:selected').text();
+        var csid = $('#ReportRequest_ClientSites option:selected').val();
+        $('#client_site_name').text(csnme)
+        var choice = $('#modelchoice').val();
+
+        $('#div_site_settings').load('/Reports/PatrolData?handler=ClientSiteKpiSettings&site=' + encodeURIComponent(csid), function () {
+            // This function will be executed after the content is loaded
+            // window.sharedVariable = button.data('cs-id');
+            // console.log('Load operation completed!');
+            // You can add your additional code or actions here
+            // console.log(csnme);    
+            //if (choice == 'RCACTIONLIST')
+            //    $('#div_kpi_rc_contractedmanning').html('');
+            //else if (choice == 'CONTRACTEDMANNING')
+            //    $('#div_kpi_rc_action_list').html('');
+        
+});
+    }
+    $('#div_site_settings').on('click', '#showDivButton', function () {
+
+        $('#divPatrolCar').show();
+        $('#divbtn').show();
+    });
+    $('#div_site_settings').on('change', '#positionfilterPatrolCar', function () {
+
+        const isChecked = $(this).is(':checked');
+        const filter = isChecked ? 1 : 2;
+
+        $("#ClientSiteManningPatrolCarKpiSettings_0__Type").val(filter);
+        $("#ClientSiteManningPatrolCarKpiSettings_1__Type").val(filter);
+        $("#ClientSiteManningPatrolCarKpiSettings_2__Type").val(filter);
+        $("#ClientSiteManningPatrolCarKpiSettings_3__Type").val(filter);
+        $("#ClientSiteManningPatrolCarKpiSettings_4__Type").val(filter);
+        $("#ClientSiteManningPatrolCarKpiSettings_5__Type").val(filter);
+        $("#ClientSiteManningPatrolCarKpiSettings_6__Type").val(filter);
+        $("#ClientSiteManningPatrolCarKpiSettings_7__Type").val(filter);
+
+
+        calculateSumOfTextBoxValues();
+
+        $.ajax({
+            url: '/Reports/PatrolData?handler=OfficerPositionsNew&filter=' + filter,
+            type: 'GET',
+            dataType: 'json'
+        }).done(function (data) {
+            $('#ClientSiteManningPatrolCarKpiSettings_1__PositionId').html('');
+            data.map(function (position) {
+                $('#ClientSiteManningPatrolCarKpiSettings_1__PositionId').append('<option value="' + position.value + '">' + position.text + '</option>');
+            });
+        });
+
+    });
+
+    $('#div_site_settings').on('input', '#ClientSiteManningPatrolCarKpiSettings_0__NoOfPatrols,#ClientSiteManningPatrolCarKpiSettings_1__NoOfPatrols, #ClientSiteManningPatrolCarKpiSettings_2__NoOfPatrols, #ClientSiteManningPatrolCarKpiSettings_3__NoOfPatrols, #ClientSiteManningPatrolCarKpiSettings_4__NoOfPatrols, #ClientSiteManningPatrolCarKpiSettings_5__NoOfPatrols,#ClientSiteManningPatrolCarKpiSettings_6__NoOfPatrols,#ClientSiteManningPatrolCarKpiSettings_7__NoOfPatrols', function () {
+
+        calculateSumOfTextBoxValues();
+
+    });
+
+    $('#div_site_settings').on('input', '#ClientSiteManningGuardKpiSettings_0__NoOfPatrols,#ClientSiteManningGuardKpiSettings_1__NoOfPatrols, #ClientSiteManningGuardKpiSettings_2__NoOfPatrols, #ClientSiteManningGuardKpiSettings_3__NoOfPatrols, #ClientSiteManningGuardKpiSettings_4__NoOfPatrols, #ClientSiteManningGuardKpiSettings_5__NoOfPatrols,#ClientSiteManningGuardKpiSettings_6__NoOfPatrols,#ClientSiteManningGuardKpiSettings_7__NoOfPatrols', function () {
+
+        calculateSumOfTextBoxValues2();
+
+    });
+
+    $('#div_site_settings').on('input', '#ClientSiteManningGuardKpiSettings_8__NoOfPatrols, #ClientSiteManningGuardKpiSettings_9__NoOfPatrols, #ClientSiteManningGuardKpiSettings_10__NoOfPatrols, #ClientSiteManningGuardKpiSettings_11__NoOfPatrols, #ClientSiteManningGuardKpiSettings_12__NoOfPatrols,#ClientSiteManningGuardKpiSettings_13__NoOfPatrols,#ClientSiteManningGuardKpiSettings_14__NoOfPatrols,#ClientSiteManningGuardKpiSettings_15__NoOfPatrols', function () {
+
+        calculateSumOfTextBoxValues3();
+
+    });
+
+    $('#div_site_settings').on('input', '#ClientSiteManningGuardKpiSettings_16__NoOfPatrols,#ClientSiteManningGuardKpiSettings_17__NoOfPatrols, #ClientSiteManningGuardKpiSettings_18__NoOfPatrols, #ClientSiteManningGuardKpiSettings_19__NoOfPatrols, #ClientSiteManningGuardKpiSettings_20__NoOfPatrols, #ClientSiteManningGuardKpiSettings_21__NoOfPatrols,#ClientSiteManningGuardKpiSettings_22__NoOfPatrols,#ClientSiteManningGuardKpiSettings_23__NoOfPatrols', function () {
+
+        calculateSumOfTextBoxValues4();
+
+    });
+    function calculateSumOfTextBoxValues() {
+
+        if ($("#positionfilterPatrolCar").prop('checked') == true) {
+
+
+            // Get the values from textbox1 and convert them to numbers
+            var value1 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_0__NoOfPatrols').val()) || 0;
+            var value2 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_1__NoOfPatrols').val()) || 0;
+            var value3 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_2__NoOfPatrols').val()) || 0;
+            var value4 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_3__NoOfPatrols').val()) || 0;
+            var value5 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_4__NoOfPatrols').val()) || 0;
+            var value6 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_5__NoOfPatrols').val()) || 0;
+            var value7 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_6__NoOfPatrols').val()) || 0;
+            var value8 = parseFloat($('#ClientSiteManningPatrolCarKpiSettings_7__NoOfPatrols').val()) || 0;
+            // Calculate the sum
+            var sum = value1 + value2 + value3 + value4 + value5 + value6 + value7 + value8;
+            // Update the value in textbox2
+            if (sum !== 0) { $('#monthlyHrsAddNew').val(sum); }
+            $('#monthlyHrsTxtAddNew').text('Total Patrols :');
+            $('#lbl_ManningPatrolCar_3').text('No of Patrols');
+        }
+        else {
+            $('#monthlyHrsTxtAddNew').text('Monthly Hrs :');
+            $('#lbl_ManningPatrolCar_3').text('Workers');
+            $('#monthlyHrsAddNew').val('');
+        }
+
+    }
+
+    function calculateSumOfTextBoxValues2() {
+
+        var check = $("#positionfilterGuard_0").prop('checked');
+        if ($("#positionfilterGuard_0").prop('checked') == true) {
+
+            // Get the values from textbox1 and convert them to numbers
+            var value1 = parseFloat($('#ClientSiteManningGuardKpiSettings_0__NoOfPatrols').val()) || 0;
+            var value2 = parseFloat($('#ClientSiteManningGuardKpiSettings_1__NoOfPatrols').val()) || 0;
+            var value3 = parseFloat($('#ClientSiteManningGuardKpiSettings_2__NoOfPatrols').val()) || 0;
+            var value4 = parseFloat($('#ClientSiteManningGuardKpiSettings_3__NoOfPatrols').val()) || 0;
+            var value5 = parseFloat($('#ClientSiteManningGuardKpiSettings_4__NoOfPatrols').val()) || 0;
+            var value6 = parseFloat($('#ClientSiteManningGuardKpiSettings_5__NoOfPatrols').val()) || 0;
+            var value7 = parseFloat($('#ClientSiteManningGuardKpiSettings_6__NoOfPatrols').val()) || 0;
+            var value8 = parseFloat($('#ClientSiteManningGuardKpiSettings_7__NoOfPatrols').val()) || 0;
+            // Calculate the sum
+            var sum = value1 + value2 + value3 + value4 + value5 + value6 + value7 + value8;
+            // Update the value in textbox2
+            $('#monthlyHrs_0').val(sum);
+
+
+        }
+
+    }
+
+    function calculateSumOfTextBoxValues3() {
+
+        var check = $("#positionfilterGuard_8").prop('checked');
+        if ($("#positionfilterGuard_8").prop('checked') == true) {
+
+            // Get the values from textbox1 and convert them to numbers
+            var value1 = parseFloat($('#ClientSiteManningGuardKpiSettings_8__NoOfPatrols').val()) || 0;
+            var value2 = parseFloat($('#ClientSiteManningGuardKpiSettings_9__NoOfPatrols').val()) || 0;
+            var value3 = parseFloat($('#ClientSiteManningGuardKpiSettings_10__NoOfPatrols').val()) || 0;
+            var value4 = parseFloat($('#ClientSiteManningGuardKpiSettings_11__NoOfPatrols').val()) || 0;
+            var value5 = parseFloat($('#ClientSiteManningGuardKpiSettings_12__NoOfPatrols').val()) || 0;
+            var value6 = parseFloat($('#ClientSiteManningGuardKpiSettings_13__NoOfPatrols').val()) || 0;
+            var value7 = parseFloat($('#ClientSiteManningGuardKpiSettings_14__NoOfPatrols').val()) || 0;
+            var value8 = parseFloat($('#ClientSiteManningGuardKpiSettings_15__NoOfPatrols').val()) || 0;
+            // Calculate the sum
+            var sum = value1 + value2 + value3 + value4 + value5 + value6 + value7 + value8;
+            // Update the value in textbox2
+            $('#monthlyHrs_8').val(sum);
+
+
+        }
+
+    }
+
+    function calculateSumOfTextBoxValues4() {
+
+        var check = $("#positionfilterGuard_16").prop('checked');
+        if ($("#positionfilterGuard_16").prop('checked') == true) {
+
+            // Get the values from textbox1 and convert them to numbers
+            var value1 = parseFloat($('#ClientSiteManningGuardKpiSettings_16__NoOfPatrols').val()) || 0;
+            var value2 = parseFloat($('#ClientSiteManningGuardKpiSettings_17__NoOfPatrols').val()) || 0;
+            var value3 = parseFloat($('#ClientSiteManningGuardKpiSettings_18__NoOfPatrols').val()) || 0;
+            var value4 = parseFloat($('#ClientSiteManningGuardKpiSettings_19__NoOfPatrols').val()) || 0;
+            var value5 = parseFloat($('#ClientSiteManningGuardKpiSettings_20__NoOfPatrols').val()) || 0;
+            var value6 = parseFloat($('#ClientSiteManningGuardKpiSettings_21__NoOfPatrols').val()) || 0;
+            var value7 = parseFloat($('#ClientSiteManningGuardKpiSettings_22__NoOfPatrols').val()) || 0;
+            var value8 = parseFloat($('#ClientSiteManningGuardKpiSettings_23__NoOfPatrols').val()) || 0;
+
+            // Calculate the sum
+            var sum = value1 + value2 + value3 + value4 + value5 + value6 + value7 + value8;
+            // Update the value in textbox2
+            $('#monthlyHrs_16').val(sum);
+
+
+        }
+
+    }
+    $('#div_site_settings').on('click', '#save_site_manning_settings', function () {
+
+
+        $.ajax({
+            url: '/Reports/PatrolData?handler=ClientSiteManningKpiSettings',
+            type: 'POST',
+            data: $('#frm_site_manning_settings').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data.success == 1) {
+                alert('Saved site manning details successfully');
+                $('#kpi-settings-modal').modal('hide');
+                $('#modelchoice').val('CONTRACTEDMANNING');
+                $('#kpi-settings-modal').modal('show');
+            }
+            else if (data.success == 2) {
+                $("input[name^='ClientSiteManningGuardKpiSettings']").val("");
+                $("input[name^='ClientSiteManningPatrolCarKpiSettings']").val("");
+                $('#ClientSiteManningGuardKpiSettings_1__PositionId').val($('#ClientSiteManningGuardKpiSettings_1__PositionId option:first').val());
+                $('#ClientSiteManningPatrolCarKpiSettings_1__PositionId').val($('#ClientSiteManningPatrolCarKpiSettings_1__PositionId option:first').val());
+                alert('Please add the site settings from site settings tab');
+            }
+            else if (data.success == 3) {
+                alert('Please select position');
+            }
+            else if (data.success == 4) {
+                alert('Error! Please try again');
+                $("input[name^='ClientSiteManningGuardKpiSettings']").val("");
+                $("input[name^='ClientSiteManningPatrolCarKpiSettings']").val("");
+            }
+            else if (data.success == 5) {
+                alert('Please enter a valid time for Start and End in the format of HH:mm and in the range of 00:01 - 23:59. These are invalid times ' + data.erorrMessage + ' .');
+
+            }
+
+            else if (data.success == 6) {
+                alert('The clocks must be in the range of 00:01-23:59, and ' + data.erorrMessage + ' is an invalid input.');
+
+            }
+            else if (data.success == 7) {
+                alert('Please make sure you fill out the three boxes (start, end, and workers) for a day or make them blank. Please ensure workers have a value and cannot be blank when a clock is set.');
+
+            }
+
+        }).fail(function () { });
+    });
+    $('#div_site_settings').on('click', '#delete_worker', function () {
+        if (confirm('Are you sure want to delete worker ?')) {
+            var buttonValue = $(this).val();
+            $.ajax({
+                url: '/Reports/PatrolData?handler=DeleteWorker',
+                type: 'POST',
+                data: { settingsId: buttonValue },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.status) {
+                    if (result.clientSiteId !== 0) {
+                        $('#kpi-settings-modal').modal('hide');
+                        $('#modelchoice').val('CONTRACTEDMANNING');
+                        $('#kpi-settings-modal').modal('show');
+                    }
+                }
+                else
+                    alert(result.message);
+            }).fail(function () { });
+        }
+    });
+
+    /*p3-132 Contracted manning button-end*/
+    $('#patrol_report_controls').show();
     $('#ReportRequest_ClientTypes').multiselect({
         maxHeight: 400,
         buttonWidth: '100%',
@@ -109,7 +395,6 @@
             }
         });
     });
-    window.myChart1;
     window.myChart2;
     window.myChart3;
     window.myChart4;

@@ -144,7 +144,7 @@ namespace CityWatch.Web.Services
 
         List<FileDownloadAuditLogs> GetFileDownloadAuditLogs(DateTime logFromDate, DateTime logToDate);
         IEnumerable<string> GetDailyGuardLogAttachments(string uploadsDir, string reportReference);
-
+        List<SelectListItem> GetOfficerPositionsNew(OfficerPositionFilter positionFilter);
     }
 
     public class ViewDataService : IViewDataService
@@ -1537,5 +1537,27 @@ namespace CityWatch.Web.Services
             }
             return Enumerable.Empty<string>();
         }
+        
+        public List<SelectListItem> GetOfficerPositionsNew(OfficerPositionFilter positionFilter = OfficerPositionFilter.All)
+        {
+            var items = new List<SelectListItem>()
+            {
+                new SelectListItem("Select", "", true),
+            };
+            var officerPositions = _configDataProvider.GetPositions();
+            foreach (var officerPosition in officerPositions.Where(z => positionFilter == OfficerPositionFilter.All ||
+                 positionFilter == OfficerPositionFilter.PatrolOnly && z.IsPatrolCar ||
+                 positionFilter == OfficerPositionFilter.NonPatrolOnly && !z.IsPatrolCar ||
+                 positionFilter == OfficerPositionFilter.SecurityOnly && z.Name.Contains("Security")))
+            {
+                items.Add(new SelectListItem(officerPosition.Name, officerPosition.Id.ToString()));
+
+
+
+            }
+
+            return items;
+        }
     }
+    
 }
