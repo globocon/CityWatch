@@ -3029,7 +3029,7 @@ $('#report_field_types').on('change', function () {
         $('#add_field_settings').hide();
         $('#add_dosanddonts_fields').hide();
         $('#add_kvl_fields').hide();
-
+        $('#irNotes').hide();
         gridReportFields.hide();
         gridKvlFields.hide();
         gridDosAndDontsFields.hide();
@@ -3048,6 +3048,7 @@ $('#report_module_types').on('change', function () {
         $('#add_field_settings').hide();
         $('#add_dosanddonts_fields').show();
         $('#add_kvl_fields').hide();
+        $('#irNotes').hide();
 
         gridReportFields.hide();
         gridKvlFields.hide();
@@ -3066,9 +3067,9 @@ $('#report_module_types').on('change', function () {
         $('#lblFieldType').show();
 
         $('#add_field_settings').hide();
-        $('#add_dosanddonts_fields').hide();
+        $('#add_dosanddonts_fields').hide();       
         $('#add_kvl_fields').show();
-
+        $('#irNotes').hide();
         $('#kvl_fields_types').val('');
         gridKvlFields.reload({ typeId: $('#kvl_fields_types').val() });
 
@@ -3087,7 +3088,7 @@ $('#report_module_types').on('change', function () {
         $('#add_field_settings').show();
         $('#add_dosanddonts_fields').hide();
         $('#add_kvl_fields').hide();
-
+        $('#irNotes').hide();
         gridReportFields.show();
         gridKvlFields.hide();
         gridDosAndDontsFields.hide();
@@ -3096,7 +3097,10 @@ $('#report_module_types').on('change', function () {
         $('#report_field_types').val('');
         gridReportFields.reload({ typeId: $('#report_field_types').val() });
     }
-    else {
+    else if ($('#report_module_types').val() == 4) {
+        
+        $('#irNotes').show(); 
+     
         $('#doanddontfields_types').hide();
         $('#report_field_types').hide();
         $('#kvl_fields_types').hide();
@@ -3106,7 +3110,30 @@ $('#report_module_types').on('change', function () {
         $('#add_field_settings').hide();
         $('#add_dosanddonts_fields').hide();
         $('#add_kvl_fields').hide();
+        $('#FinancialReimbursementSettings').hide();
+        
+        gridReportFields.hide();
+        gridKvlFields.hide();
+        gridDosAndDontsFields.hide();
+        gridAreaReportFields.hide();
 
+        $('#report_field_types').val('');
+        
+        refreshFeedbackTemplates();
+        selectNoneFeedbackTemplate();
+    }
+    else {
+
+        $('#doanddontfields_types').hide();
+        $('#report_field_types').hide();
+        $('#kvl_fields_types').hide();
+
+        $('#lblFieldType').hide();
+
+        $('#add_field_settings').hide();
+        $('#add_dosanddonts_fields').hide();
+        $('#add_kvl_fields').hide();
+        $('#irNotes').hide();
         gridAreaReportFields.hide();
         gridReportFields.hide();
         gridKvlFields.hide();
