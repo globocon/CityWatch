@@ -450,38 +450,46 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             data: 'hR1',
             width: '3%',
             className: "text-center",
-           
             render: function (value, type, data) {
-                if (value == 'Green') return '<i class="fa fa-circle text-success"></i>';
-                if (value == 'Red') return '<i class="fa fa-circle text-danger"></i>';
-                if (value == 'Yellow') return '<i class="fa fa-circle text-warning"></i>';
-                if (value == 'Grey') return '<i class="fa fa-circle text-muted"></i>';
+                
+
+                // Include the sort value as a hidden element and render the color circle
+                return '<span style="display:none;">' + value + '</span>'  +
+                    '<i class="fa fa-circle text-' +
+                    (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
+                        value == 'Yellow' ? 'warning' : 'muted') +
+                    '"></i>';
             }
         },
         {
             data: 'hR2',
             width: '3%',
             className: "text-center",
-            
             render: function (value, type, data) {
-                if (value =='Green') return '<i class="fa fa-circle text-success"></i>';
-                if (value == 'Red') return '<i class="fa fa-circle text-danger"></i>';
-                if (value == 'Yellow') return '<i class="fa fa-circle text-warning"></i>';
-                if (value == 'Grey') return '<i class="fa fa-circle text-muted"></i>';
+               
+
+                return '<span style="display:none;">' + value + '</span>' +
+                    '<i class="fa fa-circle text-' +
+                    (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
+                        value == 'Yellow' ? 'warning' : 'muted') +
+                    '"></i>';
             }
         },
         {
             data: 'hR3',
             width: '3%',
             className: "text-center",
-            
             render: function (value, type, data) {
-                if (value == 'Green') return '<i class="fa fa-circle text-success"></i>';
-                if (value == 'Red') return '<i class="fa fa-circle text-danger"></i>';
-                if (value == 'Yellow') return '<i class="fa fa-circle text-warning"></i>';
-                if (value == 'Grey') return '<i class="fa fa-circle text-muted"></i>';
+              
+
+                return '<span style="display:none;">' + value + '</span>' +
+                    '<i class="fa fa-circle text-' +
+                    (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
+                        value == 'Yellow' ? 'warning' : 'muted') +
+                    '"></i>';
             }
         },
+       
         // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- End - 31-01-2024
     ],
 
