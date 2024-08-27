@@ -2070,6 +2070,11 @@ namespace CityWatch.RadioCheck.Pages.Radio
 
         #endregion
 
+        public JsonResult OnGetGuards(int id)
+        {
+            var data = _guardLogDataProvider.GetGuardsWtihProviderNumber(id);
+            return new JsonResult(data);
+        }
 
     }
 }

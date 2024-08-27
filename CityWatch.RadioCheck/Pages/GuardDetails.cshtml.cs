@@ -41,6 +41,7 @@ namespace CityWatch.Web.Pages.Radio
         }
         public int UserId { get; set; }
         public int GuardId { get; set; }
+        public string SelectedGuardId { get; set; }
         public int InActiveGuardCount { get; set; }
 
         public int ActiveGuardCount { get; set; }
@@ -62,6 +63,17 @@ namespace CityWatch.Web.Pages.Radio
             /* For Guard Login using securityLicenseNo the office staff UserId*/
             string loginUserId = Request.Query["lud"];
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            SelectedGuardId = Request.Query["gId"];
+            if (!string.IsNullOrEmpty(SelectedGuardId))
+            {
+
+                HttpContext.Session.SetInt32("SelectedGuardId", Convert.ToInt32(SelectedGuardId));
+            }
+            else
+            {
+                SelectedGuardId = "0";
+                HttpContext.Session.SetInt32("SelectedGuardId", Convert.ToInt32(SelectedGuardId));
+            }
             string sidValue = "";
             var UserId1 = claimsIdentity.Claims;
             foreach (var item in UserId1)
@@ -116,11 +128,21 @@ namespace CityWatch.Web.Pages.Radio
   
         public JsonResult OnGetActiveGuards()
         {
+            var guardLoginId = HttpContext.Session.GetInt32("SelectedGuardId");
+            if (guardLoginId !=0)
+            {
+                return new JsonResult(new { data = _viewDataService.GetActiveGuards().Where(z=>z.Id==guardLoginId) });
+            }
             return new JsonResult(new { data = _viewDataService.GetActiveGuards() });
         }
         public JsonResult OnGetCrmSupplierData(string companyName)
         {
             return new JsonResult(_guardLogDataProvider.GetCompanyDetailsVehLog(companyName));
+        }
+        public IActionResult OnGetLastTimeLogin(int guardId)
+        {
+
+            return new JsonResult(_guardLogDataProvider.GetLastLoginNew(guardId));
         }
 
     }
