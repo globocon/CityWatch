@@ -16,26 +16,59 @@
     @model CityWatch.Web.Pages.LoginModel
 }*@
 @inject IUserDataProvider viewDataService
+@inject IConfigDataProvider dataProvider
 @*@inject LoginModel lgm*@
 @{
-    var companydetail = viewDataService.GetCompanyDetails().SingleOrDefault(x=>x.Id==1);
+    var companydetail = viewDataService.GetCompanyDetails().SingleOrDefault(x => x.Id == 1);
     var companydetailsprimarylogo = companydetail.PrimaryLogoPath;
+    var alldocWithModeleName = new List<StaffDocument>();
+    var pageName = ViewContext.RouteData.Values["page"]?.ToString();
+    if (!string.IsNullOrEmpty(pageName))
+    {
+        if (pageName.Contains("DailyLog"))
+        {
+            pageName = "LB";
+        }
+        else if (pageName.Contains("KeyVehicleLog"))
+        {
+            pageName = "KV";
+        }
+        else if (pageName.Contains("Register"))
+        {
+            pageName = "IR";
+        }
+        else
+        {
+            pageName = string.Empty;
 
+        }
+
+        if (pageName != string.Empty)
+        {
+            alldocWithModeleName = dataProvider.GetStaffDocumentModuleDetails() ;
+            alldocWithModeleName = alldocWithModeleName.Where(x => x.DocumentModuleName == pageName).ToList();
+        }
+        else
+        {
+            alldocWithModeleName = null;
+        }
+
+    }
 }
 <html>
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewBag.Title</title>
-    <link rel="icon" type="image/x-icon" href="~/favicon.ico">    
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />    
+    <link rel="icon" type="image/x-icon" href="~/favicon.ico">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/lib/jquery-editable-select/dist/jquery-editable-select.min.css" />
     <link rel="stylesheet" href="https://unpkg.com/gijgo@1.9.13/css/gijgo.min.css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.min.css" />
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/1.4.0/css/buttons.dataTables.min.css" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
-    <link rel="stylesheet" href="~/lib/bootstrap-multiselect/css/bootstrap-multiselect.min.css" /> 
+    <link rel="stylesheet" href="~/lib/bootstrap-multiselect/css/bootstrap-multiselect.min.css" />
     <link rel="stylesheet" href="~/lib/select2/css/select2.min.css" />
     <link rel="stylesheet" href="~/lib/ttskch/select2-bootstrap4-theme/dist/select2-bootstrap4.min.css" />
     <link rel="stylesheet" href="~/css/site.css" />
@@ -45,7 +78,7 @@
     <link rel="stylesheet" href="~/lib/custom-drag-drop-file-upload/fileupload.css" />
 
     <script type="text/javascript" src="https://unpkg.com/xlsx@0.15.1/dist/xlsx.full.min.js"></script>
-    
+
     <script>
         function getGpsAsHyperLink(value) {
             const gps = value.split(',');
@@ -70,15 +103,84 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom mb-3">
             <div class="container">
-                 @if (User.Identity.IsAuthenticated)
+                @if (User.Identity.IsAuthenticated)
                 {
-                    <a href="@Url.Page("/Index")" class="" nav-link py-0""><i class=" fa fa-home mr-2 mb-5"></i></a>
+                    <div style="width:12px">
+                        <a href="@Url.Page("/Index")" class="" nav-link py-0""><i class=" fa fa-home mb-4"></i></a><br>
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            if (alldocWithModeleName != null)
+                            {
+                                if (alldocWithModeleName.Count == 0)
+                                {
+                                    <a title="No documents found">
+                                        <span style="color:darkgray">
+                                            <i class="fa fa-question-circle" aria-hidden="true"></i>
+                                        </span>
+                                    </a>
+
+                                }
+                                else if (alldocWithModeleName.Count == 1)
+                                {
+                                    var singleDoc = alldocWithModeleName.FirstOrDefault();
+                                    <a href="/StaffDocs/@singleDoc.FileName" title="@singleDoc.FileName" target="_blank"><i class="fa fa-question-circle" aria-hidden="true"></i></a>
+                                }
+                                else if (alldocWithModeleName.Count > 1)
+                                {
+                                    <a href="#" data-toggle="modal" data-target=".bd-example-modal-lg"><i class="fa fa-question-circle" aria-hidden="true"></i></a>
+                                    <!-- Modal -->
+                                    <div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-lg">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="exampleModalLabel">Download Help Documents</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <table class="table table-hover">
+                                                        <thead>
+                                                            <tr>
+                                                                <th scope="col" style="width:80%">File Name</th>
+                                                                <th scope="col" style="align-content:center"><i class="fa fa-cogs ml-5" aria-hidden="true"></i></th>
+
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach (var file in alldocWithModeleName)
+                                                            {
+                                                                <tr>
+                                                                    <td><span style="color:red"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></span> @file.FileName</td>
+                                                                    <td>
+                                                                        <a href="/StaffDocs/@file.FileName" class="btn btn-outline-success ml-2" target="_blank"><i class="fa fa-download mr-3"></i>Download</a>
+                                                                    </td>
+                                                                </tr>
+
+                                                            }
+
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                }
+
+                            }
+                        }
+
+                    </div>
                 }
                 @*<a class="navbar-brand" href="https://www.citywatchsecurity.com.au" target="_blank">*@
                 <a class="navbar-brand" href="https://@companydetail.LogoHyperlink" target="_blank">
 
                     <img src="@companydetail.PrimaryLogoPath" alt="cws logo" height="60px" />
                 </a>
+
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse"
                         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -90,7 +192,8 @@
                 </div>
                 @if (IsSectionDefined("PageHeader"))
                 {
-                    @RenderSection("PageHeader");
+                    @RenderSection("PageHeader")
+                    ;
                 }
                 @if (User.Identity.IsAuthenticated)
                 {
@@ -125,7 +228,7 @@
         <img src="@companydetail.BannerLogoPath" alt="iso certification" height="80px" class="ml-md-auto" />
     </div>
 
-    <footer class="border-top footer text-muted">                   
+    <footer class="border-top footer text-muted">
         <div class="container">
             <div class="row">
                 <div class="col-md-12 d-flex flex-wrap justify-content-center">
@@ -133,18 +236,18 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-12 text-center" >
+                <div class="col-md-12 text-center">
 
-                  
-                    
-                    &copy; @DateTime.Today.Year - <a href="https://@companydetail.Hyperlink" target="_blank" class="cws-footer-link" style="color:@companydetail.HyperlinkColour;" >@companydetail.HyperlinkLabel</a> | Ver @System.Reflection.Assembly.GetExecutingAssembly().GetName().Version
+
+
+                    &copy; @DateTime.Today.Year - <a href="https://@companydetail.Hyperlink" target="_blank" class="cws-footer-link" style="color:@companydetail.HyperlinkColour;">@companydetail.HyperlinkLabel</a> | Ver @System.Reflection.Assembly.GetExecutingAssembly().GetName().Version
                     @*&copy; @DateTime.Today.Year - <a href="https://citywatchsecurity.com.au" target="_blank" class="cws-footer-link">@companydetail.HyperlinkLabel</a> | Ver @System.Reflection.Assembly.GetExecutingAssembly().GetName().Version*@
                     | <i class="fa fa-adjust" aria-hidden="true"></i>
                     <div class="custom-control custom-switch custom-control-inline ml-1" style="padding-top:0.4em" title="Toggle Dark Mode">
                         <input type="checkbox" class="custom-control-input" id="toggleDarkMode" name="toggleDarkMode">
                         <label class="custom-control-label" for="toggleDarkMode"></label>
                     </div>
-                   
+
                 </div>
             </div>
         </div>
@@ -169,7 +272,7 @@
     <script src="~/lib/bootstrap-multiselect/js/bootstrap-multiselect.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-3-typeahead/4.0.2/bootstrap3-typeahead.min.js"></script>
     <script src="~/lib/select2/js/select2.min.js"></script>
-    <script src="~/lib/d3/d3.min.js"></script> 
+    <script src="~/lib/d3/d3.min.js"></script>
     @*/* Chart js files for chart in petrol data start *@
     <script src="~/chartjs/chart.min.js"></script>
     <script src="~/chartjs/chartjs-plugin-labels.min.js"></script>
@@ -183,9 +286,9 @@
     <script src="~/lib/luxon/luxon.min.js" asp-append-version="true"></script>
     <script src="~/lib/timezone_abbreviation/timezone_abbreviation.js" asp-append-version="true"></script>
     <script src="~/lib/custom-drag-drop-file-upload/fileupload.js" asp-append-version="true"></script>
-    
 
-   
+
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
