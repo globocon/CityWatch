@@ -3064,24 +3064,24 @@ $(function () {
         table.column('isactive:name').search(filter, regex, smart).draw();
     }
 
-    $('#guard_settings tbody').on('click', 'td.dt-control', function () {
-        var tr = $(this).closest('tr');
-        var row = guardSettings.row(tr);
+    //$('#guard_settings tbody').on('click', 'td.dt-control', function () {
+    //    var tr = $(this).closest('tr');
+    //    var row = guardSettings.row(tr);
 
-        $.ajax({
-            type: 'GET',
-            url: '/Admin/Guardsettings?handler=GuardLicenseAndCompliance',
-            data: { guardId: row.data().id },
-        }).done(function (response) {
-            if (row.child.isShown()) {
-                row.child.hide();
-                tr.removeClass('shown');
-            } else {
-                row.child(format_guards_child_row(response), 'bg-light').show();
-                tr.addClass('shown');
-            }
-        });
-    });
+    //    $.ajax({
+    //        type: 'GET',
+    //        url: '/Admin/Guardsettings?handler=GuardLicenseAndCompliance',
+    //        data: { guardId: row.data().id },
+    //    }).done(function (response) {
+    //        if (row.child.isShown()) {
+    //            row.child.hide();
+    //            tr.removeClass('shown');
+    //        } else {
+    //            row.child(format_guards_child_row(response), 'bg-light').show();
+    //            tr.addClass('shown');
+    //        }
+    //    });
+    //});
 
     $('#guard_settings tbody').on('click', 'button[name=btn_edit_guard]', function () {
         resetGuardDetailsModal();
