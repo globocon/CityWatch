@@ -1,5 +1,14 @@
 ﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
+@media print {
+    .no-print {
+        display: none;
+    }
+}
+@media print {
+    .page-break {
+        page-break-before: always;
+    }
+}
 .form-control-new {
     height: 25px;
     width: 70px;

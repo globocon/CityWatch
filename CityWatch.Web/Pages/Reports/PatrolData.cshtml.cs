@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,16 +27,21 @@ namespace CityWatch.Web.Pages.Reports
         private readonly IPatrolDataReportService _irChartDataService;
         private readonly IIncidentReportGenerator _incidentReportGenerator;
         private readonly IConfigDataProvider _configDataProvider;
-
+        private readonly IClientDataProvider _clientDataProvider;
+        private readonly Settings _settings;
+        private readonly IGuardDataProvider _guardDataProvider;
         public PatrolDataModel(IViewDataService viewDataService, 
             IWebHostEnvironment webHostEnvironment,
-            IPatrolDataReportService irChartDataService, IIncidentReportGenerator incidentReportGenerator, IConfigDataProvider configurationProvider)
+            IPatrolDataReportService irChartDataService, IIncidentReportGenerator incidentReportGenerator, IConfigDataProvider configurationProvider,IClientDataProvider clientDataProvider, IOptions<Settings> settings, IGuardDataProvider guardDataProvider)
         {
             _viewDataService = viewDataService;
             _webHostEnvironment = webHostEnvironment;
             _irChartDataService = irChartDataService;
             _incidentReportGenerator = incidentReportGenerator;
             _configDataProvider = configurationProvider;
+            _clientDataProvider = clientDataProvider;
+            _settings = settings.Value;
+            _guardDataProvider = guardDataProvider;
         }
 
         [BindProperty]
@@ -126,8 +132,155 @@ namespace CityWatch.Web.Pages.Reports
 
         //public IActionResult OnGetFeedbackTemplateListByType()
         //{
-         
-        //}
 
+        //}
+        //p3-132 Contracted Manning Button-start
+        public PartialViewResult OnGetClientSiteKpiSettings(string site)
+        {
+            int siteId = _guardDataProvider.GetClientSiteID(site).Id;
+            var clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
+            clientSiteKpiSetting ??= new ClientSiteKpiSetting() { ClientSiteId = siteId };
+            if (clientSiteKpiSetting.rclistKP.ClientSiteID == 0)
+            {
+                clientSiteKpiSetting.rclistKP.ClientSiteID = siteId;
+
+            }
+            if (clientSiteKpiSetting.rclistKP.Imagepath != null)
+            {
+                if (clientSiteKpiSetting.rclistKP.Imagepath.Length > 0 && clientSiteKpiSetting.rclistKP.Imagepath.Trim() != "")
+                {
+                    clientSiteKpiSetting.rclistKP.Imagepath = clientSiteKpiSetting.rclistKP.Imagepath + ":-:" + ConvertFileToBase64(clientSiteKpiSetting.rclistKP.Imagepath);
+
+                }
+
+            }
+            return Partial("../admin/_ClientSiteKpiSetting", clientSiteKpiSetting);
+        }
+        public string ConvertFileToBase64(string imageName)
+        {
+            string rtnstring = "";
+
+            if (!string.IsNullOrEmpty(imageName))
+            {
+                var fileToConvert = Path.Combine(_settings.WebActionListKpiImageFolder, imageName);
+                if (System.IO.File.Exists(fileToConvert))
+                {
+                    byte[] AsBytes = System.IO.File.ReadAllBytes(fileToConvert);
+                    rtnstring = "data:application/octet-stream;base64," + Convert.ToBase64String(AsBytes);
+                }
+            }
+
+            return rtnstring;
+        }
+        public IActionResult OnGetOfficerPositions(OfficerPositionFilter filter)
+        {
+            return new JsonResult(_viewDataService.GetOfficerPositions((OfficerPositionFilter)filter));
+        }
+        public JsonResult OnPostClientSiteManningKpiSettings(ClientSiteKpiSetting clientSiteKpiSetting)
+        {
+            var success = 0;
+            var clientSiteId = 0;
+            var erorrMessage = string.Empty;
+            try
+            {
+                if (clientSiteKpiSetting != null)
+                {
+                    if (clientSiteKpiSetting.Id != 0)
+                    {
+                        clientSiteId = clientSiteKpiSetting.ClientSiteId;
+                        var positionIdGuard = clientSiteKpiSetting.ClientSiteManningGuardKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
+                        var positionIdPatrolCar = clientSiteKpiSetting.ClientSiteManningPatrolCarKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
+                        var InvalidTimes = _clientDataProvider.ValidDateTime(clientSiteKpiSetting);
+                        if (InvalidTimes.Trim() == string.Empty)
+                        {
+                            if (positionIdGuard != null || positionIdPatrolCar != null)
+                            {
+                                var rulenumberOne = _clientDataProvider.CheckRulesOneinKpiManningInput(clientSiteKpiSetting);
+
+                                if (rulenumberOne.Trim() == string.Empty)
+                                {
+                                    var rulenumberTwo = _clientDataProvider.CheckRulesTwoinKpiManningInput(clientSiteKpiSetting);
+                                    if (rulenumberTwo.Trim() == string.Empty)
+                                    {
+                                        success = _clientDataProvider.SaveClientSiteManningKpiSetting(clientSiteKpiSetting);
+                                    }
+                                    else
+                                    {
+                                        erorrMessage = rulenumberTwo;
+                                        success = 7;
+
+                                    }
+
+                                }
+                                else
+                                {
+                                    erorrMessage = rulenumberOne;
+                                    success = 6;
+
+                                }
+
+
+
+                            }
+                            else
+                            {
+                                success = 3;
+                            }
+                        }
+                        else
+                        {
+                            erorrMessage = InvalidTimes;
+                            success = 5;
+                        }
+                    }
+                    else
+                    {
+                        success = 2;
+                    }
+                }
+                else
+                {
+                    success = 4;
+                }
+            }
+            catch
+            {
+                success = 4;
+            }
+
+            return new JsonResult(new { success, clientSiteId, erorrMessage });
+        }
+
+        public JsonResult OnPostDeleteWorker(string settingsId)
+        {
+            var status = true;
+            var message = "Success";
+            var clientSiteId = 0;
+            try
+            {
+                if (settingsId != string.Empty)
+                {
+                    var split = settingsId.Split('_');
+                    if (split.Length > 0)
+                    {
+                        var settId = int.Parse(split[0]);
+                        var orderId = int.Parse(split[1]);
+                        clientSiteId = int.Parse(split[2]);
+                        _clientDataProvider.RemoveWorker(settId, orderId);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+            return new JsonResult(new { status, message, clientSiteId });
+        }
+        public IActionResult OnGetOfficerPositionsNew(OfficerPositionFilter filter)
+        {
+            return new JsonResult(_viewDataService.GetOfficerPositionsNew((OfficerPositionFilter)filter));
+        }
+        //p3-132 Contracted Manning Button-end
     }
 }

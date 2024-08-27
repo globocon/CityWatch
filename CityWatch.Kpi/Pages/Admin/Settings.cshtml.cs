@@ -150,7 +150,7 @@ namespace CityWatch.Kpi.Pages.Admin
             var jobId = _importJobDataProvider.SaveKpiDataImportJob(serviceLog);
             await _importDataService.Run(jobId);
         }
-
+       
         //code added to search client name start
 
         public JsonResult OnGetClientSiteWithSettings(string type, string searchTerm, int userId)
@@ -177,6 +177,7 @@ namespace CityWatch.Kpi.Pages.Admin
                         SiteUploadDailyLog = z.UploadGuardLog,
                         HasSettings = clientSiteWithSettings.Any(x => x == z.Id),
                         z.SiteEmail,
+                        z.Address,
                         z.LandLine,
                         z.GuardLogEmailTo,
                         z.DataCollectionEnabled

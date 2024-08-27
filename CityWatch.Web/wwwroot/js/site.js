@@ -2112,53 +2112,266 @@ $('#report_field_types').on('change', function () {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
-    /* Grid for CompanySop*/
+    /* Grid for CompanySop Start*/
+
+    var editManagerstaffDocsButtonRendererCompanySop;
+    editManagerstaffDocsButtonRendererCompanySop = function (value, record, $cell, $displayEl, id, $grid) {
+        var data = $grid.data(),
+            $replace = $('<label class="btn btn-success mb-0"><form id="form_file_downloads_company_sop" method="post"><i class="fa fa-upload mr-2"></i>Replace' +
+                '<input type="file" name="upload_staff_file_company_sop" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
+                '</form></label>').attr('data-key', id),
+            $downlaod = $('<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>').attr('data-key', id),
+            $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i> Edit</button>').attr('data-key', id),
+            $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_company_sop" data-doc-id="' + record.id + '"><i class="fa fa-trash mr-2"></i>Delete</button>').attr('data-key', id),
+            $update = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-check" aria-hidden="true"></i> Update</button>').attr('data-key', id).hide(),
+            $cancel = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-close" aria-hidden="true"></i> Cancel</button>').attr('data-key', id).hide();
+        $edit.on('click', function (e) {
+            $grid.edit($(this).data('key'));
+            $edit.hide();
+            $delete.hide();
+            $update.show();
+            $cancel.show();
+        });
+        $delete.on('click', function (e) {
+            $grid.removeRow($(this).data('key'));
+        });
+        $update.on('click', function (e) {
+            $grid.update($(this).data('key'));
+            $edit.show();
+            $delete.show();
+            $update.hide();
+            $cancel.hide();
+        });
+        $cancel.on('click', function (e) {
+            $grid.cancel($(this).data('key'));
+            $edit.show();
+            $delete.show();
+            $update.hide();
+            $cancel.hide();
+        });
+        $displayEl.empty().append($replace).append($downlaod).append($edit).append($delete).append($update).append($cancel);
+    }
     gridStaffDocsTypeCompanySop = $('#staff_document_files_type_CompanySop').grid({
         dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=1',
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
+        inlineEditing: { mode: 'command', managementColumn: false },
         columns: [
-            { field: 'fileName', title: 'File Name', width: 200 },
-            { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 200 },
-            { width: 200, renderer: staffDocsButtonRendererCompanySop },
+            { field: 'fileName', title: 'File Name', width: 300 },
+            { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 150 },
+            { width: 75, field: 'documentModuleName', title: '?',align: 'center', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=HelpDocValues', valueField: 'name', textField: 'name' } },
+           // { width: 200, renderer: staffDocsButtonRendererCompanySop },
+            { width: 350, renderer: editManagerstaffDocsButtonRendererCompanySop },
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
 
+    if (gridStaffDocsTypeCompanySop) {
+        gridStaffDocsTypeCompanySop.on('rowDataChanged', function (e, id, record) {
+            const data = $.extend(true, {}, record);
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '/Admin/Settings?handler=UpdateDocumentModuleType',
+                data: { record: data },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function (result) {
+
+                if (result.status) {
+                    showStatusNotification(true, 'Updated Successfully');
+                    gridStaffDocsTypeCompanySop.clear();
+                    gridStaffDocsTypeCompanySop.reload();
+                } else {
+
+                    showStatusNotification(false, 'Please try again');
+                    gridStaffDocsTypeCompanySop.edit(id);
+                }
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+
+            });
+        });
+
+    }
+    /* Grid for CompanySop end*/
+    /**************/
     /* Grid for Training*/
+    /*StaffDocs start */
+    var editManagerstaffDocsButtonRendererTraining;
+    editManagerstaffDocsButtonRendererTraining = function (value, record, $cell, $displayEl, id, $grid) {
+        var data = $grid.data(),
+            $replace = $('<label class="btn btn-success mb-0"><form id="form_file_downloads_training" method="post"><i class="fa fa-upload mr-2"></i>Replace' +
+                '<input type="file" name="upload_staff_file_training" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
+                '</form></label>').attr('data-key', id),
+            $downlaod = $('<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>').attr('data-key', id),
+            $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i> Edit</button>').attr('data-key', id),
+            $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_training" data-doc-id="' + record.id + '"><i class="fa fa-trash mr-2"></i>Delete</button>').attr('data-key', id),
+            $update = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-check" aria-hidden="true"></i> Update</button>').attr('data-key', id).hide(),
+            $cancel = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-close" aria-hidden="true"></i> Cancel</button>').attr('data-key', id).hide();
+        $edit.on('click', function (e) {
+            $grid.edit($(this).data('key'));
+            $edit.hide();
+            $delete.hide();
+            $update.show();
+            $cancel.show();
+        });
+        $delete.on('click', function (e) {
+            $grid.removeRow($(this).data('key'));
+        });
+        $update.on('click', function (e) {
+            $grid.update($(this).data('key'));
+            $edit.show();
+            $delete.show();
+            $update.hide();
+            $cancel.hide();
+        });
+        $cancel.on('click', function (e) {
+            $grid.cancel($(this).data('key'));
+            $edit.show();
+            $delete.show();
+            $update.hide();
+            $cancel.hide();
+        });
+        $displayEl.empty().append($replace).append($downlaod).append($edit).append($delete).append($update).append($cancel);
+    }
     gridStaffDocsTypeTraining = $('#staff_document_files_type_Training').grid({
         dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=2',
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
+        inlineEditing: { mode: 'command', managementColumn: false },
         primaryKey: 'id',
         columns: [
-            { field: 'fileName', title: 'File Name', width: 200 },
-            { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 200 },
-            { width: 200, renderer: staffDocsButtonRendererTraining },
+            { field: 'fileName', title: 'File Name', width: 300 },
+            { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 150 },
+            { width: 75, field: 'documentModuleName', title: '?', align: 'center', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=HelpDocValues', valueField: 'name', textField: 'name' } },
+            //{ width: 200, renderer: staffDocsButtonRendererTraining },
+            { width: 350, align: 'center', renderer: editManagerstaffDocsButtonRendererTraining }
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
 
+    /*update document module type*/
+    if (gridStaffDocsTypeTraining) {
+        gridStaffDocsTypeTraining.on('rowDataChanged', function (e, id, record) {
+            const data = $.extend(true, {}, record);
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '/Admin/Settings?handler=UpdateDocumentModuleType',
+                data: { record: data },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function (result) {
+              
+                if (result.status) {
+                    showStatusNotification(true, 'Updated Successfully');
+                    gridStaffDocsTypeTraining.clear();
+                    gridStaffDocsTypeTraining.reload();
+                } else {
+                  
+                    showStatusNotification(false, 'Please try again');
+                    gridStaffDocsTypeTraining.edit(id);
+                }
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+               
+            });
+        });
+        
+    }
+    /*StaffDocs start end */
 
+    //Staff forms start
+    var editManagerstaffDocsButtonRendererFroms;
+    editManagerstaffDocsButtonRendererFroms = function (value, record, $cell, $displayEl, id, $grid) {
+        var data = $grid.data(),
+            $replace = $('<label class="btn btn-success mb-0"><form id="form_file_downloads_templates_forms" method="post"><i class="fa fa-upload mr-2"></i>Replace' +
+                '<input type="file" name="upload_staff_file_templates_forms" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
+                '</form></label>').attr('data-key', id),
+            $downlaod = $('<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>').attr('data-key', id),
+            $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i> Edit</button>').attr('data-key', id),
+            $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_templates_forms" data-doc-id="' + record.id + '"><i class="fa fa-trash mr-2"></i>Delete</button>').attr('data-key', id),
+            $update = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-check" aria-hidden="true"></i> Update</button>').attr('data-key', id).hide(),
+            $cancel = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-close" aria-hidden="true"></i> Cancel</button>').attr('data-key', id).hide();
+        $edit.on('click', function (e) {
+            $grid.edit($(this).data('key'));
+            $edit.hide();
+            $delete.hide();
+            $update.show();
+            $cancel.show();
+        });
+        $delete.on('click', function (e) {
+            $grid.removeRow($(this).data('key'));
+        });
+        $update.on('click', function (e) {
+            $grid.update($(this).data('key'));
+            $edit.show();
+            $delete.show();
+            $update.hide();
+            $cancel.hide();
+        });
+        $cancel.on('click', function (e) {
+            $grid.cancel($(this).data('key'));
+            $edit.show();
+            $delete.show();
+            $update.hide();
+            $cancel.hide();
+        });
+        $displayEl.empty().append($replace).append($downlaod).append($edit).append($delete).append($update).append($cancel);
+    }
     gridStaffDocsTypeTemplatesAndForms = $('#staff_document_files_type_TemplatesAndForms').grid({
         dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=3',
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
+        inlineEditing: { mode: 'command', managementColumn: false },
         primaryKey: 'id',
         columns: [
-            { field: 'fileName', title: 'File Name', width: 200 },
-            { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 200 },
-            { width: 200, renderer: staffDocsButtonRendererTemplatesAndForms },
+            { field: 'fileName', title: 'File Name', width: 300 },
+            { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 150 },
+            { width: 75, field: 'documentModuleName', title: '?', align: 'center', type: 'dropdown', editField: 'documentModuleName', editor: { dataSource: '/Admin/Settings?handler=HelpDocValues', valueField: 'name', textField: 'name' } },
+            
+            { width: 350, align: 'center', renderer: editManagerstaffDocsButtonRendererFroms }
+            //{ width: 200, renderer: staffDocsButtonRendererTemplatesAndForms },
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
+
+    if (gridStaffDocsTypeTemplatesAndForms) {
+        gridStaffDocsTypeTemplatesAndForms.on('rowDataChanged', function (e, id, record) {
+            const data = $.extend(true, {}, record);
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            $.ajax({
+                url: '/Admin/Settings?handler=UpdateDocumentModuleType',
+                data: { record: data },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': token },
+            }).done(function (result) {
+
+                if (result.status) {
+                    showStatusNotification(true, 'Updated Successfully');
+                    gridStaffDocsTypeTemplatesAndForms.clear();
+                    gridStaffDocsTypeTemplatesAndForms.reload();
+                } else {
+
+                    showStatusNotification(false, 'Please try again');
+                    gridStaffDocsTypeTemplatesAndForms.edit(id);
+                }
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+
+            });
+        });
+
+    }
 
     function staffDocsButtonRenderer(value, record) {
         return '<label class="btn btn-success mb-0">' +
