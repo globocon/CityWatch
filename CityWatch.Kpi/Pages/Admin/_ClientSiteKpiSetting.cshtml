@@ -546,18 +546,27 @@
                 @*New Tab for contracted-manning start*@
                 <div class="tab-pane" id="contractedmanningSettings" role="tabpanel" aria-labelledby="contracted-manning-tab">
                     <div class="container pt-3">
-                        @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == false).Count() != 0 && (Model.ClientSiteManningPatrolCarKpiSettings.Where(x => x.DefaultValue == false).Count() != 0))
-                        {
-                            <div class="text-right"><button id="showDivButton" class="btn btn-success" disabled><i class="fa fa-plus" aria-hidden="true"></i> Add Worker</button></div>
-
-
-                        }
-                        else
-                        {
-                            <div class="text-right"><button id="showDivButton" class="btn btn-success"><i class="fa fa-plus" aria-hidden="true"></i> Add Worker</button></div>
-
-                        }
-
+                        <div class="d-flex justify-content-end align-items-center  mb-3">
+                            <button id="printDivButton" class="btn btn-primary no-print mr-2">
+                                 <i class="fa fa-print" aria-hidden="true"></i>
+                             </button>                            
+                            @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == false).Count() != 0 &&
+                            Model.ClientSiteManningPatrolCarKpiSettings.Where(x => x.DefaultValue == false).Count() != 0)
+                            {
+                                <!-- Disabled Add Worker Button -->
+                                <button id="showDivButton" class="btn btn-success no-print" disabled>
+                                    <i class="fa fa-plus" aria-hidden="true"></i> Add Worker
+                                </button>
+                            }
+                            else
+                            {
+                                <!-- Enabled Add Worker Button -->
+                                <button id="showDivButton" class="btn btn-success no-print">
+                                    <i class="fa fa-plus" aria-hidden="true"></i> Add Worker
+                                </button>
+                            }
+                        </div>                
+                        
 
 
 
@@ -571,7 +580,7 @@
                             <div class="form-row ml-2">
                                 <div class="col-md-3">
                                     <div class="d-flex flex-row">
-                                        <label class="form-label pr-2">Schedule is Active</label>
+                                        <label class="form-label pr-2" style="white-space: nowrap;" >Schedule is Active</label>
                                         <div class="custom-control custom-switch custom-control-inline" title="Switch between schedule is Active or not">
                                             <input type="checkbox" class="custom-control-input" asp-for="@Model.ScheduleisActive" id="scheduleisActive" name="scheduleisActive" >
                                             <label class="custom-control-label" for="scheduleisActive"></label>
@@ -600,7 +609,7 @@
                                         <div class="col-md-12">
 
 
-                                            <button type="button" class="btn btn-danger" value="@idForDelete" id="delete_worker"><i class="fa fa-trash" aria-hidden="true"></i>&nbsp;Delete Worker</button>
+                                            <button type="button" class="btn btn-danger no-print" value="@idForDelete" id="delete_worker"><i class="fa fa-trash" aria-hidden="true"></i>&nbsp;Delete Worker</button>
 
                                             <div class="form-group row pt-2">
                                                 <label class="col-form-label pl-3">CRM (Supplier)</label>
@@ -904,13 +913,13 @@
 
                             @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == true).Count() == 0)
                             {
-                                <button type="button" class="btn btn-success" id="save_site_manning_settings"><i class="fa fa-save mr-2"></i>Save Settings</button>
+                                <button type="button" class="btn btn-success no-print" id="save_site_manning_settings"><i class="fa fa-save mr-2 no-print"></i>Save Settings</button>
 
                             }
                             else
                             {
                                 <div id="divbtn" style="display: none;">
-                                    <button type="button" class="btn btn-success" id="save_site_manning_settings"><i class="fa fa-save mr-2"></i>Save Settings</button>
+                                    <button type="button" class="btn btn-success no-print" id="save_site_manning_settings"><i class="fa fa-save mr-2 no-print"></i>Save Settings</button>
                                 </div>
                             }
 
