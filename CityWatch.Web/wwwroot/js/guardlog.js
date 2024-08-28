@@ -3137,8 +3137,7 @@ $(function () {
 
             $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
         });
-        gridGuardLicenses.ajax.reload();
-        gridGuardCompliances.ajax.reload();
+        gridGuardLicensesAndLicence.clear().draw();
         gridGuardLicensesAndLicence.ajax.reload();
         $("#Guard_Access").multiselect();
         $("#Guard_Access").val(selectedValues);
@@ -3535,7 +3534,8 @@ $(function () {
                 }
                 $('#guard_saved_status').show().delay(2000).hide(0);
                 $('.btn-add-guard-addl-details').show();
-                gridGuardLicenses.ajax.reload();
+                /*   gridGuardLicenses.ajax.reload();*/
+                gridGuardLicensesAndLicence.clear().draw();
                 gridGuardLicensesAndLicence.ajax.reload();
                 guardSettings.ajax.reload(null, false);
             } else {
