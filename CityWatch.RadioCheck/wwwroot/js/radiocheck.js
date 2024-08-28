@@ -209,6 +209,8 @@ $(window).resize(function () {
 });
 
 
+
+
 const groupColumn = 1;
 const groupColumn2 = 2;
 const groupColumnSortAlias = 11; // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024
@@ -220,6 +222,62 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
     dom: 'Bfrtip',
     buttons: [
+
+
+        
+        {
+            text: '<i class="fa fa-microphone" aria-hidden="true"></i>',
+            titleAttr: 'Start Recoding',
+            className: 'btn btn-md mr-2 btn-custom',
+            name: 'audioStart',
+            action: function (e, dt, node, config) {
+                clickstarAudio();
+                clientSiteActiveGuards.buttons('audioStart:name').disable();
+                clientSiteActiveGuards.buttons('audioStop:name').enable();
+
+
+            }
+        },
+        {
+            text: '<i class="fa fa-microphone-slash" aria-hidden="true"></i>',
+            titleAttr: 'Stop Recoding',
+            className: 'btn btn-md mr-2 btn-custom',
+            enable: false,
+            name: 'audioStop',
+            action: function () {
+                clickStopAudio();
+                clientSiteActiveGuards.buttons('audioStop:name').disable();
+                clientSiteActiveGuards.buttons('audioStart:name').enable();
+            }
+        },
+
+        {
+            text: '<i class="fa fa-play" aria-hidden="true"></i>',
+            className: 'btn btn-md mr-2 btn-custom',
+            titleAttr: 'play Audio',
+            name: 'playaudio',
+            action: function (e, dt, node, config) {
+                // Get the audio element
+                var audioElement = document.getElementById('audioPlayback');
+                if (audioElement.getAttribute('src') === null || audioElement.getAttribute('src') === "") {
+                    alert('No recording found'); // Alert user if no source is found
+                } else {
+                    // Check if the audio is already playing
+                    if (audioElement.paused) {
+                        audioElement.play(); // Play the audio
+                        $(node).html('<i class="fa fa-pause" aria-hidden="true"></i>'); // Change button icon to 'Pause'
+                    } else {
+                        audioElement.pause(); // Pause the audio
+                        $(node).html('<i class="fa fa-play" aria-hidden="true"></i>'); // Change button icon to 'Play'
+                    }
+                }
+
+                // Add an event listener to handle when the audio ends
+                audioElement.onended = function () {
+                    $(node).html('<i class="fa fa-play" aria-hidden="true"></i>'); // Change button icon back to 'Play' when audio ends
+                };
+            }
+        },
 
         {
             extend: 'copy',
@@ -255,38 +313,11 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 $('#pushNoTificationsControlRoomModal').modal('show');
 
             }
-        },
-        {
-            text: '<i class="fa fa-microphone" aria-hidden="true"></i>',
-            titleAttr: 'Start Recoding',
-            className: 'btn btn-md mr-2 btn-custom',
-            name: 'audioStart',
-            action: function (e, dt, node, config) {
-                clickstarAudio();
-                clientSiteActiveGuards.buttons('audioStart:name').disable();
-                clientSiteActiveGuards.buttons('audioStop:name').enable();
-                
-
-            }
-        },
-        {
-            text: '<i class="fa fa-microphone-slash" aria-hidden="true"></i>',
-            titleAttr: 'Stop Recoding',
-            className: 'btn btn-md mr-2 btn-custom',
-            enable: false,
-            name: 'audioStop',
-            action: function () {
-                clickStopAudio();
-                clientSiteActiveGuards.buttons('audioStop:name').disable();
-                clientSiteActiveGuards.buttons('audioStart:name').enable();
-            }
         }
-
-
 
     ],
 
-
+   
 
 
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
@@ -573,6 +604,9 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
 });
 
+clientSiteActiveGuards.buttons('audioStop:name').disable();
+clientSiteActiveGuards.buttons('audioStart:name').enable();
+
 // Order by the grouping
 // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- Start - 31-01-2024
 $(clientSiteActiveGuards.table().header()).on('click', 'th', function () {
@@ -663,6 +697,61 @@ var rowIndex;
 let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
     dom: 'Bfrtip',
     buttons: [
+
+
+        {
+            text: '<i class="fa fa-microphone" aria-hidden="true"></i>',
+            titleAttr: 'Start Recoding',
+            className: 'btn btn-md mr-2 btn-custom',
+            name: 'audioStart',
+            action: function (e, dt, node, config) {
+                clickstarAudio();
+                clientSiteInActiveGuards.buttons('audioStart:name').disable();
+                clientSiteInActiveGuards.buttons('audioStop:name').enable();
+
+
+            }
+        },
+        {
+            text: '<i class="fa fa-microphone-slash" aria-hidden="true"></i>',
+            titleAttr: 'Stop Recoding',
+            className: 'btn btn-md mr-2 btn-custom',
+            enable: false,
+            name: 'audioStop',
+            action: function () {
+                clickStopAudio();
+                clientSiteInActiveGuards.buttons('audioStop:name').disable();
+                clientSiteInActiveGuards.buttons('audioStart:name').enable();
+            }
+        },
+
+        {
+            text: '<i class="fa fa-play" aria-hidden="true"></i>',
+            className: 'btn btn-md mr-2 btn-custom',
+            titleAttr: 'play Audio',
+            name: 'playaudio',
+            action: function (e, dt, node, config) {
+                // Get the audio element
+                var audioElement = document.getElementById('audioPlayback');
+                if (audioElement.getAttribute('src') === null || audioElement.getAttribute('src') === "") {
+                    alert('No recording found'); // Alert user if no source is found
+                } else {
+                    // Check if the audio is already playing
+                    if (audioElement.paused) {
+                        audioElement.play(); // Play the audio
+                        $(node).html('<i class="fa fa-pause" aria-hidden="true"></i>'); // Change button icon to 'Pause'
+                    } else {
+                        audioElement.pause(); // Pause the audio
+                        $(node).html('<i class="fa fa-play" aria-hidden="true"></i>'); // Change button icon to 'Play'
+                    }
+                }
+
+                // Add an event listener to handle when the audio ends
+                audioElement.onended = function () {
+                    $(node).html('<i class="fa fa-play" aria-hidden="true"></i>'); // Change button icon back to 'Play' when audio ends
+                };
+            }
+        },
 
         {
             extend: 'copy',
@@ -942,6 +1031,9 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
 });
 
+
+clientSiteInActiveGuards.buttons('audioStop:name').disable();
+clientSiteInActiveGuards.buttons('audioStart:name').enable();
 
 //p4#48 AudioNotification - Binoy - 12-01-2024 -- Start
 function PlayDuressAlarm() {
@@ -5336,15 +5428,15 @@ async function clickstarAudio() {
     };
 
     mediaRecorder.start();
-    $(this).prop('disabled', true);
-    $('#stopBtn').prop('disabled', false);
+    //$(this).prop('disabled', true);
+    //$('#stopBtn').prop('disabled', false);
 }
 
 function clickStopAudio() {
 
     mediaRecorder.stop();
-    $(this).prop('disabled', true);
-    $('#startBtn').prop('disabled', false);
+    //$(this).prop('disabled', true);
+    //$('#startBtn').prop('disabled', false);
 }
 
 $('#stopBtn').click(function () {
