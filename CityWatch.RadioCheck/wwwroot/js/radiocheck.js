@@ -255,7 +255,33 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 $('#pushNoTificationsControlRoomModal').modal('show');
 
             }
+        },
+        {
+            text: '<i class="fa fa-microphone" aria-hidden="true"></i>',
+            titleAttr: 'Start Recoding',
+            className: 'btn btn-md mr-2 btn-custom',
+            name: 'audioStart',
+            action: function (e, dt, node, config) {
+                clickstarAudio();
+                clientSiteActiveGuards.buttons('audioStart:name').disable();
+                clientSiteActiveGuards.buttons('audioStop:name').enable();
+                
+
+            }
+        },
+        {
+            text: '<i class="fa fa-microphone-slash" aria-hidden="true"></i>',
+            titleAttr: 'Stop Recoding',
+            className: 'btn btn-md mr-2 btn-custom',
+            enable: false,
+            name: 'audioStop',
+            action: function () {
+                clickStopAudio();
+                clientSiteActiveGuards.buttons('audioStop:name').disable();
+                clientSiteActiveGuards.buttons('audioStart:name').enable();
+            }
         }
+
 
 
     ],
@@ -5262,5 +5288,96 @@ function downloadDailyGuardfusionLogZipFile() {
 }
 
      //end fusion report in auditlog08072024
+
+
+//Audio file save 
+let mediaRecorder;
+let audioChunks = [];
+$('#startBtn').click(async function () {
+    // Clear previous recording data
+    audioChunks = [];
+    mediaRecorder = null;
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+
+    mediaRecorder.ondataavailable = function (event) {
+        audioChunks.push(event.data);
+    };
+
+    mediaRecorder.onstop = function () {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        $('#audioPlayback').attr('src', audioUrl);
+        uploadAudio(audioBlob);
+    };
+
+    mediaRecorder.start();
+    $(this).prop('disabled', true);
+    $('#stopBtn').prop('disabled', false);
+});
+
+async function clickstarAudio() {
+
+    // Clear previous recording data
+    audioChunks = [];
+    mediaRecorder = null;
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+
+    mediaRecorder.ondataavailable = function (event) {
+        audioChunks.push(event.data);
+    };
+
+    mediaRecorder.onstop = function () {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        $('#audioPlayback').attr('src', audioUrl);
+        uploadAudio(audioBlob);
+    };
+
+    mediaRecorder.start();
+    $(this).prop('disabled', true);
+    $('#stopBtn').prop('disabled', false);
+}
+
+function clickStopAudio() {
+
+    mediaRecorder.stop();
+    $(this).prop('disabled', true);
+    $('#startBtn').prop('disabled', false);
+}
+
+$('#stopBtn').click(function () {
+    mediaRecorder.stop();
+    $(this).prop('disabled', true);
+    $('#startBtn').prop('disabled', false);
+});
+
+function uploadAudio(blob) {
+
+
+
+
+
+    let formData = new FormData();
+    formData.append('audioFile', blob, 'recording.wav');
+
+    $.ajax({
+        url: '/Record?handler=SaveAudio',
+        type: 'POST',
+        dataType: 'json',
+        data: formData,
+        processData: false,
+        contentType: false, // Add this line
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        console.log('Upload success:', result);
+        formData.delete('audioFile'); // Removes the file from FormData
+        blob = null; // Clear the blob reference to allow garbage collection
+    });
+
+
+
+}
 
 

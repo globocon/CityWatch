@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.IO;
@@ -11,22 +12,22 @@ namespace CityWatch.Web.Pages
         {
         }
 
-        public IActionResult OnPostSaveAudioAsync()
+        public async Task<IActionResult> OnPostSaveAudioAsync(IFormFile audioFile)
         {
-            var file = Request.Form.Files["audioFile"];
-            if (file != null && file.Length > 0)
+            if (audioFile == null || audioFile.Length == 0)
             {
-                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", file.FileName);
-
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                     file.CopyToAsync(stream);
-                }
-
-                return new JsonResult("Audio uploaded successfully.");
+                return BadRequest("No file received or file is empty.");
             }
 
-            return new JsonResult("Audio upload failed.");
+            var filePath = Path.Combine("wwwroot/AudioRecordings", audioFile.FileName); // Adjust the path as needed
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await audioFile.CopyToAsync(stream);
+            }
+
+            // Optionally, return some result or status
+            return new JsonResult(new { success = true, fileName = audioFile.FileName });
         }
     }
 }
