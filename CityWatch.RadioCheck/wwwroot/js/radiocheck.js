@@ -242,8 +242,37 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
         {
             extend: 'print',
             text: '<i class="fa fa-print"></i>',
-            titleAttr: 'Print',
+            titleAttr: 'Print portrait',
             className: 'btn btn-md mr-2 btn-print'
+        },
+
+        {
+            extend: 'print',
+            text: '<i class="fa fa-file"></i>', // Custom button text
+            className: 'btn btn-md mr-2 btn-print',
+            titleAttr: 'Print landscape',
+            customize: function (win) {
+                // Customize the print window/document here
+                $(win.document.body).css('font-size', '10pt');
+                $(win.document.body).find('table')
+                    .addClass('display')
+                    .css('font-size', 'inherit');
+
+                // Add a landscape orientation
+                var css = '@page { size: landscape; }';
+                var head = win.document.head || win.document.getElementsByTagName('head')[0];
+                var style = win.document.createElement('style');
+
+                style.type = 'text/css';
+                style.media = 'print';
+                if (style.styleSheet) {
+                    style.styleSheet.cssText = css;
+                } else {
+                    style.appendChild(win.document.createTextNode(css));
+                }
+
+                head.appendChild(style);
+            }
         },
 
         {
@@ -659,9 +688,39 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         {
             extend: 'print',
             text: '<i class="fa fa-print"></i>',
-            titleAttr: 'Print',
+            titleAttr: 'Print portrait',
             className: 'btn btn-md mr-2 btn-print'
         },
+
+        {
+            extend: 'print',
+            text: '<i class="fa fa-file"></i>', // Custom button text
+            className: 'btn btn-md mr-2 btn-print',
+            titleAttr: 'Print landscape',
+            customize: function (win) {
+                // Customize the print window/document here
+                $(win.document.body).css('font-size', '10pt');
+                $(win.document.body).find('table')
+                    .addClass('display')
+                    .css('font-size', 'inherit');
+
+                // Add a landscape orientation
+                var css = '@page { size: landscape; }';
+                var head = win.document.head || win.document.getElementsByTagName('head')[0];
+                var style = win.document.createElement('style');
+
+                style.type = 'text/css';
+                style.media = 'print';
+                if (style.styleSheet) {
+                    style.styleSheet.cssText = css;
+                } else {
+                    style.appendChild(win.document.createTextNode(css));
+                }
+
+                head.appendChild(style);
+            }
+        },
+
 
         {
             text: '<img src="/images/man-climbing-stairs.png" alt="Image" height="16" width="16">',
@@ -2925,9 +2984,39 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
         {
             extend: 'print',
             text: '<i class="fa fa-print"></i>',
-            titleAttr: 'Print',
+            titleAttr: 'Print portrait',
             className: 'btn btn-md mr-2 btn-print'
         },
+
+        {
+            extend: 'print',
+            text: '<i class="fa fa-file"></i>', // Custom button text
+            className: 'btn btn-md mr-2 btn-print',
+            titleAttr: 'Print landscape',
+            customize: function (win) {
+                // Customize the print window/document here
+                $(win.document.body).css('font-size', '10pt');
+                $(win.document.body).find('table')
+                    .addClass('display')
+                    .css('font-size', 'inherit');
+
+                // Add a landscape orientation
+                var css = '@page { size: landscape; }';
+                var head = win.document.head || win.document.getElementsByTagName('head')[0];
+                var style = win.document.createElement('style');
+
+                style.type = 'text/css';
+                style.media = 'print';
+                if (style.styleSheet) {
+                    style.styleSheet.cssText = css;
+                } else {
+                    style.appendChild(win.document.createTextNode(css));
+                }
+
+                head.appendChild(style);
+            }
+        },
+
 
         {
             text: '<img src="/images/man-climbing-stairs.png" alt="Image" height="16" width="16">',
@@ -3229,9 +3318,39 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
         {
             extend: 'print',
             text: '<i class="fa fa-print"></i>',
-            titleAttr: 'Print',
+            titleAttr: 'Print portrait',
             className: 'btn btn-md mr-2 btn-print'
         },
+
+        {
+            extend: 'print',
+            text: '<i class="fa fa-file"></i>', // Custom button text
+            className: 'btn btn-md mr-2 btn-print',
+            titleAttr: 'Print landscape',
+            customize: function (win) {
+                // Customize the print window/document here
+                $(win.document.body).css('font-size', '10pt');
+                $(win.document.body).find('table')
+                    .addClass('display')
+                    .css('font-size', 'inherit');
+
+                // Add a landscape orientation
+                var css = '@page { size: landscape; }';
+                var head = win.document.head || win.document.getElementsByTagName('head')[0];
+                var style = win.document.createElement('style');
+
+                style.type = 'text/css';
+                style.media = 'print';
+                if (style.styleSheet) {
+                    style.styleSheet.cssText = css;
+                } else {
+                    style.appendChild(win.document.createTextNode(css));
+                }
+
+                head.appendChild(style);
+            }
+        },
+
 
         {
             text: '<img src="/images/man-climbing-stairs.png" alt="Image" height="16" width="16">',
@@ -4579,7 +4698,7 @@ var guardSettings = $('#guard_settings_for_control_room').DataTable({
         },
         //p4-105 new button-end
         { data: 'name', width: "22%" },
-        { data: 'securityNo', width: "10%" },
+        { data: 'securityNo', width: "12%" },
         { data: 'initial', orderable: false, width: "3%" },
         { data: 'mobile', width: "15%" },
         { data: 'email', width: "11%" },
