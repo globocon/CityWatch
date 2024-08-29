@@ -239,18 +239,12 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             titleAttr: 'PDF',
             className: 'btn btn-md mr-2 btn-pdf'
         },
+        
         {
             extend: 'print',
-            text: '<i class="fa fa-print"></i>',
-            titleAttr: 'Print portrait',
-            className: 'btn btn-md mr-2 btn-print'
-        },
-
-        {
-            extend: 'print',
-            text: '<i class="fa fa-file"></i>', // Custom button text
+            text: '<i class="fa fa-print"></i>', // Custom button text
             className: 'btn btn-md mr-2 btn-print',
-            titleAttr: 'Print landscape',
+            titleAttr: 'Print',
             customize: function (win) {
                 // Customize the print window/document here
                 $(win.document.body).css('font-size', '10pt');
@@ -684,19 +678,13 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             text: '<i class="fa fa-file-pdf-o"></i>',
             titleAttr: 'PDF',
             className: 'btn btn-md mr-2 btn-pdf'
-        },
-        {
-            extend: 'print',
-            text: '<i class="fa fa-print"></i>',
-            titleAttr: 'Print portrait',
-            className: 'btn btn-md mr-2 btn-print'
-        },
+        },       
 
         {
             extend: 'print',
-            text: '<i class="fa fa-file"></i>', // Custom button text
+            text: '<i class="fa fa-print"></i>', // Custom button text
             className: 'btn btn-md mr-2 btn-print',
-            titleAttr: 'Print landscape',
+            titleAttr: 'Print',
             customize: function (win) {
                 // Customize the print window/document here
                 $(win.document.body).css('font-size', '10pt');
@@ -2981,18 +2969,13 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
             titleAttr: 'PDF',
             className: 'btn btn-md mr-2 btn-pdf'
         },
-        {
-            extend: 'print',
-            text: '<i class="fa fa-print"></i>',
-            titleAttr: 'Print portrait',
-            className: 'btn btn-md mr-2 btn-print'
-        },
+        
 
         {
             extend: 'print',
-            text: '<i class="fa fa-file"></i>', // Custom button text
+            text: '<i class="fa fa-print"></i>', // Custom button text
             className: 'btn btn-md mr-2 btn-print',
-            titleAttr: 'Print landscape',
+            titleAttr: 'Print',
             customize: function (win) {
                 // Customize the print window/document here
                 $(win.document.body).css('font-size', '10pt');
@@ -3317,16 +3300,9 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
         },
         {
             extend: 'print',
-            text: '<i class="fa fa-print"></i>',
-            titleAttr: 'Print portrait',
-            className: 'btn btn-md mr-2 btn-print'
-        },
-
-        {
-            extend: 'print',
-            text: '<i class="fa fa-file"></i>', // Custom button text
+            text: '<i class="fa fa-print"></i>', // Custom button text
             className: 'btn btn-md mr-2 btn-print',
-            titleAttr: 'Print landscape',
+            titleAttr: 'Print',
             customize: function (win) {
                 // Customize the print window/document here
                 $(win.document.body).css('font-size', '10pt');

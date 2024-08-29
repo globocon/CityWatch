@@ -4,6 +4,7 @@
 		<AssemblyVersion>2.31.0.0</AssemblyVersion>
 	</PropertyGroup>
 	<ItemGroup>
+	  <Content Remove="wwwroot\js\radiocheck.js~RF45fa00.TMP" />
 	  <Content Remove="wwwroot\Pdf\Template\IR_Form_Template.pdf" />
 	</ItemGroup>
 	<ItemGroup>
