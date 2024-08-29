@@ -1493,7 +1493,7 @@ $(function () {
         element.style.backgroundColor = '#ffffff';
         element.style.width = '100%';
    
-        let heading = '<div style="text-align: center; color: red;">';
+        let heading = '<div style="text-align: center; color: black;">';
         heading += '<span style="font-size: 1em; display: block;font-weight: bold;">Contracted Manning Schedule</span>';
         heading += '<span style="font-size: 0.875em; display: block;">' + clientSiteName + '</span>';
         heading += '<span style="font-size: 0.875em; display: block;">' + clientSiteAddress + '</span>';
