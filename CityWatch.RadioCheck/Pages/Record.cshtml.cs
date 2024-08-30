@@ -1,5 +1,8 @@
+using CityWatch.Common.Helpers;
+using CityWatch.Common.Models;
 using CityWatch.Common.Services;
 using CityWatch.Data.Helpers;
+using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Pages.Guard;
 using CityWatch.Web.Services;
@@ -11,19 +14,37 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.IO;
+using CityWatch.Web.Helpers;
 using System.Threading.Tasks;
+using Azure.Storage.Blobs.Models;
+using Azure.Storage.Blobs;
+using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
+using System.Linq.Expressions;
+using static System.Net.WebRequestMethods;
 
 namespace CityWatch.Web.Pages
 {
     public class RecordModel : PageModel
     {
         private readonly IWebHostEnvironment _WebHostEnvironment;
-        public RecordModel(IWebHostEnvironment webHostEnvironment     
-            )
+        private readonly IGuardDataProvider _guardDataProvider;
+        private readonly IDropboxService _dropboxUploadService;
+        private readonly Settings _settings;
+        private readonly IConfiguration _configuration;
+        public RecordModel(
+            IWebHostEnvironment webHostEnvironment, 
+            IGuardDataProvider guardDataProvider,
+            IOptions<Settings> settings,
+            IDropboxService dropboxUploadService,
+            IConfiguration configuration)
         {
-          
+
             _WebHostEnvironment = webHostEnvironment;
-            
+            _guardDataProvider = guardDataProvider;
+            _settings = settings.Value;
+            _dropboxUploadService = dropboxUploadService;
+            _configuration = configuration;
         }
         public void OnGet()
         {
@@ -36,32 +57,128 @@ namespace CityWatch.Web.Pages
                 return BadRequest("No file received or file is empty.");
             }
 
-            // Get the current date and time ticks for unique file naming
-            var ticks = DateTime.UtcNow.Ticks;
+            // Generate a unique file name
+            var uniqueFileName = GenerateUniqueFileName(audioFile.FileName);
 
-            // Extract the file extension
-            var fileExtension = Path.GetExtension(audioFile.FileName);
-
-            // Generate a unique file name using ticks and current date
-            var formattedDate = DateTime.Today.ToString("dd_MM_yyyy");
-            var uniqueFileName = $"recording_{formattedDate}_{ticks}{fileExtension}";
-
-            // Define the folder name and path for audio recording
-            var folderNameForAudioRecording = formattedDate;
-            var folderPath = Path.Combine(_WebHostEnvironment.WebRootPath, "AudioRecordings", folderNameForAudioRecording);
+            // Define the folder path for audio recording
+            var folderPath = Path.Combine(_WebHostEnvironment.WebRootPath, "AudioRecordings", DateTime.Today.ToString("dd_MM_yyyy"));
 
             // Ensure the directory exists
-            Directory.CreateDirectory(folderPath);  // CreateDirectory checks for existence before creating, no need for if-check
+            Directory.CreateDirectory(folderPath);
 
             // Save the file to the server
             var filePath = Path.Combine(folderPath, uniqueFileName);
-            await using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await audioFile.CopyToAsync(stream);
-            }
+            await SaveFileAsync(audioFile, filePath);
+
+            
+            // Upload the file to Dropbox and Azure bob
+            var blobUrl= blobilpaod(filePath);
+            _guardDataProvider.SaveRecordingFileDetails(new AudioRecordingLog { BlobUrl = blobUrl, FileName = uniqueFileName });
+            var isUploaded = await UploadFileToDropboxAsync(filePath);
 
             // Return the result with the unique file name
-            return new JsonResult(new { success = true, fileName = uniqueFileName });
+            return new JsonResult(new { success = isUploaded, fileName = uniqueFileName });
+        }
+
+        private string GenerateUniqueFileName(string originalFileName)
+        {
+            var ticks = DateTime.UtcNow.Ticks;
+            var fileExtension = Path.GetExtension(originalFileName);
+            var formattedDate = DateTime.Today.ToString("dd_MM_yyyy");
+            return $"recording_{formattedDate}_{ticks}{fileExtension}";
+        }
+
+        private async Task SaveFileAsync(IFormFile audioFile, string filePath)
+        {
+            await using var stream = new FileStream(filePath, FileMode.Create);
+            await audioFile.CopyToAsync(stream);
+        }
+
+        private async Task<bool> UploadFileToDropboxAsync(string localFilePath)
+        {
+            try
+            {
+                var formattedDate = DateTime.Today.ToString("dd_MM_yyyy");
+                var fileName = Path.GetFileName(localFilePath);
+                var dropboxDir = _guardDataProvider.GetDrobox();
+                var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{dropboxDir.DropboxDir}/RCAudioRecordings/{formattedDate}/{fileName}");
+
+                return await UploadDocumentToDropboxAsync(localFilePath, dbxFilePath);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (consider using a logging framework)
+                Console.WriteLine($"Error uploading to Dropbox: {ex.Message}");
+                return false;
+            }
+        }
+
+        private async Task<bool> UploadDocumentToDropboxAsync(string fileToUpload, string dbxFilePath)
+        {
+            var dropboxSettings = new DropboxSettings(
+                _settings.DropboxAppKey,
+                _settings.DropboxAppSecret,
+                _settings.DropboxAccessToken,
+                _settings.DropboxRefreshToken,
+                _settings.DropboxUserEmail
+            );
+
+            try
+            {
+                return await _dropboxUploadService.Upload(dropboxSettings, fileToUpload, dbxFilePath);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (consider using a logging framework)
+                Console.WriteLine($"Error in Dropbox upload service: {ex.Message}");
+                return false;
+            }
+        }
+
+
+        public string blobilpaod(string localFilepath)
+        {
+
+            try
+            {
+                string blobUrl = string.Empty;
+                var formattedDate = DateTime.Today.ToString("dd_MM_yyyy");
+                var azureStorageConnectionString = _configuration.GetSection("AzureStorage").Get<List<string>>();
+                if (azureStorageConnectionString.Count > 0)
+                {
+                    if (azureStorageConnectionString[0] != null)
+                    {
+                        string connectionString = azureStorageConnectionString[0];
+                        string blobName = Path.GetFileName(localFilepath);
+                        string containerName = "audiorecordings";
+                        BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
+                        BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+                        containerClient.CreateIfNotExists();
+                        /* The container Structure like irfiles/20230925*/
+                        BlobClient blobClient = containerClient.GetBlobClient(new string(formattedDate) + "/" + blobName);
+                        blobUrl = blobClient.Uri.ToString();
+                        using FileStream fs = System.IO.File.OpenRead(localFilepath);
+                        var blobHttpHeader = new BlobHttpHeaders { ContentType = "audio/wav" };
+                        /*Commented for local testing ,uncomment when go on live*/
+                        blobClient.Upload(fs, new BlobUploadOptions
+                        {
+                            HttpHeaders = blobHttpHeader
+                        });
+                        fs.Close();
+
+                    }
+
+
+
+
+                }
+                return blobUrl;
+            }
+            catch(Exception ex)
+            {
+                return string.Empty;
+
+            }
         }
     }
 }

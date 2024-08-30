@@ -124,6 +124,8 @@ namespace CityWatch.Data
         public DbSet<ClientSiteRadioChecksActivityStatus_History> ClientSiteRadioChecksActivityStatus_History { get; set; }
         public DbSet<TimeSheet> TimeSheet { get; set; }
 
+        public DbSet<AudioRecordingLog> AudioRecordingLog { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<GuardLog>()
