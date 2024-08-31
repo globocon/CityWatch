@@ -1,0 +1,22 @@
+﻿@page
+@model CityWatch.RadioCheck.Pages.LprWebhookModel
+@{
+}
+
+<!-- Form to trigger HTTP POST (if needed for testing or other purposes) -->
+
+
+<!-- Display Webhook Data in Textboxes After POST -->
+@if (Model.WebhookDataTemp != null && Model.WebhookDataTemp.data != null)
+{
+    <div>
+        <label for="LicensePlateNumber">License Plate Number:</label>
+        <input type="text" id="LicensePlateNumber" value="@Model.WebhookDataTemp.data.license_plate_number"  />
+    </div>
+    <div>
+        <label for="CreatedTime">Created Time:</label>
+        <input type="text" id="CreatedTime" value="@Model.WebhookDataTemp.data.created"  />
+    </div>
+}
+@Html.AntiForgeryToken()
+

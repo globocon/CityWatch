@@ -302,6 +302,8 @@ namespace CityWatch.Data.Providers
 
         List<GuardLogsDocumentImages> GetGuardLogDocumentImaesById(int Id);
         void DeleteGuardLogDocumentImaes(int id);
+
+        public void SaveLprWebhookResponse(LprWebhookResponse lprWebhookResponse);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -5117,6 +5119,29 @@ namespace CityWatch.Data.Providers
                 _context.Remove(guardLogDocumentImaes);
                 _context.SaveChanges();
             }
+        }
+
+
+        public void SaveLprWebhookResponse(LprWebhookResponse lprWebhookResponse)
+        {
+            if (lprWebhookResponse.Id == 0)
+            {
+                //Only one Licence no curresponding to One carmeraId
+                var deletePreviousLprResponceForTheCameraId = _context.LprWebhookResponse.SingleOrDefault(x => x.camera_id == lprWebhookResponse.camera_id);
+
+
+                if(deletePreviousLprResponceForTheCameraId!=null)
+                {
+                    _context.LprWebhookResponse.Remove(deletePreviousLprResponceForTheCameraId);
+                    _context.SaveChanges();
+                }
+
+
+                _context.LprWebhookResponse.Add(lprWebhookResponse);
+                _context.SaveChanges();
+            }
+           
+           
         }
     }
 
