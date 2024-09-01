@@ -4,7 +4,7 @@
 @inject IViewDataService viewDataServiceNew
 
 <div class="modal fade" id="addGuardCompliancesLicenseModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="addComplianceModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header p-2">
                 <h5 class="modal-title">Add/Edit Compliance</h5>
@@ -25,10 +25,18 @@
                             are trying to upload is not listed in the dropdown description list, please contact admin
                         </p>
                         @* <p class="col-sm-6 mb-1" style="color:black"><u>LEGEND</u></p> *@
-                        <h8 class="col-sm-6" style="color:black"><u>LEGEND</u></h8>
+                        @* P2#248 *@
+                        <div class="col-sm-12">
+                            <h6 class="text-black mb-1"><u>LEGEND</u></h6>
+                            <p class="text-black mb-0" style="font-size:11px; margin-left: 20px;">HR 1 = C4i Onboarding (CV, LICENSES, C4i Training)</p>
+                            <p class="text-black mb-0" style="font-size:11px; margin-left: 20px;">HR 2 = Client inductions (client specific SOPs)</p>
+                            <p class="text-black mb-0" style="font-size:11px; margin-left: 20px;">HR 3 = Special skills (FLIR, WARDEN, COXSWAIN, etc.)</p>
+                        </div>
+
+                       @*  <h8 class="col-sm-6" style="color:black"><u>LEGEND</u></h8>
                         <h8 style="color:black;font-size:11px">HR 1=C4i Onboarding    (CV,LICENSES,C4i Training)</h8>
                         <h8 style="color:black;font-size:11px">HR 2=Client inductions    (client specific SOPs)</h8>
-                        <h8 style="color:black;font-size:11px">HR 3=Special skills    (FLIR,WARDEN,COXSWAIN,etc)</h8><br />
+                        <h8 style="color:black;font-size:11px">HR 3=Special skills    (FLIR,WARDEN,COXSWAIN,etc)</h8><br /> *@
                         <div class="row pt-3" id="ComplianceHiddenDiv">
                             <div class="form-group col-md-5 col-lg-5 col-12">
                                 <label class="form-label">HR Group</label>
@@ -38,7 +46,7 @@
                             </div>
                             <div class="form-group col-md-7 col-lg-7 col-12">
                                 <label class="form-label" id="DescLabel">Description</label>
-                                <select name="GuardComplianceAndLicense.Description" id="Description" class="form-control" style="width:287px"></select>
+                                <select name="GuardComplianceAndLicense.Description" id="Description" class="form-control" style="width:350px"></select>
                             </div>
                         </div>
                         <div class="row">
@@ -68,7 +76,7 @@
 
                     <hr class="mb-1 mt-1" />
                     <div class="form-row">
-                        <div class="form-group col-md-12 mt-1">
+                        <div class="form-group col-md-12 mt-1 mb-0">
                             <label class="form-label">Compliance Document: <span id="guardComplianceandlicense_fileName1">None</span></label>
                         </div>
                         <div class="form-group col-md-8">

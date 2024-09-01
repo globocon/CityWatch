@@ -222,8 +222,22 @@
             </div>
             <div class="tab-pane fade py-3" id="irdocs" role="tabpanel" aria-labelledby="irdocs-tab" @hideTabStyle>
                 <div class="row my-3">
+                    <label class="col-form-label col-md-3">C4i Module</label>
+                    <div class="col-md-4">
+
+                        <select class="form-control" id="report_module_types_irtemplate">
+                           @*  <option value="">None</option> *@
+                            <option value="1" selected>Details of Incident Report Pdf Template</option>
+                            <option value="2">Company SOP</option>
+                            <option value="3">Training</option>
+                            <option value="4">Templates & Forms</option>
+                        </select>
+                    </div>
+                </div>
+                 <div  id="incident_report_pdf_template">
+
                     <div class="col">
-                        <label class="fw-bold">Details of Incident Report Pdf Template</label>
+                        <label class="fw-bold" hidden >Details of Incident Report Pdf Template</label>
                         <table class="table table-bordered tbl-settings">
                             <thead>
                                 <tr>
@@ -258,26 +272,30 @@
                         </table>
                     </div>
                 </div>
-                <div class="row mb-2">
-                    <div class="col-md-6 position-relative">
-                        <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Company SOP</label> <label class="fw-bold mb-0" style="bottom:0">Documents available for staff to download in the field:</label>
-                    </div>
-                    <div class="col-md-6 text-right">
-                        <label class="btn btn-success mb-0">
-                            <form id="form_add_staff_document_file_company_sop" method="post">
-                                <i class="fa fa-upload mr-2"></i>Add File
-                                <input type="file" id="add_staff_document_file_company_sop" accept=".pdf, .docx, .xlsx" hidden>
-                            </form>
-                        </label>
-                    </div>
-                </div>
-                <div class="row mb-4">
-                    <div class="col-md-12">
-                        <table class="table" id="staff_document_files_type_CompanySop"></table>
+              
 
+            <div id="company_sop">
+                    <div class="row mb-2">
+                        <div class="col-md-6 position-relative">
+                            <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Company SOP</label> <label class="fw-bold mb-0" style="bottom:0">Documents available for staff to download in the field:</label>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <label class="btn btn-success mb-0">
+                                <form id="form_add_staff_document_file_company_sop" method="post">
+                                    <i class="fa fa-upload mr-2"></i>Add File
+                                    <input type="file" id="add_staff_document_file_company_sop" accept=".pdf, .docx, .xlsx" hidden>
+                                </form>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <table class="table" id="staff_document_files_type_CompanySop"></table>
+
+                        </div>
                     </div>
                 </div>
-                <div class="row mb-2">
+                <div class="row mb-2" id="training">
                     <div class="col-md-6 position-relative">
                         <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Training</label>  <label class="fw-bold mb-0" style="bottom:0">Documents available for staff to download in the field:</label>
                     </div>
@@ -289,14 +307,14 @@
                             </form>
                         </label>
                     </div>
-                </div>
-                <div class="row mb-4">
+              
+                <div class="row mb-4" id="staffdocumentfilesfortraining">
                     <div class="col-md-12">
                         <table class="table" id="staff_document_files_type_Training"></table>
                     </div>
                 </div>
-
-                <div class="row mb-2">
+                </div>
+                <div class="row mb-2" id="templatesandforms">
                     <div class="col-md-6 position-relative">
                         <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Templates & Forms</label><label class="fw-bold mb-0" style="bottom:0">Documents available for staff to download in the field:</label>
                     </div>
@@ -308,13 +326,13 @@
                             </form>
                         </label>
                     </div>
-                </div>
+               
                 <div class="row mb-4">
                     <div class="col-md-12">
                         <table class="table" id="staff_document_files_type_TemplatesAndForms"></table>
                     </div>
                 </div>
-
+                </div>
             </div>
             <div class="tab-pane fade py-3" id="fields" role="tabpanel" aria-labelledby="fields-tab" @hideTabStyle>
                 <div class="form-group row">
@@ -442,11 +460,25 @@
             @*Tools End*@
 
             <div class="tab-pane fade py-3" id="user" role="tabpanel" aria-labelledby="user-tab" @hideTabStyle>
-                <div class="row">
-                    <div class="col-md-12 text-right">
-                        <button class="btn btn-success mb-3" id="add_user"><i class="fa fa-plus mr-2"></i>Add User</button>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="input-group mb-2 ml-1">
+                            <input type="text" id="search_users" class="form-control" placeholder="Search">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-primary" id="btnSearchUsers">
+                                    <i class="fa fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-8 text-right">
+                        <button class="btn btn-success mb-2" id="add_user">
+                            <i class="fa fa-plus mr-2"></i>Add User
+                        </button>
                     </div>
                 </div>
+
                 <div class="row">
                     <div class="col-md-12">
                         <table class="table" id="user_settings"></table>
@@ -823,6 +855,19 @@
                 </div>
             </div>
             <div class="tab-pane fade py-3" id="uca" role="tabpanel" aria-labelledby="uca-tab" @hideTabStyle>
+                   <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="input-group mb-2 ml-1">
+                            <input type="text" id="search_site_access_control" class="form-control" placeholder="Search">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-primary" id="btnSearchClientSiteAccess">
+                                    <i class="fa fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>              
+                </div>
+
                 <div class="row">
                     <div class="col-md-12 justify-content-center">
                         <table class="table" id="user_client_access"></table>
@@ -1065,6 +1110,12 @@
 
 
             <div class="tab-pane fade py-3" id="uca" role="tabpanel" aria-labelledby="uca-tab" >
+                <div class="input-group col-md-3 mb-2 ml-1">
+                    <input type="text" id="search_site_access_control" class="form-control" placeholder="Search Client Site Access">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-primary" id="btnSearchClientSiteAccess"><i class="fa fa-search"></i></button>
+                    </div>
+                </div>
                 <div class="row">
                     <div class="col-md-12 justify-content-center">
                         <table class="table" id="user_client_access"></table>

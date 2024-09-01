@@ -67,7 +67,7 @@ namespace CityWatch.Web.Services
         List<SelectListItem> GetUserClientTypes(int? userId);
         List<SelectListItem> GetUserClientSites(int? userId, string type = "");
         List<SelectListItem> GetUserClientSites(string types = "");
-        List<object> GetAllUsersClientSiteAccess();
+        List<object> GetAllUsersClientSiteAccess(string searchTerm);
         List<object> GetUserClientSiteAccess(int userId);
         List<object> GetAllCoreSettings(int companyId);
 
@@ -491,7 +491,7 @@ namespace CityWatch.Web.Services
         }
 
 
-        public List<object> GetAllUsersClientSiteAccess()
+        public List<object> GetAllUsersClientSiteAccess(string searchterm)
         {
             var results = new List<object>();
             var users = _userDataProvider.GetUsers();
@@ -507,7 +507,19 @@ namespace CityWatch.Web.Services
                     ClientSiteCsv = GetFormattedClientSites(currUserAccess)
                 });
             }
-            return results;
+            var filteredResults = results;
+            
+            if (!string.IsNullOrEmpty(searchterm))
+            {
+                filteredResults = results
+                    .Where(x =>
+                        ((dynamic)x).UserName.Contains(searchterm, StringComparison.OrdinalIgnoreCase) ||
+                        ((dynamic)x).ClientTypeCsv.Contains(searchterm, StringComparison.OrdinalIgnoreCase) ||
+                        ((dynamic)x).ClientSiteCsv.Contains(searchterm, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+
+            return filteredResults;
         }
         public List<object> GetAllCoreSettings(int companyId)
         {
