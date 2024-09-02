@@ -74,9 +74,13 @@ namespace CityWatch.Web.Pages.Admin
 
         [BindProperty]
         public ReportTemplate ReportTemplate { get; set; }
-
+       
+        public string SecurityLicenseNo { get; set; }
         public IActionResult OnGet()
         {
+            string securityLicenseNonew = Request.Query["Sl"];
+           
+            
             if (!AuthUserHelper.IsAdminUserLoggedIn && !AuthUserHelper.IsAdminGlobal && !AuthUserHelper.IsAdminPowerUser)
             {
                 return Redirect(Url.Page("/Account/Unauthorized"));
@@ -85,6 +89,7 @@ namespace CityWatch.Web.Pages.Admin
             {
 
                 ReportTemplate = _configDataProvider.GetReportTemplate();
+                SecurityLicenseNo = securityLicenseNonew;
                 return Page();
 
             }

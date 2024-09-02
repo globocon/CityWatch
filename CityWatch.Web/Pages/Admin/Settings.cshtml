@@ -118,6 +118,7 @@
                         <div class="form-group row">
                             <label class="col-form-label ">Filter by Client Type</label>
                             <div class="col-md-3">
+                                <input type="hidden" id="siteGuardSecurityLicenseNo" asp-for="@Model.SecurityLicenseNo" />
                                 <select class="form-control" id="sel_client_type">
                                     <option value="">All</option>
                                     @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
