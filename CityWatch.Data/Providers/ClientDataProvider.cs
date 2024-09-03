@@ -396,7 +396,7 @@ namespace CityWatch.Data.Providers
             }
             _context.SaveChanges();
 
-            if (gpsHasChanged && !string.IsNullOrEmpty(clientSite.Gps))
+            if (gpsHasChanged || !string.IsNullOrEmpty(clientSite.Gps))
                 CreateGpsImage(clientSite);
         }
 
