@@ -31,9 +31,32 @@
                 </div>
             </div>
             <div id="divmarqueeLiveEvents" class="form-group col-md-9 p-0 container marquee-stylenew marquee marqueeurls"><pre>@LiveEventsNotExpired</pre></div>
-            <a href="https://@LiveEventsweblink" class="nav-link py-2" target="_blank">
-                <u>SEE LINK</u>
-            </a>
+
+            @{
+                    if (!string.IsNullOrEmpty(LiveEventsweblink))
+                    {
+                        if (LiveEventsweblink.Contains("https://"))
+                        {
+                            <a href="@LiveEventsweblink" class="nav-link py-2" target="_blank">
+                                <u>SEE LINK</u>
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="https://@LiveEventsweblink" class="nav-link py-2" target="_blank">
+                                <u>SEE LINK</u>
+                            </a>
+                        }
+                    }
+                    else
+                    {
+                        <a href="" class="nav-link py-2" target="_blank">
+                            <u>SEE LINK</u>
+                        </a>
+                    }
+                }
+
+
         </div>
        
         <input type="hidden" id="inp_marqueeurls" value="@LiveEventsNotExpiredUrls" />
