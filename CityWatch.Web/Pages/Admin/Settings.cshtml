@@ -63,7 +63,7 @@
             <li class="nav-item" @hideTabStyle>
                 <a class="nav-link p-2" id="fields-tab" data-toggle="tab" href="#fields" role="tab" aria-controls="fields" aria-selected="false">C4i Fields</a>
             </li>
-            <li class="nav-item" @hideTabStyle>
+            <li class="nav-item" style="display:none">
                 <a class="nav-link p-2" id="fbktpl-tab" data-toggle="tab" href="#fbktpl" role="tab" aria-controls="fbktpl" aria-selected="false">IR Notes</a>
             </li>
             <li class="nav-item" @hideTabStyle>
@@ -154,8 +154,8 @@
                     </div>
                 </div>
             </div>
-            <div class="tab-pane fade py-3" id="fbktpl" role="tabpanel" aria-labelledby="fbktpl-tab" @hideTabStyle>
-                <div class="row">
+            @* <div class="tab-pane fade py-3" id="fbktpl" role="tabpanel" aria-labelledby="fbktpl-tab" @hideTabStyle> *@
+               @*  <div class="row">
                     <div class="col">
                         <div class="form-group row">
                             <label class="col-form-label col-md-3">Selected feedback template</label>
@@ -202,14 +202,14 @@
                                     <button class="btn btn-success col-md-2 mr-2" id="add_feedbacktype_page"><i class="fa fa-plus mr-2"></i>New Category</button>
                                     @*<select class="form-control" asp-for="@Model.FeedbackTemplate.Type" asp-items="@Html.GetEnumSelectList<FeedbackType>()"></select>*@
                                     @*Template type is directly taken from database -jisha -start*@
-                                    <select class="form-control" id="FeedbackTemplate_Type" asp-for="@Model.FeedbackTemplate.Type">
+                                   @*<select class="form-control" id="FeedbackTemplate_Type" asp-for="@Model.FeedbackTemplate.Type">
                                         @foreach (var item in Model.ConfigDataProiver.GetFeedbackTypes())
                                         {
                                             <option value="@item.Id">@item.Name</option>
                                         }
                                     </select>
                                     @*Template type is directly taken from database -jisha -end*@
-                                </div>
+                               @*</div>
                                 <textarea class="form-control" asp-for="@Model.FeedbackTemplate.Text" rows="10"></textarea>
                                 <div class="mt-3">
                                     <button type="button" class="btn btn-outline-danger" id="delete_fbktpl" style="display:none"><i class="fa fa-trash mr-2"></i>Delete</button>
@@ -218,8 +218,8 @@
                             </div>
                         </form>
                     </div>
-                </div>
-            </div>
+                </div> *@
+           @*  </div> *@
             <div class="tab-pane fade py-3" id="irdocs" role="tabpanel" aria-labelledby="irdocs-tab" @hideTabStyle>
                 <div class="row my-3">
                     <div class="col">
@@ -326,6 +326,7 @@
                             <option value="1">LB</option>
                             <option value="2">KV</option>
                             <option value="3">IR</option>
+                            <option value="4">IR Notes</option>
                         </select>
                     </div>
                 </div>
@@ -407,6 +408,72 @@
 
                     </div>
                 </div>
+                @*div for ir notes start*@
+                <div class="row" id="irNotes">
+                    <div class="col">
+                        <div class="form-group row">
+                            <label class="col-form-label col-md-3">Selected feedback template</label>
+                            <div class="col-md-4">
+                                <select class="form-control" id="sel_fbktpl">
+                                    <option value="">None</option>
+                                    @foreach (var item in Model.ConfigDataProiver.GetFeedbackTemplates())
+                                    {
+                                        <option value="@item.Id">@item.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-5 text-right">
+                                <button class="btn btn-success mb-3" id="add_fbktpl"><i class="fa fa-plus mr-2"></i>New Template</button>
+                            </div>
+                        </div>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert" id="fbktpl_status" style="display:none">
+                            <span>Message</span>
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <form id="form_fbktpl" style="display:none" method="post">
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2 text-right">Background Colour</label>
+                                <div class="col-md-1">
+                                    <input type="color" asp-for="@Model.FeedbackTemplate.BackgroundColour" />
+                                </div>
+                                <label class="col-form-label col-md-1 pl-0 pr-0 text-right">Text Colour</label>
+                                <div class="col-md-1">
+                                    <input type="color" asp-for="@Model.FeedbackTemplate.TextColor" />
+                                </div>
+                            </div>
+                            <div class="form-group row" style="display:none" id="new_fbktpl_name">
+                                <label class="col-md-3 col-form-label">New template name:</label>
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control" asp-for="@Model.FeedbackTemplate.Name" />
+                                    <input type="hidden" asp-for="@Model.FeedbackTemplate.Id" value="" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="d-flex flex-row mb-2">
+                                    <label class="col-md-8 col-form-label pl-0">Pre-populated text for template &quot;<span id="sel_fbktpl_name"></span>&quot;:</label>
+                                    <button class="btn btn-success col-md-2 mr-2" id="add_feedbacktype_page"><i class="fa fa-plus mr-2"></i>New Category</button>
+                                    @*<select class="form-control" asp-for="@Model.FeedbackTemplate.Type" asp-items="@Html.GetEnumSelectList<FeedbackType>()"></select>*@
+                                    @*Template type is directly taken from database -jisha -start*@
+                                    <select class="form-control" id="FeedbackTemplate_Type" asp-for="@Model.FeedbackTemplate.Type">
+                                        @foreach (var item in Model.ConfigDataProiver.GetFeedbackTypes())
+                                        {
+                                            <option value="@item.Id">@item.Name</option>
+                                        }
+                                    </select>
+                                    @*Template type is directly taken from database -jisha -end*@
+                                </div>
+                                <textarea class="form-control" asp-for="@Model.FeedbackTemplate.Text" rows="10"></textarea>
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-outline-danger" id="delete_fbktpl" style="display:none"><i class="fa fa-trash mr-2"></i>Delete</button>
+                                    <button type="button" class="btn btn-primary mr-2" id="save_fbktpl"><i class="fa fa-save mr-2"></i>Save</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                 @*div for ir notes end*@
             </div>
             @*Tools start*@
             <div class="tab-pane fade py-3" id="tools" role="tabpanel" aria-labelledby="tools-tab" @hideTabStyle>
