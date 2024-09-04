@@ -193,6 +193,7 @@ gridBroadCastBannerLiveEvents = $('#BroadCastBannerLiveEvents').grid({
     columns: [
         { width: 130, field: 'id', title: 'Id', hidden: true },
         { width: 900, field: 'textMessage', title: 'Text Message', editor: true },
+        { width: 300, field: 'weblink', title: 'Weblink', editor: true },
         {
             width: 170, field: 'formattedExpiryDate', title: 'Expiry',
             type: 'date',
