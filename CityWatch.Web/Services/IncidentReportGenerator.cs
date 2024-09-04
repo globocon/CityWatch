@@ -230,8 +230,15 @@ namespace CityWatch.Web.Services
                 if (attachLiveGps)
                     imageFile = GetLiveGpsImageFilePath(_IncidentReport.DateLocation.ClientSiteLiveGps);
                 else if (attachGpsMap)
+                {
+                    //p1-274 gps stuck if gps image is not available then create  -start
+                    if (!IO.File.Exists(IO.Path.Combine(_GpsMapRootDir, $"Client_{_clientSite.Id}.jpg")))
+                    {
+                        CreateGpsImage(_clientSite);
+                    }
+                    //p1-274 gps stuck if gps image is not available then create  -end
                     imageFile = IO.Path.Combine(_GpsMapRootDir, $"Client_{_clientSite.Id}.jpg");
-
+                }
                 if (!string.IsNullOrEmpty(imageFile) && IO.File.Exists(imageFile))
                 {
                     var image = AttachImageToPdf(pdfDocument, ++index, imageFile);
@@ -398,7 +405,19 @@ namespace CityWatch.Web.Services
 
             return reportFileName;
         }
+        private void CreateGpsImage(ClientSite clientSite)
+        {
+            string gpsImageDir = System.IO.Path.Combine(_webHostEnvironment.WebRootPath, "GpsImage");
+            var mapSettings = _configuration.GetSection("GoogleMap").Get(typeof(GoogleMapSettings)) as GoogleMapSettings;
+            try
+            {
+                GoogleMapHelper.DownloadGpsImage(gpsImageDir, clientSite, mapSettings);
+            }
+            catch
+            {
 
+            }
+        }
         // p1#160_MultimediaAttachments03012024 done by Binoy - Start
         public static byte[] ConvertToByteArrayChunked(string filePath)
         {
