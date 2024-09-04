@@ -59,7 +59,7 @@ namespace CityWatch.Data.Providers
         List<BroadcastBannerCalendarEvents> GetBroadcastCalendarEventsByDate();
         string GetBroadcastLiveEventsNotExpired();
         string GetUrlsInsideBroadcastLiveEventsNotExpired();
-
+        string GetBroadcastLiveEventsWeblink();
 
         void SaveDefaultEmail(string DefaultEmail);
         //broadcast banner calendar events-end
@@ -565,6 +565,19 @@ namespace CityWatch.Data.Providers
                 foreach (var fileName in lv)
                 {
                     LiveEventstxtmsg = LiveEventstxtmsg + fileName.TextMessage.Replace("\n", "\t") + '\t' + '\t';
+                }
+            }
+            return LiveEventstxtmsg;
+        }
+        public string GetBroadcastLiveEventsWeblink()
+        {
+            var lv = _context.BroadcastBannerLiveEvents.Where(x => x.ExpiryDate >= DateTime.Now.Date).ToList();
+            var LiveEventstxtmsg = string.Empty;
+            if (lv != null)
+            {
+                foreach (var fileName in lv)
+                {
+                    LiveEventstxtmsg = fileName.Weblink;
                 }
             }
             return LiveEventstxtmsg;

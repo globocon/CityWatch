@@ -11,6 +11,7 @@ namespace CityWatch.Data.Models
         public string TextMessage { get; set; }
 
         public DateTime ExpiryDate { get; set; }
+        public string Weblink { get; set; }
 
         [NotMapped]
         public string FormattedExpiryDate { get { return ExpiryDate.ToString("dd-MMM-yyyy"); } }

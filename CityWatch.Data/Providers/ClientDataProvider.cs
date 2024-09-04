@@ -1693,6 +1693,7 @@ namespace CityWatch.Data.Providers
                 {
                     TextMessage = liveEvents.TextMessage,
                     ExpiryDate = liveEvents.ExpiryDate,
+                    Weblink=liveEvents.Weblink,
                 };
                 _context.BroadcastBannerLiveEvents.Add(calendarEventsnew);
             }
@@ -1704,6 +1705,7 @@ namespace CityWatch.Data.Providers
 
                 calendarEventsUpdate.TextMessage = liveEvents.TextMessage;
                 calendarEventsUpdate.ExpiryDate = liveEvents.ExpiryDate;
+                calendarEventsUpdate.Weblink = liveEvents.Weblink;
             }
             _context.SaveChanges();
         }
