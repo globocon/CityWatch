@@ -128,6 +128,10 @@ namespace CityWatch.Web.Pages.Admin
             var message = "Success";
             try
             {
+                if(string.IsNullOrEmpty(record.Address))
+                {
+                    record.Gps = string.Empty;
+                }
                 _clientDataProvider.SaveClientSite(record);
             }
             catch (Exception ex)
