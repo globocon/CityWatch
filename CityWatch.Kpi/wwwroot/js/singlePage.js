@@ -477,6 +477,173 @@ $(function () {
     });
     /* site poc and locations - end*/
     /*key settings-start*/
+    /*ANPR-start*/
+
+    if ($.fn.DataTable.isDataTable('#cs_client_anpr_sources')) {
+        $('#cs_client_anpr_sources').DataTable().destroy();
+    }
+    let gridAnprSources = $('#cs_client_anpr_source').DataTable({
+        lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+        paging: true,
+        ordering: true,
+        order: [[1, "asc"]],
+        info: false,
+        searching: true,
+        autoWidth: false,
+        "bDestroy": true,
+        ajax: {
+            url: '/Admin/Settings?handler=ClientSiteAnprSources',
+            data: function (d) {
+                d.clientSiteId = $('#gl_client_site_id').val();
+            },
+            dataSrc: ''
+        },
+        columns: [
+            { data: 'id', visible: false },
+            { data: 'profile', width: '4%' },
+            { data: 'apiCalls', width: '12%', orderable: false },
+            { data: 'laneLabel', width: '12%', orderable: false },
+            {
+                targets: -1,
+                orderable: false,
+                width: '4%',
+                data: null,
+                defaultContent: '<button  class="btn btn-outline-primary mr-1" id="btn_edit_anpr_source"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
+                    '<button id="btn_delete_anpr_source" class="btn btn-outline-danger mr-1 mt-1"><i class="fa fa-trash mr-2"></i>Delete</button>',
+                className: "text-center"
+            },
+        ],
+    });
+
+    $('#cs_client_anpr_sources tbody').on('click', '#btn_edit_cs_key', function () {
+        var data = gridAnprSources.row($(this).parents('tr')).data();
+        loadAnprSourceModal(data);
+    });
+
+    function loadAnprSourceModal(data) {
+        $('#ClientSiteAnprSource_Id').val(data.id);
+        $('#ClientSiteAnprSource_Profile').val(data.profile);
+        $('#ClientSiteAnprSource_ApiCalls').val(data.apiCalls);
+        $('#ClientSiteAnprSource_LaneLabel').val(data.laneLabel);
+        $('#csKeyValidationSummary').html('');
+        $('#anpr-source-modal-new').modal('show');
+    }
+
+    function resetAnprSourceModal() {
+        $('#ClientSiteAnprSourcevvvvvv_Id').val('');
+        $('#ClientSiteAnprSource_Profile').val('');
+        $('#ClientSiteAnprSource_ApiCalls').val('');
+        $('ClientSiteAnprSource_LaneLabel').val('');
+        $('#csKeyValidationSummary').html('');
+        $('#anpr-source-modal-new').modal('hide');
+    }
+
+    $('#add_anpr_source').on('click', function () {
+        resetAnprSourceModal();
+        $('#anpr-source-modal-new').modal('show');
+        // $('#client-site-key-modal-new').appendTo("body").modal('show');
+    });
+
+    $('#btn_save_anpr_source').on('click', function () {
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSiteAnprSource',
+            data: $('#frm_add_anpr_source').serialize(),
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.success) {
+                $('#anpr-source-modal-new').modal('hide');
+                gridAnprSources.ajax.reload();
+            } else {
+                displaySiteKeyValidationSummary(result.message);
+            }
+        });
+    });
+
+
+    $('#btnSaveAnpr').on('click', function () {
+        var toggleType;
+        var  anprStatus = 0;
+
+        if ($('#chk_cs_anpr_single').is(":checked")) {
+            anprStatus = 1;
+
+        } 
+        else if ($('#chk_cs_anpr_separate').is(":checked")) {
+            anprStatus = 2;
+
+        }
+        
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSiteAnpr',
+            type: 'POST',
+            data: {
+                ClientSiteId: $('#gl_client_site_id').val(),
+                Status: anprStatus,
+            },
+            headers: { 'RequestVerificationToken': token }
+        }).done(function () {
+
+            alert("Saved Successfully");
+        }).fail(function () {
+            console.log("error");
+        });
+    });
+
+    $('#cs_client_anpr_source tbody').on('click', '#btn_delete_anpr_source', function () {
+        var data = gridAnprSources.row($(this).parents('tr')).data();
+        if (confirm('Are you sure want to delete this anpr source?')) {
+            $.ajax({
+                type: 'POST',
+                url: '/Admin/Settings?handler=DeleteClientSiteAnprSource',
+                data: { 'id': data.id },
+                dataType: 'json',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function () {
+                gridAnprSources.ajax.reload();
+            });
+        }
+    });
+
+    $('#btnanprSourceclose').on('click', function () {
+        $('#anpr-source-modal-new').modal('hide');
+    });
+
+    $('#cs_client_anpr_source tbody').on('click', '#btn_edit_anpr_source', function () {
+        var data = gridAnprSources.row($(this).parents('tr')).data();
+        loadAnprSourceModal(data);
+    });
+
+
+    $('#chk_cs_anpr_disabled').on('change', function () {
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_anpr_single').prop('checked', false);
+            $('#chk_cs_anpr_separate').prop('checked', false);
+            $('#ClientSiteAnprSource_LaneLabelv').prop('disabled', true);
+        }
+    });
+    $('#chk_cs_anpr_single').on('change', function () {
+
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_anpr_disabled').prop('checked', false);
+            $('#chk_cs_anpr_separate').prop('checked', false);
+            $('#ClientSiteAnprSource_LaneLabel').prop('disabled', true);
+
+        }
+    });
+    $('#chk_cs_anpr_separate').on('change', function () {
+        const isChecked = $(this).is(':checked');
+        if (isChecked == true) {
+            $('#chk_cs_anpr_disabled').prop('checked', false);
+            $('#chk_cs_anpr_single').prop('checked', false);
+            $('#ClientSiteAnprSource_LaneLabel').prop('disabled', false);
+        }
+    });
+
+    /* ANPR - end*/
     if ($.fn.DataTable.isDataTable('#cs_client_site_keys')) {
         $('#cs_client_site_keys').DataTable().destroy();
     }
@@ -654,6 +821,7 @@ $(function () {
     /*toggle settings-start*/
     /*for manifest options-start*/
     GetClientSiteToggle();
+    GetClientSiteAnpr();
     /*for manifest options - end*/
     //for time slot - start 
     $('#chk_cs_time_slot').on('change', function () {
@@ -847,10 +1015,50 @@ $(function () {
         });
     });
 
+    function GetClientSiteAnpr() {
+        const token = $('input[name="__RequestVerificationToken"]').val();
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSiteAnprs',
+            type: 'GET',
+            data: {
+                clientSiteId: $('#gl_client_site_id').val()
+            },
+            headers: { 'RequestVerificationToken': token }
+        }).done(function (response) {
+            if (response != undefined) {
+                for (var i = 0; i < response.length; i++) {
+                    console.log(response[i].status)
+                    
+                    if (response[i].status == 1) {
+                        $('#chk_cs_anpr_disabled').prop('checked', false);
+                        $('#chk_cs_anpr_single').prop('checked', true);
+                        $('#chk_cs_anpr_separate').prop('checked', false);
+                        $('#ClientSiteAnprSource_LaneLabel').prop('disabled', true);
+
+                    }
+                    else if (response[i].status == 2) {
+                        $('#chk_cs_anpr_disabled').prop('checked', false);
+                        $('#chk_cs_anpr_single').prop('checked', false);
+                        $('#chk_cs_anpr_separate').prop('checked', true);
+                        $('#ClientSiteAnprSource_LaneLabel').prop('disabled', true);
+                    }
+                    else {
+                        $('#chk_cs_anpr_disabled').prop('checked', true);
+                        $('#chk_cs_anpr_single').prop('checked', false);
+                        $('#chk_cs_anpr_separate').prop('checked', false);
+                        $('#ClientSiteAnprSource_LaneLabel').prop('disabled', false);
+                    }
+                }
+            }
+        }).fail(function () {
+            console.log("error");
+        });
+    }
+
     function GetClientSiteToggle() {
         const token = $('input[name="__RequestVerificationToken"]').val();
         $.ajax({
-            url: '/Admin/Settings?handler=ClientSiteToggle',
+            url: '/Admin/Settings?handler=c',
             type: 'GET',
             data: {
                 siteId: $('#gl_client_site_id').val()
