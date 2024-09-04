@@ -176,6 +176,75 @@ namespace CityWatch.Data.Providers
                 _context.ClientSiteKeys.Remove(clientSiteKeyToDelete);
                 _context.SaveChanges();
             }
-        }        
+        }
+
+        public List<ClientSiteAnpr> GetClientSiteAnprs(int clientSiteId)
+        {
+            return _context.ClientSiteAnprs
+                .Where(z => z.ClientSiteId == clientSiteId && z.ClientSite.IsActive == true)
+                .Include(x => x.ClientSite)
+                .ToList();
+        }
+
+        public void SaveClientSiteAnpr(ClientSiteAnpr clientSiteAnpr)
+        {
+            if (clientSiteAnpr == null)
+                throw new ArgumentNullException();
+
+            if (clientSiteAnpr.Id != 0) {
+                var clientSiteAnprSourceToUpdate = _context.ClientSiteAnprs.SingleOrDefault(x => x.ClientSiteId == clientSiteAnpr.ClientSiteId);
+                if (clientSiteAnprSourceToUpdate != null)
+                {
+                    clientSiteAnprSourceToUpdate.Status = clientSiteAnpr.Status;
+                }
+                else
+                {
+                    _context.ClientSiteAnprs.Add(clientSiteAnpr);
+                }
+            }
+            
+            _context.SaveChanges();
+        }
+
+        public List<ClientSiteAnprSource> GetClientSiteAnprSources(int clientSiteId)
+        {
+            return _context.ClientSiteAnprSources
+                .Where(z => z.ClientSiteId == clientSiteId && z.ClientSite.IsActive == true)
+                .Include(x => x.ClientSite)
+                .OrderBy(z => z.ApiCalls)
+                .ToList();
+        }
+        public void SaveClientSiteAnprSource(ClientSiteAnprSource clientSiteAnprSource)
+        {
+            if (clientSiteAnprSource == null)
+                throw new ArgumentNullException();
+
+            if (clientSiteAnprSource.Id == 0)
+            {
+                _context.ClientSiteAnprSources.Add(clientSiteAnprSource);
+            }
+            else
+            {
+                var clientSiteAnprSourceToUpdate = _context.ClientSiteAnprSources.SingleOrDefault(x => x.Id == clientSiteAnprSource.Id);
+                if (clientSiteAnprSourceToUpdate != null)
+                {
+                    clientSiteAnprSourceToUpdate.Profile = clientSiteAnprSource.Profile;
+                    clientSiteAnprSourceToUpdate.ApiCalls = clientSiteAnprSource.ApiCalls;
+                    clientSiteAnprSourceToUpdate.LaneLabel = clientSiteAnprSource.LaneLabel;
+                }
+            }
+            _context.SaveChanges();
+        }
+        public void DeleteClientSiteAnprSource(int id)
+        {
+            var anprSourceToDelete = _context.ClientSiteAnprSources.SingleOrDefault(x => x.Id == id);
+            if (anprSourceToDelete != null)
+            {
+                _context.ClientSiteAnprSources.Remove(anprSourceToDelete);
+                _context.SaveChanges();
+            }
+        }
+
+        
     }
 }

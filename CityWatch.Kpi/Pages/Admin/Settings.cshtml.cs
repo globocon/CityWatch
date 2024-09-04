@@ -1060,6 +1060,83 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(new { success, message });
         }
         /*site poc and locations-end*/
+
+        /*anpr source -start*/
+
+        public JsonResult OnGetClientSiteAnprs(int clientSiteId)
+        {
+
+            return new JsonResult(_guardSettingsDataProvider.GetClientSiteAnprs(clientSiteId));
+        }
+
+        public JsonResult OnGetClientSiteAnprSources(int clientSiteId)
+        {
+            return new JsonResult(_guardSettingsDataProvider.GetClientSiteAnprSources(clientSiteId).ToList());
+        }
+
+        public JsonResult OnPostClientSiteAnpr(ClientSiteAnpr clientSiteAnpr)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _guardSettingsDataProvider.SaveClientSiteAnpr(clientSiteAnpr);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+                if (ex.InnerException != null &&
+                    ex.InnerException is SqlException &&
+                    ex.InnerException.Message.StartsWith("Violation of UNIQUE KEY constraint"))
+                {
+                    message = "Anpr Source already exists";
+                }
+            }
+
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnPostClientSiteAnprSource(ClientSiteAnprSource clientSiteAnprSource)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _guardSettingsDataProvider.SaveClientSiteAnprSource(clientSiteAnprSource);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+                if (ex.InnerException != null &&
+                    ex.InnerException is SqlException &&
+                    ex.InnerException.Message.StartsWith("Violation of UNIQUE KEY constraint"))
+                {
+                    message = "Anpr Source already exists";
+                }
+            }
+
+            return new JsonResult(new { success, message });
+        }
+        public IActionResult OnPostDeleteClientSiteAnprSource(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _guardSettingsDataProvider.DeleteClientSiteAnprSource(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
+
+        /*anpr source-end*/
+
         /*key settings-start*/
         public JsonResult OnGetClientSiteKeys(int clientSiteId)
         {
@@ -1116,7 +1193,7 @@ namespace CityWatch.Kpi.Pages.Admin
             _clientDataProvider.SaveClientSiteToggle(siteId, reelstoggleTypeId, reelsIsActive);
             _clientDataProvider.SaveClientSiteToggle(siteId, trailerRegoTypeId, isISOVINAcive);
         }
-        public IActionResult OnGetClientSiteToggle(int siteId)
+        public JsonResult OnGetClientSiteToggle(int siteId)
         {
 
             return new JsonResult(_guardDataProvider.GetClientSiteToggle().Where(x => x.ClientSiteId == siteId));
