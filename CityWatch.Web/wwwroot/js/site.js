@@ -1019,6 +1019,8 @@ $('#report_field_types').on('change', function () {
         $('#fieldSettings').show();
         $('#positionSettings').hide();
         $('#FinancialReimbursementSettings').hide();
+        $('#irNotes').hide();
+
         gridReportFields.clear();
         gridPositions.clear();
         gridAreaReportFields.clear();
@@ -1030,6 +1032,7 @@ $('#report_field_types').on('change', function () {
         $('#positionSettings').show();
         $('#PSPFSettings').hide();
         $('#FinancialReimbursementSettings').hide();
+        $('#irNotes').hide();
 
         gridReportFields.clear();
         gridPositions.reload();
@@ -1042,7 +1045,7 @@ $('#report_field_types').on('change', function () {
         $('#fieldSettings').hide();
         $('#positionSettings').hide();
         $('#FinancialReimbursementSettings').hide();
-
+        $('#irNotes').hide();
         gridPositions.clear();
         gridReportFields.clear();
         gridAreaReportFields.clear();
@@ -1056,7 +1059,7 @@ $('#report_field_types').on('change', function () {
         $('#PSPFSettings').hide();
         $('#fieldSettings').hide();
         $('#positionSettings').hide();
-
+        $('#irNotes').hide();
 
         gridPositions.clear();
         gridReportFields.clear();
@@ -1065,6 +1068,7 @@ $('#report_field_types').on('change', function () {
         gridAreaReportFields.hide();
     }
     else if (selFieldTypeId === '4') {
+        $('#irNotes').hide();
         $('#fieldSettings').show();
         $('#positionSettings').hide();
         $('#PSPFSettings').hide();
@@ -1079,6 +1083,21 @@ $('#report_field_types').on('change', function () {
 
 
     }
+    else if (selFieldTypeId === '7') {
+
+        $('#irNotes').show();
+        $('#FinancialReimbursementSettings').hide();
+        $('#PSPFSettings').hide();
+        $('#fieldSettings').hide();
+        $('#positionSettings').hide();
+
+
+        gridPositions.clear();
+        gridReportFields.clear();
+        gridAreaReportFields.clear();
+        gridPSPF.clear();
+        gridAreaReportFields.hide();
+    }
     else {
         $('#fieldSettings').show();
         $('#positionSettings').hide();
@@ -1086,6 +1105,7 @@ $('#report_field_types').on('change', function () {
         $('#FinancialReimbursementSettings').hide();
         $('#field_settings').show();
         $('#field_settings_Area').hide();
+        $('#irNotes').hide();
 
         gridPSPF.clear();
         gridPositions.clear();
@@ -3097,31 +3117,7 @@ $('#report_module_types').on('change', function () {
         $('#report_field_types').val('');
         gridReportFields.reload({ typeId: $('#report_field_types').val() });
     }
-    else if ($('#report_module_types').val() == 4) {
-        
-        $('#irNotes').show(); 
-     
-        $('#doanddontfields_types').hide();
-        $('#report_field_types').hide();
-        $('#kvl_fields_types').hide();
-
-        $('#lblFieldType').hide();
-
-        $('#add_field_settings').hide();
-        $('#add_dosanddonts_fields').hide();
-        $('#add_kvl_fields').hide();
-        $('#FinancialReimbursementSettings').hide();
-        
-        gridReportFields.hide();
-        gridKvlFields.hide();
-        gridDosAndDontsFields.hide();
-        gridAreaReportFields.hide();
-
-        $('#report_field_types').val('');
-        
-        refreshFeedbackTemplates();
-        selectNoneFeedbackTemplate();
-    }
+    
     else {
 
         $('#doanddontfields_types').hide();
