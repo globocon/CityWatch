@@ -1700,6 +1700,18 @@ $('#report_field_types').on('change', function () {
         }
     });
 
+    /*p1-248 search users grid*/
+
+    $('#btnSearchUsers').on('click', function () {
+        var searchTerm = $('#search_users').val();
+        gridUsers.reload({ searchTerm: searchTerm });
+    });
+    $('#search_users').on('keyup', function (event) {
+        // Enter key pressed
+        if (event.keyCode === 13) {
+            gridUsers.reload({ searchTerm: $(this).val() });
+        }
+    });
     $('#user_settings').on('click', ".showPassword", function () {
         const btn = $(this);
         const userId = btn.attr('data-uid');
@@ -1817,6 +1829,19 @@ $('#report_field_types').on('change', function () {
         }
     });
 
+    /*p1-248 search client site access grid*/
+   
+    $('#btnSearchClientSiteAccess').on('click', function () {
+        var searchTerm = $('#search_site_access_control').val();
+        console.log('Search Term:', searchTerm);  // Debugging output
+        gridClientSiteAccess.reload({ searchTerm: searchTerm });
+    });
+    $('#search_site_access_control').on('keyup', function (event) {
+        // Enter key pressed
+        if (event.keyCode === 13) {
+            gridClientSiteAccess.reload({searchTerm: $(this).val()});
+        }
+    });
     $('#user-client-access-modal').on('shown.bs.modal', function (event) {
         const button = $(event.relatedTarget);
         const userId = button.data('id');
@@ -3732,6 +3757,50 @@ $('#hr_settings_fields_types').on('change', function () {
     else {
         gridLicenseTypes.hide();
         gridHrSettings.hide();
+    }
+});
+if ($('#report_module_types_irtemplate').val() == 1) {
+    $('#incident_report_pdf_template').show();
+    $('#company_sop').hide();
+    $('#training').hide();
+    $('#templatesandforms').hide();
+
+}
+$('#report_module_types_irtemplate').on('change', function () {
+    const reportModuletypeIrtemplateId = $('#report_module_types_irtemplate').val();
+    if ($('#report_module_types_irtemplate').val() == 1) {
+
+        $('#incident_report_pdf_template').show();
+        $('#company_sop').hide();
+        $('#training').hide();
+        $('#templatesandforms').hide();       
+    
+    }
+
+    else if ($('#report_module_types_irtemplate').val() == 2) {
+        $('#incident_report_pdf_template').hide();      
+        $('#company_sop').show();
+        $('#training').hide();
+        $('#templatesandforms').hide();
+
+    }
+    else if ($('#report_module_types_irtemplate').val() == 3) {
+        $('#incident_report_pdf_template').hide();
+        $('#company_sop').hide();
+        $('#training').show();
+        $('#templatesandforms').hide();
+    }
+    else if ($('#report_module_types_irtemplate').val() == 4) {
+        $('#incident_report_pdf_template').hide();
+        $('#company_sop').hide();
+        $('#training').hide();
+        $('#templatesandforms').show();
+
+
+    }
+
+    else {
+     
     }
 });
 $('#clientTypeNameDoc').multiselect({
