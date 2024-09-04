@@ -3297,6 +3297,7 @@ $('#report_field_types').on('change', function () {
 $('#report_module_types').on('change', function () {
     if ($('#report_module_types').val() == 1) {
 
+        $('#fieldSettings').show();
         $('#doanddontfields_types').show();
         $('#report_field_types').hide();
         $('#kvl_fields_types').hide();
@@ -3317,6 +3318,7 @@ $('#report_module_types').on('change', function () {
         gridDosAndDontsFields.reload({ typeId: $('#doanddontfields_types').val() });
     }
     else if ($('#report_module_types').val() == 2) {
+        $('#fieldSettings').show();
         $('#doanddontfields_types').hide();
         $('#report_field_types').hide();
 
@@ -3337,6 +3339,7 @@ $('#report_module_types').on('change', function () {
         gridDosAndDontsFields.hide();
     }
     else if ($('#report_module_types').val() == 3) {
+        $('#fieldSettings').hide();
         $('#doanddontfields_types').hide();
         $('#report_field_types').show();
         $('#kvl_fields_types').hide();
