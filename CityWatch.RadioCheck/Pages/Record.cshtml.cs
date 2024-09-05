@@ -22,24 +22,27 @@ using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using System.Linq.Expressions;
 using static System.Net.WebRequestMethods;
+using System.Linq;
 
 namespace CityWatch.Web.Pages
 {
     public class RecordModel : PageModel
     {
+        private readonly IClientDataProvider _clientDataProvider;
         private readonly IWebHostEnvironment _WebHostEnvironment;
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly IDropboxService _dropboxUploadService;
         private readonly Settings _settings;
         private readonly IConfiguration _configuration;
         public RecordModel(
+            IClientDataProvider clientDataProvider,
             IWebHostEnvironment webHostEnvironment, 
             IGuardDataProvider guardDataProvider,
             IOptions<Settings> settings,
             IDropboxService dropboxUploadService,
             IConfiguration configuration)
         {
-
+            _clientDataProvider = clientDataProvider;
             _WebHostEnvironment = webHostEnvironment;
             _guardDataProvider = guardDataProvider;
             _settings = settings.Value;
@@ -73,9 +76,21 @@ namespace CityWatch.Web.Pages
             
             // Upload the file to Dropbox and Azure bob
             var blobUrl= blobilpaod(filePath);
-            _guardDataProvider.SaveRecordingFileDetails(new AudioRecordingLog { BlobUrl = blobUrl, FileName = uniqueFileName });
-            var isUploaded = await UploadFileToDropboxAsync(filePath);
+          
 
+            var clientSite = _clientDataProvider.GetClientSiteForRcLogBook();
+            var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientSite.FirstOrDefault().Id);
+            var siteBasePath = clientSiteKpiSettings.DropboxImagesDir;
+
+            var dayPathFormat = clientSiteKpiSettings.IsWeekendOnlySite ? "yyyyMMdd - ddd" : "yyyyMMdd";
+            var dbxFilePath = $"{siteBasePath}/FLIR - Wand Recordings - IRs - Daily Logs/{DateTime.Now.Year}/{DateTime.Now.Date:yyyyMM} - {DateTime.Now.Date.ToString("MMMM").ToUpper()} DATA/{DateTime.Now.Date.ToString(dayPathFormat).ToUpper()}/" + Path.GetFileName(filePath);
+
+
+            var isUploaded = await UploadFileToDropboxAsync(filePath, dbxFilePath);
+            if (isUploaded)
+            {
+                _guardDataProvider.SaveRecordingFileDetails(new AudioRecordingLog { BlobUrl = blobUrl, FileName = uniqueFileName, DropboxPath= dbxFilePath });
+            }
             // Return the result with the unique file name
             return new JsonResult(new { success = isUploaded, fileName = uniqueFileName });
         }
@@ -94,16 +109,18 @@ namespace CityWatch.Web.Pages
             await audioFile.CopyToAsync(stream);
         }
 
-        private async Task<bool> UploadFileToDropboxAsync(string localFilePath)
+        private async Task<bool> UploadFileToDropboxAsync(string localFilePath,string dropBoxPath)
         {
             try
             {
-                var formattedDate = DateTime.Today.ToString("dd_MM_yyyy");
-                var fileName = Path.GetFileName(localFilePath);
-                var dropboxDir = _guardDataProvider.GetDrobox();
-                var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{dropboxDir.DropboxDir}/RCAudioRecordings/{formattedDate}/{fileName}");
+                //var formattedDate = DateTime.Today.ToString("dd_MM_yyyy");
+                //var fileName = Path.GetFileName(localFilePath);
+                //var dropboxDir = _guardDataProvider.GetDrobox();
 
-                return await UploadDocumentToDropboxAsync(localFilePath, dbxFilePath);
+                
+                //var dbxFilePath = FileNameHelper.GetSanitizedDropboxFileNamePart($"{dropboxDir.DropboxDir}/RCAudioRecordings/{formattedDate}/{fileName}");
+
+                return await UploadDocumentToDropboxAsync(localFilePath, dropBoxPath);
             }
             catch (Exception ex)
             {
