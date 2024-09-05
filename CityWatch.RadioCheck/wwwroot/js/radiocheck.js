@@ -250,7 +250,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 clientSiteActiveGuards.buttons('audioStart:name').enable();
             }
         },
-
+        /*
         {
             text: '<i class="fa fa-play" aria-hidden="true"></i>',
             className: 'btn btn-md mr-2 btn-custom',
@@ -277,8 +277,15 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                     $(node).html('<i class="fa fa-play" aria-hidden="true"></i>'); // Change button icon back to 'Play' when audio ends
                 };
             }
+        },*/
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
+            
         },
-
         {
             extend: 'copy',
             text: '<i class="fa fa-copy"></i>',
@@ -326,7 +333,14 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 head.appendChild(style);
             }
         },
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
 
+        },
         {
             text: '<img src="/images/man-climbing-stairs.png" alt="Image" height="16" width="16">',
             titleAttr: 'Steps',
@@ -746,7 +760,17 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             }
         },
 
+
         {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
+
+        },
+
+       /* {
             text: '<i class="fa fa-play" aria-hidden="true"></i>',
             className: 'btn btn-md mr-2 btn-custom',
             titleAttr: 'play Audio',
@@ -772,7 +796,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                     $(node).html('<i class="fa fa-play" aria-hidden="true"></i>'); // Change button icon back to 'Play' when audio ends
                 };
             }
-        },
+        },*/
 
         {
             extend: 'copy',
@@ -822,6 +846,14 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             }
         },
 
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
+
+        },
 
         {
             text: '<img src="/images/man-climbing-stairs.png" alt="Image" height="16" width="16">',

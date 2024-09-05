@@ -11,6 +11,8 @@ namespace CityWatch.Data.Models
         public int Id { get; set; }
         public string FileName { get; set; }
         public string BlobUrl { get; set; }
+
+        public string DropboxPath { get; set; }
         public DateTime UploadedDate { get; set; }
     }
 
