@@ -242,7 +242,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             text: '<i class="fa fa-microphone-slash" aria-hidden="true"></i>',
             titleAttr: 'Stop Recoding',
             className: 'btn btn-md mr-2 btn-custom',
-            enable: false,
+            enabled: false,
             name: 'audioStop',
             action: function () {
                 clickStopAudio();
@@ -627,8 +627,6 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
 });
 
-clientSiteActiveGuards.buttons('audioStop:name').disable();
-clientSiteActiveGuards.buttons('audioStart:name').enable();
 
 // Order by the grouping
 // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- Start - 31-01-2024
@@ -739,7 +737,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             text: '<i class="fa fa-microphone-slash" aria-hidden="true"></i>',
             titleAttr: 'Stop Recoding',
             className: 'btn btn-md mr-2 btn-custom',
-            enable: false,
+            enabled: false,
             name: 'audioStop',
             action: function () {
                 clickStopAudio();
@@ -1079,8 +1077,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 });
 
 
-clientSiteInActiveGuards.buttons('audioStop:name').disable();
-clientSiteInActiveGuards.buttons('audioStart:name').enable();
+
 
 //p4#48 AudioNotification - Binoy - 12-01-2024 -- Start
 function PlayDuressAlarm() {
