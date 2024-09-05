@@ -234,8 +234,9 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 clickstarAudio();
                 clientSiteActiveGuards.buttons('audioStart:name').disable();
                 clientSiteActiveGuards.buttons('audioStop:name').enable();
-
-
+                
+                clientSiteInActiveGuards.buttons('audioStart:name').disable();
+                clientSiteInActiveGuards.buttons('audioStop:name').enable();
             }
         },
         {
@@ -248,6 +249,9 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 clickStopAudio();
                 clientSiteActiveGuards.buttons('audioStop:name').disable();
                 clientSiteActiveGuards.buttons('audioStart:name').enable();
+
+                clientSiteInActiveGuards.buttons('audioStop:name').disable();
+                clientSiteInActiveGuards.buttons('audioStart:name').enable();
             }
         },
         /*
@@ -743,7 +747,8 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                 clickstarAudio();
                 clientSiteInActiveGuards.buttons('audioStart:name').disable();
                 clientSiteInActiveGuards.buttons('audioStop:name').enable();
-
+                clientSiteActiveGuards.buttons('audioStart:name').disable();
+                clientSiteActiveGuards.buttons('audioStop:name').enable();
 
             }
         },
@@ -757,6 +762,10 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                 clickStopAudio();
                 clientSiteInActiveGuards.buttons('audioStop:name').disable();
                 clientSiteInActiveGuards.buttons('audioStart:name').enable();
+
+                clientSiteActiveGuards.buttons('audioStop:name').disable();
+                clientSiteActiveGuards.buttons('audioStart:name').enable();
+
             }
         },
 
@@ -3099,6 +3108,41 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
     buttons: [
 
         {
+            text: '<i class="fa fa-microphone" aria-hidden="true"></i>',
+            titleAttr: 'Start Recoding',
+            className: 'btn btn-md mr-2 btn-custom',
+            name: 'audioStart',
+            action: function (e, dt, node, config) {
+                clickstarAudio();
+                clientSiteInActiveGuardsSinglePage.buttons('audioStart:name').disable();
+                clientSiteInActiveGuardsSinglePage.buttons('audioStop:name').enable();
+               
+
+            }
+        },
+        {
+            text: '<i class="fa fa-microphone-slash" aria-hidden="true"></i>',
+            titleAttr: 'Stop Recoding',
+            className: 'btn btn-md mr-2 btn-custom',
+            enabled: false,
+            name: 'audioStop',
+            action: function () {
+                clickStopAudio();
+                clientSiteInActiveGuardsSinglePage.buttons('audioStop:name').disable();
+                clientSiteInActiveGuardsSinglePage.buttons('audioStart:name').enable();
+
+            }
+        },
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
+
+        },
+
+        {
             extend: 'copy',
             text: '<i class="fa fa-copy"></i>',
             titleAttr: 'Copy',
@@ -3147,7 +3191,14 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
             }
         },
 
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
 
+        },
         {
             text: '<img src="/images/man-climbing-stairs.png" alt="Image" height="16" width="16">',
             titleAttr: 'Steps',
@@ -3427,6 +3478,44 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
     dom: 'Bfrtip',
     buttons: [
 
+
+        {
+            text: '<i class="fa fa-microphone" aria-hidden="true"></i>',
+            titleAttr: 'Start Recoding',
+            className: 'btn btn-md mr-2 btn-custom',
+            name: 'audioStart',
+            action: function (e, dt, node, config) {
+                clickstarAudio();
+                clientSiteActiveGuardsSinglePage.buttons('audioStart:name').disable();
+                clientSiteActiveGuardsSinglePage.buttons('audioStop:name').enable();
+              
+
+            }
+        },
+        {
+            text: '<i class="fa fa-microphone-slash" aria-hidden="true"></i>',
+            titleAttr: 'Stop Recoding',
+            className: 'btn btn-md mr-2 btn-custom',
+            enabled: false,
+            name: 'audioStop',
+            action: function () {
+                clickStopAudio();
+                clientSiteActiveGuardsSinglePage.buttons('audioStop:name').disable();
+                clientSiteActiveGuardsSinglePage.buttons('audioStart:name').enable();
+
+            }
+        },
+
+
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
+
+        },
+
         {
             extend: 'copy',
             text: '<i class="fa fa-copy"></i>',
@@ -3474,6 +3563,15 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
             }
         },
 
+
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
+
+        },
 
         {
             text: '<img src="/images/man-climbing-stairs.png" alt="Image" height="16" width="16">',
