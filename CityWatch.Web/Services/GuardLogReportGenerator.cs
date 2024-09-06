@@ -474,9 +474,13 @@ namespace CityWatch.Web.Services
 
                 reportDataTable.AddCell(new Cell().SetKeepTogether(true).SetBorder(new SolidBorder(WebColors.GetRGBColor(COLOR_GREY_LIGHT), 0.25f)).SetBackgroundColor(WebColors.GetRGBColor(COLOR_WHITE)).Add(new Paragraph(getEventDateTimeUTCformat(entry)).SetFontSize(CELL_FONT_SIZE)));
                 //Commented the following line and for fixing the time issue 29/01/2024 dileep end//
-                var notes = entry.IrEntryType.HasValue ?
-                                    entry.Notes :
-                                    (string.IsNullOrEmpty(entry.GuardLogin.Guard.Initial) ? $"{entry.Notes} ;" : $"{entry.Notes} ;{entry.GuardLogin.Guard.Initial}");
+                //Commneted following line No Guard on duty shows error because entry.GuardLogin is null
+                //var notes = entry.IrEntryType.HasValue ?
+                //                    entry.Notes :
+                //                    (string.IsNullOrEmpty(entry.GuardLogin.Guard.Initial) ? $"{entry.Notes} ;" : $"{entry.Notes} ;{entry.GuardLogin.Guard.Initial}");
+
+                var notes = entry.IrEntryType.HasValue ? entry.Notes : $"{entry.Notes} ;{entry.GuardLogin?.Guard.Initial ?? string.Empty}";
+
                 var bgColor = entry.IrEntryType.HasValue ?
                                 ((entry.IrEntryType == IrEntryType.Normal)|| (entry.IrEntryType == IrEntryType.Notification) ? COLOR_PALE_YELLOW : COLOR_PALE_RED) :
                                 COLOR_WHITE;
