@@ -2046,8 +2046,8 @@ $(function () {
 
         $(document).ready(function () {
             // Prevent the combo box from showing items and open the modal instead
-            $('#crmTruckConfig').on('click', function (e) {
-                e.preventDefault(); // Prevent the dropdown from opening
+            $('#vehicleConfigSelect').on('mousedown', function (e) {
+                e.preventDefault(); 
                 $('#selectVehicleConfigModal').modal('show'); // Show the modal
             });
 
@@ -2057,7 +2057,8 @@ $(function () {
                 var selectedText = $(this).closest('li').text().trim();
 
                 // Update the combo box programmatically with the selected value and text
-                $('#crmTruckConfig').val(selectedValue).change(); // Trigger change event for binding
+                $('#vehicleConfigSelect').html('<option value="' + selectedValue + '">' + selectedText + '</option>').val(selectedValue);
+                $('#crmTruckConfig').html('<option value="' + selectedValue + '">' + selectedText + '</option>').val(selectedValue);
 
                 // Close the modal after selection
                 $('#selectVehicleConfigModal').modal('hide');
