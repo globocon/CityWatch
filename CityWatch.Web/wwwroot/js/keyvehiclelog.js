@@ -2033,15 +2033,37 @@ $(function () {
 
             }
         });
-        $('#crmTruckConfig').on('change', function () {
-            const option = $(this).find(":selected");
-            if (option.val() !== '') {
+        ////$('#crmTruckConfig').on('change', function () {
+
+        ////    const option = $(this).find(":selected");
+        ////    if (option.val() !== '') {
 
 
-                $('#TruckConfig').val(option.val());
+        ////        $('#TruckConfig').val(option.val());
 
-            }
+        ////    }
+        ////});
+
+        $(document).ready(function () {
+            // Prevent the combo box from showing items and open the modal instead
+            $('#crmTruckConfig').on('click', function (e) {
+                e.preventDefault(); // Prevent the dropdown from opening
+                $('#selectVehicleConfigModal').modal('show'); // Show the modal
+            });
+
+            // Handle item selection from the modal
+            $('#itemList').on('click', '.btn-select-radio-status', function () {
+                var selectedValue = $(this).closest('li').data('value');
+                var selectedText = $(this).closest('li').text().trim();
+
+                // Update the combo box programmatically with the selected value and text
+                $('#crmTruckConfig').val(selectedValue).change(); // Trigger change event for binding
+
+                // Close the modal after selection
+                $('#selectVehicleConfigModal').modal('hide');
+            });
         });
+
 
         $('#crmTrailerType').on('change', function () {
             const option = $(this).find(":selected");
