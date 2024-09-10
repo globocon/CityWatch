@@ -1546,6 +1546,40 @@ $('#report_field_types').on('change', function () {
 
     /****** Report tools end *******/
 
+    var editPositionGridRender;
+    editPositionGridRender = function (value, record, $cell, $displayEl, id, $grid) {
+        var data = $grid.data(),
+            $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i></button>').attr('data-key', id),
+            $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_training" data-doc-id="' + record.id + '"><i class="fa fa-trash"></i></button>').attr('data-key', id),
+            $update = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-check" aria-hidden="true"></i></button>').attr('data-key', id).hide(),
+            $cancel = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-close" aria-hidden="true"></i></button>').attr('data-key', id).hide();
+        $edit.on('click', function (e) {
+            $grid.edit($(this).data('key'));
+            $edit.hide();
+            $delete.hide();
+            $update.show();
+            $cancel.show();
+        });
+        $delete.on('click', function (e) {
+            $grid.removeRow($(this).data('key'));
+        });
+        $update.on('click', function (e) {
+            $grid.update($(this).data('key'));
+            $edit.show();
+            $delete.show();
+            $update.hide();
+            $cancel.hide();
+        });
+        $cancel.on('click', function (e) {
+            $grid.cancel($(this).data('key'));
+            $edit.show();
+            $delete.show();
+            $update.hide();
+            $cancel.hide();
+        });
+        $displayEl.empty().append($edit).append($delete).append($update).append($cancel);
+    }
+
     let gridPositions;
 
     gridPositions = $('#position_settings').grid({
@@ -1553,7 +1587,7 @@ $('#report_field_types').on('change', function () {
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
-        inlineEditing: { mode: 'command' },
+        inlineEditing: { mode: 'command', managementColumn: false },
         columns: [
             { field: 'name', title: 'Name', width: 230, editor: true },
             { field: 'emailTo', title: 'Special Email Condition', width: 200, editor: true },
@@ -1561,14 +1595,32 @@ $('#report_field_types').on('change', function () {
             { field: 'dropboxDir', title: 'Dropbox Directory', width: 250, editor: true },
             {
                 field: 'isLogbook', title: 'Logbook',
-                type: 'checkbox', align: 'center', width: 80, editor: true,
+                type: 'checkbox', align: 'center', width: 100, editor: true,
             },
             { field: 'clientsiteName', title: 'Nominated logbook', width: 130, editor: false },
+
+            {
+                field: 'isSmartwandbypass', title: 'Smart WAND Bypass',
+                type: 'checkbox', align: 'center', width: 100, editor: true,
+                editor: {
+                    // Assign a unique ID if needed
+                    class: 'is-smartwandbypass-checkbox',
+                    id: 'smartwandbypass' // Example of dynamic ID assignment
+                }
+            },
+            { title: '<i class="fa fa-cogs" aria-hidden="true"></i>', width: 30, align: 'center',  renderer: editPositionGridRender }
         ],
         initialized: function (e) {
-            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>').css('width', '205px');
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>').css('width', '116px');
         }
     });
+
+
+    
+
+
+
+
     //To Position Checkbox and Popup start
     $('#PositionClientSiteId').select({
         placeholder: 'Select',
@@ -1576,7 +1628,14 @@ $('#report_field_types').on('change', function () {
     });
     $('#position_settings').on('click', 'input[type="checkbox"]', function () {
         var itemId = $(this).data('id');
+        var checkboxId = $(this).attr('id'); 
         var isChecked = $(this).is(':checked');
+        var isSmartwandbypass = $(this).hasClass('is-smartwandbypass-checkbox');
+
+        if (itemId ==='smartwandbypass') {
+            // Skip modal popup for 'IsSmartwandbypass'
+            return;
+        }
         if (isChecked == true) {
             $('#po_client_type').val('');
             $('#PositionClientSiteId').val('');

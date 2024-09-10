@@ -471,17 +471,52 @@ $(function () {
     $('#btnGuardLogin').on('click', function () {
 
 
-
+       
 
         const isPosition = $('#GuardLogin_IsPosition').is(':checked');
         if (isPosition) {
-            confirmDialog('Only click <b>Position</b> if you do not have a Smart WAND - are you sure you want to continue?', function () {
+            $('#loader').show();
+            // New change start bypass the message 
+            if ($('#GuardLogin_SmartWandOrPosition').val() !== '') {
+                $.ajax({
+                    url: '/Guard/Login?handler=CheckIfSmartwandMsgBypass',
+                    type: 'GET',
+                    data: {
+                        clientSiteName: $('#GuardLogin_ClientSiteName').val(),
+                        positionName: $('#GuardLogin_SmartWandOrPosition').val(),
+                        guardId: $('#GuardLogin_Guard_Id').val()
+                    }
+                }).done(function (result) {
+                    if (result) {
+                        submitGuardLogin();
+                    }
+                    else {
+
+                        confirmDialog('Only click <b>Position</b> if you do not have a Smart WAND - are you sure you want to continue?', function () {
+                            const validateSmartWand = $('#GuardLogin_IsPosition').is(':not(:checked)') && $('#GuardLogin_SmartWandOrPosition').val() !== '';
+
+                            if (!validateSmartWand) {
+                                submitGuardLogin();
+                            }
+                        });
+                    }
+                }).always(function () {
+                    $('#loader').hide();
+                });
+
+            }
+            else
+            {
                 const validateSmartWand = $('#GuardLogin_IsPosition').is(':not(:checked)') && $('#GuardLogin_SmartWandOrPosition').val() !== '';
 
                 if (!validateSmartWand) {
                     submitGuardLogin();
                 }
-            });
+
+            }
+
+
+         
         }
         else {
             const validateSmartWand = $('#GuardLogin_IsPosition').is(':not(:checked)') && $('#GuardLogin_SmartWandOrPosition').val() !== '';
@@ -549,6 +584,8 @@ $(function () {
 
         }
         else {
+
+            $('#loader').show();
             // P4#70 checking guard license no and mesaging if guard is not logged in for 120 days + disabling the active status
             var guardId = $('#GuardLogin_Guard_SecurityNo').val();
 
@@ -567,7 +604,7 @@ $(function () {
                     return;
                 } else {
                     // if guard is active then submit guard login
-                    $('#loader').show();
+                 
                     $.ajax({
                         url: '/Guard/Login?handler=LoginGuard',
                         type: 'POST',

@@ -492,6 +492,13 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(_viewDataService.CheckWandIsInUse(smartWand.Id, guardId));
         }
 
+        public JsonResult OnGetCheckIfSmartwandMsgBypass(string clientSiteName, string positionName, int? guardId)
+        {
+            var position = _configDataProvider.GetPositions().SingleOrDefault(x => x.Name == positionName);
+            bool isSmartwandbypass = position?.IsSmartwandbypass ?? false; // Use false if null
+            return new JsonResult(isSmartwandbypass);
+        }
+
         public JsonResult OnGetIsGuardLoginActive(string guardLicNo)
         {
 
@@ -753,5 +760,8 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(_guardDataProvider.GetCriticalDocs(ClientSiteID.Id));
 
         }
+
+
+     
     }
 }
