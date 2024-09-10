@@ -505,7 +505,7 @@ $(function () {
             //{ data: 'imagePathNew', width: '4%', orderable: false },
             //p2-140 key photos  -start
             {
-                 width: '12%', orderable: false, data: 'imagePathNew',
+                 width: '4%', orderable: false, data: 'imagePathNew',
                 render: function (value, type, data) {
 
                     return '<a  href="' + data.imagePath + '"target="_blank" >' + value + '</a>';
