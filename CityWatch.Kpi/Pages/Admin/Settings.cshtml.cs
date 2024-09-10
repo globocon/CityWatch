@@ -26,6 +26,7 @@ using CityWatch.Kpi.Helpers;
 using Microsoft.Extensions.Options;
 using CityWatch.Common.Services;
 using System.Security.Policy;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace CityWatch.Kpi.Pages.Admin
 {
@@ -1063,7 +1064,15 @@ namespace CityWatch.Kpi.Pages.Admin
         /*key settings-start*/
         public JsonResult OnGetClientSiteKeys(int clientSiteId)
         {
-            return new JsonResult(_guardSettingsDataProvider.GetClientSiteKeys(clientSiteId).ToList());
+            //p2-140 key photos  -start
+            var clientSiteKeys = _guardSettingsDataProvider.GetClientSiteKeys(clientSiteId).ToList();
+            foreach(var item in clientSiteKeys)
+            {
+                item.ImagePathNew = Path.GetFileName(item.ImagePath) ;
+            }
+            return new JsonResult(clientSiteKeys);
+            //p2-140 key photos  -end
+            //return new JsonResult(_guardSettingsDataProvider.GetClientSiteKeys(clientSiteId).ToList());
         }
         public JsonResult OnPostClientSiteKey(ClientSiteKey clientSiteKey)
         {
@@ -1434,8 +1443,109 @@ namespace CityWatch.Kpi.Pages.Admin
 
             return new JsonResult(new { status, message });
         }
+        //p2-140 key photos  -start
+        public JsonResult OnPostUploadKeyFileAttachmentAttachment()
+        {
+            var success = true;
+            var files = Request.Form.Files;
+
+            var keyNo = Request.Form["keyNo"];
+            var clientSiteId = Request.Form["clientSiteId"];
+            var fileName = string.Empty;
+            string filePath = string.Empty;
+            string url = Request.Form["url"].ToString();
+
+            try
+            {
+                if (files.Count == 1 )
+                {
+                    var file = files[0];
+                    fileName = file.FileName;
 
 
+                    string extension = ""; string newFileName = ""; var formattedDate = "";
+
+                    extension = Path.GetExtension(fileName).ToLower();
+                    if (!string.IsNullOrEmpty(keyNo))
+                    {
+                        newFileName = keyNo + extension;
+                        fileName =  newFileName;
+                    }
+
+                    
+
+
+
+                    //string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
+                    //var fileNameUpload = fileNameWithoutExtension + "_" + CurrentDate + extension;
+
+
+
+
+                    var guardUploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "KeyImage", clientSiteId);
+
+                    if (!Directory.Exists(guardUploadDir))
+                        Directory.CreateDirectory(guardUploadDir);
+
+                     filePath = Path.Combine(guardUploadDir, fileName);
+                    if (System.IO.File.Exists(filePath))
+                    {
+
+                        System.IO.File.Delete(filePath);
+
+                    }
+                    using var stream = System.IO.File.Create(Path.Combine(guardUploadDir, fileName));
+                    file.CopyTo(stream);
+
+
+
+                }
+
+            }
+            catch
+            {
+                success = false;
+            }
+            var guardUploadDirnew = Path.Combine(url, "KeyImage", clientSiteId);
+            var imagePath = Path.Combine(guardUploadDirnew, fileName);
+            var imagePathNew = fileName;
+            return new JsonResult(new { success, imagePath, imagePathNew });
+        }
+
+        public JsonResult OnPostDeleteKeyImageAttachment(int id,string name,int clientsiteid)
+
+        {
+
+            var success = false;
+            var message = "Success";
+            try
+            {
+                if (id != 0)
+                {
+                   
+                    var filePath = string.Empty;
+                    filePath = Path.Combine(_webHostEnvironment.WebRootPath, "KeyImage", clientsiteid.ToString(), name);
+                    if (System.IO.File.Exists(filePath))
+                    {
+
+                        System.IO.File.Delete(filePath);
+
+                    }
+
+                    _guardSettingsDataProvider.DeleteClientSiteKeyImage(id);
+                }
+
+
+
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = "Error " + ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        //p2-140 key photos  -start
     }
 
 }

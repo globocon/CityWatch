@@ -1,4 +1,6 @@
-﻿
+﻿//p2-140 key photos  -start
+var FileuploadFileChanged = null;
+//p2-140 key photos  -end
 $(document).ready(function () {
        
 });
@@ -500,18 +502,167 @@ $(function () {
             { data: 'id', visible: false },
             { data: 'keyNo', width: '4%' },
             { data: 'description', width: '12%', orderable: false },
+            //{ data: 'imagePathNew', width: '4%', orderable: false },
+            //p2-140 key photos  -start
+            {
+                 width: '12%', orderable: false, data: 'imagePathNew',
+                render: function (value, type, data) {
+
+                    return '<a  href="' + data.imagePath + '"target="_blank" >' + value + '</a>';
+
+                }
+            },
+            //p2-140 key photos-end
             {
                 targets: -1,
                 orderable: false,
                 width: '4%',
                 data: null,
                 defaultContent: '<button  class="btn btn-outline-primary mr-2" id="btn_edit_cs_key"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
-                    '<button id="btn_delete_cs_key" class="btn btn-outline-danger mr-2 mt-1"><i class="fa fa-trash mr-2"></i>Delete</button>',
+                 '<button id="btn_delete_cs_key" class="btn btn-outline-danger mr-2 mt-1"><i class="fa fa-trash mr-2"></i>Delete</button>',
+                
+                
                 className: "text-center"
             },
         ],
+       
     });
+    //p2-140 key photos  -start
+    $("#KeyImagefileUpload").fileUpload();
+    
+    $('#upload_KeyImage_file').on('change', function () {
+        const file = $(this).get(0).files; //.item(0); 
+        FileuploadFileChanged(file);
+    });
+    
+    
+    FileuploadFileChanged = function (allfile) {
+        const file = allfile.item(0); // allfile.get(0).files.item(0);
+        const fileExtn = "." + file.name.split('.').pop().toLowerCase();
+        console.log('fileExtn: ' + fileExtn);
+        if (!fileExtn || allowedfiletypes.includes(fileExtn) == false) {
+            alert('Please select a valid file type');
+            return false;
+        }
+        const formData = new FormData();
+        var Desc = $('#ClientSiteKey_KeyNo').val();
+        formData.append("file", file);
+        formData.append('keyNo', $('#ClientSiteKey_KeyNo').val());
+        formData.append('clientSiteId', $('#ClientSiteKey_ClientSiteId').val());
+        formData.append('url', window.location.origin);
+        if (Desc == '') {
+            
+            (confirm('Please enter the key no'))
+        }
+        else {
+            fileprocess(allfile);
 
+            $.ajax({
+                type: 'POST',
+                url: '/Admin/Settings?handler=UploadKeyFileAttachmentAttachment',
+                data: formData,
+                cache: false,
+                contentType: false,
+                processData: false,
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (response) {
+                if (response.success) {
+                    $('#ClientSiteKey_ImagePath').val(response.imagePath);
+                    $('#keyImage_fileName1').val(response.imagePathNew);
+                    
+                    loadKeyImagePopup(response);
+                    
+                }
+            }).fail(function () {
+            }).always(function () {
+                $('#upload_KeyImage_file').val('');
+            });
+        }
+
+    }
+    function loadKeyImagePopup(response) {
+        $("#keyimage-attachment-list").empty();
+       
+        var attachIndex = 0;
+        const file = response.imagePath;
+        const attachment_id = response.id;
+            const li = document.createElement('li');
+            li.id = attachment_id;
+            li.className = 'list-group-item';
+            li.dataset.index = attachIndex;
+            let liText = document.createTextNode(response.imagePathNew);
+            const icon = document.createElement("i");
+            icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-keyImage-attachment';
+            icon.title = 'Delete';
+            icon.style = 'cursor:pointer';
+            li.appendChild(liText);
+            li.appendChild(icon);
+            const anchorTag = document.createElement("a");
+            anchorTag.href = file;
+            anchorTag.target = "_blank";
+            const icon2 = document.createElement("i");
+            icon2.className = 'fa fa-download ml-2 text-primary';
+            icon2.title = 'Download';
+            icon2.style = 'cursor:pointer';
+            anchorTag.appendChild(icon2);
+            li.appendChild(anchorTag);
+            document.getElementById('keyimage-attachment-list').append(li);
+        //for (var attachIndex = 0; attachIndex < response.length; attachIndex++) {
+        //    const file = response[attachIndex].filePath;
+        //    const attachment_id = 1;
+        //    const li = document.createElement('li');
+        //    li.id = attachment_id;
+        //    li.className = 'list-group-item';
+        //    li.dataset.index = attachIndex;
+        //    let liText = document.createTextNode(response[attachIndex].fileName);
+        //    const icon = document.createElement("i");
+        //    icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-keyImage-attachment';
+        //    icon.title = 'Delete';
+        //    icon.style = 'cursor:pointer';
+        //    li.appendChild(liText);
+        //    li.appendChild(icon);
+        //    const anchorTag = document.createElement("a");
+        //    anchorTag.href = file;
+        //    anchorTag.target = "_blank";
+        //    const icon2 = document.createElement("i");
+        //    icon2.className = 'fa fa-download ml-2 text-primary';
+        //    icon2.title = 'Download';
+        //    icon2.style = 'cursor:pointer';
+        //    anchorTag.appendChild(icon2);
+        //    li.appendChild(anchorTag);
+        //    document.getElementById('keyimage-attachment-list').append(li);
+
+        //}
+    }
+   
+    $('#keyimage-attachment-list').on('click', '.btn-delete-keyImage-attachment', function (event) {
+        if (confirm('Are you sure want to remove this attachment?')) {
+            var target = event.target;
+            const fileName = target.parentNode.innerText.trim();
+            const id = target.parentNode.id;
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteKeyImageAttachment',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    clientsiteid: $('#ClientSiteKey_ClientSiteId').val(),
+                    name: fileName,
+                    id:id,
+
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result) {
+                    target.parentNode.parentNode.removeChild(target.parentNode);
+                    $("#keyimage-attachment-list").empty();
+                    //gridClientSiteKeys.clear();
+                    gridClientSiteKeys.ajax.reload();
+                    //loadKeyImagePopup(result)
+                }
+            });
+        }
+    });
+    //p2-140 key photos  -end
     $('#cs_client_site_keys tbody').on('click', '#btn_delete_cs_key', function () {
         var data = gridClientSiteKeys.row($(this).parents('tr')).data();
         if (confirm('Are you sure want to delete this key?')) {
@@ -588,7 +739,10 @@ $(function () {
     $('#add_client_site_key').on('click', function () {
        resetClientSiteKeyModal();
         $('#client-site-key-modal-new').modal('show');
-       // $('#client-site-key-modal-new').appendTo("body").modal('show');
+        //p2-140 key photos  -start
+        $("#keyimage-attachment-list").empty();
+        //p2-140 key photos  -end
+        // $('#client-site-key-modal-new').appendTo("body").modal('show');
     });
           
     $('#btnkeyclose').on('click', function () {       
@@ -606,7 +760,10 @@ $(function () {
         $('#ClientSiteKey_KeyNo').val(data.keyNo);
         $('#ClientSiteKey_Description').val(data.description);
         $('#csKeyValidationSummary').html('');
-       $('#client-site-key-modal-new').modal('show');
+        $('#client-site-key-modal-new').modal('show');
+        //p2-140 key photos  -start
+        loadKeyImagePopup(data);
+        //p2-140 key photos  -end
     }
 
     function resetClientSiteKeyModal() {
