@@ -1080,6 +1080,10 @@ namespace CityWatch.Kpi.Pages.Admin
             var message = string.Empty;
             try
             {
+                if(clientSiteKey.ImagePath==null)
+                {
+                    clientSiteKey.ImagePath = string.Empty;
+                }
                 _guardSettingsDataProvider.SaveClientSiteKey(clientSiteKey);
                 success = true;
             }

@@ -762,7 +762,11 @@ $(function () {
         $('#csKeyValidationSummary').html('');
         $('#client-site-key-modal-new').modal('show');
         //p2-140 key photos  -start
-        loadKeyImagePopup(data);
+        $("#keyimage-attachment-list").empty();
+        
+        if (data.imagePath != '') {
+            loadKeyImagePopup(data);
+        }
         //p2-140 key photos  -end
     }
 
