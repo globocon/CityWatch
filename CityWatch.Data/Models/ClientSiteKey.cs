@@ -16,5 +16,10 @@ namespace CityWatch.Data.Models
 
         [ForeignKey("ClientSiteId")]
         public ClientSite ClientSite { get; set; }
+        //p2-140 key photos  -start
+        public string ImagePath { get; set; }
+        [NotMapped]
+        public string ImagePathNew { get; set; }
+        //p2-140 key photos  -end
     }
 }

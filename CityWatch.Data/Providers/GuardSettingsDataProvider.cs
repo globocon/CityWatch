@@ -27,6 +27,9 @@ namespace CityWatch.Data.Providers
         public List<ClientSiteKey> GetClientSiteKeys(int[] clientSiteIds);
         public void SaveClientSiteKey(ClientSiteKey clientSiteKey);
         void DeleteClientSiteKey(int id);
+        //p2-140 key photos  -start
+        void DeleteClientSiteKeyImage(int id);
+        //p2-140 key photos  -end
     }
 
     public class GuardSettingsDataProvider : IGuardSettingsDataProvider
@@ -163,6 +166,9 @@ namespace CityWatch.Data.Providers
                 {
                     clientSiteKeyToUpdate.KeyNo = clientSiteKey.KeyNo;
                     clientSiteKeyToUpdate.Description = clientSiteKey.Description;
+                    //p2-140 key photos  -start
+                    clientSiteKeyToUpdate.ImagePath = clientSiteKey.ImagePath;
+                    //p2-140 key photos  -end
                 }
             }
             _context.SaveChanges();
@@ -176,6 +182,19 @@ namespace CityWatch.Data.Providers
                 _context.ClientSiteKeys.Remove(clientSiteKeyToDelete);
                 _context.SaveChanges();
             }
-        }        
+        }
+        //p2-140 key photos  -start
+        public void DeleteClientSiteKeyImage(int id)
+        {
+            var clientSiteKeyToDelete = _context.ClientSiteKeys.SingleOrDefault(x => x.Id == id);
+            if (clientSiteKeyToDelete != null)
+            {
+                clientSiteKeyToDelete.ImagePath = string.Empty;
+                
+            }
+            _context.SaveChanges();
+        }
+        //p2-140 key photos  -end
     }
+
 }
