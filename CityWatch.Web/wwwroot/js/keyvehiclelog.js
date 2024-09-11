@@ -2043,11 +2043,11 @@ $(function () {
 
         ////    }
         ////});
-
+       // P7#85  show combobox items in modal --start
         $(document).ready(function () {
             // Prevent the combo box from showing items and open the modal instead
             $('#vehicleConfigSelect').on('mousedown', function (e) {
-                e.preventDefault(); 
+                e.preventDefault();
                 $('#selectVehicleConfigModal').modal('show'); // Show the modal
             });
 
@@ -2063,8 +2063,28 @@ $(function () {
                 // Close the modal after selection
                 $('#selectVehicleConfigModal').modal('hide');
             });
+
+            
+            $('#closeModalButton').on('click', function (e) {
+                e.preventDefault(); // Prevent default behavior of closing
+                e.stopImmediatePropagation();
+                $('#selectVehicleConfigModal').modal('hide'); 
+            });
+
+            // Optional: Ensure modal hide does not affect parent window
+            $('#selectVehicleConfigModal').on('hide.bs.modal', function (e) {
+                e.stopImmediatePropagation(); // Stop event from propagating to parent
+            });
+
+            $('#selectVehicleConfigModal').on('hidden.bs.modal', function () {
+                
+                if (!$('#vkl-modal').hasClass('show')) {
+                    $('#vkl-modal').modal('show'); 
+                }
+            });
         });
 
+        // P7#85  show combobox items in modal --end
 
         $('#crmTrailerType').on('change', function () {
             const option = $(this).find(":selected");
