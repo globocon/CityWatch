@@ -2603,6 +2603,7 @@ $('#report_field_types').on('change', function () {
     function fileDownloadsButtonRenderer(value, record) {
         return '<div class="button-container-div">' + 
             '<button id="btnSopDownload" data-sop-filename="' + record.fileName + '" class="btn btn-outline-primary ml-2"><i class="fa fa-download mr-2"></i>Download</button>' +
+           
             '</div>'
     }
 
@@ -2616,6 +2617,16 @@ $('#report_field_types').on('change', function () {
     $('#file_downloads tbody').on('click', '#btnSopDownload', function () {
         const btn = $(this);
         $('#sop_filename').val(btn.attr('data-sop-filename'));
+        $('#AuthGuardForSopDwnldValidationSummary').html('');
+        $('#mdlAuthGuardForSopDownload').modal('show');
+    });
+    $('#fileDownloadLayout tbody').on('click', '.download-btn', function (e) {
+
+        const btn = $(this);
+        const fileName = btn.attr('data-filename');  
+        const categType = 'DailyLog';
+        $('#sop_filename').val(fileName);
+        $('#sop_catg_type').val(categType);
         $('#AuthGuardForSopDwnldValidationSummary').html('');
         $('#mdlAuthGuardForSopDownload').modal('show');
     });

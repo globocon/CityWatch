@@ -5972,14 +5972,14 @@ $(function () {
         data: [],
         columns: [
         { data: 'id', title: 'Event ID', visible: false },
-        { data: 'user.userName', title: 'User', width: "10%" },
+        { data: 'user.userName', title: 'User', width: "8%" },
         { data: 'guard.name', title: 'Guard Name', width: "15%" },
-        { data: 'guard.securityNo', title: 'Security Number', width: "10%" },
-        { data: 'ipAddress', title: 'IP Address', width: "10%" },
-        { data: 'dwnlCatagory', title: 'Categories', width: "15%" },
-        { data: 'dwnlFileName', title: 'File Name', width: "20%" },
+        { data: 'guard.securityNo', title: 'Security Number', width: "9%" },
+        { data: 'ipAddress', title: 'IP Address', width: "8%" },
+        { data: 'dwnlCatagory', title: 'Categories', width: "13%" },
+        { data: 'dwnlFileName', title: 'File Name', width: "32%"},
         {
-            data: 'eventDateTime', title: 'Download/View Time', width: "20%", 'render': function (value) {
+            data: 'eventDateTime', title: 'Download/View Time', width: "15%", 'render': function (value) {
                 const date = new Date(value);
                 var DateTime = luxon.DateTime;
                 var dt1 = DateTime.fromJSDate(date);
