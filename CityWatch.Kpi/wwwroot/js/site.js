@@ -1118,6 +1118,10 @@ $(function () {
         var searchitem = '';
         gridClientSiteSettings.reload({ type: $(this).val(), searchTerm: searchitem, userId: $('#hid_userIdSettings').val() });
     });
+    if ($('#cs_client_type').val() != '') {
+        var searchitem = $("#search_sites_settings").val();
+        gridClientSiteSettings.reload({ type: $(this).val(), searchTerm: searchitem, userId: $('#hid_userIdSettings').val() });
+    }
     /*code added for search client stop */
     var currentDiv = 1;
     let gritdSmartWands;   

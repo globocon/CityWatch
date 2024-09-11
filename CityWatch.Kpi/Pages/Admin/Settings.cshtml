@@ -112,10 +112,25 @@
                     <div class="form-group row">
                         <label class="col-form-label col-md-2">Filter by Client Type</label>
                         <div class="col-md-5">
-                            <select class="form-control" id="cs_client_type" asp-items="@Model.ViewDataService.ClientTypesUsingLoginMainUserId(Model.userId)"></select>
+                            @if (Model.ClientTypeId != 0)
+                            {
+                                <select class="form-control" id="cs_client_type" asp-items="@Model.ViewDataService.ClientTypesUsingLoginMainUserIdWithClientTypeId(Model.userId,Model.ClientTypeId)"></select>
+                            }
+                            else
+                            {
+                                <select class="form-control" id="cs_client_type" asp-items="@Model.ViewDataService.ClientTypesUsingLoginMainUserId(Model.userId)"></select>
+                            }
                         </div>
                         <div class="input-group offset-md-1 col-md-4">
-                            <input type="text" id="search_sites_settings" class="form-control" placeholder="Search Client Site">
+                            @if(Model.ClientSiteId!=0)
+                            {
+                                <input type="text" id="search_sites_settings" class="form-control" placeholder="Search Client Site" asp-items="@Model.ViewDataService.ClientSitesUsingId(Model.ClientSiteId)">
+                            }
+                            else
+                            {
+                                <input type="text" id="search_sites_settings" class="form-control" placeholder="Search Client Site">
+                            }
+                            
                             <div class="input-group-append">
                                 <button class="btn btn-outline-primary" style="height:33px" id="btnSearchSites"><i class="fa fa-search"></i></button>
                             </div>

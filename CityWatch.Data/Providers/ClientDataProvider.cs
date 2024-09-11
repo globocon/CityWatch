@@ -213,8 +213,8 @@ namespace CityWatch.Data.Providers
         public List<ClientSite> GetClientSitesUsingLoginUser(int? userId, string searchTerm);
         public string CheckRulesOneinKpiManningInput(ClientSiteKpiSetting settings);
         public string CheckRulesTwoinKpiManningInput(ClientSiteKpiSetting settings);
-        
 
+        List<ClientSite> GetClientSiteDetailsWithId(int clientSiteIds);
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -2482,6 +2482,12 @@ namespace CityWatch.Data.Providers
         {
             return _context.TimeSheet.FirstOrDefault();
         }
-
+        public List<ClientSite> GetClientSiteDetailsWithId(int clientSiteIds)
+        {
+            var clientSiteDetails = _context.ClientSites
+                .Where(x => x.Id == clientSiteIds)
+                .ToList();
+            return clientSiteDetails;
+        }
     }
 }

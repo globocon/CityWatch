@@ -4864,7 +4864,7 @@ $(function () {
                     $('#modelGuardLoginC4iSettingsPatrol').modal('hide');
 
                     clearGuardValidationSummary('GuardLoginValidationSummaryC4iSettings');
-                    window.location.href = '/Admin/Settings?Sl = ' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
+                    window.location.href = '/Admin/Settings?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
                 }
                 else {
 

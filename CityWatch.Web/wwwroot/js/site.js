@@ -468,32 +468,13 @@
 
         $editBtn.on('click', function (e) {
             //   gridSite.edit($(this).data('id'));
-            var securityLicenseNo = $('#siteGuardSecurityLicenseNo').val();
-            $.ajax({
-                url: '/Admin/Settings?handler=GuardLoginId',
-                type: 'GET',
-                
-                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-            }).done(function (result) {
-                if (result.accessPermission) {
+            var securityNumber = $('#siteGuardSecurityLicenseNo').val();
+            var siteGuardId = $('#siteGuardId').val();
+            var siteloggedInUserId = $('#siteloggedInUserId').val();
                     /* $('#txt_securityLicenseNoIR').val('');*/
-                    window.location.href = 'https://localhost:44378/Admin/Settings?ClientTypeId=' + record.typeId + "&&ClientSiteId=" + record.id + "&Sl = " + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
-                    //window.location.href = 'https://kpi.cws-ir.com/Admin/Settings?ClientTypeId=' + record.typeId + "&&ClientSiteId=" + record.id + "&Sl = " + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
-                }
-                else {
-
-                    // $('#txt_securityLicenseNo').val('');
-                    /*$('#txt_securityLicenseNoIR').val('');*/
-                    $('#modelGuardLoginC4iSettingsPatrol').modal('show');
-                    if (result.successCode === 0) {
-                        displayGuardValidationSummary('GuardLoginValidationSummaryC4iSettings', result.successMessage);
-                    }
-                }
-            });
-            
-            window.location.href = 'https://localhost:44378/Admin/Settings?ClientTypeId=' + record.typeId + "&&ClientSiteId=" + record.id;
-//                + "&Sl = " + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
-
+            window.location.href = 'https://localhost:44378/Dashboard?ClientTypeId=' + record.typeId + "&&ClientSiteId=" + record.id + "&&Sl=" + securityNumber + "&&lud=" + siteloggedInUserId + "&&guid=" + siteGuardId;
+                    //window.location.href = 'https://kpi.cws-ir.com/Admin/Dashboard?ClientTypeId=' + record.typeId + "&&ClientSiteId=" + record.id + "&Sl = " + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
+               
         });
 
       
