@@ -565,7 +565,8 @@
             <h4>File Attachments</h4>
             <i class="text-muted">Click Browse and select one or more files ( .avi, .bmp, .jpeg, .jpg, .mp3, .mp4, .pdf, .png, .xlsx)</i> @* .mp3, .mp4, .wav Added by binoy to include multimedia files *@
             <div class="custom-file mt-3">
-                <input type="file" id="file_upload" class="custom-file-input" accept=".avi, .bmp, .jpeg, .jpg, .mp3, .mp4, .pdf, .png, .xlsx, .heic" multiple>  @* .mp3, .mp4, .wav Added by binoy to include multimedia files *@
+                @* <input type="file" id="file_upload" class="custom-file-input" accept=".avi, .bmp, .jpeg, .jpg, .mp3, .mp4, .pdf, .png, .xlsx, .heic" multiple>  @* .mp3, .mp4, .wav Added by binoy to include multimedia files *@ 
+                <input type="file" id="file_upload" class="custom-file-input" accept=".avi, .bmp, .jpeg, .jpg, .mp3, .mp4, .pdf, .png, .xlsx" multiple>  @* .mp3, .mp4, .wav Added by binoy to include multimedia files *@
                 <label class="custom-file-label" for="attachments">Choose file to upload</label>
             </div>
         </div>
@@ -907,21 +908,22 @@
                 li.id = attachment_id;
                 li.className = 'list-group-item';
                 li.dataset.index = attachIndex;
+                 let liText = document.createTextNode(file.name);
                 // p1-102 add photos with heic extension-start
 
-                const fileExtension = file.name.split('.').pop();
-                var fileNameWithoutExtension;
-                if (fileExtension == 'heic' || fileExtension == '.HEIC') { 
-                     fileNameWithoutExtension = file.name.split('.').slice(0, -1).join('.') + '.jpg';
-                }
-                else
-                {
-                    fileNameWithoutExtension = file.name;
-                }
-                // Extract the file name without extension
+                // const fileExtension = file.name.split('.').pop();
+                // var fileNameWithoutExtension;
+                // if (fileExtension == 'heic' || fileExtension == '.HEIC') { 
+                //      fileNameWithoutExtension = file.name.split('.').slice(0, -1).join('.') + '.jpg';
+                // }
+                // else
+                // {
+                //     fileNameWithoutExtension = file.name;
+                // }
+                // // Extract the file name without extension
                 
 
-                let liText = document.createTextNode(fileNameWithoutExtension);
+                // let liText = document.createTextNode(fileNameWithoutExtension);
                 // p1-102 add photos with heic extension-end
                 const icon = document.createElement("i");
                 icon.className = 'fa fa-circle-o-notch fa-spin ml-2 text-success';
