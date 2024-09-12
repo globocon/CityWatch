@@ -213,8 +213,7 @@ namespace CityWatch.Data.Providers
         public List<ClientSite> GetClientSitesUsingLoginUser(int? userId, string searchTerm);
         public string CheckRulesOneinKpiManningInput(ClientSiteKpiSetting settings);
         public string CheckRulesTwoinKpiManningInput(ClientSiteKpiSetting settings);
-        
-
+        public string GetContractedManningDetailsForSpecificSite(string siteName);
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -295,7 +294,7 @@ namespace CityWatch.Data.Providers
 
         public List<ClientSite> GetClientSites(int? typeId)
         {
-            
+
 
             return _context.ClientSites
                 .Where(x => (!typeId.HasValue || (typeId.HasValue && x.TypeId == typeId.Value)) && x.IsActive == true)
@@ -331,12 +330,12 @@ namespace CityWatch.Data.Providers
         public List<ClientSite> GetClientSitesUsingLoginUser(int? userId, string searchTerm)
         {
             var userAccessSitelist = _context.UserClientSiteAccess
-            .Where(z => z.UserId == userId )
+            .Where(z => z.UserId == userId)
            .Select(z => z.ClientSite)
            .Distinct()
            .OrderBy(x => x.Name)
            .ToList();
-            if(!string.IsNullOrEmpty(searchTerm))
+            if (!string.IsNullOrEmpty(searchTerm))
             {
                 userAccessSitelist = userAccessSitelist.Where(x => x.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
             }
@@ -424,7 +423,7 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.Notes)
                 .ToList();
         }
-        
+
 
         public ClientSiteKpiSetting GetClientSiteKpiSetting(int clientSiteId)
         {
@@ -446,7 +445,7 @@ namespace CityWatch.Data.Providers
             }
             return clientSiteKpiSetting;
         }
-        public List<GuardLogin> GetLoginDetailsGuard(int GuardID,DateTime startdate, DateTime enddate)
+        public List<GuardLogin> GetLoginDetailsGuard(int GuardID, DateTime startdate, DateTime enddate)
         {
             return _context.GuardLogins
         .Where(gl => gl.GuardId == GuardID && gl.LoginDate.Date >= startdate.Date && gl.LoginDate.Date <= enddate.Date)
@@ -459,7 +458,7 @@ namespace CityWatch.Data.Providers
             var TimesheetName = "";
             var guardLogin = _context.GuardLogins
      .FirstOrDefault(x => x.GuardId == GuardID && x.LoginDate.Date == enddate.Date);
-            if (guardLogin!=null)
+            if (guardLogin != null)
             {
                 if (guardLogin.SmartWandId != null)
                 {
@@ -484,12 +483,12 @@ namespace CityWatch.Data.Providers
      .FirstOrDefault(x => x.GuardId == GuardID && x.LoginDate.Date == enddate.Date);
             if (guardLogin != null)
             {
-                 var SiteName1 = _context.ClientSites.Where(x => x.Id == guardLogin.ClientSiteId).FirstOrDefault();
+                var SiteName1 = _context.ClientSites.Where(x => x.Id == guardLogin.ClientSiteId).FirstOrDefault();
                 SiteName = SiteName1.Name;
             }
             return SiteName;
         }
-            public List<ClientSiteKpiSetting> GetClientSiteKpiSetting(int[] clientSiteIds)
+        public List<ClientSiteKpiSetting> GetClientSiteKpiSetting(int[] clientSiteIds)
         {
             var clientSiteKpiSetting = _context.ClientSiteKpiSettings
                 .Include(x => x.ClientSite)
@@ -792,7 +791,7 @@ namespace CityWatch.Data.Providers
                     //p1-225 Core Settings-start
                     templateToUpdate.HyperlinkColour = companyDetails.HyperlinkColour;
                     templateToUpdate.HyperlinkLabel = companyDetails.HyperlinkLabel;
-                    templateToUpdate.LogoHyperlink=companyDetails.LogoHyperlink;
+                    templateToUpdate.LogoHyperlink = companyDetails.LogoHyperlink;
                     //p1-225 Core Settings-end
                 }
 
@@ -862,17 +861,17 @@ namespace CityWatch.Data.Providers
                             if (setting.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == false).Count() > 0)
                             {
                                 var positionIdGuard = setting.ClientSiteManningGuardKpiSettings.Where(x => x.PositionId != 0).ToList();
-                               
+
                                 if (positionIdGuard != null)
                                 {
                                     foreach (var poId in positionIdGuard)
                                     {
                                         if (poId != null)
                                         {
-                                            var CrmSupplier = setting.ClientSiteManningGuardKpiSettings.Where(x => x.CrmSupplier != null &&x.OrderId==poId.OrderId).FirstOrDefault();
+                                            var CrmSupplier = setting.ClientSiteManningGuardKpiSettings.Where(x => x.CrmSupplier != null && x.OrderId == poId.OrderId).FirstOrDefault();
                                             if (CrmSupplier != null)
                                             {
-                                                setting.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == poId.OrderId).ToList().ForEach(x => {  x.CrmSupplier = CrmSupplier.CrmSupplier; });
+                                                setting.ClientSiteManningGuardKpiSettings.Where(x => x.OrderId == poId.OrderId).ToList().ForEach(x => { x.CrmSupplier = CrmSupplier.CrmSupplier; });
 
                                             }
 
@@ -983,8 +982,8 @@ namespace CityWatch.Data.Providers
             {
                 return TimeSpan.TryParse(input, out inputTimeSpan);
             }
-            
-            
+
+
         }
 
         /*
@@ -1055,11 +1054,11 @@ namespace CityWatch.Data.Providers
                     //{
                     //    invalidInputs += $"Invalid worker entry for times {listItem.EmpHoursStart} - {listItem.EmpHoursEnd},";
                     //}
-                   
+
                     if (!AreAllValuesPresent(listItem.EmpHoursStart, listItem.EmpHoursEnd, listItem.NoOfPatrols))
                     {
                         string notnullVlaue = string.Empty;
-                        string  nullVlaue = string.Empty;
+                        string nullVlaue = string.Empty;
                         invalidInputs += "Incomplete entry for ";
                         if (string.IsNullOrEmpty(listItem.EmpHoursStart))
                         {
@@ -1067,7 +1066,7 @@ namespace CityWatch.Data.Providers
                         }
                         else
                         {
-                            notnullVlaue+= " Start :"+ listItem.EmpHoursStart;
+                            notnullVlaue += " Start :" + listItem.EmpHoursStart;
 
                         }
                         if (string.IsNullOrEmpty(listItem.EmpHoursEnd))
@@ -1076,19 +1075,19 @@ namespace CityWatch.Data.Providers
                         }
                         else
                         {
-                            notnullVlaue += " End :"+ listItem.EmpHoursEnd;
+                            notnullVlaue += " End :" + listItem.EmpHoursEnd;
                         }
-                        if(listItem.NoOfPatrols==0 || listItem.NoOfPatrols ==null)
+                        if (listItem.NoOfPatrols == 0 || listItem.NoOfPatrols == null)
                         {
                             nullVlaue += " Worker : _ ";
                         }
                         else
                         {
-                            notnullVlaue += " Worker : "+listItem.NoOfPatrols.ToString();
+                            notnullVlaue += " Worker : " + listItem.NoOfPatrols.ToString();
                         }
-                      
 
-                        invalidInputs +=  notnullVlaue+ nullVlaue+ ", ";
+
+                        invalidInputs += notnullVlaue + nullVlaue + ", ";
                     }
                 }
                 foreach (var listItem2 in settings.ClientSiteManningPatrolCarKpiSettings)
@@ -1103,7 +1102,7 @@ namespace CityWatch.Data.Providers
                     }
                 }
 
-               
+
 
 
             }
@@ -1135,7 +1134,7 @@ namespace CityWatch.Data.Providers
 
 
             bool timesNotNull = !string.IsNullOrEmpty(startTime) || !string.IsNullOrEmpty(endTime);
-            if(!string.IsNullOrEmpty(startTime) || !string.IsNullOrEmpty(endTime))
+            if (!string.IsNullOrEmpty(startTime) || !string.IsNullOrEmpty(endTime))
             {
                 timesNotNull = true;
             }
@@ -1693,7 +1692,7 @@ namespace CityWatch.Data.Providers
                 {
                     TextMessage = liveEvents.TextMessage,
                     ExpiryDate = liveEvents.ExpiryDate,
-                    Weblink=liveEvents.Weblink,
+                    Weblink = liveEvents.Weblink,
                 };
                 _context.BroadcastBannerLiveEvents.Add(calendarEventsnew);
             }
@@ -1760,7 +1759,7 @@ namespace CityWatch.Data.Providers
 
 
         }
-         
+
         public void GlobalComplianceAlertEmail(string Email)
         {
             if (!string.IsNullOrEmpty(Email))
@@ -1797,7 +1796,7 @@ namespace CityWatch.Data.Providers
             if (!string.IsNullOrEmpty(DroboxDir))
             {
 
-               
+
                 var DropboxDirUpdate = _context.DropboxDirectory.Where(x => x.Id != 0).ToList();
                 if (DropboxDirUpdate != null)
                 {
@@ -1812,13 +1811,13 @@ namespace CityWatch.Data.Providers
                     DropboxDir = DroboxDir
                 };
                 _context.DropboxDirectory.Add(Dropboxnew);
-                
+
 
                 _context.SaveChanges();
             }
 
         }
-        public void TimesheetSave(string weekname,string time,string mailid,string dropbox)
+        public void TimesheetSave(string weekname, string time, string mailid, string dropbox)
         {
             if (!string.IsNullOrEmpty(weekname))
             {
@@ -1836,9 +1835,9 @@ namespace CityWatch.Data.Providers
                 var TimeSheetnew = new TimeSheet()
                 {
                     weekName = weekname,
-                    Frequency=time,
-                    Email= mailid,
-                    Dropbox=dropbox,
+                    Frequency = time,
+                    Email = mailid,
+                    Dropbox = dropbox,
                 };
                 _context.TimeSheet.Add(TimeSheetnew);
 
@@ -1950,7 +1949,7 @@ namespace CityWatch.Data.Providers
                     StartDate = calendarEvents.StartDate,
                     ReferenceNo = calendarEvents.ReferenceNo,
                     RepeatYearly = calendarEvents.RepeatYearly,
-                    IsPublicHoliday= calendarEvents.IsPublicHoliday,
+                    IsPublicHoliday = calendarEvents.IsPublicHoliday,
                 };
                 _context.BroadcastBannerCalendarEvents.Add(calendarEventsnew);
             }
@@ -2312,7 +2311,7 @@ namespace CityWatch.Data.Providers
         {
 
             return _context.KeyVehicleLogs.Where(z => z.CompanyName == providerName && z.PersonType == 195).FirstOrDefault().Email;
-            
+
 
 
         }
@@ -2369,7 +2368,7 @@ namespace CityWatch.Data.Providers
                     _context.SaveChanges();
                 }
 
-          
+
                 schedule.GroupName = linkedDuress.GroupName.Trim();
                 if (updateClientSites)
                     schedule.RCLinkedDuressClientSites = linkedDuress.RCLinkedDuressClientSites;
@@ -2380,7 +2379,7 @@ namespace CityWatch.Data.Providers
         public bool CheckAlreadyExistTheGroupName(RCLinkedDuressMaster linkedDuress, bool updateClientSites = false)
         {
             var status = true;
-            if(updateClientSites)
+            if (updateClientSites)
             {
                 var sameGroupName = _context.RCLinkedDuressMaster.Where(x => x.GroupName.Trim() == linkedDuress.GroupName.Trim()
                 && x.Id != linkedDuress.Id).ToList();
@@ -2405,11 +2404,11 @@ namespace CityWatch.Data.Providers
         }
         public List<ClientSiteKpiSettingsCustomDropboxFolder> GetKpiSettingsCustomDropboxFolder(int clientSiteId)
         {
-            return _context.ClientSiteKpiSettingsCustomDropboxFolder.Where(x=> x.ClientSiteId == clientSiteId).ToList();
+            return _context.ClientSiteKpiSettingsCustomDropboxFolder.Where(x => x.ClientSiteId == clientSiteId).ToList();
         }
 
         public void SaveKpiSettingsCustomDropboxFolder(ClientSiteKpiSettingsCustomDropboxFolder record)
-        {            
+        {
             if (record.Id == -1)
             {
                 record.Id = 0;
@@ -2462,7 +2461,7 @@ namespace CityWatch.Data.Providers
             {
                 throw new InvalidOperationException("Only update is allowed !!!.");
             }
-            
+
         }
         public GlobalComplianceAlertEmail GetEmail()
         {
@@ -2485,5 +2484,53 @@ namespace CityWatch.Data.Providers
             return _context.TimeSheet.FirstOrDefault();
         }
 
+        public string GetContractedManningDetailsForSpecificSite(string siteName)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(siteName))
+                {
+                    return string.Empty;
+                }
+
+                var clientSite = _context.ClientSites.FirstOrDefault(x => x.Name == siteName);
+                if (clientSite == null)
+                {
+                    // Site not found, return a default or throw an exception
+                    return string.Empty;
+                }
+
+                var clientSiteKpiSettings = _context.ClientSiteKpiSettings
+                    .FirstOrDefault(x => x.ClientSiteId == clientSite.Id);
+                if (clientSiteKpiSettings == null)
+                {
+                    // KPI settings not found, return a default or throw an exception
+                    return string.Empty;
+                }
+
+                var distinctPositions = _context.ClientSiteManningKpiSettings
+                    .Where(x => x.SettingsId == clientSiteKpiSettings.Id && x.Type == "2")
+                    .Select(x => x.PositionId)
+                    .Distinct()
+                    .FirstOrDefault();
+                var postionName = _context.IncidentReportPositions.Where(x => x.Id == distinctPositions).FirstOrDefault();
+
+                if (postionName != null)
+                {
+                    return postionName.Name ?? string.Empty;
+
+                }
+                else
+                {
+                    return string.Empty;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return string.Empty;
+            }
+        }
     }
+
 }

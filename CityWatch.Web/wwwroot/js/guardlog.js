@@ -147,18 +147,113 @@ $(function () {
                 data.map(function (result) {
                     if (isPosition) {
                         smart_Wand_Or_Position.append('<option value="' + result.value + '">' + result.text + '</option>');
+                      
+                      
                     }
                     else {
                         smart_Wand_Or_Position.append('<option value="' + result.smartWandId + '">' + result.smartWandId + (result.isInUse ? ' &#xf06a;' : '') + '</option>');
                     }
                 });
 
+
+
+
                 if (smartWandOrPositionId) {
                     smart_Wand_Or_Position.val(smartWandOrPositionId);
                 } else {
                     smart_Wand_Or_Position.val('');
                 }
+
+
+                if (isPosition) {
+                    /* new Code for select deafult postion if manning deatils exist Start11/09/2024*/
+                    $.ajax({
+                        url: '/Guard/Login?handler=ManningDeatilsForTheSite&siteName=' + encodeURIComponent(clientSiteName ? clientSiteName : $('#GuardLogin_ClientSiteName').val()),
+                        type: 'GET',
+                        dataType: 'json',
+
+                    }).done(function (result) {
+                        if (result.success) {
+                            if (result.positionIdDefault != '') {
+
+                                $('#GuardLogin_IsPosition').prop('checked', true);
+                                getSmartWandOrOfficerPositionOnSiteChange(true, clientSiteName, result.positionIdDefault);
+                                /*smart_Wand_Or_Position.html('');
+                                smart_Wand_Or_Position.append('<option value="">Select</option>').attr("selected", "selected");
+                                data.map(function (result) {
+            
+                                    smart_Wand_Or_Position.append('<option value="' + result.value + '">' + result.text + '</option>');
+            
+            
+            
+            
+                                });
+                                smart_Wand_Or_Position.val(result.positionIdDefault).trigger('change');*/
+                            }
+                        }
+
+                    }).fail(function () {
+
+                    }).always(function () {
+
+                    });
+
+                    /* new Code for select deafult postion if manning deatils exist end*/
+
+                }
+
+               
+                   
+                }
+
+            
+        });
+    }
+
+
+
+    function getSmartWandOrOfficerPositionOnSiteChange(isPosition, clientSiteName, smartWandOrPositionId) {
+
+       
+        const url = isPosition ?
+            '/Guard/Login?handler=OfficerPositions' :
+            '/Guard/Login?handler=SmartWands&siteName=' + encodeURIComponent(clientSiteName ? clientSiteName : $('#GuardLogin_ClientSiteName').val()) +
+            '&guardId=' + $('#GuardLogin_Guard_Id').val();
+
+        const smart_Wand_Or_Position = $('#GuardLogin_SmartWandOrPosition');
+        smart_Wand_Or_Position.html('');
+        $.ajax({
+            url: url,
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                smart_Wand_Or_Position.append('<option value="">Select</option>').attr("selected", "selected");
+                data.map(function (result) {
+                    if (isPosition) {
+                        smart_Wand_Or_Position.append('<option value="' + result.value + '">' + result.text + '</option>');
+
+
+                    }
+                    else {
+                        smart_Wand_Or_Position.append('<option value="' + result.smartWandId + '">' + result.smartWandId + (result.isInUse ? ' &#xf06a;' : '') + '</option>');
+                    }
+                });
+
+
+
+
+                if (smartWandOrPositionId) {
+                    smart_Wand_Or_Position.val(smartWandOrPositionId);
+                } else {
+                    smart_Wand_Or_Position.val('');
+                }
+
+
+
+               
             }
+
+
         });
     }
 
@@ -323,8 +418,46 @@ $(function () {
 
     $('#GuardLogin_ClientSiteName').on('change', function () {
         const isPosition = $('#GuardLogin_IsPosition').is(':checked');
-        getSmartWandOrOfficerPosition(isPosition);
+        //getSmartWandOrOfficerPositionOnSiteChange(isPosition);
         $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
+        var clientSiteName = $(this).val();
+        /* new Code for select deafult postion if manning deatils exist Start11/09/2024*/
+        $.ajax({
+            url: '/Guard/Login?handler=ManningDeatilsForTheSite&siteName=' + encodeURIComponent(clientSiteName ? clientSiteName : $('#GuardLogin_ClientSiteName').val()),
+            type: 'GET',
+            dataType: 'json',
+
+        }).done(function (result) {
+            if (result.success) {
+                if (result.positionIdDefault != '') {
+                    
+                    $('#GuardLogin_IsPosition').prop('checked', true);
+                    getSmartWandOrOfficerPositionOnSiteChange(true, clientSiteName, result.positionIdDefault);
+                    /*smart_Wand_Or_Position.html('');
+                    smart_Wand_Or_Position.append('<option value="">Select</option>').attr("selected", "selected");
+                    data.map(function (result) {
+
+                        smart_Wand_Or_Position.append('<option value="' + result.value + '">' + result.text + '</option>');
+
+
+
+
+                    });
+                    smart_Wand_Or_Position.val(result.positionIdDefault).trigger('change');*/
+                }
+            }
+
+        }).fail(function () {
+
+        }).always(function () {
+
+        });
+
+        /* new Code for select deafult postion if manning deatils exist end*/
+
+
+
+
         ////To Get the Critical Documents start
         //var ClientSiteName = $('#GuardLogin_ClientSiteName').val();
         //$.ajax({
