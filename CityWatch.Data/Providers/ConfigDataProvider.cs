@@ -418,7 +418,8 @@ namespace CityWatch.Data.Providers
                         DropboxDir = incidentReportPosition.DropboxDir,
                         IsLogbook = incidentReportPosition.IsLogbook,
                         ClientsiteId = incidentReportPosition.ClientsiteId,
-                        ClientsiteName = ClientSiteName.Name
+                        ClientsiteName = ClientSiteName.Name,
+                        IsSmartwandbypass= incidentReportPosition.IsSmartwandbypass
                     });
                 }
                 else
@@ -431,7 +432,8 @@ namespace CityWatch.Data.Providers
                         DropboxDir = incidentReportPosition.DropboxDir,
                         IsLogbook = incidentReportPosition.IsLogbook,
                         ClientsiteId = incidentReportPosition.ClientsiteId,
-                        ClientsiteName = null
+                        ClientsiteName = null,
+                        IsSmartwandbypass = incidentReportPosition.IsSmartwandbypass
                     });
 
                 }
@@ -455,6 +457,7 @@ namespace CityWatch.Data.Providers
                     {
                         positionToUpdate.ClientsiteName = null;
                     }
+                    positionToUpdate.IsSmartwandbypass = incidentReportPosition.IsSmartwandbypass;
 
                 }
             }

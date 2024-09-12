@@ -147,18 +147,113 @@ $(function () {
                 data.map(function (result) {
                     if (isPosition) {
                         smart_Wand_Or_Position.append('<option value="' + result.value + '">' + result.text + '</option>');
+                      
+                      
                     }
                     else {
                         smart_Wand_Or_Position.append('<option value="' + result.smartWandId + '">' + result.smartWandId + (result.isInUse ? ' &#xf06a;' : '') + '</option>');
                     }
                 });
 
+
+
+
                 if (smartWandOrPositionId) {
                     smart_Wand_Or_Position.val(smartWandOrPositionId);
                 } else {
                     smart_Wand_Or_Position.val('');
                 }
+
+
+                if (isPosition) {
+                    /* new Code for select deafult postion if manning deatils exist Start11/09/2024*/
+                    $.ajax({
+                        url: '/Guard/Login?handler=ManningDeatilsForTheSite&siteName=' + encodeURIComponent(clientSiteName ? clientSiteName : $('#GuardLogin_ClientSiteName').val()),
+                        type: 'GET',
+                        dataType: 'json',
+
+                    }).done(function (result) {
+                        if (result.success) {
+                            if (result.positionIdDefault != '') {
+
+                                $('#GuardLogin_IsPosition').prop('checked', true);
+                                getSmartWandOrOfficerPositionOnSiteChange(true, clientSiteName, result.positionIdDefault);
+                                /*smart_Wand_Or_Position.html('');
+                                smart_Wand_Or_Position.append('<option value="">Select</option>').attr("selected", "selected");
+                                data.map(function (result) {
+            
+                                    smart_Wand_Or_Position.append('<option value="' + result.value + '">' + result.text + '</option>');
+            
+            
+            
+            
+                                });
+                                smart_Wand_Or_Position.val(result.positionIdDefault).trigger('change');*/
+                            }
+                        }
+
+                    }).fail(function () {
+
+                    }).always(function () {
+
+                    });
+
+                    /* new Code for select deafult postion if manning deatils exist end*/
+
+                }
+
+               
+                   
+                }
+
+            
+        });
+    }
+
+
+
+    function getSmartWandOrOfficerPositionOnSiteChange(isPosition, clientSiteName, smartWandOrPositionId) {
+
+       
+        const url = isPosition ?
+            '/Guard/Login?handler=OfficerPositions' :
+            '/Guard/Login?handler=SmartWands&siteName=' + encodeURIComponent(clientSiteName ? clientSiteName : $('#GuardLogin_ClientSiteName').val()) +
+            '&guardId=' + $('#GuardLogin_Guard_Id').val();
+
+        const smart_Wand_Or_Position = $('#GuardLogin_SmartWandOrPosition');
+        smart_Wand_Or_Position.html('');
+        $.ajax({
+            url: url,
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                smart_Wand_Or_Position.append('<option value="">Select</option>').attr("selected", "selected");
+                data.map(function (result) {
+                    if (isPosition) {
+                        smart_Wand_Or_Position.append('<option value="' + result.value + '">' + result.text + '</option>');
+
+
+                    }
+                    else {
+                        smart_Wand_Or_Position.append('<option value="' + result.smartWandId + '">' + result.smartWandId + (result.isInUse ? ' &#xf06a;' : '') + '</option>');
+                    }
+                });
+
+
+
+
+                if (smartWandOrPositionId) {
+                    smart_Wand_Or_Position.val(smartWandOrPositionId);
+                } else {
+                    smart_Wand_Or_Position.val('');
+                }
+
+
+
+               
             }
+
+
         });
     }
 
@@ -323,8 +418,46 @@ $(function () {
 
     $('#GuardLogin_ClientSiteName').on('change', function () {
         const isPosition = $('#GuardLogin_IsPosition').is(':checked');
-        getSmartWandOrOfficerPosition(isPosition);
+        //getSmartWandOrOfficerPositionOnSiteChange(isPosition);
         $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
+        var clientSiteName = $(this).val();
+        /* new Code for select deafult postion if manning deatils exist Start11/09/2024*/
+        $.ajax({
+            url: '/Guard/Login?handler=ManningDeatilsForTheSite&siteName=' + encodeURIComponent(clientSiteName ? clientSiteName : $('#GuardLogin_ClientSiteName').val()),
+            type: 'GET',
+            dataType: 'json',
+
+        }).done(function (result) {
+            if (result.success) {
+                if (result.positionIdDefault != '') {
+                    
+                    $('#GuardLogin_IsPosition').prop('checked', true);
+                    getSmartWandOrOfficerPositionOnSiteChange(true, clientSiteName, result.positionIdDefault);
+                    /*smart_Wand_Or_Position.html('');
+                    smart_Wand_Or_Position.append('<option value="">Select</option>').attr("selected", "selected");
+                    data.map(function (result) {
+
+                        smart_Wand_Or_Position.append('<option value="' + result.value + '">' + result.text + '</option>');
+
+
+
+
+                    });
+                    smart_Wand_Or_Position.val(result.positionIdDefault).trigger('change');*/
+                }
+            }
+
+        }).fail(function () {
+
+        }).always(function () {
+
+        });
+
+        /* new Code for select deafult postion if manning deatils exist end*/
+
+
+
+
         ////To Get the Critical Documents start
         //var ClientSiteName = $('#GuardLogin_ClientSiteName').val();
         //$.ajax({
@@ -471,17 +604,54 @@ $(function () {
     $('#btnGuardLogin').on('click', function () {
 
 
-
+       
 
         const isPosition = $('#GuardLogin_IsPosition').is(':checked');
         if (isPosition) {
-            confirmDialog('Only click <b>Position</b> if you do not have a Smart WAND - are you sure you want to continue?', function () {
+            $('#loader').show();
+            // New change start bypass the message 
+            if ($('#GuardLogin_SmartWandOrPosition').val() !== '') {
+                $.ajax({
+                    url: '/Guard/Login?handler=CheckIfSmartwandMsgBypass',
+                    type: 'GET',
+                    data: {
+                        clientSiteName: $('#GuardLogin_ClientSiteName').val(),
+                        positionName: $('#GuardLogin_SmartWandOrPosition').val(),
+                        guardId: $('#GuardLogin_Guard_Id').val()
+                    }
+                }).done(function (result) {
+                    if (result) {
+                        $('#loader').show();
+                        submitGuardLogin();
+                    }
+                    else {
+
+                        confirmDialog('Only click <b>Position</b> if you do not have a Smart WAND - are you sure you want to continue?', function () {
+                            const validateSmartWand = $('#GuardLogin_IsPosition').is(':not(:checked)') && $('#GuardLogin_SmartWandOrPosition').val() !== '';
+
+                            if (!validateSmartWand) {
+                                $('#loader').show();
+                                submitGuardLogin();
+                            }
+                        });
+                    }
+                }).always(function () {
+                    $('#loader').hide();
+                });
+
+            }
+            else
+            {
                 const validateSmartWand = $('#GuardLogin_IsPosition').is(':not(:checked)') && $('#GuardLogin_SmartWandOrPosition').val() !== '';
 
                 if (!validateSmartWand) {
                     submitGuardLogin();
                 }
-            });
+
+            }
+
+
+         
         }
         else {
             const validateSmartWand = $('#GuardLogin_IsPosition').is(':not(:checked)') && $('#GuardLogin_SmartWandOrPosition').val() !== '';
@@ -535,6 +705,7 @@ $(function () {
 
 
     function submitGuardLogin() {
+        $('#loader').show();
         calculateDutyDateTime();
         var mobileno = $('#GuardLogin_Guard_Mobile').val();
         // Task p6#73_TimeZone issue -- added by Binoy -- Start
@@ -549,6 +720,8 @@ $(function () {
 
         }
         else {
+
+            $('#loader').show();
             // P4#70 checking guard license no and mesaging if guard is not logged in for 120 days + disabling the active status
             var guardId = $('#GuardLogin_Guard_SecurityNo').val();
 
@@ -567,7 +740,7 @@ $(function () {
                     return;
                 } else {
                     // if guard is active then submit guard login
-                    $('#loader').show();
+                 
                     $.ajax({
                         url: '/Guard/Login?handler=LoginGuard',
                         type: 'POST',
@@ -1183,7 +1356,7 @@ $(function () {
               //  const file = file.files.item(i);
                 const fileExtn = file.files.item(i).name.split('.').pop();
                 // if (!fileExtn || fileExtn !== 'jpg' || fileExtn !=='JPG' || fileExtn !=='jpeg' || fileExtn !=='JPEG') {
-                if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'bmp' && fileExtn !== 'BMP' && fileExtn !== 'GIF' && fileExtn !== 'gif')) {
+                if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'bmp' && fileExtn !== 'BMP' && fileExtn !== 'GIF' && fileExtn !== 'gif' && fileExtn !== 'heic' && fileExtn !== 'HEIC')) {
                     showModal('Unsupported file type. Please upload a .jpg,.jpeg,.bmp,.gif file');
                     $('#loader').hide();
                     return false;
@@ -1235,8 +1408,8 @@ $(function () {
                 const fileForm = new FormData();
                 const fileExtn = file.files.item(i).name.split('.').pop();
                 // if (!fileExtn || fileExtn !== 'jpg' || fileExtn !=='JPG' || fileExtn !=='jpeg' || fileExtn !=='JPEG') {
-                if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'bmp' && fileExtn !== 'BMP' && fileExtn !== 'GIF' && fileExtn !== 'gif')) {
-                    showModal('Unsupported file type. Please upload a .jpg,.jpeg,.bmp,.gif file');
+                if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'bmp' && fileExtn !== 'BMP' && fileExtn !== 'GIF' && fileExtn !== 'gif' && fileExtn !== 'heic' && fileExtn !== 'HEIC')) {
+                    showModal('Unsupported file type. Please upload a .jpg,.jpeg,.bmp,.gif,.heif file');
                     $('#loader').hide();
                     return false;
                 }

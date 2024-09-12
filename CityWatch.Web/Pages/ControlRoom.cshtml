@@ -15,8 +15,10 @@
 </div>
 <partial name="_Slogan" />
 @{
-    var LiveEvents = _configDataProvider.GetBroadcastLiveEventsByDate();
-    @if (LiveEvents.Count() > 0)
+    var LiveEventsNotExpired = _configDataProvider.GetBroadcastLiveEventsNotExpired();
+    var LiveEventsNotExpiredUrls = _configDataProvider.GetUrlsInsideBroadcastLiveEventsNotExpired();
+    var LiveEventsweblink = _configDataProvider.GetBroadcastLiveEventsWeblink();
+    if (LiveEventsNotExpired != string.Empty)
     {
         @section LiveEvents {
         <div class="container d-flex flex-column flex-md-row pb-1">
@@ -25,22 +27,87 @@
                     <label class="lblclass">Live Events:</label>
                 </div>
             </div>
-            <div class=" form-group col-md-10 p-0">
-                <div class="container marquee-stylenew mt-2">
+            <div id="divmarqueeLiveEvents" class="form-group col-md-9 p-0 container marquee-stylenew marquee marqueeurls"><pre>@LiveEventsNotExpired</pre></div>
 
-                    @foreach (var fileName in LiveEvents)
+            @{
+                    if (!string.IsNullOrEmpty(LiveEventsweblink))
                     {
-                        <marquee direction="right" style="width:900px;" id="marqueeLiveEvents" text=@fileName.TextMessage>@fileName.TextMessage</marquee>
+                        if (LiveEventsweblink.Contains("https://"))
+                        {
+                            <a href="@LiveEventsweblink" class="nav-link py-2" target="_blank">
+                                <u>SEE LINK</u>
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="https://@LiveEventsweblink" class="nav-link py-2" target="_blank">
+                                <u>SEE LINK</u>
+                            </a>
+                        }
                     }
-                </div>
+                    else
+                    {
+                        <a href="" class="nav-link py-2" target="_blank">
+                            <u>SEE LINK</u>
+                        </a>
+                    }
+                }
+
+
             </div>
-        </div>
-        }
+
+            <input type="hidden" id="inp_marqueeurls" value="@LiveEventsNotExpiredUrls" />
+            <a id="a_marqueeurls" hidden href="" target="_blank"></a>
     }
-
-
-
+    }
 }
+
+
+@section Scripts{
+    <script src="~/lib/marquee/jquery.marquee.min.js?v=3" type="text/javascript"></script>
+    <script src="~/lib/marquee/jquery.easing.1.3.js"></script>
+    <script>
+
+        $(function () {
+            $('.marquee').marquee({
+
+                // Set to false if you want to use jQuery animate method
+                allowCss3Support: true,
+
+                // CSS3 easing function
+                css3easing: 'linear',
+
+                // Requires jQuery easing plugin.
+                easing: 'linear',
+
+                // Time to wait before starting the animation
+                delayBeforeStart: 500,
+
+                // 'left', 'right', 'up' or 'down'
+                direction: 'left',
+
+                // Should the marquee be duplicated to show an effect of continues flow
+                duplicated: false,
+
+                // Duration of the animation
+                duration: 8500,
+
+                // Space in pixels between the tickers
+                gap: 20,
+
+                // On cycle pause the marquee
+                pauseOnCycle: false,
+
+                // Pause on hover
+                pauseOnHover: true,
+
+                // The marquee is visible initially positioned next to the border towards it will be moving
+                startVisible: false
+
+            });
+        });
+    </script>
+    }
 @*Rc Guard login Conformation Popup*@
 <div id="modelGuardLoginConRc" class="modal fade" role="dialog">
     <div class="modal-dialog">

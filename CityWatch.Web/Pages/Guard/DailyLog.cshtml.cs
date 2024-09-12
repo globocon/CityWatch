@@ -70,7 +70,8 @@ using static Dropbox.Api.Paper.PaperDocPermissionLevel;
 using System.Reflection;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.EntityFrameworkCore.SqlServer.Query.Internal;
-
+using ImageMagick;
+using Org.BouncyCastle.Crypto.Macs;
 namespace CityWatch.Web.Pages.Guard
 {
     public class DailyLogModel : PageModel
@@ -983,8 +984,9 @@ namespace CityWatch.Web.Pages.Guard
                     try
                     {
                         var uploadFileName = Path.GetFileName(file.FileName);
-                        if (Path.GetExtension(file.FileName) != ".JPG" && Path.GetExtension(file.FileName) != ".jpg" && Path.GetExtension(file.FileName) != ".JPEG" && Path.GetExtension(file.FileName) != ".jpeg" && Path.GetExtension(file.FileName) != ".bmp" && Path.GetExtension(file.FileName) != ".BMP" && Path.GetExtension(file.FileName) != ".gif" && Path.GetExtension(file.FileName) != ".GIF")
-                            throw new ArgumentException("Unsupported file type. Please upload a .jpg/.jpeg/.bmp/.gif file");
+                        if (Path.GetExtension(file.FileName) != ".JPG" && Path.GetExtension(file.FileName) != ".jpg" && Path.GetExtension(file.FileName) != ".JPEG" && Path.GetExtension(file.FileName) != ".jpeg" && Path.GetExtension(file.FileName) != ".bmp" && Path.GetExtension(file.FileName) != ".BMP" && Path.GetExtension(file.FileName) != ".gif" && Path.GetExtension(file.FileName) != ".GIF" && Path.GetExtension(file.FileName) != ".heic" && Path.GetExtension(file.FileName) != ".HEIC")
+                            throw new ArgumentException("Unsupported file type. Please upload a .jpg/.jpeg/.bmp/.gif/.heic file");
+                        
                         string reportReference = HttpContext.Session.GetString("ReportReference");
                         var folderPath = Path.Combine(Path.Combine(_webHostEnvironment.WebRootPath, "DglUploads", id.ToString()), "RearFiles");
                         if (!Directory.Exists(folderPath))
@@ -993,6 +995,27 @@ namespace CityWatch.Web.Pages.Guard
                         {
                             file.CopyTo(stream);
                         }
+                        //p1-102 add photos with heic extension-start
+                        if (Path.GetExtension(file.FileName) == ".heic" || Path.GetExtension(file.FileName) == ".HEIC")
+                        {
+                            var newuploadheic = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(file.FileName)+".jpg");
+
+
+                            using (MagickImage image = new MagickImage(Path.Combine(folderPath, file.FileName)))
+                            {
+                                // Save the image as JPEG
+                                image.Format = MagickFormat.Jpg;
+                                image.Write(newuploadheic);
+
+
+
+                            }
+                            uploadFileName = Path.GetFileName(newuploadheic);
+                            var fileToDelete = Path.Combine(folderPath, file.FileName);
+                            if (System.IO.File.Exists(fileToDelete))
+                                System.IO.File.Delete(fileToDelete);
+                        }
+                        //p1 - 102 add photos with heic extension - end
                         //var folderPathnew = Path.Combine(Path.Combine("https://localhost:44356/", "DglUploads", id.ToString()), "RearFiles");
                         var folderPathnew = Path.Combine(Path.Combine(url + "/", "DglUploads", id.ToString()), "RearFiles");
 
@@ -1044,8 +1067,9 @@ namespace CityWatch.Web.Pages.Guard
                     try
                     {
                         var uploadFileName = Path.GetFileName(file.FileName);
-                        if (Path.GetExtension(file.FileName) != ".JPG" && Path.GetExtension(file.FileName) != ".jpg" && Path.GetExtension(file.FileName) != ".JPEG" && Path.GetExtension(file.FileName) != ".jpeg" && Path.GetExtension(file.FileName) != ".bmp" && Path.GetExtension(file.FileName) != ".BMP" && Path.GetExtension(file.FileName) != ".gif" && Path.GetExtension(file.FileName) != ".GIF")
+                        if (Path.GetExtension(file.FileName) != ".JPG" && Path.GetExtension(file.FileName) != ".jpg" && Path.GetExtension(file.FileName) != ".JPEG" && Path.GetExtension(file.FileName) != ".jpeg" && Path.GetExtension(file.FileName) != ".bmp" && Path.GetExtension(file.FileName) != ".BMP" && Path.GetExtension(file.FileName) != ".gif" && Path.GetExtension(file.FileName) != ".GIF" && Path.GetExtension(file.FileName) != ".heic" && Path.GetExtension(file.FileName) != ".HEIC")
                             throw new ArgumentException("Unsupported file type. Please upload a .jpg/.jpeg/.bmp/.gif file");
+                        
                         string reportReference = HttpContext.Session.GetString("ReportReference");
                         var folderPath = Path.Combine(Path.Combine(_webHostEnvironment.WebRootPath, "DglUploads", id.ToString()), "TwentyfivePercentFiles");
                         if (!Directory.Exists(folderPath))
@@ -1054,7 +1078,27 @@ namespace CityWatch.Web.Pages.Guard
                         {
                             file.CopyTo(stream);
                         }
+                        //p1 - 102 add photos with heic extension - start
+                        if (Path.GetExtension(file.FileName) == ".heic" || Path.GetExtension(file.FileName) == ".HEIC")
+                        {
+                            var newuploadheic = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(file.FileName) + ".jpg");
 
+
+                            using (MagickImage image = new MagickImage(Path.Combine(folderPath, file.FileName)))
+                            {
+                                // Save the image as JPEG
+                                image.Format = MagickFormat.Jpg;
+                                image.Write(newuploadheic);
+
+
+
+                            }
+                             uploadFileName = Path.GetFileName(newuploadheic);
+                            var fileToDelete = Path.Combine(folderPath, file.FileName);
+                            if (System.IO.File.Exists(fileToDelete))
+                                System.IO.File.Delete(fileToDelete);
+                        }
+                        //p1 - 102 add photos with heic extension - end
                         //var folderPathnew = Path.Combine(Path.Combine("https://localhost:44356/", "DglUploads", id.ToString()), "TwentyfivePercentFiles");
                         var folderPathnew = Path.Combine(Path.Combine(url+ "/", "DglUploads", id.ToString()), "TwentyfivePercentFiles");
 
