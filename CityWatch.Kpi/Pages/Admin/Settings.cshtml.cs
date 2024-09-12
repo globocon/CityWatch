@@ -1070,7 +1070,7 @@ namespace CityWatch.Kpi.Pages.Admin
             {
                 if (item.ImagePath == null)
                 {
-                    item.ImagePathNew = string.Empty;
+                    item.ImagePathNew = string.Empty;  
                 }
                 else
                 {
