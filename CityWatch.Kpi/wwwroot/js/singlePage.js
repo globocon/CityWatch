@@ -764,9 +764,10 @@ $(function () {
         //p2-140 key photos  -start
         $("#keyimage-attachment-list").empty();
         
-        if (data.imagePath != '') {
+        if (data.imagePath != '' && data.imagePath != null) {
             loadKeyImagePopup(data);
         }
+       
         //p2-140 key photos  -end
     }
 
