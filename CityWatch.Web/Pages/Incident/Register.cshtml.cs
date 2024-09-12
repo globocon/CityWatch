@@ -457,25 +457,25 @@ namespace CityWatch.Web.Pages.Incident
                             file.CopyTo(stream);
                         }
                         // p1-102 add photos with heic extension-start
-                        if (Path.GetExtension(file.FileName) == ".heic" || Path.GetExtension(file.FileName) == ".HEIC")
-                        {
-                            var newuploadheic = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(file.FileName) + ".jpg");
+                        //if (Path.GetExtension(file.FileName) == ".heic" || Path.GetExtension(file.FileName) == ".HEIC")
+                        //{
+                        //    var newuploadheic = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(file.FileName) + ".jpg");
 
 
-                            using (MagickImage image = new MagickImage(Path.Combine(folderPath, file.FileName)))
-                            {
-                                // Save the image as JPEG
-                                image.Format = MagickFormat.Jpg;
-                                image.Write(newuploadheic);
+                        //    using (MagickImage image = new MagickImage(Path.Combine(folderPath, file.FileName)))
+                        //    {
+                        //        // Save the image as JPEG
+                        //        image.Format = MagickFormat.Jpg;
+                        //        image.Write(newuploadheic);
 
 
 
-                            }
-                            uploadFileName = Path.GetFileName(newuploadheic);
-                            var fileToDelete = Path.Combine(folderPath, file.FileName);
-                            if (System.IO.File.Exists(fileToDelete))
-                                System.IO.File.Delete(fileToDelete);
-                        }
+                        //    }
+                        //    uploadFileName = Path.GetFileName(newuploadheic);
+                        //    var fileToDelete = Path.Combine(folderPath, file.FileName);
+                        //    if (System.IO.File.Exists(fileToDelete))
+                        //        System.IO.File.Delete(fileToDelete);
+                        //}
                         // p1-102 add photos with heic extension-end
                         success = true;
                     }

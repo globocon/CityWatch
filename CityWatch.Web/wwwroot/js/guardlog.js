@@ -1356,7 +1356,9 @@ $(function () {
               //  const file = file.files.item(i);
                 const fileExtn = file.files.item(i).name.split('.').pop();
                 // if (!fileExtn || fileExtn !== 'jpg' || fileExtn !=='JPG' || fileExtn !=='jpeg' || fileExtn !=='JPEG') {
-                if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'bmp' && fileExtn !== 'BMP' && fileExtn !== 'GIF' && fileExtn !== 'gif' && fileExtn !== 'heic' && fileExtn !== 'HEIC')) {
+                //if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'bmp' && fileExtn !== 'BMP' && fileExtn !== 'GIF' && fileExtn !== 'gif' && fileExtn !== 'heic' && fileExtn !== 'HEIC')) {
+                //    showModal('Unsupported file type. Please upload a .jpg,.jpeg,.bmp,.gif file');
+                if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'bmp' && fileExtn !== 'BMP' && fileExtn !== 'GIF' && fileExtn !== 'gif')) {
                     showModal('Unsupported file type. Please upload a .jpg,.jpeg,.bmp,.gif file');
                     $('#loader').hide();
                     return false;
@@ -1408,8 +1410,10 @@ $(function () {
                 const fileForm = new FormData();
                 const fileExtn = file.files.item(i).name.split('.').pop();
                 // if (!fileExtn || fileExtn !== 'jpg' || fileExtn !=='JPG' || fileExtn !=='jpeg' || fileExtn !=='JPEG') {
-                if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'bmp' && fileExtn !== 'BMP' && fileExtn !== 'GIF' && fileExtn !== 'gif' && fileExtn !== 'heic' && fileExtn !== 'HEIC')) {
-                    showModal('Unsupported file type. Please upload a .jpg,.jpeg,.bmp,.gif,.heif file');
+                //if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'bmp' && fileExtn !== 'BMP' && fileExtn !== 'GIF' && fileExtn !== 'gif' && fileExtn !== 'heic' && fileExtn !== 'HEIC')) {
+                //    showModal('Unsupported file type. Please upload a .jpg,.jpeg,.bmp,.gif,.heif file');
+                if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'bmp' && fileExtn !== 'BMP' && fileExtn !== 'GIF' && fileExtn !== 'gif')) {
+                    showModal('Unsupported file type. Please upload a .jpg,.jpeg,.bmp,.gif file');
                     $('#loader').hide();
                     return false;
                 }
