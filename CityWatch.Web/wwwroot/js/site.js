@@ -2623,12 +2623,14 @@ $('#report_field_types').on('change', function () {
     $('#fileDownloadLayout tbody').on('click', '.download-btn', function (e) {
 
         const btn = $(this);
-        const fileName = btn.attr('data-filename');  
-        const categType = 'DailyLog';
-        $('#sop_filename').val(fileName);
-        $('#sop_catg_type').val(categType);
-        $('#AuthGuardForSopDwnldValidationSummary').html('');
-        $('#mdlAuthGuardForSopDownload').modal('show');
+        if (btn.attr('data-btn-name') === 'DownloadBtn') {
+            e.preventDefault();
+            const fileName = btn.attr('data-filename');
+            $('#sop_filename').val(fileName);
+            $('#sop_catg_type').val('DailyLog');
+            $('#AuthGuardForSopDwnldValidationSummary').html('');
+            $('#mdlAuthGuardForSopDownload').modal('show');
+        }
     });
 
     $('#btnAuthGuardForSopDwnld').on('click', function () {
@@ -2636,7 +2638,7 @@ $('#report_field_types').on('change', function () {
         const btn = $(this);
         var filename_todownload = $('#sop_filename').val();
         var Catg_todownload = $('#sop_catg_type').val();
-
+        
         $('#loader').show();
        
         var tmdata = {
