@@ -1068,7 +1068,14 @@ namespace CityWatch.Kpi.Pages.Admin
             var clientSiteKeys = _guardSettingsDataProvider.GetClientSiteKeys(clientSiteId).ToList();
             foreach(var item in clientSiteKeys)
             {
-                item.ImagePathNew = Path.GetFileName(item.ImagePath) ;
+                if (item.ImagePath == null)
+                {
+                    item.ImagePathNew = string.Empty;
+                }
+                else
+                {
+                    item.ImagePathNew = Path.GetFileName(item.ImagePath);
+                }
             }
             return new JsonResult(clientSiteKeys);
             //p2-140 key photos  -end
