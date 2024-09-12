@@ -621,6 +621,7 @@ $(function () {
                     }
                 }).done(function (result) {
                     if (result) {
+                        $('#loader').show();
                         submitGuardLogin();
                     }
                     else {
@@ -629,6 +630,7 @@ $(function () {
                             const validateSmartWand = $('#GuardLogin_IsPosition').is(':not(:checked)') && $('#GuardLogin_SmartWandOrPosition').val() !== '';
 
                             if (!validateSmartWand) {
+                                $('#loader').show();
                                 submitGuardLogin();
                             }
                         });
@@ -703,6 +705,7 @@ $(function () {
 
 
     function submitGuardLogin() {
+        $('#loader').show();
         calculateDutyDateTime();
         var mobileno = $('#GuardLogin_Guard_Mobile').val();
         // Task p6#73_TimeZone issue -- added by Binoy -- Start
