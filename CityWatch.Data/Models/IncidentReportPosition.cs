@@ -18,6 +18,6 @@ namespace CityWatch.Data.Models
         public bool IsLogbook { get; set; }
         public int? ClientsiteId { get; set; }
         public string ClientsiteName { get; set; }
-
+        public bool? IsSmartwandbypass { get; set; }
     }
 }
