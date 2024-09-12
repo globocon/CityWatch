@@ -430,7 +430,9 @@ $(function () {
 
     $('#vkl-modal').on('shown.bs.modal', function (event) {
         const params = $(event.relatedTarget);
-        bindKvlPopupEvents(!params[0].isNewEntry);
+        if (params[0] && params[0].isNewEntry !== undefined) {
+            bindKvlPopupEvents(!params[0].isNewEntry);
+        }
         if ($('#VehicleRego').val() != '') {
             GetVehicleImage();
         }
@@ -2044,7 +2046,7 @@ $(function () {
         ////    }
         ////});
        // P7#85  show combobox items in modal --start
-        $(document).ready(function () {
+       
             // Prevent the combo box from showing items and open the modal instead
             $('#vehicleConfigSelect').on('mousedown', function (e) {
                 e.preventDefault();
@@ -2082,7 +2084,7 @@ $(function () {
                     $('#vkl-modal').modal('show'); 
                 }
             });
-        });
+        
 
         // P7#85  show combobox items in modal --end
 
