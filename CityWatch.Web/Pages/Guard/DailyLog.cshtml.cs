@@ -1069,18 +1069,7 @@ namespace CityWatch.Web.Pages.Guard
                         var uploadFileName = Path.GetFileName(file.FileName);
                         if (Path.GetExtension(file.FileName) != ".JPG" && Path.GetExtension(file.FileName) != ".jpg" && Path.GetExtension(file.FileName) != ".JPEG" && Path.GetExtension(file.FileName) != ".jpeg" && Path.GetExtension(file.FileName) != ".bmp" && Path.GetExtension(file.FileName) != ".BMP" && Path.GetExtension(file.FileName) != ".gif" && Path.GetExtension(file.FileName) != ".GIF" && Path.GetExtension(file.FileName) != ".heic" && Path.GetExtension(file.FileName) != ".HEIC")
                             throw new ArgumentException("Unsupported file type. Please upload a .jpg/.jpeg/.bmp/.gif file");
-                        if (Path.GetExtension(file.FileName) == ".heic" || Path.GetExtension(file.FileName) == ".HEIC")
-                        {
-                            using (MagickImage image = new MagickImage(file.FileName))
-                            {
-                                // Save the image as JPEG
-                                image.Format = MagickFormat.Jpg;
-                                image.Write(uploadFileName);
-
-
-
-                            }
-                        }
+                        
                         string reportReference = HttpContext.Session.GetString("ReportReference");
                         var folderPath = Path.Combine(Path.Combine(_webHostEnvironment.WebRootPath, "DglUploads", id.ToString()), "TwentyfivePercentFiles");
                         if (!Directory.Exists(folderPath))
