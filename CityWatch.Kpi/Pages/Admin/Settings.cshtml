@@ -124,7 +124,7 @@
                         <div class="input-group offset-md-1 col-md-4">
                             @if(Model.ClientSiteId!=0)
                             {
-                                <input type="text" id="search_sites_settings" class="form-control" placeholder="Search Client Site" asp-items="@Model.ViewDataService.ClientSitesUsingId(Model.ClientSiteId)">
+                                <input type="text" id="search_sites_settings" class="form-control" placeholder="Search Client Site" asp-for="@Model.ClientSiteName">
                             }
                             else
                             {
