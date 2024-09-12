@@ -430,7 +430,9 @@ $(function () {
 
     $('#vkl-modal').on('shown.bs.modal', function (event) {
         const params = $(event.relatedTarget);
-        bindKvlPopupEvents(!params[0].isNewEntry);
+        if (params[0] && params[0].isNewEntry !== undefined) {
+            bindKvlPopupEvents(!params[0].isNewEntry);
+        }
         if ($('#VehicleRego').val() != '') {
             GetVehicleImage();
         }
@@ -2033,15 +2035,58 @@ $(function () {
 
             }
         });
-        $('#crmTruckConfig').on('change', function () {
-            const option = $(this).find(":selected");
-            if (option.val() !== '') {
+        ////$('#crmTruckConfig').on('change', function () {
+
+        ////    const option = $(this).find(":selected");
+        ////    if (option.val() !== '') {
 
 
-                $('#TruckConfig').val(option.val());
+        ////        $('#TruckConfig').val(option.val());
 
-            }
-        });
+        ////    }
+        ////});
+       // P7#85  show combobox items in modal --start
+       
+            // Prevent the combo box from showing items and open the modal instead
+            $('#vehicleConfigSelect').on('mousedown', function (e) {
+                e.preventDefault();
+                $('#selectVehicleConfigModal').modal('show'); // Show the modal
+            });
+
+            // Handle item selection from the modal
+            $('#itemList').on('click', '.btn-select-radio-status', function () {
+                var selectedValue = $(this).closest('li').data('value');
+                var selectedText = $(this).closest('li').text().trim();
+
+                // Update the combo box programmatically with the selected value and text
+                $('#vehicleConfigSelect').html('<option value="' + selectedValue + '">' + selectedText + '</option>').val(selectedValue);
+                $('#crmTruckConfig').html('<option value="' + selectedValue + '">' + selectedText + '</option>').val(selectedValue);
+
+                // Close the modal after selection
+                $('#selectVehicleConfigModal').modal('hide');
+            });
+
+            
+            $('#closeModalButton').on('click', function (e) {
+                e.preventDefault(); // Prevent default behavior of closing
+                e.stopImmediatePropagation();
+                $('#selectVehicleConfigModal').modal('hide'); 
+            });
+
+            // Optional: Ensure modal hide does not affect parent window
+            $('#selectVehicleConfigModal').on('hide.bs.modal', function (e) {
+                e.stopImmediatePropagation(); // Stop event from propagating to parent
+            });
+
+            $('#selectVehicleConfigModal').on('hidden.bs.modal', function () {
+                
+                if (!$('#vkl-modal').hasClass('show')) {
+                    $('#vkl-modal').modal('show'); 
+                }
+            });
+        
+
+        // P7#85  show combobox items in modal --end
 
         $('#crmTrailerType').on('change', function () {
             const option = $(this).find(":selected");
