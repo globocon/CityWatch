@@ -213,7 +213,12 @@ namespace CityWatch.Data.Providers
         public List<ClientSite> GetClientSitesUsingLoginUser(int? userId, string searchTerm);
         public string CheckRulesOneinKpiManningInput(ClientSiteKpiSetting settings);
         public string CheckRulesTwoinKpiManningInput(ClientSiteKpiSetting settings);
+
+        public string GetGuardLicenseNo(int GuardID, DateTime enddate);
+
+
         public string GetContractedManningDetailsForSpecificSite(string siteName);
+
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -449,6 +454,7 @@ namespace CityWatch.Data.Providers
         {
             return _context.GuardLogins
         .Where(gl => gl.GuardId == GuardID && gl.LoginDate.Date >= startdate.Date && gl.LoginDate.Date <= enddate.Date)
+        .Include(x => x.ClientSite)
         .ToList();
 
 
@@ -457,26 +463,53 @@ namespace CityWatch.Data.Providers
         {
             var TimesheetName = "";
             var guardLogin = _context.GuardLogins
+                .Include(x=>x.Guard)
      .FirstOrDefault(x => x.GuardId == GuardID && x.LoginDate.Date == enddate.Date);
-            if (guardLogin != null)
-            {
-                if (guardLogin.SmartWandId != null)
-                {
-                    var Name = _context.ClientSiteSmartWands.Where(x => x.Id == guardLogin.SmartWandId).FirstOrDefault();
-                    TimesheetName = Name.SmartWandId;
-                }
-                else
-                {
-                    var Name = _context.IncidentReportPositions.Where(x => x.Id == guardLogin.PositionId).FirstOrDefault();
-                    TimesheetName = Name.Name;
-                }
-            }
 
-            return TimesheetName;
+            if (guardLogin != null && guardLogin.Guard != null)
+
+            {
+                return guardLogin.Guard.Name;
+            }
+            else
+            {
+                return ""; 
+            }
+            //if (guardLogin!=null)
+            //{
+            //    if (guardLogin.SmartWandId != null)
+            //    {
+            //        var Name = _context.ClientSiteSmartWands.Where(x => x.Id == guardLogin.SmartWandId).FirstOrDefault();
+            //        TimesheetName = Name.SmartWandId;
+            //    }
+            //    else
+            //    {
+            //        var Name = _context.IncidentReportPositions.Where(x => x.Id == guardLogin.PositionId).FirstOrDefault();
+            //        TimesheetName = Name.Name;
+            //    }
+            //}
+
+            //return TimesheetName;
 
 
         }
-        public string GetGuardlogSite(int GuardID, DateTime enddate)
+        public string GetGuardLicenseNo(int GuardID, DateTime enddate)
+        {
+          
+            var guardLogin = _context.GuardLogins
+                .Include(x => x.Guard)
+     .FirstOrDefault(x => x.GuardId == GuardID && x.LoginDate.Date == enddate.Date);
+          
+            if (guardLogin != null && guardLogin.Guard != null)
+            {
+                return guardLogin.Guard.SecurityNo;
+            }
+            else
+            {
+                return ""; 
+            }
+        }
+            public string GetGuardlogSite(int GuardID, DateTime enddate)
         {
             var SiteName = "";
             var guardLogin = _context.GuardLogins

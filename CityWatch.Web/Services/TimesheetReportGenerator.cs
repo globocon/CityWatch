@@ -110,6 +110,7 @@ namespace CityWatch.Web.Services
             DateTime dateTime = DateTime.Parse(endDate);
             var LoginDetails = _clientDataProvider.GetLoginDetailsGuard(guradid, startdateTime, dateTime);
             var Name = _clientDataProvider.GetGuardlogName(guradid, dateTime);
+            var LicenseNo = _clientDataProvider.GetGuardLicenseNo(guradid, dateTime);
             var SiteName = _clientDataProvider.GetGuardlogSite(guradid, dateTime);
             var reportFileName = $"{DateTime.Now.ToString("yyyyMMdd")} - {FileNameHelper.GetSanitizedFileNamePart(Name)} - Daily KPI Reports -_{new Random().Next()}.pdf";
             var reportPdf = IO.Path.Combine(_reportRootDir, REPORT_DIR, reportFileName);
@@ -123,8 +124,9 @@ namespace CityWatch.Web.Services
             var headerTable = CreateReportHeader();
             doc.Add(headerTable);
             doc.Add(CreateNameTable(Name));
+            doc.Add(CreateLicenseTable(LicenseNo));
             doc.Add(CreateDateTable(dateTime));
-            doc.Add(CreateSiteTable(SiteName));
+           // doc.Add(CreateSiteTable(SiteName));
             doc.Add(new Paragraph("\n"));
             var (GuardLoginTables, totalHours) = CreateGuardLoginDetails(startdateTime, dateTime, LoginDetails, TimesheetDetails.weekName);
 
@@ -150,6 +152,18 @@ namespace CityWatch.Web.Services
             siteDataTable.AddCell(GetSiteValueCell("Name"));
 
             siteDataTable.AddCell(GetSiteValueCell(Name));
+
+
+            return siteDataTable;
+        }
+        private static Table CreateLicenseTable(string LicensoNo)
+        {
+            var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 5, 11 })).UseAllAvailableWidth().SetMarginTop(10);
+
+
+            siteDataTable.AddCell(GetSiteValueCell("Licence"));
+
+            siteDataTable.AddCell(GetSiteValueCell(LicensoNo));
 
 
             return siteDataTable;
@@ -276,12 +290,12 @@ namespace CityWatch.Web.Services
             // Method to create a new table with headers
             Table CreateNewGuardTable()
             {
-                float[] columnPercentages = new float[5];
+                float[] columnPercentages = new float[6];
                 var GuardTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
                 CreateGuardDetailsHeader(GuardTable);
                 return GuardTable;
             }
-
+            var SiteName = LoginDetails.Select(x => x.ClientSite.Name).FirstOrDefault(); 
             // Check if startDate and endDate are the same
             if (startDate.Date == endDate.Date)
             {
@@ -310,27 +324,45 @@ namespace CityWatch.Web.Services
                     DateTime enddate = DateTime.ParseExact(enddate1, "HH:mm", CultureInfo.InvariantCulture);
                     DateTime startd = DateTime.ParseExact(start.OnDuty.ToString("HH:mm"), "HH:mm", CultureInfo.InvariantCulture);
 
-                    TimeSpan TotalHrs = enddate - startd;
-                    int totalHrs = (int)TotalHrs.TotalHours;
+                    TimeSpan TotalHrs = (enddate - startd).Duration();
+                    int totalHrs = (int)TotalHrs.TotalMinutes;
                     dailyTotalHours += totalHrs;
                     GuardTable.AddCell(GetSiteValueCell(totalHrs.ToString()));
+                    if (SiteName != null)
+                    {
+                        GuardTable.AddCell(GetSiteValueCell(SiteName.ToString()));
+                    }
+                    else
+                    {
+                        GuardTable.AddCell(GetSiteValueCell(""));
+                    }
                 }
                 else
                 {
                     GuardTable.AddCell(GetSiteValueCell(""));
                     GuardTable.AddCell(GetSiteValueCell(""));
                     GuardTable.AddCell(GetSiteValueCell(""));
+                    if (SiteName!=null)
+                    {
+                        GuardTable.AddCell(GetSiteValueCell(SiteName.ToString()));
+                    }
+                    else
+                    {
+                        GuardTable.AddCell(GetSiteValueCell(""));
+                    }
+                    
                 }
-
+               
                 return (new List<Table> { GuardTable }, dailyTotalHours);
             }
 
             // If not the same date, proceed with weekly logic
             DateTime currentDate = startDate;
-            int weeksBetween = WeeksBetweenDates(startDate, endDate);
+            int totalDays = (endDate - startDate).Days + 1; // Total days between the start and end date
             string[] daysOfWeek = CultureInfo.CurrentCulture.DateTimeFormat.DayNames;
             int startDayIndex = Array.IndexOf(daysOfWeek, weekname);
 
+            // Adjust the currentDate to the correct starting day (e.g., Monday)
             while ((int)currentDate.DayOfWeek != startDayIndex)
             {
                 currentDate = currentDate.AddDays(1);
@@ -339,13 +371,17 @@ namespace CityWatch.Web.Services
             List<Table> weeklyTables = new List<Table>();
             int TotalWeeklyHrs = 0;
 
-            // Loop through each week
-            for (int i = 0; i < weeksBetween; i++)
+            int daysProcessed = 0;
+            int weeklyTotalHours = 0;
+            var SiteName1 = LoginDetails.Select(x => x.ClientSite.Name).ToList();
+            // Loop through each week and break it into individual days
+            while (daysProcessed < totalDays)
             {
                 var GuardTable = CreateNewGuardTable();
-                int weeklyTotalHours = 0;
+                weeklyTotalHours = 0;
 
-                for (int j = 0; j < 7; j++)
+                // Process each day in the week (up to 7 days or remaining days)
+                for (int j = 0; j < 7 && daysProcessed < totalDays; j++)
                 {
                     string weekName = currentDate.ToString("dddd"); // e.g., "Monday"
                     GuardTable.AddCell(GetSiteValueCell(weekName));
@@ -371,32 +407,63 @@ namespace CityWatch.Web.Services
                             endDateDifference = start.OffDuty.Value - start.OnDuty;
                         }
 
-                        enddate1 = string.Format("{0:D2}:{1:D2}", (int)endDateDifference.Value.TotalHours, endDateDifference.Value.Minutes);
+                        // Instead of converting to DateTime, format the TimeSpan directly
+                         enddate1 = string.Format("{0:D2}:{1:D2}", (int)endDateDifference.Value.TotalHours, endDateDifference.Value.Minutes);
                         GuardTable.AddCell(GetSiteValueCell(enddate1));
+                        string[] timeParts = enddate1.Split(':');
 
-                        DateTime enddate = DateTime.ParseExact(enddate1, "HH:mm", CultureInfo.InvariantCulture);
-                        DateTime startd = DateTime.ParseExact(start.OnDuty.ToString("HH:mm"), "HH:mm", CultureInfo.InvariantCulture);
+                        // Parse hours and minutes manually
+                        int hours = int.Parse(timeParts[0]);
+                        int minutes = int.Parse(timeParts[1]);
 
-                        TimeSpan TotalHrs = enddate - startd;
-                        int totalHrs = (int)TotalHrs.TotalHours;
+                        // Create a TimeSpan from the parsed hours and minutes
+                        TimeSpan enddate = TimeSpan.FromHours(hours) + TimeSpan.FromMinutes(minutes);
+                        TimeSpan startd = TimeSpan.ParseExact(start.OnDuty.ToString("HH:mm"), "hh\\:mm", CultureInfo.InvariantCulture);
+
+                        TimeSpan TotalHrs = (enddate - startd).Duration();
+                        int totalHrs = (int)TotalHrs.TotalMinutes;
+                        // No need to parse enddate1 as DateTime; use TimeSpan directly for total hours
+                       
                         weeklyTotalHours += totalHrs;
                         GuardTable.AddCell(GetSiteValueCell(totalHrs.ToString()));
+                        if (SiteName1 != null && j >= 0 && j < SiteName1.Count)
+                        {
+                            GuardTable.AddCell(GetSiteValueCell(SiteName1[j].ToString()));
+                        }
+                        else
+                        {
+                            GuardTable.AddCell(GetSiteValueCell(""));
+                        }
                     }
                     else
                     {
                         GuardTable.AddCell(GetSiteValueCell(""));
                         GuardTable.AddCell(GetSiteValueCell(""));
                         GuardTable.AddCell(GetSiteValueCell(""));
+                        if (SiteName1 != null && j >= 0 && j < SiteName1.Count)
+                        {
+                            GuardTable.AddCell(GetSiteValueCell(SiteName1[j].ToString()));
+                        }
+                        else
+                        {
+                          GuardTable.AddCell(GetSiteValueCell(""));
+                        }
                     }
 
                     currentDate = currentDate.AddDays(1);
+                    daysProcessed++;
                 }
 
+                // Add footer to table
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
+
                 GuardTable.AddCell(GetSiteValueCell(weeklyTotalHours.ToString()));
+
+                GuardTable.AddCell(GetNoBorderTotalHrsCell(SiteName));
+
                 TotalWeeklyHrs += weeklyTotalHours;
                 weeklyTables.Add(GuardTable);
             }
@@ -417,9 +484,9 @@ namespace CityWatch.Web.Services
         {
             try
             {
-                float[] columnWidths = { 100f, 200f, 100f, 100f, 20f }; // Adjust these values as needed
+                float[] columnWidths = { 100f, 200f, 100f, 100f, 20f,30f }; // Adjust these values as needed
                                                                         // Total width of the table in points
-                table.SetWidth(UnitValue.CreatePointValue(280)); // Example total width in points, adjust as needed
+                table.SetWidth(UnitValue.CreatePointValue(380)); // Example total width in points, adjust as needed
               
 
                 Color CELL_BG_GREY_HEADER = new DeviceRgb(211, 211, 211);
@@ -429,7 +496,8 @@ namespace CityWatch.Web.Services
                 table.AddCell(GetSiteValueCell("start"));
                 table.AddCell(GetSiteValueCell("Finish"));
                 table.AddCell(GetSiteValueCell("Total Hrs"));
-                
+                table.AddCell(GetSiteValueCell("Site"));
+
 
             }
             catch (Exception ex)
