@@ -29,8 +29,9 @@
     <div class="col-md-7">
         <i class="fa fa-calendar mr-2 text-secondary" aria-hidden="true"></i><b>Log Book Date: </b>@DateTime.Today.ToString("dd MMM yyyy (dddd)").ToUpper()
     </div>
-    <div class="col-md-5" style="padding-left:69px;">
+    <div class="col-md-5" style="padding-left:61px;">
         <button type="button" class="btn btn-outline-primary" id="btnHRDetails"><i class="fa fa-user mr-1" aria-hidden="true"></i>HR</button>
+        <button type="button" class="btn btn-outline-primary" id="btnSOP">SOP</button>
         <a class="btn btn-outline-primary" id="btn_kvl_pdf_POIList" href="#">POI List</a>
         @* <a class="btn btn-outline-primary d-none" id="btn_kvl_pdf_download" href="SiteLogPdf?id=@Model.KeyVehicleLog.ClientSiteLogBookId&t=vl" target="_blank">Download PDF</a> *@
         <button type="button" class="btn btn-outline-primary" id="btn_kvl_pdf_generate" data-logbookid="@Model.KeyVehicleLog.ClientSiteLogBookId">Download PDF</button>

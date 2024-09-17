@@ -210,7 +210,28 @@ namespace CityWatch.Data.Providers
 
         public List<StaffDocument> GetStaffDocumentsUsingType(int type)
         {
-            return _context.StaffDocuments.Where(x => x.DocumentType == type).OrderBy(x => x.FileName).ToList();
+            var staffDocList = _context.StaffDocuments.Where(x => x.DocumentType == type).OrderBy(x => x.FileName).ToList();
+            foreach (var doc in staffDocList)
+            {
+                if (doc.ClientSite.HasValue)
+                {
+
+                    
+                    var clientSite = _context.ClientSites
+                    .Where(x => x.Id == doc.ClientSite).Include(x => x.ClientType).FirstOrDefault();
+                    if (clientSite != null)
+                    {
+                        doc.ClientSiteName = clientSite?.Name ?? "Unknown";
+                        // Assign the site name or default to "Unknown"
+                        if(clientSite.ClientType!=null)
+                        doc.ClientTypeName = clientSite.ClientType.Name;
+
+                    }
+                }
+            }
+
+
+            return staffDocList;
         }
 
         public void SaveStaffDocument(StaffDocument staffdocument)
@@ -226,7 +247,7 @@ namespace CityWatch.Data.Providers
                 {
                     documentToUpdate.FileName = staffdocument.FileName;
                     documentToUpdate.LastUpdated = staffdocument.LastUpdated;
-                    
+
                 }
             }
             _context.SaveChanges();
@@ -244,7 +265,7 @@ namespace CityWatch.Data.Providers
                     documentToUpdate.DocumentModuleName = staffdocument.DocumentModuleName;
                 }
             }
-           
+
             _context.SaveChanges();
         }
 
@@ -419,7 +440,7 @@ namespace CityWatch.Data.Providers
                         IsLogbook = incidentReportPosition.IsLogbook,
                         ClientsiteId = incidentReportPosition.ClientsiteId,
                         ClientsiteName = ClientSiteName.Name,
-                        IsSmartwandbypass= incidentReportPosition.IsSmartwandbypass
+                        IsSmartwandbypass = incidentReportPosition.IsSmartwandbypass
                     });
                 }
                 else
@@ -722,15 +743,16 @@ namespace CityWatch.Data.Providers
             var mapping = _context.HrSettings.Where(x => x.HRGroupId == HRGroupId).ToList();
             foreach (var item in descriptions)
             {
-                Group.Add(new SelectListItem(item.ReferenceNo+ "&nbsp;&nbsp;&nbsp;&nbsp;" +  item.Description, item.Id.ToString()));
+                Group.Add(new SelectListItem(item.ReferenceNo + "&nbsp;&nbsp;&nbsp;&nbsp;" + item.Description, item.Id.ToString()));
 
             }
             return Group;
         }
         public void RemoveCriticalDownSelect(CriticalDocuments CriticalDoc)
         {
-            var Document= _context.KpiSendSchedules.FirstOrDefault(z => z.CriticalGroupNameID == CriticalDoc.Id.ToString());
-            if (Document != null) {
+            var Document = _context.KpiSendSchedules.FirstOrDefault(z => z.CriticalGroupNameID == CriticalDoc.Id.ToString());
+            if (Document != null)
+            {
                 Document.IsCriticalDocumentDownselect = false;
                 Document.CriticalGroupNameID = null;
                 _context.SaveChanges();
@@ -738,7 +760,7 @@ namespace CityWatch.Data.Providers
         }
         public void SaveCriticalDoc(CriticalDocuments CriticalDoc, bool updateClientSites1 = false)
         {
-            var DesriptionDoc= _context.CriticalDocuments.Include(z => z.CriticalDocumentDescriptions).SingleOrDefault(z => z.Id == CriticalDoc.Id);
+            var DesriptionDoc = _context.CriticalDocuments.Include(z => z.CriticalDocumentDescriptions).SingleOrDefault(z => z.Id == CriticalDoc.Id);
             var Document = _context.CriticalDocuments.Include(z => z.CriticalDocumentsClientSites)
                 .Include(z => z.CriticalDocumentDescriptions)
                 .SingleOrDefault(z => z.Id == CriticalDoc.Id);
@@ -749,7 +771,7 @@ namespace CityWatch.Data.Providers
                 if (updateClientSites1)
                 {
                     _context.CriticalDocumentsClientSites.RemoveRange(Document.CriticalDocumentsClientSites);
-                      _context.CriticalDocumentDescriptions.RemoveRange(DesriptionDoc.CriticalDocumentDescriptions);
+                    _context.CriticalDocumentDescriptions.RemoveRange(DesriptionDoc.CriticalDocumentDescriptions);
                     _context.SaveChanges();
                 }
 
@@ -767,9 +789,9 @@ namespace CityWatch.Data.Providers
         }
         public List<CriticalDocuments> GetCriticalDocs()
         {
-            
 
-            var document1= _context.CriticalDocuments
+
+            var document1 = _context.CriticalDocuments
     .Include(z => z.CriticalDocumentsClientSites)
         .ThenInclude(y => y.ClientSite)
             .ThenInclude(cs => cs.ClientType)
@@ -819,8 +841,8 @@ namespace CityWatch.Data.Providers
    .ThenInclude(y => y.HRSettings)
     .ThenInclude(z => z.ReferenceNoAlphabets)
   .SingleOrDefault(x => x.Id == CriticalID);
-           
-            var document= _context.CriticalDocuments
+
+            var document = _context.CriticalDocuments
    .Include(z => z.CriticalDocumentsClientSites)
        .ThenInclude(y => y.ClientSite)
            .ThenInclude(cs => cs.ClientType)
@@ -908,10 +930,10 @@ namespace CityWatch.Data.Providers
         public List<StaffDocument> GetStaffDocumentModuleDetails()
         {
 
-           return _context.StaffDocuments.Where(x => x.DocumentModuleName.Trim() != string.Empty).ToList();
-              
+            return _context.StaffDocuments.Where(x => x.DocumentModuleName.Trim() != string.Empty).ToList();
 
-            
+
+
         }
         //p1-213 critical documents stop
     }
