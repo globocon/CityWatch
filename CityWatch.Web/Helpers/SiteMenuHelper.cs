@@ -35,7 +35,8 @@ namespace CityWatch.Web.Helpers
             if (pageName == PageNameHelper.Index)
             {
                 menuHtml.AppendLine("<div>");
-                menuHtml.AppendLine(@"<a href=""https://app.guardhousehq.com/au/account/login/"" class=""nav-link py-0"" target=""_blank""><i class=""fa fa-building mr-2""></i>Rosters</a>");
+                // menuHtml.AppendLine(@"<a href=""https://app.guardhousehq.com/au/account/login/"" class=""nav-link py-0"" target=""_blank""><i class=""fa fa-building mr-2""></i>Rosters</a>");
+                menuHtml.AppendLine(@"<a href=""Admin/Roster"" class=""nav-link py-0"" target=""_blank""><i class=""fa fa-building mr-2""></i>Rosters</a>");
                 menuHtml.AppendLine("</div>");
             }
 
@@ -255,6 +256,7 @@ namespace CityWatch.Web.Helpers
         public const string DailyGuardLog = "DailyGuardLog";
         public const string VehicleAndKeyLog = "VehicleAndKeyLog";
         public const string RadioCheck = "RadioCheck";
+        public const string Roster = "Roster";
 
     }
 }
