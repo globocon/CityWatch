@@ -150,7 +150,12 @@ namespace CityWatch.Kpi.Pages.Admin
                 /*unauthorized login*/
                 HttpContext.Session.SetInt32("GuardId", 0);
                 HttpContext.Session.SetInt32("loginUserId", 0);
-
+                if (ClientSiteId != 0)
+                {
+                    HttpContext.Session.SetInt32("ClientSiteId", ClientSiteId);
+                    ClientSiteName = _viewDataService.ClientSitesUsingId(ClientSiteId);
+                    return Page();
+                }
                 return Redirect(Url.Page("/Account/Login"));
             }
         }

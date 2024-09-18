@@ -466,7 +466,14 @@
             var siteGuardId = $('#siteGuardId').val();
             var siteloggedInUserId = $('#siteloggedInUserId').val();
         var type = 'settings';
-        let $editBtn = $('<a href="https://localhost:44378/Dashboard?ClientTypeId=' + record.typeId + '&& ClientSiteId=' + record.id + '&&Sl=' + securityNumber + ' &&lud=' + siteloggedInUserId + ' &&guid=' + siteGuardId + ' &&type=' + type +'" class="nav-link py-0" target="_blank"><i class="fa fa-pencil"></i>Edit</a>'
+        if (siteloggedInUserId == '' || siteloggedInUserId == null) {
+            siteloggedInUserId = '0';
+        }
+        if (siteGuardId == '' || siteGuardId == null) {
+            siteGuardId = '0';
+        }
+
+        let $editBtn = $('<a href="https://localhost:44378/Dashboard?ClientTypeId=' + record.typeId + '&&ClientSiteId=' + record.id + '&&Sl=' + securityNumber + ' &&lud=' + siteloggedInUserId + ' &&guid=' + siteGuardId + ' &&type=' + type +'" class="nav-link py-0" target="_blank"><i class="fa fa-pencil"></i>Edit</a>'
         );
 
         //$editBtn.on('click', function (e) {
