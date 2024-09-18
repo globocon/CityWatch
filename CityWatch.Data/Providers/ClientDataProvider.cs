@@ -2526,7 +2526,7 @@ namespace CityWatch.Data.Providers
                 .Where(x => x.Id == clientSiteIds)
                 .ToList();
             return clientSiteDetails;
-
+        }
 
         public string GetContractedManningDetailsForSpecificSite(string siteName)
         {
