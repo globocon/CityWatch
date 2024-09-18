@@ -139,7 +139,7 @@
                                                     </button>
                                                 </div>
                                                 <div class="modal-body">
-                                                    <table class="table table-hover">
+                                                    <table id="fileDownloadLayout" class="table table-hover">
                                                         <thead>
                                                             <tr>
                                                                 <th scope="col" style="width:80%">File Name</th>
@@ -153,7 +153,9 @@
                                                                 <tr>
                                                                     <td><span style="color:red"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></span> @file.FileName</td>
                                                                     <td>
-                                                                        <a href="/StaffDocs/@file.FileName" class="btn btn-outline-success ml-2" target="_blank"><i class="fa fa-download mr-3"></i>Download</a>
+                                                                        <a href="/StaffDocs/@file.FileName" class="btn btn-outline-success download-btn ml-2" target="_blank" data-filename="@file.FileName" data-btn-name="DownloadBtn">
+                                                                            <i class="fa fa-download mr-3"></i>Download
+                                                                        </a>
                                                                     </td>
                                                                 </tr>
 
@@ -227,7 +229,52 @@
         @*<img src="~/images/ISOv3.jpg" alt="iso certification" height="80px" class="ml-md-auto"/>*@
         <img src="@companydetail.BannerLogoPath" alt="iso certification" height="80px" class="ml-md-auto" />
     </div>
-
+    <div class="modal-footer" style="display:block">
+        <div class="text-left">
+            <div id="AuthGuardForSopDwnldValidationSummary" class="pl-1 text-danger" style="font-size:0.9rem"></div>
+        </div>
+    </div>
+    <!----------------- Guard Details Modal -------------------->
+    <div class="modal fade" id="mdlAuthGuardForSopDownload" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="AuthenticateGuardForSopDownload" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title">Security License No</h6>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            @* <div class="d-flex flex-sm-row flex-column justify-content-between">
+                            <label class="col-form-label">Security License No.</label>
+                            </div> *@
+                            <div class="input-group">
+                                <input class="form-control" id="GuardDownloadSop_SecurityNo">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-primary" id="btnAuthGuardForSopDwnld" title="Authenticate guard"><i class="fa fa-key mr-2"></i><span class="d-none d-md-inline-flex">Download</span></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row pb-2">
+                        <div id="guardSearchResult" class="text-muted col-md-12" style="font-size:0.9rem">
+                            Enter Security License No. and click Download
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="display:block">
+                    <div class="text-left">
+                        <div id="AuthGuardForSopDwnldValidationSummary" class="pl-1 text-danger" style="font-size:0.9rem"></div>
+                    </div>
+                </div>
+                <div>
+                    <input type="hidden" id="sop_filename" />
+                </div>
+            </div>
+        </div>
+    </div>
     <footer class="border-top footer text-muted">
         <div class="container">
             <div class="row">
