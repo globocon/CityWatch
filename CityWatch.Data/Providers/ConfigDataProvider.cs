@@ -91,6 +91,8 @@ namespace CityWatch.Data.Providers
         public void UpdateStaffDocumentModuleType(StaffDocument staffdocument);
 
         public List<StaffDocument> GetStaffDocumentModuleDetails();
+
+        public List<StaffDocument> GetStaffDocumentSOPDocDetails(int clientSiteId);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -247,7 +249,8 @@ namespace CityWatch.Data.Providers
                 {
                     documentToUpdate.FileName = staffdocument.FileName;
                     documentToUpdate.LastUpdated = staffdocument.LastUpdated;
-
+                    documentToUpdate.SOP = staffdocument.SOP;
+                    documentToUpdate.ClientSite = staffdocument.ClientSite;
                 }
             }
             _context.SaveChanges();
@@ -931,6 +934,15 @@ namespace CityWatch.Data.Providers
         {
 
             return _context.StaffDocuments.Where(x => x.DocumentModuleName.Trim() != string.Empty).ToList();
+
+
+
+        }
+
+        public List<StaffDocument> GetStaffDocumentSOPDocDetails(int clientSiteId)
+        {
+
+            return _context.StaffDocuments.Where(x => x.DocumentType==4 && x.ClientSite== clientSiteId && x.SOP!=string.Empty).ToList();
 
 
 

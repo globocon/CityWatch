@@ -1594,39 +1594,15 @@ namespace CityWatch.Web.Pages.Admin
                     {
                         if (".pdf,.docx,.xlsx".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
                             throw new ArgumentException("Unsupported file type");
-                        var SOP = Request.Form["sop"];
-                        var ClientSite = int.Parse(Request.Form["site"]);
-                        if (SOP != string.Empty && ClientSite != 0)
+
+                        var staffDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "StaffDocs");
+                        if (!Directory.Exists(staffDocsFolder))
+                            Directory.CreateDirectory(staffDocsFolder);
+                        using (var stream = System.IO.File.Create(Path.Combine(staffDocsFolder, file.FileName)))
                         {
-                            var staffDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "StaffDocs");
-                            if (!Directory.Exists(staffDocsFolder))
-                                Directory.CreateDirectory(staffDocsFolder);
-
-                            using (var stream = System.IO.File.Create(Path.Combine(staffDocsFolder, file.FileName)))
-                            {
-                                file.CopyTo(stream);
-                            }
-
-                            var documentId = Convert.ToInt32(Request.Form["doc-id"]);
-                            var type = 4;
-
-                            _configDataProvider.SaveStaffDocument(new StaffDocument()
-                            {
-                                Id = documentId,
-                                FileName = file.FileName,
-                                LastUpdated = DateTime.Now,
-                                DocumentType = type,
-                                SOP = SOP,
-                                ClientSite = ClientSite
-
-                            });
-
-                            success = true;
+                            file.CopyTo(stream);
                         }
-                        else
-                        {
-                            throw new ArgumentException("Select the site and SOP");
-                        }
+                        
                     }
                     catch (Exception ex)
                     {
@@ -1634,6 +1610,37 @@ namespace CityWatch.Web.Pages.Admin
                     }
                 }
             }
+
+
+
+
+            var SOP = Request.Form["sop"];
+            var ClientSite = int.Parse(Request.Form["site"]);
+            var fileName = Request.Form["filename"];
+            if (ClientSite != 0)
+            {
+                var documentId = Convert.ToInt32(Request.Form["doc-id"]);
+                var type = 4;
+
+                _configDataProvider.SaveStaffDocument(new StaffDocument()
+                {
+                    Id = documentId,
+                    FileName = fileName,
+                    LastUpdated = DateTime.Now,
+                    DocumentType = type,
+                    SOP = SOP,
+                    ClientSite = ClientSite
+
+                });
+
+                success = true;
+            }
+            else
+            {
+                throw new ArgumentException("Select the site and SOP");
+            }
+
+
             return new JsonResult(new { success, message });
         }
 

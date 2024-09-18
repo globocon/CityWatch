@@ -347,7 +347,7 @@
                         <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Client(Site) SOP</label><label class="fw-bold mb-0" style="bottom:0">Site Specific documents such as SOP's and 'Quick Guides' available for Staff to download in the field:</label>
                     </div>
                     <div class="col-md-3 text-right">
-                        <button class="btn btn-success" id="add_newLinkedDuress" data-toggle="modal" data-target="#schedule-modal"><i class="fa fa-plus mr-2"></i>Add File</button>
+                        <button class="btn btn-success mb-1" id="add_newLinkedDuress" data-toggle="modal" data-target="#schedule-modal"><i class="fa fa-plus mr-2"></i>Add File</button>
                     </div>
 
                     <div class="row mb-4">
@@ -1735,7 +1735,7 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header p-2">
-                <h5 class="modal-title"><i class="fa fa-link" aria-hidden="true"></i>Client(Site) SOP</h5>
+                <h5 class="modal-title"><i class="fa fa-link" aria-hidden="true"></i> Client(Site) SOP</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -1744,6 +1744,7 @@
                 <div id="loader"></div>
                 <form id="frm_kpi_schedule" enctype="multipart/form-data" method="post">
                     <input type="hidden" id="scheduleId" name="id" value="0">
+                    <input type="hidden" id="filename" name="filename" value="">
                     <div class="row">
                         <div class="col-md-12">
 
@@ -1751,7 +1752,7 @@
                                 <label for="clientTypeNamesiteSOP">Client Type</label>
                                 <select class="form-control" id="clientTypeNamesiteSOP" name="clientTypeNamesiteSOP">
 
-                                    <option value="">All</option>
+                                    <option value="">Select</option>
                                     @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(null))
                                     {
                                         <option value="@item.Name">@item.Name</option>
@@ -1775,7 +1776,10 @@
                             <div class="form-group mb-1">
 
                                 <label for="File">File</label>
-                                <input type="file" name="add_staff_document_file_SlientSite_sop" id="add_staff_document_file_SlientSite_sop" class="form-control" />
+                                <input type="file" name="add_staff_document_file_SlientSite_sop" id="add_staff_document_file_SlientSite_sop" class="form-control-file" />
+                                <label id="dynamicLabel" class="pt-1"></label>
+                                
+                                
                             </div>
                         </div>
                     </div>
@@ -1787,7 +1791,7 @@
                 </form>
             </div>
             <div class="modal-footer p-2">
-                <button type="button" id="btnSaveSiteSOP" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save Site SOP</button>
+                <button type="button" id="btnSaveSiteSOP" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save Client(Site) SOP</button>
             </div>
         </div>
     </div>

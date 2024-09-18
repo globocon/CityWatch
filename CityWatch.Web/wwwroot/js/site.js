@@ -2575,9 +2575,9 @@ $('#report_field_types').on('change', function () {
     $('#add_staff_document_file_templates_and_forms').on('change', function () {
         uploadStafDocUsingType($(this), false, 3);
     });
-    $('#add_staff_document_file_SlientSite_sop').on('change', function () {
+   /*$('#add_staff_document_file_SlientSite_sop').on('change', function () {
         uploadStafDocUsingTypeTypeFour($(this), false, 4);
-    });
+    });*/
 
 
 
@@ -2656,16 +2656,16 @@ $('#report_field_types').on('change', function () {
         var sop = $('#SOP').val();
         var site = $('#clientSitessiteSOP').val();
 
-        if (sop == '') {
+        /*if (sop == '') {
 
-            
+            $('#add_staff_document_file_SlientSite_sop').val('');
                 showModal('Please select SOP');
                 return false;
             
-        }
+        }*/
         if (site == '') {
 
-
+            $('#add_staff_document_file_SlientSite_sop').val('');
             showModal('Please select Site');
             return false;
 
@@ -3502,7 +3502,225 @@ $('#report_module_types').on('change', function () {
         gridDosAndDontsFields.hide();
     }
 });
-/*p1 - 196 Rationalization Of Menu Changes - end*/
+    /*p1 - 196 Rationalization Of Menu Changes - end*/
+
+
+
+
+    /*Client Site SOP dileep 17092024*/
+    let gridSchedules;
+
+
+
+    gridSchedules = $('#staff_document_siteSOP').grid({
+        dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=4',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        columns: [
+
+            { field: 'clientTypeName', title: 'Client Type', width: 160 },
+            { field: 'clientSiteName', title: 'Client Site', width: 160 },
+            { field: 'fileName', title: 'File Name', width: 300 },
+            { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 150 },
+            { width: 55, field: 'sop', title: 'SOP' },
+            { width: 135, renderer: schButtonRenderer },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+
+    function schButtonRenderer(value, record) {
+        let buttonHtml = '';
+        buttonHtml = '<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary m-1" target="_blank"><i class="fa fa-download"></i></a>';
+        buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-primary m-1 d-block" data-toggle="modal" data-target="#schedule-modal" data-sch-id="' + record.id + '" ';
+        buttonHtml += 'data-action="editSchedule"><i class="fa fa-pencil"></i></button>';
+        buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-danger m-1 del-schedule d-block" data-sch-id="' + record.id + '""><i class="fa fa-trash" aria-hidden="true"></i></button>';
+        return buttonHtml;
+    }
+
+
+
+    $('#clientTypeNamesiteSOP').on('change', function () {
+        const option = $(this).val();
+        if (option === '') {
+            $('#clientSitessiteSOP').html('');
+            $('#clientSitessiteSOP').append('<option value="">Select</option>');
+        }
+
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSitesSOPClientSite&type=' + encodeURIComponent(option),
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+            $('#clientSitessiteSOP').html('');
+            $('#clientSitessiteSOP').append('<option value="">Select</option>');
+            data.map(function (site) {
+                $('#clientSitessiteSOP').append('<option value="' + site.value + '">' + site.text + '</option>');
+            });
+        });
+    });
+
+
+
+
+    $('#removeSelectedSites').on('click', function () {
+        $('#selectedSites option:selected').remove();
+        updateSelectedSitesCount();
+    });
+
+    function updateSelectedSitesCount() {
+        $('#selectedSitesCount').text($('#selectedSites option').length);
+    }
+
+    $('#schedule-modal').on('shown.bs.modal', function (event) {
+        clearScheduleModal();
+        const button = $(event.relatedTarget);
+        const isEdit = button.data('action') !== undefined && button.data('action') === 'editSchedule';
+        if (isEdit) {
+            schId = button.data('sch-id');
+            SOPClientSiteModalOnEdit(schId);
+        }
+
+
+    });
+
+    function clearScheduleModal() {
+        $('#dynamicLabel').html('');
+        $('#filename').val('');
+        $('#add_staff_document_file_SlientSite_sop').val('');
+        $('#scheduleId').val('0');
+        $('#clientTypeNamesiteSOP').val('');
+        $('#clientSitessiteSOP').html('<option value="">Select</option>');
+        $('#clientTypeNamesiteSOP option:eq(0)').attr('selected', true);
+        $('#GroupName').val('');
+        $('#sch-modal-validation').hide();
+        $('#SOP').prop('selectedIndex', 0);
+    }
+
+
+    function SOPClientSiteModalOnEdit(scheduleId) {
+        $('#loader').show();
+        $.ajax({
+            url: '/Admin/Settings?handler=SOPClientSitebyId&id=' + scheduleId,
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+            $('#scheduleId').val(data.id);
+            $('#filename').val(data.fileName);
+            $('#dynamicLabel').html('<a href="/StaffDocs/' + data.fileName +'" class="btn btn-outline-primary" target="_blank"><i class="fa fa-download"></i> Download</a>');
+
+            $('#clientSitessiteSOP').html(''); // Clear the existing options
+            $('#clientSitessiteSOP').append('<option value="">Select</option>'); // Add a default 'Select' option
+
+            // Populate the dropdown with new options
+            $.each(data.clientSites, function (index, item) {
+                $('#clientSitessiteSOP').append('<option value="' + item.value + '">' + item.text + '</option>');
+            });
+            $('#clientTypeNamesiteSOP').val(data.clientTypeName);
+            // Set the value of the dropdown and trigger the change event
+            $('#clientSitessiteSOP').val(data.clientSite);
+
+            // Set the value for another input field
+            $('#SOP').val(data.sop);
+
+        }).always(function () {
+            $('#loader').hide();
+        });
+    }
+
+    $('#staff_document_siteSOP').on('click', '.del-schedule', function () {
+        const idToDelete = $(this).attr('data-sch-id');
+        if (confirm('Are you sure want to delete this linked Duress?')) {
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteStaffDoc',
+                type: 'POST',
+                data: { id: idToDelete },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function () {
+                gridSchedules.reload({ type: $('#sel_schedule').val(), searchTerm: $('#search_kw_client_site').val() });
+            });
+        }
+
+    });
+
+    $('#btnSaveSiteSOP').on('click', function () {
+
+        var fileName = $('#filename').val();
+        var sop = $('#SOP').val();
+        var site = $('#clientSitessiteSOP').val();
+        var scheduleId = $('#scheduleId').val();
+        if (site == '') {
+
+            $('#add_staff_document_file_SlientSite_sop').val('');
+            $('#msg-modal .modal-body p').html('Please select Site');
+            $('#msg-modal').modal();
+            return false;
+
+        }
+        var fileInput = $('#add_staff_document_file_SlientSite_sop')[0]; // Access the raw DOM element
+        const fileForm = new FormData();
+        // Check if a file has been selected
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0]; // Get the first file object
+            const fileExtn = file.name.split('.').pop().toLowerCase(); // Get file extension
+            fileName = file.name;
+            // Validate file extension
+            if (!fileExtn || ['pdf', 'docx', 'xlsx'].indexOf(fileExtn) < 0) {
+                showModal('Unsupported file type. Please upload a .pdf, .docx, or .xlsx file');
+                return false;
+            }
+            // Prepare the form data
+
+            fileForm.append('file', file);
+
+
+
+        }
+        else {
+
+            if (scheduleId == 0) {
+                showModal('Please select the file to upload');
+                return false;
+            }
+            fileForm.append('file', '');
+        }
+
+        fileForm.append('type', 4);
+        fileForm.append('sop', sop);
+        fileForm.append('site', site);
+        fileForm.append('doc-id', scheduleId);
+        fileForm.append('fileName', fileName);
+
+            //if (edit)
+            //    fileForm.append('doc-id', uploadCtrl.attr('data-doc-id'));
+
+            $.ajax({
+                url: '/Admin/Settings?handler=UploadStaffDocUsingTypeFour',
+                type: 'POST',
+                data: fileForm,
+                processData: false,
+                contentType: false,
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+            }).done(function (data) {
+                if (data.success) {
+                    gridSchedules.reload();
+                    gridStaffDocsTypeCompanySop.reload();
+                    gridStaffDocsTypeTraining.reload();
+                    gridStaffDocsTypeTemplatesAndForms.reload();
+                    $('#schedule-modal').modal('hide');
+                    showStatusNotification(data.success, data.message);
+
+                }
+            }).fail(function () {
+                showStatusNotification(false, 'Something went wrong');
+            });
+
+        
+    });
+
+    /**Client Site SOP dileep 17092024 end*/
 
 });
 
@@ -3888,6 +4106,7 @@ if ($('#report_module_types_irtemplate').val() == 1) {
     $('#company_sop').hide();
     $('#training').hide();
     $('#templatesandforms').hide();
+    $('#clientSOP').hide();
 
 }
 $('#report_module_types_irtemplate').on('change', function () {
@@ -4594,169 +4813,6 @@ $('#HrState').multiselect({
 });
 
 
-/*Client Site SOP dileep 17092024*/
-let gridSchedules;
-
-
-
-gridSchedules = $('#staff_document_siteSOP').grid({
-    dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=4',
-    uiLibrary: 'bootstrap4',
-    iconsLibrary: 'fontawesome',
-    primaryKey: 'id',
-    columns: [
-       
-        { field: 'clientTypeName', title: 'Client Types', width: 200 },
-        { field: 'clientSiteName', title: 'Client Sites', width: 180 },
-        { field: 'fileName', title: 'File Name', width: 390 },
-        { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 140 },
-        { width: 75, field: 'sop', title: 'SOP', width: 50 },
-        { width: 75, renderer: schButtonRenderer },
-    ],
-    initialized: function (e) {
-        $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
-    }
-});
-
-function schButtonRenderer(value, record) {
-    let buttonHtml = '';
-    buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-primary mr-2 mt-2 d-block" data-toggle="modal" data-target="#schedule-modal" data-sch-id="' + record.id + '" ';
-    buttonHtml += 'data-action="editSchedule"><i class="fa fa-pencil"></i></button>';
-    buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-danger mt-2 del-schedule d-block" data-sch-id="' + record.id + '""><i class="fa fa-trash" aria-hidden="true"></i></button>';
-    return buttonHtml;
-}
-
-
-
-$('#clientTypeNamesiteSOP').on('change', function () {
-    const option = $(this).val();
-    if (option === '') {
-        $('#clientSitessiteSOP').html('');
-        $('#clientSitessiteSOP').append('<option value="">Select</option>');
-    }
-
-    $.ajax({
-        url: '/Admin/Settings?handler=ClientSitesSOPClientSite&type=' + encodeURIComponent(option),
-        type: 'GET',
-        dataType: 'json',
-    }).done(function (data) {
-        $('#clientSitessiteSOP').html('');
-        $('#clientSitessiteSOP').append('<option value="">Select</option>');
-        data.map(function (site) {
-            $('#clientSitessiteSOP').append('<option value="' + site.value + '">' + site.text + '</option>');
-        });
-    });
-});
-
-
-
-
-$('#removeSelectedSites').on('click', function () {
-    $('#selectedSites option:selected').remove();
-    updateSelectedSitesCount();
-});
-
-function updateSelectedSitesCount() {
-    $('#selectedSitesCount').text($('#selectedSites option').length);
-}
-
-$('#schedule-modal').on('shown.bs.modal', function (event) {
-    clearScheduleModal();
-    const button = $(event.relatedTarget);
-    const isEdit = button.data('action') !== undefined && button.data('action') === 'editSchedule';
-    if (isEdit) {
-        schId = button.data('sch-id');
-        SOPClientSiteModalOnEdit(schId);
-    }
-
-
-});
-
-function clearScheduleModal() {
-    $('#scheduleId').val('0');
-    $('#clientTypeNamesiteSOP').val('');
-    $('#clientSitessiteSOP').html('<option value="">Select</option>');
-    $('#selectedSites').html('');
-    updateSelectedSitesCount();
-    $('input:hidden[name="clientSiteIds"]').remove();
-    $('#clientTypeNamesiteSOP option:eq(0)').attr('selected', true);
-    $('#GroupName').val('');
-    $('#sch-modal-validation').hide();
-
-}
-
-
-function SOPClientSiteModalOnEdit(scheduleId) {
-    $('#loader').show();
-    $.ajax({
-        url: '/Admin/Settings?handler=SOPClientSitebyId&id=' + scheduleId,
-        type: 'GET',
-        dataType: 'json',
-    }).done(function (data) {
-        $('#scheduleId').val(data.id);
-
-
-        $('#clientSitessiteSOP').html(''); // Clear the existing options
-        $('#clientSitessiteSOP').append('<option value="">Select</option>'); // Add a default 'Select' option
-
-        // Populate the dropdown with new options
-        $.each(data.clientSites, function (index, item) {
-            $('#clientSitessiteSOP').append('<option value="' + item.value + '">' + item.text + '</option>');
-        });
-        $('#clientTypeNamesiteSOP').val(data.clientTypeName);
-        // Set the value of the dropdown and trigger the change event
-        $('#clientSitessiteSOP').val(data.clientSite);
-       
-        // Set the value for another input field
-        $('#SOP').val(data.sop);
-
-    }).always(function () {
-        $('#loader').hide();
-    });
-}
-
-$('#staff_document_siteSOP').on('click', '.del-schedule', function () {
-    const idToDelete = $(this).attr('data-sch-id');
-    if (confirm('Are you sure want to delete this linked Duress?')) {
-        $.ajax({
-            url: '/Admin/Settings?handler=DeleteSOPClientSite',
-            type: 'POST',
-            data: { id: idToDelete },
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function () {
-            gridSchedules.reload({ type: $('#sel_schedule').val(), searchTerm: $('#search_kw_client_site').val() });
-        });
-    }
-
-});
-
-$('#btnSaveSiteSOP').on('click', function () {
-    $("input[name=clientSiteIds]").remove();
-    var options = $('#selectedSites option');
-    options.each(function () {
-        const elem = '<input type="hidden" name="clientSiteIds" value="' + $(this).val() + '">';
-        $('#frm_kpi_schedule').append(elem);
-    });
-
-    $.ajax({
-        url: '/Admin/Settings?handler=SaveSOPClientSite',
-        type: 'POST',
-        data: $('#frm_kpi_schedule').serialize(),
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (data) {
-        if (data.success) {
-            alert('RC LinkedDuress saved successfully');
-            $('#schedule-modal').modal('hide');
-            gridSchedules.reload({ type: $('#sel_schedule').val(), searchTerm: $('#search_kw_client_site').val() });
-        } else {
-            $('#sch-modal-validation').html('');
-            data.message.split(',').map(function (item) { $('#sch-modal-validation').append('<li>' + item + '</li>') });
-            $('#sch-modal-validation').show().delay(5000).fadeOut();
-        }
-    });
-});
-
-/**Client Site SOP dileep 17092024 end*/
 
 //p1-213 document step L end 
 
