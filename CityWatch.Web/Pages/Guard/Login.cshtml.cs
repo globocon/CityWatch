@@ -486,10 +486,32 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(officerPositionsWithoutSelect);
         }
 
+
+        public JsonResult OnGetManningDeatilsForTheSite(string siteName)
+        {
+            if (string.IsNullOrWhiteSpace(siteName))
+            {
+                return new JsonResult(new { success = false, positionIdDefault = 0 });
+            }
+
+            var positionIdDefault = _clientDataProvider.GetContractedManningDetailsForSpecificSite(siteName);
+            var success = positionIdDefault !=string.Empty;
+
+            return new JsonResult(new { success, positionIdDefault });
+        }
+
+
         public JsonResult OnGetCheckIsWandAvailable(string clientSiteName, string smartWandNo, int? guardId)
         {
             var smartWand = _clientSiteWandDataProvider.GetClientSiteSmartWands().SingleOrDefault(z => z.ClientSite.Name == clientSiteName & z.SmartWandId == smartWandNo);
             return new JsonResult(_viewDataService.CheckWandIsInUse(smartWand.Id, guardId));
+        }
+
+        public JsonResult OnGetCheckIfSmartwandMsgBypass(string clientSiteName, string positionName, int? guardId)
+        {
+            var position = _configDataProvider.GetPositions().SingleOrDefault(x => x.Name == positionName);
+            bool isSmartwandbypass = position?.IsSmartwandbypass ?? false; // Use false if null
+            return new JsonResult(isSmartwandbypass);
         }
 
         public JsonResult OnGetIsGuardLoginActive(string guardLicNo)
@@ -526,11 +548,12 @@ namespace CityWatch.Web.Pages.Guard
                                     success = true;
                                 }
                             }
-                            else {
-                                
+                            else
+                            {
+
                                 success = false;
 
-                                 }
+                            }
 
                         }
                         else
@@ -553,7 +576,7 @@ namespace CityWatch.Web.Pages.Guard
 
 
 
-     
+
         private int GetGuardLoginId(int logBookId)
         {
             GuardLogin guardLogin = new GuardLogin();
@@ -753,5 +776,8 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(_guardDataProvider.GetCriticalDocs(ClientSiteID.Id));
 
         }
+
+
+     
     }
 }

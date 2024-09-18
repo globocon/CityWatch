@@ -137,6 +137,10 @@ namespace CityWatch.Web.Pages.Admin
             var message = "Success";
             try
             {
+                if(string.IsNullOrEmpty(record.Address))
+                {
+                    record.Gps = string.Empty;
+                }
                 _clientDataProvider.SaveClientSite(record);
             }
             catch (Exception ex)
@@ -473,10 +477,12 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { status = status, message = message });
         }
 
-        public JsonResult OnGetUsers()
+        public JsonResult OnGetUsers(string searchTerm)
         {
-            var users = _userDataProvider.GetUsers().Select(x => new { x.Id, x.UserName, x.IsDeleted });
-            return new JsonResult(users);
+            var users = _userDataProvider.GetUsers()
+             .Where(x => string.IsNullOrEmpty(searchTerm) || x.UserName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+             .Select(x => new { x.Id, x.UserName, x.IsDeleted });
+              return new JsonResult(users);
         }
 
         public JsonResult OnPostUser(Data.Models.User record)
@@ -694,9 +700,9 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(_clientDataProvider.GetSiteLinkDetailsUsingTypeAndState(type));
         }
 
-        public JsonResult OnGetUserClientAccess()
+        public JsonResult OnGetUserClientAccess(string searchTerm)
         {
-            return new JsonResult(_viewDataService.GetAllUsersClientSiteAccess());
+            return new JsonResult(_viewDataService.GetAllUsersClientSiteAccess(searchTerm));
         }
 
         public JsonResult OnGetClientAccessByUserId(int userId)

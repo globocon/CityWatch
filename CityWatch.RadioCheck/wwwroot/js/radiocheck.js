@@ -209,6 +209,8 @@ $(window).resize(function () {
 });
 
 
+
+
 const groupColumn = 1;
 const groupColumn2 = 2;
 const groupColumnSortAlias = 11; // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy - 31-01-2024
@@ -221,6 +223,73 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     dom: 'Bfrtip',
     buttons: [
 
+
+        
+        {
+            text: '<i class="fa fa-microphone" aria-hidden="true"></i>',
+            titleAttr: 'Start Recoding',
+            className: 'btn btn-md mr-2 btn-custom',
+            name: 'audioStart',
+            action: function (e, dt, node, config) {
+                clickstarAudio();
+                clientSiteActiveGuards.buttons('audioStart:name').disable();
+                clientSiteActiveGuards.buttons('audioStop:name').enable();
+                
+                clientSiteInActiveGuards.buttons('audioStart:name').disable();
+                clientSiteInActiveGuards.buttons('audioStop:name').enable();
+            }
+        },
+        {
+            text: '<i class="fa fa-microphone-slash" aria-hidden="true"></i>',
+            titleAttr: 'Stop Recoding',
+            className: 'btn btn-md mr-2 btn-custom',
+            enabled: false,
+            name: 'audioStop',
+            action: function () {
+                clickStopAudio();
+                clientSiteActiveGuards.buttons('audioStop:name').disable();
+                clientSiteActiveGuards.buttons('audioStart:name').enable();
+
+                clientSiteInActiveGuards.buttons('audioStop:name').disable();
+                clientSiteInActiveGuards.buttons('audioStart:name').enable();
+            }
+        },
+        /*
+        {
+            text: '<i class="fa fa-play" aria-hidden="true"></i>',
+            className: 'btn btn-md mr-2 btn-custom',
+            titleAttr: 'play Audio',
+            name: 'playaudio',
+            action: function (e, dt, node, config) {
+                // Get the audio element
+                var audioElement = document.getElementById('audioPlayback');
+                if (audioElement.getAttribute('src') === null || audioElement.getAttribute('src') === "") {
+                    alert('No recording found'); // Alert user if no source is found
+                } else {
+                    // Check if the audio is already playing
+                    if (audioElement.paused) {
+                        audioElement.play(); // Play the audio
+                        $(node).html('<i class="fa fa-pause" aria-hidden="true"></i>'); // Change button icon to 'Pause'
+                    } else {
+                        audioElement.pause(); // Pause the audio
+                        $(node).html('<i class="fa fa-play" aria-hidden="true"></i>'); // Change button icon to 'Play'
+                    }
+                }
+
+                // Add an event listener to handle when the audio ends
+                audioElement.onended = function () {
+                    $(node).html('<i class="fa fa-play" aria-hidden="true"></i>'); // Change button icon back to 'Play' when audio ends
+                };
+            }
+        },*/
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
+            
+        },
         {
             extend: 'copy',
             text: '<i class="fa fa-copy"></i>',
@@ -239,13 +308,43 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             titleAttr: 'PDF',
             className: 'btn btn-md mr-2 btn-pdf'
         },
+        
         {
             extend: 'print',
-            text: '<i class="fa fa-print"></i>',
+            text: '<i class="fa fa-print"></i>', // Custom button text
+            className: 'btn btn-md mr-2 btn-print',
             titleAttr: 'Print',
-            className: 'btn btn-md mr-2 btn-print'
-        },
+            customize: function (win) {
+                // Customize the print window/document here
+                $(win.document.body).css('font-size', '10pt');
+                $(win.document.body).find('table')
+                    .addClass('display')
+                    .css('font-size', 'inherit');
 
+                // Add a landscape orientation
+                var css = '@page { size: landscape; }';
+                var head = win.document.head || win.document.getElementsByTagName('head')[0];
+                var style = win.document.createElement('style');
+
+                style.type = 'text/css';
+                style.media = 'print';
+                if (style.styleSheet) {
+                    style.styleSheet.cssText = css;
+                } else {
+                    style.appendChild(win.document.createTextNode(css));
+                }
+
+                head.appendChild(style);
+            }
+        },
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
+
+        },
         {
             text: '<img src="/images/man-climbing-stairs.png" alt="Image" height="16" width="16">',
             titleAttr: 'Steps',
@@ -257,10 +356,9 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             }
         }
 
-
     ],
 
-
+   
 
 
     lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
@@ -547,6 +645,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
 });
 
+
 // Order by the grouping
 // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- Start - 31-01-2024
 $(clientSiteActiveGuards.table().header()).on('click', 'th', function () {
@@ -638,6 +737,76 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
     dom: 'Bfrtip',
     buttons: [
 
+
+        {
+            text: '<i class="fa fa-microphone" aria-hidden="true"></i>',
+            titleAttr: 'Start Recoding',
+            className: 'btn btn-md mr-2 btn-custom',
+            name: 'audioStart',
+            action: function (e, dt, node, config) {
+                clickstarAudio();
+                clientSiteInActiveGuards.buttons('audioStart:name').disable();
+                clientSiteInActiveGuards.buttons('audioStop:name').enable();
+                clientSiteActiveGuards.buttons('audioStart:name').disable();
+                clientSiteActiveGuards.buttons('audioStop:name').enable();
+
+            }
+        },
+        {
+            text: '<i class="fa fa-microphone-slash" aria-hidden="true"></i>',
+            titleAttr: 'Stop Recoding',
+            className: 'btn btn-md mr-2 btn-custom',
+            enabled: false,
+            name: 'audioStop',
+            action: function () {
+                clickStopAudio();
+                clientSiteInActiveGuards.buttons('audioStop:name').disable();
+                clientSiteInActiveGuards.buttons('audioStart:name').enable();
+
+                clientSiteActiveGuards.buttons('audioStop:name').disable();
+                clientSiteActiveGuards.buttons('audioStart:name').enable();
+
+            }
+        },
+
+
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
+
+        },
+
+       /* {
+            text: '<i class="fa fa-play" aria-hidden="true"></i>',
+            className: 'btn btn-md mr-2 btn-custom',
+            titleAttr: 'play Audio',
+            name: 'playaudio',
+            action: function (e, dt, node, config) {
+                // Get the audio element
+                var audioElement = document.getElementById('audioPlayback');
+                if (audioElement.getAttribute('src') === null || audioElement.getAttribute('src') === "") {
+                    alert('No recording found'); // Alert user if no source is found
+                } else {
+                    // Check if the audio is already playing
+                    if (audioElement.paused) {
+                        audioElement.play(); // Play the audio
+                        $(node).html('<i class="fa fa-pause" aria-hidden="true"></i>'); // Change button icon to 'Pause'
+                    } else {
+                        audioElement.pause(); // Pause the audio
+                        $(node).html('<i class="fa fa-play" aria-hidden="true"></i>'); // Change button icon to 'Play'
+                    }
+                }
+
+                // Add an event listener to handle when the audio ends
+                audioElement.onended = function () {
+                    $(node).html('<i class="fa fa-play" aria-hidden="true"></i>'); // Change button icon back to 'Play' when audio ends
+                };
+            }
+        },*/
+
         {
             extend: 'copy',
             text: '<i class="fa fa-copy"></i>',
@@ -655,12 +824,44 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             text: '<i class="fa fa-file-pdf-o"></i>',
             titleAttr: 'PDF',
             className: 'btn btn-md mr-2 btn-pdf'
-        },
+        },       
+
         {
             extend: 'print',
-            text: '<i class="fa fa-print"></i>',
+            text: '<i class="fa fa-print"></i>', // Custom button text
+            className: 'btn btn-md mr-2 btn-print',
             titleAttr: 'Print',
-            className: 'btn btn-md mr-2 btn-print'
+            customize: function (win) {
+                // Customize the print window/document here
+                $(win.document.body).css('font-size', '10pt');
+                $(win.document.body).find('table')
+                    .addClass('display')
+                    .css('font-size', 'inherit');
+
+                // Add a landscape orientation
+                var css = '@page { size: landscape; }';
+                var head = win.document.head || win.document.getElementsByTagName('head')[0];
+                var style = win.document.createElement('style');
+
+                style.type = 'text/css';
+                style.media = 'print';
+                if (style.styleSheet) {
+                    style.styleSheet.cssText = css;
+                } else {
+                    style.appendChild(win.document.createTextNode(css));
+                }
+
+                head.appendChild(style);
+            }
+        },
+
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
+
         },
 
         {
@@ -915,6 +1116,8 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
 
 });
+
+
 
 
 //p4#48 AudioNotification - Binoy - 12-01-2024 -- Start
@@ -2905,6 +3108,41 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
     buttons: [
 
         {
+            text: '<i class="fa fa-microphone" aria-hidden="true"></i>',
+            titleAttr: 'Start Recoding',
+            className: 'btn btn-md mr-2 btn-custom',
+            name: 'audioStart',
+            action: function (e, dt, node, config) {
+                clickstarAudio();
+                clientSiteInActiveGuardsSinglePage.buttons('audioStart:name').disable();
+                clientSiteInActiveGuardsSinglePage.buttons('audioStop:name').enable();
+               
+
+            }
+        },
+        {
+            text: '<i class="fa fa-microphone-slash" aria-hidden="true"></i>',
+            titleAttr: 'Stop Recoding',
+            className: 'btn btn-md mr-2 btn-custom',
+            enabled: false,
+            name: 'audioStop',
+            action: function () {
+                clickStopAudio();
+                clientSiteInActiveGuardsSinglePage.buttons('audioStop:name').disable();
+                clientSiteInActiveGuardsSinglePage.buttons('audioStart:name').enable();
+
+            }
+        },
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
+
+        },
+
+        {
             extend: 'copy',
             text: '<i class="fa fa-copy"></i>',
             titleAttr: 'Copy',
@@ -2922,13 +3160,45 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
             titleAttr: 'PDF',
             className: 'btn btn-md mr-2 btn-pdf'
         },
+        
+
         {
             extend: 'print',
-            text: '<i class="fa fa-print"></i>',
+            text: '<i class="fa fa-print"></i>', // Custom button text
+            className: 'btn btn-md mr-2 btn-print',
             titleAttr: 'Print',
-            className: 'btn btn-md mr-2 btn-print'
+            customize: function (win) {
+                // Customize the print window/document here
+                $(win.document.body).css('font-size', '10pt');
+                $(win.document.body).find('table')
+                    .addClass('display')
+                    .css('font-size', 'inherit');
+
+                // Add a landscape orientation
+                var css = '@page { size: landscape; }';
+                var head = win.document.head || win.document.getElementsByTagName('head')[0];
+                var style = win.document.createElement('style');
+
+                style.type = 'text/css';
+                style.media = 'print';
+                if (style.styleSheet) {
+                    style.styleSheet.cssText = css;
+                } else {
+                    style.appendChild(win.document.createTextNode(css));
+                }
+
+                head.appendChild(style);
+            }
         },
 
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
+
+        },
         {
             text: '<img src="/images/man-climbing-stairs.png" alt="Image" height="16" width="16">',
             titleAttr: 'Steps',
@@ -3208,6 +3478,44 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
     dom: 'Bfrtip',
     buttons: [
 
+
+        {
+            text: '<i class="fa fa-microphone" aria-hidden="true"></i>',
+            titleAttr: 'Start Recoding',
+            className: 'btn btn-md mr-2 btn-custom',
+            name: 'audioStart',
+            action: function (e, dt, node, config) {
+                clickstarAudio();
+                clientSiteActiveGuardsSinglePage.buttons('audioStart:name').disable();
+                clientSiteActiveGuardsSinglePage.buttons('audioStop:name').enable();
+              
+
+            }
+        },
+        {
+            text: '<i class="fa fa-microphone-slash" aria-hidden="true"></i>',
+            titleAttr: 'Stop Recoding',
+            className: 'btn btn-md mr-2 btn-custom',
+            enabled: false,
+            name: 'audioStop',
+            action: function () {
+                clickStopAudio();
+                clientSiteActiveGuardsSinglePage.buttons('audioStop:name').disable();
+                clientSiteActiveGuardsSinglePage.buttons('audioStart:name').enable();
+
+            }
+        },
+
+
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
+
+        },
+
         {
             extend: 'copy',
             text: '<i class="fa fa-copy"></i>',
@@ -3228,9 +3536,41 @@ let clientSiteActiveGuardsSinglePage = $('#clientSiteActiveGuardsSinglePage').Da
         },
         {
             extend: 'print',
-            text: '<i class="fa fa-print"></i>',
+            text: '<i class="fa fa-print"></i>', // Custom button text
+            className: 'btn btn-md mr-2 btn-print',
             titleAttr: 'Print',
-            className: 'btn btn-md mr-2 btn-print'
+            customize: function (win) {
+                // Customize the print window/document here
+                $(win.document.body).css('font-size', '10pt');
+                $(win.document.body).find('table')
+                    .addClass('display')
+                    .css('font-size', 'inherit');
+
+                // Add a landscape orientation
+                var css = '@page { size: landscape; }';
+                var head = win.document.head || win.document.getElementsByTagName('head')[0];
+                var style = win.document.createElement('style');
+
+                style.type = 'text/css';
+                style.media = 'print';
+                if (style.styleSheet) {
+                    style.styleSheet.cssText = css;
+                } else {
+                    style.appendChild(win.document.createTextNode(css));
+                }
+
+                head.appendChild(style);
+            }
+        },
+
+
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
+
         },
 
         {
@@ -4579,7 +4919,7 @@ var guardSettings = $('#guard_settings_for_control_room').DataTable({
         },
         //p4-105 new button-end
         { data: 'name', width: "22%" },
-        { data: 'securityNo', width: "10%" },
+        { data: 'securityNo', width: "12%" },
         { data: 'initial', orderable: false, width: "3%" },
         { data: 'mobile', width: "15%" },
         { data: 'email', width: "11%" },
@@ -5262,5 +5602,96 @@ function downloadDailyGuardfusionLogZipFile() {
 }
 
      //end fusion report in auditlog08072024
+
+
+//Audio file save 
+let mediaRecorder;
+let audioChunks = [];
+$('#startBtn').click(async function () {
+    // Clear previous recording data
+    audioChunks = [];
+    mediaRecorder = null;
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+
+    mediaRecorder.ondataavailable = function (event) {
+        audioChunks.push(event.data);
+    };
+
+    mediaRecorder.onstop = function () {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        $('#audioPlayback').attr('src', audioUrl);
+        uploadAudio(audioBlob);
+    };
+
+    mediaRecorder.start();
+    $(this).prop('disabled', true);
+    $('#stopBtn').prop('disabled', false);
+});
+
+async function clickstarAudio() {
+
+    // Clear previous recording data
+    audioChunks = [];
+    mediaRecorder = null;
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+
+    mediaRecorder.ondataavailable = function (event) {
+        audioChunks.push(event.data);
+    };
+
+    mediaRecorder.onstop = function () {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        $('#audioPlayback').attr('src', audioUrl);
+        uploadAudio(audioBlob);
+    };
+
+    mediaRecorder.start();
+    //$(this).prop('disabled', true);
+    //$('#stopBtn').prop('disabled', false);
+}
+
+function clickStopAudio() {
+
+    mediaRecorder.stop();
+    //$(this).prop('disabled', true);
+    //$('#startBtn').prop('disabled', false);
+}
+
+$('#stopBtn').click(function () {
+    mediaRecorder.stop();
+    $(this).prop('disabled', true);
+    $('#startBtn').prop('disabled', false);
+});
+
+function uploadAudio(blob) {
+
+
+
+
+
+    let formData = new FormData();
+    formData.append('audioFile', blob, 'recording.wav');
+
+    $.ajax({
+        url: '/Record?handler=SaveAudio',
+        type: 'POST',
+        dataType: 'json',
+        data: formData,
+        processData: false,
+        contentType: false, // Add this line
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        console.log('Upload success:', result);
+        formData.delete('audioFile'); // Removes the file from FormData
+        blob = null; // Clear the blob reference to allow garbage collection
+    });
+
+
+
+}
 
 

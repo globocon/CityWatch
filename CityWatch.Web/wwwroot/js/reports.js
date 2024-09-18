@@ -19,6 +19,9 @@
         ordering: false,
         info: false,
         scrollX: true,
+        fixedHeader: true,
+        scrollY: '400px', // Set the height to 300px
+        scrollCollapse: true,
         data: [],
         columns: [
             { data: 'nameOfDay' },

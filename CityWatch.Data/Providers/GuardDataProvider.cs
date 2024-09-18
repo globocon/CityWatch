@@ -78,6 +78,7 @@ namespace CityWatch.Data.Providers
         public List<Guard> GetGuardDetailsUsingId(int Id);
         public void SetGuardNewPIN(int guardId, string NewPIN);
         List<HrSettings> GetHRDescFull();
+        public void SaveRecordingFileDetails(AudioRecordingLog audioRecordingLog);
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -795,6 +796,26 @@ namespace CityWatch.Data.Providers
                 .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
                 ThenBy(x => x.ReferenceNoAlphabets.Name).ToList();
             return descriptions;
+        }
+
+        public void SaveRecordingFileDetails( AudioRecordingLog audioRecordingLog)
+        {
+            if (audioRecordingLog.Id == 0)
+            {
+                audioRecordingLog.UploadedDate = DateTime.Now;
+                _context.AudioRecordingLog.Add(audioRecordingLog);
+            }
+            else
+            {
+                var audioRecordingLogToUpdate = _context.AudioRecordingLog.SingleOrDefault(x => x.Id == audioRecordingLog.Id);
+                if (audioRecordingLogToUpdate != null)
+                {
+                    audioRecordingLogToUpdate.FileName= audioRecordingLog.FileName;
+                    audioRecordingLogToUpdate.BlobUrl= audioRecordingLog.BlobUrl;
+                }
+            }
+            _context.SaveChanges();
+
         }
     }
 }

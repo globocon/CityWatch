@@ -1065,6 +1065,8 @@ $('#report_field_types').on('change', function () {
         $('#fieldSettings').show();
         $('#positionSettings').hide();
         $('#FinancialReimbursementSettings').hide();
+        $('#irNotes').hide();
+
         gridReportFields.clear();
         gridPositions.clear();
         gridAreaReportFields.clear();
@@ -1076,6 +1078,7 @@ $('#report_field_types').on('change', function () {
         $('#positionSettings').show();
         $('#PSPFSettings').hide();
         $('#FinancialReimbursementSettings').hide();
+        $('#irNotes').hide();
 
         gridReportFields.clear();
         gridPositions.reload();
@@ -1088,7 +1091,7 @@ $('#report_field_types').on('change', function () {
         $('#fieldSettings').hide();
         $('#positionSettings').hide();
         $('#FinancialReimbursementSettings').hide();
-
+        $('#irNotes').hide();
         gridPositions.clear();
         gridReportFields.clear();
         gridAreaReportFields.clear();
@@ -1102,7 +1105,7 @@ $('#report_field_types').on('change', function () {
         $('#PSPFSettings').hide();
         $('#fieldSettings').hide();
         $('#positionSettings').hide();
-
+        $('#irNotes').hide();
 
         gridPositions.clear();
         gridReportFields.clear();
@@ -1111,6 +1114,7 @@ $('#report_field_types').on('change', function () {
         gridAreaReportFields.hide();
     }
     else if (selFieldTypeId === '4') {
+        $('#irNotes').hide();
         $('#fieldSettings').show();
         $('#positionSettings').hide();
         $('#PSPFSettings').hide();
@@ -1125,6 +1129,21 @@ $('#report_field_types').on('change', function () {
 
 
     }
+    else if (selFieldTypeId === '7') {
+
+        $('#irNotes').show();
+        $('#FinancialReimbursementSettings').hide();
+        $('#PSPFSettings').hide();
+        $('#fieldSettings').hide();
+        $('#positionSettings').hide();
+
+
+        gridPositions.clear();
+        gridReportFields.clear();
+        gridAreaReportFields.clear();
+        gridPSPF.clear();
+        gridAreaReportFields.hide();
+    }
     else {
         $('#fieldSettings').show();
         $('#positionSettings').hide();
@@ -1132,6 +1151,7 @@ $('#report_field_types').on('change', function () {
         $('#FinancialReimbursementSettings').hide();
         $('#field_settings').show();
         $('#field_settings_Area').hide();
+        $('#irNotes').hide();
 
         gridPSPF.clear();
         gridPositions.clear();
@@ -1572,6 +1592,40 @@ $('#report_field_types').on('change', function () {
 
     /****** Report tools end *******/
 
+    var editPositionGridRender;
+    editPositionGridRender = function (value, record, $cell, $displayEl, id, $grid) {
+        var data = $grid.data(),
+            $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i></button>').attr('data-key', id),
+            $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_training" data-doc-id="' + record.id + '"><i class="fa fa-trash"></i></button>').attr('data-key', id),
+            $update = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-check" aria-hidden="true"></i></button>').attr('data-key', id).hide(),
+            $cancel = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-close" aria-hidden="true"></i></button>').attr('data-key', id).hide();
+        $edit.on('click', function (e) {
+            $grid.edit($(this).data('key'));
+            $edit.hide();
+            $delete.hide();
+            $update.show();
+            $cancel.show();
+        });
+        $delete.on('click', function (e) {
+            $grid.removeRow($(this).data('key'));
+        });
+        $update.on('click', function (e) {
+            $grid.update($(this).data('key'));
+            $edit.show();
+            $delete.show();
+            $update.hide();
+            $cancel.hide();
+        });
+        $cancel.on('click', function (e) {
+            $grid.cancel($(this).data('key'));
+            $edit.show();
+            $delete.show();
+            $update.hide();
+            $cancel.hide();
+        });
+        $displayEl.empty().append($edit).append($delete).append($update).append($cancel);
+    }
+
     let gridPositions;
 
     gridPositions = $('#position_settings').grid({
@@ -1579,7 +1633,7 @@ $('#report_field_types').on('change', function () {
         uiLibrary: 'bootstrap4',
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
-        inlineEditing: { mode: 'command' },
+        inlineEditing: { mode: 'command', managementColumn: false },
         columns: [
             { field: 'name', title: 'Name', width: 230, editor: true },
             { field: 'emailTo', title: 'Special Email Condition', width: 200, editor: true },
@@ -1587,14 +1641,32 @@ $('#report_field_types').on('change', function () {
             { field: 'dropboxDir', title: 'Dropbox Directory', width: 250, editor: true },
             {
                 field: 'isLogbook', title: 'Logbook',
-                type: 'checkbox', align: 'center', width: 80, editor: true,
+                type: 'checkbox', align: 'center', width: 100, editor: true,
             },
             { field: 'clientsiteName', title: 'Nominated logbook', width: 130, editor: false },
+
+            {
+                field: 'isSmartwandbypass', title: 'Smart WAND Bypass',
+                type: 'checkbox', align: 'center', width: 100, editor: true,
+                editor: {
+                    // Assign a unique ID if needed
+                    class: 'is-smartwandbypass-checkbox',
+                    id: 'smartwandbypass' // Example of dynamic ID assignment
+                }
+            },
+            { title: '<i class="fa fa-cogs" aria-hidden="true"></i>', width: 30, align: 'center',  renderer: editPositionGridRender }
         ],
         initialized: function (e) {
-            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>').css('width', '205px');
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>').css('width', '116px');
         }
     });
+
+
+    
+
+
+
+
     //To Position Checkbox and Popup start
     $('#PositionClientSiteId').select({
         placeholder: 'Select',
@@ -1602,7 +1674,14 @@ $('#report_field_types').on('change', function () {
     });
     $('#position_settings').on('click', 'input[type="checkbox"]', function () {
         var itemId = $(this).data('id');
+        var checkboxId = $(this).attr('id'); 
         var isChecked = $(this).is(':checked');
+        var isSmartwandbypass = $(this).hasClass('is-smartwandbypass-checkbox');
+
+        if (itemId ==='smartwandbypass') {
+            // Skip modal popup for 'IsSmartwandbypass'
+            return;
+        }
         if (isChecked == true) {
             $('#po_client_type').val('');
             $('#PositionClientSiteId').val('');
@@ -1746,6 +1825,18 @@ $('#report_field_types').on('change', function () {
         }
     });
 
+    /*p1-248 search users grid*/
+
+    $('#btnSearchUsers').on('click', function () {
+        var searchTerm = $('#search_users').val();
+        gridUsers.reload({ searchTerm: searchTerm });
+    });
+    $('#search_users').on('keyup', function (event) {
+        // Enter key pressed
+        if (event.keyCode === 13) {
+            gridUsers.reload({ searchTerm: $(this).val() });
+        }
+    });
     $('#user_settings').on('click', ".showPassword", function () {
         const btn = $(this);
         const userId = btn.attr('data-uid');
@@ -1863,6 +1954,19 @@ $('#report_field_types').on('change', function () {
         }
     });
 
+    /*p1-248 search client site access grid*/
+   
+    $('#btnSearchClientSiteAccess').on('click', function () {
+        var searchTerm = $('#search_site_access_control').val();
+        console.log('Search Term:', searchTerm);  // Debugging output
+        gridClientSiteAccess.reload({ searchTerm: searchTerm });
+    });
+    $('#search_site_access_control').on('keyup', function (event) {
+        // Enter key pressed
+        if (event.keyCode === 13) {
+            gridClientSiteAccess.reload({searchTerm: $(this).val()});
+        }
+    });
     $('#user-client-access-modal').on('shown.bs.modal', function (event) {
         const button = $(event.relatedTarget);
         const userId = button.data('id');
@@ -3288,7 +3392,7 @@ $('#report_field_types').on('change', function () {
         $('#add_field_settings').hide();
         $('#add_dosanddonts_fields').hide();
         $('#add_kvl_fields').hide();
-
+        $('#irNotes').hide();
         gridReportFields.hide();
         gridKvlFields.hide();
         gridDosAndDontsFields.hide();
@@ -3298,6 +3402,7 @@ $('#report_field_types').on('change', function () {
 $('#report_module_types').on('change', function () {
     if ($('#report_module_types').val() == 1) {
 
+        $('#fieldSettings').show();
         $('#doanddontfields_types').show();
         $('#report_field_types').hide();
         $('#kvl_fields_types').hide();
@@ -3307,6 +3412,7 @@ $('#report_module_types').on('change', function () {
         $('#add_field_settings').hide();
         $('#add_dosanddonts_fields').show();
         $('#add_kvl_fields').hide();
+        $('#irNotes').hide();
 
         gridReportFields.hide();
         gridKvlFields.hide();
@@ -3317,6 +3423,7 @@ $('#report_module_types').on('change', function () {
         gridDosAndDontsFields.reload({ typeId: $('#doanddontfields_types').val() });
     }
     else if ($('#report_module_types').val() == 2) {
+        $('#fieldSettings').show();
         $('#doanddontfields_types').hide();
         $('#report_field_types').hide();
 
@@ -3325,9 +3432,9 @@ $('#report_module_types').on('change', function () {
         $('#lblFieldType').show();
 
         $('#add_field_settings').hide();
-        $('#add_dosanddonts_fields').hide();
+        $('#add_dosanddonts_fields').hide();       
         $('#add_kvl_fields').show();
-
+        $('#irNotes').hide();
         $('#kvl_fields_types').val('');
         gridKvlFields.reload({ typeId: $('#kvl_fields_types').val() });
 
@@ -3337,6 +3444,7 @@ $('#report_module_types').on('change', function () {
         gridDosAndDontsFields.hide();
     }
     else if ($('#report_module_types').val() == 3) {
+        $('#fieldSettings').hide();
         $('#doanddontfields_types').hide();
         $('#report_field_types').show();
         $('#kvl_fields_types').hide();
@@ -3346,7 +3454,7 @@ $('#report_module_types').on('change', function () {
         $('#add_field_settings').show();
         $('#add_dosanddonts_fields').hide();
         $('#add_kvl_fields').hide();
-
+        $('#irNotes').hide();
         gridReportFields.show();
         gridKvlFields.hide();
         gridDosAndDontsFields.hide();
@@ -3355,7 +3463,9 @@ $('#report_module_types').on('change', function () {
         $('#report_field_types').val('');
         gridReportFields.reload({ typeId: $('#report_field_types').val() });
     }
+    
     else {
+
         $('#doanddontfields_types').hide();
         $('#report_field_types').hide();
         $('#kvl_fields_types').hide();
@@ -3365,7 +3475,7 @@ $('#report_module_types').on('change', function () {
         $('#add_field_settings').hide();
         $('#add_dosanddonts_fields').hide();
         $('#add_kvl_fields').hide();
-
+        $('#irNotes').hide();
         gridAreaReportFields.hide();
         gridReportFields.hide();
         gridKvlFields.hide();
@@ -3751,6 +3861,50 @@ $('#hr_settings_fields_types').on('change', function () {
     else {
         gridLicenseTypes.hide();
         gridHrSettings.hide();
+    }
+});
+if ($('#report_module_types_irtemplate').val() == 1) {
+    $('#incident_report_pdf_template').show();
+    $('#company_sop').hide();
+    $('#training').hide();
+    $('#templatesandforms').hide();
+
+}
+$('#report_module_types_irtemplate').on('change', function () {
+    const reportModuletypeIrtemplateId = $('#report_module_types_irtemplate').val();
+    if ($('#report_module_types_irtemplate').val() == 1) {
+
+        $('#incident_report_pdf_template').show();
+        $('#company_sop').hide();
+        $('#training').hide();
+        $('#templatesandforms').hide();       
+    
+    }
+
+    else if ($('#report_module_types_irtemplate').val() == 2) {
+        $('#incident_report_pdf_template').hide();      
+        $('#company_sop').show();
+        $('#training').hide();
+        $('#templatesandforms').hide();
+
+    }
+    else if ($('#report_module_types_irtemplate').val() == 3) {
+        $('#incident_report_pdf_template').hide();
+        $('#company_sop').hide();
+        $('#training').show();
+        $('#templatesandforms').hide();
+    }
+    else if ($('#report_module_types_irtemplate').val() == 4) {
+        $('#incident_report_pdf_template').hide();
+        $('#company_sop').hide();
+        $('#training').hide();
+        $('#templatesandforms').show();
+
+
+    }
+
+    else {
+     
     }
 });
 $('#clientTypeNameDoc').multiselect({

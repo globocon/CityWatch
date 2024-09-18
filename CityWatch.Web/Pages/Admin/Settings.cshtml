@@ -63,7 +63,7 @@
             <li class="nav-item" @hideTabStyle>
                 <a class="nav-link p-2" id="fields-tab" data-toggle="tab" href="#fields" role="tab" aria-controls="fields" aria-selected="false">C4i Fields</a>
             </li>
-            <li class="nav-item" @hideTabStyle>
+            <li class="nav-item" style="display:none">
                 <a class="nav-link p-2" id="fbktpl-tab" data-toggle="tab" href="#fbktpl" role="tab" aria-controls="fbktpl" aria-selected="false">IR Notes</a>
             </li>
             <li class="nav-item" @hideTabStyle>
@@ -157,8 +157,265 @@
                     </div>
                 </div>
             </div>
-            <div class="tab-pane fade py-3" id="fbktpl" role="tabpanel" aria-labelledby="fbktpl-tab" @hideTabStyle>
-                <div class="row">
+            @* <div class="tab-pane fade py-3" id="fbktpl" role="tabpanel" aria-labelledby="fbktpl-tab" @hideTabStyle> *@
+               @*  <div class="row">
+                    <div class="col">
+                        <div class="form-group row">
+                            <label class="col-form-label col-md-3">Selected feedback template</label>
+                            <div class="col-md-4">
+                                <select class="form-control" id="sel_fbktpl">
+                                    <option value="">None</option>
+                                    @foreach (var item in Model.ConfigDataProiver.GetFeedbackTemplates())
+                                    {
+                                        <option value="@item.Id">@item.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-5 text-right">
+                                <button class="btn btn-success mb-3" id="add_fbktpl"><i class="fa fa-plus mr-2"></i>New Template</button>
+                            </div>
+                        </div>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert" id="fbktpl_status" style="display:none">
+                            <span>Message</span>
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <form id="form_fbktpl" style="display:none" method="post">
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2 text-right">Background Colour</label>
+                                <div class="col-md-1">
+                                    <input type="color" asp-for="@Model.FeedbackTemplate.BackgroundColour" />
+                                </div>
+                                <label class="col-form-label col-md-1 pl-0 pr-0 text-right">Text Colour</label>
+                                <div class="col-md-1">
+                                    <input type="color" asp-for="@Model.FeedbackTemplate.TextColor" />
+                                </div>
+                            </div>
+                            <div class="form-group row" style="display:none" id="new_fbktpl_name">
+                                <label class="col-md-3 col-form-label">New template name:</label>
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control" asp-for="@Model.FeedbackTemplate.Name" />
+                                    <input type="hidden" asp-for="@Model.FeedbackTemplate.Id" value="" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="d-flex flex-row mb-2">
+                                    <label class="col-md-8 col-form-label pl-0">Pre-populated text for template &quot;<span id="sel_fbktpl_name"></span>&quot;:</label>
+                                    <button class="btn btn-success col-md-2 mr-2" id="add_feedbacktype_page"><i class="fa fa-plus mr-2"></i>New Category</button>
+                                    @*<select class="form-control" asp-for="@Model.FeedbackTemplate.Type" asp-items="@Html.GetEnumSelectList<FeedbackType>()"></select>*@
+                                    @*Template type is directly taken from database -jisha -start*@
+                                   @*<select class="form-control" id="FeedbackTemplate_Type" asp-for="@Model.FeedbackTemplate.Type">
+                                        @foreach (var item in Model.ConfigDataProiver.GetFeedbackTypes())
+                                        {
+                                            <option value="@item.Id">@item.Name</option>
+                                        }
+                                    </select>
+                                    @*Template type is directly taken from database -jisha -end*@
+                               @*</div>
+                                <textarea class="form-control" asp-for="@Model.FeedbackTemplate.Text" rows="10"></textarea>
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-outline-danger" id="delete_fbktpl" style="display:none"><i class="fa fa-trash mr-2"></i>Delete</button>
+                                    <button type="button" class="btn btn-primary mr-2" id="save_fbktpl"><i class="fa fa-save mr-2"></i>Save</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div> *@
+           @*  </div> *@
+            <div class="tab-pane fade py-3" id="irdocs" role="tabpanel" aria-labelledby="irdocs-tab" @hideTabStyle>
+                <div class="row my-3">
+                    <label class="col-form-label col-md-3">C4i Module</label>
+                    <div class="col-md-4">
+
+                        <select class="form-control" id="report_module_types_irtemplate">
+                           @*  <option value="">None</option> *@
+                            <option value="1" selected>Details of Incident Report Pdf Template</option>
+                            <option value="2">Company SOP</option>
+                            <option value="3">Training</option>
+                            <option value="4">Templates & Forms</option>
+                        </select>
+                    </div>
+                </div>
+                 <div  id="incident_report_pdf_template">
+
+                    <div class="col">
+                        <label class="fw-bold" hidden >Details of Incident Report Pdf Template</label>
+                        <table class="table table-bordered tbl-settings">
+                            <thead>
+                                <tr>
+                                    <th style="width:241px">Current Location</th>
+                                    <th style="width:240px">Last Uploaded DTG</th>
+                                    <th style="width:340px">Default Email for IR sending/HR Warning</th>
+                                    <th style="width:400px" class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="align-middle">@Model.ReportTemplate.Path</td>
+                                    <td id="ir_template_updatedOn" class="align-middle">@Model.ReportTemplate.LastUpdated.ToString("dd MMM yyyy @ HH:mm")</td>
+
+                                    <td class="align-middle" id="DefaultMail">@Model.ReportTemplate.DefaultEmail</td>
+                                    <td class="align-middle" style="display: none;" id="DefaultMailTextbox"><input type="text" id="DefaultMailTextboxval" style="width:100%" name="DefaultEmail" value="@Model.ReportTemplate.DefaultEmail" /></td>
+
+                                    <td class="text-center">
+                                        <button role="edit" id="btn_DefaultEmailEdit" class="btn btn-outline-primary" key="33"><i class="gj-icon pencil" style="font-size:15px"> EDIT</i></button>
+                                        <button role="update" id="btn_DefaultEmailUpdate" class="btn btn-outline-primary" key="1" style="display:none"><i class="gj-icon check-circle" style="font-size:15px"> UPDATE</i></button>
+                                        <label class="btn btn-success mb-0">
+                                            <form id="form_ir_template" method="post">
+                                                <i class="fa fa-upload mr-2"></i>Replace
+                                                <input type="file" id="ir_template_upload" accept=".pdf" hidden>
+                                            </form>
+                                        </label>
+                                        <a href="@Url.Content("~/Pdf/Template/IR_Form_Template.pdf")" target="_blank" class="btn btn-outline-primary"><i class="fa fa-download mr-2"></i>Download</a>
+
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+              
+
+            <div id="company_sop">
+                    <div class="row mb-2">
+                        <div class="col-md-6 position-relative">
+                            <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Company SOP</label> <label class="fw-bold mb-0" style="bottom:0">Documents available for staff to download in the field:</label>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <label class="btn btn-success mb-0">
+                                <form id="form_add_staff_document_file_company_sop" method="post">
+                                    <i class="fa fa-upload mr-2"></i>Add File
+                                    <input type="file" id="add_staff_document_file_company_sop" accept=".pdf, .docx, .xlsx" hidden>
+                                </form>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <table class="table" id="staff_document_files_type_CompanySop"></table>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-2" id="training">
+                    <div class="col-md-6 position-relative">
+                        <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Training</label>  <label class="fw-bold mb-0" style="bottom:0">Documents available for staff to download in the field:</label>
+                    </div>
+                    <div class="col-md-6 text-right">
+                        <label class="btn btn-success mb-0">
+                            <form id="form_add_staff_document_file_training" method="post">
+                                <i class="fa fa-upload mr-2"></i>Add File
+                                <input type="file" id="add_staff_document_file_training" accept=".pdf, .docx, .xlsx" hidden>
+                            </form>
+                        </label>
+                    </div>
+              
+                <div class="row mb-4" id="staffdocumentfilesfortraining">
+                    <div class="col-md-12">
+                        <table class="table" id="staff_document_files_type_Training"></table>
+                    </div>
+                </div>
+                </div>
+                <div class="row mb-2" id="templatesandforms">
+                    <div class="col-md-6 position-relative">
+                        <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Templates & Forms</label><label class="fw-bold mb-0" style="bottom:0">Documents available for staff to download in the field:</label>
+                    </div>
+                    <div class="col-md-6 text-right">
+                        <label class="btn btn-success mb-0">
+                            <form id="form_add_staff_document_file_templates_and_forms" method="post">
+                                <i class="fa fa-upload mr-2"></i>Add File
+                                <input type="file" id="add_staff_document_file_templates_and_forms" accept=".pdf, .docx, .xlsx" hidden>
+                            </form>
+                        </label>
+                    </div>
+               
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <table class="table" id="staff_document_files_type_TemplatesAndForms"></table>
+                    </div>
+                </div>
+                </div>
+            </div>
+            <div class="tab-pane fade py-3" id="fields" role="tabpanel" aria-labelledby="fields-tab" @hideTabStyle>
+                <div class="form-group row">
+                    <label class="col-form-label col-md-3">C4i Module</label>
+                    <div class="col-md-4">
+
+                        <select class="form-control" id="report_module_types">
+                            <option value="">None</option>
+                            <option value="1">LB</option>
+                            <option value="2">KV</option>
+                            <option value="3">IR</option>                            
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-form-label col-md-3" id="lblFieldType">Select a field type</label>
+                    <div class="col-md-4">
+                        @*         <select class="form-control" id="report_field_types"  onchange="sortSelect()">
+                    <option value="">None</option>
+                    <option value="1">Position</option>
+                    <option value="2">Notified By</option>
+                    <option value="3">Callsign</option>
+                    <option value="4">Area/Ward</option>
+                    <option value="5">PSPF</option>
+                    <option value="6">Financial Reimbursement</option>
+                    </select> *@
+                        <select class="form-control" id="report_field_types">
+                            <option value="">None</option>
+                            <option value="4">Area/Ward</option>
+                            <option value="3">Callsign</option>
+                            <option value="6">Financial Reimbursement</option>
+                            <option value="2">Notified By</option>
+                            <option value="1">Position</option>
+                            <option value="5">PSPF</option>
+                            <option value="7">IR Notes</option>
+
+                        </select>
+                        @*p1-196 Rationalization Of Menu Changes-start*@
+                        <select class="form-control" id="doanddontfields_types">
+                            <option value="">None</option>
+                            <option value="1">Do's</option>
+                            <option value="2">Dont's</option>
+                        </select>
+                        <select class="form-control" id="kvl_fields_types" asp-items="@Html.GetEnumSelectList<KvlFieldType>()">
+                            <option value="">None</option>
+                        </select>
+                        @*p1-196 Rationalization Of Menu Changes-end*@
+                    </div>
+                </div>
+                <div class="row" id="fieldSettings">
+                    <div class="col-md-12">
+                        <div class="text-right">
+                            <button class="btn btn-success mb-3" id="add_field_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                            <button class="btn btn-success mb-3" id="add_dosanddonts_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                            <button class="btn btn-success mb-3" id="add_kvl_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                        </div>
+                        <table class="table" id="field_settings"></table>
+                        <table class="table" id="field_settings_Area" hidden></table>
+                        <table class="table" id="tbl_kvl_fields"></table>
+                        <table class="table" id="tbl_dosanddonts_fields"></table>
+                    </div>
+                </div>
+                <div class="row" style="display:none" id="positionSettings">
+                    <div class="col-md-12">
+                        <div class="text-right">
+                            <button class="btn btn-success mb-3" id="add_position_settings"><i class="fa fa-plus mr-2"></i>Add New Position</button>
+                        </div>
+                        <table class="table" id="position_settings"></table>
+                    </div>
+                </div>
+                <div class="row" style="display:none" id="PSPFSettings">
+                    <div class="col-md-12">
+                        <div class="text-right">
+                            <button class="btn btn-success mb-3" id="add_PSPF_settings"><i class="fa fa-plus mr-2"></i>Add New PSPF</button>
+                        </div>
+                        <table class="table" id="PSPF_settings"></table>
+                    </div>
+                </div>
+                @*div for ir notes start*@
+                <div class="row" style="display:none" id="irNotes">
                     <div class="col">
                         <div class="form-group row">
                             <label class="col-form-label col-md-3">Selected feedback template</label>
@@ -222,179 +479,8 @@
                         </form>
                     </div>
                 </div>
-            </div>
-            <div class="tab-pane fade py-3" id="irdocs" role="tabpanel" aria-labelledby="irdocs-tab" @hideTabStyle>
-                <div class="row my-3">
-                    <div class="col">
-                        <label class="fw-bold">Details of Incident Report Pdf Template</label>
-                        <table class="table table-bordered tbl-settings">
-                            <thead>
-                                <tr>
-                                    <th style="width:241px">Current Location</th>
-                                    <th style="width:240px">Date & Time Last Uploaded</th>
-                                    <th style="width:340px">Default Email for IR sending/HR Warning</th>
-                                    <th style="width:400px" class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="align-middle">@Model.ReportTemplate.Path</td>
-                                    <td id="ir_template_updatedOn" class="align-middle">@Model.ReportTemplate.LastUpdated.ToString("dd MMM yyyy @ HH:mm")</td>
+                @*div for ir notes end*@
 
-                                    <td class="align-middle" id="DefaultMail">@Model.ReportTemplate.DefaultEmail</td>
-                                    <td class="align-middle" style="display: none;" id="DefaultMailTextbox"><input type="text" id="DefaultMailTextboxval" style="width:100%" name="DefaultEmail" value="@Model.ReportTemplate.DefaultEmail" /></td>
-
-                                    <td class="text-center">
-                                        <button role="edit" id="btn_DefaultEmailEdit" class="btn btn-outline-primary" key="33"><i class="gj-icon pencil" style="font-size:15px"> EDIT</i></button>
-                                        <button role="update" id="btn_DefaultEmailUpdate" class="btn btn-outline-primary" key="1" style="display:none"><i class="gj-icon check-circle" style="font-size:15px"> UPDATE</i></button>
-                                        <label class="btn btn-success mb-0">
-                                            <form id="form_ir_template" method="post">
-                                                <i class="fa fa-upload mr-2"></i>Replace
-                                                <input type="file" id="ir_template_upload" accept=".pdf" hidden>
-                                            </form>
-                                        </label>
-                                        <a href="@Url.Content("~/Pdf/Template/IR_Form_Template.pdf")" target="_blank" class="btn btn-outline-primary"><i class="fa fa-download mr-2"></i>Download</a>
-
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="row mb-2">
-                    <div class="col-md-6 position-relative">
-                        <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Company SOP</label> <label class="fw-bold mb-0" style="bottom:0">Documents available for staff to download in the field:</label>
-                    </div>
-                    <div class="col-md-6 text-right">
-                        <label class="btn btn-success mb-0">
-                            <form id="form_add_staff_document_file_company_sop" method="post">
-                                <i class="fa fa-upload mr-2"></i>Add File
-                                <input type="file" id="add_staff_document_file_company_sop" accept=".pdf, .docx, .xlsx" hidden>
-                            </form>
-                        </label>
-                    </div>
-                </div>
-                <div class="row mb-4">
-                    <div class="col-md-12">
-                        <table class="table" id="staff_document_files_type_CompanySop"></table>
-
-                    </div>
-                </div>
-                <div class="row mb-2">
-                    <div class="col-md-6 position-relative">
-                        <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Training</label>  <label class="fw-bold mb-0" style="bottom:0">Documents available for staff to download in the field:</label>
-                    </div>
-                    <div class="col-md-6 text-right">
-                        <label class="btn btn-success mb-0">
-                            <form id="form_add_staff_document_file_training" method="post">
-                                <i class="fa fa-upload mr-2"></i>Add File
-                                <input type="file" id="add_staff_document_file_training" accept=".pdf, .docx, .xlsx" hidden>
-                            </form>
-                        </label>
-                    </div>
-                </div>
-                <div class="row mb-4">
-                    <div class="col-md-12">
-                        <table class="table" id="staff_document_files_type_Training"></table>
-                    </div>
-                </div>
-
-                <div class="row mb-2">
-                    <div class="col-md-6 position-relative">
-                        <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Templates & Forms</label><label class="fw-bold mb-0" style="bottom:0">Documents available for staff to download in the field:</label>
-                    </div>
-                    <div class="col-md-6 text-right">
-                        <label class="btn btn-success mb-0">
-                            <form id="form_add_staff_document_file_templates_and_forms" method="post">
-                                <i class="fa fa-upload mr-2"></i>Add File
-                                <input type="file" id="add_staff_document_file_templates_and_forms" accept=".pdf, .docx, .xlsx" hidden>
-                            </form>
-                        </label>
-                    </div>
-                </div>
-                <div class="row mb-4">
-                    <div class="col-md-12">
-                        <table class="table" id="staff_document_files_type_TemplatesAndForms"></table>
-                    </div>
-                </div>
-
-            </div>
-            <div class="tab-pane fade py-3" id="fields" role="tabpanel" aria-labelledby="fields-tab" @hideTabStyle>
-                <div class="form-group row">
-                    <label class="col-form-label col-md-3">C4i Module</label>
-                    <div class="col-md-4">
-
-                        <select class="form-control" id="report_module_types">
-                            <option value="">None</option>
-                            <option value="1">LB</option>
-                            <option value="2">KV</option>
-                            <option value="3">IR</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group row">
-                    <label class="col-form-label col-md-3" id="lblFieldType">Select a field type</label>
-                    <div class="col-md-4">
-                        @*         <select class="form-control" id="report_field_types"  onchange="sortSelect()">
-                    <option value="">None</option>
-                    <option value="1">Position</option>
-                    <option value="2">Notified By</option>
-                    <option value="3">Callsign</option>
-                    <option value="4">Area/Ward</option>
-                    <option value="5">PSPF</option>
-                    <option value="6">Financial Reimbursement</option>
-                    </select> *@
-                        <select class="form-control" id="report_field_types">
-                            <option value="">None</option>
-                            <option value="4">Area/Ward</option>
-                            <option value="3">Callsign</option>
-                            <option value="6">Financial Reimbursement</option>
-                            <option value="2">Notified By</option>
-                            <option value="1">Position</option>
-                            <option value="5">PSPF</option>
-
-                        </select>
-                        @*p1-196 Rationalization Of Menu Changes-start*@
-                        <select class="form-control" id="doanddontfields_types">
-                            <option value="">None</option>
-                            <option value="1">Do's</option>
-                            <option value="2">Dont's</option>
-                        </select>
-                        <select class="form-control" id="kvl_fields_types" asp-items="@Html.GetEnumSelectList<KvlFieldType>()">
-                            <option value="">None</option>
-                        </select>
-                        @*p1-196 Rationalization Of Menu Changes-end*@
-                    </div>
-                </div>
-                <div class="row" id="fieldSettings">
-                    <div class="col-md-12">
-                        <div class="text-right">
-                            <button class="btn btn-success mb-3" id="add_field_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
-                            <button class="btn btn-success mb-3" id="add_dosanddonts_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
-                            <button class="btn btn-success mb-3" id="add_kvl_fields"><i class="fa fa-plus mr-2"></i>Add New Field</button>
-                        </div>
-                        <table class="table" id="field_settings"></table>
-                        <table class="table" id="field_settings_Area" hidden></table>
-                        <table class="table" id="tbl_kvl_fields"></table>
-                        <table class="table" id="tbl_dosanddonts_fields"></table>
-                    </div>
-                </div>
-                <div class="row" style="display:none" id="positionSettings">
-                    <div class="col-md-12">
-                        <div class="text-right">
-                            <button class="btn btn-success mb-3" id="add_position_settings"><i class="fa fa-plus mr-2"></i>Add New Position</button>
-                        </div>
-                        <table class="table" id="position_settings"></table>
-                    </div>
-                </div>
-                <div class="row" style="display:none" id="PSPFSettings">
-                    <div class="col-md-12">
-                        <div class="text-right">
-                            <button class="btn btn-success mb-3" id="add_PSPF_settings"><i class="fa fa-plus mr-2"></i>Add New PSPF</button>
-                        </div>
-                        <table class="table" id="PSPF_settings"></table>
-                    </div>
-                </div>
                 <div class="row" style="display:none" id="FinancialReimbursementSettings">
                     <div class="col-md-12">
 
@@ -410,6 +496,7 @@
 
                     </div>
                 </div>
+           
             </div>
             @*Tools start*@
             <div class="tab-pane fade py-3" id="tools" role="tabpanel" aria-labelledby="tools-tab" @hideTabStyle>
@@ -445,11 +532,25 @@
             @*Tools End*@
 
             <div class="tab-pane fade py-3" id="user" role="tabpanel" aria-labelledby="user-tab" @hideTabStyle>
-                <div class="row">
-                    <div class="col-md-12 text-right">
-                        <button class="btn btn-success mb-3" id="add_user"><i class="fa fa-plus mr-2"></i>Add User</button>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="input-group mb-2 ml-1">
+                            <input type="text" id="search_users" class="form-control" placeholder="Search">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-primary" id="btnSearchUsers">
+                                    <i class="fa fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-8 text-right">
+                        <button class="btn btn-success mb-2" id="add_user">
+                            <i class="fa fa-plus mr-2"></i>Add User
+                        </button>
                     </div>
                 </div>
+
                 <div class="row">
                     <div class="col-md-12">
                         <table class="table" id="user_settings"></table>
@@ -826,6 +927,19 @@
                 </div>
             </div>
             <div class="tab-pane fade py-3" id="uca" role="tabpanel" aria-labelledby="uca-tab" @hideTabStyle>
+                   <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="input-group mb-2 ml-1">
+                            <input type="text" id="search_site_access_control" class="form-control" placeholder="Search">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-primary" id="btnSearchClientSiteAccess">
+                                    <i class="fa fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>              
+                </div>
+
                 <div class="row">
                     <div class="col-md-12 justify-content-center">
                         <table class="table" id="user_client_access"></table>
@@ -1068,6 +1182,12 @@
 
 
             <div class="tab-pane fade py-3" id="uca" role="tabpanel" aria-labelledby="uca-tab" >
+                <div class="input-group col-md-3 mb-2 ml-1">
+                    <input type="text" id="search_site_access_control" class="form-control" placeholder="Search Client Site Access">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-primary" id="btnSearchClientSiteAccess"><i class="fa fa-search"></i></button>
+                    </div>
+                </div>
                 <div class="row">
                     <div class="col-md-12 justify-content-center">
                         <table class="table" id="user_client_access"></table>
@@ -1252,14 +1372,14 @@
                                     <input type="text" class="form-control" id="Guard_Email" name="Guard.Email" autocomplete="off">
                                 </div>
                                 <label class="col-md-1 col-form-label">HR Pin</label>
-                                <div class="pr-0 pl-3">
-                                    <input type="password" style="display:none;" aria-hidden="true">
-                                    <input type="password" style="display:none;" id="LoginUser_Password" aria-hidden="true">
-                                    <input type="password" class="form-control" id="Guard_Pin" name="Guard.Pin" style="width:120px;" autocomplete="random-string">
+                                <div class="pr-0 pl-3 pr-3">
+                                   @* <input type="password" style="display:none;" aria-hidden="true">
+                                    <input type="password" style="display:none;" id="LoginUser_Password" aria-hidden="true">*@
+                                    <input type="text" class="form-control" id="Guard_Pin" name="Guard.Pin" style="width:156px;" autocomplete="off">
 
                                 </div>
-                                <div class="pr-4 pl-3">
-                                    <span id="togglePassword" class=""><i class="fa fa-eye-slash" aria-hidden="true"></i></span>
+                                <div >
+                                   @* <span id="togglePassword" class=""><i class="fa fa-eye-slash" aria-hidden="true"></i></span>*@
                                 </div>
 
 
