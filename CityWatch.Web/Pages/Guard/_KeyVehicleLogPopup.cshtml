@@ -124,7 +124,8 @@
                     <div class="form-row custom-control-log">
                         <div class="form-group col-md-4 custom-control-log">
                             <label>Vehicle Config</label>
-                            <select asp-for="@Model.TruckConfig" ID="vehicleConfigSelect" class="form-control" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.VehicleConfig)"></select>
+                            <select asp-for="@Model.TruckConfig" class="form-control" asp-items="@viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.VehicleConfig)"></select>
+                           
                         </div>
                         <div class="form-group col-md-4 custom-control-log">
                             <label>Trailer Type</label>
@@ -646,33 +647,7 @@
         </div>
     </div>
 </form>
-<div class="modal fade" id="selectVehicleConfigModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="selectVehicleConfig" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title">Vehicle Configuration</h4>
-                <button type="button" id="closeModalButton" class="close" data-dismiss="modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <ul id="itemList" class="list-group">
-                        <!-- Use the same data source for the modal list -->
-                        @foreach (var item in @viewDataService.GetKeyVehicleLogFieldsByType(KvlFieldType.VehicleConfig))
-                        {
-                            @if (!string.IsNullOrWhiteSpace(item.Text) && item.Text.Trim().ToLower() != "select")
-                            {
-                                <li class="list-group-item" id="attach_@item.Value" data-value="@item.Value" style="border-left: 0;border-right: 0;font-size:12px;padding:3px">
-                                    @item.Text
-                                    <i class="fa fa-check ml-2 text-success btn-select-radio-status" title="Select" style="cursor: pointer;float:right"></i>
-                                </li>
-                            }
-                        }
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
 <style>
     .box {
         width: 400px;
