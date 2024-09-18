@@ -5635,6 +5635,7 @@ async function clickstarAudio() {
     // Clear previous recording data
     audioChunks = [];
     mediaRecorder = null;
+    let audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     mediaRecorder = new MediaRecorder(stream);
 
@@ -5643,7 +5644,7 @@ async function clickstarAudio() {
     };
 
     mediaRecorder.onstop = function () {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const audioBlob = new Blob(audioChunks, { type: 'application/wav' });
         const audioUrl = URL.createObjectURL(audioBlob);
         $('#audioPlayback').attr('src', audioUrl);
         uploadAudio(audioBlob);
@@ -5652,6 +5653,22 @@ async function clickstarAudio() {
     mediaRecorder.start();
     //$(this).prop('disabled', true);
     //$('#stopBtn').prop('disabled', false);
+}
+
+
+function getPCMData(audioBuffer) {
+    let numberOfChannels = audioBuffer.numberOfChannels;
+    let length = audioBuffer.length * numberOfChannels;
+    let result = new Int16Array(length);
+    let offset = 0;
+
+    for (let channel = 0; channel < numberOfChannels; channel++) {
+        let channelData = audioBuffer.getChannelData(channel);
+        for (let i = 0; i < channelData.length; i++) {
+            result[offset++] = Math.max(-1, Math.min(1, channelData[i])) * 32767;
+        }
+    }
+    return result;
 }
 
 function clickStopAudio() {
