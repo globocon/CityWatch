@@ -5,7 +5,7 @@
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.Login;
 }
 
-<div class="m-auto p-4">
+<div class="m-auto pb-0 pt-1 pl-4 pr-4">
     <div class="m-auto card box-shadow p-5 col-sm-10 col-md-7 col-lg-5">
         <form method="post">
             <div class="form-group">
@@ -21,10 +21,23 @@
             <div asp-validation-summary="All"></div>
             <button type="submit" class="btn btn-primary w-100 mt-3">Login</button>
         </form>
+
     </div>
+
+
+
+    <p class="mt-1" style="text-align: center;">
+        Data, communication, IP address, location, and audio calls are recorded by this system.
+        The data recorded and stored is handled in accordance with local with local privacy laws and are used for legitimate business purposes, including training, compliance, and quality control.
+    </p>
+    <p style="text-align: center;" class="mb-0">
+        By logging into this system, you explicitly consent to the recording and storing of data, communications,and audio calls in accordance with these purposes. End-users
+        also agree to use the system honestly, and refrain from any actions that could sabotage or compromise the integrity of data.
+    </p>
+
 </div>
 @section PageHeader {
-    <h3 class="text-center">CLOUD PORTAL</h3>    
+    <h3 class="text-center">CLOUD PORTAL</h3>
 }
 @section ProductLogo {
     <a href="https://www.c4isystem.com/" target="_blank" class="text-center text-md-left">
