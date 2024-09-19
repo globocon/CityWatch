@@ -2225,10 +2225,10 @@ $('#report_field_types').on('change', function () {
                 '<input type="file" name="upload_staff_file_company_sop" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
                 '</form></label>').attr('data-key', id),
             $downlaod = $('<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>').attr('data-key', id),
-            $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i> Edit</button>').attr('data-key', id),
-            $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_company_sop" data-doc-id="' + record.id + '"><i class="fa fa-trash mr-2"></i>Delete</button>').attr('data-key', id),
-            $update = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-check" aria-hidden="true"></i> Update</button>').attr('data-key', id).hide(),
-            $cancel = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-close" aria-hidden="true"></i> Cancel</button>').attr('data-key', id).hide();
+            $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i></button>').attr('data-key', id),
+            $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_company_sop" data-doc-id="' + record.id + '"><i class="fa fa-trash"></i></button>').attr('data-key', id),
+            $update = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-check" aria-hidden="true"></i></button>').attr('data-key', id).hide(),
+            $cancel = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-close" aria-hidden="true"></i></button>').attr('data-key', id).hide();
         $edit.on('click', function (e) {
             $grid.edit($(this).data('key'));
             $edit.hide();
@@ -2262,11 +2262,11 @@ $('#report_field_types').on('change', function () {
         primaryKey: 'id',
         inlineEditing: { mode: 'command', managementColumn: false },
         columns: [
-            { field: 'fileName', title: 'File Name', width: 300 },
-            { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 150 },
+            { field: 'fileName', title: 'File Name', width: 390 },
+            { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 140 },
             { width: 75, field: 'documentModuleName', title: '?',align: 'center', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=HelpDocValues', valueField: 'name', textField: 'name' } },
            // { width: 200, renderer: staffDocsButtonRendererCompanySop },
-            { width: 350, renderer: editManagerstaffDocsButtonRendererCompanySop },
+            { width: 270, renderer: editManagerstaffDocsButtonRendererCompanySop },
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -2312,10 +2312,10 @@ $('#report_field_types').on('change', function () {
                 '<input type="file" name="upload_staff_file_training" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
                 '</form></label>').attr('data-key', id),
             $downlaod = $('<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>').attr('data-key', id),
-            $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i> Edit</button>').attr('data-key', id),
-            $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_training" data-doc-id="' + record.id + '"><i class="fa fa-trash mr-2"></i>Delete</button>').attr('data-key', id),
-            $update = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-check" aria-hidden="true"></i> Update</button>').attr('data-key', id).hide(),
-            $cancel = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-close" aria-hidden="true"></i> Cancel</button>').attr('data-key', id).hide();
+            $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i></button>').attr('data-key', id),
+            $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_training" data-doc-id="' + record.id + '"><i class="fa fa-trash"></i></button>').attr('data-key', id),
+            $update = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-check" aria-hidden="true"></i></button>').attr('data-key', id).hide(),
+            $cancel = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-close" aria-hidden="true"></i></button>').attr('data-key', id).hide();
         $edit.on('click', function (e) {
             $grid.edit($(this).data('key'));
             $edit.hide();
@@ -2349,11 +2349,11 @@ $('#report_field_types').on('change', function () {
         inlineEditing: { mode: 'command', managementColumn: false },
         primaryKey: 'id',
         columns: [
-            { field: 'fileName', title: 'File Name', width: 300 },
-            { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 150 },
+            { field: 'fileName', title: 'File Name', width: 390 },
+            { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 140 },
             { width: 75, field: 'documentModuleName', title: '?', align: 'center', type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=HelpDocValues', valueField: 'name', textField: 'name' } },
             //{ width: 200, renderer: staffDocsButtonRendererTraining },
-            { width: 350, align: 'center', renderer: editManagerstaffDocsButtonRendererTraining }
+            { width: 270, align: 'center', renderer: editManagerstaffDocsButtonRendererTraining }
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -2399,10 +2399,10 @@ $('#report_field_types').on('change', function () {
                 '<input type="file" name="upload_staff_file_templates_forms" accept=".pdf, .docx, .xlsx" hidden data-doc-id="' + record.id + '">' +
                 '</form></label>').attr('data-key', id),
             $downlaod = $('<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary ml-2" target="_blank"><i class="fa fa-download mr-2"></i>Download</a>').attr('data-key', id),
-            $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i> Edit</button>').attr('data-key', id),
-            $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_templates_forms" data-doc-id="' + record.id + '"><i class="fa fa-trash mr-2"></i>Delete</button>').attr('data-key', id),
-            $update = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-check" aria-hidden="true"></i> Update</button>').attr('data-key', id).hide(),
-            $cancel = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-close" aria-hidden="true"></i> Cancel</button>').attr('data-key', id).hide();
+            $edit = $('<button class="btn btn-outline-primary ml-2"><i class="gj-icon pencil" style="font-size:15px"></i></button>').attr('data-key', id),
+            $delete = $('<button type="button" class="btn btn-outline-danger ml-2 delete_staff_file_templates_forms" data-doc-id="' + record.id + '"><i class="fa fa-trash"></i></button>').attr('data-key', id),
+            $update = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-check" aria-hidden="true"></i></button>').attr('data-key', id).hide(),
+            $cancel = $('<button class="btn btn-outline-primary ml-2"><i class="fa fa-close" aria-hidden="true"></i></button>').attr('data-key', id).hide();
         $edit.on('click', function (e) {
             $grid.edit($(this).data('key'));
             $edit.hide();
@@ -2436,11 +2436,11 @@ $('#report_field_types').on('change', function () {
         inlineEditing: { mode: 'command', managementColumn: false },
         primaryKey: 'id',
         columns: [
-            { field: 'fileName', title: 'File Name', width: 300 },
-            { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 150 },
+            { field: 'fileName', title: 'File Name', width: 390 },
+            { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 140 },
             { width: 75, field: 'documentModuleName', title: '?', align: 'center', type: 'dropdown', editField: 'documentModuleName', editor: { dataSource: '/Admin/Settings?handler=HelpDocValues', valueField: 'name', textField: 'name' } },
             
-            { width: 350, align: 'center', renderer: editManagerstaffDocsButtonRendererFroms }
+            { width: 270, align: 'center', renderer: editManagerstaffDocsButtonRendererFroms }
             //{ width: 200, renderer: staffDocsButtonRendererTemplatesAndForms },
         ],
         initialized: function (e) {
@@ -2575,7 +2575,14 @@ $('#report_field_types').on('change', function () {
     $('#add_staff_document_file_templates_and_forms').on('change', function () {
         uploadStafDocUsingType($(this), false, 3);
     });
+   /*$('#add_staff_document_file_SlientSite_sop').on('change', function () {
+        uploadStafDocUsingTypeTypeFour($(this), false, 4);
+    });*/
 
+
+
+
+    
     function uploadStafDoc(uploadCtrl, edit = false) {
         const file = uploadCtrl.get(0).files.item(0);
         const fileExtn = file.name.split('.').pop();
@@ -2607,6 +2614,8 @@ $('#report_field_types').on('change', function () {
 
     function uploadStafDocUsingType(uploadCtrl, edit = false, type) {
         var Email = $('#file_downloads').val();
+        var check = $('#SOP').val();
+        var check2 = $('#clientSitessiteSOP').val();
         const file = uploadCtrl.get(0).files.item(0);
         const fileExtn = file.name.split('.').pop();
         if (!fileExtn || '.pdf,.docx,.xlsx'.indexOf(fileExtn.toLowerCase()) < 0) {
@@ -2639,6 +2648,63 @@ $('#report_field_types').on('change', function () {
         });
     }
 
+
+
+
+    function uploadStafDocUsingTypeTypeFour(uploadCtrl, edit = false, type) {
+        var Email = $('#file_downloads').val();
+        var sop = $('#SOP').val();
+        var site = $('#clientSitessiteSOP').val();
+
+        /*if (sop == '') {
+
+            $('#add_staff_document_file_SlientSite_sop').val('');
+                showModal('Please select SOP');
+                return false;
+            
+        }*/
+        if (site == '') {
+
+            $('#add_staff_document_file_SlientSite_sop').val('');
+            showModal('Please select Site');
+            return false;
+
+        }
+
+
+        const file = uploadCtrl.get(0).files.item(0);
+        const fileExtn = file.name.split('.').pop();
+        if (!fileExtn || '.pdf,.docx,.xlsx'.indexOf(fileExtn.toLowerCase()) < 0) {
+            showModal('Unsupported file type. Please upload a .pdf, .docx or .xlsx file');
+            return false;
+        }
+
+        const fileForm = new FormData();
+        fileForm.append('file', file);
+        fileForm.append('type', type);
+        fileForm.append('sop', sop);
+        fileForm.append('site', site);
+        if (edit)
+            fileForm.append('doc-id', uploadCtrl.attr('data-doc-id'));
+
+        $.ajax({
+            url: '/Admin/Settings?handler=UploadStaffDocUsingTypeFour',
+            type: 'POST',
+            data: fileForm,
+            processData: false,
+            contentType: false,
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+        }).done(function (data) {
+            if (data.success) {
+                gridStaffDocsTypeCompanySop.reload();
+                gridStaffDocsTypeTraining.reload();
+                gridStaffDocsTypeTemplatesAndForms.reload();
+                showStatusNotification(data.success, data.message);
+            }
+        }).fail(function () {
+            showStatusNotification(false, 'Something went wrong');
+        });
+    }
     /****** Downloads *******/
 
     var queryString = window.location.search;
@@ -3436,7 +3502,225 @@ $('#report_module_types').on('change', function () {
         gridDosAndDontsFields.hide();
     }
 });
-/*p1 - 196 Rationalization Of Menu Changes - end*/
+    /*p1 - 196 Rationalization Of Menu Changes - end*/
+
+
+
+
+    /*Client Site SOP dileep 17092024*/
+    let gridSchedules;
+
+
+
+    gridSchedules = $('#staff_document_siteSOP').grid({
+        dataSource: '/Admin/Settings?handler=StaffDocsUsingType&&type=4',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        columns: [
+
+            { field: 'clientTypeName', title: 'Client Type', width: 160 },
+            { field: 'clientSiteName', title: 'Client Site', width: 160 },
+            { field: 'fileName', title: 'File Name', width: 300 },
+            { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 150 },
+            { width: 55, field: 'sop', title: 'SOP' },
+            { width: 135, renderer: schButtonRenderer },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+
+    function schButtonRenderer(value, record) {
+        let buttonHtml = '';
+        buttonHtml = '<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary m-1" target="_blank"><i class="fa fa-download"></i></a>';
+        buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-primary m-1 d-block" data-toggle="modal" data-target="#schedule-modal" data-sch-id="' + record.id + '" ';
+        buttonHtml += 'data-action="editSchedule"><i class="fa fa-pencil"></i></button>';
+        buttonHtml += '<button style="display:inline-block!important;" class="btn btn-outline-danger m-1 del-schedule d-block" data-sch-id="' + record.id + '""><i class="fa fa-trash" aria-hidden="true"></i></button>';
+        return buttonHtml;
+    }
+
+
+
+    $('#clientTypeNamesiteSOP').on('change', function () {
+        const option = $(this).val();
+        if (option === '') {
+            $('#clientSitessiteSOP').html('');
+            $('#clientSitessiteSOP').append('<option value="">Select</option>');
+        }
+
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSitesSOPClientSite&type=' + encodeURIComponent(option),
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+            $('#clientSitessiteSOP').html('');
+            $('#clientSitessiteSOP').append('<option value="">Select</option>');
+            data.map(function (site) {
+                $('#clientSitessiteSOP').append('<option value="' + site.value + '">' + site.text + '</option>');
+            });
+        });
+    });
+
+
+
+
+    $('#removeSelectedSites').on('click', function () {
+        $('#selectedSites option:selected').remove();
+        updateSelectedSitesCount();
+    });
+
+    function updateSelectedSitesCount() {
+        $('#selectedSitesCount').text($('#selectedSites option').length);
+    }
+
+    $('#schedule-modal').on('shown.bs.modal', function (event) {
+        clearScheduleModal();
+        const button = $(event.relatedTarget);
+        const isEdit = button.data('action') !== undefined && button.data('action') === 'editSchedule';
+        if (isEdit) {
+            schId = button.data('sch-id');
+            SOPClientSiteModalOnEdit(schId);
+        }
+
+
+    });
+
+    function clearScheduleModal() {
+        $('#dynamicLabel').html('');
+        $('#filename').val('');
+        $('#add_staff_document_file_SlientSite_sop').val('');
+        $('#scheduleId').val('0');
+        $('#clientTypeNamesiteSOP').val('');
+        $('#clientSitessiteSOP').html('<option value="">Select</option>');
+        $('#clientTypeNamesiteSOP option:eq(0)').attr('selected', true);
+        $('#GroupName').val('');
+        $('#sch-modal-validation').hide();
+        $('#SOP').prop('selectedIndex', 0);
+    }
+
+
+    function SOPClientSiteModalOnEdit(scheduleId) {
+        $('#loader').show();
+        $.ajax({
+            url: '/Admin/Settings?handler=SOPClientSitebyId&id=' + scheduleId,
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (data) {
+            $('#scheduleId').val(data.id);
+            $('#filename').val(data.fileName);
+            $('#dynamicLabel').html('<a href="/StaffDocs/' + data.fileName +'" class="btn btn-outline-primary" target="_blank"><i class="fa fa-download"></i> Download</a>');
+
+            $('#clientSitessiteSOP').html(''); // Clear the existing options
+            $('#clientSitessiteSOP').append('<option value="">Select</option>'); // Add a default 'Select' option
+
+            // Populate the dropdown with new options
+            $.each(data.clientSites, function (index, item) {
+                $('#clientSitessiteSOP').append('<option value="' + item.value + '">' + item.text + '</option>');
+            });
+            $('#clientTypeNamesiteSOP').val(data.clientTypeName);
+            // Set the value of the dropdown and trigger the change event
+            $('#clientSitessiteSOP').val(data.clientSite);
+
+            // Set the value for another input field
+            $('#SOP').val(data.sop);
+
+        }).always(function () {
+            $('#loader').hide();
+        });
+    }
+
+    $('#staff_document_siteSOP').on('click', '.del-schedule', function () {
+        const idToDelete = $(this).attr('data-sch-id');
+        if (confirm('Are you sure want to delete this linked Duress?')) {
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteStaffDoc',
+                type: 'POST',
+                data: { id: idToDelete },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function () {
+                gridSchedules.reload({ type: $('#sel_schedule').val(), searchTerm: $('#search_kw_client_site').val() });
+            });
+        }
+
+    });
+
+    $('#btnSaveSiteSOP').on('click', function () {
+
+        var fileName = $('#filename').val();
+        var sop = $('#SOP').val();
+        var site = $('#clientSitessiteSOP').val();
+        var scheduleId = $('#scheduleId').val();
+        if (site == '') {
+
+            $('#add_staff_document_file_SlientSite_sop').val('');
+            $('#msg-modal .modal-body p').html('Please select Site');
+            $('#msg-modal').modal();
+            return false;
+
+        }
+        var fileInput = $('#add_staff_document_file_SlientSite_sop')[0]; // Access the raw DOM element
+        const fileForm = new FormData();
+        // Check if a file has been selected
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0]; // Get the first file object
+            const fileExtn = file.name.split('.').pop().toLowerCase(); // Get file extension
+            fileName = file.name;
+            // Validate file extension
+            if (!fileExtn || ['pdf', 'docx', 'xlsx'].indexOf(fileExtn) < 0) {
+                showModal('Unsupported file type. Please upload a .pdf, .docx, or .xlsx file');
+                return false;
+            }
+            // Prepare the form data
+
+            fileForm.append('file', file);
+
+
+
+        }
+        else {
+
+            if (scheduleId == 0) {
+                showModal('Please select the file to upload');
+                return false;
+            }
+            fileForm.append('file', '');
+        }
+
+        fileForm.append('type', 4);
+        fileForm.append('sop', sop);
+        fileForm.append('site', site);
+        fileForm.append('doc-id', scheduleId);
+        fileForm.append('fileName', fileName);
+
+            //if (edit)
+            //    fileForm.append('doc-id', uploadCtrl.attr('data-doc-id'));
+
+            $.ajax({
+                url: '/Admin/Settings?handler=UploadStaffDocUsingTypeFour',
+                type: 'POST',
+                data: fileForm,
+                processData: false,
+                contentType: false,
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+            }).done(function (data) {
+                if (data.success) {
+                    gridSchedules.reload();
+                    gridStaffDocsTypeCompanySop.reload();
+                    gridStaffDocsTypeTraining.reload();
+                    gridStaffDocsTypeTemplatesAndForms.reload();
+                    $('#schedule-modal').modal('hide');
+                    showStatusNotification(data.success, data.message);
+
+                }
+            }).fail(function () {
+                showStatusNotification(false, 'Something went wrong');
+            });
+
+        
+    });
+
+    /**Client Site SOP dileep 17092024 end*/
 
 });
 
@@ -3822,6 +4106,7 @@ if ($('#report_module_types_irtemplate').val() == 1) {
     $('#company_sop').hide();
     $('#training').hide();
     $('#templatesandforms').hide();
+    $('#clientSOP').hide();
 
 }
 $('#report_module_types_irtemplate').on('change', function () {
@@ -3832,7 +4117,7 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#company_sop').hide();
         $('#training').hide();
         $('#templatesandforms').hide();       
-    
+        $('#clientSOP').hide();
     }
 
     else if ($('#report_module_types_irtemplate').val() == 2) {
@@ -3840,20 +4125,31 @@ $('#report_module_types_irtemplate').on('change', function () {
         $('#company_sop').show();
         $('#training').hide();
         $('#templatesandforms').hide();
-
+        $('#clientSOP').hide();
     }
     else if ($('#report_module_types_irtemplate').val() == 3) {
         $('#incident_report_pdf_template').hide();
         $('#company_sop').hide();
         $('#training').show();
         $('#templatesandforms').hide();
+        $('#clientSOP').hide();
     }
     else if ($('#report_module_types_irtemplate').val() == 4) {
         $('#incident_report_pdf_template').hide();
         $('#company_sop').hide();
         $('#training').hide();
         $('#templatesandforms').show();
+        $('#clientSOP').hide();
 
+    }
+
+    else if ($('#report_module_types_irtemplate').val() == 5) {
+        $('#incident_report_pdf_template').hide();
+        $('#company_sop').hide();
+        $('#training').hide();
+        $('#templatesandforms').hide();
+        $('#clientSOP').show();
+        
 
     }
 
@@ -4515,6 +4811,8 @@ $('#HrState').multiselect({
     buttonTextAlignment: 'left',
     includeSelectAllOption: true,
 });
+
+
 
 //p1-213 document step L end 
 

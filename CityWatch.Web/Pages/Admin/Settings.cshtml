@@ -94,7 +94,7 @@
             <li class="nav-item">
                 <a class="nav-link p-2" id="uca-tab" data-toggle="tab" href="#uca" role="tab" aria-controls="uca" aria-selected="false">C4i Access Control</a>
             </li>
-              //Power User menu end
+            //Power User menu end
         }
     </ul>
     <div class="tab-content" id="settingsTabContent">
@@ -155,96 +155,97 @@
                 </div>
             </div>
             @* <div class="tab-pane fade py-3" id="fbktpl" role="tabpanel" aria-labelledby="fbktpl-tab" @hideTabStyle> *@
-               @*  <div class="row">
-                    <div class="col">
-                        <div class="form-group row">
-                            <label class="col-form-label col-md-3">Selected feedback template</label>
-                            <div class="col-md-4">
-                                <select class="form-control" id="sel_fbktpl">
-                                    <option value="">None</option>
-                                    @foreach (var item in Model.ConfigDataProiver.GetFeedbackTemplates())
-                                    {
-                                        <option value="@item.Id">@item.Name</option>
-                                    }
-                                </select>
-                            </div>
-                            <div class="col-md-5 text-right">
-                                <button class="btn btn-success mb-3" id="add_fbktpl"><i class="fa fa-plus mr-2"></i>New Template</button>
-                            </div>
-                        </div>
-                        <div class="alert alert-success alert-dismissible fade show" role="alert" id="fbktpl_status" style="display:none">
-                            <span>Message</span>
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <form id="form_fbktpl" style="display:none" method="post">
-                            <div class="form-group row">
-                                <label class="col-form-label col-md-2 text-right">Background Colour</label>
-                                <div class="col-md-1">
-                                    <input type="color" asp-for="@Model.FeedbackTemplate.BackgroundColour" />
-                                </div>
-                                <label class="col-form-label col-md-1 pl-0 pr-0 text-right">Text Colour</label>
-                                <div class="col-md-1">
-                                    <input type="color" asp-for="@Model.FeedbackTemplate.TextColor" />
-                                </div>
-                            </div>
-                            <div class="form-group row" style="display:none" id="new_fbktpl_name">
-                                <label class="col-md-3 col-form-label">New template name:</label>
-                                <div class="col-md-4">
-                                    <input type="text" class="form-control" asp-for="@Model.FeedbackTemplate.Name" />
-                                    <input type="hidden" asp-for="@Model.FeedbackTemplate.Id" value="" />
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <div class="d-flex flex-row mb-2">
-                                    <label class="col-md-8 col-form-label pl-0">Pre-populated text for template &quot;<span id="sel_fbktpl_name"></span>&quot;:</label>
-                                    <button class="btn btn-success col-md-2 mr-2" id="add_feedbacktype_page"><i class="fa fa-plus mr-2"></i>New Category</button>
-                                    @*<select class="form-control" asp-for="@Model.FeedbackTemplate.Type" asp-items="@Html.GetEnumSelectList<FeedbackType>()"></select>*@
-                                    @*Template type is directly taken from database -jisha -start*@
-                                   @*<select class="form-control" id="FeedbackTemplate_Type" asp-for="@Model.FeedbackTemplate.Type">
-                                        @foreach (var item in Model.ConfigDataProiver.GetFeedbackTypes())
-                                        {
-                                            <option value="@item.Id">@item.Name</option>
-                                        }
-                                    </select>
-                                    @*Template type is directly taken from database -jisha -end*@
-                               @*</div>
-                                <textarea class="form-control" asp-for="@Model.FeedbackTemplate.Text" rows="10"></textarea>
-                                <div class="mt-3">
-                                    <button type="button" class="btn btn-outline-danger" id="delete_fbktpl" style="display:none"><i class="fa fa-trash mr-2"></i>Delete</button>
-                                    <button type="button" class="btn btn-primary mr-2" id="save_fbktpl"><i class="fa fa-save mr-2"></i>Save</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div> *@
-           @*  </div> *@
+            @*  <div class="row">
+        <div class="col">
+        <div class="form-group row">
+        <label class="col-form-label col-md-3">Selected feedback template</label>
+        <div class="col-md-4">
+        <select class="form-control" id="sel_fbktpl">
+        <option value="">None</option>
+        @foreach (var item in Model.ConfigDataProiver.GetFeedbackTemplates())
+        {
+        <option value="@item.Id">@item.Name</option>
+        }
+        </select>
+        </div>
+        <div class="col-md-5 text-right">
+        <button class="btn btn-success mb-3" id="add_fbktpl"><i class="fa fa-plus mr-2"></i>New Template</button>
+        </div>
+        </div>
+        <div class="alert alert-success alert-dismissible fade show" role="alert" id="fbktpl_status" style="display:none">
+        <span>Message</span>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+        </button>
+        </div>
+        <form id="form_fbktpl" style="display:none" method="post">
+        <div class="form-group row">
+        <label class="col-form-label col-md-2 text-right">Background Colour</label>
+        <div class="col-md-1">
+        <input type="color" asp-for="@Model.FeedbackTemplate.BackgroundColour" />
+        </div>
+        <label class="col-form-label col-md-1 pl-0 pr-0 text-right">Text Colour</label>
+        <div class="col-md-1">
+        <input type="color" asp-for="@Model.FeedbackTemplate.TextColor" />
+        </div>
+        </div>
+        <div class="form-group row" style="display:none" id="new_fbktpl_name">
+        <label class="col-md-3 col-form-label">New template name:</label>
+        <div class="col-md-4">
+        <input type="text" class="form-control" asp-for="@Model.FeedbackTemplate.Name" />
+        <input type="hidden" asp-for="@Model.FeedbackTemplate.Id" value="" />
+        </div>
+        </div>
+        <div class="form-group">
+        <div class="d-flex flex-row mb-2">
+        <label class="col-md-8 col-form-label pl-0">Pre-populated text for template &quot;<span id="sel_fbktpl_name"></span>&quot;:</label>
+        <button class="btn btn-success col-md-2 mr-2" id="add_feedbacktype_page"><i class="fa fa-plus mr-2"></i>New Category</button>
+        @*<select class="form-control" asp-for="@Model.FeedbackTemplate.Type" asp-items="@Html.GetEnumSelectList<FeedbackType>()"></select>*@
+            @*Template type is directly taken from database -jisha -start*@
+            @*<select class="form-control" id="FeedbackTemplate_Type" asp-for="@Model.FeedbackTemplate.Type">
+        @foreach (var item in Model.ConfigDataProiver.GetFeedbackTypes())
+        {
+        <option value="@item.Id">@item.Name</option>
+        }
+        </select>
+        @*Template type is directly taken from database -jisha -end*@
+            @*</div>
+        <textarea class="form-control" asp-for="@Model.FeedbackTemplate.Text" rows="10"></textarea>
+        <div class="mt-3">
+        <button type="button" class="btn btn-outline-danger" id="delete_fbktpl" style="display:none"><i class="fa fa-trash mr-2"></i>Delete</button>
+        <button type="button" class="btn btn-primary mr-2" id="save_fbktpl"><i class="fa fa-save mr-2"></i>Save</button>
+        </div>
+        </div>
+        </form>
+        </div>
+        </div> *@
+            @*  </div> *@
             <div class="tab-pane fade py-3" id="irdocs" role="tabpanel" aria-labelledby="irdocs-tab" @hideTabStyle>
                 <div class="row my-3">
                     <label class="col-form-label col-md-3">C4i Module</label>
                     <div class="col-md-4">
 
                         <select class="form-control" id="report_module_types_irtemplate">
-                           @*  <option value="">None</option> *@
+                            @*  <option value="">None</option> *@
                             <option value="1" selected>Details of Incident Report Pdf Template</option>
+                            <option value="5">Client(Site) SOP</option>
                             <option value="2">Company SOP</option>
                             <option value="3">Training</option>
                             <option value="4">Templates & Forms</option>
                         </select>
                     </div>
                 </div>
-                 <div  id="incident_report_pdf_template">
+                <div id="incident_report_pdf_template">
 
                     <div class="col">
-                        <label class="fw-bold" hidden >Details of Incident Report Pdf Template</label>
+                        <label class="fw-bold" hidden>Details of Incident Report Pdf Template</label>
                         <table class="table table-bordered tbl-settings">
                             <thead>
                                 <tr>
-                                    <th style="width:241px">Current Location</th>
-                                    <th style="width:240px">Last Uploaded DTG</th>
-                                    <th style="width:340px">Default Email for IR sending/HR Warning</th>
-                                    <th style="width:400px" class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                                    <th style="width:267px">Current Location</th>
+                                    <th style="width:168px">Last Uploaded DTG</th>
+                                    <th style="width:257px">Default Email for IR sending/HR Warning</th>
+                                    <th style="width:235px" class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -256,8 +257,8 @@
                                     <td class="align-middle" style="display: none;" id="DefaultMailTextbox"><input type="text" id="DefaultMailTextboxval" style="width:100%" name="DefaultEmail" value="@Model.ReportTemplate.DefaultEmail" /></td>
 
                                     <td class="text-center">
-                                        <button role="edit" id="btn_DefaultEmailEdit" class="btn btn-outline-primary" key="33"><i class="gj-icon pencil" style="font-size:15px"> EDIT</i></button>
-                                        <button role="update" id="btn_DefaultEmailUpdate" class="btn btn-outline-primary" key="1" style="display:none"><i class="gj-icon check-circle" style="font-size:15px"> UPDATE</i></button>
+                                        <button role="edit" id="btn_DefaultEmailEdit" class="btn btn-outline-primary" key="33"><i class="gj-icon pencil" style="font-size:15px"></i></button>
+                                        <button role="update" id="btn_DefaultEmailUpdate" class="btn btn-outline-primary" key="1" style="display:none"><i class="gj-icon check-circle" style="font-size:15px"></i></button>
                                         <label class="btn btn-success mb-0">
                                             <form id="form_ir_template" method="post">
                                                 <i class="fa fa-upload mr-2"></i>Replace
@@ -272,9 +273,9 @@
                         </table>
                     </div>
                 </div>
-              
 
-            <div id="company_sop">
+
+                <div id="company_sop">
                     <div class="row mb-2">
                         <div class="col-md-6 position-relative">
                             <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Company SOP</label> <label class="fw-bold mb-0" style="bottom:0">Documents available for staff to download in the field:</label>
@@ -307,12 +308,12 @@
                             </form>
                         </label>
                     </div>
-              
-                <div class="row mb-4" id="staffdocumentfilesfortraining">
-                    <div class="col-md-12">
-                        <table class="table" id="staff_document_files_type_Training"></table>
+
+                    <div class="row mb-4" id="staffdocumentfilesfortraining">
+                        <div class="col-md-12">
+                            <table class="table" id="staff_document_files_type_Training"></table>
+                        </div>
                     </div>
-                </div>
                 </div>
                 <div class="row mb-2" id="templatesandforms">
                     <div class="col-md-6 position-relative">
@@ -326,13 +327,42 @@
                             </form>
                         </label>
                     </div>
-               
-                <div class="row mb-4">
-                    <div class="col-md-12">
-                        <table class="table" id="staff_document_files_type_TemplatesAndForms"></table>
+
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <table class="table" id="staff_document_files_type_TemplatesAndForms"></table>
+                        </div>
                     </div>
                 </div>
+
+
+
+
+                @*//Client Site SOP Start//*@
+
+
+
+                <div class="row mb-2" id="clientSOP">
+                    <div class="col-md-9 position-relative">
+                        <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Client(Site) SOP</label><label class="fw-bold mb-0" style="bottom:0">Site Specific documents such as SOP's and 'Quick Guides' available for Staff to download in the field:</label>
+                    </div>
+                    <div class="col-md-3 text-right">
+                        <button class="btn btn-success mb-1" id="add_newLinkedDuress" data-toggle="modal" data-target="#schedule-modal"><i class="fa fa-plus mr-2"></i>Add File</button>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <table class="table" id="staff_document_siteSOP"></table>
+                        </div>
+                    </div>
                 </div>
+
+
+
+
+                @*///Client Site SOP end//*@
+
+
             </div>
             <div class="tab-pane fade py-3" id="fields" role="tabpanel" aria-labelledby="fields-tab" @hideTabStyle>
                 <div class="form-group row">
@@ -343,7 +373,7 @@
                             <option value="">None</option>
                             <option value="1">LB</option>
                             <option value="2">KV</option>
-                            <option value="3">IR</option>                            
+                            <option value="3">IR</option>
                         </select>
                     </div>
                 </div>
@@ -493,7 +523,7 @@
 
                     </div>
                 </div>
-           
+
             </div>
             @*Tools start*@
             <div class="tab-pane fade py-3" id="tools" role="tabpanel" aria-labelledby="tools-tab" @hideTabStyle>
@@ -590,7 +620,7 @@
                             </label>
                         </div>
 
-                        
+
 
                         <label class="col-form-label col-md-2">Banner Logo</label>
                         <div style="padding-left: 8px;">
@@ -895,15 +925,15 @@
                                         <div class="container pl-0 row" style="display:flex;color:black;height:19px">
                                             <p class="left-text text-danger">Note:</p>&nbsp;&nbsp;
                                             <p class="right-text">
-                                               Based on selected first day of the week (usually sunday or Monday) the time sheet will be released as follows:
+                                                Based on selected first day of the week (usually sunday or Monday) the time sheet will be released as follows:
                                             </p>
-                                             
+
                                         </div>
                                         <div class="container" style="padding-left:56px;height:33px">
                                             <p class="right-text">
                                                 <span style="font-size: 2.5em;">.</span> Daily=Release @@ 00.01 of the next day
                                             </p>
-                                            </div>
+                                        </div>
                                         <div class="container" style="padding-left:56px;height:33px">
                                             <p class="right-text">
                                                 <span style="font-size: 2.5em;">.</span> Weekly/Fortnight=Release @@ 00.01 of the day AFTER the last day of the week has ended
@@ -924,7 +954,7 @@
                 </div>
             </div>
             <div class="tab-pane fade py-3" id="uca" role="tabpanel" aria-labelledby="uca-tab" @hideTabStyle>
-                   <div class="row mb-3">
+                <div class="row mb-3">
                     <div class="col-md-4">
                         <div class="input-group mb-2 ml-1">
                             <input type="text" id="search_site_access_control" class="form-control" placeholder="Search">
@@ -934,7 +964,7 @@
                                 </button>
                             </div>
                         </div>
-                    </div>              
+                    </div>
                 </div>
 
                 <div class="row">
@@ -1178,7 +1208,7 @@
             </div>
 
 
-            <div class="tab-pane fade py-3" id="uca" role="tabpanel" aria-labelledby="uca-tab" >
+            <div class="tab-pane fade py-3" id="uca" role="tabpanel" aria-labelledby="uca-tab">
                 <div class="input-group col-md-3 mb-2 ml-1">
                     <input type="text" id="search_site_access_control" class="form-control" placeholder="Search Client Site Access">
                     <div class="input-group-append">
@@ -1370,13 +1400,13 @@
                                 </div>
                                 <label class="col-md-1 col-form-label">HR Pin</label>
                                 <div class="pr-0 pl-3 pr-3">
-                                   @* <input type="password" style="display:none;" aria-hidden="true">
+                                    @* <input type="password" style="display:none;" aria-hidden="true">
                                     <input type="password" style="display:none;" id="LoginUser_Password" aria-hidden="true">*@
                                     <input type="text" class="form-control" id="Guard_Pin" name="Guard.Pin" style="width:156px;" autocomplete="off">
 
                                 </div>
-                                <div >
-                                   @* <span id="togglePassword" class=""><i class="fa fa-eye-slash" aria-hidden="true"></i></span>*@
+                                <div>
+                                    @* <span id="togglePassword" class=""><i class="fa fa-eye-slash" aria-hidden="true"></i></span>*@
                                 </div>
 
 
@@ -1700,6 +1730,72 @@
         </div>
     </div>
 </div>
+
+<div class="modal" tabindex="-1" role="dialog" id="schedule-modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-2">
+                <h5 class="modal-title"><i class="fa fa-link" aria-hidden="true"></i> Client(Site) SOP</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-2">
+                <div id="loader"></div>
+                <form id="frm_kpi_schedule" enctype="multipart/form-data" method="post">
+                    <input type="hidden" id="scheduleId" name="id" value="0">
+                    <input type="hidden" id="filename" name="filename" value="">
+                    <div class="row">
+                        <div class="col-md-12">
+
+                            <div class="form-group mb-1">
+                                <label for="clientTypeNamesiteSOP">Client Type</label>
+                                <select class="form-control" id="clientTypeNamesiteSOP" name="clientTypeNamesiteSOP">
+
+                                    <option value="">Select</option>
+                                    @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(null))
+                                    {
+                                        <option value="@item.Name">@item.Name</option>
+                                    }
+
+                                </select>
+                            </div>
+                            <div class="form-group mb-1">
+                                <label for="clientSitessiteSOP">Client Site</label>
+                                <select class="form-control" id="clientSitessiteSOP" name="clientSitessiteSOP">
+                                    <option>Select</option>
+                                </select>
+                            </div>
+                            <div class="form-group mb-1">
+                                <label for="clientSitessiteSOP">SOP</label>
+                                <select class="form-control" id="SOP" name="SOP">
+                                    <option></option>
+                                    <option value="LB/KV">LB/KV</option>
+                                </select>
+                            </div>
+                            <div class="form-group mb-1">
+
+                                <label for="File">File</label>
+                                <input type="file" name="add_staff_document_file_SlientSite_sop" id="add_staff_document_file_SlientSite_sop" class="form-control-file" />
+                                <label id="dynamicLabel" class="pt-1"></label>
+                                
+                                
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <ul id="sch-modal-validation" class="text-danger hide"></ul>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer p-2">
+                <button type="button" id="btnSaveSiteSOP" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save Client(Site) SOP</button>
+            </div>
+        </div>
+    </div>
+</div>
 @*<div class="modal" tabindex="-1" role="dialog" id="irSettingsModal">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
@@ -1811,6 +1907,8 @@
 <partial name="_KeySiteSettingsPopup" />
 <partial name="_GuardSiteSettings" />
 <partial name="_irSettingsPopup" />
+@*/*<partial name="_LinkedDuressPopup" />*/*@
+
 @section scripts {
     <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&libraries=places"></script>
     <script src="https://unpkg.com/gijgo@1.9.13/js/gijgo.min.js"></script>
