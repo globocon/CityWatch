@@ -830,10 +830,14 @@ $(function () {
         } else if (selectedOption.length > 1) {
             alert('Select only one site to edit');
         } else {
+
             let triggerButton = '<button type="button" id="editSiteTrigger" style="display:none" data-toggle="modal" data-target="#kpi-settings-modal" ' +
-                'data-cs-id="' + $(selectedOption).val() + '" data-cs-name="' + $(selectedOption).text() + '"></button>';
+            //p1-139 change pop up start
+                'data-cs-id="' + $(selectedOption).val() + '" data-cs-name="' + $(selectedOption).text() + '" data-type-tab="KPI"></button>';
+            //p1-139 change pop up end
             $(triggerButton).insertAfter($(this));
             $('#editSiteTrigger').click();
+          
         }
     });
 
@@ -1071,7 +1075,9 @@ $(function () {
         return '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#kpi-settings-modal" ' +
             'data-cs-id="' + record.id + '" data-cs-name="' + record.clientSiteName + '" data-cs-email="' + record.siteEmail + '" data-cs-address="' + record.address + '" data-cs-landline="' + record.landLine + '" data-cs-duressemail="' + record.duressEmail + '" data-cs-duresssms="' + record.duressSms +
             '" data-cs-guardlog-emailto="' + record.guardLogEmailTo + '" data-cs-dbx-upload="' + record.siteUploadDailyLog +
-            '"data-cs-datacollection-enabled ="' + record.dataCollectionEnabled + '"><i class="fa fa-pencil mr-2"></i>Edit</button>';
+        //p1-139 change pop up start
+            '"data-cs-datacollection-enabled ="' + record.dataCollectionEnabled + '" data-type-tab="LB"><i class="fa fa-pencil mr-2"></i>Edit</button>';
+        //p1-139 change pop up end
        
     }
 
@@ -1130,6 +1136,9 @@ $(function () {
         const button = $(event.relatedTarget);
         const siteName = button.data('cs-name');
         const siteAddress = button.data('cs-address');
+        //p1-139 change pop up start
+        var type = button.data('type-tab');
+        //p1-139 change pop up end
         $('#client_site_name').text(siteName);
         $('#client_site_address').text(siteAddress);
         globalClientSiteAddress = siteAddress;
@@ -1144,6 +1153,20 @@ $(function () {
             console.log(button.data('cs-id'));
             console.log(button.data('cs-address'));
             $('#_dropboxStatusDisplay').html('');
+            //p1-139 change pop up start
+            if (type == 'KPI') {
+                $('#kpi-LB-Menu-tab').removeClass('active');
+                $('#kpi-tab').addClass('active');
+                $('#KpiLB').removeClass('active');
+                $('#KPISettings').addClass('active');
+            }
+            else {
+                $('#kpi-LB-Menu-tab').addClass('active');
+                $('#kpi-tab').removeClass('active');
+                $('#KpiLB').addClass('active');
+                $('#KPISettings').removeClass('active');
+            }
+            //p1-139 change pop up end
         });
     });
       
