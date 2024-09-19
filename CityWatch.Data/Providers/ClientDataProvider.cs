@@ -467,7 +467,7 @@ namespace CityWatch.Data.Providers
             var TimesheetName = "";
             var guardLogin = _context.GuardLogins
                 .Include(x=>x.Guard)
-     .FirstOrDefault(x => x.GuardId == GuardID && x.LoginDate.Date == enddate.Date);
+     .FirstOrDefault(x => x.GuardId == GuardID);
 
             if (guardLogin != null && guardLogin.Guard != null)
 
@@ -501,7 +501,7 @@ namespace CityWatch.Data.Providers
           
             var guardLogin = _context.GuardLogins
                 .Include(x => x.Guard)
-     .FirstOrDefault(x => x.GuardId == GuardID && x.LoginDate.Date == enddate.Date);
+     .FirstOrDefault(x => x.GuardId == GuardID);
           
             if (guardLogin != null && guardLogin.Guard != null)
             {

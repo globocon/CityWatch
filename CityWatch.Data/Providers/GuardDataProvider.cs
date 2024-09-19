@@ -79,6 +79,7 @@ namespace CityWatch.Data.Providers
         public void SetGuardNewPIN(int guardId, string NewPIN);
         List<HrSettings> GetHRDescFull();
         public void SaveRecordingFileDetails(AudioRecordingLog audioRecordingLog);
+        public int GetGuardID(string LicenseNo);
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -166,7 +167,11 @@ namespace CityWatch.Data.Providers
             return _context.Guards.SingleOrDefault(x => x.SecurityNo.Trim() == securityLicenseNo.Trim());
         }
 
-
+        public int GetGuardID(string LicenseNo)
+        {
+            var Number= _context.Guards.Where(x => x.SecurityNo == LicenseNo).Select(x => x.Id);
+            return Number.FirstOrDefault();
+        }
 
         public int SaveGuard(Guard guard, out string initalsUsed)
         {

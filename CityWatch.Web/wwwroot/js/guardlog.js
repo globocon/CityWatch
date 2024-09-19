@@ -6218,3 +6218,171 @@ $("#btnGenerateDwnlog").on('click', function () {
 
 });
 
+$('#btnTimesheetConfirm').on('click', function () {
+    $('#AuthGuardForSopDwnldValidationSummary1').html('');
+
+    var guardLicNo = $('#GuardDownloadSop_SecurityNo').val();
+    
+
+    $.ajax({
+        url: '/Admin/Roster?handler=CheckAndCreateDownloadAuditLog1',
+        type: 'POST',
+        data: {
+            guardLicNo: guardLicNo
+        },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        if (result.success) {
+           
+            $('#mdlAuthGuardForSopDownload').modal('hide');
+            $('#TimesheetGuard_Id1').val('-1');
+            $('#startDate').val('');
+            $('#endDate').val('');
+            $('#frequency').val('');
+            $('#timesheetModal').modal('show');
+            $.ajax({
+                url: '/Admin/Roster?handler=GuardID&LicenseNo=' + guardLicNo,
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    $('#TimesheetGuard_Id1').val(data);
+                    
+                }
+            });
+        } else {
+            console.log('Error: ', result.message);
+            $('#AuthGuardForSopDwnldValidationSummary1').html(result.message);
+        }
+    }).always(function () {
+        $('#loader').hide();
+    });
+});
+
+$('#btnDownloadTimesheetRoster').on('click', function (e) {
+    var startDate = $('#startDate').val();
+    var endDate = $('#endDate').val();
+
+    // Check if both startDate and endDate have values
+    if (!startDate || !endDate) {
+        alert("Please select both start date and end date.");
+        return; // Exit the function if validation fails
+    }
+
+
+
+
+    $.ajax({
+        url: '/Admin/Settings?handler=DownloadTimesheet',
+        data: {
+            startdate: $('#startDate').val(),
+            endDate: $('#endDate').val(),
+            frequency: $('#frequency').val(),
+            guradid: $('#TimesheetGuard_Id').val(),
+        },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (response) {
+        if (response.statusCode === -1) {
+
+        } else {
+
+
+
+
+
+            var newTab = window.open(response.fileName, '_blank');
+            if (!newTab) {
+
+                var a = document.createElement('a');
+                a.href = response.fileName;
+                a.download = "TimeSheet_Report";
+                a.click();
+            }
+
+        }
+    });
+});
+$('#btnDownloadTimesheetFrequencyRoster').on('click', function (e) {
+    var Frequency = $('#frequency').val();
+
+    if (!frequency) {
+        alert("Please select Instant Timesheet.");
+        return; // Exit the function if validation fails
+    }
+
+
+
+
+    $.ajax({
+        url: '/Admin/Settings?handler=DownloadTimesheetFrequency',
+        data: {
+            frequency: $('#frequency').val(),
+            guradid: $('#TimesheetGuard_Id1').val(),
+        },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (response) {
+        if (response.statusCode === -1) {
+
+        } else {
+
+
+
+
+
+            var newTab = window.open(response.fileName, '_blank');
+            if (!newTab) {
+
+                var a = document.createElement('a');
+                a.href = response.fileName;
+                a.download = "TimeSheet_Report";
+                a.click();
+            }
+
+        }
+    });
+});
+$('#btnDownloadTimesheetRoster').on('click', function (e) {
+    var startDate = $('#startDate').val();
+    var endDate = $('#endDate').val();
+    var ddd = $('#TimesheetGuard_Id1').val();
+    // Check if both startDate and endDate have values
+    if (!startDate || !endDate) {
+        alert("Please select both start date and end date.");
+        return; // Exit the function if validation fails
+    }
+
+
+
+
+    $.ajax({
+        url: '/Admin/Settings?handler=DownloadTimesheet',
+        data: {
+            startdate: $('#startDate').val(),
+            endDate: $('#endDate').val(),
+            frequency: $('#frequency').val(),
+            guradid: $('#TimesheetGuard_Id1').val(),
+        },
+        type: 'POST',
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (response) {
+        if (response.statusCode === -1) {
+
+        } else {
+
+
+
+
+
+            var newTab = window.open(response.fileName, '_blank');
+            if (!newTab) {
+
+                var a = document.createElement('a');
+                a.href = response.fileName;
+                a.download = "TimeSheet_Report";
+                a.click();
+            }
+
+        }
+    });
+});
