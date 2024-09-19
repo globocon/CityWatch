@@ -455,7 +455,7 @@
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
             /*p1-245 jump button-start*/
 
-            $(e.target).find('thead tr th:nth-last-child(2)').html('<i class=" fa fa-chart-bar" aria-hidden="true"></i>');
+            $(e.target).find('thead tr th:nth-last-child(2)').html('<i class=" fa fa-bars" aria-hidden="true"></i>');
             /*p1-245 jump button-end*/
         }
     });
@@ -473,7 +473,7 @@
             siteGuardId = '0';
         }
 
-        let $editBtn = $('<a href="https://localhost:44378/Dashboard?ClientTypeId=' + record.typeId + '&&ClientSiteId=' + record.id + '&&Sl=' + securityNumber + ' &&lud=' + siteloggedInUserId + ' &&guid=' + siteGuardId + ' &&type=' + type +'" class="nav-link py-0" target="_blank"><i class="fa fa-pencil"></i>Edit</a>'
+        let $editBtn = $('<a href="https://kpi.cws-ir.com/Dashboard?ClientTypeId=' + record.typeId + '&&ClientSiteId=' + record.id + '&&Sl=' + securityNumber + '&&lud=' + siteloggedInUserId + '&&guid=' + siteGuardId + '&&type=' + type +'" class="nav-link py-0" target="_blank"><i class="fa fa-pencil"></i>Edit</a>'
         );
 
         //$editBtn.on('click', function (e) {
