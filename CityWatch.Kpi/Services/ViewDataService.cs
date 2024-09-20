@@ -54,6 +54,8 @@ namespace CityWatch.Kpi.Services
         public List<SelectListItem> ClientTypesUsingLoginMainUserId(int userId);
 
         public List<SelectListItem> GetClientSitesUsingLoginUserIdNew(int userId, string type = "");
+        public List<SelectListItem> ClientTypesUsingLoginMainUserIdWithClientTypeId(int userId, int ClientTypeId);
+        public string ClientSitesUsingId(int ClientSiteId);
     }
 
     public class ViewDataService : IViewDataService
@@ -566,6 +568,46 @@ namespace CityWatch.Kpi.Services
             }
             return items;
 
+        }
+        public List<SelectListItem> ClientTypesUsingLoginMainUserIdWithClientTypeId(int userId,int ClientTypeId)
+        {
+            if (userId == 0)
+            {
+                var clientTypes = _clientDataProvider.GetClientTypes().Where(z=> z.Id==ClientTypeId);
+                var items = new List<SelectListItem>() { new SelectListItem("Select", "", false) };
+                foreach (var item in clientTypes)
+                {
+                    var countClientType = GetClientTypeCount(item.Id);
+                    items.Add(new SelectListItem($"{item.Name} ({countClientType})", item.Name,true));
+                    //items.Add(new SelectListItem(item.Name, item.Name));
+                }
+
+                return items;
+            }
+            else
+            {
+
+                var allUserAccess = _clientDataProvider.GetUserClientSiteAccess(userId);
+                var distinctType = allUserAccess.Where(x=>x.ClientSite.ClientType.Id==ClientTypeId).Select(x => x.ClientSite.ClientType).Distinct().OrderBy(x => x.Name);
+                var items = new List<SelectListItem>() { new SelectListItem("Select", "", false) };
+                foreach (var item in distinctType)
+                {
+
+                    var countClientType = GetClientTypeCount(item.Id);
+                    items.Add(new SelectListItem($"{item.Name} ({countClientType})", item.Name,true));
+
+
+                }
+
+                return items;
+
+            }
+
+        }
+        public string ClientSitesUsingId(int ClientSiteId)
+        {
+            var distinctType = _clientDataProvider.GetClientSiteDetailsWithId(ClientSiteId).FirstOrDefault().Name;
+            return distinctType;
         }
     }
 }

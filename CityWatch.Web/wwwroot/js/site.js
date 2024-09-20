@@ -443,14 +443,60 @@
             { field: 'gps', title: 'GPS', width: 100, editor: gpsEditor, renderer: gpsRenderer },
             { field: 'billing', title: 'Billing', width: 100, editor: true },
             { field: 'status', title: 'Status', width: 150, renderer: statusTypeRenderer, editor: statusTypeEditor },
-            { field: 'statusDate', hidden: true, editor: true }
+            { field: 'statusDate', hidden: true, editor: true },
+            /*p1-245 jump button-start*/
+            {
+                field: 'statutypeIdsDate', title: 'Client Type', renderer: renderSiteTelematicsview , width: 100
+            }
+            /*p1 - 245 jump button - end*/
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+            /*p1-245 jump button-start*/
+
+            $(e.target).find('thead tr th:nth-last-child(2)').html('<i class=" fa fa-bars" aria-hidden="true"></i>');
+            /*p1-245 jump button-end*/
         }
     });
+    function renderSiteTelematicsview(value, record, $cell, $displayEl) {
+        //let $editBtn = $('<button id="btnEditClientSiteTelematicslink" class="btn btn-outline-primary mr-2" data-cs-typeid="' + record.typeId + '" data-cs-siteid="' + record.id + '" ><i class="fa fa-pencil">Edit</i></button>'
+        //        );
+        var securityNumber = $('#siteGuardSecurityLicenseNo').val();
+            var siteGuardId = $('#siteGuardId').val();
+            var siteloggedInUserId = $('#siteloggedInUserId').val();
+        var type = 'settings';
+        if (siteloggedInUserId == '' || siteloggedInUserId == null) {
+            siteloggedInUserId = '0';
+        }
+        if (siteGuardId == '' || siteGuardId == null) {
+            siteGuardId = '0';
+        }
+
+        let $editBtn = $('<a href="https://kpi.cws-ir.com/Dashboard?ClientTypeId=' + record.typeId + '&&ClientSiteId=' + record.id + '&&Sl=' + securityNumber + '&&lud=' + siteloggedInUserId + '&&guid=' + siteGuardId + '&&type=' + type +'" class="nav-link py-0" target="_blank"><i class="fa fa-pencil"></i>Edit</a>'
+        );
+
+        //$editBtn.on('click', function (e) {
+        //    //   gridSite.edit($(this).data('id'));
+        //    var securityNumber = $('#siteGuardSecurityLicenseNo').val();
+        //    var siteGuardId = $('#siteGuardId').val();
+        //    var siteloggedInUserId = $('#siteloggedInUserId').val();
+        //    var type='settings'
+        //            /* $('#txt_securityLicenseNoIR').val('');*/
+        //    window.open('https://localhost:44378/Dashboard?ClientTypeId=' + record.typeId + "&&ClientSiteId=" + record.id + "&&Sl=" + securityNumber + "&&lud=" + siteloggedInUserId + "&&guid=" + siteGuardId + "&&type=" + type, '_blank');
+        //    //window.location.href = 'https://localhost:44378/Dashboard?ClientTypeId=' + record.typeId + "&&ClientSiteId=" + record.id + "&&Sl=" + securityNumber + "&&lud=" + siteloggedInUserId + "&&guid=" + siteGuardId + "&&type=" + type;
+        //    //window.location.href = 'https://kpi.cws-ir.com/Admin/Dashboard?ClientTypeId=' + record.typeId + "&&ClientSiteId=" + record.id + "&&Sl=" + securityNumber + "&&lud=" + siteloggedInUserId + "&&guid=" + siteGuardId 
+               
+        //});
+
+      
+
+        $displayEl.empty().append($editBtn)
+           
+    }
 
     if (gridSite) {
+     
         gridSite.on('rowDataChanged', function (e, id, record) {
             const data = $.extend(true, {}, record);
             data.status = !Number.isInteger(data.status) ? clientSiteStatuses.getValue(data.status) : data.status;

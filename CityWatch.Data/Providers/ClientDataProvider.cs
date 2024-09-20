@@ -215,12 +215,18 @@ namespace CityWatch.Data.Providers
         public string CheckRulesOneinKpiManningInput(ClientSiteKpiSetting settings);
         public string CheckRulesTwoinKpiManningInput(ClientSiteKpiSetting settings);
 
+
         public string GetGuardLicenseNo(int GuardID, DateTime enddate);
 
 
         public string GetContractedManningDetailsForSpecificSite(string siteName);
 
+
+
+        List<ClientSite> GetClientSiteDetailsWithId(int clientSiteIds);
+
         public StaffDocument GetStaffDocById(int documentId);
+
 
     }
 
@@ -2546,6 +2552,14 @@ namespace CityWatch.Data.Providers
             return _context.TimeSheet.FirstOrDefault();
         }
 
+        public List<ClientSite> GetClientSiteDetailsWithId(int clientSiteIds)
+        {
+            var clientSiteDetails = _context.ClientSites
+                .Where(x => x.Id == clientSiteIds)
+                .ToList();
+            return clientSiteDetails;
+        }
+
         public string GetContractedManningDetailsForSpecificSite(string siteName)
         {
             try
@@ -2592,6 +2606,7 @@ namespace CityWatch.Data.Providers
             {
                 return string.Empty;
             }
+
         }
     }
 
