@@ -20,6 +20,7 @@ using System.Linq;
 using System.Security.Policy;
 using static Dropbox.Api.FileProperties.PropertyType;
 using static Dropbox.Api.Files.ListRevisionsMode;
+using static Dropbox.Api.TeamLog.PaperDownloadFormat;
 //using static Dropbox.Api.Files.ListRevisionsMode;
 using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -221,7 +222,12 @@ namespace CityWatch.Data.Providers
         public string GetContractedManningDetailsForSpecificSite(string siteName);
 
 
+
         List<ClientSite> GetClientSiteDetailsWithId(int clientSiteIds);
+
+        public StaffDocument GetStaffDocById(int documentId);
+
+
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -467,7 +473,7 @@ namespace CityWatch.Data.Providers
             var TimesheetName = "";
             var guardLogin = _context.GuardLogins
                 .Include(x=>x.Guard)
-     .FirstOrDefault(x => x.GuardId == GuardID && x.LoginDate.Date == enddate.Date);
+     .FirstOrDefault(x => x.GuardId == GuardID);
 
             if (guardLogin != null && guardLogin.Guard != null)
 
@@ -501,7 +507,7 @@ namespace CityWatch.Data.Providers
           
             var guardLogin = _context.GuardLogins
                 .Include(x => x.Guard)
-     .FirstOrDefault(x => x.GuardId == GuardID && x.LoginDate.Date == enddate.Date);
+     .FirstOrDefault(x => x.GuardId == GuardID);
           
             if (guardLogin != null && guardLogin.Guard != null)
             {
@@ -2379,6 +2385,32 @@ namespace CityWatch.Data.Providers
               .ThenInclude(y => y.ClientSite)
               .ThenInclude(y => y.ClientType)
               .SingleOrDefault(x => x.Id == duressId);
+        }
+
+
+        public StaffDocument GetStaffDocById(int documentId)
+        {
+            var staffDoc = _context.StaffDocuments
+              .SingleOrDefault(x => x.Id == documentId);
+            var clientSite = _context.ClientSites
+                  .Where(x => x.Id == staffDoc.ClientSite).Include(x => x.ClientType).FirstOrDefault();
+            if (clientSite != null)
+            {
+                staffDoc.ClientSiteName = clientSite?.Name ?? "Unknown";
+                // Assign the site name or default to "Unknown"
+                if (clientSite.ClientType != null)
+                    staffDoc.ClientTypeName = clientSite.ClientType.Name;
+                var sites = new List<SelectListItem>();
+                var mapping = GetClientSites(null).Where(x => x.ClientType.Name == clientSite.ClientType.Name).OrderBy(clientType => clientType.Name);
+                foreach (var item in mapping)
+                {
+                    sites.Add(new SelectListItem(item.Name, item.Id.ToString()));
+                }
+
+                staffDoc.ClientSites = sites;
+
+            }
+            return staffDoc;
         }
 
         public void DeleteRCLinkedDuress(int id)

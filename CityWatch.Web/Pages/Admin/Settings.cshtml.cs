@@ -26,6 +26,7 @@ using static Dropbox.Api.FileRequests.GracePeriod;
 using static Dropbox.Api.TeamLog.ActorLogInfo;
 using static Dropbox.Api.TeamLog.EventCategory;
 
+
 namespace CityWatch.Web.Pages.Admin
 {
     public class SettingsModel : PageModel
@@ -1538,6 +1539,122 @@ namespace CityWatch.Web.Pages.Admin
             });
             return new JsonResult(new { status = status, message = message });
         }
+
+
+        #region SOPClientSite
+
+       
+
+        public IActionResult OnGetClientSitesSOPClientSite(string type)
+        {
+
+            return new JsonResult(_viewDataService.GetClientSites(type));
+
+
+
+
+        }
+
+        public JsonResult OnGetClientSitesNew(int? page, int? limit, int? typeId, string searchTerm, string searchTermtwo)
+        {
+           
+                return new JsonResult(_viewDataService.GetUserClientSitesHavingAccess(typeId, null, searchTerm, searchTermtwo));
+
+           
+        }
+
+        public JsonResult OnGetSOPClientSitebyId(int id)
+        {
+
+
+            return new JsonResult(_clientDataProvider.GetStaffDocById(id));
+
+        }
+
+        public JsonResult OnPostDeleteSOPClientSite(int id)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _clientDataProvider.DeleteRCLinkedDuress(id);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message });
+        }
+
+
+        public JsonResult OnPostUploadStaffDocUsingTypeFour()
+        {
+            var success = false;
+            var message = "Uploaded successfully";
+            var files = Request.Form.Files;
+            if (files.Count == 1)
+            {
+                var file = files[0];
+                if (file.Length > 0)
+                {
+                    try
+                    {
+                        if (".pdf,.docx,.xlsx".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
+                            throw new ArgumentException("Unsupported file type");
+
+                        var staffDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "StaffDocs");
+                        if (!Directory.Exists(staffDocsFolder))
+                            Directory.CreateDirectory(staffDocsFolder);
+                        using (var stream = System.IO.File.Create(Path.Combine(staffDocsFolder, file.FileName)))
+                        {
+                            file.CopyTo(stream);
+                        }
+                        
+                    }
+                    catch (Exception ex)
+                    {
+                        message = ex.Message;
+                    }
+                }
+            }
+
+
+
+
+            var SOP = Request.Form["sop"];
+            var ClientSite = int.Parse(Request.Form["site"]);
+            var fileName = Request.Form["filename"];
+            if (ClientSite != 0)
+            {
+                var documentId = Convert.ToInt32(Request.Form["doc-id"]);
+                var type = 4;
+
+                _configDataProvider.SaveStaffDocument(new StaffDocument()
+                {
+                    Id = documentId,
+                    FileName = fileName,
+                    LastUpdated = DateTime.Now,
+                    DocumentType = type,
+                    SOP = SOP,
+                    ClientSite = ClientSite
+
+                });
+
+                success = true;
+            }
+            else
+            {
+                throw new ArgumentException("Select the site and SOP");
+            }
+
+
+            return new JsonResult(new { success, message });
+        }
+
+       
+        #endregion
 
     }
     public class helpDocttype

@@ -4,13 +4,14 @@
 @using CityWatch.Web.Services
 @using CityWatch.Data.Helpers
 @using Microsoft.Extensions.Configuration
+@using CityWatch.Data.Providers;
 @model CityWatch.Web.Pages.Guard.KeyVehicleLogModel
 @inject IViewDataService viewDataService
 @inject IConfiguration Configuration
 @inject IViewDataService viewDataService
 @inject IClientSiteViewDataService clientViewDataService
 @inject IViewDataService viewDataServiceNew
-
+@inject IConfigDataProvider dataProvider
 @{
     ViewData["title"] = "CityWatch Security | Vehicle And Key Log";
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.VehicleAndKeyLog;
@@ -18,6 +19,8 @@
     var ApiKey = mapSettings.ApiKey;
     <input type="hidden" id="hid_duressEnabledGpsCoordinates">
     <input type="hidden" id="hid_duressEnabledAddress">
+    var clientSiteSOp = new List<StaffDocument>();
+    clientSiteSOp = dataProvider.GetStaffDocumentSOPDocDetails(@Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId);
 }
 <input type="hidden" id="ClientSiteID" asp-for="@Model.KeyVehicleLog.ClientSiteLogBook.ClientSite.Id" />
 <input type="hidden" asp-for="@Model.KeyVehicleLog.ClientSiteLogBook.ClientSiteId" />
@@ -29,8 +32,55 @@
     <div class="col-md-7">
         <i class="fa fa-calendar mr-2 text-secondary" aria-hidden="true"></i><b>Log Book Date: </b>@DateTime.Today.ToString("dd MMM yyyy (dddd)").ToUpper()
     </div>
-    <div class="col-md-5" style="padding-left:69px;">
+    <div class="col-md-5" style="padding-left:61px;">
         <button type="button" class="btn btn-outline-primary" id="btnHRDetails"><i class="fa fa-user mr-1" aria-hidden="true"></i>HR</button>
+        @if (clientSiteSOp.Count != 0)
+        {
+
+            <a href="#" data-toggle="modal" class="btn btn-outline-primary" data-target=".bd-example-modal-lg" title="Click here SOP">SOP</a>
+            <!-- Modal -->
+            <div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Download SOP Documents</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th scope="col" style="width:80%">File Name</th>
+                                        <th scope="col" style="align-content:center"><i class="fa fa-cogs ml-5" aria-hidden="true"></i></th>
+
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var file in clientSiteSOp)
+                                    {
+                                        <tr>
+                                            <td><span style="color:red"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></span> @file.FileName</td>
+                                            <td>
+                                                <a href="/StaffDocs/@file.FileName" class="btn btn-outline-success ml-2" target="_blank"><i class="fa fa-download mr-3"></i>Download</a>
+                                            </td>
+                                        </tr>
+
+                                    }
+
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <button type="button" class="btn btn-outline-primary" id="btnSOP" aria-disabled="true">SOP</button>
+        }
         <a class="btn btn-outline-primary" id="btn_kvl_pdf_POIList" href="#">POI List</a>
         @* <a class="btn btn-outline-primary d-none" id="btn_kvl_pdf_download" href="SiteLogPdf?id=@Model.KeyVehicleLog.ClientSiteLogBookId&t=vl" target="_blank">Download PDF</a> *@
         <button type="button" class="btn btn-outline-primary" id="btn_kvl_pdf_generate" data-logbookid="@Model.KeyVehicleLog.ClientSiteLogBookId">Download PDF</button>

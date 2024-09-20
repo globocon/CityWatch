@@ -133,48 +133,130 @@ namespace CityWatch.Web.Services
             var footer = CreateFooter();
             pdfDoc.AddEventHandler(PdfDocumentEvent.END_PAGE, new TableFooterEventHandler(footer));
 
-            //p6-102 Add photo -start
-            var index = 1;
+            //p6-102 Add photo -start Commented 19092024 Dileep Start
+            //var index = 1;
+            //foreach (var entry in _guardLogs)
+            //{
+
+
+            //    var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(entry.Id);
+            //    Paragraph notesParagraphnew = new Paragraph("See attached file  ").SetFontSize(CELL_FONT_SIZE);
+
+            //    foreach (var guardLogImage in guardlogImages)
+            //    {
+
+            //        if (guardLogImage.IsRearfile == true)
+            //        {
+            //            var docImage = new Document(pdfDoc);
+            //            var image = AttachImageToPdf(pdfDoc, ++index, guardLogImage.ImagePath);
+            //            doc.Add(image);
+
+
+
+            //            var paraName = new Paragraph($"File Name: {IO.Path.GetFileName(guardLogImage.ImagePath)}").SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLACK));
+            //            doc.Add(paraName);
+            //            docImage.Close();
+            //        }
+            //    }
+            //}
+            //p6-102 Add photo -end end 
+            //New Code fix the image bug start Dileep 
+
+            int lastPageIndex = pdfDoc.GetNumberOfPages();
+            var index = lastPageIndex + 1;
             foreach (var entry in _guardLogs)
             {
-                
-
                 var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(entry.Id);
-                //Paragraph notesParagraphnew = new Paragraph("See attached file  ").SetFontSize(CELL_FONT_SIZE);
-
                 foreach (var guardLogImage in guardlogImages)
                 {
 
                     if (guardLogImage.IsRearfile == true)
                     {
-                        //  var docImage = new Document(pdfDoc);
-                        var image = AttachImageToPdf(pdfDoc, ++index, guardLogImage.ImagePath);
-                        doc.Add(image);
+                        try
+                        {
 
+                            AttachImageToPdf(pdfDoc, doc, index, guardLogImage.ImagePath);
+                            index++;
+                            // Add the image to the document
+                            //doc.Add(image);
+                            //var image = AttachImageToPdf(pdfDoc, index, guardLogImage.ImagePath);
+                            //doc.Add(image);
 
-                        
-                        var paraName = new Paragraph($"File Name: {IO.Path.GetFileName(guardLogImage.ImagePath)}").SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLACK));
-                        doc.Add(paraName);
-                        //  docImage.Close();
+                            //var paraName = new Paragraph($"File Name: {System.IO.Path.GetFileName(guardLogImage.ImagePath)}")
+                            //    .SetFontColor(WebColors.GetRGBColor(FONT_COLOR_BLACK));
+                            //doc.Add(paraName);
+
+                        }
+                        catch (Exception ex)
+                        {
+                            // Log exception or handle it as needed
+                            Console.WriteLine($"Error attaching image: {ex.Message}");
+                        }
                     }
                 }
             }
-            //p6-102 Add photo -end
+
+            //New Code fix the image bug end 
             doc.Close();
             pdfDoc.Close();
 
             return IO.Path.GetFileName(reportPdf);
         }
-        //p6-102 Add photo -start
-        private Image AttachImageToPdf(PdfDocument pdfDocument, int index, string imagePath)
+        //p6-102 Add photo -start Commented Dileep19092024 fix the image bug issue 
+        //private Image AttachImageToPdf(PdfDocument pdfDocument, int index, string imagePath)
+        //{
+        //    var pageSize = new PageSize(pdfDocument.GetFirstPage().GetPageSize());
+        //    pdfDocument.AddNewPage(index, pageSize);
+        //    var imageData = ImageDataFactory.Create(imagePath);
+        //    var image = new Image(imageData);
+        //    bool rotateImage = image.GetImageWidth() > image.GetImageHeight();
+        //    bool scaleImage = image.GetImageWidth() > MAX_IMAGE_WIDTH || image.GetImageHeight() > MAX_IMAGE_HEIGHT;
+
+        //    if (rotateImage)
+        //    {
+        //        image.SetRotationAngle(ROTATION_ANGLE_DEG * (Math.PI / 180));
+        //        if (scaleImage)
+        //            image.ScaleToFit(PageSize.A4.GetHeight() * SCALE_FACTOR, PageSize.A4.GetWidth() * SCALE_FACTOR);
+        //    }
+        //    else
+        //    {
+        //        if (scaleImage)
+        //            image.ScaleToFit(PageSize.A4.GetWidth() * SCALE_FACTOR, PageSize.A4.GetHeight() * SCALE_FACTOR);
+        //    }
+
+        //    var bottom = rotateImage ? pageSize.GetTop() : pageSize.GetTop() - image.GetImageScaledHeight();
+        //    image.SetFixedPosition(index, 0, bottom);
+        //    return image;
+        //}
+        //p6-102 Add photo -end
+
+        /* New code for Image in Pdf Dileep 19092024 Start*/
+        private void AttachImageToPdf(PdfDocument pdfDocument, Document doc, int index, string imagePath)
         {
-            var pageSize = new PageSize(pdfDocument.GetFirstPage().GetPageSize());
-            pdfDocument.AddNewPage(index, pageSize);
+            if (pdfDocument == null)
+                throw new ArgumentNullException(nameof(pdfDocument), "PdfDocument cannot be null");
+
+            if (pdfDocument.GetNumberOfPages() == 0)
+                pdfDocument.AddNewPage(PageSize.A4); // Ensure there is at least one page
+
+            var pageSize = PageSize.A4;
+
+            // Create a new page at the specified index with A4 size
+            pdfDocument.AddNewPage(index, PageSize.A4);
+
             var imageData = ImageDataFactory.Create(imagePath);
             var image = new Image(imageData);
+
+            // Constants for maximum size and rotation
+            const float MAX_IMAGE_WIDTH = 500f;
+            const float MAX_IMAGE_HEIGHT = 600f;
+            const float ROTATION_ANGLE_DEG = 90;
+            const float SCALE_FACTOR = 0.9f;
+
             bool rotateImage = image.GetImageWidth() > image.GetImageHeight();
             bool scaleImage = image.GetImageWidth() > MAX_IMAGE_WIDTH || image.GetImageHeight() > MAX_IMAGE_HEIGHT;
 
+            // Adjust image scaling and rotation based on its dimensions
             if (rotateImage)
             {
                 image.SetRotationAngle(ROTATION_ANGLE_DEG * (Math.PI / 180));
@@ -187,11 +269,40 @@ namespace CityWatch.Web.Services
                     image.ScaleToFit(PageSize.A4.GetWidth() * SCALE_FACTOR, PageSize.A4.GetHeight() * SCALE_FACTOR);
             }
 
-            var bottom = rotateImage ? pageSize.GetTop() : pageSize.GetTop() - image.GetImageScaledHeight();
-            image.SetFixedPosition(index, 0, bottom);
-            return image;
+            // Calculate the X and Y position for the image based on its size
+            float imageX, imageY;
+
+            if (rotateImage)
+            {
+                // For rotated image, position is calculated using height as width and vice versa
+                imageX = (pageSize.GetWidth() - image.GetImageScaledHeight()) / 2; // Center horizontally
+                imageY = (pageSize.GetHeight() - image.GetImageScaledWidth()) / 2; // Center vertically
+            }
+            else
+            {
+                // For non-rotated image
+                imageX = (pageSize.GetWidth() - image.GetImageScaledWidth()) / 2; // Center horizontally
+                imageY = (pageSize.GetHeight() - image.GetImageScaledHeight()) / 2; // Center vertically
+            }
+
+            // Set the image position on the PDF page
+            image.SetFixedPosition(index, imageX, imageY);
+
+            // Create a Paragraph to show the file name at the top of the page
+            var fileName = System.IO.Path.GetFileName(imagePath);
+            var fileNameParagraph = new Paragraph($"File Name: {fileName}")
+                .SetFontColor(WebColors.GetRGBColor("#000000")) // Set font color (black)
+                .SetFontSize(12) // Set font size
+                .SetTextAlignment(TextAlignment.CENTER) // Center the text
+                .SetFixedPosition(index, 0, pageSize.GetTop() - 30, pageSize.GetWidth()); // Position at the top of the page
+
+            // Add the file name paragraph above the image
+            doc.Add(fileNameParagraph);
+
+            // Add the image to the document
+            doc.Add(image);
         }
-        //p6-102 Add photo -end
+        /* New code for Image in Pdf Dileep 19092024 end*/
         private string GetReportPdfFilePath(ClientSiteLogBook clientsiteLogBook, string version)
         {
             var reportPdfPath = IO.Path.Combine(_reportRootDir, REPORT_DIR, $"{clientsiteLogBook.Date:yyyyMMdd} - Daily Guard Log - {FileNameHelper.GetSanitizedFileNamePart(clientsiteLogBook.ClientSite.Name)} - {version}.pdf");

@@ -35,6 +35,7 @@ using iText.Layout;
 using iText.Layout.Element;
 using iText.Kernel.Geom;
 using iText.Layout.Properties;
+using static Dropbox.Api.TeamLog.TimeUnit;
 
 namespace CityWatch.Web.Services
 {
@@ -327,7 +328,9 @@ namespace CityWatch.Web.Services
                     TimeSpan TotalHrs = (enddate - startd).Duration();
                     int totalHrs = (int)TotalHrs.TotalMinutes;
                     dailyTotalHours += totalHrs;
-                    GuardTable.AddCell(GetSiteValueCell(totalHrs.ToString()));
+                    int hoursDail = totalHrs / 60;
+                    int minutesDail = totalHrs % 60;
+                    GuardTable.AddCell(GetSiteValueCell($"{hoursDail}:{minutesDail}"));
                     if (SiteName != null)
                     {
                         GuardTable.AddCell(GetSiteValueCell(SiteName.ToString()));
@@ -370,6 +373,7 @@ namespace CityWatch.Web.Services
 
             List<Table> weeklyTables = new List<Table>();
             int TotalWeeklyHrs = 0;
+            TimeSpan totalAccumulatedHrs = TimeSpan.Zero;
 
             int daysProcessed = 0;
             int weeklyTotalHours = 0;
@@ -392,7 +396,7 @@ namespace CityWatch.Web.Services
                     }
                     else
                     {
-                        GuardTable.AddCell(currentDate.ToString("dd/MM/yyyy"));
+                        GuardTable.AddCell(GetSiteValueCell(currentDate.ToString("dd/MM/yyyy")));
                     }
 
                     string enddate1 = "";
@@ -423,9 +427,11 @@ namespace CityWatch.Web.Services
                         TimeSpan TotalHrs = (enddate - startd).Duration();
                         int totalHrs = (int)TotalHrs.TotalMinutes;
                         // No need to parse enddate1 as DateTime; use TimeSpan directly for total hours
-                       
+                        totalAccumulatedHrs = totalAccumulatedHrs.Add(TotalHrs);
+                        string formattedTotalHrs = string.Format("{0:D2}:{1:D2}", TotalHrs.Hours, TotalHrs.Minutes);
+
                         weeklyTotalHours += totalHrs;
-                        GuardTable.AddCell(GetSiteValueCell(totalHrs.ToString()));
+                        GuardTable.AddCell(GetSiteValueCell(formattedTotalHrs.ToString()));
                         if (SiteName1 != null && j >= 0 && j < SiteName1.Count)
                         {
                             GuardTable.AddCell(GetSiteValueCell(SiteName1[j].ToString()));
@@ -459,8 +465,9 @@ namespace CityWatch.Web.Services
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
-
-                GuardTable.AddCell(GetSiteValueCell(weeklyTotalHours.ToString()));
+                int hours1 = weeklyTotalHours / 60;
+                int minutes1 = weeklyTotalHours % 60;
+                GuardTable.AddCell(GetSiteValueCell($"{hours1}:{minutes1}"));
 
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(SiteName));
 
@@ -556,7 +563,9 @@ namespace CityWatch.Web.Services
                 table.AddCell(TotalTitle);
                 table.AddCell(GetNoBorderTotalHrsCell(""));
                 table.AddCell(GetNoBorderValueCell(""));
-                table.AddCell(GetSiteValueCell(weelTotalHrs.ToString()));
+                int hours1 = weelTotalHrs / 60;
+                int minutes1 = weelTotalHrs % 60;
+                table.AddCell(GetSiteValueCell($"{hours1}:{minutes1}"));
             }
             catch (Exception ex)
             {
