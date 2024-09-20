@@ -3692,7 +3692,7 @@ $('#report_module_types').on('change', function () {
     });
 
     $('#btnSaveSiteSOP').on('click', function () {
-
+        $('#loadinDiv').show();
         var fileName = $('#filename').val();
         var sop = $('#SOP').val();
         var site = $('#clientSitessiteSOP').val();
@@ -3757,11 +3757,14 @@ $('#report_module_types').on('change', function () {
                     gridStaffDocsTypeTemplatesAndForms.reload();
                     $('#schedule-modal').modal('hide');
                     showStatusNotification(data.success, data.message);
-
+                  
                 }
             }).fail(function () {
                 showStatusNotification(false, 'Something went wrong');
+            }).always(function () {
+                $('#loadinDiv').hide();
             });
+                
 
         
     });
