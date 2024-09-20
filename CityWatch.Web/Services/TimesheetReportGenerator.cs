@@ -331,9 +331,9 @@ namespace CityWatch.Web.Services
                     int hoursDail = totalHrs / 60;
                     int minutesDail = totalHrs % 60;
                     GuardTable.AddCell(GetSiteValueCell($"{hoursDail}:{minutesDail}"));
-                    if (SiteName != null)
+                    if (start.ClientSite.Name != null)
                     {
-                        GuardTable.AddCell(GetSiteValueCell(SiteName.ToString()));
+                        GuardTable.AddCell(GetSiteValueCell(start.ClientSite.Name.ToString()));
                     }
                     else
                     {
@@ -345,9 +345,9 @@ namespace CityWatch.Web.Services
                     GuardTable.AddCell(GetSiteValueCell(""));
                     GuardTable.AddCell(GetSiteValueCell(""));
                     GuardTable.AddCell(GetSiteValueCell(""));
-                    if (SiteName!=null)
+                    if (start != null)
                     {
-                        GuardTable.AddCell(GetSiteValueCell(SiteName.ToString()));
+                        GuardTable.AddCell(GetSiteValueCell(start.ClientSite.Name.ToString()));
                     }
                     else
                     {
@@ -408,7 +408,7 @@ namespace CityWatch.Web.Services
 
                         if (start.OffDuty.HasValue)
                         {
-                            endDateDifference = start.OffDuty.Value - start.OnDuty;
+                            endDateDifference = start.OffDuty.Value.TimeOfDay;
                         }
 
                         // Instead of converting to DateTime, format the TimeSpan directly
@@ -432,9 +432,9 @@ namespace CityWatch.Web.Services
 
                         weeklyTotalHours += totalHrs;
                         GuardTable.AddCell(GetSiteValueCell(formattedTotalHrs.ToString()));
-                        if (SiteName1 != null && j >= 0 && j < SiteName1.Count)
+                        if (start.ClientSite.Name != null)
                         {
-                            GuardTable.AddCell(GetSiteValueCell(SiteName1[j].ToString()));
+                            GuardTable.AddCell(GetSiteValueCell(start.ClientSite.Name.ToString()));
                         }
                         else
                         {
@@ -446,13 +446,13 @@ namespace CityWatch.Web.Services
                         GuardTable.AddCell(GetSiteValueCell(""));
                         GuardTable.AddCell(GetSiteValueCell(""));
                         GuardTable.AddCell(GetSiteValueCell(""));
-                        if (SiteName1 != null && j >= 0 && j < SiteName1.Count)
+                        if (start != null)
                         {
-                            GuardTable.AddCell(GetSiteValueCell(SiteName1[j].ToString()));
+                            GuardTable.AddCell(GetSiteValueCell(start.ClientSite.Name.ToString()));
                         }
                         else
                         {
-                          GuardTable.AddCell(GetSiteValueCell(""));
+                            GuardTable.AddCell(GetSiteValueCell(""));
                         }
                     }
 
