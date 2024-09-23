@@ -573,12 +573,20 @@ namespace CityWatch.Kpi.Services
         {
             if (userId == 0)
             {
-                var clientTypes = _clientDataProvider.GetClientTypes().Where(z=> z.Id==ClientTypeId);
+                var clientTypesNew = _clientDataProvider.GetClientTypes().Where(z=> z.Id==ClientTypeId).FirstOrDefault().Name;
+                var clientTypes = _clientDataProvider.GetClientTypes();
                 var items = new List<SelectListItem>() { new SelectListItem("Select", "", false) };
                 foreach (var item in clientTypes)
                 {
                     var countClientType = GetClientTypeCount(item.Id);
-                    items.Add(new SelectListItem($"{item.Name} ({countClientType})", item.Name,true));
+                    if (clientTypesNew == item.Name)
+                    {
+                        items.Add(new SelectListItem($"{item.Name} ({countClientType})", item.Name, true));
+                    }
+                    else
+                    {
+                        items.Add(new SelectListItem($"{item.Name} ({countClientType})", item.Name, false));
+                    }
                     //items.Add(new SelectListItem(item.Name, item.Name));
                 }
 
@@ -588,13 +596,19 @@ namespace CityWatch.Kpi.Services
             {
 
                 var allUserAccess = _clientDataProvider.GetUserClientSiteAccess(userId);
-                var distinctType = allUserAccess.Where(x=>x.ClientSite.ClientType.Id==ClientTypeId).Select(x => x.ClientSite.ClientType).Distinct().OrderBy(x => x.Name);
+                var distinctTypeNew = _clientDataProvider.GetClientTypes().Where(z => z.Id == ClientTypeId).FirstOrDefault().Name;
+                var distinctType = allUserAccess.Select(x => x.ClientSite.ClientType).Distinct().OrderBy(x => x.Name);
                 var items = new List<SelectListItem>() { new SelectListItem("Select", "", false) };
                 foreach (var item in distinctType)
                 {
 
                     var countClientType = GetClientTypeCount(item.Id);
-                    items.Add(new SelectListItem($"{item.Name} ({countClientType})", item.Name,true));
+                    if (distinctTypeNew == item.Name)
+                    {
+                        items.Add(new SelectListItem($"{item.Name} ({countClientType})", item.Name, true));
+                    }
+                    else
+                    { items.Add(new SelectListItem($"{item.Name} ({countClientType})", item.Name, false)); }
 
 
                 }

@@ -435,14 +435,14 @@
         inlineEditing: { mode: 'command' },
         columns: [
             { field: 'typeId', hidden: true },
-            { field: 'clientType', title: 'Client Type', width: 180, renderer: function (value, record) { return value.name; } },
-            { field: 'name', title: 'Client Site', width: 180, editor: true },
+            { field: 'clientType', title: 'Client Type', width: 170, renderer: function (value, record) { return value.name; } },
+            { field: 'name', title: 'Client Site', width: 150, editor: true },
             { field: 'emails', title: 'Emails', width: 200, editor: true },
-            { field: 'address', title: 'Address', width: 200, editor: addressEditor },
-            { field: 'state', title: 'State', width: 80, type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
+            { field: 'address', title: 'Address', width: 160, editor: addressEditor },
+            { field: 'state', title: 'State', width: 70, type: 'dropdown', editor: { dataSource: '/Admin/Settings?handler=ClientStates', valueField: 'name', textField: 'name' } },
             { field: 'gps', title: 'GPS', width: 100, editor: gpsEditor, renderer: gpsRenderer },
             { field: 'billing', title: 'Billing', width: 100, editor: true },
-            { field: 'status', title: 'Status', width: 150, renderer: statusTypeRenderer, editor: statusTypeEditor },
+            { field: 'status', title: 'Status', width: 110, renderer: statusTypeRenderer, editor: statusTypeEditor },
             { field: 'statusDate', hidden: true, editor: true },
             /*p1-245 jump button-start*/
             {
@@ -452,10 +452,10 @@
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
-            $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+         
             /*p1-245 jump button-start*/
 
-            $(e.target).find('thead tr th:nth-last-child(2)').html('<i class=" fa fa-bars" aria-hidden="true"></i>');
+            $(e.target).find('thead tr th:nth-last-child(2)').html('<i class="fa fa-bar-chart" aria-hidden="true"></i>').css('text-align', 'center');;
             /*p1-245 jump button-end*/
         }
     });
@@ -473,7 +473,7 @@
             siteGuardId = '0';
         }
 
-        let $editBtn = $('<a href="https://kpi.cws-ir.com/Dashboard?ClientTypeId=' + record.typeId + '&&ClientSiteId=' + record.id + '&&Sl=' + securityNumber + '&&lud=' + siteloggedInUserId + '&&guid=' + siteGuardId + '&&type=' + type +'" class="nav-link py-0" target="_blank"><i class="fa fa-pencil"></i>Edit</a>'
+        let $editBtn = $('<a href="https://kpi.cws-ir.com/Dashboard?ClientTypeId=' + record.typeId + '&&ClientSiteId=' + record.id + '&&Sl=' + securityNumber + '&&lud=' + siteloggedInUserId + '&&guid=' + siteGuardId + '&&type=' + type +'" class="nav-link py-0" target="_blank"><i class="fa fa-pencil"></i>EDIT</a>'
         );
 
         //$editBtn.on('click', function (e) {
