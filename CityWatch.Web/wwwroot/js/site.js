@@ -435,7 +435,7 @@
         inlineEditing: { mode: 'command' },
         columns: [
             { field: 'typeId', hidden: true },
-            { field: 'clientType', title: 'Client Type', width: 180, renderer: function (value, record) { return value.name; } },
+            { field: 'clientType', title: 'Client Type', width: 170, renderer: function (value, record) { return value.name; } },
             { field: 'name', title: 'Client Site', width: 150, editor: true },
             { field: 'emails', title: 'Emails', width: 200, editor: true },
             { field: 'address', title: 'Address', width: 160, editor: addressEditor },
