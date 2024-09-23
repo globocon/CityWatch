@@ -3570,7 +3570,7 @@ $('#report_module_types').on('change', function () {
             { field: 'fileName', title: 'File Name', width: 300 },
             { field: 'formattedLastUpdated', title: 'Date & Time Updated', width: 150 },
             { width: 55, field: 'sop', title: 'SOP' },
-            { width: 135, renderer: schButtonRenderer },
+            { width: 140, renderer: schButtonRenderer },
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
