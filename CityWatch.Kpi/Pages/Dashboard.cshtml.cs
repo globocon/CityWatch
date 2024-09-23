@@ -129,9 +129,18 @@ namespace CityWatch.Kpi.Pages
             {
                 HttpContext.Session.SetInt32("GuardId", 0);
                 HttpContext.Session.SetInt32("loginUserId", 0);
-              
+                if (!string.IsNullOrEmpty(LoginClientTypeId) && !string.IsNullOrEmpty(LoginClientSiteIdId))
+                {
+                    ClientTypeId = int.Parse(LoginClientTypeId);
+                    ClientSiteId = int.Parse(LoginClientSiteIdId);
+                    HttpContext.Session.SetInt32("ClientTypeId", ClientTypeId);
+                    HttpContext.Session.SetInt32("ClientSiteId", ClientSiteId);
+                    return Redirect(Url.Page("/Admin/Settings"));
+                }
+                else
+                {
                     return Redirect(Url.Page("/Account/Login"));
-                
+                }
             }
         }
 
