@@ -1047,6 +1047,64 @@
 }
 
 @section scripts {
+
+    <script>
+        function initialize() {
+            var geocoder = new google.maps.Geocoder();
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+
+                    gpsCoordinatesValues = position.coords.latitude + ',' + position.coords.longitude;
+                    var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+                    $("#hid_duressEnabledGpsCoordinates").val(gpsCoordinatesValues);
+                    $("#hid_duressEnabledGpsCoordinatesDailyLog").val(gpsCoordinatesValues);
+                    reverseGeocode(position.coords.latitude, position.coords.longitude);
+
+                });
+            }
+
+        }
+
+        function getDurressLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    $("#duressEnabledGpsCoordinates").val(position.coords.latitude);
+                    reverseGeocode(position.coords.latitude, position.coords.longitude);
+
+                });
+            }
+        }
+
+
+        function reverseGeocode(latitude, longitude) {
+            var latlng = new google.maps.LatLng(latitude, longitude);
+            console.log('Latitude:', latitude);
+            console.log('Longitude:', longitude);
+            var geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ 'latLng': latlng }, function (results, status) {
+                if (status === google.maps.GeocoderStatus.OK) {                   
+                    if (results[0]) {
+                        var address = results[0].formatted_address;
+                        $("#hid_duressEnabledAddress").val(address);
+                        console.log('Reverse Geocoding Result: ', address);
+
+                    } else {
+                        console.error('No results found');
+                    }
+                } else {
+                    console.error('Geocoder failed due to: ' + status);
+                }
+            });
+        }
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition, showError);
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+    </script>
     <script src="https://maps.googleapis.com/maps/api/js?key=@ApiKey&callback=initialize&libraries=places"></script>
 
 }
