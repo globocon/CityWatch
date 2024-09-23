@@ -212,26 +212,46 @@ namespace CityWatch.Data.Providers
 
         public List<StaffDocument> GetStaffDocumentsUsingType(int type)
         {
-            var staffDocList = _context.StaffDocuments.Where(x => x.DocumentType == type).OrderBy(x => x.FileName).ToList();
-            foreach (var doc in staffDocList)
+            // Retrieve documents of the specified type
+            var staffDocList = _context.StaffDocuments
+                .Where(x => x.DocumentType == type)
+                .ToList();
+            // Check if any of the documents have a ClientSite assigned.
+            bool hasClientSite = staffDocList.Any(doc => doc.ClientSite.HasValue);
+
+            // If there are documents with ClientSite, retrieve their names and client types.
+            if (hasClientSite)
             {
-                if (doc.ClientSite.HasValue)
+                foreach (var doc in staffDocList)
                 {
-
-                    
-                    var clientSite = _context.ClientSites
-                    .Where(x => x.Id == doc.ClientSite).Include(x => x.ClientType).FirstOrDefault();
-                    if (clientSite != null)
+                    if (doc.ClientSite.HasValue)
                     {
-                        doc.ClientSiteName = clientSite?.Name ?? "Unknown";
-                        // Assign the site name or default to "Unknown"
-                        if(clientSite.ClientType!=null)
-                        doc.ClientTypeName = clientSite.ClientType.Name;
+                        // Fetch the ClientSite along with ClientType using Include
+                        var clientSite = _context.ClientSites
+                            .Where(x => x.Id == doc.ClientSite)
+                            .Include(x => x.ClientType)
+                            .FirstOrDefault();
 
+                        // Set the properties if ClientSite is found
+                        if (clientSite != null)
+                        {
+                            doc.ClientSiteName = clientSite.Name ?? "Unknown";
+                            doc.ClientTypeName = clientSite.ClientType?.Name ?? "Unknown";
+                        }
                     }
                 }
-            }
 
+                // Sort the staff document list by ClientSite and then by ClientTypeName
+                staffDocList = staffDocList
+                    .OrderBy(x => x.ClientTypeName)
+                    .ThenBy(x => x.ClientSiteName)
+                    .ToList();
+            }
+            else
+            {
+                // If no ClientSite, just order by FileName
+                staffDocList = staffDocList.OrderBy(x => x.FileName).ToList();
+            }
 
             return staffDocList;
         }
