@@ -22,6 +22,7 @@ namespace CityWatch.Web.Services
         void ProcessDailyGuardLogsSecondRun();
         public void ProcessDailyGuardLogsNew();
         public void ProcessDailyGuardLogsSecondRunNew();
+       
     }
 
     public class SiteLogUploadService : ISiteLogUploadService
@@ -225,7 +226,7 @@ namespace CityWatch.Web.Services
                     _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "logBook :" + siteLogBook.ClientSite.Name + " LogBookId" + siteLogBook.Id });
                     var fileToUpload = Path.Combine(outputDirectory, logFileName);
                     _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "File to upload Site : " + siteLogBook.ClientSite.Name + " File" + fileToUpload });
-                    var uploaded = ProcessDailyGuardLogUpload(siteLogBook, fileToUpload);
+                    var uploaded = ProcessDailyGuardLogUploadNew(siteLogBook, fileToUpload);
                     _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "Upload Status for Site : " + siteLogBook.ClientSite.Name + " Dropboxupload Status " + uploaded.ToString() });
                     // Process the log upload.
 
@@ -358,6 +359,46 @@ namespace CityWatch.Web.Services
                 _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils ="ClientSite: "+ clientSiteLogBook .ClientSite.Name + " Dropbox Fileupload Error:"+ ex.Message});
                 _logger.LogError(ex.StackTrace);
                 throw;
+            }
+        }
+
+
+
+        private bool ProcessDailyGuardLogUploadNew(ClientSiteLogBook clientSiteLogBook, string fileToUpload)
+        {
+
+            var dropboxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken,
+                _settings.DropboxRefreshToken, _settings.DropboxUserEmail);
+
+            var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientSiteLogBook.ClientSiteId);
+            //if (clientSiteKpiSettings == null)
+            //    throw new ArgumentException($"ClientSiteKpiSettings missing for Client Site Id: {clientSiteLogBook.ClientSiteId}");
+
+            var siteBasePath = clientSiteKpiSettings.DropboxImagesDir;
+            //if (string.IsNullOrEmpty(siteBasePath))
+            //    throw new ArgumentException($"SiteBasePath missing for Client Site Id: {clientSiteLogBook.ClientSiteId}");
+
+            //if (!File.Exists(fileToUpload))
+            //    throw new ArgumentException($"File not found: {fileToUpload} for IR id: {clientSiteLogBook.Id}");
+
+            try
+            {
+                if (clientSiteKpiSettings != null && (!string.IsNullOrEmpty(siteBasePath)) && File.Exists(fileToUpload))
+                {
+                    var dayPathFormat = clientSiteKpiSettings.IsWeekendOnlySite ? "yyyyMMdd - ddd" : "yyyyMMdd";
+                    var dbxFilePath = $"{siteBasePath}/FLIR - Wand Recordings - IRs - Daily Logs/{clientSiteLogBook.Date.Year}/{clientSiteLogBook.Date:yyyyMM} - {clientSiteLogBook.Date.ToString("MMMM").ToUpper()} DATA/{clientSiteLogBook.Date.ToString(dayPathFormat).ToUpper()}/" + Path.GetFileName(fileToUpload);
+                    return Task.Run(() => _dropboxUploadService.Upload(dropboxSettings, fileToUpload, dbxFilePath)).Result;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "ClientSite: " + clientSiteLogBook.ClientSite.Name + " Dropbox Fileupload Error:" + ex.Message });
+                _logger.LogError(ex.StackTrace);
+                return false;
             }
         }
 
