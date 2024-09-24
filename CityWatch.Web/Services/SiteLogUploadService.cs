@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,6 +20,8 @@ namespace CityWatch.Web.Services
     {
         void ProcessDailyGuardLogs();
         void ProcessDailyGuardLogsSecondRun();
+        public void ProcessDailyGuardLogsNew();
+        public void ProcessDailyGuardLogsSecondRunNew();
     }
 
     public class SiteLogUploadService : ISiteLogUploadService
@@ -117,6 +120,148 @@ namespace CityWatch.Web.Services
             }
         }
 
+
+
+        public void ProcessDailyGuardLogsNew()
+        {
+
+            _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "---Scheduler Start---" }); 
+            // Retrieve and filter the log books to upload only once.
+            var yesterday = DateTime.Now.AddDays(-1).Date;
+            var siteLogBooksToUpload = _clientDataProvider.GetClientSiteLogBooks()
+                .Where(z => z.ClientSite.UploadGuardLog && z.Date == yesterday && !z.DbxUploaded)
+                .ToList();
+
+            // Check if there are any logs to process to avoid unnecessary operations.
+            if (!siteLogBooksToUpload.Any())
+                return;
+
+            // Cache the report directory path.
+            var outputDirectory = Path.Combine(_reportRootDir, "Output");
+
+           
+            _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "Number of logbook to upload "+ siteLogBooksToUpload.Count.ToString() });
+
+            foreach (var siteLogBook in siteLogBooksToUpload)
+            {
+                try
+                {
+                    _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "----- Start "+siteLogBook.ClientSite.Name+"----" });
+
+                    string logFileName = GetLogFilePath(siteLogBook);
+                    if (string.IsNullOrEmpty(logFileName))
+                        continue;
+                    _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "logBook :"+ siteLogBook.ClientSite.Name+"LogBookId"+ siteLogBook.Id });
+                    var fileToUpload = Path.Combine(outputDirectory, logFileName);
+                    _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "File to upload Site : " + siteLogBook.ClientSite.Name + "File" + fileToUpload });
+                    var uploaded = ProcessDailyGuardLogUpload(siteLogBook, fileToUpload);
+                    _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "Upload Status for Site : " + siteLogBook.ClientSite.Name + "Dropboxupload Status " + uploaded.ToString() });
+                    // Process the log upload.
+
+
+                    // Send email if there is a valid email address.
+                    if (!string.IsNullOrEmpty(fileToUpload) && siteLogBook != null)
+                    {
+                        _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "Upload Status for Site : " + siteLogBook.ClientSite.Name + "---Mail send Start--"  });
+                        if (!string.IsNullOrEmpty(siteLogBook.ClientSite.GuardLogEmailTo))
+                            SendEmail(fileToUpload, siteLogBook);
+
+                        _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "Upload Status for Site : " + siteLogBook.ClientSite.Name + "---Mail send finish--" });
+
+                    }
+
+                        // Mark the log book as uploaded.
+                        _clientDataProvider.MarkClientSiteLogBookAsUploaded(siteLogBook.Id, logFileName);
+
+
+                    
+                    // Delete the file after processing.
+                    if (File.Exists(fileToUpload))
+                        File.Delete(fileToUpload);
+
+                }
+                catch (Exception ex)
+                {
+                    _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "Error Message : " + siteLogBook.ClientSite.Name + "---message--"+ex.Message });
+                    _logger.LogError($"Daily Guard Log Upload | Failed | Log Book Id: {siteLogBook.Id}. Error: {ex.Message}");
+                }
+                _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "----- end " + siteLogBook.ClientSite.Name + "----" });
+            }
+
+            _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "---Scheduler end---" });
+        }
+
+
+
+        public void ProcessDailyGuardLogsSecondRunNew()
+        {
+
+            _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "---Scheduler Start Second run---" });
+            // Retrieve and filter the log books to upload only once.
+            var yesterday = DateTime.Now.AddDays(-1).Date;
+            var siteLogBooksToUpload = _clientDataProvider.GetClientSiteLogBooks()
+                .Where(z => z.ClientSite.UploadGuardLog && z.Date == yesterday && !z.DbxUploaded)
+                .ToList();
+
+            // Check if there are any logs to process to avoid unnecessary operations.
+            if (!siteLogBooksToUpload.Any())
+                return;
+
+            // Cache the report directory path.
+            var outputDirectory = Path.Combine(_reportRootDir, "Output");
+
+
+            _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "Number of logbook to upload " + siteLogBooksToUpload.Count.ToString() });
+
+            foreach (var siteLogBook in siteLogBooksToUpload)
+            {
+                try
+                {
+                    _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "----- Start " + siteLogBook.ClientSite.Name + "----" });
+
+                    string logFileName = GetLogFilePath(siteLogBook);
+                    if (string.IsNullOrEmpty(logFileName))
+                        continue;
+                    _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "logBook :" + siteLogBook.ClientSite.Name + " LogBookId" + siteLogBook.Id });
+                    var fileToUpload = Path.Combine(outputDirectory, logFileName);
+                    _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "File to upload Site : " + siteLogBook.ClientSite.Name + " File" + fileToUpload });
+                    var uploaded = ProcessDailyGuardLogUpload(siteLogBook, fileToUpload);
+                    _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "Upload Status for Site : " + siteLogBook.ClientSite.Name + " Dropboxupload Status " + uploaded.ToString() });
+                    // Process the log upload.
+
+
+                    // Send email if there is a valid email address.
+                    if (!string.IsNullOrEmpty(fileToUpload) && siteLogBook != null)
+                    {
+                        _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "Upload Status for Site : " + siteLogBook.ClientSite.Name + " ---Mail send Start--" });
+                        if (!string.IsNullOrEmpty(siteLogBook.ClientSite.GuardLogEmailTo))
+                            SendEmail(fileToUpload, siteLogBook);
+
+                        _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "Upload Status for Site : " + siteLogBook.ClientSite.Name + " ---Mail send finish--" });
+
+                    }
+
+                    // Mark the log book as uploaded.
+                    //_clientDataProvider.MarkClientSiteLogBookAsUploaded(siteLogBook.Id, logFileName);
+
+
+
+                    // Delete the file after processing.
+                    if (File.Exists(fileToUpload))
+                        File.Delete(fileToUpload);
+
+                }
+                catch (Exception ex)
+                {
+                    _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "Error Message : " + siteLogBook.ClientSite.Name + "---message--" + ex.Message });
+                    _logger.LogError($"Daily Guard Log Upload | Failed | Log Book Id: {siteLogBook.Id}. Error: {ex.Message}");
+                }
+                _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "----- end " + siteLogBook.ClientSite.Name + "----" });
+            }
+
+            _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "---Scheduler end second run ---" });
+        }
+
         private string GetLogFilePath(ClientSiteLogBook logBook)
         {
             string fileName = string.Empty;
@@ -134,6 +279,8 @@ namespace CityWatch.Web.Services
         {
             try
             {
+
+                
                 var fromAddress = _emailOptions.FromAddress.Split('|');
                 var subject = siteLogBook.Type.ToDisplayName();
                 var messageHtml = $"Dear Citywatch Security Client; <br><br>Please find attached {subject.ToLower()}.";
@@ -167,7 +314,9 @@ namespace CityWatch.Web.Services
                 if (!string.IsNullOrEmpty(_emailOptions.SmtpUserName) &&
                     !string.IsNullOrEmpty(_emailOptions.SmtpPassword))
                     client.Authenticate(_emailOptions.SmtpUserName, _emailOptions.SmtpPassword);
-                client.Send(message);
+
+                    _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "logBook :" + siteLogBook.ClientSite.Name + "mail to address" + message.To });
+                    client.Send(message);
                 client.Disconnect(true);
                     //to avoid duplicate emails sending-start
                     flag = true;
@@ -176,6 +325,7 @@ namespace CityWatch.Web.Services
             }
             catch (Exception ex)
             {
+                _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "logBook :" + siteLogBook.ClientSite.Name + "Mail Issue" + ex.Message });
                 _logger.LogError($"Daily Guard Log Email | Failed | Log Book Id: {siteLogBook.Id}. Error: {ex.Message}");
             }
         }
@@ -205,6 +355,7 @@ namespace CityWatch.Web.Services
             }
             catch (Exception ex)
             {
+                _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils ="ClientSite: "+ clientSiteLogBook .ClientSite.Name + " Dropbox Fileupload Error:"+ ex.Message});
                 _logger.LogError(ex.StackTrace);
                 throw;
             }

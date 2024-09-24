@@ -20,6 +20,7 @@ using System.Linq;
 using System.Security.Policy;
 using static Dropbox.Api.FileProperties.PropertyType;
 using static Dropbox.Api.Files.ListRevisionsMode;
+using static Dropbox.Api.Files.SearchMatchType;
 using static Dropbox.Api.TeamLog.PaperDownloadFormat;
 //using static Dropbox.Api.Files.ListRevisionsMode;
 using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
@@ -227,6 +228,7 @@ namespace CityWatch.Data.Providers
 
         public StaffDocument GetStaffDocById(int documentId);
 
+        public void SaveSiteLogUploadHistory(SiteLogUploadHistory siteLogUploadHistory);
 
     }
 
@@ -472,7 +474,7 @@ namespace CityWatch.Data.Providers
         {
             var TimesheetName = "";
             var guardLogin = _context.GuardLogins
-                .Include(x=>x.Guard)
+                .Include(x => x.Guard)
      .FirstOrDefault(x => x.GuardId == GuardID);
 
             if (guardLogin != null && guardLogin.Guard != null)
@@ -482,7 +484,7 @@ namespace CityWatch.Data.Providers
             }
             else
             {
-                return ""; 
+                return "";
             }
             //if (guardLogin!=null)
             //{
@@ -504,21 +506,21 @@ namespace CityWatch.Data.Providers
         }
         public string GetGuardLicenseNo(int GuardID, DateTime enddate)
         {
-          
+
             var guardLogin = _context.GuardLogins
                 .Include(x => x.Guard)
      .FirstOrDefault(x => x.GuardId == GuardID);
-          
+
             if (guardLogin != null && guardLogin.Guard != null)
             {
                 return guardLogin.Guard.SecurityNo;
             }
             else
             {
-                return ""; 
+                return "";
             }
         }
-            public string GetGuardlogSite(int GuardID, DateTime enddate)
+        public string GetGuardlogSite(int GuardID, DateTime enddate)
         {
             var SiteName = "";
             var guardLogin = _context.GuardLogins
@@ -2608,6 +2610,21 @@ namespace CityWatch.Data.Providers
             }
 
         }
+
+
+        public void SaveSiteLogUploadHistory(SiteLogUploadHistory siteLogUploadHistory)
+        {
+            if (siteLogUploadHistory.Id == 0)
+            {
+                
+                siteLogUploadHistory.Date = DateTime.Now;
+                _context.SiteLogUploadHistory.Add(siteLogUploadHistory);
+                _context.SaveChanges();
+            }
+
+        }
     }
+
+   
 
 }
