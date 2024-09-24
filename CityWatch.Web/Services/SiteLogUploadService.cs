@@ -155,7 +155,7 @@ namespace CityWatch.Web.Services
                     _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "logBook :"+ siteLogBook.ClientSite.Name+"LogBookId"+ siteLogBook.Id });
                     var fileToUpload = Path.Combine(outputDirectory, logFileName);
                     _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "File to upload Site : " + siteLogBook.ClientSite.Name + "File" + fileToUpload });
-                    var uploaded = ProcessDailyGuardLogUpload(siteLogBook, fileToUpload);
+                    var uploaded = ProcessDailyGuardLogUploadNew(siteLogBook, fileToUpload);
                     _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "Upload Status for Site : " + siteLogBook.ClientSite.Name + "Dropboxupload Status " + uploaded.ToString() });
                     // Process the log upload.
 
