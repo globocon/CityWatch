@@ -126,6 +126,8 @@ namespace CityWatch.Data
 
         public DbSet<AudioRecordingLog> AudioRecordingLog { get; set; }
 
+        public DbSet<SiteLogUploadHistory> SiteLogUploadHistory { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<GuardLog>()
