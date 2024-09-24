@@ -299,10 +299,12 @@
         primaryKey: 'id',
         inlineEditing: { mode: 'command' },
         columns: [
-            { field: 'name', title: 'Client Type', width: 400, editor: true }
+            { field: 'name', title: 'Client Type', width: 400, editor: true },
+            { field: 'clientSiteCount', width: 50, editor: false }
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+            $(e.target).find('thead tr th:nth-last-child(2)').html('Σ')
         }
     });
 
