@@ -203,6 +203,9 @@ namespace CityWatch.Web.Pages.Reports
                                     if (rulenumberTwo.Trim() == string.Empty)
                                     {
                                         success = _clientDataProvider.SaveClientSiteManningKpiSetting(clientSiteKpiSetting);
+                                        /* If change in the status update start */
+                                        _clientDataProvider.UpdateClientSiteStatus(clientSiteKpiSetting.ClientSiteId, clientSiteKpiSetting.ClientSite.StatusDate, clientSiteKpiSetting.ClientSite.Status, clientSiteKpiSetting.Id);
+                                        /* If change in the status update end */
                                     }
                                     else
                                     {
