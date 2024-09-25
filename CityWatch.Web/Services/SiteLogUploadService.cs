@@ -199,9 +199,9 @@ namespace CityWatch.Web.Services
 
             _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "---Scheduler Start Second run---" });
             // Retrieve and filter the log books to upload only once.
-            var yesterday = DateTime.Now.AddDays(-1).Date;
+            var today = DateTime.Now.Date;
             var siteLogBooksToUpload = _clientDataProvider.GetClientSiteLogBooks()
-                .Where(z => z.ClientSite.UploadGuardLog && z.Date == yesterday && !z.DbxUploaded)
+                .Where(z => z.ClientSite.UploadGuardLog && z.Date == today && !z.DbxUploaded)
                 .ToList();
 
             // Check if there are any logs to process to avoid unnecessary operations.
