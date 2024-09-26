@@ -569,7 +569,11 @@ namespace CityWatch.Web.Pages.Guard
             var test = _viewDataService.GetClientSiteKeyNo(keyId, clientSiteId);
             return new JsonResult(_viewDataService.GetClientSiteKeyNo(keyId, clientSiteId));
         }
-
+        public JsonResult OnGetClientSiteDetails(int keyId, int clientSiteId)
+        {
+            var test = _viewDataService.GetClientSiteKeyNo(keyId, clientSiteId);
+            return new JsonResult(_viewDataService.GetClientSiteKeyDescriptionAndImage(keyId, clientSiteId));
+        }
         public JsonResult OnGetIsVehicleOnsite(int logbookId, string vehicleRego, string trailer1Rego, string trailer2Rego, string trailer3Rego, string trailer4Rego)
         {
 

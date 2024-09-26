@@ -145,6 +145,7 @@ namespace CityWatch.Web.Services
         List<FileDownloadAuditLogs> GetFileDownloadAuditLogs(DateTime logFromDate, DateTime logToDate);
         IEnumerable<string> GetDailyGuardLogAttachments(string uploadsDir, string reportReference);
         List<SelectListItem> GetOfficerPositionsNew(OfficerPositionFilter positionFilter);
+        ClientSiteKey GetClientSiteKeyDescriptionAndImage(int keyId, int clientSiteId);
     }
 
     public class ViewDataService : IViewDataService
@@ -994,7 +995,10 @@ namespace CityWatch.Web.Services
         {
             return _guardSettingsDataProvider.GetClientSiteKeys(clientSiteId).SingleOrDefault(z => z.Id == keyId)?.Description;
         }
-
+        public ClientSiteKey GetClientSiteKeyDescriptionAndImage(int keyId, int clientSiteId)
+        {
+            return _guardSettingsDataProvider.GetClientSiteKeys(clientSiteId).SingleOrDefault(z => z.Id == keyId);
+        }
         public string GetClientSiteKeyNo(int keyId, int clientSiteId)
         {
             return _guardSettingsDataProvider.GetClientSiteKeys(clientSiteId).SingleOrDefault(z => z.Id == keyId)?.KeyNo;
