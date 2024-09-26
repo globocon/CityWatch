@@ -304,7 +304,8 @@
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
-            $(e.target).find('thead tr th:nth-last-child(2)').html('Σ')
+            //$(e.target).find('thead tr th:nth-last-child(2)').html('Σ')
+            $(e.target).find('thead tr th:nth-last-child(2)').html('<span>&Sigma;</span>')
         }
     });
 
