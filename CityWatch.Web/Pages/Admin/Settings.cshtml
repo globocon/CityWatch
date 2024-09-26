@@ -38,7 +38,7 @@
 
     }
 
-
+    var totalSiteCount = clientDataProvider.GetClientSites(null).Count;
     var companydetail = viewDataService.GetCompanyDetails().SingleOrDefault(x => x.Id == 1);
 }
 
@@ -109,6 +109,18 @@
                 <div class="row">
                     <div class="col">
                         <table class="table" id="client_type_settings"></table>
+                        <table class="table gj-grid gj-grid-bootstrap gj-grid-bootstrap-4 table-bordered table-hover" id="footer" data-type="grid" data-guid="7cff56bd-f9d7-f057-3363-346fe8b5e98a">
+                            <thead>
+                                <tr data-role="caption">
+                                    <th style="text-align: left;width: 700px;"></th>
+                                    <th style="text-align: center;width: 87px;"><span>@totalSiteCount</span></th>
+                                    <th style="text-align: center;width: 228px;"></th>
+                                </tr>
+                            </thead>
+                           
+
+
+                        </table>
                     </div>
                 </div>
             </div>
