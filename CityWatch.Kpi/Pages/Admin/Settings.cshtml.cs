@@ -255,7 +255,11 @@ namespace CityWatch.Kpi.Pages.Admin
         public PartialViewResult OnGetClientSiteKpiSettings(int siteId)
         {
             var clientSiteKpiSetting = _clientDataProvider.GetClientSiteKpiSetting(siteId);
-            clientSiteKpiSetting ??= new ClientSiteKpiSetting() { ClientSiteId = siteId };
+            if (clientSiteKpiSetting == null)
+            {
+                var clientSiteForTheId = _guardLogDataProvider.GetClientSites(siteId).FirstOrDefault();
+                clientSiteKpiSetting ??= new ClientSiteKpiSetting() { ClientSiteId = siteId, ClientSite = clientSiteForTheId };
+            }
             return Partial("_ClientSiteKpiSetting", clientSiteKpiSetting);
         }
 
@@ -293,6 +297,8 @@ namespace CityWatch.Kpi.Pages.Admin
                 {
                     if (clientSiteKpiSetting.Id != 0)
                     {
+                       
+
                         clientSiteId = clientSiteKpiSetting.ClientSiteId;
                         var positionIdGuard = clientSiteKpiSetting.ClientSiteManningGuardKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
                         var positionIdPatrolCar = clientSiteKpiSetting.ClientSiteManningPatrolCarKpiSettings.Where(x => x.PositionId != 0).FirstOrDefault();
@@ -312,6 +318,9 @@ namespace CityWatch.Kpi.Pages.Admin
                                     if (rulenumberTwo.Trim() == string.Empty)
                                     {
                                         success = _clientDataProvider.SaveClientSiteManningKpiSetting(clientSiteKpiSetting);
+                                        /* If change in the status update start */
+                                        _clientDataProvider.UpdateClientSiteStatus(clientSiteKpiSetting.ClientSiteId, clientSiteKpiSetting.ClientSite.StatusDate, clientSiteKpiSetting.ClientSite.Status, clientSiteKpiSetting.Id);
+                                        /* If change in the status update end */
                                     }
                                     else
                                     {
