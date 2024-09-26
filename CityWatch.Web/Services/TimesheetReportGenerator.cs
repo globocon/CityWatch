@@ -113,7 +113,7 @@ namespace CityWatch.Web.Services
             var Name = _clientDataProvider.GetGuardlogName(guradid, dateTime);
             var LicenseNo = _clientDataProvider.GetGuardLicenseNo(guradid, dateTime);
             var SiteName = _clientDataProvider.GetGuardlogSite(guradid, dateTime);
-            var reportFileName = $"{DateTime.Now.ToString("yyyyMMdd")} - {FileNameHelper.GetSanitizedFileNamePart(Name)} - Daily KPI Reports -_{new Random().Next()}.pdf";
+            var reportFileName = $"{DateTime.Now.ToString("yyyyMMdd")} - {FileNameHelper.GetSanitizedFileNamePart(Name)} - Time Sheet -_{new Random().Next()}.pdf";
             var reportPdf = IO.Path.Combine(_reportRootDir, REPORT_DIR, reportFileName);
             var TimesheetDetails = _clientDataProvider.GetTimesheetDetails();
 
@@ -121,22 +121,38 @@ namespace CityWatch.Web.Services
             pdfDoc.SetDefaultPageSize(PageSize.A4.Rotate());
             var doc = new Document(pdfDoc);
             doc.SetMargins(PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN);
+           
 
             var headerTable = CreateReportHeader();
             doc.Add(headerTable);
+           
             doc.Add(CreateNameTable(Name));
             doc.Add(CreateLicenseTable(LicenseNo));
             doc.Add(CreateDateTable(dateTime));
            // doc.Add(CreateSiteTable(SiteName));
             doc.Add(new Paragraph("\n"));
             var (GuardLoginTables, totalHours) = CreateGuardLoginDetails(startdateTime, dateTime, LoginDetails, TimesheetDetails.weekName);
-
-            foreach (var GuardLoginTable in GuardLoginTables)
+            bool hasContentOnCurrentPage = false;
+            for (int i = 0; i < GuardLoginTables.Count; i++)
             {
-                doc.Add(GuardLoginTable);
-                doc.Add(new Paragraph("\n")); // Add a space between tables
+                var GuardLoginTable = GuardLoginTables[i];
+                if (GuardLoginTable.GetNumberOfRows() > 0)
+                {
+                    doc.Add(GuardLoginTable);
+                    hasContentOnCurrentPage = true;
+                    if (i < GuardLoginTables.Count - 1) // Only add space if it's not the last table
+                    {
+                        doc.Add(new Paragraph("\n"));
+                        doc.Add(new Paragraph("\n")); // Add a space between tables
+                    }
+                }
+               
+               
             }
-
+            if (hasContentOnCurrentPage)
+            {
+                doc.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+            }
             var commentTable = GetCommentTable(totalHours);
             doc.Add(commentTable);
             doc.Close();
@@ -247,6 +263,19 @@ namespace CityWatch.Web.Services
                .SetTextAlignment(TextAlignment.LEFT)
                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
                .SetVerticalAlignment(VerticalAlignment.MIDDLE);
+
+        }
+        private static Cell GetSiteValueCellHeader(string text)
+        {
+            Color CELL_BG_GREY_HEADER = new DeviceRgb(211, 211, 211);
+            return new Cell()
+               .Add(new Paragraph().Add(new Text(text)))
+               .SetFont(PdfHelper.GetPdfFont())
+               .SetFontSize(CELL_FONT_SIZE)
+               .SetTextAlignment(TextAlignment.LEFT)
+               .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+               .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+               .SetBackgroundColor(CELL_BG_GREY_HEADER);
 
         }
         private static Cell GetNoBorderValueCell(string text)
@@ -388,72 +417,61 @@ namespace CityWatch.Web.Services
                 for (int j = 0; j < 7 && daysProcessed < totalDays; j++)
                 {
                     string weekName = currentDate.ToString("dddd"); // e.g., "Monday"
-                    GuardTable.AddCell(GetSiteValueCell(weekName));
+                    GuardTable.AddCell(GetSiteValueCellHeader(weekName));
 
+                    // Add the date, but skip if currentDate > endDate
                     if (currentDate > endDate)
                     {
-                        GuardTable.AddCell("");
+                        GuardTable.AddCell(GetSiteValueCell(""));
                     }
                     else
                     {
                         GuardTable.AddCell(GetSiteValueCell(currentDate.ToString("dd/MM/yyyy")));
                     }
 
-                    string enddate1 = "";
-                    var start = LoginDetails.Where(x => x.LoginDate.Date == currentDate.Date).FirstOrDefault();
+                    var start = LoginDetails.FirstOrDefault(x => x.LoginDate.Date == currentDate.Date);
+
                     if (start != null)
                     {
+                        // Add OnDuty time
                         GuardTable.AddCell(GetSiteValueCell(start.OnDuty.ToString("HH:mm")));
-                        TimeSpan? endDateDifference = null;
 
-                        if (start.OffDuty.HasValue)
+                        // Handle OffDuty, and calculate total hours
+                        TimeSpan? endDateDifference = start.OffDuty?.TimeOfDay;
+                        if (endDateDifference.HasValue)
                         {
-                            endDateDifference = start.OffDuty.Value.TimeOfDay;
-                        }
+                            // Format OffDuty time
+                            string enddate1 = string.Format("{0:D2}:{1:D2}", (int)endDateDifference.Value.TotalHours, endDateDifference.Value.Minutes);
+                            GuardTable.AddCell(GetSiteValueCell(enddate1));
 
-                        // Instead of converting to DateTime, format the TimeSpan directly
-                         enddate1 = string.Format("{0:D2}:{1:D2}", (int)endDateDifference.Value.TotalHours, endDateDifference.Value.Minutes);
-                        GuardTable.AddCell(GetSiteValueCell(enddate1));
-                        string[] timeParts = enddate1.Split(':');
+                            // Parse and calculate hours and minutes manually
+                            TimeSpan enddate = TimeSpan.FromHours(endDateDifference.Value.TotalHours) + TimeSpan.FromMinutes(endDateDifference.Value.Minutes);
+                            TimeSpan startd = TimeSpan.ParseExact(start.OnDuty.ToString("HH:mm"), "hh\\:mm", CultureInfo.InvariantCulture);
 
-                        // Parse hours and minutes manually
-                        int hours = int.Parse(timeParts[0]);
-                        int minutes = int.Parse(timeParts[1]);
+                            TimeSpan TotalHrs = (enddate - startd).Duration();
+                            int totalHrs = (int)TotalHrs.TotalMinutes;
+                            weeklyTotalHours += totalHrs;
 
-                        // Create a TimeSpan from the parsed hours and minutes
-                        TimeSpan enddate = TimeSpan.FromHours(hours) + TimeSpan.FromMinutes(minutes);
-                        TimeSpan startd = TimeSpan.ParseExact(start.OnDuty.ToString("HH:mm"), "hh\\:mm", CultureInfo.InvariantCulture);
-
-                        TimeSpan TotalHrs = (enddate - startd).Duration();
-                        int totalHrs = (int)TotalHrs.TotalMinutes;
-                        // No need to parse enddate1 as DateTime; use TimeSpan directly for total hours
-                        totalAccumulatedHrs = totalAccumulatedHrs.Add(TotalHrs);
-                        string formattedTotalHrs = string.Format("{0:D2}:{1:D2}", TotalHrs.Hours, TotalHrs.Minutes);
-
-                        weeklyTotalHours += totalHrs;
-                        GuardTable.AddCell(GetSiteValueCell(formattedTotalHrs.ToString()));
-                        if (start.ClientSite.Name != null)
-                        {
-                            GuardTable.AddCell(GetSiteValueCell(start.ClientSite.Name.ToString()));
+                            string formattedTotalHrs = string.Format("{0:D2}:{1:D2}", TotalHrs.Hours, TotalHrs.Minutes);
+                            GuardTable.AddCell(GetSiteValueCell(formattedTotalHrs));
                         }
                         else
                         {
+                            // OffDuty is null, so add empty cells for end time and total hours
+                            GuardTable.AddCell(GetSiteValueCell(""));
                             GuardTable.AddCell(GetSiteValueCell(""));
                         }
+
+                        // Add Client Site Name or empty cell
+                        GuardTable.AddCell(GetSiteValueCell(start.ClientSite?.Name ?? ""));
                     }
                     else
                     {
+                        // If no login details for the day, add empty cells
                         GuardTable.AddCell(GetSiteValueCell(""));
                         GuardTable.AddCell(GetSiteValueCell(""));
                         GuardTable.AddCell(GetSiteValueCell(""));
-                        if (start != null)
-                        {
-                            GuardTable.AddCell(GetSiteValueCell(start.ClientSite.Name.ToString()));
-                        }
-                        else
-                        {
-                            GuardTable.AddCell(GetSiteValueCell(""));
-                        }
+                        GuardTable.AddCell(GetSiteValueCell(""));
                     }
 
                     currentDate = currentDate.AddDays(1);
@@ -465,15 +483,19 @@ namespace CityWatch.Web.Services
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
+
+                // Convert weeklyTotalHours to hours and minutes
                 int hours1 = weeklyTotalHours / 60;
                 int minutes1 = weeklyTotalHours % 60;
-                GuardTable.AddCell(GetSiteValueCell($"{hours1}:{minutes1}"));
+                GuardTable.AddCell(GetSiteValueCell($"{hours1:D2}:{minutes1:D2}"));
 
+                // Add the site name in the footer
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(SiteName));
 
                 TotalWeeklyHrs += weeklyTotalHours;
                 weeklyTables.Add(GuardTable);
             }
+
 
             return (weeklyTables, TotalWeeklyHrs);
         }
@@ -498,12 +520,12 @@ namespace CityWatch.Web.Services
 
                 Color CELL_BG_GREY_HEADER = new DeviceRgb(211, 211, 211);
                 // const float CELL_WIDTH = 1f;
-                table.AddCell(GetNoBorderValueCell(""));
-                table.AddCell(GetSiteValueCell("Date"));
-                table.AddCell(GetSiteValueCell("start"));
-                table.AddCell(GetSiteValueCell("Finish"));
-                table.AddCell(GetSiteValueCell("Total Hrs"));
-                table.AddCell(GetSiteValueCell("Site"));
+                table.AddCell(GetSiteValueCellHeader(""));
+                table.AddCell(GetSiteValueCellHeader("Date"));
+                table.AddCell(GetSiteValueCellHeader("start"));
+                table.AddCell(GetSiteValueCellHeader("Finish"));
+                table.AddCell(GetSiteValueCellHeader("Total Hrs"));
+                table.AddCell(GetSiteValueCellHeader("Site"));
 
 
             }
