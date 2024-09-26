@@ -238,8 +238,13 @@ namespace CityWatch.Kpi.Pages.Admin
                         z.Id,
                         ClientTypeName = z.ClientType.Name,
                         ClientSiteName = z.Name,
+                        SiteUploadDailyLog = z.UploadGuardLog,
                         HasSettings = clientSiteWithSettings.Any(x => x == z.Id),
-                        z.SiteEmail
+                        z.SiteEmail,
+                        z.Address,
+                        z.LandLine,
+                        z.GuardLogEmailTo,
+                        z.DataCollectionEnabled
                     }));
                 }
             }
