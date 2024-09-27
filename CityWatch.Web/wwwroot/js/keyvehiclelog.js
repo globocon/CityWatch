@@ -631,7 +631,9 @@ $(function () {
                         clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),
                     }
                 }).done(function (response) {
-                    const imageHtml = response.imagePath ? '<img src="' + response.imagePath + '" alt="Image" style="width: 24px; height: auto;" />' : '';
+                    const imageHtml = response.imagePath
+                        ? '<a href="' + response.imagePath + '" target="_blank"><img src="' + response.imagePath + '" alt="Image" style="width: 24px; height: 24px;" /></a>'
+                        : '';
                     const rowHtml = '<tr>' +
                         '<td>' + keyNo + '</td>' +
                         '<td>' + response.description + '</td>' +
@@ -667,7 +669,9 @@ $(function () {
                 }
             }).done(function (response) {
                 if (!currentKeyNos.includes(response.keyNo)) {
-                    const imageHtml = response.imagePath ? '<img src="' + response.imagePath + '" alt="Image" style="width: 24px; height: auto;" />' : '';
+                    const imageHtml = response.imagePath
+                        ? '<a href="' + response.imagePath + '" target="_blank"><img src="' + response.imagePath + '" alt="Image" style="width: 24px; height: 24px;" /></a>'
+                        : '';
                     const rowHtml = '<tr>' +
                         '<td>' + response.keyNo + '</td>' +
                         '<td>' + keyNo + '</td>' +

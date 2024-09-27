@@ -275,8 +275,8 @@
                             <tr>
                                 <th>Key #</th>
                                 <th>Key Description</th>
-                                <th></th>
-                                <th></th>
+                                <th style="width:20px"></th>
+                                <th style="width:35px"></th>
                             </tr>
                             @if (kvlKeys != null)
                             {
@@ -288,7 +288,9 @@
                                         <th>
                                             @if (!string.IsNullOrEmpty(clientSiteKey.ImagePath))
                                             {
-                                                <img src="@clientSiteKey.ImagePath" alt="Image" style="width: 24px; height: auto;" />
+                                                <a href="@clientSiteKey.ImagePath" target="_blank">
+                                                    <img src="@clientSiteKey.ImagePath" alt="Image" style="width: 24px; height: 24px;" />
+                                                </a>
                                             }
                                         </th>
                                         <td><i class="fa fa-trash-o text-danger btn-delete-kvl-Key" title="Delete" style="cursor: pointer;"></i></td>
