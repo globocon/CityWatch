@@ -3142,7 +3142,7 @@ $(function () {
 
 
     function renderGuardActiveCellHrValues(value, type, data) {
-      
+
         if (data.hR1Status == 'green') {
             return '<i class="fa fa-circle text-success mr-2"></i>';
         }
@@ -3152,8 +3152,8 @@ $(function () {
         else if (data.hR1Status == 'yellow') {
             return '<i class="fa fa-circle text-warning mr-2"></i>';
         }
-            
-       
+
+
     }
 
     function format_guards_child_row(d) {
@@ -3186,28 +3186,45 @@ $(function () {
         { data: 'clientSites', orderable: false, width: "15%" },
         { data: 'pin', width: "1%", visible: false },
         { data: 'loginDate', visible: false },
-        { data: 'gender', width: "10%" },
+        { data: 'gender', width: "5%" },
         {
-            data: 'isActive', name: 'isactive', className: "text-center", width: "5%", 'render': function (value, type, data) {
+            data: 'isActive', name: 'isactive', className: "text-center", width: "4%", 'render': function (value, type, data) {
                 return renderGuardActiveCell(value, type, data);
             }
         },
 
 
+        {
+            data: 'hR1Status', name: 'hR1Status', className: "text-center no-padding", width: "2%", 'render': function (value, type, data) {
+                return renderGuardActiveCellHrValues(value, type, data);
+            }
+        },
+        {
+            data: 'hR2Status', name: 'hR2Status', className: "text-center no-padding", width: "2%", 'render': function (value, type, data) {
+                return renderGuardActiveCellHr2Values(value, type, data);
+            }
+        },
 
-          
-        { data: 'hR1Status', name: 'hR1Status', width: "2%" },
-        { data: 'hR2Status', name: 'hR2Status', width: "2%" },
-        { data: 'hR3Status', name: 'hR3Status', width: "2%" },
+        {
+            data: 'hR3Status', name: 'hR3Status', className: "text-center no-padding", width: "2%", 'render': function (value, type, data) {
+                return renderGuardActiveCellHr3Values(value, type, data);
+            }
+        },
+
+
+
+        // { data: 'hR1Status', name: 'hR1Status', width: "2%" },
+        // { data: 'hR2Status', name: 'hR2Status', width: "2%" },
+        //{ data: 'hR3Status', name: 'hR3Status', width: "2%" },
 
 
         {
             targets: -1,
             data: null,
-            defaultContent: '<button  class="btn btn-outline-primary mr-2" name="btn_edit_guard"><i class="fa fa-pencil mr-2"></i>Edit</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + '<img src="/images/Timesheet.jpg" style="width:60%" alt="Image" class="clickable-image" style="cursor: pointer;" alt="Timesheet" name="btn_timesheet"/>',
+            defaultContent: '<button  class="btn btn-outline-primary  mb-1" name="btn_edit_guard"><i class="fa fa-pencil"></i></button>' + '<img src="/images/Timesheet.jpg" style="width: 96%;height: 96%;" alt="Image" class="clickable-image" style="cursor: pointer;" alt="Timesheet" name="btn_timesheet"/>',
             orderable: false,
             className: "text-center",
-            width: "8%"
+            width: "0%"
         },
         ],
         initComplete: function (settings, json) {
@@ -3221,6 +3238,63 @@ $(function () {
         $('#chkbxfilterGuardInActive').prop("disabled", true);
         guardSettingsDataLoaded = false;
     });
+
+
+
+
+    function renderGuardActiveCellHrValues(value, type, data) {
+
+        if (data.hR1Status == 'Green') {
+            return '<i class="fa fa-circle text-success"></i><span style="color:#f8f9fa;font-size:1px;">green</span>';
+        }
+        else if (data.hR1Status == 'Red') {
+            return '<i class="fa fa-circle text-danger"></i><span style="color:#f8f9fa;font-size:1px;">red</span>';
+        }
+        else if (data.hR1Status == 'Yellow') {
+            return '<i class="fa fa-circle text-warning"></i></i><span style="color:#f8f9fa;font-size:1px;">yellow</span>';
+        }
+        else {
+            return '<i class="fa fa-circle text-secondary"></i>';
+        }
+
+
+    }
+
+    function renderGuardActiveCellHr2Values(value, type, data) {
+
+        if (data.hR2Status == 'Green') {
+            return '<i class="fa fa-circle text-success"></i><span style="color:#f8f9fa;font-size:1px;">green</span>';
+        }
+        else if (data.hR2Status == 'Red') {
+            return '<i class="fa fa-circle text-danger"></i><span style="color:#f8f9fa;font-size:1px;">red</span>';
+        }
+        else if (data.hR2Status == 'Yellow') {
+            return '<i class="fa fa-circle text-warning"></i><span style="color:#f8f9fa;font-size:1px;">yellow</span>';
+        }
+        else {
+            return '<i class="fa fa-circle text-secondary"></i>';
+        }
+
+
+    }
+
+    function renderGuardActiveCellHr3Values(value, type, data) {
+
+        if (data.hR3Status == 'Green') {
+            return '<i class="fa fa-circle text-success"></i><span style="color: #f8f9fa;font-size:1px;">green</span>';
+        }
+        else if (data.hR3Status == 'Red') {
+            return '<i class="fa fa-circle text-danger"></i><span style="color: #f8f9fa;font-size:1px;">red</span>';
+        }
+        else if (data.hR3Status == 'Yellow') {
+            return '<i class="fa fa-circle text-warning"></i><span style="color: #f8f9fa;font-size:1px;">yellow</span>';
+        }
+        else {
+            return '<i class="fa fa-circle text-secondary"></i>';
+        }
+
+
+    }
 
     //$('#btn_refresh_guard_top').on('click', function () {
     //    if (guardSettings) {   
@@ -3708,7 +3782,7 @@ $(function () {
 
         if (kvlStatusFilter !== 0) {
             var filter = 'true'; // or 'false'
-            var regex = false;   // No need for regex
+            var regex = true;   // No need for regex
             var smart = false;   // Exact match only
             if ($('#chkbxHR1').is(':checked')) {
                 $('#chkbxHR2').prop('checked', false);
@@ -3739,12 +3813,15 @@ $(function () {
                 guardSettings.columns().search('');
 
                 // Redraw the table
-                guardSettings.draw();
+
+                // Clear the sorting
+                guardSettings.order([]).draw(false);
+                guardSettings.draw(false);
                 filterActiveInActiveGuards(guardSettings);
-               
-                
+
+
             }
-            
+
         }
         else {
 
@@ -3759,7 +3836,10 @@ $(function () {
             guardSettings.columns().search('');
 
             // Redraw the table
-            guardSettings.draw();
+
+            // Clear the sorting
+            guardSettings.order([]).draw(false);
+            guardSettings.draw(false);
             filterActiveInActiveGuards(guardSettings);
             //$('#chkbxfilterGuardActive').prop("disabled", false);
             //$('#chkbxfilterGuardInActive').prop("disabled", false);
@@ -3791,7 +3871,10 @@ $(function () {
         guardSettings.columns().search('');
 
         // Redraw the table
-        guardSettings.draw();
+
+        // Clear the sorting
+        guardSettings.order([]).draw(false);
+        guardSettings.draw(false);
         filterActiveInActiveGuards(guardSettings);
         //$('.dropdownGuardHrFilter > .dropdown-menu > .dropdown-item').first().trigger('click');
     });
@@ -3814,9 +3897,12 @@ $(function () {
         guardSettings.columns().search('');
 
         // Redraw the table
-        guardSettings.draw();
+
+        // Clear the sorting
+        guardSettings.order([]).draw(false);
+        guardSettings.draw(false);
         filterActiveInActiveGuards(guardSettings);
-       // $('.dropdownGuardHrFilter > .dropdown-menu > .dropdown-item').first().trigger('click');
+        // $('.dropdownGuardHrFilter > .dropdown-menu > .dropdown-item').first().trigger('click');
     });
     $('#chkbxHR3').on('click', function () {
         var thisCheck = $(this);
@@ -3837,7 +3923,10 @@ $(function () {
         guardSettings.columns().search('');
 
         // Redraw the table
-        guardSettings.draw();
+
+        // Clear the sorting
+        guardSettings.order([]).draw(false);
+        guardSettings.draw(false);
         filterActiveInActiveGuards(guardSettings);
         //$('.dropdownGuardHrFilter > .dropdown-menu > .dropdown-item').first().trigger('click');
     });

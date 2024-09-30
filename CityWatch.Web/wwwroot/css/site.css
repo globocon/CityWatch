@@ -760,7 +760,9 @@ pre.dark-mode {
     page-break-after: always;
 }
 
-</style >
-/*form trafiic lights-end*/
+.no-padding {
+    padding-left: 1px !important;
+    padding-right: 1px !important;
+}
 
 

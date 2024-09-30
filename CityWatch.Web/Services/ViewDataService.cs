@@ -640,21 +640,54 @@ namespace CityWatch.Web.Services
             var guardViewModels = guards.Select(guard =>
                 new GuardViewModel(guard, guardLogins.Where(login => login.GuardId == guard.Id).ToList())).ToList();
 
-            // Retrieve all document statuses for guard IDs at once (optimization)
+            // Retrieve all document statuses for guard IDs at once
             var documentStatusesByGuard = guardIds.ToDictionary(
                 guardId => guardId,
-                guardId => LEDStatusForLoginUser(guardId) // Assuming LEDStatusForLoginUser returns a list
+                guardId => LEDStatusForLoginUser(guardId) // Assuming this returns a list
             );
 
+            // Process the status checks
             foreach (var guard in guardViewModels)
             {
-                // Get statuses for each guard from the dictionary
                 var documentStatuses = documentStatusesByGuard[guard.Id];
 
-                // Set status or fallback to "Grey"
-                guard.HR1Status = documentStatuses.FirstOrDefault(ds => ds.GroupName == "HR1 (C4i)")?.ColourCodeStatus ?? "Grey";
-                guard.HR2Status = documentStatuses.FirstOrDefault(ds => ds.GroupName == "HR2 (Client)")?.ColourCodeStatus ?? "Grey";
-                guard.HR3Status = documentStatuses.FirstOrDefault(ds => ds.GroupName == "HR3 (Special)")?.ColourCodeStatus ?? "Grey";
+                // Initialize default statuses to "Grey"
+                guard.HR1Status = "Grey";
+                guard.HR2Status = "Grey";
+                guard.HR3Status = "Grey";
+
+                if (documentStatuses == null || documentStatuses.Count == 0)
+                    continue;
+
+                // Group document statuses by GroupName for faster lookups
+                var statusLookup = documentStatuses.ToLookup(x => x.GroupName.Trim());
+
+                // Set HR1Status
+                var HR1List = statusLookup["HR 1 (C4i)"];
+                if (HR1List.Any())
+                {
+                    guard.HR1Status = HR1List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
+                                      HR1List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
+                                      "Green";
+                }
+
+                // Set HR2Status
+                var HR2List = statusLookup["HR 2 (Client)"];
+                if (HR2List.Any())
+                {
+                    guard.HR2Status = HR2List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
+                                      HR2List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
+                                      "Green";
+                }
+
+                // Set HR3Status
+                var HR3List = statusLookup["HR 3 (Special)"];
+                if (HR3List.Any())
+                {
+                    guard.HR3Status = HR3List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
+                                      HR3List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
+                                      "Green";
+                }
             }
 
             return guardViewModels;
@@ -691,62 +724,61 @@ namespace CityWatch.Web.Services
 
         private List<HRGroupStatusNew> LEDStatusForLoginUser(int GuardID)
         {
-            var MasterGroup = _guardDataProvider.GetHRDescFull();
-            var GuardDocumentDetails = _guardDataProvider.GetGuardLicensesandcompliance(GuardID);
+            // Retrieve guard document details in one call
+            var guardDocumentDetails = _guardDataProvider.GetGuardLicensesandcompliance(GuardID);
             var hrGroupStatusesNew = new List<HRGroupStatusNew>();
 
-            foreach (var item in MasterGroup)
+            // Iterate through each document detail
+            foreach (var item in guardDocumentDetails)
             {
-                var TemDescription = item.ReferenceNo + " " + item.Description.Trim();
-                var SelectedGuardDocument = GuardDocumentDetails.Where(x => x.Description == TemDescription).ToList();
-
-                if (SelectedGuardDocument.Count > 0)
+                // Directly use the item without filtering again
+                hrGroupStatusesNew.Add(new HRGroupStatusNew
                 {
-                    hrGroupStatusesNew.Add(new HRGroupStatusNew
-                    {
-                        Status = 1,
-                        GroupName = item.GroupName.Trim(),
-                        ColourCodeStatus = GuardledColourCodeGenerator(SelectedGuardDocument)
-                    });
-                }
+                    Status = 1,
+                    GroupName = item.HrGroupText.Trim(), // Assuming HrGroupText replaces GroupName
+                                                         // Generate the color code based on the current item
+                    ColourCodeStatus = GuardledColourCodeGenerator(new List<GuardComplianceAndLicense> { item })
+                });
             }
+
             return hrGroupStatusesNew;
         }
 
-        private string GuardledColourCodeGenerator(List<GuardComplianceAndLicense> SelectedList)
+        private string GuardledColourCodeGenerator(List<GuardComplianceAndLicense> selectedList)
         {
             var today = DateTime.Now;
-            var ColourCode = "Green";
+            var colourCode = "Green"; // Default to green
 
-            if (SelectedList.Count > 0)
+            if (selectedList.Count > 0)
             {
-                var SelectDatatype = SelectedList.Where(x => x.DateType == true).ToList();
-                if (SelectDatatype.Count > 0)
-                {
-                    ColourCode = "Green";
-                }
-                else
-                {
-                    if (SelectedList.FirstOrDefault() != null)
-                    {
-                        if (SelectedList.FirstOrDefault().ExpiryDate != null)
-                        {
-                            var ExpiryDate = SelectedList.FirstOrDefault().ExpiryDate;
-                            var timeDifference = ExpiryDate - today;
+                // Check if any entry has DateType == true
+                var hasDateTypeTrue = selectedList.Any(x => x.DateType == true);
 
-                            if (ExpiryDate < today)
-                            {
-                                ColourCode = "Red";
-                            }
-                            else if ((ExpiryDate - DateTime.Now).Value.Days < 45)
-                            {
-                                ColourCode = "Yellow";
-                            }
-                        }
+                if (hasDateTypeTrue)
+                {
+                    return "Green"; // Return immediately if DateType == true exists
+                }
+
+                // Get the first non-null expiry date (if any)
+                var firstItem = selectedList.FirstOrDefault(x => x.ExpiryDate != null);
+
+                if (firstItem != null)
+                {
+                    var expiryDate = firstItem.ExpiryDate.Value; // Assuming ExpiryDate is not null here
+
+                    // Compare expiry date with today's date
+                    if (expiryDate < today)
+                    {
+                        return "Red";
+                    }
+                    else if ((expiryDate - today).Days < 45)
+                    {
+                        return "Yellow";
                     }
                 }
             }
-            return ColourCode;
+
+            return colourCode; // Default return is green
         }
         public async Task<DataTable> PatrolDataToDataTable(List<DailyPatrolData> dailyPatrolData)
         {
