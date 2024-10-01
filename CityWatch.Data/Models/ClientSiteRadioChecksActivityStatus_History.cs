@@ -1,6 +1,9 @@
-﻿using System;
+﻿using CityWatch.Data.Enums;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 using System.Text.Json.Serialization;
 using static Dropbox.Api.Sharing.RequestedLinkAccessLevel;
 
@@ -8,6 +11,7 @@ namespace CityWatch.Data.Models
 {
     public class ClientSiteRadioChecksActivityStatus_History
     {
+        
         [Key]
         public int Id { get; set; }
         public int? ClientSiteId { get; set; }
@@ -87,6 +91,22 @@ namespace CityWatch.Data.Models
 
             }
         }
+        [ForeignKey("ClientSiteId")]
+        public ClientSite ClientSite { get; set; }
+        [NotMapped]
+        public int RecordCount { get; set; }
+        [NotMapped]
+        public string DateRange { get; set; }
+
+    }
+    public class ClientSiteRadioChecksActivityStatus_HistoryReport
+    {
+
+        
+        [NotMapped]
+        public int RecordCount { get; set; }
+        [NotMapped]
+        public string DateRange { get; set; }
 
     }
 }

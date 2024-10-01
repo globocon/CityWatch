@@ -302,6 +302,7 @@ namespace CityWatch.Data.Providers
 
         List<GuardLogsDocumentImages> GetGuardLogDocumentImaesById(int Id);
         void DeleteGuardLogDocumentImaes(int id);
+        List<ClientSiteRadioChecksActivityStatus_History> GetGuardFusionLogsWithToDate(DateTime FromDate, DateTime ToDate);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -5117,6 +5118,21 @@ namespace CityWatch.Data.Providers
                 _context.Remove(guardLogDocumentImaes);
                 _context.SaveChanges();
             }
+        }
+        public List<ClientSiteRadioChecksActivityStatus_History> GetGuardFusionLogsWithToDate( DateTime  FromDate,DateTime ToDate)
+        {
+            //var data = _context.ClientSiteRadioChecksActivityStatus_History
+            //.Where(z => z.ClientSiteId == clientSiteId )
+            //.ToList();
+
+            var data = _context.ClientSiteRadioChecksActivityStatus_History
+               .Where(z => z.EventDateTime.Date>=FromDate && z.EventDateTime.Date <= ToDate)
+               .ToList();
+
+            var returnData = data.OrderBy(z => z.EventDateTime)
+                .ToList();
+
+            return returnData;
         }
     }
 

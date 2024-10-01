@@ -504,6 +504,21 @@
             drawPieChartUsingChartJsChart(response.chartData.areaWardPercentage);
             drawPieChartUsingChartJsChartColorCode(response.chartData.colorCodePercentage, response.chartData.feedbackTemplatesColour);
             /* expanding grapph - start*/
+            
+            
+            
+            if (response.rcChartTypesForWeekNewCount != 0) {
+                $('#count_by_numberofduressperweek').html(response.rcChartTypesForWeekNewCount);
+                drawPieChartUsingChartJsChartRCForWeek(response.chartData.rcChartTypesForWeekNew);
+            }
+            if (response.rcChartTypesForMonthNewCount != 0) {
+                $('#count_by_numberofduresspermonth').html(response.rcChartTypesForMonthNewCount);
+                drawPieChartUsingChartJsChartRCForMonth(response.chartData.rcChartTypesForMonthNew);
+            }
+            if (response.rcChartTypesForYearNewCount != 0) {
+                $('#count_by_numberofduressperyear').html(response.rcChartTypesForYearNewCount);
+                drawPieChartUsingChartJsChartRCForYear(response.chartData.rcChartTypesForYearNew);
+            }
         }).fail(function () {
         }).always(function () {
             $('#loader-p').hide();
@@ -1276,7 +1291,7 @@ function drawPieChartUsingChartJsChart(dataValue) {
     var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
     if (canvas !== null) {
         const ctx = document.getElementById('pie_chart_ir_by_areaward').getContext('2d');
-
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         window.myChart1 = new Chart(ctx, {
             type: 'pie',
             data: {
@@ -1381,6 +1396,7 @@ function drawPieChartUsingChartJsChart(dataValue) {
 
     if (canvas2 !== null) {
         const ctx2 = document.getElementById('pie_chart_ir_by_areaward1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
         window.myChart2 = new Chart(ctx2, {
             type: 'pie',
             data: {
@@ -1481,6 +1497,7 @@ function drawPieChartUsingChartJsChart(dataValue) {
 
     if (canvas3 !== null) {
         const ctx3 = document.getElementById('pie_chart_ir_by_areaward3').getContext('2d');
+        ctx3.clearRect(0, 0, canvas3.width, canvas3.height);
         window.myChart6 = new Chart(ctx3, {
             type: 'pie',
             data: {
@@ -1958,6 +1975,1191 @@ function drawPieChartUsingChartJsChartColorCode(dataValue, colors) {
 
 
 
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+    //// Configuration options
+    //const options = {
+    //    responsive: false,
+    //    plugins: {
+    //        legend: {
+    //            position: 'right',
+    //            onClick: function (event, legendItem) {
+    //                const index = legendItem.index;
+    //                const meta = this.chart.getDatasetMeta(0);
+    //                meta.data[index].hidden = !meta.data[index].hidden;
+    //                this.chart.update();
+    //            }
+    //        },
+    //        datalabels: {
+    //            backgroundColor: function (context) {
+    //                return context.dataset.backgroundColor;
+    //            },
+    //            borderColor: 'white',
+    //            borderRadius: 25,
+    //            borderWidth: 2,
+    //            color: 'white',
+    //            display: function (context) {
+    //                var dataset = context.dataset;
+    //                var count = dataset.data.length;
+    //                var value = dataset.data[context.dataIndex];
+    //                return value > count * 1.5;
+    //            }
+    //        }
+    //    }
+
+    //};
+
+    //// Create the pie chart
+    //var canvas = document.getElementById("myPieChart");
+    //if (canvas !== null) {
+    //    const ctx = document.getElementById('myPieChart').getContext('2d');
+    //    const myPieChart = new Chart(ctx, {
+    //        type: 'pie',
+    //        data: data,
+    //        options: options
+    //    });
+
+    //}
+
+}
+$('#btncount_by_numberofduressPerWeek').on('click', function () {
+    $('#modelRCDuressEntriesGraphForWeek').modal('show');
+});
+$('#btncount_by_numberofduressPerMonth').on('click', function () {
+    $('#modelRCDuressEntriesGraphForMonth').modal('show');
+});
+$('#btncount_by_numberofduressPerYear').on('click', function () {
+    $('#modelRCDuressEntriesGraphForYear').modal('show');
+});
+
+$('#btncount_by_numberoftimesrcpushedbycro').on('click', function () {
+    $('#modelRCButtonPushedbyCRO').modal('show');
+});
+$('#btncount_by_numberofguardswnenttoprealarm').on('click', function () {
+    $('#modelRCGuardswenttoprealarm').modal('show');
+});
+$('#btncount_by_numberofguardswnentfromprealarmorangetored').on('click', function () {
+    $('#modelRCGuardswentfromprealarmorangetored').modal('show');
+});
+
+function drawPieChartUsingChartJsChartRCForWeek(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+        return e.dateRange;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.recordCount;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("bar_chart_by_rc_duress_forweek");
+    var canvas2 = document.getElementById("bar_chart_by_rc_duress_forweek1");
+    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('bar_chart_by_rc_duress_forweek').getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        window.myChart1 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + ')'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value;
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx2 = document.getElementById('bar_chart_by_rc_duress_forweek1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        window.myChart2 = new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + ')'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+    //if (canvas3 !== null) {
+    //    const ctx3 = document.getElementById('pie_chart_ir_by_areaward3').getContext('2d');
+    //    window.myChart6 = new Chart(ctx3, {
+    //        type: 'pie',
+    //        data: {
+    //            labels: labels,
+    //            datasets: [{
+    //                label: '# of Votes',
+    //                data: data2,
+    //                backgroundColor: getColors(15),
+    //                borderColor: [
+    //                    'rgba(255, 99, 132, 1)',
+    //                    'rgba(54, 162, 235, 1)',
+    //                    'rgba(255, 206, 86, 1)',
+    //                    'rgba(75, 192, 192, 1)',
+    //                    'rgba(153, 102, 255, 1)',
+    //                    'rgba(255, 159, 64, 1)'
+    //                ],
+    //                borderWidth: 0
+    //            }]
+    //        },
+    //        options: {
+    //            layout: {
+    //                padding: {
+    //                    left: 10,
+    //                    right: 10,
+    //                    top: 20,
+    //                    bottom: 20
+    //                }
+    //            },
+    //            maintainAspectRatio: false,
+    //            plugins: {
+    //                tooltip: {
+    //                    enabled: true,
+    //                    callbacks: {
+    //                        label: function (context) {
+    //                            let label = context.label + '(' + context.formattedValue + '%)'
+    //                            return label;
+    //                        }
+    //                    }
+    //                },
+    //                legend: {
+    //                    position: 'right',
+    //                    labels: {
+    //                        font: {
+    //                            family: 'Arial',
+    //                            size: 11
+    //                        },
+
+    //                        boxWidth: 10,
+    //                        boxHeight: 10,
+    //                        generateLabels(chart) {
+    //                            const data = chart.data;
+    //                            if (data.labels.length && data.datasets.length) {
+    //                                const { labels: { pointStyle } } = chart.legend.options;
+
+    //                                return data.labels.map((label, i) => {
+    //                                    const meta = chart.getDatasetMeta(0);
+    //                                    const style = meta.controller.getStyle(i);
+
+    //                                    return {
+    //                                        text: `${label} (${data['datasets'][0].data[i]}%)`,
+    //                                        fillStyle: style.backgroundColor,
+    //                                        strokeStyle: style.borderColor,
+    //                                        lineWidth: style.borderWidth,
+    //                                        borderWidth: 0,
+    //                                        pointStyle: pointStyle,
+    //                                        hidden: !chart.getDataVisibility(i),
+
+    //                                        // Extra data used for toggling the correct item
+    //                                        index: i
+    //                                    };
+    //                                });
+    //                            }
+    //                            return [];
+    //                        }
+    //                    }
+    //                },
+    //                labels: {
+    //                    /* render:"value",*/
+    //                    render: (args) => {
+
+    //                        return args.value + '%';
+
+    //                    },
+    //                    position: 'outside',
+    //                    outsidePadding: 10,
+    //                    textMargin: 10
+
+    //                },
+
+    //            }
+
+    //        },
+
+
+    //    });
+    //}
+
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+    //// Configuration options
+    //const options = {
+    //    responsive: false,
+    //    plugins: {
+    //        legend: {
+    //            position: 'right',
+    //            onClick: function (event, legendItem) {
+    //                const index = legendItem.index;
+    //                const meta = this.chart.getDatasetMeta(0);
+    //                meta.data[index].hidden = !meta.data[index].hidden;
+    //                this.chart.update();
+    //            }
+    //        },
+    //        datalabels: {
+    //            backgroundColor: function (context) {
+    //                return context.dataset.backgroundColor;
+    //            },
+    //            borderColor: 'white',
+    //            borderRadius: 25,
+    //            borderWidth: 2,
+    //            color: 'white',
+    //            display: function (context) {
+    //                var dataset = context.dataset;
+    //                var count = dataset.data.length;
+    //                var value = dataset.data[context.dataIndex];
+    //                return value > count * 1.5;
+    //            }
+    //        }
+    //    }
+
+    //};
+
+    //// Create the pie chart
+    //var canvas = document.getElementById("myPieChart");
+    //if (canvas !== null) {
+    //    const ctx = document.getElementById('myPieChart').getContext('2d');
+    //    const myPieChart = new Chart(ctx, {
+    //        type: 'pie',
+    //        data: data,
+    //        options: options
+    //    });
+
+    //}
+
+}
+function drawPieChartUsingChartJsChartRCForMonth(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+        return e.dateRange;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.recordCount;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("bar_chart_by_rc_duress_formonth");
+    var canvas2 = document.getElementById("bar_chart_by_rc_duress_formonth1");
+    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('bar_chart_by_rc_duress_formonth').getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        window.myChart1 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + ')'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value;
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx2 = document.getElementById('bar_chart_by_rc_duress_formonth1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        window.myChart2 = new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + ')'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+    //if (canvas3 !== null) {
+    //    const ctx3 = document.getElementById('pie_chart_ir_by_areaward3').getContext('2d');
+    //    window.myChart6 = new Chart(ctx3, {
+    //        type: 'pie',
+    //        data: {
+    //            labels: labels,
+    //            datasets: [{
+    //                label: '# of Votes',
+    //                data: data2,
+    //                backgroundColor: getColors(15),
+    //                borderColor: [
+    //                    'rgba(255, 99, 132, 1)',
+    //                    'rgba(54, 162, 235, 1)',
+    //                    'rgba(255, 206, 86, 1)',
+    //                    'rgba(75, 192, 192, 1)',
+    //                    'rgba(153, 102, 255, 1)',
+    //                    'rgba(255, 159, 64, 1)'
+    //                ],
+    //                borderWidth: 0
+    //            }]
+    //        },
+    //        options: {
+    //            layout: {
+    //                padding: {
+    //                    left: 10,
+    //                    right: 10,
+    //                    top: 20,
+    //                    bottom: 20
+    //                }
+    //            },
+    //            maintainAspectRatio: false,
+    //            plugins: {
+    //                tooltip: {
+    //                    enabled: true,
+    //                    callbacks: {
+    //                        label: function (context) {
+    //                            let label = context.label + '(' + context.formattedValue + '%)'
+    //                            return label;
+    //                        }
+    //                    }
+    //                },
+    //                legend: {
+    //                    position: 'right',
+    //                    labels: {
+    //                        font: {
+    //                            family: 'Arial',
+    //                            size: 11
+    //                        },
+
+    //                        boxWidth: 10,
+    //                        boxHeight: 10,
+    //                        generateLabels(chart) {
+    //                            const data = chart.data;
+    //                            if (data.labels.length && data.datasets.length) {
+    //                                const { labels: { pointStyle } } = chart.legend.options;
+
+    //                                return data.labels.map((label, i) => {
+    //                                    const meta = chart.getDatasetMeta(0);
+    //                                    const style = meta.controller.getStyle(i);
+
+    //                                    return {
+    //                                        text: `${label} (${data['datasets'][0].data[i]}%)`,
+    //                                        fillStyle: style.backgroundColor,
+    //                                        strokeStyle: style.borderColor,
+    //                                        lineWidth: style.borderWidth,
+    //                                        borderWidth: 0,
+    //                                        pointStyle: pointStyle,
+    //                                        hidden: !chart.getDataVisibility(i),
+
+    //                                        // Extra data used for toggling the correct item
+    //                                        index: i
+    //                                    };
+    //                                });
+    //                            }
+    //                            return [];
+    //                        }
+    //                    }
+    //                },
+    //                labels: {
+    //                    /* render:"value",*/
+    //                    render: (args) => {
+
+    //                        return args.value + '%';
+
+    //                    },
+    //                    position: 'outside',
+    //                    outsidePadding: 10,
+    //                    textMargin: 10
+
+    //                },
+
+    //            }
+
+    //        },
+
+
+    //    });
+    //}
+
+    function getColors(length) {
+        let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
+            "#7f7f7f", "#bcbd22", "#17becf",
+            "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
+        let colors = [];
+
+        for (let i = 0; i < length; i++) {
+            colors.push(pallet[i % (pallet.length - 1)]);
+        }
+
+        return colors;
+    }
+    //// Configuration options
+    //const options = {
+    //    responsive: false,
+    //    plugins: {
+    //        legend: {
+    //            position: 'right',
+    //            onClick: function (event, legendItem) {
+    //                const index = legendItem.index;
+    //                const meta = this.chart.getDatasetMeta(0);
+    //                meta.data[index].hidden = !meta.data[index].hidden;
+    //                this.chart.update();
+    //            }
+    //        },
+    //        datalabels: {
+    //            backgroundColor: function (context) {
+    //                return context.dataset.backgroundColor;
+    //            },
+    //            borderColor: 'white',
+    //            borderRadius: 25,
+    //            borderWidth: 2,
+    //            color: 'white',
+    //            display: function (context) {
+    //                var dataset = context.dataset;
+    //                var count = dataset.data.length;
+    //                var value = dataset.data[context.dataIndex];
+    //                return value > count * 1.5;
+    //            }
+    //        }
+    //    }
+
+    //};
+
+    //// Create the pie chart
+    //var canvas = document.getElementById("myPieChart");
+    //if (canvas !== null) {
+    //    const ctx = document.getElementById('myPieChart').getContext('2d');
+    //    const myPieChart = new Chart(ctx, {
+    //        type: 'pie',
+    //        data: data,
+    //        options: options
+    //    });
+
+    //}
+
+}
+function drawPieChartUsingChartJsChartRCForYear(dataValue) {
+
+    var labels = dataValue.map(function (e) {
+        return e.dateRange;
+    });
+    var data2 = dataValue.map(function (e) {
+        return e.recordCount;
+    });
+    // Data for the pie chart
+    const data = {
+        labels: labels,
+        datasets: [{
+            data: data2, // Values for each slice
+
+        },
+        ],
+        datalabels: {
+            // display labels for this specific dataset
+            display: true
+        }
+    };
+
+
+    var canvas = document.getElementById("bar_chart_by_rc_duress_foryear");
+    var canvas2 = document.getElementById("bar_chart_by_rc_duress_foryear1");
+    //var canvas3 = document.getElementById("pie_chart_ir_by_areaward3");
+    if (canvas !== null) {
+        const ctx = document.getElementById('bar_chart_by_rc_duress_foryear').getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        window.myChart1 = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 2,
+                        bottom: 2
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + ')'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value;
+
+                        },
+
+                        outsidePadding: 4,
+                        textMargin: 4
+
+                    },
+
+                }
+
+            },
+
+
+        });
+
+
+    }
+
+
+
+    if (canvas2 !== null) {
+        const ctx2 = document.getElementById('bar_chart_by_rc_duress_foryear1').getContext('2d');
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        window.myChart2 = new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '# of Votes',
+                    data: data2,
+                    backgroundColor: getColors(15),
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 20
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label + '(' + context.formattedValue + ')'
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                family: 'Arial',
+                                size: 11
+                            },
+
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            generateLabels(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const { labels: { pointStyle } } = chart.legend.options;
+
+                                    return data.labels.map((label, i) => {
+                                        const meta = chart.getDatasetMeta(0);
+                                        const style = meta.controller.getStyle(i);
+
+                                        return {
+                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            fillStyle: style.backgroundColor,
+                                            strokeStyle: style.borderColor,
+                                            lineWidth: style.borderWidth,
+                                            borderWidth: 0,
+                                            pointStyle: pointStyle,
+                                            hidden: !chart.getDataVisibility(i),
+
+                                            // Extra data used for toggling the correct item
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    },
+                    labels: {
+                        /* render:"value",*/
+                        render: (args) => {
+
+                            return args.value + '%';
+
+                        },
+                        position: 'outside',
+                        outsidePadding: 10,
+                        textMargin: 10
+
+                    },
+
+                }
+
+            },
+
+
+        });
+    }
+
+
+    //if (canvas3 !== null) {
+    //    const ctx3 = document.getElementById('pie_chart_ir_by_areaward3').getContext('2d');
+    //    window.myChart6 = new Chart(ctx3, {
+    //        type: 'pie',
+    //        data: {
+    //            labels: labels,
+    //            datasets: [{
+    //                label: '# of Votes',
+    //                data: data2,
+    //                backgroundColor: getColors(15),
+    //                borderColor: [
+    //                    'rgba(255, 99, 132, 1)',
+    //                    'rgba(54, 162, 235, 1)',
+    //                    'rgba(255, 206, 86, 1)',
+    //                    'rgba(75, 192, 192, 1)',
+    //                    'rgba(153, 102, 255, 1)',
+    //                    'rgba(255, 159, 64, 1)'
+    //                ],
+    //                borderWidth: 0
+    //            }]
+    //        },
+    //        options: {
+    //            layout: {
+    //                padding: {
+    //                    left: 10,
+    //                    right: 10,
+    //                    top: 20,
+    //                    bottom: 20
+    //                }
+    //            },
+    //            maintainAspectRatio: false,
+    //            plugins: {
+    //                tooltip: {
+    //                    enabled: true,
+    //                    callbacks: {
+    //                        label: function (context) {
+    //                            let label = context.label + '(' + context.formattedValue + '%)'
+    //                            return label;
+    //                        }
+    //                    }
+    //                },
+    //                legend: {
+    //                    position: 'right',
+    //                    labels: {
+    //                        font: {
+    //                            family: 'Arial',
+    //                            size: 11
+    //                        },
+
+    //                        boxWidth: 10,
+    //                        boxHeight: 10,
+    //                        generateLabels(chart) {
+    //                            const data = chart.data;
+    //                            if (data.labels.length && data.datasets.length) {
+    //                                const { labels: { pointStyle } } = chart.legend.options;
+
+    //                                return data.labels.map((label, i) => {
+    //                                    const meta = chart.getDatasetMeta(0);
+    //                                    const style = meta.controller.getStyle(i);
+
+    //                                    return {
+    //                                        text: `${label} (${data['datasets'][0].data[i]}%)`,
+    //                                        fillStyle: style.backgroundColor,
+    //                                        strokeStyle: style.borderColor,
+    //                                        lineWidth: style.borderWidth,
+    //                                        borderWidth: 0,
+    //                                        pointStyle: pointStyle,
+    //                                        hidden: !chart.getDataVisibility(i),
+
+    //                                        // Extra data used for toggling the correct item
+    //                                        index: i
+    //                                    };
+    //                                });
+    //                            }
+    //                            return [];
+    //                        }
+    //                    }
+    //                },
+    //                labels: {
+    //                    /* render:"value",*/
+    //                    render: (args) => {
+
+    //                        return args.value + '%';
+
+    //                    },
+    //                    position: 'outside',
+    //                    outsidePadding: 10,
+    //                    textMargin: 10
+
+    //                },
+
+    //            }
+
+    //        },
+
+
+    //    });
+    //}
+
+    function getColors(length) {
         let pallet = ["#4682b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2",
             "#7f7f7f", "#bcbd22", "#17becf",
             "#85144b", "#F012BE", "#3D9970", "#111111", "#AAAAAA"];
