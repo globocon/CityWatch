@@ -1,3 +1,5 @@
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using CityWatch.Data.Enums;
 using CityWatch.Data.Helpers;
 using CityWatch.Data.Models;
@@ -5,12 +7,14 @@ using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
 using CityWatch.Web.Services;
-using DocumentFormat.OpenXml.Spreadsheet;
+using ConvertApiDotNet;
 using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
@@ -18,22 +22,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
-using Azure.Storage.Blobs;
-using Microsoft.Extensions.Configuration;
-using Azure.Storage.Blobs.Models;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using DocumentFormat.OpenXml.Wordprocessing;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Dropbox.Api.Users;
-using static Dropbox.Api.Paper.ListPaperDocsSortBy;
-using System.Text;
 using System.Security.Cryptography;
-using DocumentFormat.OpenXml.Vml.Spreadsheet;
-using Dropbox.Api.Files;
-using ImageMagick;
-
-
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace CityWatch.Web.Pages.Incident
 {
@@ -436,7 +428,7 @@ namespace CityWatch.Web.Pages.Incident
         }
 
 
-        public JsonResult OnPostUpload()
+        public async Task<JsonResult> OnPostUpload()
         {
             var success = false;
             var files = Request.Form.Files;
@@ -457,25 +449,25 @@ namespace CityWatch.Web.Pages.Incident
                             file.CopyTo(stream);
                         }
                         // p1-102 add photos with heic extension-start
-                        //if (Path.GetExtension(file.FileName) == ".heic" || Path.GetExtension(file.FileName) == ".HEIC")
-                        //{
-                        //    var newuploadheic = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(file.FileName) + ".jpg");
+                        if (Path.GetExtension(file.FileName) == ".heic" || Path.GetExtension(file.FileName) == ".HEIC")
+                        {
+                            var newuploadheic = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(file.FileName) + ".jpg");
+
+                            await ConvertHeicToJpgAsync(Path.Combine(folderPath, uploadFileName), folderPath);
+                            //using (MagickImage image = new MagickImage(Path.Combine(folderPath, file.FileName)))
+                            //{
+                            //    // Save the image as JPEG
+                            //    image.Format = MagickFormat.Jpg;
+                            //    image.Write(newuploadheic);
 
 
-                        //    using (MagickImage image = new MagickImage(Path.Combine(folderPath, file.FileName)))
-                        //    {
-                        //        // Save the image as JPEG
-                        //        image.Format = MagickFormat.Jpg;
-                        //        image.Write(newuploadheic);
 
-
-
-                        //    }
-                        //    uploadFileName = Path.GetFileName(newuploadheic);
-                        //    var fileToDelete = Path.Combine(folderPath, file.FileName);
-                        //    if (System.IO.File.Exists(fileToDelete))
-                        //        System.IO.File.Delete(fileToDelete);
-                        //}
+                            //}
+                            uploadFileName = Path.GetFileName(newuploadheic);
+                            var fileToDelete = Path.Combine(folderPath, file.FileName);
+                            if (System.IO.File.Exists(fileToDelete))
+                                System.IO.File.Delete(fileToDelete);
+                        }
                         // p1-102 add photos with heic extension-end
                         success = true;
                     }
@@ -487,6 +479,47 @@ namespace CityWatch.Web.Pages.Incident
             }
 
             return new JsonResult(new { attachmentId = Request.Form["attach_id"], success });
+        }
+
+
+
+
+        public async Task<string> ConvertHeicToJpgAsync(string heicFilePath, string outputDirectory)
+        {
+            try
+            {
+                // Initialize ConvertAPI with your API secret key
+                var convertApi = new ConvertApi("secret_FnQsUSaNs9JFC7gO");
+
+                // Check if the HEIC file exists
+                if (!System.IO.File.Exists(heicFilePath))
+                {
+                    throw new FileNotFoundException("The specified HEIC file does not exist.");
+                }
+
+                // Convert HEIC to JPG
+                var conversionResult = await convertApi.ConvertAsync("heic", "jpg", new ConvertApiFileParam(heicFilePath));
+
+                // Ensure the output directory exists
+                if (!Directory.Exists(outputDirectory))
+                {
+                    Directory.CreateDirectory(outputDirectory);
+                }
+
+                // Path to save the converted JPG file
+                //string jpgFilePath = Path.Combine(outputDirectory, $"{Path.GetFileNameWithoutExtension(heicFilePath)}.jpg");
+
+                // Save the converted JPG file
+                await conversionResult.SaveFilesAsync(outputDirectory);
+
+                Console.WriteLine($"Conversion successful! JPG saved at: {outputDirectory}");
+                return outputDirectory;  // Return the path to the converted file
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during conversion: {ex.Message}");
+                throw;  // Rethrow the exception for further handling if needed
+            }
         }
 
         private bool SendEmail(string fileName)
