@@ -303,6 +303,7 @@ namespace CityWatch.Data.Providers
         List<GuardLogsDocumentImages> GetGuardLogDocumentImaesById(int Id);
         void DeleteGuardLogDocumentImaes(int id);
         List<ClientSiteRadioChecksActivityStatus_History> GetGuardFusionLogsWithToDate(DateTime FromDate, DateTime ToDate);
+        List<ClientSiteRadioCheck> GetClientSiteRadioChecksWithDate(DateTime FromDate, DateTime ToDate);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -5133,6 +5134,10 @@ namespace CityWatch.Data.Providers
                 .ToList();
 
             return returnData;
+        }
+        public List<ClientSiteRadioCheck> GetClientSiteRadioChecksWithDate(DateTime FromDate, DateTime ToDate)
+        {
+             return _context.ClientSiteRadioChecks.Where(z => z.CheckedAt >= FromDate && z.CheckedAt <= ToDate).ToList();
         }
     }
 

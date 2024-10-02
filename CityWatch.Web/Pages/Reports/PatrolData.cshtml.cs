@@ -127,15 +127,15 @@ namespace CityWatch.Web.Pages.Reports
 
                 var thisMonthStart = new DateTime(today.Year, today.Month, 1);
                 var thisMonthEnd = thisMonthStart.AddMonths(1).AddDays(-1);
-                if (thisMonthStart < today)
-                {
-                    thisMonthStart = today;
-                }
+                //if (thisMonthStart < today)
+                //{
+                //    thisMonthStart = today;
+                //}
                 
-                if (thisMonthEnd > ReportRequest.ToDate)
-                {
-                    thisMonthEnd = ReportRequest.ToDate;
-                }
+                //if (thisMonthEnd > ReportRequest.ToDate)
+                //{
+                //    thisMonthEnd = ReportRequest.ToDate;
+                //}
                 var rcChartTypesForMonth = _irChartDataService.GetAuditGuardFusionLogs(ReportRequest, thisMonthStart, thisMonthEnd).Where(z => (z.LogBookNotes != null && z.LogBookNotes.Contains("Duress Alarm Activated By "))); ;
                 string newdaterange = thisMonthStart.ToString("MMM");
                 ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
@@ -164,15 +164,15 @@ namespace CityWatch.Web.Pages.Reports
 
                 var thisYearStart = new DateTime(today.Year, 1, 1);
                 var thisYearEnd = new DateTime(today.Year, 12, 1);
-                if (thisYearStart < today)
-                {
-                    thisYearStart = today;
-                }
+                //if (thisYearStart < today)
+                //{
+                //    thisYearStart = today;
+                //}
                 
-                if (thisYearEnd > ReportRequest.ToDate)
-                {
-                    thisYearEnd = ReportRequest.ToDate;
-                }
+                //if (thisYearEnd > ReportRequest.ToDate)
+                //{
+                //    thisYearEnd = ReportRequest.ToDate;
+                //}
                 var rcChartTypesForYear = _irChartDataService.GetAuditGuardFusionLogs(ReportRequest, thisYearStart, thisYearEnd).Where(z => (z.LogBookNotes != null && z.LogBookNotes.Contains("Duress Alarm Activated By "))); ;
                 string newdaterange = thisYearStart.Year.ToString();
                 ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
@@ -184,7 +184,80 @@ namespace CityWatch.Web.Pages.Reports
 
             }
             var rcChartTypesForYearNewCount = rcChartTypesForYearNewCountnew;
+
+
             //duress entries per year-end
+            //no of guards went to prelarm-start
+            var rcChartTypesGuardsPrealarmNew = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
+            int rcChartTypesGuardsPrealarmCountnew = 0;
+            var rcChartTypesGuardsPrealarm = _irChartDataService.GetAuditGuardFusionLogs(ReportRequest, ReportRequest.FromDate, ReportRequest.ToDate).Where(z => (z.LogBookNotes != null && z.LogBookNotes.Contains("Guard Off Duty (Logbook Signout) "))).GroupBy(z=>z.ClientSiteId); ;
+            foreach (var item in rcChartTypesGuardsPrealarm)
+            {
+                
+                string newdaterange = item.FirstOrDefault().ClientSite.Name;
+                var rcChartradiochecks = _irChartDataService.GetClientSiteRadioChecks(item.FirstOrDefault().ClientSite.Id, ReportRequest.FromDate,ReportRequest.ToDate).Where(z=>z.RadioCheckStatusId==1);
+                ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
+                if (rcChartradiochecks.Count() != 0)
+                {
+                    obj.DateRange = newdaterange;
+                    obj.RecordCount = rcChartradiochecks.Count();
+
+                    rcChartTypesGuardsPrealarmNew.Add(obj);
+
+                    rcChartTypesGuardsPrealarmCountnew = rcChartTypesGuardsPrealarmCountnew + obj.RecordCount;
+                }
+
+            }
+
+
+
+            //no of guards went to prealram-end
+            //no of guards went from prelarm-start
+            var rcChartTypesGuardsFromPrealarmNew = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
+            int rcChartTypesGuardsFromPrealarmCountnew = 0;
+            var rcChartTypesGuardsFromPrealarm = _irChartDataService.GetAuditGuardFusionLogs(ReportRequest, ReportRequest.FromDate, ReportRequest.ToDate).Where(z => (z.LogBookNotes != null && z.LogBookNotes.Contains("Control Room Alert:Guard Off Duty  "))).GroupBy(z => z.ClientSiteId); ;
+            foreach (var item in rcChartTypesGuardsPrealarm)
+            {
+
+                string newdaterange = item.FirstOrDefault().ClientSite.Name;
+                var rcChartradiochecks = _irChartDataService.GetClientSiteRadioChecks(item.FirstOrDefault().ClientSite.Id, ReportRequest.FromDate, ReportRequest.ToDate).Where(z => z.RadioCheckStatusId == 1);
+                ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
+                if (rcChartradiochecks.Count() != 0)
+                {
+                    obj.DateRange = newdaterange;
+                    obj.RecordCount = rcChartradiochecks.Count();
+
+                    rcChartTypesGuardsFromPrealarmNew.Add(obj);
+
+                    rcChartTypesGuardsFromPrealarmCountnew = rcChartTypesGuardsFromPrealarmCountnew + obj.RecordCount;
+                }
+
+            }
+
+
+
+            //no of guards went to prealram-end
+            //no of tomes cro pushed radio button -start
+            var rcChartTypesCRONew = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
+            int rcChartTypesCROCountnew = 0;
+            foreach (var item in rcChartTypesGuardsPrealarm)
+            {
+
+                string newdaterange = item.FirstOrDefault().ClientSite.Name;
+                var rcChartradiochecks = _irChartDataService.GetClientSiteRadioChecks(item.FirstOrDefault().ClientSite.Id, ReportRequest.FromDate, ReportRequest.ToDate);
+                ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
+                if (rcChartradiochecks.Count() != 0)
+                {
+                    obj.DateRange = newdaterange;
+                    obj.RecordCount = rcChartradiochecks.Count();
+                    rcChartTypesCRONew.Add(obj);
+                    rcChartTypesCROCountnew = rcChartTypesCROCountnew + obj.RecordCount;
+                }
+            }
+
+
+
+            //no of tomes cro pushed radio button-end
             //p4 - 73 new piechart- end
 
             var dataTable = _viewDataService.PatrolDataToDataTable(results).Result;
@@ -194,7 +267,7 @@ namespace CityWatch.Web.Pages.Reports
             var fileName = $"IR Statistics {ReportRequest.FromDate:ddMMyyyy} - {ReportRequest.ToDate:ddMMyyyy}.xlsx";
             PatrolReportGenerator.CreateExcelFile(dataTable, Path.Combine(excelFileDir, fileName));
 
-            return new JsonResult(new { results, fileName, chartData = new { sitePercentage, areaWardPercentage, eventTypePercentage, eventTypeCount, colorCodePercentage, feedbackTemplatesColour, rcChartTypesForWeekNew, rcChartTypesForMonthNew, rcChartTypesForYearNew }, recordCount, rcChartTypesForWeekNewCount, rcChartTypesForMonthNewCount, rcChartTypesForYearNewCount });
+            return new JsonResult(new { results, fileName, chartData = new { sitePercentage, areaWardPercentage, eventTypePercentage, eventTypeCount, colorCodePercentage, feedbackTemplatesColour, rcChartTypesForWeekNew, rcChartTypesForMonthNew, rcChartTypesForYearNew, rcChartTypesGuardsPrealarmNew, rcChartTypesCRONew, rcChartTypesGuardsFromPrealarmNew }, recordCount, rcChartTypesForWeekNewCount, rcChartTypesForMonthNewCount, rcChartTypesForYearNewCount, rcChartTypesGuardsPrealarmCountnew, rcChartTypesCROCountnew, rcChartTypesGuardsFromPrealarmCountnew });
         }
 
         public List<string> ArrageColurCode(KeyValuePair<string, double>[] ColourCodeName, List<FeedbackTemplate> FeedBackTempletes)

@@ -15,6 +15,7 @@ namespace CityWatch.Data.Services
     {
         PatrolDataReport GetDailyPatrolData(PatrolRequest patrolRequest);
         List<ClientSiteRadioChecksActivityStatus_History> GetAuditGuardFusionLogs(PatrolRequest patrolRequest, DateTime FromDate, DateTime ToDate);
+        List<ClientSiteRadioCheck> GetClientSiteRadioChecks(int clientsiteid, DateTime FromDate, DateTime ToDate);
     }
 
     public class PatrolDataReportService : IPatrolDataReportService
@@ -73,5 +74,21 @@ namespace CityWatch.Data.Services
                 
 
         }
+
+        public List<ClientSiteRadioCheck> GetClientSiteRadioChecks(int clientsiteid , DateTime FromDate, DateTime ToDate)
+        {
+
+            var dailyGuardLogGroups = _guardLogDataProvider.GetClientSiteRadioChecksWithDate(FromDate, ToDate).Where(z=>
+                z.ClientSiteId==clientsiteid 
+                                );
+
+
+
+
+            return dailyGuardLogGroups.ToList();
+
+
+        }
+
     }
 }
