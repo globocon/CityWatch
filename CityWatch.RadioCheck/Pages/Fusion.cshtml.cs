@@ -8,6 +8,9 @@ using System.Linq;
 using System.Collections.Generic;
 using DocumentFormat.OpenXml.Presentation;
 using CityWatch.Web.Extensions;
+using Microsoft.AspNetCore.Http;
+using CityWatch.Data.Providers;
+using CityWatch.RadioCheck.Helpers;
 
 namespace CityWatch.RadioCheck.Pages
 {
@@ -18,26 +21,46 @@ namespace CityWatch.RadioCheck.Pages
         private readonly IGuardLogZipGenerator _guardLogZipGenerator;
         private readonly IAuditLogViewDataService _auditLogViewDataService;
         private readonly IClientSiteViewDataService _clientViewDataService;
-
+        private readonly IGuardDataProvider _guardDataProvider;
+        public int GuardId { get; set; }
+        [BindProperty]
+        public string GuardIdCheck { get; set; }
         public FusionModel(
            
             IGuardLogZipGenerator guardLogZipGenerator,
             IAuditLogViewDataService auditLogViewDataService,
-            IClientSiteViewDataService clientViewDataService)
+            IClientSiteViewDataService clientViewDataService, IGuardDataProvider guardDataProvider)
         {
            
             
             _guardLogZipGenerator = guardLogZipGenerator;
             _auditLogViewDataService = auditLogViewDataService;
             _clientViewDataService = clientViewDataService;
+            _guardDataProvider = guardDataProvider;
         }
 
         public KeyVehicleLogAuditLogRequest KeyVehicleLogAuditLogRequest { get; set; }
 
         public ActionResult OnGet()
         {
-          
-            return Page();
+
+            GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            GuardIdCheck = GuardId.ToString();
+            var guard = _guardDataProvider.GetGuards().SingleOrDefault(z => z.Id == GuardId);
+
+            if (guard != null)
+            {
+                if (guard.IsAdminPowerUser || guard.IsAdminGlobal)
+                {
+                    return Page();
+                }
+                else
+                {
+                    return Redirect(Url.Page("/Account/Unauthorized"));
+                }
+                
+            }
+                return Page();
         }
 
       

@@ -5593,6 +5593,7 @@ $('#btncount_by_numberofguardswnentfromprealarmorangetored').on('click', functio
     $('#modelRCGuardswentfromprealarmorangetored').modal('show');
 });
 function GetRCCharts() {
+    $('#loader').show();
     if (window.myChart1 != undefined)
         window.myChart1.destroy();
     if (window.myChart2 != undefined)
@@ -5667,7 +5668,7 @@ function GetRCCharts() {
 
     }).fail(function () {
     }).always(function () {
-        $('#loader-p').hide();
+        $('#loader').hide();
     });
 }
 function drawPieChartUsingChartJsChartRCForWeek(dataValue) {
