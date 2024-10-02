@@ -82,7 +82,13 @@ namespace CityWatch.Web.Models
         public bool IsRCBypass { get { return _guard.IsRCBypass; } }
 
         public string Gender { get { return _guard.Gender; } }
+
+
         //p1-224 RC Bypass For HR -end
+
+        public string HR1Status { get; set; }
+        public string HR2Status { get; set; }
+        public string HR3Status { get; set; }
 
     }
 }

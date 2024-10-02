@@ -80,7 +80,7 @@ namespace CityWatch.Web.Services
         List<ClientSiteSmartWand> GetSmartWands(string siteName, int? guardId);
         List<ClientSiteSmartWand> GetClientSiteSmartWands(int clientSiteId);
         List<GuardViewModel> GetGuards();
-        List<GuardViewExcelModel> GetGuardsToExcel(bool active, bool inactive);
+        List<GuardViewExcelModel> GetGuardsToExcel(bool active, bool inactive, int[] guardIds);
         List<KeyVehicleLogViewModel> GetKeyVehicleLogs(int logBookId, KvlStatusFilter kvlStatusFilter);
         List<KeyVehicleLogViewModel> GetKeyVehicleLogsForIds(int logBookId);
         List<SelectListItem> GetKeyVehicleLogFieldsByType(KvlFieldType type, bool withoutSelect = false);
@@ -509,7 +509,7 @@ namespace CityWatch.Web.Services
                 });
             }
             var filteredResults = results;
-            
+
             if (!string.IsNullOrEmpty(searchterm))
             {
                 filteredResults = results
@@ -629,37 +629,164 @@ namespace CityWatch.Web.Services
 
         public List<GuardViewModel> GetGuards()
         {
-            var guards = _guardDataProvider.GetGuards();
-            var guardLogins = _guardDataProvider.GetGuardLogins(guards.Select(z => z.Id).ToArray());
-            return guards.Select(z => new GuardViewModel(z, guardLogins.Where(y => y.GuardId == z.Id))).ToList();
+            // Retrieve guards and guard logins in a single step
+            var guards = _guardDataProvider.GetGuards().ToList();
+            var guardIds = guards.Select(z => z.Id).ToArray();
+
+            // Retrieve guard logins in one call
+            var guardLogins = _guardDataProvider.GetGuardLogins(guardIds).ToList();
+
+            // Create GuardViewModel list in one query
+            var guardViewModels = guards.Select(guard =>
+                new GuardViewModel(guard, guardLogins.Where(login => login.GuardId == guard.Id).ToList())).ToList();
+
+            // Retrieve all document statuses for guard IDs at once
+            var documentStatusesByGuard = guardIds.ToDictionary(
+                guardId => guardId,
+                guardId => LEDStatusForLoginUser(guardId) // Assuming this returns a list
+            );
+
+            // Process the status checks
+            foreach (var guard in guardViewModels)
+            {
+                var documentStatuses = documentStatusesByGuard[guard.Id];
+
+                // Initialize default statuses to "Grey"
+                guard.HR1Status = "Grey";
+                guard.HR2Status = "Grey";
+                guard.HR3Status = "Grey";
+
+                if (documentStatuses == null || documentStatuses.Count == 0)
+                    continue;
+
+                // Group document statuses by GroupName for faster lookups
+                var statusLookup = documentStatuses.ToLookup(x => x.GroupName.Trim());
+
+                // Set HR1Status
+                var HR1List = statusLookup["HR 1 (C4i)"];
+                if (HR1List.Any())
+                {
+                    guard.HR1Status = HR1List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
+                                      HR1List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
+                                      "Green";
+                }
+
+                // Set HR2Status
+                var HR2List = statusLookup["HR 2 (Client)"];
+                if (HR2List.Any())
+                {
+                    guard.HR2Status = HR2List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
+                                      HR2List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
+                                      "Green";
+                }
+
+                // Set HR3Status
+                var HR3List = statusLookup["HR 3 (Special)"];
+                if (HR3List.Any())
+                {
+                    guard.HR3Status = HR3List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
+                                      HR3List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
+                                      "Green";
+                }
+            }
+
+            return guardViewModels;
         }
-        public List<GuardViewExcelModel> GetGuardsToExcel(bool active, bool inactive)
+        public List<GuardViewExcelModel> GetGuardsToExcel(bool active, bool inactive, int[] guardIds)
         {
-            var guards = _guardDataProvider.GetGuards();
-            var guardLogins = _guardDataProvider.GetGuardLogins(guards.Select(z => z.Id).ToArray());
-
-            // Filter the guards based on active and inactive statuses
-            if (active && !inactive)
+            var listGuardExcel = new List<GuardViewExcelModel>();
+            if (guardIds != null && guardIds.Length > 0)
             {
-                guards = guards.Where(g => g.IsActive == true).OrderBy(x => x.Name).ToList();
+                // Fetch guards based on the provided guardIds
+                var guards = _guardDataProvider.GetGuards()
+                                                .Where(x => guardIds.Contains(x.Id))
+                                                .ToList(); // Materialize the query
 
+                // If there are no guards found, return an empty list
+                if (!guards.Any())
+                    return listGuardExcel;
+
+                // Fetch guard logins for the found guards in a single call
+                var guardLogins = _guardDataProvider.GetGuardLogins(guards.Select(z => z.Id).ToArray())
+                                                     .ToList(); // Materialize the query
+
+                // Create the list of GuardViewExcelModel objects using a single Select
+                listGuardExcel = guards.Select(z => new GuardViewExcelModel(z,
+                                                    guardLogins.Where(y => y.GuardId == z.Id),
+                                                    _guardDataProvider))
+                                       .ToList();
             }
-            else if (!active && inactive)
+
+            return listGuardExcel;
+
+
+        }
+
+        private List<HRGroupStatusNew> LEDStatusForLoginUser(int GuardID)
+        {
+            // Retrieve guard document details in one call
+            var guardDocumentDetails = _guardDataProvider.GetGuardLicensesandcompliance(GuardID);
+            var hrGroupStatusesNew = new List<HRGroupStatusNew>();
+
+            // Iterate through each document detail
+            foreach (var item in guardDocumentDetails)
             {
-                guards = guards.Where(g => g.IsActive == false).OrderBy(x => x.Name).ToList();
+                // Directly use the item without filtering again
+                hrGroupStatusesNew.Add(new HRGroupStatusNew
+                {
+                    Status = 1,
+                    GroupName = item.HrGroupText.Trim(), // Assuming HrGroupText replaces GroupName
+                                                         // Generate the color code based on the current item
+                    ColourCodeStatus = GuardledColourCodeGenerator(new List<GuardComplianceAndLicense> { item })
+                });
             }
 
-            return guards.Select(z => new GuardViewExcelModel(z, guardLogins.Where(y => y.GuardId == z.Id), _guardDataProvider)).ToList();
+            return hrGroupStatusesNew;
+        }
 
+        private string GuardledColourCodeGenerator(List<GuardComplianceAndLicense> selectedList)
+        {
+            var today = DateTime.Now;
+            var colourCode = "Green"; // Default to green
 
+            if (selectedList.Count > 0)
+            {
+                // Check if any entry has DateType == true
+                var hasDateTypeTrue = selectedList.Any(x => x.DateType == true);
+
+                if (hasDateTypeTrue)
+                {
+                    return "Green"; // Return immediately if DateType == true exists
+                }
+
+                // Get the first non-null expiry date (if any)
+                var firstItem = selectedList.FirstOrDefault(x => x.ExpiryDate != null);
+
+                if (firstItem != null)
+                {
+                    var expiryDate = firstItem.ExpiryDate.Value; // Assuming ExpiryDate is not null here
+
+                    // Compare expiry date with today's date
+                    if (expiryDate < today)
+                    {
+                        return "Red";
+                    }
+                    else if ((expiryDate - today).Days < 45)
+                    {
+                        return "Yellow";
+                    }
+                }
+            }
+
+            return colourCode; // Default return is green
         }
         public async Task<DataTable> PatrolDataToDataTable(List<DailyPatrolData> dailyPatrolData)
         {
             var dt = new DataTable("IR Statistics");
             dt.Columns.Add("Day");
             dt.Columns.Add("Date");
-          //  dt.Columns.Add("IR S/No");
-		    dt.Columns.Add("Control Room Job No.");
+            //  dt.Columns.Add("IR S/No");
+            dt.Columns.Add("Control Room Job No.");
             dt.Columns.Add("Site");
             dt.Columns.Add("Address");
             dt.Columns.Add("Desp. Time");
@@ -670,8 +797,8 @@ namespace CityWatch.Web.Services
             dt.Columns.Add("Resp. Time");
             dt.Columns.Add("Alarm");
             dt.Columns.Add("Patrol Att.");
-			dt.Columns.Add("Colour Code");
-			dt.Columns.Add("Action Taken");
+            dt.Columns.Add("Colour Code");
+            dt.Columns.Add("Action Taken");
             dt.Columns.Add("Notified By");
             dt.Columns.Add("Bill To:");
             dt.Columns.Add("File Name");
@@ -683,8 +810,8 @@ namespace CityWatch.Web.Services
                 var row = dt.NewRow();
                 row["Day"] = data.NameOfDay;
                 row["Date"] = data.Date;
-				//row["IR S/No"] = data.SerialNo;
-				row["Control Room Job No."] = data.ControlRoomJobNo;
+                //row["IR S/No"] = data.SerialNo;
+                row["Control Room Job No."] = data.ControlRoomJobNo;
                 row["Site"] = data.SiteName;
                 row["Address"] = data.SiteAddress;
                 row["Desp. Time"] = data.DespatchTime;
@@ -695,12 +822,12 @@ namespace CityWatch.Web.Services
                 row["Resp. Time"] = data.ResponseTime;
                 row["Alarm"] = data.Alarm;
                 row["Patrol Att."] = data.PatrolAttented;
-				row["Colour Code"] = data.ColorCodeStr;
-				row["Action Taken"] = data.ActionTaken;
+                row["Colour Code"] = data.ColorCodeStr;
+                row["Action Taken"] = data.ActionTaken;
                 row["Notified By"] = data.NotifiedBy;
                 row["Bill To:"] = data.Billing;
                 row["File Name"] = data.fileNametodownload;
-                row["PSPF"] =  data.pspfname;               
+                row["PSPF"] = data.pspfname;
                 row["File Size(Kb)"] = await data.GetBlobSizeAsync();
                 row["Hash String"] = data.hashvalue;
                 dt.Rows.Add(row);
@@ -987,7 +1114,7 @@ namespace CityWatch.Web.Services
         }
 
         public int GetNewClientSiteLogBookId(int clientSiteId, LogBookType logBookType)
-        { 
+        {
             return _logbookDataService.GetNewOrExistingClientSiteLogBookId(clientSiteId, logBookType);
         }
 
@@ -1018,7 +1145,7 @@ namespace CityWatch.Web.Services
                     (kvlFieldsToLookup.TryGetValue("Emergency Situation", out int idEmSituation) && z.EntryReason == idEmSituation) ||
                     !string.IsNullOrEmpty(z.KeyNo)));
 
-            
+
 
             if (logsToCopy.Any())
             {
@@ -1046,12 +1173,12 @@ namespace CityWatch.Web.Services
             // Task P7#129 Yellow wont roll over  - Binoy 29-07-2024 -- Start
             // To rollover previous days pending yellow entries to new logbook
             var pendinglogentries = previousDayLogs.Where(z => !z.ExitTime.HasValue && !z.EntryTime.HasValue && !z.SentInTime.HasValue && z.InitialCallTime.HasValue);
-            if(pendinglogentries.Count() > 0)
+            if (pendinglogentries.Count() > 0)
             {
                 foreach (var logToCopy in pendinglogentries)
-                {                    
+                {
                     logToCopy.Id = 0;
-                    logToCopy.InitialCallTime = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day, 00, 01, 0);                    
+                    logToCopy.InitialCallTime = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day, 00, 01, 0);
                     logToCopy.ClientSiteLogBookId = logBookId;
                     logToCopy.GuardLoginId = guardLoginId;
                     logToCopy.CopiedFromId = logToCopy.Id;
@@ -1177,7 +1304,7 @@ namespace CityWatch.Web.Services
                 /* Save the push message for reload to logbook on next day end*/
 
                 _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(guardId, guardId, null, "Duress Alarm Activated By " + GuradName + " From " + clientSiteName, IrEntryType.Alarm, 1, 0, tmzdata); // GuardLog tmzdata parameter added by binoy for Task p6#73_TimeZone issue
-                _guardLogDataProvider.SaveClientSiteDuress(clientSiteId, guardId, gpsCoordinates, enabledAddress, tmzdata, clientSiteId,1);
+                _guardLogDataProvider.SaveClientSiteDuress(clientSiteId, guardId, gpsCoordinates, enabledAddress, tmzdata, clientSiteId, 1);
 
                 _guardLogDataProvider.SaveGuardLog(new GuardLog()
                 {
@@ -1220,7 +1347,7 @@ namespace CityWatch.Web.Services
                                     LogBookId = logBookIdLinked,
                                     //Notes = "Duress Alarm[Linked] Activated By " + GuradName + " From " + ClientsiteDetails.Name,
                                     Notes = "Duress Alarm[Linked] Activated By " + GuradName + " From " + clientSiteName,
-                                    
+
                                     EntryType = (int)IrEntryType.Alarm,
                                     Date = logBook_Date.Value,
                                     IsAcknowledged = 0,
@@ -1228,7 +1355,7 @@ namespace CityWatch.Web.Services
                                 };
                                 var pushMessageIdSave = _guardLogDataProvider.SavePushMessage(radioCheckPushMessagesLinked);
                                 _guardLogDataProvider.LogBookEntryForRcControlRoomMessages(guardId, guardId, null, "Duress Alarm[Linked] Activated By " + GuradName + " From " + ClientsiteDetails.Name, IrEntryType.Alarm, 1, 0, tmzdata); // GuardLog tmzdata parameter added by binoy for Task p6#73_TimeZone issue
-                                _guardLogDataProvider.SaveClientSiteDuress(linkedSite.ClientSiteId, guardId, gpsCoordinates, enabledAddress, tmzdata, clientSiteId,0);
+                                _guardLogDataProvider.SaveClientSiteDuress(linkedSite.ClientSiteId, guardId, gpsCoordinates, enabledAddress, tmzdata, clientSiteId, 0);
 
                                 _guardLogDataProvider.SaveGuardLog(new GuardLog()
                                 {
@@ -1553,7 +1680,7 @@ namespace CityWatch.Web.Services
             }
             return Enumerable.Empty<string>();
         }
-        
+
         public List<SelectListItem> GetOfficerPositionsNew(OfficerPositionFilter positionFilter = OfficerPositionFilter.All)
         {
             var items = new List<SelectListItem>()
@@ -1575,5 +1702,11 @@ namespace CityWatch.Web.Services
             return items;
         }
     }
-    
+
+}
+public class HRGroupStatusNew
+{
+    public int Status { get; set; }
+    public string GroupName { get; set; }
+    public string ColourCodeStatus { get; set; }
 }

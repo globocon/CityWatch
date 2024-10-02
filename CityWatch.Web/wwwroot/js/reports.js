@@ -341,6 +341,34 @@
 
         }).fail(function () { });
     });
+    $('#crmSupplierDetailsModal').on('shown.bs.modal', function (event) {
+        
+        $('#lbl_company_name').html('');
+        $('#lbl_abn').html('');
+        $('#lbl_landline').html('');
+        $('#lbl_email').html('');
+        $('#lbl_website').html('');
+
+
+        const button = $(event.relatedTarget);
+
+        const compName = button.data('id');
+
+
+        $.ajax({
+            url: '/Reports/PatrolData?handler=CrmSupplierData',
+            data: { companyName: compName },
+            type: 'GET',
+        }).done(function (result) {
+            if (result) {
+                $('#lbl_company_name').html('&nbsp;' + result.companyName);
+                $('#lbl_abn').html('&nbsp;' + result.companyABN);
+                $('#lbl_landline').html('&nbsp;' + result.companyLandline);
+                $('#lbl_email').html('&nbsp;' + result.email);
+                $('#lbl_website').html('&nbsp;' + result.website);
+            }
+        });
+    });
     $('#div_site_settings').on('click', '#delete_worker', function () {
         if (confirm('Are you sure want to delete worker ?')) {
             var buttonValue = $(this).val();

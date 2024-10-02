@@ -49,7 +49,7 @@ namespace CityWatch.Kpi.Pages
         public IViewDataService ViewDataService { get { return _viewDataService; } }
 
         public IActionResult OnGet()
-        {
+        {// all qurey string check in dashbaord to avoid to show query string in url
             /* The following changes done for allowing guard to access the KPI*/
             var claimsIdentity = User.Identity as ClaimsIdentity;
             /* For Guard Login using securityLicenseNo*/
@@ -76,8 +76,8 @@ namespace CityWatch.Kpi.Pages
                     ClientTypeId = int.Parse(LoginClientTypeId);
                     
                     HttpContext.Session.SetInt32("ClientTypeId", ClientTypeId);
-                    
-                    
+
+                    return Redirect(Url.Page("/Admin/Settings"));
                 }
                 if ( !string.IsNullOrEmpty(LoginClientSiteIdId))
                 {
@@ -91,7 +91,8 @@ namespace CityWatch.Kpi.Pages
                 }
                 else
                 {
-                    return Page();
+                    return Redirect(Url.Page("/Admin/Settings"));
+                    //return Page();
                 }
             }
             // Check if the user is authenticated(Normal Admin Login)
@@ -100,9 +101,22 @@ namespace CityWatch.Kpi.Pages
                 ReportRequest = new KpiRequest();
                 HttpContext.Session.SetInt32("GuardId", 0);
                 HttpContext.Session.SetInt32("loginUserId", 0);
-                
-                    return Page();
-                
+
+                if (!string.IsNullOrEmpty(LoginClientTypeId) && !string.IsNullOrEmpty(LoginClientSiteIdId))
+                {
+                    ClientTypeId = int.Parse(LoginClientTypeId);
+                    ClientSiteId = int.Parse(LoginClientSiteIdId);
+                    HttpContext.Session.SetInt32("ClientTypeId", ClientTypeId);
+                    HttpContext.Session.SetInt32("ClientSiteId", ClientSiteId);
+                    return Redirect(Url.Page("/Admin/Settings"));
+                }
+                else
+                {
+                    return Redirect(Url.Page("/Admin/Settings"));
+                }
+                //return Page();
+               
+
             }
             else if(GuardId!=0)
             {
@@ -122,13 +136,13 @@ namespace CityWatch.Kpi.Pages
                 }
                 else
                 {
-                    return Page();
+                    return Redirect(Url.Page("/Admin/Settings"));
+                    //return Page();
                 }
             }           
             else
             {
-                HttpContext.Session.SetInt32("GuardId", 0);
-                HttpContext.Session.SetInt32("loginUserId", 0);
+               
                 if (!string.IsNullOrEmpty(LoginClientTypeId) && !string.IsNullOrEmpty(LoginClientSiteIdId))
                 {
                     ClientTypeId = int.Parse(LoginClientTypeId);
@@ -139,6 +153,10 @@ namespace CityWatch.Kpi.Pages
                 }
                 else
                 {
+                    HttpContext.Session.SetInt32("GuardId", 0);
+                    HttpContext.Session.SetInt32("loginUserId", 0);
+                    HttpContext.Session.SetInt32("ClientTypeId", 0);
+                    HttpContext.Session.SetInt32("ClientSiteId", 0);
                     return Redirect(Url.Page("/Account/Login"));
                 }
             }
