@@ -235,7 +235,7 @@ $(function () {
             clearKpiResults();
             if (response.success) {
                 gridReport.rows.add(response.data.dailyKpiResults).draw();
-                const pdfName = response.fileName !== '' ? 'Pdf/Output/' + response.fileName : '#';
+                const pdfName = response.fileName !== '' ? '../Pdf/Output/' + response.fileName : '#';
                 $('#btnExportPdf').attr('href', pdfName);
                 $('#btnExportPdf').removeClass('btn-outline-secondary').addClass('btn-outline-primary');
                 highlightKpiResults(response);
