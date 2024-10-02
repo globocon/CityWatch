@@ -381,10 +381,10 @@ namespace CityWatch.Web.Pages.Admin
             });
         }
 
-        public JsonResult OnGetExportGuardsToExcel(bool active, bool inactive)
+        public JsonResult OnPostExportGuardsToExcel(bool active, bool inactive, int[] guardIdsFilter)
         {
-            return new JsonResult(new { data = _viewDataService.GetGuardsToExcel(active,inactive) });
-            
+             return new JsonResult(new { data = _viewDataService.GetGuardsToExcel(active,inactive, guardIdsFilter) });
+            //return new JsonResult("message");
         }
         public JsonResult OnGetClientStates()
         {

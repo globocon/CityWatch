@@ -117,7 +117,7 @@
                                     <th style="text-align: center;width: 228px;"></th>
                                 </tr>
                             </thead>
-                           
+
 
 
                         </table>
@@ -772,12 +772,69 @@
                     <div class="tab-pane fade show active py-3" id="guard" role="tabpanel" aria-labelledby="guard-tab">
                         <div class="row">
                             <div class="col-md-12">
+
+                                <div class="form-group row mb-0">
+                                    <div class="col-md-2 text-left mr-5">
+                                      
+                                    </div>
+
+                                    <div class="col-md-3 text-left mr-5">
+                                        <h6>Filter Records(Downselect)</h6>
+                                    </div>
+                                    <div class="col-md-2 text-left p-0">
+                                       
+                                    </div>
+
+
+                                    <div class="col-md-1 offset-md-2 px-0 text-left">
+
+                                       
+                                    </div>
+                                    <div class="col-md-3 text-right">
+
+                                      
+                                    </div>
+                                    @*  <div class="col-md-2 text-right">
+                                <button class="btn btn-success mb-3" id="btn_refresh_guard_top"><i class="fa fa-refresh mr-2"></i>Refresh</button>
+                                </div> *@
+
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
                                 <div class="form-group row">
-                                    <div class="col-md-2 text-left">
+                                    <div class="col-md-2 text-left mr-5">
                                         <a href="#" class="btn btn-primary mb-3" id="btnDownloadGuardLogExcel">Download <i class="fa fa-file-excel-o"></i></a>
                                         <div id="loader"></div>
                                     </div>
-                                    <div class="col-md-1 offset-md-6 px-0 text-left">
+
+                                    <div class="" style="width: 142px;">
+                                        <input type="checkbox" class="form-check-input" id="chkbxHR1">
+                                        <label class="font-weight-normal pr-4" for="chkbxfilterGuardActive">HR1</label>
+                                        <input type="checkbox" class="form-check-input" id="chkbxHR2">
+                                        <label class="font-weight-normal pr-4" for="chkbxHR2">HR2</label>
+                                        <input type="checkbox" class="form-check-input" id="chkbxHR3">
+                                        <label class="font-weight-normal" for="chkbxHR3">HR3</label>
+
+                                    </div>
+                                    <div class="col-md-2 text-left p-0">
+                                        <div class="dropdown dropdownGuardHrFilter">
+                                            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
+                                                <i class="fa fa-circle text-primary mr-2"></i>Show All Entries
+                                            </button>
+                                            <div class="dropdown-menu" x-placement="bottom-start" style="position: absolute; will-change: transform; top: 0px; left: 0px; transform: translate3d(0px, 66px, 0px);">
+                                                <a class="dropdown-item" href="#" data-val="0"><i class="fa fa-circle text-primary mr-2"></i>Show All Entries</a>
+                                                <a class="dropdown-item" href="#" data-val="green"><i class="fa fa-circle text-success mr-2"></i>Valid</a>
+                                                <a class="dropdown-item" href="#" data-val="yellow"><i class="fa fa-circle text-warning mr-2"></i>Expiring</a>
+                                                <a class="dropdown-item" href="#" data-val="red"><i class="fa fa-circle text-danger mr-2"></i>Expired</a>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+
+                                    <div class="col-md-1 offset-md-2 px-0 text-left">
 
                                         <input type="checkbox" class="form-check-input" id="chkbxfilterGuardActive">
                                         <label class="font-weight-normal" for="chkbxfilterGuardActive">Active</label>
@@ -812,6 +869,9 @@
                                             <th></th>
                                             <th>Gender</th>
                                             <th>Active</th>
+                                            <th>HR1</th>
+                                            <th>HR2</th>
+                                            <th>HR3</th>
                                             <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
                                         </tr>
                                     </thead>
@@ -1005,11 +1065,37 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group row">
-                                    <div class="col-md-2 text-left">
+                                    <div class="col-md-2 text-left mr-5">
                                         <a href="#" class="btn btn-primary mb-3" id="btnDownloadGuardLogExcel">Download <i class="fa fa-file-excel-o"></i></a>
                                         <div id="loader"></div>
                                     </div>
-                                    <div class="col-md-1 offset-md-6 px-0 text-left">
+
+                                    <div class="" style="width: 142px;">
+                                        <input type="checkbox" class="form-check-input" id="chkbxHR1">
+                                        <label class="font-weight-normal pr-4" for="chkbxfilterGuardActive">HR1</label>
+                                        <input type="checkbox" class="form-check-input" id="chkbxHR2">
+                                        <label class="font-weight-normal pr-4" for="chkbxHR2">HR2</label>
+                                        <input type="checkbox" class="form-check-input" id="chkbxHR3">
+                                        <label class="font-weight-normal" for="chkbxHR3">HR3</label>
+
+                                    </div>
+                                    <div class="col-md-2 text-left p-0">
+                                        <div class="dropdown dropdownGuardHrFilter">
+                                            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
+                                                <i class="fa fa-circle text-primary mr-2"></i>Show All Entries
+                                            </button>
+                                            <div class="dropdown-menu" x-placement="bottom-start" style="position: absolute; will-change: transform; top: 0px; left: 0px; transform: translate3d(0px, 66px, 0px);">
+                                                <a class="dropdown-item" href="#" data-val="0"><i class="fa fa-circle text-primary mr-2"></i>Show All Entries</a>
+                                                <a class="dropdown-item" href="#" data-val="green"><i class="fa fa-circle text-success mr-2"></i>Valid</a>
+                                                <a class="dropdown-item" href="#" data-val="yellow"><i class="fa fa-circle text-warning mr-2"></i>Expiring</a>
+                                                <a class="dropdown-item" href="#" data-val="red"><i class="fa fa-circle text-danger mr-2"></i>Expired</a>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+
+                                    <div class="col-md-1 offset-md-2 px-0 text-left">
 
                                         <input type="checkbox" class="form-check-input" id="chkbxfilterGuardActive">
                                         <label class="font-weight-normal" for="chkbxfilterGuardActive">Active</label>
@@ -1044,6 +1130,9 @@
                                             <th></th>
                                             <th>Gender</th>
                                             <th>Active</th>
+                                            <th>HR1</th>
+                                            <th>HR2</th>
+                                            <th>HR3</th>
                                             <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
                                         </tr>
                                     </thead>
