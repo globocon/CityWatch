@@ -4,10 +4,11 @@
 @using CityWatch.Data.Helpers;
 @inject IViewDataService viewDataService
 @inject IGuardLogDataProvider _guardLogDataProvider
-<div class="row">
+@* <div class="row">
     <div class="col-md-12">
-        <form method="post" class="border-bottom">
-            <div class="form-row">
+        <form method="post" class="border-bottom"> *@
+            @* for temporary use *@
+            @* <div class="form-row">
                 <div class="form-group col-md-2">
                     <label class="mx-1" for="fusionClientType">Client Type</label>
                     <select class="form-control" id="fusionClientType">
@@ -31,8 +32,8 @@
                         <input type="checkbox" id="excludeSystemLog" class="form-check-input" />
                         <label for="excludeSystemLog" class="form-check-label">Exclude System Logs</label>
                     </div>*@
-                </div>
-                <div class="form-group col-md-2">
+                @* </div> *@
+                @* <div class="form-group col-md-2">
                     <label class="mx-1" for="fusionAudtitFromDate">From Date</label>
                     <input type="date" class="form-control" id="fusionAudtitFromDate" />
                 </div>
@@ -49,10 +50,10 @@
                        
                     </div>
                 </div>
-            </div>
-        </form>
+            </div> *@ 
+        @* </form>
     </div>
-</div>
+</div> *@
 <div class="row">
     <div class="col-md-12">
         <div class="my-2">

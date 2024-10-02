@@ -1,8 +1,11 @@
 ﻿using CityWatch.Data.Enums;
 using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
+using iText.Layout.Element;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Configuration;
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 
@@ -11,6 +14,8 @@ namespace CityWatch.Data.Services
     public interface IPatrolDataReportService
     {
         PatrolDataReport GetDailyPatrolData(PatrolRequest patrolRequest);
+        List<ClientSiteRadioChecksActivityStatus_History> GetAuditGuardFusionLogs(PatrolRequest patrolRequest, DateTime FromDate, DateTime ToDate);
+        List<ClientSiteRadioCheck> GetClientSiteRadioChecks(int clientsiteid, DateTime FromDate, DateTime ToDate);
     }
 
     public class PatrolDataReportService : IPatrolDataReportService
@@ -18,14 +23,17 @@ namespace CityWatch.Data.Services
         private readonly IIrDataProvider _irDataProvider;
         private readonly IClientDataProvider _clientDataProvider;
         private readonly IConfigDataProvider _configDataProvider;
+        private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly IConfiguration _configuration;
 
-        public PatrolDataReportService(IClientDataProvider clientDataProvider, IIrDataProvider irDataProvider, IConfigDataProvider configDataProvider)
+        public PatrolDataReportService(IClientDataProvider clientDataProvider, IIrDataProvider irDataProvider, IConfigDataProvider configDataProvider,IGuardLogDataProvider guardLogDataProvider)
         {
             _clientDataProvider = clientDataProvider;
             _irDataProvider = irDataProvider;
             _configDataProvider = configDataProvider;
-          
+            _guardLogDataProvider = guardLogDataProvider;
+
+
         }
 
         public PatrolDataReport GetDailyPatrolData(PatrolRequest patrolRequest)
@@ -51,5 +59,36 @@ namespace CityWatch.Data.Services
 
             return new PatrolDataReport(patrolRequest.ClientSites, incidentReports.Select(x => new DailyPatrolData(x, clientSites, _configDataProvider)), feedbackTemplates);
         }
+        public List<ClientSiteRadioChecksActivityStatus_History> GetAuditGuardFusionLogs(PatrolRequest patrolRequest, DateTime FromDate, DateTime ToDate)
+        {
+            
+            var dailyGuardLogGroups = _guardLogDataProvider.GetGuardFusionLogsWithToDate(FromDate,ToDate).Where(z => (patrolRequest.ClientTypes == null || z.ClientSiteId.HasValue && patrolRequest.ClientTypes.Contains(z.ClientSite.ClientType.Name)) &&
+                                (patrolRequest.ClientSites == null || z.ClientSiteId.HasValue && patrolRequest.ClientSites.Contains(z.ClientSite.Name))
+                               // && (z.LogBookNotes != null && z.LogBookNotes.Contains("Duress Alarm Activated By ") )
+                                );
+            
+
+
+            
+                return dailyGuardLogGroups.ToList();
+                
+
+        }
+
+        public List<ClientSiteRadioCheck> GetClientSiteRadioChecks(int clientsiteid , DateTime FromDate, DateTime ToDate)
+        {
+
+            var dailyGuardLogGroups = _guardLogDataProvider.GetClientSiteRadioChecksWithDate(FromDate, ToDate).Where(z=>
+                z.ClientSiteId==clientsiteid 
+                                );
+
+
+
+
+            return dailyGuardLogGroups.ToList();
+
+
+        }
+
     }
 }

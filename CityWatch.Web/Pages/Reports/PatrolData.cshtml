@@ -89,6 +89,9 @@
         <li class="nav-item" role="presentation">
             <a class="nav-link" id="pd-chart-tab" data-toggle="tab" href="#pd-chart" role="tab" aria-controls="pd-chart" aria-selected="false">Chart</a>
         </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="rcstat-chart-tab" data-toggle="tab" href="#rcstat-chart" role="tab" aria-controls="rcstat-chart" aria-selected="false">RC Stats</a>
+        </li>
     </ul>
     <div class="tab-content pt-3">
         <div class="tab-pane active" id="pd-report" role="tabpanel" aria-labelledby="pd-report-tab">
@@ -204,6 +207,84 @@
                                     <svg width="550" height="300" id="bar_chart_by_ireventype_quantity"></svg>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane" id="rcstat-chart" role="tabpanel" aria-labelledby="rcstat-chart-tab">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            Number of Duress Per Week (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_numberofduressPerWeek"><span id="count_by_numberofduressperweek" class="p-0 b-0"></span></a>)
+                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                        </div>
+                        <div class="card-body">
+                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
+                            <canvas id="bar_chart_by_rc_duress_forweek"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            Number of Duress Per Month (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_numberofduressPerMonth"><span id="count_by_numberofduresspermonth" class="p-0 b-0"></span></a>)
+                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                        </div>
+                        <div class="card-body">
+                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
+                            <canvas id="bar_chart_by_rc_duress_formonth"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            Number of Duress Per Year (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_numberofduressPerYear"><span id="count_by_numberofduressperyear" class="p-0 b-0"></span></a>)
+                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                        </div>
+                        <div class="card-body">
+                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
+                            <canvas id="bar_chart_by_rc_duress_foryear"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            Number of Times Radio Check Pushed By CRO (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_numberoftimesrcpushedbycro"><span id="count_by_numberoftimesrcpushedbycro" class="p-0 b-0"></span></a>)
+                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                        </div>
+                        <div class="card-body">
+                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
+                            <canvas id="bar_chart_by_rc_pushedby_cro"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            Number of Guards Went To PRE-ALARM (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_numberofguardswnenttoprealarm"><span id="count_by_numberofguardswnenttoprealarm" class="p-0 b-0"></span></a>)
+                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                        </div>
+                        <div class="card-body">
+                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
+                            <canvas id="bar_chart_by_rc_guards_wenttoprealarm"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            Number of Guards Went From PRE-ALARM (Orange) To Red (TopScreen) (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_numberofguardswnentfromprealarmorangetored"><span id="count_by_numberofguardswnentfromprealarmorangetored" class="p-0 b-0"></span></a>)
+                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                        </div>
+                        <div class="card-body">
+                            @* <svg width="500" height="200" id="bar_chart_by_rc_duress_forweek"></svg> *@
+                            <canvas id="bar_chart_by_rc_guards_wentfromprealarmorangetored"></canvas>
                         </div>
                     </div>
                 </div>
@@ -483,6 +564,253 @@
     </div>
 </div>
 @*p3-132 Contracted Manning Button-end*@
+<div id="modelRCDuressEntriesGraphForWeek" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            @* <div class="modal-body">
+            <div class="row">
+            <div class="col-md-12">
+            <div class="card">
+            <div class="card-header">*@
+            @* IR Records Percentage By Area/Ward
+            <div class="float-right">Total Area/Ward Count:: <span id="count_by_area_ward1"></span></div>*@
+            @*  </div>*@
+            @* <div class="card-body">*@
+            <div style="height:750px ;width:1200px">
+                <div style="height:730px ;width:1000px">
+                    <canvas id="bar_chart_by_rc_duress_forweek1"></canvas>
+                    <div>
+
+                        @*<svg width="1200" height="750" id="pie_chart_ir_by_areaward1"></svg>*@
+                        @*  </div>*@
+                        @*  </div>
+                        </div>
+
+                        </div>
+                        </div>*@
+                        @* <div class="modal-footer" style="display:block">
+                        <div class="text-left">
+                        <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
+                        </div>
+                        </div>*@
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div id="modelRCDuressEntriesGraphForMonth" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            @* <div class="modal-body">
+            <div class="row">
+            <div class="col-md-12">
+            <div class="card">
+            <div class="card-header">*@
+            @* IR Records Percentage By Area/Ward
+            <div class="float-right">Total Area/Ward Count:: <span id="count_by_area_ward1"></span></div>*@
+            @*  </div>*@
+            @* <div class="card-body">*@
+            <div style="height:750px ;width:1200px">
+                <div style="height:730px ;width:1000px">
+                    <canvas id="bar_chart_by_rc_duress_formonth1"></canvas>
+                    <div>
+
+                        @*<svg width="1200" height="750" id="pie_chart_ir_by_areaward1"></svg>*@
+                        @*  </div>*@
+                        @*  </div>
+                        </div>
+
+                        </div>
+                        </div>*@
+                        @* <div class="modal-footer" style="display:block">
+                        <div class="text-left">
+                        <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
+                        </div>
+                        </div>*@
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div id="modelRCDuressEntriesGraphForYear" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            @* <div class="modal-body">
+            <div class="row">
+            <div class="col-md-12">
+            <div class="card">
+            <div class="card-header">*@
+            @* IR Records Percentage By Area/Ward
+            <div class="float-right">Total Area/Ward Count:: <span id="count_by_area_ward1"></span></div>*@
+            @*  </div>*@
+            @* <div class="card-body">*@
+            <div style="height:750px ;width:1200px">
+                <div style="height:730px ;width:1000px">
+                    <canvas id="bar_chart_by_rc_duress_foryear1"></canvas>
+                    <div>
+
+                        @*<svg width="1200" height="750" id="pie_chart_ir_by_areaward1"></svg>*@
+                        @*  </div>*@
+                        @*  </div>
+                        </div>
+
+                        </div>
+                        </div>*@
+                        @* <div class="modal-footer" style="display:block">
+                        <div class="text-left">
+                        <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
+                        </div>
+                        </div>*@
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modelRCButtonPushedbyCRO" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            @* <div class="modal-body">
+            <div class="row">
+            <div class="col-md-12">
+            <div class="card">
+            <div class="card-header">*@
+            @* IR Records Percentage By Area/Ward
+            <div class="float-right">Total Area/Ward Count:: <span id="count_by_area_ward1"></span></div>*@
+            @*  </div>*@
+            @* <div class="card-body">*@
+            <div style="height:750px ;width:1200px">
+                <div style="height:730px ;width:1000px">
+                    <canvas id="bar_chart_by_rc_pushedby_cro1"></canvas>
+                    <div>
+
+                        @*<svg width="1200" height="750" id="pie_chart_ir_by_areaward1"></svg>*@
+                        @*  </div>*@
+                        @*  </div>
+                        </div>
+
+                        </div>
+                        </div>*@
+                        @* <div class="modal-footer" style="display:block">
+                        <div class="text-left">
+                        <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
+                        </div>
+                        </div>*@
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div id="modelRCGuardswenttoprealarm" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            @* <div class="modal-body">
+            <div class="row">
+            <div class="col-md-12">
+            <div class="card">
+            <div class="card-header">*@
+            @* IR Records Percentage By Area/Ward
+            <div class="float-right">Total Area/Ward Count:: <span id="count_by_area_ward1"></span></div>*@
+            @*  </div>*@
+            @* <div class="card-body">*@
+            <div style="height:750px ;width:1200px">
+                <div style="height:730px ;width:1000px">
+                    <canvas id="bar_chart_by_rc_guards_wenttoprealarm1"></canvas>
+                    <div>
+
+                        @*<svg width="1200" height="750" id="pie_chart_ir_by_areaward1"></svg>*@
+                        @*  </div>*@
+                        @*  </div>
+                        </div>
+
+                        </div>
+                        </div>*@
+                        @* <div class="modal-footer" style="display:block">
+                        <div class="text-left">
+                        <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
+                        </div>
+                        </div>*@
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div id="modelRCGuardswentfromprealarmorangetored" class="modal fade " role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header p-0 m-0">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            @* <div class="modal-body">
+            <div class="row">
+            <div class="col-md-12">
+            <div class="card">
+            <div class="card-header">*@
+            @* IR Records Percentage By Area/Ward
+            <div class="float-right">Total Area/Ward Count:: <span id="count_by_area_ward1"></span></div>*@
+            @*  </div>*@
+            @* <div class="card-body">*@
+            <div style="height:750px ;width:1200px">
+                <div style="height:730px ;width:1000px">
+                    <canvas id="bar_chart_by_rc_guards_wentfromprealarmorangetored1"></canvas>
+                    <div>
+
+                        @*<svg width="1200" height="750" id="pie_chart_ir_by_areaward1"></svg>*@
+                        @*  </div>*@
+                        @*  </div>
+                        </div>
+
+                        </div>
+                        </div>*@
+                        @* <div class="modal-footer" style="display:block">
+                        <div class="text-left">
+                        <div asp-validation-summary="All" id="GuardLoginValidationSummaryIR"></div>
+                        </div>
+                        </div>*@
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
 <!----------------- CRM Supplier Details Modal -------------------->
 <div class="modal fade" id="crmSupplierDetailsModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="crmSupplierDetailsLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered  ">

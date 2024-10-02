@@ -5,6 +5,7 @@ using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Services;
+using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Office2010.Excel;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using Microsoft.AspNetCore.Hosting;
@@ -12,11 +13,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
+using NuGet.Packaging;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CityWatch.Web.Pages.Reports
 {
@@ -77,6 +80,188 @@ namespace CityWatch.Web.Pages.Reports
             var feedbackTemplates = _configDataProvider.GetFeedbackTemplates().Where(z => z.Type == colourcode).ToList();
 
             var feedbackTemplatesColour = ArrageColurCode(colorCodePercentage,feedbackTemplates).ToArray();
+            //p4-73 new piechart-start
+            //duress entries per week-start
+            var today = ReportRequest.FromDate;
+            
+            var rcChartTypesForWeekNew = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
+            int rcChartTypesForWeekNewCountnew = 0;
+            TimeSpan ts = ReportRequest.ToDate.Subtract(today);
+            int dateDiff = ts.Days;
+            int totalWeeks = (int)dateDiff / 7;
+            for (int i = 1; i <= totalWeeks; i++)
+            {
+               
+                var thisWeekStart = today.AddDays(-(int)today.DayOfWeek);
+                var thisWeekEnd = thisWeekStart.AddDays(7).AddSeconds(-1);
+                if (thisWeekStart<today)
+                {
+                    thisWeekStart = today;
+                }
+                
+                if(thisWeekEnd > ReportRequest.ToDate)
+                {
+                    thisWeekEnd = ReportRequest.ToDate;
+                }
+                var rcChartTypesForWeek = _irChartDataService.GetAuditGuardFusionLogs(ReportRequest, thisWeekStart, thisWeekEnd).Where(z=> (z.LogBookNotes != null && z.LogBookNotes.Contains("Duress Alarm Activated By ")));
+                string newdaterange = thisWeekStart.ToString("dd-MM-yyy") + " to " + thisWeekEnd.ToString("dd-MM-yyy");
+                ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
+                obj.DateRange = newdaterange;
+                obj.RecordCount = rcChartTypesForWeek.Count();
+                rcChartTypesForWeekNew.Add(obj);
+                rcChartTypesForWeekNewCountnew = rcChartTypesForWeekNewCountnew + obj.RecordCount;
+                today = thisWeekEnd.AddDays(1);
+
+            }
+            var rcChartTypesForWeekNewCount = rcChartTypesForWeekNewCountnew;
+            //duress entries per week-end
+
+
+            //duress entries per month-start
+             today = ReportRequest.FromDate;
+
+            var rcChartTypesForMonthNew = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
+            int rcChartTypesForMonthNewCountnew = 0;
+
+            //int months = (int)(ReportRequest.ToDate.Month) - (ReportRequest.FromDate.Month);
+            int months=   (ReportRequest.ToDate.Year * 12 + ReportRequest.ToDate.Month) - (ReportRequest.FromDate.Year * 12 + ReportRequest.FromDate.Month) + 1;
+            for (int i = 1; i <= months; i++)
+            {
+
+                var thisMonthStart = new DateTime(today.Year, today.Month, 1);
+                var thisMonthEnd = thisMonthStart.AddMonths(1).AddDays(-1);
+                //if (thisMonthStart < today)
+                //{
+                //    thisMonthStart = today;
+                //}
+                
+                //if (thisMonthEnd > ReportRequest.ToDate)
+                //{
+                //    thisMonthEnd = ReportRequest.ToDate;
+                //}
+                var rcChartTypesForMonth = _irChartDataService.GetAuditGuardFusionLogs(ReportRequest, thisMonthStart, thisMonthEnd).Where(z => (z.LogBookNotes != null && z.LogBookNotes.Contains("Duress Alarm Activated By "))); ;
+                string newdaterange = thisMonthStart.ToString("MMM");
+                ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
+                obj.DateRange = newdaterange;
+                obj.RecordCount = rcChartTypesForMonth.Count();
+                rcChartTypesForMonthNew.Add(obj);
+                rcChartTypesForMonthNewCountnew = rcChartTypesForMonthNewCountnew + obj.RecordCount;
+                today = thisMonthEnd.AddDays(1);
+
+            }
+            var rcChartTypesForMonthNewCount = rcChartTypesForMonthNewCountnew;
+            //duress entries per month-end
+
+            //duress entries per year-start
+            today = ReportRequest.FromDate;
+
+            var rcChartTypesForYearNew = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
+            int rcChartTypesForYearNewCountnew = 0;
+
+            int years = (int)(ReportRequest.ToDate.Year - ReportRequest.FromDate.Year  ) +
+        (((ReportRequest.ToDate.Month > ReportRequest.FromDate.Month) ||
+        ((ReportRequest.ToDate.Month == ReportRequest.FromDate.Month) && (ReportRequest.ToDate.Day >= ReportRequest.FromDate.Day))) ? 1 : 0);
+
+            for (int i = 1; i <= years; i++)
+            {
+
+                var thisYearStart = new DateTime(today.Year, 1, 1);
+                var thisYearEnd = new DateTime(today.Year, 12, 1);
+                //if (thisYearStart < today)
+                //{
+                //    thisYearStart = today;
+                //}
+                
+                //if (thisYearEnd > ReportRequest.ToDate)
+                //{
+                //    thisYearEnd = ReportRequest.ToDate;
+                //}
+                var rcChartTypesForYear = _irChartDataService.GetAuditGuardFusionLogs(ReportRequest, thisYearStart, thisYearEnd).Where(z => (z.LogBookNotes != null && z.LogBookNotes.Contains("Duress Alarm Activated By "))); ;
+                string newdaterange = thisYearStart.Year.ToString();
+                ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
+                obj.DateRange = newdaterange;
+                obj.RecordCount = rcChartTypesForYear.Count();
+                rcChartTypesForYearNew.Add(obj);
+                rcChartTypesForYearNewCountnew = rcChartTypesForYearNewCountnew + obj.RecordCount;
+                today = new DateTime(today.Year + 1, 1, 1);
+
+            }
+            var rcChartTypesForYearNewCount = rcChartTypesForYearNewCountnew;
+
+
+            //duress entries per year-end
+            //no of guards went to prelarm-start
+            var rcChartTypesGuardsPrealarmNew = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
+            int rcChartTypesGuardsPrealarmCountnew = 0;
+            var rcChartTypesGuardsPrealarm = _irChartDataService.GetAuditGuardFusionLogs(ReportRequest, ReportRequest.FromDate, ReportRequest.ToDate).Where(z => (z.LogBookNotes != null && z.LogBookNotes.Contains("Guard Off Duty (Logbook Signout) "))).GroupBy(z=>z.ClientSiteId); ;
+            foreach (var item in rcChartTypesGuardsPrealarm)
+            {
+                
+                string newdaterange = item.FirstOrDefault().ClientSite.Name;
+                var rcChartradiochecks = _irChartDataService.GetClientSiteRadioChecks(item.FirstOrDefault().ClientSite.Id, ReportRequest.FromDate,ReportRequest.ToDate).Where(z=>z.RadioCheckStatusId==1);
+                ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
+                if (rcChartradiochecks.Count() != 0)
+                {
+                    obj.DateRange = newdaterange;
+                    obj.RecordCount = rcChartradiochecks.Count();
+
+                    rcChartTypesGuardsPrealarmNew.Add(obj);
+
+                    rcChartTypesGuardsPrealarmCountnew = rcChartTypesGuardsPrealarmCountnew + obj.RecordCount;
+                }
+
+            }
+
+
+
+            //no of guards went to prealram-end
+            //no of guards went from prelarm-start
+            var rcChartTypesGuardsFromPrealarmNew = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
+            int rcChartTypesGuardsFromPrealarmCountnew = 0;
+            var rcChartTypesGuardsFromPrealarm = _irChartDataService.GetAuditGuardFusionLogs(ReportRequest, ReportRequest.FromDate, ReportRequest.ToDate).Where(z => (z.LogBookNotes != null && z.LogBookNotes.Contains("Control Room Alert:Guard Off Duty  "))).GroupBy(z => z.ClientSiteId); ;
+            foreach (var item in rcChartTypesGuardsPrealarm)
+            {
+
+                string newdaterange = item.FirstOrDefault().ClientSite.Name;
+                var rcChartradiochecks = _irChartDataService.GetClientSiteRadioChecks(item.FirstOrDefault().ClientSite.Id, ReportRequest.FromDate, ReportRequest.ToDate).Where(z => z.RadioCheckStatusId == 1);
+                ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
+                if (rcChartradiochecks.Count() != 0)
+                {
+                    obj.DateRange = newdaterange;
+                    obj.RecordCount = rcChartradiochecks.Count();
+
+                    rcChartTypesGuardsFromPrealarmNew.Add(obj);
+
+                    rcChartTypesGuardsFromPrealarmCountnew = rcChartTypesGuardsFromPrealarmCountnew + obj.RecordCount;
+                }
+
+            }
+
+
+
+            //no of guards went to prealram-end
+            //no of tomes cro pushed radio button -start
+            var rcChartTypesCRONew = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
+            int rcChartTypesCROCountnew = 0;
+            foreach (var item in rcChartTypesGuardsPrealarm)
+            {
+
+                string newdaterange = item.FirstOrDefault().ClientSite.Name;
+                var rcChartradiochecks = _irChartDataService.GetClientSiteRadioChecks(item.FirstOrDefault().ClientSite.Id, ReportRequest.FromDate, ReportRequest.ToDate);
+                ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
+                if (rcChartradiochecks.Count() != 0)
+                {
+                    obj.DateRange = newdaterange;
+                    obj.RecordCount = rcChartradiochecks.Count();
+                    rcChartTypesCRONew.Add(obj);
+                    rcChartTypesCROCountnew = rcChartTypesCROCountnew + obj.RecordCount;
+                }
+            }
+
+
+
+            //no of tomes cro pushed radio button-end
+            //p4 - 73 new piechart- end
 
             var dataTable = _viewDataService.PatrolDataToDataTable(results).Result;
             var excelFileDir = Path.Combine(_webHostEnvironment.WebRootPath, "Excel", "Output");
@@ -85,7 +270,7 @@ namespace CityWatch.Web.Pages.Reports
             var fileName = $"IR Statistics {ReportRequest.FromDate:ddMMyyyy} - {ReportRequest.ToDate:ddMMyyyy}.xlsx";
             PatrolReportGenerator.CreateExcelFile(dataTable, Path.Combine(excelFileDir, fileName));
 
-            return new JsonResult(new { results, fileName, chartData = new { sitePercentage, areaWardPercentage, eventTypePercentage, eventTypeCount, colorCodePercentage, feedbackTemplatesColour }, recordCount });
+            return new JsonResult(new { results, fileName, chartData = new { sitePercentage, areaWardPercentage, eventTypePercentage, eventTypeCount, colorCodePercentage, feedbackTemplatesColour, rcChartTypesForWeekNew, rcChartTypesForMonthNew, rcChartTypesForYearNew, rcChartTypesGuardsPrealarmNew, rcChartTypesCRONew, rcChartTypesGuardsFromPrealarmNew }, recordCount, rcChartTypesForWeekNewCount, rcChartTypesForMonthNewCount, rcChartTypesForYearNewCount, rcChartTypesGuardsPrealarmCountnew, rcChartTypesCROCountnew, rcChartTypesGuardsFromPrealarmCountnew });
         }
 
         public List<string> ArrageColurCode(KeyValuePair<string, double>[] ColourCodeName, List<FeedbackTemplate> FeedBackTempletes)
