@@ -1433,7 +1433,36 @@ $(function () {
         }).fail(function () { });
     });
 
-    $('#div_site_settings').on('change', '#ClientSite_Status', function () {
+
+    $('#crmSupplierDetailsModal').on('shown.bs.modal', function (event) {
+        $('#lbl_company_name').html('');
+        $('#lbl_abn').html('');
+        $('#lbl_landline').html('');
+        $('#lbl_email').html('');
+        $('#lbl_website').html('');
+
+
+        const button = $(event.relatedTarget);
+
+        const compName = button.data('id');
+
+
+        $.ajax({
+            url: '/admin/settings?handler=CrmSupplierData',
+            data: { companyName: compName },
+            type: 'GET',
+        }).done(function (result) {
+            if (result) {
+                $('#lbl_company_name').html('&nbsp;' + result.companyName);
+                $('#lbl_abn').html('&nbsp;' + result.companyABN);
+                $('#lbl_landline').html('&nbsp;' + result.companyLandline);
+                $('#lbl_email').html('&nbsp;' + result.email);
+                $('#lbl_website').html('&nbsp;' + result.website);
+            }
+        });
+    });
+  
+   $('#div_site_settings').on('change', '#ClientSite_Status', function () {
         // Get the selected value
         var selectedStatus = $(this).val();
         if (selectedStatus != 0) {
@@ -1451,7 +1480,6 @@ $(function () {
 
        
     });
-
     $('#div_site_settings').on('click', '#save_site_manning_settings', function () {
         $.ajax({
             url: '/admin/settings?handler=ClientSiteManningKpiSettings',

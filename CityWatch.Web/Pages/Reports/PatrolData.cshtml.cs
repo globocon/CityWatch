@@ -30,9 +30,11 @@ namespace CityWatch.Web.Pages.Reports
         private readonly IClientDataProvider _clientDataProvider;
         private readonly Settings _settings;
         private readonly IGuardDataProvider _guardDataProvider;
+        private readonly IGuardLogDataProvider _guardLogDataProvider;
         public PatrolDataModel(IViewDataService viewDataService, 
             IWebHostEnvironment webHostEnvironment,
-            IPatrolDataReportService irChartDataService, IIncidentReportGenerator incidentReportGenerator, IConfigDataProvider configurationProvider,IClientDataProvider clientDataProvider, IOptions<Settings> settings, IGuardDataProvider guardDataProvider)
+            IPatrolDataReportService irChartDataService, IIncidentReportGenerator incidentReportGenerator, IConfigDataProvider configurationProvider,IClientDataProvider clientDataProvider, IOptions<Settings> settings, IGuardDataProvider guardDataProvider,
+            IGuardLogDataProvider guardLogDataProvider)
         {
             _viewDataService = viewDataService;
             _webHostEnvironment = webHostEnvironment;
@@ -42,6 +44,7 @@ namespace CityWatch.Web.Pages.Reports
             _clientDataProvider = clientDataProvider;
             _settings = settings.Value;
             _guardDataProvider = guardDataProvider;
+            _guardLogDataProvider = guardLogDataProvider;
         }
 
         [BindProperty]
@@ -285,5 +288,9 @@ namespace CityWatch.Web.Pages.Reports
             return new JsonResult(_viewDataService.GetOfficerPositionsNew((OfficerPositionFilter)filter));
         }
         //p3-132 Contracted Manning Button-end
+        public JsonResult OnGetCrmSupplierData(string companyName)
+        {
+            return new JsonResult(_guardLogDataProvider.GetCompanyDetailsVehLog(companyName));
+        }
     }
 }
