@@ -1594,6 +1594,10 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(new { success, message });
         }
         //p2-140 key photos  -start
+        public JsonResult OnGetCrmSupplierData(string companyName)
+        {
+            return new JsonResult(_guardLogDataProvider.GetCompanyDetailsVehLog(companyName));
+        }
     }
 
 }

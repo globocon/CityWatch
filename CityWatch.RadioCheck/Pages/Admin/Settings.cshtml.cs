@@ -36,13 +36,14 @@ namespace CityWatch.RadioCheck.Pages.Admin
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IViewDataService _viewDataService;
         private readonly IGuardDataProvider _guardDataProvider;
-
+        private readonly IGuardLogDataProvider _guardLogDataProvider;
 
         public SettingsModel(IWebHostEnvironment webHostEnvironment,
             IClientDataProvider clientDataProvider,
             IConfigDataProvider configDataProvider,
             IViewDataService viewDataService
-            , IGuardDataProvider guardDataProvider
+            , IGuardDataProvider guardDataProvider,
+            IGuardLogDataProvider guardLogDataProvider
             //,
             //IUserDataProvider userDataProvider
             )
@@ -53,6 +54,7 @@ namespace CityWatch.RadioCheck.Pages.Admin
             //_userDataProvider = userDataProvider;
             _webHostEnvironment = webHostEnvironment;
             _guardDataProvider = guardDataProvider;
+            _guardLogDataProvider = guardLogDataProvider;
         }
 
 
@@ -768,6 +770,10 @@ namespace CityWatch.RadioCheck.Pages.Admin
             }
 
             return new JsonResult(new { success, message });
+        }
+        public JsonResult OnGetCrmSupplierData(string companyName)
+        {
+            return new JsonResult(_guardLogDataProvider.GetCompanyDetailsVehLog(companyName));
         }
     }
 }
