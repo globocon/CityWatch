@@ -624,16 +624,20 @@ $(function () {
             const currentKeyNos = $('#KeyNo').val();
             if (!currentKeyNos.includes(keyNo)) {
                 $.ajax({
-                    url: '/Guard/KeyVehicleLog?handler=ClientSiteKeyDescription',
+                    url: '/Guard/KeyVehicleLog?handler=ClientSiteDetails',
                     type: 'GET',
                     data: {
                         keyId: keyId,
                         clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),
                     }
                 }).done(function (response) {
+                    const imageHtml = response.imagePath
+                        ? '<a href="' + response.imagePath + '" target="_blank"><img src="' + response.imagePath + '" alt="Image" style="width: 24px; height: 24px;" /></a>'
+                        : '';
                     const rowHtml = '<tr>' +
                         '<td>' + keyNo + '</td>' +
-                        '<td>' + response + '</td>' +
+                        '<td>' + response.description + '</td>' +
+                        '<td>' + imageHtml + '</td>' +
                         '<td><i class="fa fa-trash-o text-danger btn-delete-kvl-Key" title="Delete" style="cursor: pointer;"></i></td>' +
                         '</tr>';
                     $("#kvl-keys-list").append(rowHtml);
@@ -657,22 +661,26 @@ $(function () {
             const currentKeyNos = $('#KeyNo').val();
 
             $.ajax({
-                url: '/Guard/KeyVehicleLog?handler=ClientSiteKeyNo',
+                url: '/Guard/KeyVehicleLog?handler=ClientSiteDetails',
                 type: 'GET',
                 data: {
                     keyId: keyId,
                     clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),
                 }
             }).done(function (response) {
-                if (!currentKeyNos.includes(response)) {
+                if (!currentKeyNos.includes(response.keyNo)) {
+                    const imageHtml = response.imagePath
+                        ? '<a href="' + response.imagePath + '" target="_blank"><img src="' + response.imagePath + '" alt="Image" style="width: 24px; height: 24px;" /></a>'
+                        : '';
                     const rowHtml = '<tr>' +
-                        '<td>' + response + '</td>' +
+                        '<td>' + response.keyNo + '</td>' +
                         '<td>' + keyNo + '</td>' +
+                        '<td>' + imageHtml + '</td>' +
                         '<td><i class="fa fa-trash-o text-danger btn-delete-kvl-Key" title="Delete" style="cursor: pointer;"></i></td>' +
                         '</tr>';
                     $("#kvl-keys-list").append(rowHtml);
-                    if (currentKeyNos === '') $('#KeyNo').val(response);
-                    else $('#KeyNo').val(currentKeyNos + '; ' + response);
+                    if (currentKeyNos === '') $('#KeyNo').val(response.keyNo);
+                    else $('#KeyNo').val(currentKeyNos + '; ' + response.keyNo);
                 }
             });
 

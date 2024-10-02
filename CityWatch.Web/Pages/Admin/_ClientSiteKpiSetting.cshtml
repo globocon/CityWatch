@@ -17,6 +17,8 @@
     if (Model.ClientSiteManningPatrolCarKpiSettings.Count != 0)
         count++;
     var check = count;
+    bool isStatusOngoing = @Model.ClientSite.Status != 0;
+
 }
 
 
@@ -38,7 +40,7 @@
 
             @*Scheduler is Active Start15072024*@
             <div class="form-row ml-2">
-                <div class="col-md-3">
+                <div class="col-md-10">
                     <div class="d-flex flex-row">
                         <label class="form-label pr-2">Schedule is Active</label>
                         <div class="custom-control custom-switch custom-control-inline" title="Switch between schedule is Active or not">
@@ -46,6 +48,23 @@
                             <label class="custom-control-label" for="scheduleisActive"></label>
                         </div>
                     </div>
+                </div>
+
+                <div class="col-md-2">
+                    <div class="d-flex flex-row">
+                        <label class="form-label pr-2 mb'0 mt-2" style="white-space: nowrap;">Status</label>
+                        <select class="form-control dd-client-status" asp-for="@Model.ClientSite.Status">
+                            <option value="0">Ongoing</option>
+                            <option value="1">Expiring</option>
+                            <option value="2">Expired</option>
+                        </select>
+                    </div>
+                    <p class="pl-5 ml-2">
+
+                        <input type="date" class="form-control" asp-for="@Model.ClientSite.StatusDate" style="display: @(isStatusOngoing ? "block" : "none");">
+
+
+                    </p>
                 </div>
             </div>
             @*display Already Existing Mannings*@

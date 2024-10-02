@@ -21,7 +21,7 @@ $(function () {
         primaryKey: 'id',
         inlineEditing: { mode: 'command' },
         columns: [
-            { width: 250, field: 'smartWandId', title: 'Smart Wand Id', editor: true },
+            { width: 250, field: 'smartWandId', title: 'Smart Wand ID', editor: true },
             { width: 250, field: 'phoneNumber', title: 'Number', editor: true },
         ],
         initialized: function (e) {

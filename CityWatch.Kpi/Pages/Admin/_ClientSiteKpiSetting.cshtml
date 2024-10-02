@@ -20,6 +20,7 @@
     if (Model.ClientSiteManningPatrolCarKpiSettings.Count != 0)
         count++;
     var check = count;
+    bool isStatusOngoing = @Model.ClientSite.Status != 0;
 }
 
 @{
@@ -417,15 +418,15 @@
                                 <div class="col-md-8">
                                     <div class="form-row" style="margin-bottom: 1px;">
                                         <div class="form-group col-md-2" style="margin-bottom: 1px;">
-                                             <label class="form-label" asp-for="@Model.KoiosClientSiteId"></label>
+                                            <label class="form-label" asp-for="@Model.KoiosClientSiteId"></label>
                                             <input class="form-control w-80px" asp-for="@Model.KoiosClientSiteId">
                                         </div>
                                         <div class="form-group col-md-2">
                                             <label class="form-label" asp-for="@Model.KoiosClientSiteIdB"></label>
                                             <input class="form-control w80px" asp-for="@Model.KoiosClientSiteIdB">
                                         </div>
-                                         </div>
-                                    <div class="form-row" style="margin-bottom: 1px;" >
+                                    </div>
+                                    <div class="form-row" style="margin-bottom: 1px;">
                                         <div class="form-group col-md-4">
                                             <label class="form-label" asp-for="@Model.PhotoPointsPerPatrol" style="white-space: nowrap; overflow: hidden;">Photo Points Per Patrol</label>
 
@@ -441,24 +442,24 @@
                                         </div>
                                     </div>
                                 </div>
-                               
+
                                 <div class="col-md-4">
 
-                            <div>
-                                <h6 class="font-weight-bold">Site Image (200x100)</h6>
-                                @{
-                                    var siteImage = !string.IsNullOrEmpty(Model.SiteImage) ? Model.SiteImage : "//via.placeholder.com/200x100.png?text=No Image";
-                                }
-                                <img src="@siteImage" width="200" height="100" id="img_site_image" class="img-fluid" />
-                                <input type="hidden" asp-for="@Model.SiteImage" value="@Model.SiteImage" />
-                            </div>
-                            <div class="mt-2">
-                                <label class="btn btn-sm btn-outline-primary">
-                                    <i class="fa fa-upload mr-2"></i>Replace Image
-                                    <input type="file" id="upload_site_image" accept=".jpg" hidden>
-                                </label>
-                            </div>
-                        </div>                            
+                                    <div>
+                                        <h6 class="font-weight-bold">Site Image (200x100)</h6>
+                                        @{
+                                            var siteImage = !string.IsNullOrEmpty(Model.SiteImage) ? Model.SiteImage : "//via.placeholder.com/200x100.png?text=No Image";
+                                        }
+                                        <img src="@siteImage" width="200" height="100" id="img_site_image" class="img-fluid" />
+                                        <input type="hidden" asp-for="@Model.SiteImage" value="@Model.SiteImage" />
+                                    </div>
+                                    <div class="mt-2">
+                                        <label class="btn btn-sm btn-outline-primary">
+                                            <i class="fa fa-upload mr-2"></i>Replace Image
+                                            <input type="file" id="upload_site_image" accept=".jpg" hidden>
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
                             <hr style="margin-top: 0; margin-bottom: 0;">
                             <div class="form-row" style="margin-bottom: 1px;">
@@ -531,13 +532,13 @@
                                             <input class="form-control w-80px daily-wand-target" asp-for="@Model.MinImagesPerPatrol">
                                         </div>
                                         <div class="form-group col-md-3 align-self-end">
-                                        <label class="form-label"></label>
+                                            <label class="form-label"></label>
                                             <button type="button" class="btn btn-success" id="save_site_settings"><i class="fa fa-save mr-2"></i>Save Settings</button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                           
+
 
                         </form>
                     </div>
@@ -549,8 +550,8 @@
                     <div class="container pt-3">
                         <div class="d-flex justify-content-end align-items-center  mb-3">
                             <button id="printDivButton" class="btn btn-primary no-print mr-2">
-                                 <i class="fa fa-print" aria-hidden="true"></i>
-                             </button>                            
+                                <i class="fa fa-print" aria-hidden="true"></i>
+                            </button>
                             @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == false).Count() != 0 &&
                             Model.ClientSiteManningPatrolCarKpiSettings.Where(x => x.DefaultValue == false).Count() != 0)
                             {
@@ -566,8 +567,8 @@
                                     <i class="fa fa-plus" aria-hidden="true"></i> Add Worker
                                 </button>
                             }
-                        </div>                
-                        
+                        </div>
+
 
 
 
@@ -577,23 +578,39 @@
                             <input type="hidden" id="hidCount" value="@count" />
                             @*display Already Existing Mannings*@
 
-                          @*Scheduler is Active Start15072024*@
+                            @*Scheduler is Active Start15072024*@
                             <div class="form-row ml-2">
-                                <div class="col-md-3">
+                                <div class="col-md-10">
                                     <div class="d-flex flex-row">
-                                        <label class="form-label pr-2" style="white-space: nowrap;" >Schedule is Active</label>
+                                        <label class="form-label pr-2" style="white-space: nowrap;">Schedule is Active</label>
                                         <div class="custom-control custom-switch custom-control-inline" title="Switch between schedule is Active or not">
-                                            <input type="checkbox" class="custom-control-input" asp-for="@Model.ScheduleisActive" id="scheduleisActive" name="scheduleisActive" >
+                                            <input type="checkbox" class="custom-control-input" asp-for="@Model.ScheduleisActive" id="scheduleisActive" name="scheduleisActive">
                                             <label class="custom-control-label" for="scheduleisActive"></label>
                                         </div>
                                     </div>
                                 </div>
-                           </div>
+                                <div class="col-md-2">
+                                    <div class="d-flex flex-row">
+                                        <label class="form-label pr-2 mb'0 mt-2" style="white-space: nowrap;">Status</label>
+                                        <select class="form-control dd-client-status" asp-for="@Model.ClientSite.Status">
+                                            <option value="0">Ongoing</option>
+                                            <option value="1">Expiring</option>
+                                            <option value="2">Expired</option>
+                                        </select>
+                                    </div>
+                                    <p class="pl-5 ml-2">
+                                     
+                                            <input type="date" class="form-control" asp-for="@Model.ClientSite.StatusDate"  style="display: @(isStatusOngoing ? "block" : "none");">
+
+                                        
+                                    </p>
+                                </div>
+                            </div>
                             @*Scheduler is Active end15072024*@
                             @*Check if default value or orginal data exist*@
                             @if (Model.ClientSiteManningGuardKpiSettings.Where(x => x.DefaultValue == true).Count() == 0)
                             {
-                                
+
 
 
 
@@ -802,7 +819,7 @@
                                     <div class="row">
                                         <div class="col-md-12">
 
-                                           
+
 
 
                                             <div class="form-group row pt-1">
@@ -1229,18 +1246,18 @@
                                 <input type="hidden" name="RCActionList.SettingsId" id="RCList_SettingsId" value="@Model.rclistKP.SettingsId" />
                                 <input type="hidden" name="RCActionList.SettingsId" id="RCList_SettingsId" value="@Model.rclistKP.SiteAlarmKeypadCode" />
                                 <div class="form-group row ml-1 mt-5">
-                                <label class="form-check-label pr-0">RC Bypass</label>
-                                <div class="pr-1 pl-3">
-                                @if(Model.rclistKP.IsRCBypass==true)
-                                {
-                                            <input type="checkbox"  id="cbIsRCBypassSite" checked>
-                                }
+                                    <label class="form-check-label pr-0">RC Bypass</label>
+                                    <div class="pr-1 pl-3">
+                                        @if (Model.rclistKP.IsRCBypass == true)
+                                        {
+                                            <input type="checkbox" id="cbIsRCBypassSite" checked>
+                                        }
                                         else
                                         {
-                                           <input type="checkbox"  id="cbIsRCBypassSite"> 
+                                            <input type="checkbox" id="cbIsRCBypassSite">
                                         }
                                         <input type="hidden" id="RCList_IsSiteRCBypass" name="RCActionList.IsRCBypass" value="@Model.rclistKP.IsRCBypass">
-                                </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

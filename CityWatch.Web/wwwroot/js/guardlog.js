@@ -3438,7 +3438,7 @@ $(function () {
     $('#btnDownloadTimesheetFrequency').on('click', function (e) {
         var Frequency = $('#frequency').val();
        
-        if (!frequency) {
+        if (!Frequency) {
             alert("Please select Instant Timesheet.");
             return; // Exit the function if validation fails
         }
@@ -6236,8 +6236,8 @@ $('#btnTimesheetConfirm').on('click', function () {
            
             $('#mdlAuthGuardForSopDownload').modal('hide');
             $('#TimesheetGuard_Id1').val('-1');
-            $('#startDate').val('');
-            $('#endDate').val('');
+            $('#startDateRoster').val('');
+            $('#endDateRoster').val('');
             $('#frequency').val('');
             $('#timesheetModal').modal('show');
             $.ajax({
@@ -6258,54 +6258,11 @@ $('#btnTimesheetConfirm').on('click', function () {
     });
 });
 
-$('#btnDownloadTimesheetRoster').on('click', function (e) {
-    var startDate = $('#startDate').val();
-    var endDate = $('#endDate').val();
 
-    // Check if both startDate and endDate have values
-    if (!startDate || !endDate) {
-        alert("Please select both start date and end date.");
-        return; // Exit the function if validation fails
-    }
-
-
-
-
-    $.ajax({
-        url: '/Admin/Settings?handler=DownloadTimesheet',
-        data: {
-            startdate: $('#startDate').val(),
-            endDate: $('#endDate').val(),
-            frequency: $('#frequency').val(),
-            guradid: $('#TimesheetGuard_Id').val(),
-        },
-        type: 'POST',
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (response) {
-        if (response.statusCode === -1) {
-
-        } else {
-
-
-
-
-
-            var newTab = window.open(response.fileName, '_blank');
-            if (!newTab) {
-
-                var a = document.createElement('a');
-                a.href = response.fileName;
-                a.download = "TimeSheet_Report";
-                a.click();
-            }
-
-        }
-    });
-});
 $('#btnDownloadTimesheetFrequencyRoster').on('click', function (e) {
     var Frequency = $('#frequency').val();
 
-    if (!frequency) {
+    if (!Frequency) {
         alert("Please select Instant Timesheet.");
         return; // Exit the function if validation fails
     }
@@ -6343,11 +6300,11 @@ $('#btnDownloadTimesheetFrequencyRoster').on('click', function (e) {
     });
 });
 $('#btnDownloadTimesheetRoster').on('click', function (e) {
-    var startDate = $('#startDate').val();
-    var endDate = $('#endDate').val();
+    var startDate1 = $('#startDateRoster').val();
+    var endDate1 = $('#endDateRoster').val();
     var ddd = $('#TimesheetGuard_Id1').val();
     // Check if both startDate and endDate have values
-    if (!startDate || !endDate) {
+    if (!startDate1 || !endDate1) {
         alert("Please select both start date and end date.");
         return; // Exit the function if validation fails
     }
@@ -6358,8 +6315,8 @@ $('#btnDownloadTimesheetRoster').on('click', function (e) {
     $.ajax({
         url: '/Admin/Settings?handler=DownloadTimesheet',
         data: {
-            startdate: $('#startDate').val(),
-            endDate: $('#endDate').val(),
+            startdate: $('#startDateRoster').val(),
+            endDate: $('#endDateRoster').val(),
             frequency: $('#frequency').val(),
             guradid: $('#TimesheetGuard_Id1').val(),
         },

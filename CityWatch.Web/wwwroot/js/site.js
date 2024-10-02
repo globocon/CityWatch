@@ -299,10 +299,14 @@
         primaryKey: 'id',
         inlineEditing: { mode: 'command' },
         columns: [
-            { field: 'name', title: 'Client Type', width: 400, editor: true }
+            { field: 'name', title: 'Client Type', width: 400, editor: true },
+            { field: 'clientSiteCount', width: 50, editor: false,cssClass: 'text-center' }
         ],
+       
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+            //$(e.target).find('thead tr th:nth-last-child(2)').html('Σ')
+            $(e.target).find('thead tr th:nth-last-child(2)').html('<span>&Sigma;</span>').css('text-align', 'center');
         }
     });
 
@@ -455,7 +459,7 @@
          
             /*p1-245 jump button-start*/
 
-            $(e.target).find('thead tr th:nth-last-child(2)').html('<i class="fa fa-bar-chart" aria-hidden="true"></i>').css('text-align', 'center');;
+            $(e.target).find('thead tr th:nth-last-child(2)').html('<i class="fa fa-bar-chart" aria-hidden="true"></i>').css('text-align', 'center');
             /*p1-245 jump button-end*/
         }
     });

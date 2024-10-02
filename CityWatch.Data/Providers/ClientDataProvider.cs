@@ -230,6 +230,8 @@ namespace CityWatch.Data.Providers
 
         public void SaveSiteLogUploadHistory(SiteLogUploadHistory siteLogUploadHistory);
 
+        public void UpdateClientSiteStatus(int clientSiteId, DateTime? updateDatetime, int status, int kpiSettingsid);
+
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -366,7 +368,14 @@ namespace CityWatch.Data.Providers
                 throw new ArgumentNullException();
 
             var gpsHasChanged = false;
+            /*update the status and kpi settings value start*/
+            var kpiSettings = _context.ClientSiteKpiSettings.FirstOrDefault(x => x.ClientSiteId == clientSite.Id);
 
+            if (kpiSettings != null)
+            {
+                UpdateClientSiteStatus(clientSite.Id, clientSite.StatusDate, clientSite.Status, kpiSettings.Id);
+            }
+            /*update the status and kpi settings value end */
             if (clientSite.Id == -1)
             {
                 _context.ClientSites.Add(new ClientSite()
@@ -413,6 +422,10 @@ namespace CityWatch.Data.Providers
 
             if (gpsHasChanged && !string.IsNullOrEmpty(clientSite.Gps))
                 CreateGpsImage(clientSite);
+
+
+           
+
         }
 
         public void DeleteClientSite(int id)
@@ -2616,15 +2629,68 @@ namespace CityWatch.Data.Providers
         {
             if (siteLogUploadHistory.Id == 0)
             {
-                
+
                 siteLogUploadHistory.Date = DateTime.Now;
                 _context.SiteLogUploadHistory.Add(siteLogUploadHistory);
                 _context.SaveChanges();
             }
 
         }
+        /* update Status for a site */
+        public void UpdateClientSiteStatus(int clientSiteId, DateTime? updateDatetime, int status, int kpiSettingsid)
+        {
+            // Fetch the client site to update
+            var updateClientSite = _context.ClientSites.SingleOrDefault(x => x.Id == clientSiteId);
+
+            if (updateClientSite != null)
+            {
+                bool isUpdated = false;
+
+                // Check if status or status date has changed
+                if (updateClientSite.Status != status)
+                {
+                    updateClientSite.Status = status;
+                    isUpdated = true;
+                }
+
+                if (updateClientSite.StatusDate != updateDatetime)
+                {
+                    updateClientSite.StatusDate = updateDatetime;
+                    isUpdated = true;
+                }
+
+                // If either the status or date was updated, proceed to save changes
+                if (isUpdated)
+                {
+                    _context.SaveChanges(); // Save changes for the ClientSite
+
+                    // If the status is 'Expired' (assuming status '2' is Expired)
+                    if (status == 2)
+                    {
+                        var kpiSettingsToUpdate = _context.ClientSiteKpiSettings.SingleOrDefault(x => x.Id == kpiSettingsid);
+
+                        if (kpiSettingsToUpdate != null)
+                        {
+                            kpiSettingsToUpdate.ScheduleisActive = false;
+                            _context.SaveChanges(); // Save changes for KPI Settings
+                        }
+                    }
+                    else
+                    {
+                        var kpiSettingsToUpdate = _context.ClientSiteKpiSettings.SingleOrDefault(x => x.Id == kpiSettingsid);
+
+                        if (kpiSettingsToUpdate != null)
+                        {
+                            kpiSettingsToUpdate.ScheduleisActive = true;
+                            _context.SaveChanges(); // Save changes for KPI Settings
+                        }
+
+                    }
+                }
+            }
+        }
     }
 
-   
+
 
 }

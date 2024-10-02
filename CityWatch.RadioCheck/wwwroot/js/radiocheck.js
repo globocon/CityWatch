@@ -4501,6 +4501,26 @@ $('#div_site_settings').on('click', '#save_site_manning_settings', function () {
     }).fail(function () { });
 });
 
+
+$('#div_site_settings').on('change', '#ClientSite_Status', function () {
+    // Get the selected value
+    var selectedStatus = $(this).val();
+    if (selectedStatus != 0) {
+        $('#ClientSite_StatusDate').show();
+    } else {
+        $('#ClientSite_StatusDate').hide();
+    }
+    if (selectedStatus == 2) {
+        $('#scheduleisActive').prop('checked', false);
+    }
+    else {
+        $('#scheduleisActive').prop('checked', true);
+    }
+
+
+
+});
+
 $('#div_site_settings').on('click', '#showDivButton', function () {
 
     $('#divPatrolCar').show();

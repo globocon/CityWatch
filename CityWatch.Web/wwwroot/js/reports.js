@@ -391,6 +391,26 @@
         }
     });
 
+
+    $('#div_site_settings').on('change', '#ClientSite_Status', function () {
+        // Get the selected value
+        var selectedStatus = $(this).val();
+        if (selectedStatus != 0) {
+            $('#ClientSite_StatusDate').show();
+        } else {
+            $('#ClientSite_StatusDate').hide();
+        }
+        if (selectedStatus == 2) {
+            $('#scheduleisActive').prop('checked', false);
+        }
+        else {
+            $('#scheduleisActive').prop('checked', true);
+        }
+
+
+
+    });
+
     /*p3-132 Contracted manning button-end*/
     $('#patrol_report_controls').show();
     $('#ReportRequest_ClientTypes').multiselect({
