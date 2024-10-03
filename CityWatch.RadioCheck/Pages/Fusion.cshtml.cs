@@ -214,7 +214,7 @@ namespace CityWatch.RadioCheck.Pages
             foreach (var item in rcChartTypesGuardsPrealarm)
             {
 
-                string newdaterange = item.FirstOrDefault().ClientSite.Name;
+                string newdaterange = item.FirstOrDefault().SiteName;
                 ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
                 
                     obj.DateRange = newdaterange;
@@ -263,7 +263,7 @@ namespace CityWatch.RadioCheck.Pages
             foreach (var item in rcChartTypesGuardsFromCRO)
             {
 
-                string newdaterange = item.FirstOrDefault().ClientSite.Name;
+                string newdaterange = item.FirstOrDefault().SiteName;
                 ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
 
                 obj.DateRange = newdaterange;
