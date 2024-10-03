@@ -142,10 +142,10 @@ namespace CityWatch.Web.Services
                     CreateLogBookReportsFusion(guardId, zipFolderPath, startdate, endDate, fileNamePart);
                 }
 
-               
-                DateTime dateTimeStart = DateTime.ParseExact(startdate, "dd/MM/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture);
-                DateTime dateTimeEnd = DateTime.ParseExact(endDate, "dd/MM/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture);
-               
+
+                DateTime dateTimeStart = DateTime.ParseExact(startdate,"dd-MM-yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+                DateTime dateTimeEnd = DateTime.ParseExact(endDate,"dd-MM-yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+
                 return GetZipFileName(zipFolderPath, dateTimeStart, dateTimeEnd, fileNamePart);
             }
             catch (FormatException ex)
@@ -220,10 +220,11 @@ namespace CityWatch.Web.Services
         private string GetZipFileName(string zipFolderPath, DateTime logFromDate, DateTime logToDate, string fileNamePart)
         {
             var zipFileName = $"{FileNameHelper.GetSanitizedFileNamePart(fileNamePart)}_{logFromDate:yyyyMMdd}_{logToDate:yyyyMMdd}_{new Random().Next(100, 999)}.zip";
-            ZipFile.CreateFromDirectory(zipFolderPath, IO.Path.Combine(_downloadsFolderPath, zipFileName), CompressionLevel.Optimal, false);
-
             if (!Directory.Exists(zipFolderPath))
                 Directory.Delete(zipFolderPath);
+            ZipFile.CreateFromDirectory(zipFolderPath, IO.Path.Combine(_downloadsFolderPath, zipFileName), CompressionLevel.Optimal, false);
+
+            
 
             return zipFileName;
         }

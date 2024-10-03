@@ -6723,12 +6723,12 @@ function downloadDailyGuardTimeSheetLogZipFile() {
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (response) {
         if (!response.success) {
-            $('#auditfusionlog-zip-modal').modal('hide');
+            $('#auditTimesheetlog-zip-modal').modal('hide');
             new MessageModal({ message: 'Failed to generate zip file. ' + response.message }).showError();
         } else {
             $('#btn-auditTimesheetlog-zip-download').attr('href', response.fileName);
             $('#btn-auditTimesheetlog-zip-download').show();
-            $('#auditfusionlog-zip-msg').hide();
+            $('#auditTimesheetlog-zip-msg').hide();
         }
     });
 }
@@ -6753,12 +6753,12 @@ function downloadDailyGuardTimeSheetLogBulkZipFile() {
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
     }).done(function (response) {
         if (!response.success) {
-            $('#auditfusionlog-zip-modal').modal('hide');
+            $('#auditTimesheetlog-zip-modal').modal('hide');
             new MessageModal({ message: 'Failed to generate zip file. ' + response.message }).showError();
         } else {
             $('#btn-auditTimesheetlog-zip-download').attr('href', response.fileName);
             $('#btn-auditTimesheetlog-zip-download').show();
-            $('#auditfusionlog-zip-msg').hide();
+            $('#auditTimesheetlog-zip-msg').hide();
         }
     });
 }
