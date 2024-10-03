@@ -193,22 +193,21 @@ namespace CityWatch.Web.Pages.Reports
             //no of guards went to prelarm-start
             var rcChartTypesGuardsPrealarmNew = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
             int rcChartTypesGuardsPrealarmCountnew = 0;
-            var rcChartTypesGuardsPrealarm = _irChartDataService.GetAuditGuardFusionLogs(ReportRequest, ReportRequest.FromDate, ReportRequest.ToDate).Where(z => (z.LogBookNotes != null && z.LogBookNotes.Contains("Guard Off Duty (Logbook Signout) "))).GroupBy(z=>z.ClientSiteId); ;
+            var rcChartTypesGuardsPrealarm = _irChartDataService.GetAuditGuardFusionLogs(ReportRequest, ReportRequest.FromDate, ReportRequest.ToDate).Where(z => z.NotificationType == 1).GroupBy(z=>z.ClientSiteId); ;
             foreach (var item in rcChartTypesGuardsPrealarm)
             {
                 
                 string newdaterange = item.FirstOrDefault().ClientSite.Name;
-                var rcChartradiochecks = _irChartDataService.GetClientSiteRadioChecks(item.FirstOrDefault().ClientSite.Id, ReportRequest.FromDate,ReportRequest.ToDate).Where(z=>z.RadioCheckStatusId==1);
+                //var rcChartradiochecks = _irChartDataService.GetClientSiteRadioChecks(item.FirstOrDefault().ClientSite.Id, ReportRequest.FromDate,ReportRequest.ToDate).Where(z=>z.RadioCheckStatusId==1);
                 ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
-                if (rcChartradiochecks.Count() != 0)
-                {
+                
                     obj.DateRange = newdaterange;
-                    obj.RecordCount = rcChartradiochecks.Count();
+                    obj.RecordCount = item.Count();
 
                     rcChartTypesGuardsPrealarmNew.Add(obj);
 
                     rcChartTypesGuardsPrealarmCountnew = rcChartTypesGuardsPrealarmCountnew + obj.RecordCount;
-                }
+                
 
             }
 
@@ -243,19 +242,19 @@ namespace CityWatch.Web.Pages.Reports
             //no of tomes cro pushed radio button -start
             var rcChartTypesCRONew = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
             int rcChartTypesCROCountnew = 0;
-            foreach (var item in rcChartTypesGuardsPrealarm)
+            var rcChartTypesGuardsFromCRO = _irChartDataService.GetAuditGuardFusionLogs(ReportRequest, ReportRequest.FromDate, ReportRequest.ToDate).Where(z => (z.Notes != null && z.Notes.Contains("Control Room Alert"))).GroupBy(z => z.ClientSiteId); ;
+
+            foreach (var item in rcChartTypesGuardsFromCRO)
             {
 
                 string newdaterange = item.FirstOrDefault().ClientSite.Name;
-                var rcChartradiochecks = _irChartDataService.GetClientSiteRadioChecks(item.FirstOrDefault().ClientSite.Id, ReportRequest.FromDate, ReportRequest.ToDate);
                 ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
-                if (rcChartradiochecks.Count() != 0)
-                {
+                
                     obj.DateRange = newdaterange;
-                    obj.RecordCount = rcChartradiochecks.Count();
+                    obj.RecordCount = item.Count();
                     rcChartTypesCRONew.Add(obj);
                     rcChartTypesCROCountnew = rcChartTypesCROCountnew + obj.RecordCount;
-                }
+                
             }
 
 

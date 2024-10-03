@@ -143,10 +143,13 @@ namespace CityWatch.Web.Services
                 }
 
 
-                DateTime dateTimeStart = DateTime.ParseExact(startdate,"dd-MM-yyyy HH:mm:ss", CultureInfo.InvariantCulture);
-                DateTime dateTimeEnd = DateTime.ParseExact(endDate,"dd-MM-yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+                //DateTime dateTimeStart = DateTime.ParseExact(startdate, "dd-MM-yyyy hh:mm:ss", null, System.Globalization.DateTimeStyles.None);
+                //DateTime dateTimeEnd = DateTime.ParseExact(endDate, "dd-MM-yyyy hh:mm:ss", null, System.Globalization.DateTimeStyles.None);
+                // DateTime dateTimeStart = DateTime.ParseExact(startdate, "dd/MM/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture);
+                //DateTime dateTimeEnd = DateTime.ParseExact(endDate, "dd/MM/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture);
 
-                return GetZipFileName(zipFolderPath, dateTimeStart, dateTimeEnd, fileNamePart);
+                return GetZipFileName(zipFolderPath, startdate, endDate, fileNamePart);
+
             }
             catch (FormatException ex)
             {
@@ -192,10 +195,10 @@ namespace CityWatch.Web.Services
                 }
 
                 
-                DateTime dateTimeStart = DateTime.ParseExact(startdate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
-                DateTime dateTimeEnd = DateTime.ParseExact(endDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+               // DateTime dateTimeStart = DateTime.ParseExact(startdate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+               // DateTime dateTimeEnd = DateTime.ParseExact(endDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
                 
-                return GetZipFileName(zipFolderPath, dateTimeStart, dateTimeEnd, fileNamePart);
+                return GetZipFileName(zipFolderPath, startdate, endDate, fileNamePart);
             }
             catch (FormatException ex)
             {
@@ -225,6 +228,21 @@ namespace CityWatch.Web.Services
             ZipFile.CreateFromDirectory(zipFolderPath, IO.Path.Combine(_downloadsFolderPath, zipFileName), CompressionLevel.Optimal, false);
 
             
+
+            return zipFileName;
+        }
+        private string GetZipFileName(string zipFolderPath, string logFromDate, string logToDate, string fileNamePart)
+        {
+            var sanitizedLogFromDate = logFromDate.Replace("/", "_").Replace(":", "_").Replace(" ", "_");
+            var sanitizedLogToDate = logToDate.Replace("/", "_").Replace(":", "_").Replace(" ", "_");
+
+            // Create the sanitized file name
+            var zipFileName = $"{FileNameHelper.GetSanitizedFileNamePart(fileNamePart)}_{sanitizedLogFromDate}_{sanitizedLogToDate}_{new Random().Next(100, 999)}.zip";
+
+            ZipFile.CreateFromDirectory(zipFolderPath, IO.Path.Combine(_downloadsFolderPath, zipFileName), CompressionLevel.Optimal, false);
+
+            if (!Directory.Exists(zipFolderPath))
+                Directory.Delete(zipFolderPath);
 
             return zipFileName;
         }
