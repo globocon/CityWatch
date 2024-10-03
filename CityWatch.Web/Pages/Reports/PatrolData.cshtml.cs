@@ -244,7 +244,7 @@ namespace CityWatch.Web.Pages.Reports
             int rcChartTypesCROCountnew = 0;
             var rcChartTypesGuardsFromCRO = _irChartDataService.GetAuditGuardFusionLogs(ReportRequest, ReportRequest.FromDate, ReportRequest.ToDate).Where(z => (z.Notes != null && z.Notes.Contains("Control Room Alert"))).GroupBy(z => z.ClientSiteId); ;
 
-            foreach (var item in rcChartTypesGuardsPrealarm)
+            foreach (var item in rcChartTypesGuardsFromCRO)
             {
 
                 string newdaterange = item.FirstOrDefault().ClientSite.Name;
