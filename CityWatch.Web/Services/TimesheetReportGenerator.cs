@@ -142,10 +142,11 @@ namespace CityWatch.Web.Services
                     CreateLogBookReportsFusion(guardId, zipFolderPath, startdate, endDate, fileNamePart);
                 }
 
-               
-                DateTime dateTimeStart = DateTime.ParseExact(startdate, "dd/MM/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture);
-                DateTime dateTimeEnd = DateTime.ParseExact(endDate, "dd/MM/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture);
-               
+                DateTime dateTimeStart = DateTime.ParseExact(startdate, "dd-MM-yyyy hh:mm:ss", null, System.Globalization.DateTimeStyles.None);
+                DateTime dateTimeEnd = DateTime.ParseExact(endDate, "dd-MM-yyyy hh:mm:ss", null, System.Globalization.DateTimeStyles.None);
+                // DateTime dateTimeStart = DateTime.ParseExact(startdate, "dd/MM/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture);
+                //DateTime dateTimeEnd = DateTime.ParseExact(endDate, "dd/MM/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture);
+
                 return GetZipFileName(zipFolderPath, dateTimeStart, dateTimeEnd, fileNamePart);
             }
             catch (FormatException ex)
