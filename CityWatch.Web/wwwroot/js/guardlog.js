@@ -2184,7 +2184,13 @@ $(function () {
         includeSelectAllOption: true,
     });
 
-
+    $('#vklClientSiteIdTimesheet').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
     $('#vklClientSiteId').on('change', function () {
         if ($('#vklClientSiteId').val().length === 0) {
             alert('Please select a client site');
@@ -2224,6 +2230,7 @@ $(function () {
         buttonTextAlignment: 'left',
         includeSelectAllOption: true,
     });
+   
     // for selecting more than one POI
     $('#vklPersonOfInterest').multiselect({
         maxHeight: 400,
@@ -2250,6 +2257,45 @@ $(function () {
         includeSelectAllOption: true,
     });
     // for selecting more than one Site Loc-end
+    $('#vklClientTypeTimesheet').on('change', function () {
+        //gridsitefusionLog.clear();
+        const clientTypeId = $(this).val();
+        const clientSiteControl = $('#vklClientSiteIdTimesheet');
+        clientSiteControl.html('');
+        $.ajax({
+            url: '/Admin/Settings?handler=ClientSites&typeId=' + clientTypeId,
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                data.map(function (site) {
+                    clientSiteControl.append('<option value="' + site.id + '">' + site.name + '</option>');
+                });
+                clientSiteControl.multiselect('rebuild');
+            }
+
+        });
+
+
+    });
+    $('#vklClientSiteIdTimesheet').on('change', function () {
+        var selectedOptions = $(this).val();  // Get selected values
+        $('#startDateTimesheetBulk').val('');
+        $('#endDateTimesheetBulk').val('');
+        $('#frequency').val('');
+        if (selectedOptions && selectedOptions.length > 0) {
+            var selectedSitesList = $('#selectedSitesList');
+            selectedSitesList.empty();  // Clear previous list
+
+            // Add selected options to modal list
+            selectedOptions.forEach(function (siteId) {
+                var selectedText = $('#vklClientSiteIdTimesheet option[value="' + siteId + '"]').text();
+                selectedSitesList.append('<li>' + selectedText + '</li>');
+            });
+
+            // Show the modal
+            $('#timesheetBulkModal').modal('show');
+        }
+    });
     $('#vklPersonOfInterest').on('change', function () {
         const personOfInterestId = $(this).val();
         $("#vklPersonOfInterest").val(personOfInterestId);
@@ -6343,3 +6389,86 @@ $('#btnDownloadTimesheetRoster').on('click', function (e) {
         }
     });
 });
+
+$('#btnDownloadTimesheetFrequencyBulk').on('click', function (e) {
+    var Frequency = $('#frequency').val();
+
+    if (!Frequency) {
+        alert("Please select Instant Timesheet.");
+        return; // Exit the function if validation fails
+    }
+    $('#auditTimesheetlog-zip-modal').modal('show');
+    downloadDailyGuardTimeSheetLogZipFile();
+
+});
+$('#btnDownloadTimesheetBulk').on('click', function (e) {
+    var startDate1 = $('#startDateTimesheetBulk').val();
+    var endDate1 = $('#endDateTimesheetBulk').val();
+    var ddd = $('#TimesheetGuard_Id1').val();
+    // Check if both startDate and endDate have values
+    if (!startDate1 || !endDate1) {
+        alert("Please select both start date and end date.");
+        return; // Exit the function if validation fails
+    }
+    $('#auditTimesheetlog-zip-modal').modal('show');
+    downloadDailyGuardTimeSheetLogBulkZipFile();
+});
+function downloadDailyGuardTimeSheetLogZipFile() {
+    // Get selected client site IDs from multi-checkbox dropdown
+    var selectedClientSiteIds = $('#vklClientSiteIdTimesheet').val(); // This will get the selected IDs as an array
+    var ddd = selectedClientSiteIds.join(',');
+    if (!selectedClientSiteIds || selectedClientSiteIds.length === 0) {
+        new MessageModal({ message: 'Please select at least one client site.' }).showError();
+        return;
+    }
+    
+    $.ajax({
+        url: '/Admin/AuditSiteLog?handler=DownloadDailyTimesheetLogZip',
+        type: 'POST',
+        dataType: 'json',
+        data: {
+            clientSiteId: selectedClientSiteIds.join(','), // Send as a comma-separated string
+            frequency: $('#frequency').val(),
+        },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (response) {
+        if (!response.success) {
+            $('#auditfusionlog-zip-modal').modal('hide');
+            new MessageModal({ message: 'Failed to generate zip file. ' + response.message }).showError();
+        } else {
+            $('#btn-auditTimesheetlog-zip-download').attr('href', response.fileName);
+            $('#btn-auditTimesheetlog-zip-download').show();
+            $('#auditfusionlog-zip-msg').hide();
+        }
+    });
+}
+function downloadDailyGuardTimeSheetLogBulkZipFile() {
+    // Get selected client site IDs from multi-checkbox dropdown
+    var selectedClientSiteIds = $('#vklClientSiteIdTimesheet').val(); // This will get the selected IDs as an array
+    var ddd = selectedClientSiteIds.join(',');
+    if (!selectedClientSiteIds || selectedClientSiteIds.length === 0) {
+        new MessageModal({ message: 'Please select at least one client site.' }).showError();
+        return;
+    }
+
+    $.ajax({
+        url: '/Admin/AuditSiteLog?handler=DownloadTimesheetBulk',
+        type: 'POST',
+        dataType: 'json',
+        data: {
+            clientSiteId: selectedClientSiteIds.join(','), // Send as a comma-separated string
+            startdate: $('#startDateTimesheetBulk').val(),
+            endDate: $('#endDateTimesheetBulk').val(),
+        },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (response) {
+        if (!response.success) {
+            $('#auditfusionlog-zip-modal').modal('hide');
+            new MessageModal({ message: 'Failed to generate zip file. ' + response.message }).showError();
+        } else {
+            $('#btn-auditTimesheetlog-zip-download').attr('href', response.fileName);
+            $('#btn-auditTimesheetlog-zip-download').show();
+            $('#auditfusionlog-zip-msg').hide();
+        }
+    });
+}

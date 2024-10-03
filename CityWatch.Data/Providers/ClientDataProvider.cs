@@ -231,6 +231,8 @@ namespace CityWatch.Data.Providers
         public void SaveSiteLogUploadHistory(SiteLogUploadHistory siteLogUploadHistory);
 
         public void UpdateClientSiteStatus(int clientSiteId, DateTime? updateDatetime, int status, int kpiSettingsid);
+        public List<GuardLogin> GetClientSiteGuradLoginDetails(int clientSiteId);
+        public List<GuardLogin> GetGuardDetailsAll(int[] clientSiteIds);
 
     }
 
@@ -2561,6 +2563,23 @@ namespace CityWatch.Data.Providers
             return _context.ClientSiteRadioChecksActivityStatus_History
                 .Where(z => z.ClientSiteId == clientSiteId && z.EventDateTime.Date >= fromDate && z.EventDateTime.Date <= toDate)
                 .ToList();
+        }
+        public List<GuardLogin> GetClientSiteGuradLoginDetails(int clientSiteId)
+        {
+            return _context.GuardLogins
+                .Where(z => z.ClientSiteId == clientSiteId)
+                .ToList();
+        }
+        public List<GuardLogin> GetGuardDetailsAll(int[] clientSiteIds)
+        {
+            var clientSiteDetails = _context.GuardLogins
+       .Include(x => x.ClientSite)
+       .Where(x => clientSiteIds.Contains(x.ClientSiteId))
+       .AsEnumerable() // Switch to client-side evaluation
+       .DistinctBy(x => x.GuardId) // Now this works on the client side
+       .ToList();
+
+            return clientSiteDetails;
         }
         public TimeSheet GetTimesheetDetails()
         {
