@@ -237,7 +237,7 @@ namespace CityWatch.RadioCheck.Pages
             foreach (var item in rcChartTypesGuardsPrealarm)
             {
 
-                string newdaterange = item.FirstOrDefault().ClientSite.Name;
+                string newdaterange = item.FirstOrDefault().SiteName;
                 var rcChartradiochecks = _auditLogViewDataService.GetClientSiteRadioChecks(item.FirstOrDefault().ClientSite.Id, logFromDate, logToDate).Where(z => z.RadioCheckStatusId == 1);
                 ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
                 if (rcChartradiochecks.Count() != 0)
