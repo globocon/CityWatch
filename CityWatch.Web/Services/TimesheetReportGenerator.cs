@@ -230,7 +230,12 @@ namespace CityWatch.Web.Services
         }
         private string GetZipFileName(string zipFolderPath, string logFromDate, string logToDate, string fileNamePart)
         {
-            var zipFileName = $"{FileNameHelper.GetSanitizedFileNamePart(fileNamePart)}_{logFromDate}_{logToDate}_{new Random().Next(100, 999)}.zip";
+            var sanitizedLogFromDate = logFromDate.Replace("/", "_").Replace(":", "_").Replace(" ", "_");
+            var sanitizedLogToDate = logToDate.Replace("/", "_").Replace(":", "_").Replace(" ", "_");
+
+            // Create the sanitized file name
+            var zipFileName = $"{FileNameHelper.GetSanitizedFileNamePart(fileNamePart)}_{sanitizedLogFromDate}_{sanitizedLogToDate}_{new Random().Next(100, 999)}.zip";
+
             ZipFile.CreateFromDirectory(zipFolderPath, IO.Path.Combine(_downloadsFolderPath, zipFileName), CompressionLevel.Optimal, false);
 
             if (!Directory.Exists(zipFolderPath))
