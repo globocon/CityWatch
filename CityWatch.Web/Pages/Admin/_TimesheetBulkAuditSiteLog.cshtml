@@ -1,0 +1,104 @@
+﻿@using CityWatch.Data.Models;
+@using CityWatch.Web.Helpers;
+@using CityWatch.Web.Services;
+@inject IViewDataService viewDataService
+@model CityWatch.Web.Pages.Admin.AuditSiteLogModel
+
+<form id="form_kvl_auditlog_request" method="post" class="border-bottom">
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label class="mx-1">Client Type</label>
+            <select class="form-control" id="vklClientTypeTimesheet">
+                <option value="">Select</option>
+                @{
+                    var userClientTypes = viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId);
+                    var sortedClientTypes = userClientTypes.OrderByDescending(clientType => viewDataService.GetClientTypeCount(clientType.Id));
+                    sortedClientTypes = userClientTypes.OrderBy(clientType => clientType.Name);
+                    foreach (var clientType in sortedClientTypes)
+                    {
+                        var countClientType = viewDataService.GetClientTypeCount(clientType.Id);
+                        <option value="@clientType.Id">@clientType.Name (@countClientType)</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="form-group col-md-3">
+            <label class="mx-1">Client Site</label>
+            <select class="form-control mx-1" multiple="multiple" id="vklClientSiteIdTimesheet"></select>
+        </div>
+      
+       
+    </div>
+
+    <div class="modal" tabindex="-1" data-backdrop="static" data-keyboard="false" role="dialog" id="auditTimesheetlog-zip-modal">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">TimeSheet Download</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p id="auditfusionlog-zip-msg"><i class="fa fa-circle-o-notch fa-spin mr-2" aria-hidden="true"></i>Generating zip file. Please wait ...</p>
+                    <a style="display:none" class="btn btn-success" id="btn-auditTimesheetlog-zip-download" href="#">Download Zip</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!----------------- Timesheet Modal -------------------->
+    <div class="modal fade" id="timesheetBulkModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="guardInfoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered  ">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fa fa-calendar mr-2"></i>Timesheet</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <input type="hidden" id="TimesheetGuard_Id1" />
+                            <h>Instant Timesheet</h>
+                            <div class="form-group">
+                                <label for="frequency"></label>
+                                <select class="form-control" id="frequency" name="frequency">
+                                    <option value="">Select</option>
+                                    <option value="Today">Today</option>
+                                    <option value="ThisWeek">This Week</option>
+                                    <option value="Last2weeks">Last 2 weeks(fortnight)</option>
+                                    <option value="Last4weeks">Last 4 weeks(month)</option>
+                                    <option value="Month">Month Only</option>
+                                </select>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button type="button" id="btnDownloadTimesheetFrequencyBulk" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Download</button>
+                                </div>
+                            </div><br />
+                            <h>Custom Timesheets</h><br />
+                            <div class="form-group">
+                            </div>
+                            <div class="form-group">
+                                <label for="startDate">Start Date</label>
+                                <input type="date" class="form-control" id="startDateTimesheetBulk" name="startDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="endDate">End Date</label>
+                                <input type="date" class="form-control" id="endDateTimesheetBulk" name="endDate">
+                            </div>
+
+
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button type="button" id="btnDownloadTimesheetBulk" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Download</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </form>

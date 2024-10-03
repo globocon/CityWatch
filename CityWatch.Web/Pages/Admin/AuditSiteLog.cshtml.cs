@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace CityWatch.Web.Pages.Admin
 {
@@ -21,18 +22,21 @@ namespace CityWatch.Web.Pages.Admin
         private readonly IGuardLogZipGenerator _guardLogZipGenerator;
         private readonly IAuditLogViewDataService _auditLogViewDataService;
         private readonly IClientSiteViewDataService _clientViewDataService;
+        private readonly ITimesheetReportGenerator _TimesheetReportGenerator;
 
         public AuditSiteLogModel(IViewDataService viewDataService,
             IGuardLogDataProvider guardLogDataProvider,
             IGuardLogZipGenerator guardLogZipGenerator,
             IAuditLogViewDataService auditLogViewDataService,
-            IClientSiteViewDataService clientViewDataService)
+            IClientSiteViewDataService clientViewDataService,
+            ITimesheetReportGenerator TimesheetReportGenerator)
         {
             _viewDataService = viewDataService;
             _guardLogDataProvider = guardLogDataProvider;
             _guardLogZipGenerator = guardLogZipGenerator;
             _auditLogViewDataService = auditLogViewDataService;
             _clientViewDataService = clientViewDataService;
+            _TimesheetReportGenerator = TimesheetReportGenerator;
         }
 
         public KeyVehicleLogAuditLogRequest KeyVehicleLogAuditLogRequest { get; set; }
@@ -292,7 +296,109 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { success, message, fileName = @Url.Content($"~/Pdf/FromDropbox/{zipFileName}") });
         }
+        public JsonResult OnPostDownloadDailyTimesheetLogZip(string clientSiteId, string frequency)
+        {
+            List<int> clientSiteIds = clientSiteId.Split(',').Select(int.Parse).ToList();
+            var success = true;
+            var message = string.Empty;
+            var zipFileName = string.Empty;
+            var fileName = string.Empty;
+            var statusCode = 0;
+            DateTime startDate = DateTime.MinValue;
+            DateTime endDate = DateTime.MinValue;
+           
+                DateTime today = DateTime.Today;
 
+                if (frequency == "ThisWeek")
+                {
+
+                    // Assuming the week starts on Monday and ends on Sunday
+                    int daysToSubtract = (int)today.DayOfWeek - (int)DayOfWeek.Monday;
+                    startDate = today.AddDays(-daysToSubtract);
+
+                    endDate = startDate.AddDays(6);
+                }
+                else if (frequency == "Last2weeks")
+                {
+                    // Calculate the end of last week (Sunday)
+                    int daysToSubtract = (int)today.DayOfWeek - (int)DayOfWeek.Sunday + 7;
+                    endDate = today.AddDays(-daysToSubtract);
+
+                    // Start date is 13 days before the end date (2 weeks)
+                    startDate = endDate.AddDays(-13);
+                }
+                else if (frequency == "Last4weeks")
+                {
+                    // Calculate the end of last week (Sunday)
+                    int daysToSubtract = (int)today.DayOfWeek + 1; // daysToSubtract for the previous Sunday
+                    endDate = today.AddDays(-daysToSubtract);
+
+                    // Start date is 27 days before the end date (for four weeks)
+                    startDate = endDate.AddDays(-27);
+                }
+                else if (frequency == "Month")
+                {
+                    // Calculate the start date as the first day of the last month
+                    startDate = new DateTime(today.Year, today.Month, 1).AddMonths(-1);
+
+                    // Calculate the end date as the last day of the last month
+                    endDate = startDate.AddMonths(1).AddDays(-1);
+                }
+                else if (frequency == "Today")
+                {
+                    startDate = today;
+                    endDate = today;
+                }
+                string StartDate = startDate.ToString();
+                string EndDate = endDate.ToString();
+
+                try
+            {
+                zipFileName = _TimesheetReportGenerator.GenerateTimesheetZipFileFrequency(clientSiteIds.ToArray(), StartDate, EndDate).Result;
+              //fileName = _TimesheetReportGenerator.GeneratePdfTimesheetReport(startdate, endDate, guradid);
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+
+                if (ex.InnerException != null)
+                    message = ex.InnerException.Message;
+            }
+
+            return new JsonResult(new { success, message, fileName = @Url.Content($"~/Pdf/FromDropbox/{zipFileName}") });
+        }
+        public async Task<JsonResult> OnPostDownloadTimesheetBulk(string clientSiteId,string startdate, string endDate)
+        {
+            List<int> clientSiteIds = clientSiteId.Split(',').Select(int.Parse).ToList();
+            var fileName = string.Empty;
+            var statusCode = 0;
+            int id = 1;
+            var zipFileName = string.Empty;
+            var success = true;
+            var message = string.Empty;
+            try
+            {
+                zipFileName = _TimesheetReportGenerator.GenerateTimesheetZipFile(clientSiteIds.ToArray(), startdate, endDate).Result;
+
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+
+                if (ex.InnerException != null)
+                    message = ex.InnerException.Message;
+            }
+
+            if (string.IsNullOrEmpty(zipFileName))
+                return new JsonResult(new { fileName, message = "Failed to generate pdf", statusCode = -1 });
+
+
+
+
+            return new JsonResult(new { success, message, fileName = @Url.Content($"~/Pdf/FromDropbox/{zipFileName}") });
+        }
         public JsonResult OnPostGenerateDownloadFilesLog(DateTime logFromDate, DateTime logToDate)
         {
             var r = _viewDataService.GetFileDownloadAuditLogs(logFromDate, logToDate);

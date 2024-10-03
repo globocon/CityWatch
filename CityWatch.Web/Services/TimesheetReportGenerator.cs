@@ -36,6 +36,9 @@ using iText.Layout.Element;
 using iText.Kernel.Geom;
 using iText.Layout.Properties;
 using static Dropbox.Api.TeamLog.TimeUnit;
+using System.Threading.Tasks;
+using System.IO;
+using System.IO.Compression;
 
 namespace CityWatch.Web.Services
 {
@@ -43,6 +46,10 @@ namespace CityWatch.Web.Services
     {
 
         public string GeneratePdfTimesheetReport(string startdate, string endDate, int guradid);
+        Task<string> GenerateTimesheetZipFile(int[] clientSiteIds, string startdate, string endDate);
+        Task<string> GenerateTimesheetZipFileFrequency(int[] clientSiteIds, string startdate, string endDate);
+        public string GeneratePdfTimesheetReportBulk(string startdate, string endDate, int guradid, string fileNamePart);
+
     }
     public class TimesheetReportGenerator : ITimesheetReportGenerator
     {
@@ -73,7 +80,8 @@ namespace CityWatch.Web.Services
         private readonly Settings _settings;
         private readonly IPatrolDataReportService _patrolDataReportService;
         private readonly string _SiteimageRootDir;
-
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly string _downloadsFolderPath;
         public TimesheetReportGenerator(IOptions<Settings> settings,
             IWebHostEnvironment webHostEnvironment,
             IViewDataService viewDataService,
@@ -84,15 +92,16 @@ namespace CityWatch.Web.Services
             _clientDataProvider = clientDataProvider;
             _logger = logger;
             _settings = settings.Value;
-
+            _webHostEnvironment = webHostEnvironment;
             _reportRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "Pdf");
             _imageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "images");
             _siteImageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "SiteImage");
             _graphImageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "GraphImage");
             _SiteimageRootDir = IO.Path.Combine(webHostEnvironment.WebRootPath, "SiteImage");
+            _downloadsFolderPath = IO.Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "FromDropbox");
             //nEWLY ADDAED-START
 
-            _patrolDataReportService = patrolDataReportService;
+           _patrolDataReportService = patrolDataReportService;
             //nEWLY ADDAED-END
 
             if (!IO.Directory.Exists(IO.Path.Combine(_reportRootDir, REPORT_DIR)))
@@ -102,9 +111,205 @@ namespace CityWatch.Web.Services
                 IO.Directory.CreateDirectory(_graphImageRootDir);
         }
 
+        public async Task<string> GenerateTimesheetZipFileFrequency(int[] clientSiteIds, string startdate, string endDate)
+        {
+            try
+            {
+                
+                if (clientSiteIds.Length <= 0)
+                {
+                    return string.Empty;
+                }
+
+               
+                var zipFolderPath = GetZipFolderPath();
+                var fileNamePart = string.Empty;
+
+                
+                var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientSiteIds)
+                    .Where(z => !string.IsNullOrEmpty(z.DropboxImagesDir)).ToList();
+
+                
+                var clientSiteDetails = _clientDataProvider.GetGuardDetailsAll(clientSiteIds);
+
+               
+                foreach (var clientSiteDetail in clientSiteDetails)
+                {
+                    var guardId = clientSiteDetail.GuardId;
+                    fileNamePart = clientSiteDetail.ClientSite.Name;
+
+                   
+                    CreateLogBookReportsFusion(guardId, zipFolderPath, startdate, endDate, fileNamePart);
+                }
+
+               
+                DateTime dateTimeStart = DateTime.ParseExact(startdate, "dd/MM/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture);
+                DateTime dateTimeEnd = DateTime.ParseExact(endDate, "dd/MM/yyyy hh:mm:ss tt", CultureInfo.InvariantCulture);
+               
+                return GetZipFileName(zipFolderPath, dateTimeStart, dateTimeEnd, fileNamePart);
+            }
+            catch (FormatException ex)
+            {
+                Console.WriteLine($"Date format is invalid: {ex.Message}");
+                return null;  
+            }
+            catch (Exception ex)
+            {
+               
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                return null;  
+            }
+        }
+        public async Task<string> GenerateTimesheetZipFile(int[] clientSiteIds, string startdate, string endDate)
+        {
+            try
+            {
+                
+                if (clientSiteIds.Length <= 0)
+                {
+                    return string.Empty;
+                }
+
+                
+                var zipFolderPath = GetZipFolderPath();
+                var fileNamePart = string.Empty;
+
+              
+                var clientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientSiteIds)
+                    .Where(z => !string.IsNullOrEmpty(z.DropboxImagesDir)).ToList();
+
+                
+                var clientSiteDetails = _clientDataProvider.GetGuardDetailsAll(clientSiteIds);
+
+               
+                foreach (var clientSiteDetail in clientSiteDetails)
+                {
+                    var guardId = clientSiteDetail.GuardId;
+                    fileNamePart = clientSiteDetail.ClientSite.Name;
+
+                    
+                    CreateLogBookReportsFusion(guardId, zipFolderPath, startdate, endDate, fileNamePart);
+                }
+
+                
+                DateTime dateTimeStart = DateTime.ParseExact(startdate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                DateTime dateTimeEnd = DateTime.ParseExact(endDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                
+                return GetZipFileName(zipFolderPath, dateTimeStart, dateTimeEnd, fileNamePart);
+            }
+            catch (FormatException ex)
+            {
+                Console.WriteLine($"Date format is invalid: {ex.Message}");
+                return null;  
+            }
+            catch (Exception ex)
+            {
+                
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                return null; 
+            }
+        }
+
+        private string GetZipFolderPath()
+        {
+            var zipFolderPath = IO.Path.Combine(_downloadsFolderPath, Guid.NewGuid().ToString());
+            if (!Directory.Exists(zipFolderPath))
+                Directory.CreateDirectory(zipFolderPath);
+            return zipFolderPath;
+        }
+        private string GetZipFileName(string zipFolderPath, DateTime logFromDate, DateTime logToDate, string fileNamePart)
+        {
+            var zipFileName = $"{FileNameHelper.GetSanitizedFileNamePart(fileNamePart)}_{logFromDate:yyyyMMdd}_{logToDate:yyyyMMdd}_{new Random().Next(100, 999)}.zip";
+            ZipFile.CreateFromDirectory(zipFolderPath, IO.Path.Combine(_downloadsFolderPath, zipFileName), CompressionLevel.Optimal, false);
+
+            if (!Directory.Exists(zipFolderPath))
+                Directory.Delete(zipFolderPath);
+
+            return zipFileName;
+        }
+        private void CreateLogBookReportsFusion(int GuardId, string zipFolderPath,string startdate, string endDate,string fileNamePart)
+        {
+           
+                var fileName = GetFusionLogFileName(GuardId, startdate, endDate, fileNamePart);
+                if (!string.IsNullOrEmpty(fileName))
+                {
+                    var reportFilePath = IO.Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", fileName);
+                    File.Copy(reportFilePath, IO.Path.Combine(zipFolderPath, fileName));
+                    File.Delete(reportFilePath);
+                }
+            
+        }
+        private string GetFusionLogFileName(int GuardId, string startdate,string endDate, string fileNamePart)
+        {
+
+            try
+            {
+                return GeneratePdfTimesheetReportBulk(startdate, endDate, GuardId, fileNamePart);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it according to your needs
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                return null; // Or return a custom error message or default value
+            }
 
 
+        }
+        public string GeneratePdfTimesheetReportBulk(string startdate, string endDate, int guradid,string fileNamePart)
+        {
+            DateTime startdateTime = DateTime.Parse(startdate);
+            DateTime dateTime = DateTime.Parse(endDate);
+            var LoginDetails = _clientDataProvider.GetLoginDetailsGuard(guradid, startdateTime, dateTime);
+            var Name = _clientDataProvider.GetGuardlogName(guradid, dateTime);
+            var LicenseNo = _clientDataProvider.GetGuardLicenseNo(guradid, dateTime);
+            var SiteName = _clientDataProvider.GetGuardlogSite(guradid, dateTime);
+            var reportFileName = $"{DateTime.Now.ToString("yyyyMMdd")} - {FileNameHelper.GetSanitizedFileNamePart(Name)} - Time Sheet- {fileNamePart} -_{new Random().Next()}.pdf";
+            var reportPdf = IO.Path.Combine(_reportRootDir, REPORT_DIR, reportFileName);
+            var TimesheetDetails = _clientDataProvider.GetTimesheetDetails();
 
+            var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
+            pdfDoc.SetDefaultPageSize(PageSize.A4.Rotate());
+            var doc = new Document(pdfDoc);
+            doc.SetMargins(PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN);
+
+
+            var headerTable = CreateReportHeader();
+            doc.Add(headerTable);
+
+            doc.Add(CreateNameTable(Name));
+            doc.Add(CreateLicenseTable(LicenseNo));
+            doc.Add(CreateDateTable(dateTime));
+            // doc.Add(CreateSiteTable(SiteName));
+            doc.Add(new Paragraph("\n"));
+            var (GuardLoginTables, totalHours) = CreateGuardLoginDetails(startdateTime, dateTime, LoginDetails, TimesheetDetails.weekName);
+            bool hasContentOnCurrentPage = false;
+            for (int i = 0; i < GuardLoginTables.Count; i++)
+            {
+                var GuardLoginTable = GuardLoginTables[i];
+                if (GuardLoginTable.GetNumberOfRows() > 0)
+                {
+                    doc.Add(GuardLoginTable);
+                    hasContentOnCurrentPage = true;
+                    if (i < GuardLoginTables.Count - 1) // Only add space if it's not the last table
+                    {
+                        doc.Add(new Paragraph("\n"));
+                        doc.Add(new Paragraph("\n")); // Add a space between tables
+                    }
+                }
+
+
+            }
+            if (hasContentOnCurrentPage)
+            {
+                doc.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+            }
+            var commentTable = GetCommentTable(totalHours);
+            doc.Add(commentTable);
+            doc.Close();
+            pdfDoc.Close();
+
+            return reportFileName;
+        }
         public string GeneratePdfTimesheetReport(string startdate, string endDate, int guradid)
         {
             DateTime startdateTime = DateTime.Parse(startdate);
