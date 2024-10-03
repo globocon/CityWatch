@@ -39,7 +39,7 @@
             <input type="hidden" id="hidCount" value="@count" />
 
             @*Scheduler is Active Start15072024*@
-            <div class="form-row ml-2">
+            <div class="form-row ml-2 mt-2">
                 <div class="col-md-10">
                     <div class="d-flex flex-row">
                         <label class="form-label pr-2">Schedule is Active</label>
@@ -89,10 +89,19 @@
                                 <div class="col-md-3">
                                     <select asp-for="@Model.ClientSiteManningGuardKpiSettings[rowIndexFirst].CrmSupplier" asp-items="@ViewDataService.ProviderList" class="form-control"></select>
                                 </div>
-                                <div class="col-md-2 mt-2">
-                                    <i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#crmSupplierDetailsModal" data-id="@Model.ClientSiteManningGuardKpiSettings[rowIndexFirst].CrmSupplier"></i>
+                                @if (!string.IsNullOrEmpty(Model.ClientSiteManningGuardKpiSettings[rowIndexFirst].CrmSupplier))
+                                {
+                                    <div class="col-md-2 mt-2 pl-0 ml-0">
+                                        <i class="fa fa-vcard-o text-info" style="font-size:18px" data-toggle="modal" data-target="#crmSupplierDetailsModal" data-id="@Model.ClientSiteManningGuardKpiSettings[rowIndexFirst].CrmSupplier"></i>
+                                    </div>
 
-                                </div>
+                                }
+                                else
+                                {
+                                    <div class="col-md-2 mt-2 pl-0 ml-0">
+                                        <i class="fa fa-vcard-o text-info" style="color: gray !important;opacity: 0.6;cursor: not-allowed;font-size:18px" ></i>
+                                    </div>
+                                }
                             </div>
                             @for (int rowIndex = rowIndexFirst; rowIndex < (4 + rowIndexFirst); rowIndex++)
                             {
@@ -237,10 +246,12 @@
                                 <div class="col-md-3">
                                     <select asp-for="@Model.ClientSiteManningPatrolCarKpiSettings[0].CrmSupplier" asp-items="@ViewDataService.ProviderList" class="form-control"></select>
                                 </div>
-                                <div class="col-md-2 mt-2">
-                                    <i class="fa fa-vcard-o text-info ml-2" data-toggle="modal" data-target="#crmSupplierDetailsModal" data-id="@Model.ClientSiteManningGuardKpiSettings[0].CrmSupplier"></i>
 
+                                <div class="col-md-2 mt-2 pl-0 ml-0">
+                                    <i class="fa fa-vcard-o text-info" style="color: gray !important;opacity: 0.6;cursor: not-allowed;font-size:18px"  ></i>
                                 </div>
+
+
                             </div>
                             @for (int rowIndex2 = 0; rowIndex2 < 4; rowIndex2++)
                             {
