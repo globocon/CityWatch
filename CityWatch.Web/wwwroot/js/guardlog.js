@@ -3300,7 +3300,7 @@ $(function () {
             return '<i class="fa fa-circle text-warning"></i></i><span style="color:#f8f9fa;font-size:1px;">yellow</span>';
         }
         else {
-            return '<i class="fa fa-circle text-secondary"></i>';
+            return '<i class="fa fa-circle text-secondary"></i><span style="color:#f8f9fa;font-size:1px;">grey</span>';
         }
 
 
@@ -3318,7 +3318,7 @@ $(function () {
             return '<i class="fa fa-circle text-warning"></i><span style="color:#f8f9fa;font-size:1px;">yellow</span>';
         }
         else {
-            return '<i class="fa fa-circle text-secondary"></i>';
+            return '<i class="fa fa-circle text-secondary"></i><span style="color:#f8f9fa;font-size:1px;">grey</span>';
         }
 
 
@@ -3336,7 +3336,7 @@ $(function () {
             return '<i class="fa fa-circle text-warning"></i><span style="color: #f8f9fa;font-size:1px;">yellow</span>';
         }
         else {
-            return '<i class="fa fa-circle text-secondary"></i>';
+            return '<i class="fa fa-circle text-secondary"></i><span style="color:#f8f9fa;font-size:1px;">grey</span>';
         }
 
 
@@ -4041,6 +4041,7 @@ $(function () {
                 $('#guardId').val(result.guardId);
                 $('#GuardLicense_GuardId').val(result.guardId);
                 $('#GuardCompliance_GuardId').val(result.guardId);
+                $('#GuardComplianceandlicense_GuardId').val(result.guardId);
                 if (result.initalsChangedMessage !== '') {
                     alert(result.initalsChangedMessage);
                     $('#Guard_Initial').val(result.initalsUsed);
