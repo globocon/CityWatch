@@ -232,7 +232,7 @@ namespace CityWatch.Data.Providers
 
         public void UpdateClientSiteStatus(int clientSiteId, DateTime? updateDatetime, int status, int kpiSettingsid);
         public List<GuardLogin> GetClientSiteGuradLoginDetails(int clientSiteId);
-        public List<GuardLogin> GetGuardDetailsAll(int[] clientSiteIds);
+        public List<GuardLogin> GetGuardDetailsAll(int[] clientSiteIds, string startdate, string endDate);
 
     }
 
@@ -2570,11 +2570,27 @@ namespace CityWatch.Data.Providers
                 .Where(z => z.ClientSiteId == clientSiteId)
                 .ToList();
         }
-        public List<GuardLogin> GetGuardDetailsAll(int[] clientSiteIds)
+        public List<GuardLogin> GetGuardDetailsAll(int[] clientSiteIds, string startdate, string endDate)
         {
+            DateTime startDateParsed;
+            DateTime endDateParsed;
+
+            // Use DateTime.TryParse to handle invalid date formats
+            if (!DateTime.TryParse(startdate, out startDateParsed))
+            {
+                throw new ArgumentException("Invalid start date format");
+            }
+
+            if (!DateTime.TryParse(endDate, out endDateParsed))
+            {
+                throw new ArgumentException("Invalid end date format");
+            }
             var clientSiteDetails = _context.GuardLogins
        .Include(x => x.ClientSite)
-       .Where(x => clientSiteIds.Contains(x.ClientSiteId))
+       .Where(x => clientSiteIds.Contains(x.ClientSiteId) &&
+                   (startDateParsed == endDateParsed
+                        ? x.LoginDate.Date == startDateParsed.Date // If dates are equal, check exact date
+                        : x.LoginDate.Date >= startDateParsed.Date && x.LoginDate.Date <= endDateParsed.Date))
        .AsEnumerable() // Switch to client-side evaluation
        .DistinctBy(x => x.GuardId) // Now this works on the client side
        .ToList();

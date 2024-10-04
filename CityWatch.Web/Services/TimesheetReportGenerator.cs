@@ -130,7 +130,7 @@ namespace CityWatch.Web.Services
                     .Where(z => !string.IsNullOrEmpty(z.DropboxImagesDir)).ToList();
 
                 
-                var clientSiteDetails = _clientDataProvider.GetGuardDetailsAll(clientSiteIds);
+                var clientSiteDetails = _clientDataProvider.GetGuardDetailsAll(clientSiteIds, startdate, endDate);
 
                
                 foreach (var clientSiteDetail in clientSiteDetails)
@@ -182,7 +182,7 @@ namespace CityWatch.Web.Services
                     .Where(z => !string.IsNullOrEmpty(z.DropboxImagesDir)).ToList();
 
                 
-                var clientSiteDetails = _clientDataProvider.GetGuardDetailsAll(clientSiteIds);
+                var clientSiteDetails = _clientDataProvider.GetGuardDetailsAll(clientSiteIds, startdate, endDate);
 
                
                 foreach (var clientSiteDetail in clientSiteDetails)
