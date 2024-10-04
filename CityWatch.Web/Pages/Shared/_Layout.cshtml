@@ -45,7 +45,7 @@
 
         if (pageName != string.Empty)
         {
-            alldocWithModeleName = dataProvider.GetStaffDocumentModuleDetails() ;
+            alldocWithModeleName = dataProvider.GetStaffDocumentModuleDetails();
             alldocWithModeleName = alldocWithModeleName.Where(x => x.DocumentModuleName == pageName).ToList();
         }
         else
@@ -78,7 +78,7 @@
     <link rel="stylesheet" href="~/lib/custom-drag-drop-file-upload/fileupload.css" />
 
     <script type="text/javascript" src="https://unpkg.com/xlsx@0.15.1/dist/xlsx.full.min.js"></script>
-    
+
 
     <script>
         function getGpsAsHyperLink(value) {
@@ -101,9 +101,11 @@
     </script>
 </head>
 <body class="d-flex flex-column">
+
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom mb-3">
             <div class="container">
+                <input type="hidden" id="pageName" name="pageName" value="@pageName" />
                 @if (User.Identity.IsAuthenticated)
                 {
                     <div style="width:12px">
@@ -124,7 +126,17 @@
                                 else if (alldocWithModeleName.Count == 1)
                                 {
                                     var singleDoc = alldocWithModeleName.FirstOrDefault();
-                                    <a href="/StaffDocs/@singleDoc.FileName" title="@singleDoc.FileName" target="_blank" ><i class="fa fa-question-circle" aria-hidden="true"></i></a>
+                                    @* <input type="hidden" id="fileNametoDownload" name="fileNametoDownload" value="@singleDoc.FileName" />
+                    <button id="downloadButton"><i class="fa fa-question-circle" aria-hidden="true"></i></button>*@
+
+
+                                    <ul  style="list-style-type:none;padding-left:0;">
+                                        <li>
+                                            <i class="fa fa-question-circle text-primary btn-delete-dgl-attachment1" style="cursor: pointer;" id="@singleDoc.FileName" title="@singleDoc.FileName" aria-hidden="true"></i>
+                                        </li>
+                                    </ul>
+
+                                    //<a id="downloadLink" href="/StaffDocs/@singleDoc.FileName" title="@singleDoc.FileName" target="_blank"><i class="fa fa-question-circle" aria-hidden="true"></i></a>
                                 }
                                 else if (alldocWithModeleName.Count > 1)
                                 {
@@ -154,7 +166,15 @@
                                                                 <tr>
                                                                     <td><span style="color:red"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></span> @file.FileName</td>
                                                                     <td>
-                                                                        <a href="/StaffDocs/@file.FileName" class="btn btn-outline-success ml-2" target="_blank"><i class="fa fa-download mr-3"></i>Download</a>
+
+                                                                        <ul  style="list-style-type:none;padding-left:0;">
+                                                                            <li>
+                                                                                <a href="#" class="btn btn-outline-success ml-2" >
+                                                                                    <i class="fa fa-download mr-3 text-primary btn-delete-dgl-attachment1" style="cursor: pointer;" id="@file.FileName" title="@file.FileName" aria-hidden="true">&nbsp;Download</i>
+                                                                                </a>
+                                                                            </li>
+                                                                        </ul>
+                                                                        @*<a href="/StaffDocs/@file.FileName" class="btn btn-outline-success ml-2" target="_blank"><i class="fa fa-download mr-3"></i>Download</a>*@
                                                                     </td>
                                                                 </tr>
 
