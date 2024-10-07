@@ -5675,63 +5675,7 @@ $(function () {
     /*p1-196 rationalization of menu changes-end*/
 
 
-    $('.btn-delete-dgl-attachment1').on('click', function (event) {
-        // $('#dgl-attachment-list1').on('click', '.btn-delete-dgl-attachment1', function (event) {
-        var pageNameValue = $('#pageName').val();
-        var jsname = 'kv';
-        var tmdata = {
-            'EventDateTimeLocal': null,
-            'EventDateTimeLocalWithOffset': null,
-            'EventDateTimeZone': null,
-            'EventDateTimeZoneShort': null,
-            'EventDateTimeUtcOffsetMinute': null,
-        };
-
-        /*fillRefreshLocalTimeZoneDetails(tmdata, "", false)*/
-
-        var DateTime = luxon.DateTime;
-        var dt1 = DateTime.local();
-        let tz = dt1.zoneName + ' ' + dt1.offsetNameShort;
-        let diffTZ = dt1.offset
-        let tzshrtnm = 'GMT' + dt1.toFormat('ZZ');
-        const eventDateTimeLocal = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS');
-        const eventDateTimeLocalWithOffset = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS Z');
-        tmdata.EventDateTimeLocal = eventDateTimeLocal;
-        tmdata.EventDateTimeLocalWithOffset = eventDateTimeLocalWithOffset;
-        tmdata.EventDateTimeZone = tz;
-        tmdata.EventDateTimeZoneShort = tzshrtnm;
-        tmdata.EventDateTimeUtcOffsetMinute = diffTZ;
-
-        var target = event.target;
-        var filename = target.id;
-        var guardId = $("#GuardLog_GuardLogin_GuardId").val();
-        $.ajax({
-            url: '/Guard/DailyLog?handler=DownLoadHelpPDF',
-            type: 'POST',
-            dataType: 'json',
-            data: {
-                filename: filename,
-                loginGuardId: guardId,
-                tmdata: tmdata,
-                pageName: pageNameValue,
-                jsname: jsname,
-            },
-            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-        }).done(function (result) {
-            if (result) {
-                // Step 3: Dynamically create an anchor tag and trigger the download
-                if (result.success) {
-                    var link = document.createElement('a');
-                    link.href = '/StaffDocs/' + filename;  // Construct the file URL
-                    link.target = "_blank";                // Open the file in a new window or tab
-                    document.body.appendChild(link);       // Append to the body
-                    link.click();                          // Simulate a click event to open the file
-                    document.body.removeChild(link);
-                }// Remove the link from the document
-            }
-        });
-
-    });
+   
 
 
 
