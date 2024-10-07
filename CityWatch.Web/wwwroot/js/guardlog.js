@@ -375,7 +375,8 @@ $(function () {
                     //p1 - 224 RC Bypass for IR - end
                     $('#guardLoginDetails').show();
                     $('#GuardLogin_Guard_Id').val(result.guard.id);
-
+                    $('#GuardLogin_Guard_IsLB_KV_IR').val(result.guard.isLB_KV_IR);
+                    
                     if (hasLastLogin) {
                         const lastLogin = result.lastLogin;
 
