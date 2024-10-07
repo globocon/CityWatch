@@ -1195,55 +1195,66 @@ namespace CityWatch.Web.Pages.Guard
         }
 
 
-        public JsonResult OnPostDownLoadHelpPDF(string filename, int loginGuardId, GuardLog tmdata,string pageName)
+        public JsonResult OnPostDownLoadHelpPDF(string filename, int loginGuardId, GuardLog tmdata,string pageName,string jsname)
         {
 
             var Issuccess = false;
             var exMessage = "";
+            var status = pageName == "IR" ? ((jsname == "lb") ? true : false) : true;
             try
             {
-                if (User.Identity.IsAuthenticated)
+                // avoid two calls from lb and Kv js in IR
+                if (status)
                 {
-                    var userid = AuthUserHelper.GetLoggedInUserId;
-                    if (userid != null)
+                    if (User.Identity.IsAuthenticated)
                     {
-                        var IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
-
-                        if (loginGuardId != 0)
+                        var userid = AuthUserHelper.GetLoggedInUserId;
+                        if (userid != null)
                         {
+                            var IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
 
-                            FileDownloadAuditLogs fdal = new FileDownloadAuditLogs()
+                            if (loginGuardId != 0)
                             {
-                                UserID = (int)userid,
-                                GuardID = loginGuardId,
-                                IPAddress = IPAddress,
-                                DwnlCatagory = "Help Document "+ pageName,
-                                DwnlFileName = filename,
-                                EventDateTimeLocal = tmdata.EventDateTimeLocal,
-                                EventDateTimeLocalWithOffset = tmdata.EventDateTimeLocalWithOffset,
-                                EventDateTimeZone = tmdata.EventDateTimeZone,
-                                EventDateTimeZoneShort = tmdata.EventDateTimeZoneShort,
-                                EventDateTimeUtcOffsetMinute = tmdata.EventDateTimeUtcOffsetMinute
-                            };
 
-                            _guardLogDataProvider.CreateDownloadFileAuditLogEntry(fdal);
-                            Issuccess = true;
+                                FileDownloadAuditLogs fdal = new FileDownloadAuditLogs()
+                                {
+                                    UserID = (int)userid,
+                                    GuardID = loginGuardId,
+                                    IPAddress = IPAddress,
+                                    DwnlCatagory = "Help Document " + pageName,
+                                    DwnlFileName = filename,
+                                    EventDateTimeLocal = tmdata.EventDateTimeLocal,
+                                    EventDateTimeLocalWithOffset = tmdata.EventDateTimeLocalWithOffset,
+                                    EventDateTimeZone = tmdata.EventDateTimeZone,
+                                    EventDateTimeZoneShort = tmdata.EventDateTimeZoneShort,
+                                    EventDateTimeUtcOffsetMinute = tmdata.EventDateTimeUtcOffsetMinute
+                                };
+
+                                _guardLogDataProvider.CreateDownloadFileAuditLogEntry(fdal);
+                                Issuccess = true;
+
+                            }
+                            else
+                            {
+                                exMessage = "Error: Guard details not found.";
+                            }
 
                         }
                         else
                         {
-                            exMessage = "Error: Guard details not found.";
+                            exMessage = "Error: User not authenticated.";
                         }
-
                     }
                     else
                     {
                         exMessage = "Error: User not authenticated.";
                     }
+
                 }
-                else
+               else
                 {
-                    exMessage = "Error: User not authenticated.";
+                    Issuccess = false;
+
                 }
 
 

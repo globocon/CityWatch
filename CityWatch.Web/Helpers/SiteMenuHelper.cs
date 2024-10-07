@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Text;
+using CityWatch.Data.Models;
 using CityWatch.Web.Helpers;
 using DocumentFormat.OpenXml.Drawing.Diagrams;
 using DocumentFormat.OpenXml.Spreadsheet;
+using Microsoft.AspNetCore.Http;
 
 namespace CityWatch.Web.Helpers
 {
@@ -112,6 +114,7 @@ namespace CityWatch.Web.Helpers
                 }
                 else
                 {
+                    
                     menuHtml.AppendLine(@"<a href=""/Incident/Register"" class=""nav-link py-0""><i class=""fa fa-file-pdf-o mr-2""></i>Incident Report (IR)</a>");
                 }
                 menuHtml.AppendLine("</div>");
