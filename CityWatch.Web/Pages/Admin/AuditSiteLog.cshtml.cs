@@ -3,6 +3,7 @@ using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Models;
 using CityWatch.Web.Services;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -72,10 +73,49 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { records, total = dailyGuardLogs.Count });
         }
 
-        public JsonResult OnPostKeyVehicleSiteLogs(KeyVehicleLogAuditLogRequest keyVehicleLogAuditLogRequest)
+        public IActionResult OnPostKeyVehicleSiteLogs(KeyVehicleLogAuditLogRequest keyVehicleLogAuditLogRequest)
         {
             //return new JsonResult(_auditLogViewDataService.GetKeyVehicleLogs(keyVehicleLogAuditLogRequest));
-            return new JsonResult(_auditLogViewDataService.GetKeyVehicleLogsWithPOI(keyVehicleLogAuditLogRequest));
+            var keyVehicleAuditLogRequest = _auditLogViewDataService.GetKeyVehicleLogsWithPOI(keyVehicleLogAuditLogRequest);
+            //duress entries per week-start
+            var today = keyVehicleLogAuditLogRequest.LogFromDate;
+            var todate= keyVehicleLogAuditLogRequest.LogToDate;
+            var kvtruckentriesForWeekNew = new List<KeyVehicleLogAuditLogRequest>();
+            int kvtruckentriesForWeekNewCountnew = 0;
+            TimeSpan ts = keyVehicleLogAuditLogRequest.LogToDate.Subtract(today);
+            int dateDiff = ts.Days;
+            int totalWeeks = (int)dateDiff / 7;
+            KeyVehicleLogAuditLogRequest keyVehicleLogAuditLogRequestnew = new KeyVehicleLogAuditLogRequest();
+            keyVehicleLogAuditLogRequestnew = keyVehicleLogAuditLogRequest;
+            for (int i = 1; i <= totalWeeks; i++)
+            {
+
+                var thisWeekStart = today.AddDays(-(int)today.DayOfWeek);
+                var thisWeekEnd = thisWeekStart.AddDays(7).AddSeconds(-1);
+                if (thisWeekStart < today)
+                {
+                    thisWeekStart = today;
+                }
+
+                if (thisWeekEnd > keyVehicleLogAuditLogRequest.LogToDate)
+                {
+                    thisWeekEnd = keyVehicleLogAuditLogRequest.LogToDate;
+                }
+                keyVehicleLogAuditLogRequestnew.LogFromDate = thisWeekStart;
+                keyVehicleLogAuditLogRequestnew.LogToDate = thisWeekEnd;
+                var kvtruckentriesTypeforWeek = _auditLogViewDataService.GetKeyVehicleLogsWithPOI(keyVehicleLogAuditLogRequestnew);
+                string newdaterange = thisWeekStart.ToString("dd-MM-yyy") + " to " + thisWeekEnd.ToString("dd-MM-yyy");
+                KeyVehicleLogAuditLogRequest obj = new KeyVehicleLogAuditLogRequest();
+                obj.DateRange = newdaterange;
+                obj.RecordCount = kvtruckentriesTypeforWeek.Count();
+                kvtruckentriesForWeekNew.Add(obj);
+                kvtruckentriesForWeekNewCountnew = kvtruckentriesForWeekNewCountnew + obj.RecordCount;
+                today = thisWeekEnd.AddDays(1);
+
+            }
+            var kvtruckentriesForWeekNewCount = kvtruckentriesForWeekNewCountnew;
+            //duress entries per week-end
+            return new JsonResult(new { keyVehicleAuditLogRequest, chartData = new { kvtruckentriesForWeekNew }, kvtruckentriesForWeekNewCount });
         }
 
         /*

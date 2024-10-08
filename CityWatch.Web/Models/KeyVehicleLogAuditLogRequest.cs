@@ -1,5 +1,7 @@
 ﻿using CityWatch.Data.Models;
 using System;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 
 namespace CityWatch.Web.Models
@@ -66,6 +68,9 @@ namespace CityWatch.Web.Models
                 return PersonOfInterest?.Split(",").Select(z => int.Parse(z)).ToArray() ?? Array.Empty<int>();
             }
         }
-
+        [NotMapped]
+        public string DateRange { get; set; }
+        [NotMapped]
+        public int RecordCount { get; set; }
     }
 }
