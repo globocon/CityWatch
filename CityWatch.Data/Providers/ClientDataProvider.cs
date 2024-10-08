@@ -1806,7 +1806,7 @@ namespace CityWatch.Data.Providers
                 {
                     var Emailnew = new GlobalDuressEmail()
                     {
-                        Email = part
+                        Email = part.Trim()
                     };
                     _context.GlobalDuressEmail.Add(Emailnew);
                 }
