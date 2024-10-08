@@ -3674,7 +3674,7 @@ $(function () {
                             }
                         },
                         {
-                            data: 'clientSite', width: "10%",
+                            data: 'clientSite', width: "16%",
                             render: function (data, type, row) {
 
                                 var name1 = data.name;
@@ -3683,6 +3683,13 @@ $(function () {
 
                             }
                         },
+
+                        {
+                            data: 'ipAddress', width: "2%",
+                            
+                        },
+
+                        
                     ]
                 });
             },

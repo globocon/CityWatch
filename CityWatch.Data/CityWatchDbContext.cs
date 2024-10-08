@@ -128,6 +128,8 @@ namespace CityWatch.Data
 
         public DbSet<SiteLogUploadHistory> SiteLogUploadHistory { get; set; }
 
+        public DbSet<LoginUserHistory> LoginUserHistory { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<GuardLog>()

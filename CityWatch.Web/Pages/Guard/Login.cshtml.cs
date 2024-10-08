@@ -103,7 +103,8 @@ namespace CityWatch.Web.Pages.Guard
                     EventDateTimeZoneShort = GuardLogin.EventDateTimeZoneShort,
                     EventDateTimeUtcOffsetMinute = GuardLogin.EventDateTimeUtcOffsetMinute,
                     PlayNotificationSound = false,
-                    GpsCoordinates = GPSCoordinates
+                    GpsCoordinates = GPSCoordinates,
+                   
                 };
                 // Task p6#73_TimeZone issue -- added by Binoy - End
 
@@ -603,6 +604,7 @@ namespace CityWatch.Web.Pages.Guard
                     guardLogin.OnDuty = GuardLogin.OnDuty;
                     guardLogin.OffDuty = GuardLogin.OffDuty;
                     guardLogin.UserId = AuthUserHelper.LoggedInUserId.GetValueOrDefault();
+                    guardLogin.IPAddress= Request.HttpContext.Connection.RemoteIpAddress.ToString();
                 }
             }
             else
@@ -611,6 +613,7 @@ namespace CityWatch.Web.Pages.Guard
             }
 
             guardLogin.ClientSiteLogBookId = logBookId;
+            guardLogin.IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
 
             var guardLoginId = _guardDataProvider.SaveGuardLogin(guardLogin);
 

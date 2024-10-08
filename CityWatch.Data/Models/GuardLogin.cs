@@ -27,6 +27,8 @@ namespace CityWatch.Data.Models
 
         public int ClientSiteLogBookId { get; set; }
 
+        public string IPAddress { get; set; }
+
         [ForeignKey("GuardId")]
         public Guard Guard { get; set; }
 
