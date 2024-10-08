@@ -158,6 +158,7 @@ namespace CityWatch.Data.Providers
                 LoginTime = gl.LoginDate, 
                 SiteName= gl.ClientSite.Name,
                 guard= gl.Guard.Name,
+                IPAddress=gl.IPAddress,
             }).ToList();
 
             // Combine both login histories
