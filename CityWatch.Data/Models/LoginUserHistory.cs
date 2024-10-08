@@ -28,7 +28,8 @@ namespace CityWatch.Data.Models
                     : null;
             }
         }
-
+        public int GuardId { get; set; }
+        public int ClientSiteId { get; set; }
         [NotMapped]
         public string guard { get; set; }
 

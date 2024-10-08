@@ -130,7 +130,16 @@ namespace CityWatch.Web.Pages.Guard
                 var eventDateTimeZoneShort = GuardLogin.EventDateTimeZoneShort;
                 var eventDateTimeUtcOffsetMinute = GuardLogin.EventDateTimeUtcOffsetMinute.Value;
                 // Task p6#73_TimeZone issue -- added by Binoy - End
-
+                //Save history for the Guard Login Start
+                _guardLogDataProvider.SaveUserLoginHistoryDetails(new LoginUserHistory()
+                {
+                    LoginUserId = AuthUserHelper.LoggedInUserId.GetValueOrDefault(),
+                    IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
+                    LoginTime = DateTime.Now,
+                    ClientSiteId= GuardLogin.ClientSite.Id,
+                    GuardId= GuardLogin.Guard.Id,
+                });
+                //Save history for the Guard Login end
                 if (LogBookType == LogBookType.DailyGuardLog)
                 {
                     // Task p6#73_TimeZone issue -- modified by Binoy
