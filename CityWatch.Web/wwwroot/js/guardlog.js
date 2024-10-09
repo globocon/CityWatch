@@ -1338,125 +1338,70 @@ $(function () {
         $('#msg-modal').modal();
     }
 
+
     $('#IsRearOrTwentyfivePercentfileInput').on('change', function (e) {
-        $('#loader').show();
-        //const file = $(this).get(0).files.item(0);
+        const files = this.files;
+        const logId = $('#GuardimagedataId').val();
+        const url = window.location.origin;
 
-        //const file = $(this).get(0).files; 
-        const file = this;
+        const supportedExtensions = ['jpg', 'jpeg', 'bmp', 'gif', 'heic', 'png', 'JPG', 'JPEG', 'BMP', 'GIF', 'HEIC', 'PNG'];
 
+        function uploadFile(file, uploadUrl, isRearFile) {
+            const fileForm = new FormData();
+            const fileExtn = file.name.split('.').pop();
+
+            if (!supportedExtensions.includes(fileExtn)) {
+                showModal('Unsupported file type. Please upload a .jpg, .jpeg, .bmp, .gif, .heic, .png file');
+                return;
+            }
+
+            fileForm.append('file', file);
+            fileForm.append('logId', logId);
+            fileForm.append('url', url);
+
+            $('#loader').show();
+            $('#loadinDiv').show();
+
+            $.ajax({
+                url: uploadUrl,
+                type: 'POST',
+                data: fileForm,
+                processData: false,
+                contentType: false,
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+            }).done(function (data) {
+                if (data.success) {
+                    if (isRearFile) {
+                        $('#IsAttachmentToRear').val(true);
+                        $('#IsTwentyfivePercentOfPage').val(false);
+                    } else {
+                        $('#IsAttachmentToRear').val(false);
+                        $('#IsTwentyfivePercentOfPage').val(true);
+                    }
+
+                    gridGuardLog.clear();
+                    gridGuardLog.reload();
+                    loadDlgImagePopup(logId, false);
+                }
+            }).fail(function () {
+                showStatusNotification(false, 'Something went wrong');
+            }).always(function () {
+                $('#loader').hide();
+                $('#loadinDiv').hide();
+            });
+        }
 
         if ($('#IsAttachmentToRear').val() === 'true') {
-            for (let i = 0; i < file.files.length; i++) {
-
-                const fileForm = new FormData();
-                //fileForm.append('file', file);
-                // fileForm.append('file', file.files.item(i));
-                //  const file = file.files.item(i);
-                const fileExtn = file.files.item(i).name.split('.').pop();
-                // if (!fileExtn || fileExtn !== 'jpg' || fileExtn !=='JPG' || fileExtn !=='jpeg' || fileExtn !=='JPEG') {
-                //if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'bmp' && fileExtn !== 'BMP' && fileExtn !== 'GIF' && fileExtn !== 'gif' && fileExtn !== 'heic' && fileExtn !== 'HEIC')) {
-                //    showModal('Unsupported file type. Please upload a .jpg,.jpeg,.bmp,.gif file');
-                if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'bmp' && fileExtn !== 'BMP' && fileExtn !== 'GIF' && fileExtn !== 'gif')) {
-                    showModal('Unsupported file type. Please upload a .jpg,.jpeg,.bmp,.gif file');
-                    $('#loader').hide();
-                    return false;
-                }
-                fileForm.append('file', file.files.item(i))
-                fileForm.append('logId', $('#GuardimagedataId').val());
-                fileForm.append('url', window.location.origin);
-
-
-
-
-                $.ajax({
-                    url: '/Guard/DailyLog?handler=RearFileUpload',
-                    type: 'POST',
-                    data: fileForm,
-                    processData: false,
-                    contentType: false,
-                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
-                }).done(function (data) {
-
-                    if (data.success) {
-
-                        if (i == file.files.length - 1) {
-                            $('#loader').hide();
-                            //$('#dgl-image-modal').modal('hide');
-                            gridGuardLog.clear();
-                            gridGuardLog.reload();
-                            $('#IsAttachmentToRear').val(true);
-
-                            $('#IsTwentyfivePercentOfPage').val(false);
-                            loadDlgImagePopup($('#GuardimagedataId').val(), false);
-                        }
-
-                    }
-
-
-                }).fail(function () {
-                    //  showStatusNotification(false, 'Something went wrong');
-                    $('#loader').hide();
-                }).always(function () {
-
-                });
+            for (let i = 0; i < files.length; i++) {
+                uploadFile(files[i], '/Guard/DailyLog?handler=RearFileUpload', true);
             }
-
-        }
-        if ($('#IsTwentyfivePercentOfPage').val() === 'true') {
-
-            for (let i = 0; i < file.files.length; i++) {
-                const fileForm = new FormData();
-                const fileExtn = file.files.item(i).name.split('.').pop();
-                // if (!fileExtn || fileExtn !== 'jpg' || fileExtn !=='JPG' || fileExtn !=='jpeg' || fileExtn !=='JPEG') {
-                //if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'bmp' && fileExtn !== 'BMP' && fileExtn !== 'GIF' && fileExtn !== 'gif' && fileExtn !== 'heic' && fileExtn !== 'HEIC')) {
-                //    showModal('Unsupported file type. Please upload a .jpg,.jpeg,.bmp,.gif,.heif file');
-                if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'bmp' && fileExtn !== 'BMP' && fileExtn !== 'GIF' && fileExtn !== 'gif')) {
-                    showModal('Unsupported file type. Please upload a .jpg,.jpeg,.bmp,.gif file');
-                    $('#loader').hide();
-                    return false;
-                }
-                fileForm.append('file', file.files.item(i));
-                fileForm.append('logId', $('#GuardimagedataId').val());
-                fileForm.append('url', window.location.origin);
-
-
-
-
-                $.ajax({
-                    url: '/Guard/DailyLog?handler=TwentyfivePercentFileUpload',
-                    type: 'POST',
-                    data: fileForm,
-                    processData: false,
-                    contentType: false,
-                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
-                }).done(function (data) {
-
-                    if (data.success) {
-                        if (i == file.files.length - 1) {
-                            $('#loader').hide();
-                            //$('#dgl-image-modal').modal('hide');
-                            gridGuardLog.clear();
-                            gridGuardLog.reload();
-                            $('#IsAttachmentToRear').val(false);
-
-                            $('#IsTwentyfivePercentOfPage').val(true);
-                            loadDlgImagePopup($('#GuardimagedataId').val(), false);
-
-                        }
-                    }
-
-
-                }).fail(function () {
-                    showStatusNotification(false, 'Something went wrong');
-                    $('#loader').hide();
-                }).always(function () {
-
-                });
+        } else if ($('#IsTwentyfivePercentOfPage').val() === 'true') {
+            for (let i = 0; i < files.length; i++) {
+                uploadFile(files[i], '/Guard/DailyLog?handler=TwentyfivePercentFileUpload', false);
             }
         }
-
     });
+
 
     //p6-102 Add Photo -end
     /*to display the popup to acknowledge the message-start*/

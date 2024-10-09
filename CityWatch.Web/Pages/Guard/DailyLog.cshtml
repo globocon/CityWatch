@@ -1014,8 +1014,11 @@
             </div>
             <div class="modal-footer justify-content-between">
                 <button class="btn btn-primary " id="btnIsRearOrTwentyfivePercent"><i class="fa fa-plus"></i>Add</button>
-                   @*  <input type="file" id="IsRearOrTwentyfivePercentfileInput" class="custom-file-input" accept=".jpg, .jpeg, .bmp, .gif, .heic" multiple hidden> *@
-                <input type="file" id="IsRearOrTwentyfivePercentfileInput" class="custom-file-input" accept=".jpg, .jpeg, .bmp, .gif" multiple hidden>
+                <div class="spinner-border pl-2" role="status" id="loadinDiv" style="display:none">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                 <input type="file" id="IsRearOrTwentyfivePercentfileInput" class="custom-file-input" accept=".jpg, .jpeg, .bmp, .gif, .heic" multiple hidden>
+                @*<input type="file" id="IsRearOrTwentyfivePercentfileInput" class="custom-file-input" accept=".jpg, .jpeg, .bmp, .gif" multiple hidden>*@
                 <button class="btn btn-success ml-2 " id="btnIsRearOrTwentyfivePercentSaveAndClose">Save and Close</button>
              </div>
         </div>

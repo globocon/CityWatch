@@ -851,6 +851,8 @@ namespace CityWatch.Data.Providers
                     templateToUpdate.HyperlinkColour = companyDetails.HyperlinkColour;
                     templateToUpdate.HyperlinkLabel = companyDetails.HyperlinkLabel;
                     templateToUpdate.LogoHyperlink = companyDetails.LogoHyperlink;
+                    templateToUpdate.ApiProvider = companyDetails.ApiProvider;
+                    templateToUpdate.ApiSecretkey = companyDetails.ApiSecretkey;
                     //p1-225 Core Settings-end
                 }
 

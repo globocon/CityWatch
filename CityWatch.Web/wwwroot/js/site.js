@@ -2971,6 +2971,9 @@ $('#report_field_types').on('change', function () {
                 $("#txt_HyplerLinkLabel").val(data[i].hyperlinkLabel);
                 $("#txt_HyperlinkColor").val(data[i].hyperlinkColour);
                 $("#txt_LogoHyplerLink").val(data[i].logoHyperlink);
+                $("#txt_APIProvider").val(data[i].apiProvider);
+                $("#txt_APIsecretkey").val(data[i].apiSecretkey)
+              
                 //p1-225 Core Settings-end
             }
 
@@ -3095,6 +3098,8 @@ $('#report_field_types').on('change', function () {
                 HyperlinkLabel: $("#txt_HyplerLinkLabel").val(),
                 HyperlinkColour: $("#txt_HyperlinkColor").val(),
                 LogoHyperlink: $("#txt_LogoHyplerLink").val(),
+                ApiProvider: $("#txt_APIProvider").val(),
+                ApiSecretkey: $("#txt_APIsecretkey").val(),
                 //p1-225 Core Settings-end
             }
             $.ajax({
