@@ -233,22 +233,20 @@ namespace CityWatch.RadioCheck.Pages
             //no of guards went from prelarm-start
             var rcChartTypesGuardsFromPrealarmNew = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
             int rcChartTypesGuardsFromPrealarmCountnew = 0;
-            var rcChartTypesGuardsFromPrealarm = _auditLogViewDataService.GetAuditGuardFusionLogs(clientSiteId, logFromDate, logToDate, excludeSystemLogs).Where(z => (z.LogBookNotes != null && z.LogBookNotes.Contains("Control Room Alert:Guard Off Duty  "))).GroupBy(z => z.ClientSiteId); ;
+            var rcChartTypesGuardsFromPrealarm = _auditLogViewDataService.GetAuditGuardFusionLogs(clientSiteId, logFromDate, logToDate, excludeSystemLogs).Where(z => (z.LogBookNotes != null && z.LogBookNotes.Contains("Guard Off Duty (NOTE: CRO did manual stamp as Guard went home without hitting OFF DUTY which is a breach of SOP"))).GroupBy(z => z.ClientSiteId); ;
             foreach (var item in rcChartTypesGuardsPrealarm)
             {
 
                 string newdaterange = item.FirstOrDefault().SiteName;
-                var rcChartradiochecks = _auditLogViewDataService.GetClientSiteRadioChecks(item.FirstOrDefault().ClientSite.Id, logFromDate, logToDate).Where(z => z.RadioCheckStatusId == 1);
                 ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
-                if (rcChartradiochecks.Count() != 0)
-                {
+                
                     obj.DateRange = newdaterange;
-                    obj.RecordCount = rcChartradiochecks.Count();
+                obj.RecordCount = item.Count() ;
 
                     rcChartTypesGuardsFromPrealarmNew.Add(obj);
 
                     rcChartTypesGuardsFromPrealarmCountnew = rcChartTypesGuardsFromPrealarmCountnew + obj.RecordCount;
-                }
+                
 
             }
 
