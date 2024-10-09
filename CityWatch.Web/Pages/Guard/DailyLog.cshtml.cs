@@ -943,7 +943,9 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     try
                     {
-                        var uploadFileName = Path.GetFileNameWithoutExtension(file.FileName) + "_" + DateTime.Today.Ticks.ToString() + Path.GetExtension(file.FileName);
+                        var dateTick = DateTime.Now.Ticks.ToString();
+                        dateTick = dateTick.Substring(Math.Max(0, dateTick.Length - 6));
+                        var uploadFileName = Path.GetFileNameWithoutExtension(file.FileName) + "_" + dateTick + Path.GetExtension(file.FileName);
                         var fileExtension = Path.GetExtension(file.FileName).ToLower();
                         string[] allowedExtensions = { ".jpg", ".jpeg", ".bmp", ".gif", ".heic", ".png" };
 
@@ -963,7 +965,7 @@ namespace CityWatch.Web.Pages.Guard
                         //p1-102 add photos with heic extension-start
                         if (fileExtension == ".heic")
                         {
-                            var newuploadheic = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(file.FileName) + "_" + DateTime.Today.Ticks.ToString() + ".jpg");
+                            var newuploadheic = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(file.FileName) + "_" + dateTick + ".jpg");
                             await ConvertHeicToJpgAsync(Path.Combine(folderPath, uploadFileName), folderPath);
                             Newfilename = Path.GetFileName(newuploadheic);
                             var fileToDelete = Path.Combine(folderPath, uploadFileName);
@@ -1025,8 +1027,9 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     try
                     {
-
-                        var uploadFileName = Path.GetFileNameWithoutExtension(file.FileName) + "_" + DateTime.Today.Ticks.ToString() + Path.GetExtension(file.FileName);
+                        var dateTick = DateTime.Now.Ticks.ToString();
+                        dateTick= dateTick.Substring(Math.Max(0, dateTick.Length - 6));
+                        var uploadFileName = Path.GetFileNameWithoutExtension(file.FileName) + "_" + dateTick + Path.GetExtension(file.FileName);
                         var fileExtension = Path.GetExtension(file.FileName).ToLower();
                         string[] allowedExtensions = { ".jpg", ".jpeg", ".bmp", ".gif", ".heic", ".png" };
 
@@ -1048,7 +1051,7 @@ namespace CityWatch.Web.Pages.Guard
                         //p1-102 add photos with heic extension-start
                         if (fileExtension == ".heic")
                         {
-                            var newuploadheic = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(file.FileName) + "_" + DateTime.Today.Ticks.ToString() + ".jpg");
+                            var newuploadheic = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(file.FileName) + "_" + dateTick + ".jpg");
                             await ConvertHeicToJpgAsync(Path.Combine(folderPath, uploadFileName), folderPath);
                             Newfilename = Path.GetFileName(newuploadheic);
                             var fileToDelete = Path.Combine(folderPath, uploadFileName);
