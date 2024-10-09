@@ -72,6 +72,8 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.EntityFrameworkCore.SqlServer.Query.Internal;
 using ImageMagick;
 using Org.BouncyCastle.Crypto.Macs;
+using Dropbox.Api.Files;
+
 namespace CityWatch.Web.Pages.Guard
 {
     public class DailyLogModel : PageModel
@@ -160,7 +162,7 @@ namespace CityWatch.Web.Pages.Guard
                 logBookDate = DateTime.Today;
             }
 
-            
+
             var guardLogs = _guardLogDataProvider.GetGuardLogswithKvLogData(logBookId, logBookDate ?? DateTime.Today)
                 .OrderByDescending(z => z.Id)
                 .ThenByDescending(z => z.EventDateTime);
@@ -172,7 +174,7 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     if (guardLogImage.IsRearfile == true)
                     {
-                        guardlog.Notes = guardlog.Notes+ "</br>See attached file <a href =\"" + guardLogImage.ImagePath + "\" target=\"_blank\">" + Path.GetFileName(guardLogImage.ImagePath) + "</a>";
+                        guardlog.Notes = guardlog.Notes + "</br>See attached file <a href =\"" + guardLogImage.ImagePath + "\" target=\"_blank\">" + Path.GetFileName(guardLogImage.ImagePath) + "</a>";
                         guardlog.NotesNew = guardlog.NotesNew + "</br>See attached file <a href =\"" + guardLogImage.ImagePath + "\" target=\"_blank\">" + Path.GetFileName(guardLogImage.ImagePath) + "</a>";
                     }
                     if (guardLogImage.IsTwentyfivePercentfile == true)
@@ -385,11 +387,11 @@ namespace CityWatch.Web.Pages.Guard
                         ClientSiteRadioChecksActivity.GuardLogoutTime = DateTime.Now;
                         _guardLogDataProvider.UpdateRadioChecklistLogOffEntry(ClientSiteRadioChecksActivity);
                         /* Update Radio check status logOff*/
-                       
+
                     }
                 }
 
-                if(guardlogins!=null)
+                if (guardlogins != null)
                 {
                     _guardLogDataProvider.SaveClientSiteRadioCheckStatusFromlogBookNewUpdate(new ClientSiteRadioCheck()
                     {
@@ -934,18 +936,18 @@ namespace CityWatch.Web.Pages.Guard
 
         public IActionResult OnGetDailyGuardLog(int id)
         {
-            
+
             if (id != 0)
             {
-               
-                    
-                    /* Change in Attachement*/
-                    ViewData["DailyGuardLog_Attachments"] = _viewDataService.GetDailyGuardLogAttachments(
-                        IO.Path.Combine(_webHostEnvironment.WebRootPath, "DGlUploads"), id.ToString())
-                        .ToList();
-                    ViewData["DailyGuardLog_FilesPathRoot"] = "/DGlUploads/" + id.ToString();
-                    
-                
+
+
+                /* Change in Attachement*/
+                ViewData["DailyGuardLog_Attachments"] = _viewDataService.GetDailyGuardLogAttachments(
+                    IO.Path.Combine(_webHostEnvironment.WebRootPath, "DGlUploads"), id.ToString())
+                    .ToList();
+                ViewData["DailyGuardLog_FilesPathRoot"] = "/DGlUploads/" + id.ToString();
+
+
             }
 
             return new PartialViewResult
@@ -974,7 +976,7 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     url = Request.Form[key].ToString();
                 }
-                
+
             }
             if (files.Count == 1)
             {
@@ -1037,7 +1039,7 @@ namespace CityWatch.Web.Pages.Guard
                 }
             }
 
-            return new JsonResult(new {  success,message });
+            return new JsonResult(new { success, message });
         }
 
         public JsonResult OnPostTwentyfivePercentFileUpload()
@@ -1071,7 +1073,7 @@ namespace CityWatch.Web.Pages.Guard
                         //if (Path.GetExtension(file.FileName) != ".JPG" && Path.GetExtension(file.FileName) != ".jpg" && Path.GetExtension(file.FileName) != ".JPEG" && Path.GetExtension(file.FileName) != ".jpeg" && Path.GetExtension(file.FileName) != ".bmp" && Path.GetExtension(file.FileName) != ".BMP" && Path.GetExtension(file.FileName) != ".gif" && Path.GetExtension(file.FileName) != ".GIF" && Path.GetExtension(file.FileName) != ".heic" && Path.GetExtension(file.FileName) != ".HEIC")
                         if (Path.GetExtension(file.FileName) != ".JPG" && Path.GetExtension(file.FileName) != ".jpg" && Path.GetExtension(file.FileName) != ".JPEG" && Path.GetExtension(file.FileName) != ".jpeg" && Path.GetExtension(file.FileName) != ".bmp" && Path.GetExtension(file.FileName) != ".BMP" && Path.GetExtension(file.FileName) != ".gif" && Path.GetExtension(file.FileName) != ".GIF")
                             throw new ArgumentException("Unsupported file type. Please upload a .jpg/.jpeg/.bmp/.gif file");
-                        
+
                         string reportReference = HttpContext.Session.GetString("ReportReference");
                         var folderPath = Path.Combine(Path.Combine(_webHostEnvironment.WebRootPath, "DglUploads", id.ToString()), "TwentyfivePercentFiles");
                         if (!Directory.Exists(folderPath))
@@ -1102,7 +1104,7 @@ namespace CityWatch.Web.Pages.Guard
                         //}
                         //p1 - 102 add photos with heic extension - end
                         //var folderPathnew = Path.Combine(Path.Combine("https://localhost:44356/", "DglUploads", id.ToString()), "TwentyfivePercentFiles");
-                        var folderPathnew = Path.Combine(Path.Combine(url+ "/", "DglUploads", id.ToString()), "TwentyfivePercentFiles");
+                        var folderPathnew = Path.Combine(Path.Combine(url + "/", "DglUploads", id.ToString()), "TwentyfivePercentFiles");
 
                         var LogImages = new GuardLogsDocumentImages()
                         {
@@ -1121,7 +1123,7 @@ namespace CityWatch.Web.Pages.Guard
                 }
             }
 
-            return new JsonResult(new {  success,message });
+            return new JsonResult(new { success, message });
         }
         public JsonResult OnPostDeleteAttachment(int id)
 
@@ -1184,13 +1186,88 @@ namespace CityWatch.Web.Pages.Guard
 
 
             var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(id);
-            foreach(var item in guardlogImages)
+            foreach (var item in guardlogImages)
             {
                 item.ImageFile = IO.Path.GetFileName(item.ImagePath);
             }
 
             return new JsonResult(guardlogImages);
         }
+
+
+        public JsonResult OnPostDownLoadHelpPDF(string filename, int loginGuardId, GuardLog tmdata,string pageName,string jsname)
+        {
+
+            var Issuccess = false;
+            var exMessage = "";
+            var status = pageName == "IR" ? ((jsname == "lb") ? true : false) : true;
+            try
+            {
+                // avoid two calls from lb and Kv js in IR
+                if (status)
+                {
+                    if (User.Identity.IsAuthenticated)
+                    {
+                        var userid = AuthUserHelper.GetLoggedInUserId;
+                        if (userid != null)
+                        {
+                            var IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
+
+                            if (loginGuardId != 0)
+                            {
+
+                                FileDownloadAuditLogs fdal = new FileDownloadAuditLogs()
+                                {
+                                    UserID = (int)userid,
+                                    GuardID = loginGuardId,
+                                    IPAddress = IPAddress,
+                                    DwnlCatagory = "Help Document " + pageName,
+                                    DwnlFileName = filename,
+                                    EventDateTimeLocal = tmdata.EventDateTimeLocal,
+                                    EventDateTimeLocalWithOffset = tmdata.EventDateTimeLocalWithOffset,
+                                    EventDateTimeZone = tmdata.EventDateTimeZone,
+                                    EventDateTimeZoneShort = tmdata.EventDateTimeZoneShort,
+                                    EventDateTimeUtcOffsetMinute = tmdata.EventDateTimeUtcOffsetMinute
+                                };
+
+                                _guardLogDataProvider.CreateDownloadFileAuditLogEntry(fdal);
+                                Issuccess = true;
+
+                            }
+                            else
+                            {
+                                exMessage = "Error: Guard details not found.";
+                            }
+
+                        }
+                        else
+                        {
+                            exMessage = "Error: User not authenticated.";
+                        }
+                    }
+                    else
+                    {
+                        exMessage = "Error: User not authenticated.";
+                    }
+
+                }
+               else
+                {
+                    Issuccess = false;
+
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.StackTrace);
+                exMessage = $"Error: {ex.Message}.";
+            }
+
+            return new JsonResult(new { success = Issuccess, message = exMessage });
+        }
+
     }
 
 

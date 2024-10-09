@@ -1,6 +1,7 @@
 ﻿@page
 @using CityWatch.Data.Models;
 @using CityWatch.Data.Providers;
+@using Microsoft.AspNetCore.Http
 @model CityWatch.RadioCheck.Pages.Radio.RadioCheckNewModel
 @inject IConfigDataProvider configDataProvider
 @{
@@ -9,6 +10,10 @@
     ViewData["PageName"] = "Radio Check";
     Layout = "_Layout_InnerPage";
     ViewData["DisplayItem"] = Model.DisplayItem;
+    var guardid = Request.Query["guid"];  // Initialize with a default value
+    
+
+    var loginUserId = Request.Query["lud"];
 }
 
 @using CityWatch.Data.Helpers;
@@ -22,7 +27,8 @@
 <input type="hidden" id="txtClientSiteId" />
 <input type="hidden" id="txtGuardId" />
 <input type="hidden" id="txtSignalRConnectionUrl" value="@Model.SignalRConnectionUrl" />
-
+<input type="hidden" asp-for="@guardid" id="GuardLog_GuardLogin_GuardId" />
+<input type="hidden" asp-for="@loginUserId" id="loginUserId" />
 <!-----------------In Acive List -------------------->
 
 <div class="card">

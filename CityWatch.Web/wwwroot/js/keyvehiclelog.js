@@ -5592,7 +5592,7 @@ $(function () {
 
     /*p1-196 rationalization of menu changes-start*/
     /*to add do's and donts -start*/
-    
+
     //let gridDosAndDontsFields;
     //let isDosandDontsFieldAdding = false;
     //gridDosAndDontsFields = $('#tbl_dosanddonts_fields').grid({
@@ -5674,6 +5674,8 @@ $(function () {
     /*to add do's and donts -end*/
     /*p1-196 rationalization of menu changes-end*/
 
+
+   
 
 
 
