@@ -5057,7 +5057,26 @@ namespace CityWatch.Data.Providers
                .Where(z => z.ClientSiteId == clientSiteId && z.EventDateTime.Date >= logFromDate && z.EventDateTime.Date <= logToDate)
                .ToList();
 
-            var returnData = data.OrderBy(z => z.EventDateTime)
+            var checkGMT = data
+                  .Where(x => x.ActivityType != "SW" && x.EventDateTimeZoneShort != null)
+                  .Select(x => x.EventDateTimeZoneShort)
+                  .FirstOrDefault();
+
+            if (checkGMT != null)
+            {
+                data.ForEach(x =>
+                {
+                    if (x.EventDateTimeZoneShort == null)
+                    {
+                        x.EventDateTimeZoneShort = checkGMT;
+                    }
+                });
+
+            }
+
+                //notificationCreatedTime
+
+                var returnData = data.OrderBy(z => z.EventDateTime)
                 .ToList();
 
             return returnData;
