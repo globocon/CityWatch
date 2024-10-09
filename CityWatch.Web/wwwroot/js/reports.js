@@ -557,23 +557,35 @@
             /* expanding grapph - start*/
             
             
-                $('#count_by_numberofduressperweek').html(response.rcChartTypesForWeekNewCount);
+            $('#count_by_numberofduressperweek').html(response.rcChartTypesForWeekNewCount);
+            if (response.rcChartTypesForWeekNewCount != 0) {
                 drawPieChartUsingChartJsChartRCForWeek(response.chartData.rcChartTypesForWeekNew);
+            }
             
            
-                $('#count_by_numberofduresspermonth').html(response.rcChartTypesForMonthNewCount);
+            $('#count_by_numberofduresspermonth').html(response.rcChartTypesForMonthNewCount);
+            if (response.rcChartTypesForMonthNewCount != 0) {
                 drawPieChartUsingChartJsChartRCForMonth(response.chartData.rcChartTypesForMonthNew);
+            }
            
-                $('#count_by_numberofduressperyear').html(response.rcChartTypesForYearNewCount);
-            drawPieChartUsingChartJsChartRCForYear(response.chartData.rcChartTypesForYearNew);
+            $('#count_by_numberofduressperyear').html(response.rcChartTypesForYearNewCount);
+            if (response.rcChartTypesForYearNewCount != 0) {
+                drawPieChartUsingChartJsChartRCForYear(response.chartData.rcChartTypesForYearNew);
+            }
 
             $('#count_by_numberoftimesrcpushedbycro').html(response.rcChartTypesCROCountnew);
-            drawPieChartUsingChartJsChartRCButton(response.chartData.rcChartTypesCRONew);
+            if (response.rcChartTypesCROCountnew != 0) {
+                drawPieChartUsingChartJsChartRCButton(response.chartData.rcChartTypesCRONew);
+            }
 
             $('#count_by_numberofguardswnenttoprealarm').html(response.rcChartTypesGuardsPrealarmCountnew);
-            drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(response.chartData.rcChartTypesGuardsPrealarmNew);
+            if (response.rcChartTypesGuardsPrealarmCountnew != 0) {
+                drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(response.chartData.rcChartTypesGuardsPrealarmNew);
+            }
             $('#count_by_numberofguardswnentfromprealarmorangetored').html(response.rcChartTypesGuardsFromPrealarmCountnew);
-            drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(response.chartData.rcChartTypesGuardsFromPrealarmNew);
+            if (response.rcChartTypesGuardsFromPrealarmCountnew != 0) {
+                drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(response.chartData.rcChartTypesGuardsFromPrealarmNew);
+            }
           
             
         }).fail(function () {
