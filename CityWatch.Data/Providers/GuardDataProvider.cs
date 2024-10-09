@@ -402,6 +402,7 @@ namespace CityWatch.Data.Providers
                     guardLoginToUpdate.SmartWandId = guardLogin.SmartWandId;
                     guardLoginToUpdate.PositionId = guardLogin.PositionId;
                     guardLoginToUpdate.OnDuty = guardLogin.OnDuty;
+                    guardLoginToUpdate.IPAddress= guardLogin.IPAddress;
                 }
             }
             _context.SaveChanges();

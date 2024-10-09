@@ -764,5 +764,12 @@ pre.dark-mode {
     padding-left: 1px !important;
     padding-right: 1px !important;
 }
+#user_settings tbody div[data-role="display"] {
+    vertical-align: middle;
+    text-indent: 0;
+    white-space: normal !important; /* Override white-space: pre-wrap */
+    -ms-word-break: break-word;
+    word-break: break-word;
+}
 
 

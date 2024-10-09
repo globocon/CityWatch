@@ -304,6 +304,10 @@ namespace CityWatch.Data.Providers
         void DeleteGuardLogDocumentImaes(int id);
         List<ClientSiteRadioChecksActivityStatus_History> GetGuardFusionLogsWithToDate(DateTime FromDate, DateTime ToDate);
         List<ClientSiteRadioCheck> GetClientSiteRadioChecksWithDate(DateTime FromDate, DateTime ToDate);
+
+        void SaveUserLoginHistoryDetails(LoginUserHistory loginUserHistory);
+
+        List<LoginUserHistory> GetLastLoginUsingUserHistory(int GuardId);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -1055,7 +1059,7 @@ namespace CityWatch.Data.Providers
 
                 var result = _context.GuardLogins
      .Where(x => x.GuardId == GuradId)
-     .Include(x=>x.ClientSite)
+     .Include(x => x.ClientSite)
      .OrderByDescending(x => x.LoginDate)
      .Take(5)
      .ToList();
@@ -1069,6 +1073,26 @@ namespace CityWatch.Data.Providers
                 Console.WriteLine($"An error occurred: {ex.Message}");
                 return new List<GuardLogin>();
             }
+        }
+
+
+        public List<LoginUserHistory> GetLastLoginUsingUserHistory(int GuardId)
+        {
+            var lastLogins = _context.LoginUserHistory
+                .Where(x => x.GuardId == GuardId)
+                .Select(l => new LoginUserHistory
+                {
+                    Id = l.Id,
+                    LoginUserId = l.LoginUserId,
+                    LoginTime = l.LoginTime,
+                    IPAddress = l.IPAddress,
+                    // Populate guard and site names if the GuardId and ClientSiteId are not null
+                    guard = l.GuardId != 0 ? _context.Guards.FirstOrDefault(g => g.Id == l.GuardId).Name : string.Empty,
+                    SiteName = l.ClientSiteId != 0 ? _context.ClientSites.FirstOrDefault(c => c.Id == l.ClientSiteId).Name : string.Empty
+                })
+                .ToList();
+
+            return lastLogins;
         }
         public int SaveClientSiteCustomFields(ClientSiteCustomField clientSiteCustomField)
         {
@@ -1602,7 +1626,7 @@ namespace CityWatch.Data.Providers
                         ActivityType = clientSiteActivity.ActivityType,
                         OnDuty = clientSiteActivity.OnDuty,
                         OffDuty = clientSiteActivity.OffDuty,
-                        ActivityDescription =  clientSiteActivity.ActivityDescription!=string.Empty? clientSiteActivity.ActivityDescription: "Edited"
+                        ActivityDescription = clientSiteActivity.ActivityDescription != string.Empty ? clientSiteActivity.ActivityDescription : "Edited"
                     });
 
                 }
@@ -1636,7 +1660,7 @@ namespace CityWatch.Data.Providers
                         KVId = clientSiteActivity.KVId,
                         LBId = clientSiteActivity.LBId,
                         ActivityType = clientSiteActivity.ActivityType,
-                        ActivityDescription= clientSiteActivity.ActivityDescription,
+                        ActivityDescription = clientSiteActivity.ActivityDescription,
                         OnDuty = clientSiteActivity.OnDuty,
                         OffDuty = clientSiteActivity.OffDuty,
                         GuardLoginTimeLocal = clientSiteActivity.GuardLoginTimeLocal,
@@ -2538,18 +2562,18 @@ namespace CityWatch.Data.Providers
             }
         }
 
-        public void CreateLogBookStampForNoGuard(int ClientSiteID,DateTime dateTime, DateTime dateendTime)
+        public void CreateLogBookStampForNoGuard(int ClientSiteID, DateTime dateTime, DateTime dateendTime)
         {
             /* Check if NoGuardLogin event type exists in the logbook for the date if not create entry */
             // Check if Logbook id exists for the date create new logbookid
             var logbookdate = DateTime.Today;
             var logbooktype = LogBookType.DailyGuardLog;
             //var logBookId = GetClientSiteLogBookIdByLogBookMaxID(ClientSiteID, logbooktype, out logbookdate);
-            var logBookId =  _logbookDataService.GetNewOrExistingClientSiteLogBookId(ClientSiteID, logbooktype);
-            var ClientSiteName = GetClientSites(ClientSiteID).FirstOrDefault().Name; 
+            var logBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(ClientSiteID, logbooktype);
+            var ClientSiteName = GetClientSites(ClientSiteID).FirstOrDefault().Name;
             var checklogbookEntry = _context.GuardLogs.Where(x => x.ClientSiteLogBookId == logBookId && x.EventType == (int)GuardLogEventType.NoGuardLogin).ToList();
             var subject = "No Guard on Duty";
-            if (checklogbookEntry.Count < 1 )
+            if (checklogbookEntry.Count < 1)
             {
                 var guardLog = new GuardLog()
                 {
@@ -2568,7 +2592,7 @@ namespace CityWatch.Data.Providers
                 SaveGuardLog(guardLog);
 
                 LogBookEntryFromRcControlRoomMessages(0, 0, subject, ClientSiteName, IrEntryType.Alarm, 1, 0, guardLog);
-            }            
+            }
         }
 
 
@@ -2578,8 +2602,8 @@ namespace CityWatch.Data.Providers
          */
         public bool CheckIfAnyEntryexistInRadioCheckStatus(int ClientSiteId)
         {
-            var numberofactiveRowExistintheRadioStatus =_context.ClientSiteRadioChecksActivityStatus.Where(x =>  x.ClientSiteId == ClientSiteId && x.GuardLoginTime == null).ToList();
-            if(numberofactiveRowExistintheRadioStatus.Count!=0)
+            var numberofactiveRowExistintheRadioStatus = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == ClientSiteId && x.GuardLoginTime == null).ToList();
+            if (numberofactiveRowExistintheRadioStatus.Count != 0)
             {
                 return true;
 
@@ -2608,7 +2632,7 @@ namespace CityWatch.Data.Providers
                     /*IsPHO check if its a public holyday */
                     /*ScheduleisActive activate for particular  Site*/
                     var clientSiteManningKpiSettings = _context.ClientSiteManningKpiSettings.Include(x => x.ClientSiteKpiSetting).
-                        Where(x => x.Type == "2" && x.IsPHO == 1 && x.EmpHoursStart !=null && x.EmpHoursEnd!=null && x.ClientSiteKpiSetting.ScheduleisActive == true).ToList();
+                        Where(x => x.Type == "2" && x.IsPHO == 1 && x.EmpHoursStart != null && x.EmpHoursEnd != null && x.ClientSiteKpiSetting.ScheduleisActive == true).ToList();
                     foreach (var manning in clientSiteManningKpiSettings)
                     {
                         if (manning.EmpHoursStart != null && manning.EmpHoursEnd != null)
@@ -4248,7 +4272,7 @@ namespace CityWatch.Data.Providers
         //code added for client site dropdown starts
         public List<ClientType> GetUserClientTypesHavingAccess(int? userId)
         {
-            var clientTypes = GetClientTypes().Where(x=>x.IsActive==true).ToList();
+            var clientTypes = GetClientTypes().Where(x => x.IsActive == true).ToList();
             if (userId == null)
                 return clientTypes;
 
@@ -5057,7 +5081,26 @@ namespace CityWatch.Data.Providers
                .Where(z => z.ClientSiteId == clientSiteId && z.EventDateTime.Date >= logFromDate && z.EventDateTime.Date <= logToDate)
                .ToList();
 
-            var returnData = data.OrderBy(z => z.EventDateTime)
+            var checkGMT = data
+                  .Where(x => x.ActivityType != "SW" && x.EventDateTimeZoneShort != null)
+                  .Select(x => x.EventDateTimeZoneShort)
+                  .FirstOrDefault();
+
+            if (checkGMT != null)
+            {
+                data.ForEach(x =>
+                {
+                    if (x.EventDateTimeZoneShort == null)
+                    {
+                        x.EventDateTimeZoneShort = checkGMT;
+                    }
+                });
+
+            }
+
+                //notificationCreatedTime
+
+                var returnData = data.OrderBy(z => z.EventDateTime)
                 .ToList();
 
             return returnData;
@@ -5089,12 +5132,12 @@ namespace CityWatch.Data.Providers
         public List<GuardLogsDocumentImages> GetGuardLogDocumentImaes(int LogId)
         {
             var result = new List<GuardLogsDocumentImages>();
-           result = _context.GuardLogsDocumentImages
-                          .Where(z => z.GuardLogId==LogId)
-                          .OrderBy(z => z.ImagePath)
-                          .ToList();
+            result = _context.GuardLogsDocumentImages
+                           .Where(z => z.GuardLogId == LogId)
+                           .OrderBy(z => z.ImagePath)
+                           .ToList();
 
-                    
+
             return result;
         }
 
@@ -5105,7 +5148,7 @@ namespace CityWatch.Data.Providers
             var result = new List<GuardLogsDocumentImages>();
             result = _context.GuardLogsDocumentImages
                            .Where(z => z.Id == Id)
-                         
+
                            .ToList();
 
 
@@ -5120,14 +5163,14 @@ namespace CityWatch.Data.Providers
                 _context.SaveChanges();
             }
         }
-        public List<ClientSiteRadioChecksActivityStatus_History> GetGuardFusionLogsWithToDate( DateTime  FromDate,DateTime ToDate)
+        public List<ClientSiteRadioChecksActivityStatus_History> GetGuardFusionLogsWithToDate(DateTime FromDate, DateTime ToDate)
         {
             //var data = _context.ClientSiteRadioChecksActivityStatus_History
             //.Where(z => z.ClientSiteId == clientSiteId )
             //.ToList();
 
             var data = _context.ClientSiteRadioChecksActivityStatus_History
-               .Where(z => z.EventDateTime.Date>=FromDate && z.EventDateTime.Date <= ToDate)
+               .Where(z => z.EventDateTime.Date >= FromDate && z.EventDateTime.Date <= ToDate)
                .ToList();
 
             var returnData = data.OrderBy(z => z.EventDateTime)
@@ -5137,7 +5180,20 @@ namespace CityWatch.Data.Providers
         }
         public List<ClientSiteRadioCheck> GetClientSiteRadioChecksWithDate(DateTime FromDate, DateTime ToDate)
         {
-             return _context.ClientSiteRadioChecks.Where(z => z.CheckedAt >= FromDate && z.CheckedAt <= ToDate).ToList();
+            return _context.ClientSiteRadioChecks.Where(z => z.CheckedAt >= FromDate && z.CheckedAt <= ToDate).ToList();
+        }
+
+
+        public void SaveUserLoginHistoryDetails(LoginUserHistory loginUserHistory)
+        {
+
+
+            _context.LoginUserHistory.Add(loginUserHistory);
+            _context.SaveChanges();
+
+
+
+
         }
     }
 

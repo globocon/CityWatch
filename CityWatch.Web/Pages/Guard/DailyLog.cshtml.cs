@@ -27,6 +27,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using IO = System.IO;
+
 namespace CityWatch.Web.Pages.Guard
 {
     public class DailyLogModel : PageModel
@@ -118,7 +119,7 @@ namespace CityWatch.Web.Pages.Guard
                 logBookDate = DateTime.Today;
             }
 
-            
+
             var guardLogs = _guardLogDataProvider.GetGuardLogswithKvLogData(logBookId, logBookDate ?? DateTime.Today)
                 .OrderByDescending(z => z.Id)
                 .ThenByDescending(z => z.EventDateTime);
@@ -130,7 +131,7 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     if (guardLogImage.IsRearfile == true)
                     {
-                        guardlog.Notes = guardlog.Notes+ "</br>See attached file <a href =\"" + guardLogImage.ImagePath + "\" target=\"_blank\">" + Path.GetFileName(guardLogImage.ImagePath) + "</a>";
+                        guardlog.Notes = guardlog.Notes + "</br>See attached file <a href =\"" + guardLogImage.ImagePath + "\" target=\"_blank\">" + Path.GetFileName(guardLogImage.ImagePath) + "</a>";
                         guardlog.NotesNew = guardlog.NotesNew + "</br>See attached file <a href =\"" + guardLogImage.ImagePath + "\" target=\"_blank\">" + Path.GetFileName(guardLogImage.ImagePath) + "</a>";
                     }
                     if (guardLogImage.IsTwentyfivePercentfile == true)
@@ -343,11 +344,11 @@ namespace CityWatch.Web.Pages.Guard
                         ClientSiteRadioChecksActivity.GuardLogoutTime = DateTime.Now;
                         _guardLogDataProvider.UpdateRadioChecklistLogOffEntry(ClientSiteRadioChecksActivity);
                         /* Update Radio check status logOff*/
-                       
+
                     }
                 }
 
-                if(guardlogins!=null)
+                if (guardlogins != null)
                 {
                     _guardLogDataProvider.SaveClientSiteRadioCheckStatusFromlogBookNewUpdate(new ClientSiteRadioCheck()
                     {
@@ -892,18 +893,18 @@ namespace CityWatch.Web.Pages.Guard
 
         public IActionResult OnGetDailyGuardLog(int id)
         {
-            
+
             if (id != 0)
             {
-               
-                    
-                    /* Change in Attachement*/
-                    ViewData["DailyGuardLog_Attachments"] = _viewDataService.GetDailyGuardLogAttachments(
-                        IO.Path.Combine(_webHostEnvironment.WebRootPath, "DGlUploads"), id.ToString())
-                        .ToList();
-                    ViewData["DailyGuardLog_FilesPathRoot"] = "/DGlUploads/" + id.ToString();
-                    
-                
+
+
+                /* Change in Attachement*/
+                ViewData["DailyGuardLog_Attachments"] = _viewDataService.GetDailyGuardLogAttachments(
+                    IO.Path.Combine(_webHostEnvironment.WebRootPath, "DGlUploads"), id.ToString())
+                    .ToList();
+                ViewData["DailyGuardLog_FilesPathRoot"] = "/DGlUploads/" + id.ToString();
+
+
             }
 
             return new PartialViewResult
@@ -991,7 +992,9 @@ namespace CityWatch.Web.Pages.Guard
                     }
                 }
             }
+
             //return "";
+
             return new JsonResult(new { success, message });
         }
 
@@ -1022,6 +1025,7 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     try
                     {
+
                         var uploadFileName = Path.GetFileNameWithoutExtension(file.FileName) + "_" + DateTime.Today.Ticks.ToString() + Path.GetExtension(file.FileName);
                         var fileExtension = Path.GetExtension(file.FileName).ToLower();
                         string[] allowedExtensions = { ".jpg", ".jpeg", ".bmp", ".gif", ".heic", ".png" };
@@ -1029,6 +1033,7 @@ namespace CityWatch.Web.Pages.Guard
                         // Validate file type
                         if (!allowedExtensions.Contains(fileExtension))
                             throw new ArgumentException("Unsupported file type. Please upload a .jpg/.jpeg/.bmp/.gif/.heic/.png file.");
+
 
                         string reportReference = HttpContext.Session.GetString("ReportReference");
                         var folderPath = Path.Combine(Path.Combine(_webHostEnvironment.WebRootPath, "DglUploads", id.ToString()), "TwentyfivePercentFiles");
@@ -1074,6 +1079,7 @@ namespace CityWatch.Web.Pages.Guard
             }
 
             return new JsonResult(new { success, message });
+
         }
 
         public async Task<string> ConvertHeicToJpgAsync(string heicFilePath, string outputDirectory)
@@ -1118,6 +1124,7 @@ namespace CityWatch.Web.Pages.Guard
                 Console.WriteLine($"Error during conversion: {ex.Message}");
                 throw;  // Rethrow the exception for further handling if needed
             }
+
         }
         //public JsonResult OnPostRearFileUpload()
         //{
@@ -1349,13 +1356,88 @@ namespace CityWatch.Web.Pages.Guard
 
 
             var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(id);
-            foreach(var item in guardlogImages)
+            foreach (var item in guardlogImages)
             {
                 item.ImageFile = IO.Path.GetFileName(item.ImagePath);
             }
 
             return new JsonResult(guardlogImages);
         }
+
+
+        public JsonResult OnPostDownLoadHelpPDF(string filename, int loginGuardId, GuardLog tmdata,string pageName,string jsname)
+        {
+
+            var Issuccess = false;
+            var exMessage = "";
+            var status = pageName == "IR" ? ((jsname == "lb") ? true : false) : true;
+            try
+            {
+                // avoid two calls from lb and Kv js in IR
+                if (status)
+                {
+                    if (User.Identity.IsAuthenticated)
+                    {
+                        var userid = AuthUserHelper.GetLoggedInUserId;
+                        if (userid != null)
+                        {
+                            var IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
+
+                            if (loginGuardId != 0)
+                            {
+
+                                FileDownloadAuditLogs fdal = new FileDownloadAuditLogs()
+                                {
+                                    UserID = (int)userid,
+                                    GuardID = loginGuardId,
+                                    IPAddress = IPAddress,
+                                    DwnlCatagory = "Help Document " + pageName,
+                                    DwnlFileName = filename,
+                                    EventDateTimeLocal = tmdata.EventDateTimeLocal,
+                                    EventDateTimeLocalWithOffset = tmdata.EventDateTimeLocalWithOffset,
+                                    EventDateTimeZone = tmdata.EventDateTimeZone,
+                                    EventDateTimeZoneShort = tmdata.EventDateTimeZoneShort,
+                                    EventDateTimeUtcOffsetMinute = tmdata.EventDateTimeUtcOffsetMinute
+                                };
+
+                                _guardLogDataProvider.CreateDownloadFileAuditLogEntry(fdal);
+                                Issuccess = true;
+
+                            }
+                            else
+                            {
+                                exMessage = "Error: Guard details not found.";
+                            }
+
+                        }
+                        else
+                        {
+                            exMessage = "Error: User not authenticated.";
+                        }
+                    }
+                    else
+                    {
+                        exMessage = "Error: User not authenticated.";
+                    }
+
+                }
+               else
+                {
+                    Issuccess = false;
+
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.StackTrace);
+                exMessage = $"Error: {ex.Message}.";
+            }
+
+            return new JsonResult(new { success = Issuccess, message = exMessage });
+        }
+
     }
 
 
