@@ -43,6 +43,7 @@ namespace CityWatch.Web.Pages
             else
             {
                 SignInUser(user);
+                _userAuthentication.SaveUserLoginHistoryDetails(user, Request.HttpContext.Connection.RemoteIpAddress.ToString());
                 return Redirect(Url.Page(returnUrl));
             }
             return Page();
