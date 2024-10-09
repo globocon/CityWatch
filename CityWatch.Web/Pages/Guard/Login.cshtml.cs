@@ -86,11 +86,12 @@ namespace CityWatch.Web.Pages.Guard
             var GPSCoordinates = GuardLogin.GpsCoordinates;
             try
             {
+                //p1-266 checking whether guard has access in login 
+                if (GuardLogin.Guard.IsLB_KV_IR)
+                {
 
 
-
-
-                GuardLogin.SmartWandOrPositionId = smartWandOrPositionId;
+                    GuardLogin.SmartWandOrPositionId = smartWandOrPositionId;
                 var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Name == GuardLogin.ClientTypeName);
                 GuardLogin.ClientSite = _clientDataProvider.GetClientSites(clientType.Id).SingleOrDefault(z => z.Name == GuardLogin.ClientSiteName);
 
@@ -143,15 +144,18 @@ namespace CityWatch.Web.Pages.Guard
                 if (LogBookType == LogBookType.DailyGuardLog)
                 {
                     // Task p6#73_TimeZone issue -- modified by Binoy
-                    CreateLogbookLoggedInEntry(logBookId, guardLoginId, eventDateTimeLocal,
-                        eventDateTimeLocalWithOffset, eventDateTimeZone, eventDateTimeZoneShort, eventDateTimeUtcOffsetMinute, GPSCoordinates);
-
+                    
+                    
+                        CreateLogbookLoggedInEntry(logBookId, guardLoginId, eventDateTimeLocal,
+                            eventDateTimeLocalWithOffset, eventDateTimeZone, eventDateTimeZoneShort, eventDateTimeUtcOffsetMinute, GPSCoordinates);
+                   
                 }
                 if (LogBookType == LogBookType.VehicleAndKeyLog)
                 {
-                    CreateKeyVehicleLoggedInEntry(logBookId, guardLoginId, eventDateTimeLocal,
+                    
+                        CreateKeyVehicleLoggedInEntry(logBookId, guardLoginId, eventDateTimeLocal,
                         eventDateTimeLocalWithOffset, eventDateTimeZone, eventDateTimeZoneShort, eventDateTimeUtcOffsetMinute, GPSCoordinates);
-
+                    
                 }
 
                 if (LogBookType == LogBookType.VehicleAndKeyLog && isNewLogBook)
@@ -294,6 +298,12 @@ namespace CityWatch.Web.Pages.Guard
                 HttpContext.Session.SetInt32("GuardLoginId", guardLoginId);
 
                 success = true;
+                }
+                else
+                {
+                    success = false;
+                    message = "Not authorized to access this page";
+                }
             }
             catch (Exception ex)
             {
