@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.DataProtection;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Security.Cryptography;
@@ -30,6 +31,9 @@ namespace CityWatch.Data.Models
 
         public string EmailMessage { get; set; }
         public DateTime EmailMessageUploadedOn { get; set; }
+
+        public string ApiProvider { get; set; }
+        public string ApiSecretkey { get; set; }
 
         [NotMapped]
         public string FormattedLastUploaded { get { return LastUploaded.ToString("dd MMM yyyy @ HH:mm"); } }

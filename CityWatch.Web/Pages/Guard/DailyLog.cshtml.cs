@@ -4,33 +4,9 @@ using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Web.Helpers;
 using CityWatch.Web.Services;
-using DocumentFormat.OpenXml.Office2010.Word;
-using MailKit.Net.Smtp;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using MimeKit;
-using Org.BouncyCastle.Tls;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Web;
-using CityWatch.Common.Models;
-using CityWatch.Common.Services;
-using CityWatch.Data.Helpers;
-using CityWatch.Data.Models;
-using CityWatch.Data.Providers;
-using CityWatch.Web.Helpers;
-using CityWatch.Web.Models;
-using CityWatch.Web.Services;
-using iText.IO.Image;
+using ConvertApiDotNet;
+//using iText.Kernel.Geom;
+using iText.Layout;
 using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -38,41 +14,19 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Web;
 using IO = System.IO;
-
-using DocumentFormat.OpenXml.Bibliography;
-
-
-using iText.IO.Font.Constants;
-
-using iText.Kernel.Colors;
-//using iText.Kernel.Geom;
-using iText.Kernel.Pdf;
-using iText.Layout;
-using iText.Layout.Borders;
-using iText.Layout.Element;
-using iText.Layout.Properties;
-using Serilog;
-using static Dropbox.Api.TeamLog.EventCategory;
-using System.Net.Http;
-using static Dropbox.Api.Paper.PaperDocPermissionLevel;
-using System.Reflection;
-using DocumentFormat.OpenXml.Spreadsheet;
-using Microsoft.EntityFrameworkCore.SqlServer.Query.Internal;
-using ImageMagick;
-using Org.BouncyCastle.Crypto.Macs;
-using Dropbox.Api.Files;
 
 namespace CityWatch.Web.Pages.Guard
 {
@@ -88,7 +42,7 @@ namespace CityWatch.Web.Pages.Guard
         private readonly ISiteEventLogDataProvider _SiteEventLogDataProvider;
         private readonly ISmsSenderProvider _smsSenderProvider;
         private readonly IWebHostEnvironment _webHostEnvironment;
-
+        private readonly IUserDataProvider _userDataProvider;
 
         [BindProperty]
         public GuardLog GuardLog { get; set; }
@@ -105,7 +59,9 @@ namespace CityWatch.Web.Pages.Guard
              ILogger<DailyLogModel> logger,
              ISiteEventLogDataProvider siteEventLogDataProvider,
              ISmsSenderProvider smsSenderProvider,
-             IWebHostEnvironment webHostEnvironment)
+             IWebHostEnvironment webHostEnvironment,
+             IUserDataProvider userDataProvider
+             )
         {
             _guardDataProvider = guardDataProvider;
             _guardLogDataProvider = guardLogDataProvider;
@@ -117,6 +73,7 @@ namespace CityWatch.Web.Pages.Guard
             _SiteEventLogDataProvider = siteEventLogDataProvider;
             _smsSenderProvider = smsSenderProvider;
             _webHostEnvironment = webHostEnvironment;
+            _userDataProvider = userDataProvider;
         }
 
         public void OnGet()
@@ -956,7 +913,8 @@ namespace CityWatch.Web.Pages.Guard
                 ViewData = new ViewDataDictionary<GuardLog>(ViewData)
             };
         }
-        public JsonResult OnPostRearFileUpload()
+
+        public async Task<JsonResult> OnPostRearFileUpload()
         {
             var success = false;
             var message = "Uploaded successfully";
@@ -985,11 +943,13 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     try
                     {
-                        var uploadFileName = Path.GetFileName(file.FileName);
-                        //if (Path.GetExtension(file.FileName) != ".JPG" && Path.GetExtension(file.FileName) != ".jpg" && Path.GetExtension(file.FileName) != ".JPEG" && Path.GetExtension(file.FileName) != ".jpeg" && Path.GetExtension(file.FileName) != ".bmp" && Path.GetExtension(file.FileName) != ".BMP" && Path.GetExtension(file.FileName) != ".gif" && Path.GetExtension(file.FileName) != ".GIF" && Path.GetExtension(file.FileName) != ".heic" && Path.GetExtension(file.FileName) != ".HEIC")
-                        //    throw new ArgumentException("Unsupported file type. Please upload a .jpg/.jpeg/.bmp/.gif/.heic file");
-                        if (Path.GetExtension(file.FileName) != ".JPG" && Path.GetExtension(file.FileName) != ".jpg" && Path.GetExtension(file.FileName) != ".JPEG" && Path.GetExtension(file.FileName) != ".jpeg" && Path.GetExtension(file.FileName) != ".bmp" && Path.GetExtension(file.FileName) != ".BMP" && Path.GetExtension(file.FileName) != ".gif" && Path.GetExtension(file.FileName) != ".GIF")
-                            throw new ArgumentException("Unsupported file type. Please upload a .jpg/.jpeg/.bmp/.gif file");
+                        var uploadFileName = Path.GetFileNameWithoutExtension(file.FileName) + "_" + DateTime.Today.Ticks.ToString() + Path.GetExtension(file.FileName);
+                        var fileExtension = Path.GetExtension(file.FileName).ToLower();
+                        string[] allowedExtensions = { ".jpg", ".jpeg", ".bmp", ".gif", ".heic", ".png" };
+
+                        // Validate file type
+                        if (!allowedExtensions.Contains(fileExtension))
+                            throw new ArgumentException("Unsupported file type. Please upload a .jpg/.jpeg/.bmp/.gif/.heic/.png file.");
                         string reportReference = HttpContext.Session.GetString("ReportReference");
                         var folderPath = Path.Combine(Path.Combine(_webHostEnvironment.WebRootPath, "DglUploads", id.ToString()), "RearFiles");
                         if (!Directory.Exists(folderPath))
@@ -998,26 +958,20 @@ namespace CityWatch.Web.Pages.Guard
                         {
                             file.CopyTo(stream);
                         }
+
+                        var Newfilename = Path.GetFileName(uploadFileName);
                         //p1-102 add photos with heic extension-start
-                        //if (Path.GetExtension(file.FileName) == ".heic" || Path.GetExtension(file.FileName) == ".HEIC")
-                        //{
-                        //    var newuploadheic = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(file.FileName)+".jpg");
+                        if (fileExtension == ".heic")
+                        {
+                            var newuploadheic = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(file.FileName) + "_" + DateTime.Today.Ticks.ToString() + ".jpg");
+                            await ConvertHeicToJpgAsync(Path.Combine(folderPath, uploadFileName), folderPath);
+                            Newfilename = Path.GetFileName(newuploadheic);
+                            var fileToDelete = Path.Combine(folderPath, uploadFileName);
+                            if (System.IO.File.Exists(fileToDelete))
+                                System.IO.File.Delete(fileToDelete);
 
 
-                        //    using (MagickImage image = new MagickImage(Path.Combine(folderPath, file.FileName)))
-                        //    {
-                        //        // Save the image as JPEG
-                        //        image.Format = MagickFormat.Jpg;
-                        //        image.Write(newuploadheic);
-
-
-
-                        //    }
-                        //    uploadFileName = Path.GetFileName(newuploadheic);
-                        //    var fileToDelete = Path.Combine(folderPath, file.FileName);
-                        //    if (System.IO.File.Exists(fileToDelete))
-                        //        System.IO.File.Delete(fileToDelete);
-                        //}
+                        }
                         //p1 - 102 add photos with heic extension - end
                         //var folderPathnew = Path.Combine(Path.Combine("https://localhost:44356/", "DglUploads", id.ToString()), "RearFiles");
                         var folderPathnew = Path.Combine(Path.Combine(url + "/", "DglUploads", id.ToString()), "RearFiles");
@@ -1025,7 +979,7 @@ namespace CityWatch.Web.Pages.Guard
                         var LogImages = new GuardLogsDocumentImages()
                         {
                             GuardLogId = id,
-                            ImagePath = Path.Combine(folderPathnew, uploadFileName),
+                            ImagePath = Path.Combine(folderPathnew, Newfilename),
                             IsRearfile = true
                         };
 
@@ -1039,10 +993,12 @@ namespace CityWatch.Web.Pages.Guard
                 }
             }
 
+            //return "";
+
             return new JsonResult(new { success, message });
         }
 
-        public JsonResult OnPostTwentyfivePercentFileUpload()
+        public async Task<JsonResult> OnPostTwentyfivePercentFileUpload()
         {
             var success = false;
             var message = "Uploaded successfully";
@@ -1069,10 +1025,15 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     try
                     {
-                        var uploadFileName = Path.GetFileName(file.FileName);
-                        //if (Path.GetExtension(file.FileName) != ".JPG" && Path.GetExtension(file.FileName) != ".jpg" && Path.GetExtension(file.FileName) != ".JPEG" && Path.GetExtension(file.FileName) != ".jpeg" && Path.GetExtension(file.FileName) != ".bmp" && Path.GetExtension(file.FileName) != ".BMP" && Path.GetExtension(file.FileName) != ".gif" && Path.GetExtension(file.FileName) != ".GIF" && Path.GetExtension(file.FileName) != ".heic" && Path.GetExtension(file.FileName) != ".HEIC")
-                        if (Path.GetExtension(file.FileName) != ".JPG" && Path.GetExtension(file.FileName) != ".jpg" && Path.GetExtension(file.FileName) != ".JPEG" && Path.GetExtension(file.FileName) != ".jpeg" && Path.GetExtension(file.FileName) != ".bmp" && Path.GetExtension(file.FileName) != ".BMP" && Path.GetExtension(file.FileName) != ".gif" && Path.GetExtension(file.FileName) != ".GIF")
-                            throw new ArgumentException("Unsupported file type. Please upload a .jpg/.jpeg/.bmp/.gif file");
+
+                        var uploadFileName = Path.GetFileNameWithoutExtension(file.FileName) + "_" + DateTime.Today.Ticks.ToString() + Path.GetExtension(file.FileName);
+                        var fileExtension = Path.GetExtension(file.FileName).ToLower();
+                        string[] allowedExtensions = { ".jpg", ".jpeg", ".bmp", ".gif", ".heic", ".png" };
+
+                        // Validate file type
+                        if (!allowedExtensions.Contains(fileExtension))
+                            throw new ArgumentException("Unsupported file type. Please upload a .jpg/.jpeg/.bmp/.gif/.heic/.png file.");
+
 
                         string reportReference = HttpContext.Session.GetString("ReportReference");
                         var folderPath = Path.Combine(Path.Combine(_webHostEnvironment.WebRootPath, "DglUploads", id.ToString()), "TwentyfivePercentFiles");
@@ -1083,25 +1044,19 @@ namespace CityWatch.Web.Pages.Guard
                             file.CopyTo(stream);
                         }
                         //p1 - 102 add photos with heic extension - start
-                        //if (Path.GetExtension(file.FileName) == ".heic" || Path.GetExtension(file.FileName) == ".HEIC")
-                        //{
-                        //    var newuploadheic = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(file.FileName) + ".jpg");
+                        var Newfilename = Path.GetFileName(uploadFileName);
+                        //p1-102 add photos with heic extension-start
+                        if (fileExtension == ".heic")
+                        {
+                            var newuploadheic = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(file.FileName) + "_" + DateTime.Today.Ticks.ToString() + ".jpg");
+                            await ConvertHeicToJpgAsync(Path.Combine(folderPath, uploadFileName), folderPath);
+                            Newfilename = Path.GetFileName(newuploadheic);
+                            var fileToDelete = Path.Combine(folderPath, uploadFileName);
+                            if (System.IO.File.Exists(fileToDelete))
+                                System.IO.File.Delete(fileToDelete);
 
 
-                        //    using (MagickImage image = new MagickImage(Path.Combine(folderPath, file.FileName)))
-                        //    {
-                        //        // Save the image as JPEG
-                        //        image.Format = MagickFormat.Jpg;
-                        //        image.Write(newuploadheic);
-
-
-
-                        //    }
-                        //     uploadFileName = Path.GetFileName(newuploadheic);
-                        //    var fileToDelete = Path.Combine(folderPath, file.FileName);
-                        //    if (System.IO.File.Exists(fileToDelete))
-                        //        System.IO.File.Delete(fileToDelete);
-                        //}
+                        }
                         //p1 - 102 add photos with heic extension - end
                         //var folderPathnew = Path.Combine(Path.Combine("https://localhost:44356/", "DglUploads", id.ToString()), "TwentyfivePercentFiles");
                         var folderPathnew = Path.Combine(Path.Combine(url + "/", "DglUploads", id.ToString()), "TwentyfivePercentFiles");
@@ -1109,7 +1064,7 @@ namespace CityWatch.Web.Pages.Guard
                         var LogImages = new GuardLogsDocumentImages()
                         {
                             GuardLogId = id,
-                            ImagePath = Path.Combine(folderPathnew, uploadFileName),
+                            ImagePath = Path.Combine(folderPathnew, Newfilename),
                             IsTwentyfivePercentfile = true
                         };
 
@@ -1124,7 +1079,222 @@ namespace CityWatch.Web.Pages.Guard
             }
 
             return new JsonResult(new { success, message });
+
         }
+
+        public async Task<string> ConvertHeicToJpgAsync(string heicFilePath, string outputDirectory)
+        {
+            try
+            {
+                var secretkey = string.Empty;
+                var companydetail = _userDataProvider.GetCompanyDetails().SingleOrDefault(x => x.Id == 1);
+                if (companydetail != null)
+                {
+                    secretkey = companydetail.ApiSecretkey;
+                }
+                // Initialize ConvertAPI with your API secret key
+                var convertApi = new ConvertApi(secretkey);
+
+                // Check if the HEIC file exists
+                if (!System.IO.File.Exists(heicFilePath))
+                {
+                    throw new FileNotFoundException("The specified HEIC file does not exist.");
+                }
+
+                // Convert HEIC to JPG
+                var conversionResult = await convertApi.ConvertAsync("heic", "jpg", new ConvertApiFileParam(heicFilePath));
+
+                // Ensure the output directory exists
+                if (!Directory.Exists(outputDirectory))
+                {
+                    Directory.CreateDirectory(outputDirectory);
+                }
+
+                // Path to save the converted JPG file
+                //string jpgFilePath = Path.Combine(outputDirectory, $"{Path.GetFileNameWithoutExtension(heicFilePath)}.jpg");
+
+                // Save the converted JPG file
+                await conversionResult.SaveFilesAsync(outputDirectory);
+
+                Console.WriteLine($"Conversion successful! JPG saved at: {outputDirectory}");
+                return outputDirectory;  // Return the path to the converted file
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during conversion: {ex.Message}");
+                throw;  // Rethrow the exception for further handling if needed
+            }
+
+        }
+        //public JsonResult OnPostRearFileUpload()
+        //{
+        //    var success = false;
+        //    var message = "Uploaded successfully";
+        //    var files = Request.Form.Files;
+        //    int id = 0;
+        //    string url = string.Empty;
+        //    foreach (string key in Request.Form.Keys)
+        //    {
+
+        //        // Retrieve the value using the key
+        //        bool isNumeric1 = int.TryParse(Request.Form[key], out _);
+        //        if (isNumeric1)
+        //        {
+        //            id = Convert.ToInt32(Request.Form[key]);
+        //        }
+        //        else
+        //        {
+        //            url = Request.Form[key].ToString();
+        //        }
+
+        //    }
+        //    if (files.Count == 1)
+        //    {
+        //        var file = files[0];
+        //        if (file.Length > 0)
+        //        {
+        //            try
+        //            {
+        //                var uploadFileName = Path.GetFileName(file.FileName);
+        //                //if (Path.GetExtension(file.FileName) != ".JPG" && Path.GetExtension(file.FileName) != ".jpg" && Path.GetExtension(file.FileName) != ".JPEG" && Path.GetExtension(file.FileName) != ".jpeg" && Path.GetExtension(file.FileName) != ".bmp" && Path.GetExtension(file.FileName) != ".BMP" && Path.GetExtension(file.FileName) != ".gif" && Path.GetExtension(file.FileName) != ".GIF" && Path.GetExtension(file.FileName) != ".heic" && Path.GetExtension(file.FileName) != ".HEIC")
+        //                //    throw new ArgumentException("Unsupported file type. Please upload a .jpg/.jpeg/.bmp/.gif/.heic file");
+        //                if (Path.GetExtension(file.FileName) != ".JPG" && Path.GetExtension(file.FileName) != ".jpg" && Path.GetExtension(file.FileName) != ".JPEG" && Path.GetExtension(file.FileName) != ".jpeg" && Path.GetExtension(file.FileName) != ".bmp" && Path.GetExtension(file.FileName) != ".BMP" && Path.GetExtension(file.FileName) != ".gif" && Path.GetExtension(file.FileName) != ".GIF")
+        //                    throw new ArgumentException("Unsupported file type. Please upload a .jpg/.jpeg/.bmp/.gif file");
+        //                string reportReference = HttpContext.Session.GetString("ReportReference");
+        //                var folderPath = Path.Combine(Path.Combine(_webHostEnvironment.WebRootPath, "DglUploads", id.ToString()), "RearFiles");
+        //                if (!Directory.Exists(folderPath))
+        //                    Directory.CreateDirectory(folderPath);
+        //                using (var stream = System.IO.File.Create(Path.Combine(folderPath, uploadFileName)))
+        //                {
+        //                    file.CopyTo(stream);
+        //                }
+        //                //p1-102 add photos with heic extension-start
+        //                //if (Path.GetExtension(file.FileName) == ".heic" || Path.GetExtension(file.FileName) == ".HEIC")
+        //                //{
+        //                //    var newuploadheic = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(file.FileName)+".jpg");
+
+
+        //                //    using (MagickImage image = new MagickImage(Path.Combine(folderPath, file.FileName)))
+        //                //    {
+        //                //        // Save the image as JPEG
+        //                //        image.Format = MagickFormat.Jpg;
+        //                //        image.Write(newuploadheic);
+
+
+
+        //                //    }
+        //                //    uploadFileName = Path.GetFileName(newuploadheic);
+        //                //    var fileToDelete = Path.Combine(folderPath, file.FileName);
+        //                //    if (System.IO.File.Exists(fileToDelete))
+        //                //        System.IO.File.Delete(fileToDelete);
+        //                //}
+        //                //p1 - 102 add photos with heic extension - end
+        //                //var folderPathnew = Path.Combine(Path.Combine("https://localhost:44356/", "DglUploads", id.ToString()), "RearFiles");
+        //                var folderPathnew = Path.Combine(Path.Combine(url + "/", "DglUploads", id.ToString()), "RearFiles");
+
+        //                var LogImages = new GuardLogsDocumentImages()
+        //                {
+        //                    GuardLogId = id,
+        //                    ImagePath = Path.Combine(folderPathnew, uploadFileName),
+        //                    IsRearfile = true
+        //                };
+
+        //                _guardLogDataProvider.SaveGuardLogDocumentImages(LogImages);
+        //                success = true;
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                message = ex.Message;
+        //            }
+        //        }
+        //    }
+
+        //    return new JsonResult(new {  success,message });
+        //}
+
+        //public JsonResult OnPostTwentyfivePercentFileUpload()
+        //{
+        //    var success = false;
+        //    var message = "Uploaded successfully";
+        //    var files = Request.Form.Files;
+        //    int id = 0;
+        //    string url = string.Empty;
+        //    foreach (string key in Request.Form.Keys)
+        //    {
+
+        //        bool isNumeric1 = int.TryParse(Request.Form[key], out _);
+        //        if (isNumeric1)
+        //        {
+        //            id = Convert.ToInt32(Request.Form[key]);
+        //        }
+        //        else
+        //        {
+        //            url = Request.Form[key].ToString();
+        //        }
+        //    }
+        //    if (files.Count == 1)
+        //    {
+        //        var file = files[0];
+        //        if (file.Length > 0)
+        //        {
+        //            try
+        //            {
+        //                var uploadFileName = Path.GetFileName(file.FileName);
+        //                //if (Path.GetExtension(file.FileName) != ".JPG" && Path.GetExtension(file.FileName) != ".jpg" && Path.GetExtension(file.FileName) != ".JPEG" && Path.GetExtension(file.FileName) != ".jpeg" && Path.GetExtension(file.FileName) != ".bmp" && Path.GetExtension(file.FileName) != ".BMP" && Path.GetExtension(file.FileName) != ".gif" && Path.GetExtension(file.FileName) != ".GIF" && Path.GetExtension(file.FileName) != ".heic" && Path.GetExtension(file.FileName) != ".HEIC")
+        //                if (Path.GetExtension(file.FileName) != ".JPG" && Path.GetExtension(file.FileName) != ".jpg" && Path.GetExtension(file.FileName) != ".JPEG" && Path.GetExtension(file.FileName) != ".jpeg" && Path.GetExtension(file.FileName) != ".bmp" && Path.GetExtension(file.FileName) != ".BMP" && Path.GetExtension(file.FileName) != ".gif" && Path.GetExtension(file.FileName) != ".GIF")
+        //                    throw new ArgumentException("Unsupported file type. Please upload a .jpg/.jpeg/.bmp/.gif file");
+
+        //                string reportReference = HttpContext.Session.GetString("ReportReference");
+        //                var folderPath = Path.Combine(Path.Combine(_webHostEnvironment.WebRootPath, "DglUploads", id.ToString()), "TwentyfivePercentFiles");
+        //                if (!Directory.Exists(folderPath))
+        //                    Directory.CreateDirectory(folderPath);
+        //                using (var stream = System.IO.File.Create(Path.Combine(folderPath, uploadFileName)))
+        //                {
+        //                    file.CopyTo(stream);
+        //                }
+        //                //p1 - 102 add photos with heic extension - start
+        //                //if (Path.GetExtension(file.FileName) == ".heic" || Path.GetExtension(file.FileName) == ".HEIC")
+        //                //{
+        //                //    var newuploadheic = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(file.FileName) + ".jpg");
+
+
+        //                //    using (MagickImage image = new MagickImage(Path.Combine(folderPath, file.FileName)))
+        //                //    {
+        //                //        // Save the image as JPEG
+        //                //        image.Format = MagickFormat.Jpg;
+        //                //        image.Write(newuploadheic);
+
+
+
+        //                //    }
+        //                //     uploadFileName = Path.GetFileName(newuploadheic);
+        //                //    var fileToDelete = Path.Combine(folderPath, file.FileName);
+        //                //    if (System.IO.File.Exists(fileToDelete))
+        //                //        System.IO.File.Delete(fileToDelete);
+        //                //}
+        //                //p1 - 102 add photos with heic extension - end
+        //                //var folderPathnew = Path.Combine(Path.Combine("https://localhost:44356/", "DglUploads", id.ToString()), "TwentyfivePercentFiles");
+        //                var folderPathnew = Path.Combine(Path.Combine(url+ "/", "DglUploads", id.ToString()), "TwentyfivePercentFiles");
+
+        //                var LogImages = new GuardLogsDocumentImages()
+        //                {
+        //                    GuardLogId = id,
+        //                    ImagePath = Path.Combine(folderPathnew, uploadFileName),
+        //                    IsTwentyfivePercentfile = true
+        //                };
+
+        //                _guardLogDataProvider.SaveGuardLogDocumentImages(LogImages);
+        //                success = true;
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                message = ex.Message;
+        //            }
+        //        }
+        //    }
+
+        //    return new JsonResult(new {  success,message });
+        //}
         public JsonResult OnPostDeleteAttachment(int id)
 
         {
