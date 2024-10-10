@@ -73,6 +73,61 @@ namespace CityWatch.Data.Models
         };
     }
 
+    public static class KpiTimesheetScheduleRunOnCalculator
+    {
+        public static DateTime GetNextRunOn(KpiSendTimesheetSchedules sendSchedule)
+        {
+            DateTime calculatedNextRunOn;
+
+            // This a new schedule
+            if (sendSchedule.Id == 0 || sendSchedule.NextRunOn == DateTime.MinValue)
+            {
+                var firstRunOn = DateTime.Parse($"{sendSchedule.StartDate.ToShortDateString()} {sendSchedule.Time}");
+                calculatedNextRunOn = firstRunOn > DateTime.Now ? firstRunOn : GetFrequencyBasedNextRunOn(firstRunOn, sendSchedule.Frequency);
+            }
+            else
+                calculatedNextRunOn = GetFrequencyBasedNextRunOn(sendSchedule.NextRunOn, sendSchedule.Frequency);
+
+            if (calculatedNextRunOn <= DateTime.Now)
+                calculatedNextRunOn = GetFrequencyBasedNextRunOn(DateTime.Parse($"{DateTime.Today.ToShortDateString()} {sendSchedule.Time}"), sendSchedule.Frequency);
+
+            if (sendSchedule.EndDate.HasValue && calculatedNextRunOn > sendSchedule.EndDate.Value)
+                calculatedNextRunOn = DateTime.MaxValue;
+            return calculatedNextRunOn;
+        }
+
+
+        public static DateTime GetNextRunOnUpdate(KpiSendTimesheetSchedules sendSchedule)
+        {
+            DateTime calculatedNextRunOn;
+
+            // This a new schedule
+            if (sendSchedule.Id != 0 || sendSchedule.NextRunOn == DateTime.MinValue)
+            {
+                var firstRunOn = DateTime.Parse($"{sendSchedule.StartDate.ToShortDateString()} {sendSchedule.Time}");
+                calculatedNextRunOn = firstRunOn > DateTime.Now ? firstRunOn : GetFrequencyBasedNextRunOn(firstRunOn, sendSchedule.Frequency);
+            }
+            else
+                calculatedNextRunOn = GetFrequencyBasedNextRunOn(sendSchedule.NextRunOn, sendSchedule.Frequency);
+
+            if (calculatedNextRunOn <= DateTime.Now)
+                calculatedNextRunOn = GetFrequencyBasedNextRunOn(DateTime.Parse($"{DateTime.Today.ToShortDateString()} {sendSchedule.Time}"), sendSchedule.Frequency);
+
+            if (sendSchedule.EndDate.HasValue && calculatedNextRunOn > sendSchedule.EndDate.Value)
+                calculatedNextRunOn = DateTime.MaxValue;
+            return calculatedNextRunOn;
+        }
+
+
+        private static DateTime GetFrequencyBasedNextRunOn(DateTime nextRunOn, SendSchdeuleFrequency frequency) => frequency switch
+        {
+            SendSchdeuleFrequency.Daily => nextRunOn.AddDays(1),
+            SendSchdeuleFrequency.Weekly => nextRunOn.AddDays(7),
+            SendSchdeuleFrequency.Monthly => nextRunOn.AddMonths(1),
+            _ => nextRunOn,
+        };
+    }
+
     public class KpiSendSchedule
     {
         [Key]
@@ -129,5 +184,42 @@ namespace CityWatch.Data.Models
         public ICollection<KpiSendScheduleClientSite> KpiSendScheduleClientSites { get; set; }
 
         public KpiSendScheduleSummaryImage KpiSendScheduleSummaryImage { get; set; }
+    }
+
+    public class KpiSendTimesheetSchedules
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required]
+        public DateTime StartDate { get; set; }
+
+        public DateTime? EndDate { get; set; }
+
+        [Required]
+        public SendSchdeuleFrequency Frequency { get; set; }
+        //public CoverSheetType CoverSheetType { get; set; }
+
+        [Required]
+        public string Time { get; set; }
+
+        public string EmailTo { get; set; }
+
+        public DateTime NextRunOn { get; set; }
+
+        
+
+        public string ProjectName { get; set; }
+
+        
+
+        public string EmailBcc { get; set; }
+
+       
+
+        
+        public ICollection<KpiSendTimesheetClientSites> KpiSendTimesheetClientSites { get; set; }
+
+        
     }
 }

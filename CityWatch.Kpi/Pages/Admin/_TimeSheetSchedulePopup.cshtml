@@ -1,0 +1,151 @@
+﻿<!-- schedule modal -->
+<div class="modal" tabindex="-1" role="dialog" id="TimeSheetschedule-modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-calendar" aria-hidden="true"></i> Manage Timesheet Schedule</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-2">
+                <ul class="nav nav-tabs" id="scheduleEditTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link active" id="scheduleSettingsTab" data-toggle="tab" href="#siteScheduleSettings" role="tab" aria-controls="siteScheduleSettings" aria-selected="true">Schedules</a>
+                    </li>
+                   
+                </ul>
+                <div class="tab-content p-2">
+                    <div class="tab-pane active" id="siteScheduleSettings" role="tabpanel" aria-labelledby="schedulesTab">
+                        <form id="frm_kpi_Timesheetschedule">
+                            <input type="hidden" id="TimeSheetscheduleId" name="id" value="0">
+                            <input type="hidden" id="nextRunOnTimesheet" name="nextRunOn" value="">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="clientTypeName">Client Type</label>
+                                        <select class="form-control" id="clientTypeNameTimesheet" name="clientTypeName">
+                                            @foreach (var item in Model.ViewDataService.ClientTypesUsingLoginUserIdCount(@Model.GuardId))
+                                            {
+                                                <option value="@item.Value">@item.Text</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="clientSites">Client Site</label>
+                                        <select class="form-control" id="clientSitesTimesheet" name="clientSites">
+                                            <option>Select</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="selectedSites">Selected Client Sites <span class="badge badge-pill badge-info" id="selectedSitesCountTimesheet">0</span></label>
+                                        <select class="form-control" id="selectedSitesTimeSheet" name="selectedSites" multiple style="height: 220px"></select>
+                                        <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="editSelectedSiteTimesheet" title="Edit selected sites from the list"><i class="fa fa-pencil mr-2"></i>Edit Site</button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="removeSelectedSitesTimesheet" title="Remove selected sites from the list"><i class="fa fa-trash-o mr-2"></i>Remove Sites</button>
+                                    </div>
+                                  
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="startDate">Start Date</label>
+                                        <input type="date" class="form-control" id="startDateTimesheet" name="startDate">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="endDate">End Date</label>
+                                        <input type="date" class="form-control" id="endDateTimesheet" name="endDate">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="frequency">Frequency</label>
+                                        <select class="form-control" id="frequency" name="frequency">
+                                            <option value="">Select</option>
+                                            <option value="0">Daily</option>
+                                            <option value="1">Weekly</option>
+                                            <option value="2">Monthly</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="time">Exec. Time</label>
+                                        <input type="time" class="form-control" id="Timesheettime" name="time">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="emailTo">Email Recipients [CC] <i class="fa fa-info-circle text-info" title="Comma separated list of additional email recipients in CC"></i></label>
+                                        <textarea class="form-control" id="emailToTimeSheet" name="emailTo" rows="3"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="emailTo">Email Recipients [BCC] <i class="fa fa-info-circle text-info" title="Comma separated list of additional email recipients in BCC"></i></label>
+                                        <textarea class="form-control" id="emailBccTimeSheet" name="emailBcc" rows="3"></textarea>
+                                    </div>
+                                   
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="projectName">Project Name</label>
+                                        <input type="text" class="form-control" id="projectNameTimeSheet" name="projectName" maxlength="50" />
+                                    </div>
+                                   
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <ul id="sch-modal-validation1" class="text-danger hide"></ul>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button type="button" id="btnSaveTimesheetSchedule" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save Schedule</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                   
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" tabindex="-1" role="dialog" id="run-schedule-modal1" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Run Schedule</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label>Select report month and year</label>
+                        <div class="form-row">
+                            <div class="form-group col-md-8">
+                                <label class="mx-1" for="schRunMonth">Month</label>
+                                <select class="form-control mx-1" id="schRunMonth" asp-items="@Model.ViewDataService.GetMonthsInYear()"></select>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label class="mx-1" for="schRunYear">Year</label>
+                                <select class="form-control mx-1" id="schRunYear" asp-items="@Model.ViewDataService.GetYears()"></select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group mb-0">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="cbIgnoreRecipients">
+                            <label class="form-check-label" for="cbIgnoreRecipients">
+                                Ignore email recipients (CC & BCC)?
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer d-flex flex-column align-items-start">
+                <input type="hidden" value="" name="sch-id" id="sch-id" />
+                <div class="btn-toolbar">
+                    <button type="button" class="btn btn-primary mr-3" id="btnScheduleRunTime">Run Now</button>
+                    <button id="btnScheduleDownload1" class="btn btn-outline-primary ml-4"><i class="fa fa-download"></i> Download Now</button>
+                </div>
+                <span id="schRunStatusTimesheet" class="mt-2"></span>
+            </div>
+        </div>
+    </div>
+</div>

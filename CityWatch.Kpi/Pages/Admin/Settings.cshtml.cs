@@ -1612,6 +1612,126 @@ namespace CityWatch.Kpi.Pages.Admin
         {
             return new JsonResult(_guardLogDataProvider.GetCompanyDetailsVehLog(companyName));
         }
+
+        public JsonResult OnPostSaveKpiTimesheetSchedule(KpiTimeSheetScheduleViewModel kpiSendTimesheetViewModel)
+        {
+            var results = new List<ValidationResult>();
+            if (!Validator.TryValidateObject(kpiSendTimesheetViewModel, new ValidationContext(kpiSendTimesheetViewModel), results, true))
+                return new JsonResult(new { success = false, message = string.Join(",", results.Select(z => z.ErrorMessage).ToArray()) });
+
+            var success = true;
+            var message = "Saved successfully";
+            try
+            {
+                var kpiSendSchedule = KpiTimeSheetScheduleViewModel.ToDataModel(kpiSendTimesheetViewModel);
+                if (kpiSendSchedule.Id == 0)
+                    kpiSendSchedule.NextRunOn = KpiTimesheetScheduleRunOnCalculator.GetNextRunOn(kpiSendSchedule);
+                else
+                    kpiSendSchedule.NextRunOn = KpiTimesheetScheduleRunOnCalculator.GetNextRunOnUpdate(kpiSendSchedule);
+                _kpiSchedulesDataProvider.SaveTimesheetSchedule(kpiSendSchedule, true);
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnGetKpiTimesheetSchedules(int type, string searchTerm)
+        {
+            GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            if (GuardId == 0)
+            {
+                return new JsonResult(_kpiSchedulesDataProvider.GetAllTimesheetSchedules()
+                    .Select(z => KpiTimeSheetScheduleViewModel.FromDataModel(z))
+                    .Where(z => z.CoverSheetType == (CoverSheetType)type && (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
+                    .OrderBy(x => x.ProjectName)
+                    .ThenBy(x => x.ClientTypes));
+
+            }
+            else
+            {
+
+                return new JsonResult(_kpiSchedulesDataProvider.GetAllTimesheetSchedulesUisngGuardId(GuardId)
+                   .Select(z => KpiTimeSheetScheduleViewModel.FromDataModel(z))
+                   .Where(z => z.CoverSheetType == (CoverSheetType)type && (string.IsNullOrEmpty(searchTerm) || z.ClientSites.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) != -1))
+                   .OrderBy(x => x.ProjectName)
+                   .ThenBy(x => x.ClientTypes));
+
+            }
+        }
+        public JsonResult OnGetKpiTimesheetSchedule(int id)
+        {
+            GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            if (GuardId == 0)
+            {
+                return new JsonResult(_kpiSchedulesDataProvider.GetTimesheetScheduleById(id));
+            }
+            else
+            {
+                return new JsonResult(_kpiSchedulesDataProvider.GetTimesheetScheduleByIdandGuardId(id, GuardId));
+            }
+        }
+        public JsonResult OnPostDeleteKpiSendScheduleTimesheet(int id)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _kpiSchedulesDataProvider.DeleteSendScheduleTimesheet(id);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status, message });
+        }
+
+        public IActionResult OnGetDownloadPdfTimesheet(int scheduleId, int reportYear, int reportMonth, bool ignoreRecipients)
+        {
+            var schedule = _kpiSchedulesDataProvider.GetTimesheetScheduleById(scheduleId);
+            if (schedule == null)
+                throw new ArgumentException("Schedule not found");
+            // Generate the PDF file
+            DateTime date = new DateTime(reportYear, reportMonth, 1);
+            string filename = $"{reportYear}{reportMonth.ToString("00")} - {FileNameHelper.GetSanitizedFileNamePart(schedule.ProjectName)} - Monthly Report - {date.ToString("MMM").ToUpper()} {reportYear}";
+            byte[] pdfBytes = _sendScheduleService.ProcessDownloadTimeSheet(schedule, new DateTime(reportYear, reportMonth, 1), ignoreRecipients, false);
+            Response.Headers["Content-Disposition"] = $"inline; filename={filename}";
+            // Return the PDF file as a download
+            return File(pdfBytes, "application/pdf", filename + ".pdf");
+        }
+
+        public JsonResult OnPostRunScheduleTimeSheet(int scheduleId, int reportYear, int reportMonth, bool ignoreRecipients)
+        {
+            var success = false;
+            string message;
+            try
+            {
+                var schedule = _kpiSchedulesDataProvider.GetTimesheetScheduleById(scheduleId);
+                if (schedule == null)
+                    throw new ArgumentException("Schedule not found");
+
+                var task = _sendScheduleService.ProcessTimeSheetSchedule(schedule, new DateTime(reportYear, reportMonth, 1), ignoreRecipients, false);
+
+                message = task.Result;
+                success = !(message.Contains("Error") || message.Contains("Exception"));
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            if (!success)
+            {
+                _logger.LogError(message);
+            }
+
+            return new JsonResult(new { success });
+        }
     }
 
 }

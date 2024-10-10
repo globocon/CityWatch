@@ -338,6 +338,7 @@ $(function () {
     /***** Settings *****/
     // Schedules
     let gridSchedules;
+    let gridTimesheetSchedules;
 
     function renderNextRunOn(value, record) {
         if (value === '9999-12-31T23:59:59.997') return 'n/a';
@@ -412,6 +413,25 @@ $(function () {
         }
     });
 
+    gridTimesheetSchedules = $('#kpi_send_Timesheetschedules').grid({
+        dataSource: '/Admin/Settings?handler=KpiTimesheetSchedules',
+        uiLibrary: 'bootstrap4',
+        iconsLibrary: 'fontawesome',
+        primaryKey: 'id',
+        columns: [
+            { field: 'projectName', title: 'Project Name', width: 100 },
+            { field: 'clientTypes', title: 'Client Types', width: 100 },
+            { field: 'clientSites', title: 'Client Sites', width: 180 },
+            { title: 'Schedule', renderer: TimesheetscheduleRenderer, width: 120 },
+            { field: 'nextRunOn', title: 'Next Run', renderer: function (value, record) { return renderNextRunOn(value, record); }, width: 75 },
+            { field: 'emailTo', title: 'Email Recipients', width: 100 },
+            { width: 150, renderer: schButtonRendererTimesheet },
+        ],
+        initialized: function (e) {
+            $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+        }
+    });
+
     function scheduleRenderer(value, record) {
         let scheduleHtml = '';
         scheduleHtml += '<span class="my-1 d-block">From: ' + renderScheduleDate(record.startDate, record, false) + ' </span>';
@@ -420,7 +440,14 @@ $(function () {
         scheduleHtml += '<span class="my-1 d-block">Status:' + renderIsPaused(record.isPaused);
         return scheduleHtml;
     }
-
+    function TimesheetscheduleRenderer(value, record) {
+        let scheduleHtml = '';
+        scheduleHtml += '<span class="my-1 d-block">From: ' + renderScheduleDate(record.startDate, record, false) + ' </span>';
+        scheduleHtml += '<span class="my-1 d-block">To: ' + renderScheduleEndDate(record.endDate, record) + ' </span>';
+        scheduleHtml += '<span class="my-1 d-block">' + renderScheduleFrequency(record.frequency, record) + ' @ ' + record.time + ' Hrs </span>';
+        scheduleHtml += '<span class="my-1 d-block">Status:' + renderIsPaused(record.isPaused);
+        return scheduleHtml;
+    }
     function schButtonRenderer(value, record) {
         let buttonHtml = '';
         buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#run-schedule-modal" data-sch-id="' + record.id + '""><i class="fa fa-play mr-2" aria-hidden="true"></i>Run</button>';
@@ -430,7 +457,29 @@ $(function () {
         buttonHtml += '<button class=" btn mr-2 p-0" data-toggle="modal" data-target="#schedule-modal" data-sch-id="' + record.id + '" ';
         buttonHtml += 'data-action="copySchedule"><i class="fa fa-copy fa-2x mr-2"></i></button>'; return buttonHtml;
     }
+    function schButtonRendererTimesheet(value, record) {
+        let buttonHtml = '';
+        buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#run-schedule-modal1" data-sch-id="' + record.id + '""><i class="fa fa-play mr-2" aria-hidden="true"></i>Run</button>';
+        buttonHtml += '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#TimeSheetschedule-modal" data-sch-id="' + record.id + '" ';
+        buttonHtml += 'data-action="editSchedule"><i class="fa fa-pencil mr-2"></i>Edit</button>';
+        buttonHtml += '<button class="btn btn-outline-danger del-schedule1 mr-2 mt-2" data-sch-id="' + record.id + '""><i class="fa fa-trash mr-2" aria-hidden="true"></i>Delete</button>';
+        buttonHtml += '<button class=" btn mr-2 p-0" data-toggle="modal" data-target="#TimeSheetschedule-modal" data-sch-id="' + record.id + '" ';
+        buttonHtml += 'data-action="copySchedule1"><i class="fa fa-copy fa-2x mr-2"></i></button>'; return buttonHtml;
+    }
+    $('#kpi_send_Timesheetschedules').on('click', '.del-schedule1', function () {
+        const idToDelete = $(this).attr('data-sch-id');
+        if (confirm('Are you sure want to delete this Timesheet schedule?')) {
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteKpiSendScheduleTimesheet',
+                type: 'POST',
+                data: { id: idToDelete },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function () {
+                gridTimesheetSchedules.reload({ type: $('#sel_schedule').val(), searchTerm: $('#search_kw_client_site').val() });
+            });
+        }
 
+    });
     $('#kpi_send_schedules').on('click', '.del-schedule', function () {
         const idToDelete = $(this).attr('data-sch-id');
         if (confirm('Are you sure want to delete this schedule?')) {
@@ -445,7 +494,6 @@ $(function () {
         }
 
     });
-
     function scheduleModalOnEdit(scheduleId) {
         $('#loader').show();
         $.ajax({
@@ -500,6 +548,8 @@ $(function () {
             $('#loader').hide();
         });
     }
+
+    
 
     //P2-103 Duplicate Settings-start
     function scheduleModalOnCopy(scheduleId) {
@@ -1984,6 +2034,307 @@ $('#save_default_email').on('click', function () {
     }
 })
 
+//Code to handle timesheet schedule start
+function clearScheduleModalTimesheet() {
+   
+    $('#TimeSheetscheduleId').val('0');
+    $('#clientTypeNameTimesheet').val('');
+    $('#clientSitesTimesheet').html('<option value="">Select</option>');
+    $('#selectedSitesTimeSheet').html('');
+    updateSelectedSitesTimesheetCount();
+    $('input:hidden[name="clientSiteIds"]').remove();
+    $('#clientTypeName option:eq(0)').attr('selected', true);
+    $('#startDateTimesheet').val('');
+    $('#startDateTimesheet').removeAttr('min');
+    $('#endDateTimesheet').val('');
+    $('#endDateTimesheet').removeAttr('min');
+    $('#Timesheettime').val('');
+    $('#frequency option').removeAttr('selected');
+    $('#frequency').val('');
+    $('#nextRunOn').val('');
+    $('#sch-modal-validation').html('');
+    $('#emailToTimeSheet').val('');
+    $('#emailBccTimeSheet').val('');
+  
+    $('#projectNameTimeSheet').val('');
+   
+}
+$('#TimeSheetschedule-modal').on('shown.bs.modal', function (event) {
+    clearScheduleModalTimesheet();
+    const button = $(event.relatedTarget);
+    const isEdit = button.data('action') !== undefined && button.data('action') === 'editSchedule';
+    if (isEdit) {
+        schId = button.data('sch-id');
+        scheduleModalOnEditTimesheet(schId);
+    } else {
+        //P2-103 Duplicate Settings-start
+        const isCopy = button.data('action') !== undefined && button.data('action') === 'copySchedule1';
+        if (isCopy) {
+            schId = button.data('sch-id');
+            scheduleModalOnCopy1(schId);
+        } else {
+            scheduleModalOnAddTimesheet();
+        }
+        //P2-103 Duplicate Settings-end
+    }
+
+   // showHideSchedulePopupTabs(isEdit);
+});
+$('#clientTypeNameTimesheet').on('change', function () {
+    const option = $(this).val();
+    if (option === '') {
+        $('#clientSitesTimesheet').html('');
+        $('#clientSitesTimesheet').append('<option value="">Select</option>');
+    }
+
+    $.ajax({
+        url: '/dashboard?handler=ClientSites&type=' + encodeURIComponent(option),
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (data) {
+        $('#clientSitesTimesheet').html('');
+        $('#clientSitesTimesheet').append('<option value="">Select</option>');
+        data.map(function (site) {
+            $('#clientSitesTimesheet').append('<option value="' + site.value + '">' + site.text + '</option>');
+        });
+    });
+});
+$('#clientSitesTimesheet').on('change', function () {
+    const elem = $(this).find(":selected");
+    if (elem.val() !== '') {
+        const existing = $('#selectedSitesTimeSheet option[value="' + elem.val() + '"]');
+        if (existing.length === 0) {
+            $('#selectedSitesTimeSheet').append('<option value="' + elem.val() + '">' + elem.text() + '</option>');
+            updateSelectedSitesTimesheetCount();
+        }
+    }
+});
+$('#btnSaveTimesheetSchedule').on('click', function () {
+    $("input[name=clientSiteIds]").remove();
+    var options = $('#selectedSitesTimeSheet option');
+    options.each(function () {
+        const elem = '<input type="hidden" name="clientSiteIds" value="' + $(this).val() + '">';
+        $('#frm_kpi_Timesheetschedule').append(elem);
+    });
+    
+    $.ajax({
+        url: '/Admin/Settings?handler=SaveKpiTimesheetSchedule',
+        type: 'POST',
+        data: $('#frm_kpi_Timesheetschedule').serialize(),
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (data) {
+        if (data.success) {
+            $('#TimeSheetschedule-modal').modal('hide');
+            alert('Schedule saved successfully');
+            gridTimesheetSchedules.reload({ type: $('#sel_schedule').val(), searchTerm: $('#search_kw_client_site').val() });
+        } else {
+            $('#sch-modal-validation1').html('');
+            data.message.split(',').map(function (item) { $('#sch-modal-validation1').append('<li>' + item + '</li>') });
+            $('#sch-modal-validation1').show().delay(5000).fadeOut();
+        }
+    });
+});
+function scheduleModalOnAddTimesheet() {
+    const dateToday = new Date().toISOString().split('T')[0];
+    $('#startDateTimesheet').val(dateToday);
+    $('#startDateTimesheet').attr('min', dateToday);
+    const dateEnd = '2100-01-01'
+    $('#endDateTimesheet').val(dateEnd.split('T')[0]);
+  
+    $("textarea[id='KpiSendScheduleSummaryNote_Notes']").val('');
+    
+}
+function scheduleModalOnEditTimesheet(scheduleId) {
+    $('#loader').show();
+    $.ajax({
+        url: '/Admin/Settings?handler=KpiTimesheetSchedule&id=' + scheduleId,
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (data) {
+
+        $('#TimeSheetscheduleId').val(data.id);
+        $('#startDateTimesheet').val(data.startDate.split('T')[0]);
+        if (data.endDate)
+            $('#endDateTimesheet').val(data.endDate.split('T')[0]);
+        $('#endDateTimesheet').attr('min', new Date().toISOString().split('T')[0]);
+        $('#frequency').val(data.frequency).change();
+        $('#frequency option[value="' + data.frequency + '"]').attr('selected', true);
+        $('#Timesheettime').val(data.time);
+        $('#nextRunOnTimesheet').val(data.nextRunOn);
+        $('#emailToTimeSheet').val(data.emailTo);
+        $('#emailBccTimeSheet').val(data.emailBcc)
+
+        $.each(data.kpiSendTimesheetClientSites, function (index, item) {
+            $('#selectedSitesTimeSheet').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
+            updateSelectedSitesTimesheetCount();
+        });
+        $('#projectNameTimeSheet').val(data.projectName);
+
+
+    }).always(function () {
+        $('#loader').hide();
+    });
+}
+$('#removeSelectedSitesTimesheet').on('click', function () {
+    $('#selectedSitesTimeSheet option:selected').remove();
+    updateSelectedSitesTimesheetCount();
+});
+function updateSelectedSitesTimesheetCount() {
+    $('#selectedSitesCountTimesheet').text($('#selectedSitesTimeSheet option').length);
+}
+
+$('#editSelectedSiteTimesheet').on('click', function () {
+    if ($('#editSiteTrigger').length === 1) {
+        $('#editSiteTrigger').remove()
+    }
+
+    const selectedOption = $('#selectedSitesTimeSheet option:selected');
+    if (selectedOption.length == 0) {
+        alert('Please select a site to edit');
+    } else if (selectedOption.length > 1) {
+        alert('Select only one site to edit');
+    } else {
+
+        let triggerButton = '<button type="button" id="editSiteTrigger" style="display:none" data-toggle="modal" data-target="#kpi-settings-modal" ' +
+            //p1-139 change pop up start
+            'data-cs-id="' + $(selectedOption).val() + '" data-cs-name="' + $(selectedOption).text() + '" data-type-tab="KPI"></button>';
+        //p1-139 change pop up end
+        $(triggerButton).insertAfter($(this));
+        $('#editSiteTrigger').click();
+
+    }
+});
+
+function scheduleModalOnCopy1(scheduleId) {
+    $.ajax({
+        url: '/Admin/Settings?handler=KpiTimesheetSchedule&id=' + scheduleId,
+        type: 'GET',
+        dataType: 'json',
+    }).done(function (data) {
+        const dateToday = new Date().toISOString().split('T')[0];
+        $('#startDateTimesheet').val(dateToday);
+        $('#startDateTimesheet').attr('min', dateToday);
+        const dateEnd = '2100-01-01'
+        $('#endDateTimesheet').val(dateEnd.split('T')[0]);
+
+        $('#TimeSheetscheduleId').val(data.id);
+       // $('#startDateTimesheet').val(data.startDate.split('T')[0]);
+        //if (data.endDate)
+        //    $('#endDateTimesheet').val(data.endDate.split('T')[0]);
+        //$('#endDateTimesheet').attr('min', new Date().toISOString().split('T')[0]);
+        $('#frequency').val(data.frequency).change();
+        $('#frequency option[value="' + data.frequency + '"]').attr('selected', true);
+        $('#Timesheettime').val(data.time);
+        $('#nextRunOnTimesheet').val(data.nextRunOn);
+        $('#emailToTimeSheet').val(data.emailTo);
+        $('#emailBccTimeSheet').val(data.emailBcc)
+
+        $.each(data.kpiSendTimesheetClientSites, function (index, item) {
+            $('#selectedSitesTimeSheet').append('<option value="' + item.clientSite.id + '">' + item.clientSite.name + '</option>');
+            updateSelectedSitesTimesheetCount();
+        });
+        //$('#projectNameTimesheet').val(data.projectName);
+
+
+    }).always(function () {
+        $('#loader').hide();
+    });
+}
+
+$('#run-schedule-modal1').on('shown.bs.modal', function (event) {
+    const button = $(event.relatedTarget);
+    const schId = button.data('sch-id');
+    $('#sch-id').val(schId);
+    $('#btnScheduleRunTime').prop('disabled', false);
+    $('#schRunStatus').html('');
+});
+
+$('#btnScheduleRunTime').on('click', function () {
+    $('#btnScheduleRunTime').prop('disabled', true);
+    $('#schRunStatus').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i> Generating Report. Please wait...');
+    $.ajax({
+        url: '/Admin/Settings?handler=RunScheduleTimeSheet',
+        type: 'POST',
+        data: {
+            scheduleId: $('#sch-id').val(),
+            reportYear: $('#schRunYear').val(),
+            reportMonth: $('#schRunMonth').val(),
+            ignoreRecipients: $('#cbIgnoreRecipients').is(':checked'),
+        },
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    }).done(function (result) {
+        $('#btnScheduleRunTime').prop('disabled', false);
+        const messageHtml = result.success ? '<i class="fa fa-check-circle-o text-success"></i> Done. Report sent via email' :
+            '<i class="fa fa-times-circle text-danger"></i> Error. Check log for more details';
+        $('#schRunStatusTimesheet').html(messageHtml);
+    });
+});
+
+
+$('#btnScheduleDownload1').on('click', function () {
+    $('#btnScheduleDownload').prop('disabled', true);
+    $('#schRunStatus').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i> Generating PDF. Please wait...');
+    $.ajax({
+        type: 'GET',
+        url: '/Admin/Settings?handler=DownloadPdfTimesheet',
+        data: {
+            scheduleId: $('#sch-id').val(),
+            reportYear: $('#schRunYear').val(),
+            reportMonth: $('#schRunMonth').val(),
+            ignoreRecipients: $('#cbIgnoreRecipients').is(':checked'),
+        },
+        xhrFields: {
+            responseType: 'blob' // For handling binary data
+        },
+        success: function (data, textStatus, request) {
+            var contentDispositionHeader = request.getResponseHeader('Content-Disposition');
+            var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+            var matches = filenameRegex.exec(contentDispositionHeader);
+            var downloadedFileName = matches !== null && matches[1] ? matches[1].replace(/['"]/g, '') : fileName;
+            // Create a Blob with the PDF data and initiate the download
+            var blob = new Blob([data], { type: 'application/pdf' });
+            // // Create a temporary anchor element to trigger the download
+            //var url = window.URL.createObjectURL(blob);
+            // // Open the PDF in a new tab
+            //var newTab = window.open(url, '_blank');
+
+            const URL = window.URL || window.webkitURL;
+            const displayNameHash = encodeURIComponent(`#displayName=${downloadedFileName}`);
+            const bloburl = URL.createObjectURL(blob);
+            const objectUrl = URL.createObjectURL(blob) + displayNameHash;
+            const windowUrl = window.location.origin; // + window.location.pathname;
+            const viewerUrl = `${windowUrl}/lib/Pdfjs/web/viewer.html?file=`;
+            var newTab = window.open(`${viewerUrl}${objectUrl}`);
+            if (!newTab) {
+                // If the new tab was blocked, fallback to downloading the file
+                var a = document.createElement('a');
+                a.href = bloburl;
+                a.download = downloadedFileName;
+                a.click();
+            }
+
+            URL.revokeObjectURL(bloburl);
+            URL.revokeObjectURL(objectUrl);
+
+            //if (!newTab) {
+            //    // If the new tab was blocked, fallback to downloading the file
+            //    var a = document.createElement('a');
+            //    a.href = url;
+            //    a.download = downloadedFileName;
+            //    a.click();
+            //}
+            //window.URL.revokeObjectURL(url);                
+        },
+        error: function () {
+            alert('Error while downloading the PDF.');
+        }
+    }).done(function (result) {
+        $('#btnScheduleDownload').prop('disabled', false);
+        const messageHtml = '';
+        $('#schRunStatus').html(messageHtml);
+    });
+});
+//Code to handle timesheet schedule stop
 
 //$('#div_site_settings').on('click', '#btnSaveGuardSiteSettingsnew', function () {
 //    var isUpdateDailyLog = false;

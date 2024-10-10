@@ -291,11 +291,25 @@
         </div>
 
         <div class="tab-pane" id="timesheet" role="tabpanel" aria-labelledby="timesheet-tab">
-           
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group row">
+                        <div class="text-right pl-2 ">
+                            <button class="btn btn-success mb-3" id="add_kpi_Timesheetschedule" data-toggle="modal" data-target="#TimeSheetschedule-modal"><i class="fa fa-plus mr-2"></i>Add Timesheet</button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <table class="table" id="kpi_send_Timesheetschedules"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 <partial name="_SchedulePopup" />
+<partial name="_TimeSheetSchedulePopup" />
 
 
 <!-- Client site kpi settings modal -->
