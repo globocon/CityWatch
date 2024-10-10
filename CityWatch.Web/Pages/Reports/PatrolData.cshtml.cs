@@ -218,11 +218,10 @@ namespace CityWatch.Web.Pages.Reports
             var rcChartTypesGuardsFromPrealarmNew = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
             int rcChartTypesGuardsFromPrealarmCountnew = 0;
             var rcChartTypesGuardsFromPrealarm = _irChartDataService.GetAuditGuardFusionLogs(ReportRequest, ReportRequest.FromDate, ReportRequest.ToDate).Where(z => (z.LogBookNotes != null && z.LogBookNotes.Contains("Guard Off Duty (NOTE: CRO did manual stamp as Guard went home without hitting OFF DUTY which is a breach of SOP"))).GroupBy(z => z.ClientSiteId); ;
-            foreach (var item in rcChartTypesGuardsPrealarm)
+            foreach (var item in rcChartTypesGuardsFromPrealarm)
             {
 
                 string newdaterange = item.FirstOrDefault().ClientSite.Name;
-                var rcChartradiochecks = _irChartDataService.GetClientSiteRadioChecks(item.FirstOrDefault().ClientSite.Id, ReportRequest.FromDate, ReportRequest.ToDate).Where(z => z.RadioCheckStatusId == 1);
                 ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
                 
                     obj.DateRange = newdaterange;
