@@ -3620,14 +3620,15 @@ $(function () {
                             }
                         },
                         {
+                            data: 'ipAddress', width: "2%",
+
+                        },
+                        {
                             data: 'siteName', width: "16%",
                             
                         },
 
-                        {
-                            data: 'ipAddress', width: "2%",
-                            
-                        },
+                      
 
                         
                     ]
