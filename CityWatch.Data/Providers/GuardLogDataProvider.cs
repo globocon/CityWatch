@@ -5059,6 +5059,7 @@ namespace CityWatch.Data.Providers
             var r = _context.FileDownloadAuditLogs.Where(x => x.EventDateTime.Date >= logFromDate.Date && x.EventDateTime.Date <= logToDate.Date)
                 .Include(u => u.User)
                 .Include(g => g.Guard)
+                .OrderByDescending(x => x.EventDateTime)  // Sort by latest EventDateTime
                 .ToList();
             return r;
         }
