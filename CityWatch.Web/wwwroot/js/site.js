@@ -1819,17 +1819,80 @@ $('#report_field_types').on('change', function () {
         iconsLibrary: 'fontawesome',
         primaryKey: 'id',
         columns: [
-            { field: 'userName', title: 'User Name', width: 200 },
-            { title: 'Password', width: 200, renderer: passwordRenderer },
-            { field: 'isDeleted', title: 'Deleted?', align: 'center', width: 50, renderer: function (value) { return value ? 'Yes' : '&nbsp;'; } },
-            { width: 150, renderer: userButtonRenderer },
+            { field: 'userName', title: 'User Name', width: 100 },
+            { title: 'Password', width: 100, renderer: passwordRenderer },
+            { title: 'Activity', width: 350, renderer: activityDeatils },
+            { field: 'isDeleted', title: 'Deleted?', align: 'center', width: 75, renderer: function (value) { return value ? 'Yes' : '&nbsp;'; } },
+            { width: 100, renderer: userButtonRenderer },
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
 
+   
     /*p1-248 search users grid*/
+
+    function activityDeatils(value, record) {
+        if (record.formattedLastLoginDate !== null) {
+
+            if (record.lastLoginIPAdress !== null) {
+                return '<table class="table table-sm m-0"><thead><tr><th scope="col">Last Login</th><th scope="col">IP Address</th><th scope="col" style="text-align:center;"><i class="fa fa-cogs" aria-hidden="true"></i></th></tr></thead>' +
+                    '<tbody><tr><th scope="row"><i class="fa fa-key" aria-hidden="true"></i> ' + record.formattedLastLoginDate + '</th><td><i class="fa fa-desktop" aria-hidden="true"></i> ' + record.lastLoginIPAdress + '</td><td style="text-align:center;">' +
+                    '<i class="fa fa-check-circle text-success"></i>' +
+                    '[<a href="#userLoginHistoryInfoModal" id="btnLoginDetailsforUser">1</a>]<input type="hidden" id="userId" value="' + record.id + '"><input type="hidden" id="userName" value="' + record.userName + '"></td></tr></tbody></table> ';
+            }
+            else {
+                return '<table class="table table-sm m-0"><thead><tr><th scope="col">Last Login</th><th scope="col">IP Address</th><th scope="col" style="text-align:center;"><i class="fa fa-cogs" aria-hidden="true"></i></th></tr></thead>' +
+                    '<tbody><tr><th scope="row"><i class="fa fa-key" aria-hidden="true"></i> ' + record.formattedLastLoginDate + '</th><td></td><td style="text-align:center;">' +
+                    '<i class="fa fa-check-circle text-success"></i>' +
+                    '[<a href="#userLoginHistoryInfoModal" id="btnLoginDetailsforUser">1</a>]<input type="hidden" id="userId" value="' + record.id + '"><input type="hidden" id="userName" value="' + record.userName + '"></td></tr></tbody></table> ';
+            } 
+        }
+    }
+
+    $('#user_settings tbody').on('click', '#btnLoginDetailsforUser', function () {
+
+        $('#userLoginHistoryInfoModal').modal('show');
+        var userId = $(this).closest("td").find('#userId').val();
+        var userName = $(this).closest("td").find('#userName').val();
+        $('#userLoginHistoryInfoModal').find('#userName').text(userName)
+        fetchUserLoginDetails(userId);
+    });
+
+
+    function fetchUserLoginDetails(userId) {
+        $.ajax({
+            url: '/Admin/Settings?handler=UserLoginHistory',
+            method: 'GET',
+            data: { userId: userId },
+            success: function (data) {
+                // Destroy the existing DataTable instance if it exists
+                if ($.fn.DataTable.isDataTable('#UserLoginHistoryInfoDetails')) {
+                    $('#UserLoginHistoryInfoDetails').DataTable().destroy();
+                }
+
+                $('#UserLoginHistoryInfoDetails').DataTable({
+                    autoWidth: false,
+                    ordering: false,
+                    searching: false,
+                    paging: true,
+                    info: true,
+                    data: data, // Use the data fetched from the AJAX request
+                    processing: true,  // Show "Processing..." message while loading data
+                    columns: [
+                        { data: 'formattedLastLoginDate', width: '22%' },
+                        { data: 'guard', width: '20%' },
+                        { data: 'siteName', width: '43%' },
+                        { data: 'ipAddress', width: '15%' },
+                    ]
+                });
+            },
+            error: function (xhr, status, error) {
+                console.error('Error fetching data:', error);
+            }
+        });
+    }
 
     $('#btnSearchUsers').on('click', function () {
         var searchTerm = $('#search_users').val();
@@ -1864,12 +1927,12 @@ $('#report_field_types').on('change', function () {
 
     function userButtonRenderer(value, record) {
         let userButtonHtml = '<button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#user-modal" data-id="' + record.id + '" data-uname="' + record.userName + '"' +
-            'data-udeleted="' + record.isDeleted + '" data-action="editUser"><i class="fa fa-pencil mr-2"></i>Edit</button>';
+            'data-udeleted="' + record.isDeleted + '" data-action="editUser"><i class="fa fa-pencil"></i></button>';
 
         if (record.isDeleted) {
-            userButtonHtml += '<button class="btn btn-outline-success activateuser" data-user-id="' + record.id + '""> <i class="fa fa-check mr-2" aria-hidden="true"></i>Activate</button>';
+            userButtonHtml += '<button class="btn btn-outline-success activateuser" data-user-id="' + record.id + '""> <i class="fa fa-check " aria-hidden="true"></i></button>';
         } else {
-            userButtonHtml += '<button class="btn btn-outline-danger deleteuser" data-user-id="' + record.id + '""> <i class="fa fa-trash mr-2" aria-hidden="true"></i>Delete</button>';
+            userButtonHtml += '<button class="btn btn-outline-danger deleteuser" data-user-id="' + record.id + '""> <i class="fa fa-trash" aria-hidden="true"></i></button>';
         }
 
         return userButtonHtml;
@@ -2971,6 +3034,9 @@ $('#report_field_types').on('change', function () {
                 $("#txt_HyplerLinkLabel").val(data[i].hyperlinkLabel);
                 $("#txt_HyperlinkColor").val(data[i].hyperlinkColour);
                 $("#txt_LogoHyplerLink").val(data[i].logoHyperlink);
+                $("#txt_APIProvider").val(data[i].apiProvider);
+                $("#txt_APIsecretkey").val(data[i].apiSecretkey)
+              
                 //p1-225 Core Settings-end
             }
 
@@ -3095,6 +3161,8 @@ $('#report_field_types').on('change', function () {
                 HyperlinkLabel: $("#txt_HyplerLinkLabel").val(),
                 HyperlinkColour: $("#txt_HyperlinkColor").val(),
                 LogoHyperlink: $("#txt_LogoHyplerLink").val(),
+                ApiProvider: $("#txt_APIProvider").val(),
+                ApiSecretkey: $("#txt_APIsecretkey").val(),
                 //p1-225 Core Settings-end
             }
             $.ajax({

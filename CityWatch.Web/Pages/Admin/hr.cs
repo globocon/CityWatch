@@ -304,7 +304,7 @@ namespace CityWatch.Web.Pages.Admin
         public IActionResult OnGetLastTimeLogin(int guardId)
         {
 
-            return new JsonResult(_guardLogDataProvider.GetLastLoginNew(guardId));
+            return new JsonResult(_guardLogDataProvider.GetLastLoginUsingUserHistory(guardId));
         }
 
         public JsonResult OnPostGuards(Data.Models.Guard guard, string ClientSiteIds)

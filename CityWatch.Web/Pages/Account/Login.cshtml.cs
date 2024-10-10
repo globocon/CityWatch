@@ -2,6 +2,7 @@ using CityWatch.Data.Models;
 using CityWatch.Data.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System;
@@ -42,6 +43,7 @@ namespace CityWatch.Web.Pages
             else
             {
                 SignInUser(user);
+                _userAuthentication.SaveUserLoginHistoryDetails(user, Request.HttpContext.Connection.RemoteIpAddress.ToString());
                 return Redirect(Url.Page(returnUrl));
             }
             return Page();
@@ -67,6 +69,8 @@ namespace CityWatch.Web.Pages
             HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(claimsIdentity),
                 authProperties);
+            // clear the GuardId for IR when the user Login
+            HttpContext.Session.Remove("GuardId");
         }
     }
 }

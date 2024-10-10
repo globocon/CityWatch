@@ -66,6 +66,7 @@ namespace CityWatch.RadioCheck.Pages.Admin
         public IClientDataProvider ClientDataProvider { get { return _clientDataProvider; } }
 
         public int GuardId { get; set; }
+        public int loginUserIdNew { get; set; }
 
         [BindProperty]
         public FeedbackTemplate FeedbackTemplate { get; set; }
@@ -80,12 +81,20 @@ namespace CityWatch.RadioCheck.Pages.Admin
         [BindProperty]
         public string GuardIdCheck { get; set; }
 
+        [BindProperty]
+        public string loginUserId { get; set; }
+
 
         public IActionResult OnGet()
         {
 
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
             GuardIdCheck = GuardId.ToString();
+
+            loginUserIdNew = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            loginUserId = loginUserIdNew.ToString();
+
+
             var guard = _guardDataProvider.GetGuards().SingleOrDefault(z => z.Id == GuardId);
 
             if (guard != null)

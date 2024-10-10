@@ -657,6 +657,10 @@
                         <div class="col-md-4">
                             <input type="text" id="txt_LogoHyplerLink" class="form-control" />
                         </div>
+                         <label class="col-form-label col-md-2 pr-0">API Provider (heic to jpg)</label>
+                        <div class="col-md-4">
+                            <input type="text" id="txt_APIProvider" class="form-control" />
+                        </div>
                     </div>
 
 
@@ -676,6 +680,11 @@
                                     <input type="file" id="cr_reportlogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.gif,.GIF" hidden />
                                 </form>
                             </label>
+                        </div>
+
+                        <label class="col-form-label col-md-2">API secret key</label>
+                        <div class="col-md-4">
+                            <input type="text" id="txt_APIsecretkey" class="form-control" />
                         </div>
                     </div>
                     @*for logo in report-end*@
@@ -1767,7 +1776,9 @@
                                 <tr>
 
                                     <th>Last Login Date</th>
+                                    <th>IP Address</th>
                                     <th>Site Name</th>
+                                  
                                 </tr>
                             </thead>
 
@@ -1901,6 +1912,39 @@
                 </div>
                 <button type="button" id="btnSaveSiteSOP" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Save Client(Site) SOP</button>
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" tabindex="-1" role="dialog" id="userLoginHistoryInfoModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header col-md-12">
+
+                <h5 class="modal-title col-md-8">Sign-in records for user '<span id="userName"></span>'</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <table id="UserLoginHistoryInfoDetails" class="table table-bordered" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>Login Date</th>
+                                    <th>Guard</th>
+                                    <th>Site Name</th>
+                                    <th>IP Address</th>
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
         </div>
     </div>
 </div>

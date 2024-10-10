@@ -490,8 +490,15 @@ namespace CityWatch.Web.Pages.Admin
         {
             var users = _userDataProvider.GetUsers()
              .Where(x => string.IsNullOrEmpty(searchTerm) || x.UserName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
-             .Select(x => new { x.Id, x.UserName, x.IsDeleted });
+             .Select(x => new { x.Id, x.UserName, x.IsDeleted,x.LastLoginDate,x.LastLoginIPAdress,x.FormattedLastLoginDate });
               return new JsonResult(users);
+        }
+
+
+        public JsonResult OnGetUserLoginHistory(int userId)
+        {
+            var users = _userDataProvider.GetUserLoginHistory(userId);
+            return new JsonResult(users);
         }
 
         public JsonResult OnPostUser(Data.Models.User record)

@@ -86,11 +86,12 @@ namespace CityWatch.Web.Pages.Guard
             var GPSCoordinates = GuardLogin.GpsCoordinates;
             try
             {
+                //p1-266 checking whether guard has access in login 
+                if (GuardLogin.Guard.IsLB_KV_IR)
+                {
 
 
-
-
-                GuardLogin.SmartWandOrPositionId = smartWandOrPositionId;
+                    GuardLogin.SmartWandOrPositionId = smartWandOrPositionId;
                 var clientType = _clientDataProvider.GetClientTypes().SingleOrDefault(z => z.Name == GuardLogin.ClientTypeName);
                 GuardLogin.ClientSite = _clientDataProvider.GetClientSites(clientType.Id).SingleOrDefault(z => z.Name == GuardLogin.ClientSiteName);
 
@@ -103,7 +104,8 @@ namespace CityWatch.Web.Pages.Guard
                     EventDateTimeZoneShort = GuardLogin.EventDateTimeZoneShort,
                     EventDateTimeUtcOffsetMinute = GuardLogin.EventDateTimeUtcOffsetMinute,
                     PlayNotificationSound = false,
-                    GpsCoordinates = GPSCoordinates
+                    GpsCoordinates = GPSCoordinates,
+                   
                 };
                 // Task p6#73_TimeZone issue -- added by Binoy - End
 
@@ -129,19 +131,31 @@ namespace CityWatch.Web.Pages.Guard
                 var eventDateTimeZoneShort = GuardLogin.EventDateTimeZoneShort;
                 var eventDateTimeUtcOffsetMinute = GuardLogin.EventDateTimeUtcOffsetMinute.Value;
                 // Task p6#73_TimeZone issue -- added by Binoy - End
-
+                //Save history for the Guard Login Start
+                _guardLogDataProvider.SaveUserLoginHistoryDetails(new LoginUserHistory()
+                {
+                    LoginUserId = AuthUserHelper.LoggedInUserId.GetValueOrDefault(),
+                    IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
+                    LoginTime = DateTime.Now,
+                    ClientSiteId= GuardLogin.ClientSite.Id,
+                    GuardId= GuardLogin.Guard.Id,
+                });
+                //Save history for the Guard Login end
                 if (LogBookType == LogBookType.DailyGuardLog)
                 {
                     // Task p6#73_TimeZone issue -- modified by Binoy
-                    CreateLogbookLoggedInEntry(logBookId, guardLoginId, eventDateTimeLocal,
-                        eventDateTimeLocalWithOffset, eventDateTimeZone, eventDateTimeZoneShort, eventDateTimeUtcOffsetMinute, GPSCoordinates);
-
+                    
+                    
+                        CreateLogbookLoggedInEntry(logBookId, guardLoginId, eventDateTimeLocal,
+                            eventDateTimeLocalWithOffset, eventDateTimeZone, eventDateTimeZoneShort, eventDateTimeUtcOffsetMinute, GPSCoordinates);
+                   
                 }
                 if (LogBookType == LogBookType.VehicleAndKeyLog)
                 {
-                    CreateKeyVehicleLoggedInEntry(logBookId, guardLoginId, eventDateTimeLocal,
+                    
+                        CreateKeyVehicleLoggedInEntry(logBookId, guardLoginId, eventDateTimeLocal,
                         eventDateTimeLocalWithOffset, eventDateTimeZone, eventDateTimeZoneShort, eventDateTimeUtcOffsetMinute, GPSCoordinates);
-
+                    
                 }
 
                 if (LogBookType == LogBookType.VehicleAndKeyLog && isNewLogBook)
@@ -284,6 +298,12 @@ namespace CityWatch.Web.Pages.Guard
                 HttpContext.Session.SetInt32("GuardLoginId", guardLoginId);
 
                 success = true;
+                }
+                else
+                {
+                    success = false;
+                    message = "Not authorized to access this page";
+                }
             }
             catch (Exception ex)
             {
@@ -603,6 +623,7 @@ namespace CityWatch.Web.Pages.Guard
                     guardLogin.OnDuty = GuardLogin.OnDuty;
                     guardLogin.OffDuty = GuardLogin.OffDuty;
                     guardLogin.UserId = AuthUserHelper.LoggedInUserId.GetValueOrDefault();
+                    guardLogin.IPAddress= Request.HttpContext.Connection.RemoteIpAddress.ToString();
                 }
             }
             else
@@ -611,6 +632,7 @@ namespace CityWatch.Web.Pages.Guard
             }
 
             guardLogin.ClientSiteLogBookId = logBookId;
+            guardLogin.IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
 
             var guardLoginId = _guardDataProvider.SaveGuardLogin(guardLogin);
 

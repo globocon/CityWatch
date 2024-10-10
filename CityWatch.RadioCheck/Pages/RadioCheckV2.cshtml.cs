@@ -116,6 +116,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 UserId = int.Parse(loginUserId);
                 GuardId = int.Parse(LoginGuardId);
                 HttpContext.Session.SetInt32("GuardId", GuardId);
+                HttpContext.Session.SetInt32("loginUserId", UserId);
+                
                 var guard = _guardDataProvider.GetGuards().SingleOrDefault(z => z.Id == GuardId);
 
                 if (guard != null)
@@ -2078,6 +2080,73 @@ namespace CityWatch.RadioCheck.Pages.Radio
             var data = _guardLogDataProvider.GetGuardsWtihProviderNumber(id);
             return new JsonResult(data);
         }
+
+
+
+        public JsonResult OnPostDownLoadHelpPDF(string filename, int loginGuardId, GuardLog tmdata, string pageName, int loginUserId)
+        {
+
+            var Issuccess = false;
+            var exMessage = "";
+            try
+            {
+                if (User.Identity.IsAuthenticated)
+                {
+                    var userid = loginUserId;
+                    if (userid != 0)
+                    {
+                        var IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
+
+                        if (loginGuardId != 0)
+                        {
+
+                            FileDownloadAuditLogs fdal = new FileDownloadAuditLogs()
+                            {
+                                UserID = (int)userid,
+                                GuardID = loginGuardId,
+                                IPAddress = IPAddress,
+                                DwnlCatagory = "Help Document RC",
+                                DwnlFileName = filename,
+                                EventDateTimeLocal = tmdata.EventDateTimeLocal,
+                                EventDateTimeLocalWithOffset = tmdata.EventDateTimeLocalWithOffset,
+                                EventDateTimeZone = tmdata.EventDateTimeZone,
+                                EventDateTimeZoneShort = tmdata.EventDateTimeZoneShort,
+                                EventDateTimeUtcOffsetMinute = tmdata.EventDateTimeUtcOffsetMinute
+                            };
+
+                            _guardLogDataProvider.CreateDownloadFileAuditLogEntry(fdal);
+                            Issuccess = true;
+
+                        }
+                        else
+                        {
+                            exMessage = "Error: Guard details not found.";
+                        }
+
+                    }
+                    else
+                    {
+                        exMessage = "Error: User not authenticated.";
+                    }
+
+                    Issuccess = true;
+                }
+                else
+                {
+                    exMessage = "Error: User not authenticated.";
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+                //_logger.LogError(ex.StackTrace);
+                exMessage = $"Error: {ex.Message}.";
+            }
+            Issuccess = true;
+            return new JsonResult(new { success = Issuccess, message = exMessage });
+        }
+
 
     }
 }

@@ -56,7 +56,12 @@
                         else if (alldocWithModeleName.Count == 1)
                         {
                             var singleDoc = alldocWithModeleName.FirstOrDefault();
-                            <a href="/StaffDocs/@singleDoc.FileName" title="@singleDoc.FileName" target="_blank"><i class="fa fa-question-circle" aria-hidden="true"></i></a>
+                            <ul style="list-style-type:none;padding-left:0;">
+                                <li>
+                                    <i class="fa fa-question-circle text-primary btn-delete-dgl-attachment1" style="cursor: pointer;" id="@singleDoc.FileName" title="@singleDoc.FileName" aria-hidden="true"></i>
+                                </li>
+                            </ul>
+                           @* <a href="/StaffDocs/@singleDoc.FileName" title="@singleDoc.FileName" target="_blank"><i class="fa fa-question-circle" aria-hidden="true"></i></a>*@
                         }
                         else if (alldocWithModeleName.Count > 1)
                         {
@@ -86,7 +91,14 @@
                                                         <tr>
                                                             <td><span style="color:red"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></span> @file.FileName</td>
                                                             <td>
-                                                                <a href="/StaffDocs/@file.FileName" class="btn btn-outline-success ml-2" target="_blank"><i class="fa fa-download mr-3"></i>Download</a>
+                                                                <ul style="list-style-type:none;padding-left:0;">
+                                                                    <li>
+                                                                        <a href="#" class="btn btn-outline-success ml-2">
+                                                                            <i class="fa fa-download mr-3 text-primary btn-delete-dgl-attachment1" style="cursor: pointer;" id="@file.FileName" title="@file.FileName" aria-hidden="true">&nbsp;Download</i>
+                                                                        </a>
+                                                                    </li>
+                                                                </ul>
+                                                               @* <a href="/StaffDocs/@file.FileName" class="btn btn-outline-success ml-2" target="_blank"><i class="fa fa-download mr-3"></i>Download</a>*@
                                                             </td>
                                                         </tr>
 
@@ -199,6 +211,7 @@
     <script src="~/lib/notify/js/prettify.js"></script>
     <script src="https://unpkg.com/gijgo@1.9.13/js/gijgo.min.js"></script>
     <script src=" https://cdn.datatables.net/plug-ins/1.13.7/features/scrollResize/dataTables.scrollResize.min.js"></script>
+    <script src="~/lib/luxon/luxon.min.js" asp-append-version="true"></script>
     <script src="~/js/settings.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

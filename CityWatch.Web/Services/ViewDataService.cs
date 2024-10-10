@@ -557,7 +557,9 @@ namespace CityWatch.Web.Services
                     //p1-225 Core Settings-start
                     company.HyperlinkLabel,
                     company.HyperlinkColour,
-                    company.LogoHyperlink
+                    company.LogoHyperlink,
+                    company.ApiProvider,
+                    company.ApiSecretkey
                     //p1-225 Core Settings-end
 
 

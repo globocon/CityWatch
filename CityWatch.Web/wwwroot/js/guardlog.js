@@ -375,7 +375,8 @@ $(function () {
                     //p1 - 224 RC Bypass for IR - end
                     $('#guardLoginDetails').show();
                     $('#GuardLogin_Guard_Id').val(result.guard.id);
-
+                    $('#GuardLogin_Guard_IsLB_KV_IR').val(result.guard.isLB_KV_IR);
+                    
                     if (hasLastLogin) {
                         const lastLogin = result.lastLogin;
 
@@ -1338,125 +1339,70 @@ $(function () {
         $('#msg-modal').modal();
     }
 
+
     $('#IsRearOrTwentyfivePercentfileInput').on('change', function (e) {
-        $('#loader').show();
-        //const file = $(this).get(0).files.item(0);
+        const files = this.files;
+        const logId = $('#GuardimagedataId').val();
+        const url = window.location.origin;
 
-        //const file = $(this).get(0).files; 
-        const file = this;
+        const supportedExtensions = ['jpg', 'jpeg', 'bmp', 'gif', 'heic', 'png', 'JPG', 'JPEG', 'BMP', 'GIF', 'HEIC', 'PNG'];
 
+        function uploadFile(file, uploadUrl, isRearFile) {
+            const fileForm = new FormData();
+            const fileExtn = file.name.split('.').pop();
+
+            if (!supportedExtensions.includes(fileExtn)) {
+                showModal('Unsupported file type. Please upload a .jpg, .jpeg, .bmp, .gif, .heic, .png file');
+                return;
+            }
+
+            fileForm.append('file', file);
+            fileForm.append('logId', logId);
+            fileForm.append('url', url);
+
+            $('#loader').show();
+            $('#loadinDiv').show();
+
+            $.ajax({
+                url: uploadUrl,
+                type: 'POST',
+                data: fileForm,
+                processData: false,
+                contentType: false,
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+            }).done(function (data) {
+                if (data.success) {
+                    if (isRearFile) {
+                        $('#IsAttachmentToRear').val(true);
+                        $('#IsTwentyfivePercentOfPage').val(false);
+                    } else {
+                        $('#IsAttachmentToRear').val(false);
+                        $('#IsTwentyfivePercentOfPage').val(true);
+                    }
+
+                    gridGuardLog.clear();
+                    gridGuardLog.reload();
+                    loadDlgImagePopup(logId, false);
+                }
+            }).fail(function () {
+                showStatusNotification(false, 'Something went wrong');
+            }).always(function () {
+                $('#loader').hide();
+                $('#loadinDiv').hide();
+            });
+        }
 
         if ($('#IsAttachmentToRear').val() === 'true') {
-            for (let i = 0; i < file.files.length; i++) {
-
-                const fileForm = new FormData();
-                //fileForm.append('file', file);
-                // fileForm.append('file', file.files.item(i));
-                //  const file = file.files.item(i);
-                const fileExtn = file.files.item(i).name.split('.').pop();
-                // if (!fileExtn || fileExtn !== 'jpg' || fileExtn !=='JPG' || fileExtn !=='jpeg' || fileExtn !=='JPEG') {
-                //if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'bmp' && fileExtn !== 'BMP' && fileExtn !== 'GIF' && fileExtn !== 'gif' && fileExtn !== 'heic' && fileExtn !== 'HEIC')) {
-                //    showModal('Unsupported file type. Please upload a .jpg,.jpeg,.bmp,.gif file');
-                if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'bmp' && fileExtn !== 'BMP' && fileExtn !== 'GIF' && fileExtn !== 'gif')) {
-                    showModal('Unsupported file type. Please upload a .jpg,.jpeg,.bmp,.gif file');
-                    $('#loader').hide();
-                    return false;
-                }
-                fileForm.append('file', file.files.item(i))
-                fileForm.append('logId', $('#GuardimagedataId').val());
-                fileForm.append('url', window.location.origin);
-
-
-
-
-                $.ajax({
-                    url: '/Guard/DailyLog?handler=RearFileUpload',
-                    type: 'POST',
-                    data: fileForm,
-                    processData: false,
-                    contentType: false,
-                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
-                }).done(function (data) {
-
-                    if (data.success) {
-
-                        if (i == file.files.length - 1) {
-                            $('#loader').hide();
-                            //$('#dgl-image-modal').modal('hide');
-                            gridGuardLog.clear();
-                            gridGuardLog.reload();
-                            $('#IsAttachmentToRear').val(true);
-
-                            $('#IsTwentyfivePercentOfPage').val(false);
-                            loadDlgImagePopup($('#GuardimagedataId').val(), false);
-                        }
-
-                    }
-
-
-                }).fail(function () {
-                    //  showStatusNotification(false, 'Something went wrong');
-                    $('#loader').hide();
-                }).always(function () {
-
-                });
+            for (let i = 0; i < files.length; i++) {
+                uploadFile(files[i], '/Guard/DailyLog?handler=RearFileUpload', true);
             }
-
-        }
-        if ($('#IsTwentyfivePercentOfPage').val() === 'true') {
-
-            for (let i = 0; i < file.files.length; i++) {
-                const fileForm = new FormData();
-                const fileExtn = file.files.item(i).name.split('.').pop();
-                // if (!fileExtn || fileExtn !== 'jpg' || fileExtn !=='JPG' || fileExtn !=='jpeg' || fileExtn !=='JPEG') {
-                //if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'bmp' && fileExtn !== 'BMP' && fileExtn !== 'GIF' && fileExtn !== 'gif' && fileExtn !== 'heic' && fileExtn !== 'HEIC')) {
-                //    showModal('Unsupported file type. Please upload a .jpg,.jpeg,.bmp,.gif,.heif file');
-                if (!fileExtn || (fileExtn !== 'jpg' && fileExtn !== 'JPG' && fileExtn !== 'jpeg' && fileExtn !== 'JPEG' && fileExtn !== 'bmp' && fileExtn !== 'BMP' && fileExtn !== 'GIF' && fileExtn !== 'gif')) {
-                    showModal('Unsupported file type. Please upload a .jpg,.jpeg,.bmp,.gif file');
-                    $('#loader').hide();
-                    return false;
-                }
-                fileForm.append('file', file.files.item(i));
-                fileForm.append('logId', $('#GuardimagedataId').val());
-                fileForm.append('url', window.location.origin);
-
-
-
-
-                $.ajax({
-                    url: '/Guard/DailyLog?handler=TwentyfivePercentFileUpload',
-                    type: 'POST',
-                    data: fileForm,
-                    processData: false,
-                    contentType: false,
-                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
-                }).done(function (data) {
-
-                    if (data.success) {
-                        if (i == file.files.length - 1) {
-                            $('#loader').hide();
-                            //$('#dgl-image-modal').modal('hide');
-                            gridGuardLog.clear();
-                            gridGuardLog.reload();
-                            $('#IsAttachmentToRear').val(false);
-
-                            $('#IsTwentyfivePercentOfPage').val(true);
-                            loadDlgImagePopup($('#GuardimagedataId').val(), false);
-
-                        }
-                    }
-
-
-                }).fail(function () {
-                    showStatusNotification(false, 'Something went wrong');
-                    $('#loader').hide();
-                }).always(function () {
-
-                });
+        } else if ($('#IsTwentyfivePercentOfPage').val() === 'true') {
+            for (let i = 0; i < files.length; i++) {
+                uploadFile(files[i], '/Guard/DailyLog?handler=TwentyfivePercentFileUpload', false);
             }
         }
-
     });
+
 
     //p6-102 Add Photo -end
     /*to display the popup to acknowledge the message-start*/
@@ -3650,7 +3596,7 @@ $(function () {
                     data: data, // Use the data fetched from the AJAX request
                     columns: [
                         {
-                            data: 'loginDate',
+                            data: 'loginTime',
                             width: "4%",
                             render: function (data, type, row) {
                                 // Convert the date string to a JavaScript Date object
@@ -3674,15 +3620,17 @@ $(function () {
                             }
                         },
                         {
-                            data: 'clientSite', width: "10%",
-                            render: function (data, type, row) {
+                            data: 'ipAddress', width: "2%",
 
-                                var name1 = data.name;
-
-                                return name1;
-
-                            }
                         },
+                        {
+                            data: 'siteName', width: "16%",
+                            
+                        },
+
+                      
+
+                        
                     ]
                 });
             },
@@ -6552,6 +6500,117 @@ $(function () {
 
     /* ##### Download Log Audit End ##### */
 
+    $("#downloadButton").click(function () {
+        var fileName = "example.pdf";  // The file you want to download
+        var userId = "user123";        // Example user ID or other details
+        var fileName = $("#fileNametoDownload").val();
+        var guardId = $("#GuardLog_GuardLogin_GuardId").val();
+        $.ajax({
+            url: '/Download/DownloadFile',   // The Razor Page handler URL
+            type: 'POST',
+            data: {
+                fileName: fileName,
+                userId: userId
+            },
+            success: function (response) {
+                // Step 3: Dynamically create an anchor tag and trigger the download
+                var link = document.createElement('a');
+                link.href = response.downloadUrl;  // Get the download URL from the server
+                link.download = fileName;          // Set the file name
+                document.body.appendChild(link);   // Append to the body
+                link.click();                      // Simulate a click event to download the file
+                document.body.removeChild(link);   // Remove the link from the document
+            },
+            error: function (xhr, status, error) {
+                console.error('Error:', error);
+            }
+        });
+    });
+
+    $("#downloadLink").click(function (e) {
+        e.preventDefault(); // Prevent the default download action
+
+        // Example user details to save before download
+        var userId = "user123";
+        var fileName = $(this).attr('href').split('/').pop(); // Get the file name from the href attribute
+
+        // Step 2: Make an AJAX call to save user details
+        $.ajax({
+            url: '/Download/SaveUserDownloadDetails',   // Endpoint for saving download details
+            type: 'POST',
+            data: {
+                userId: userId,
+                fileName: fileName
+            },
+            success: function (response) {
+                // Step 3: Once the details are saved, trigger the file download
+                window.location.href = $("#downloadLink").attr("href");  // Trigger the download
+            },
+            error: function (xhr, status, error) {
+                console.error('Error:', error);
+            }
+        });
+    });
+
+    $('.btn-delete-dgl-attachment1').on('click', function (event) {
+   // $('#dgl-attachment-list1').on('click', '.btn-delete-dgl-attachment1', function (event) {
+        var pageNameValue = $('#pageName').val();
+        var jsname = 'lb';
+        var tmdata = {
+            'EventDateTimeLocal': null,
+            'EventDateTimeLocalWithOffset': null,
+            'EventDateTimeZone': null,
+            'EventDateTimeZoneShort': null,
+            'EventDateTimeUtcOffsetMinute': null,
+        };
+
+        /*fillRefreshLocalTimeZoneDetails(tmdata, "", false)*/
+
+        var DateTime = luxon.DateTime;
+        var dt1 = DateTime.local();
+        let tz = dt1.zoneName + ' ' + dt1.offsetNameShort;
+        let diffTZ = dt1.offset
+        let tzshrtnm = 'GMT' + dt1.toFormat('ZZ');
+        const eventDateTimeLocal = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS');
+        const eventDateTimeLocalWithOffset = dt1.toFormat('yyyy-MM-dd HH:mm:ss.SSS Z');
+        tmdata.EventDateTimeLocal = eventDateTimeLocal;
+        tmdata.EventDateTimeLocalWithOffset = eventDateTimeLocalWithOffset;
+        tmdata.EventDateTimeZone = tz;
+        tmdata.EventDateTimeZoneShort = tzshrtnm;
+        tmdata.EventDateTimeUtcOffsetMinute = diffTZ;
+        
+            var target = event.target;
+            var filename = target.id;
+            var guardId = $("#GuardLog_GuardLogin_GuardId").val();
+            $.ajax({
+                url: '/Guard/DailyLog?handler=DownLoadHelpPDF',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    filename: filename,
+                    loginGuardId: guardId,
+                    tmdata: tmdata,
+                    pageName: pageNameValue,
+                    jsname: jsname,
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result) {
+                    // Step 3: Dynamically create an anchor tag and trigger the download
+                    if (result.success) {
+                        var link = document.createElement('a');
+                        link.href = '/StaffDocs/' + filename;  // Construct the file URL
+                        link.target = "_blank";                // Open the file in a new window or tab
+                        document.body.appendChild(link);       // Append to the body
+                        link.click();                          // Simulate a click event to open the file
+                        document.body.removeChild(link);
+                    }// Remove the link from the document
+                }
+            });
+        
+    });
+
+
 
 });
 
@@ -6679,6 +6738,13 @@ $('#btnDownloadTimesheetRoster').on('click', function (e) {
 
         }
     });
+
+  
+
+
+
+
+
 });
 
 $('#btnDownloadTimesheetFrequencyBulk').on('click', function (e) {
