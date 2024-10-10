@@ -35,6 +35,7 @@ namespace CityWatch.Data
         public DbSet<KpiSendSchedule> KpiSendSchedules { get; set; }
         public DbSet<KpiSendScheduleClientSite> KpiSendScheduleClientSites { get; set; }
         public DbSet<KpiSendScheduleJob> KpiSendScheduleJobs { get; set; }
+        public DbSet<KpiSendScheduleJobsTimeSheet> KpiSendScheduleJobsTimeSheet { get; set; }
         public DbSet<AppConfiguration> Appconfigurations { get; set; }
         public DbSet<ClientSiteLogBook> ClientSiteLogBooks { get; set; }
         public DbSet<GuardLog> GuardLogs { get; set; }
@@ -128,7 +129,12 @@ namespace CityWatch.Data
 
         public DbSet<SiteLogUploadHistory> SiteLogUploadHistory { get; set; }
 
+
+        public DbSet<KpiSendTimesheetSchedules> KpiSendTimesheetSchedules { get; set; }
+        public DbSet<KpiSendTimesheetClientSites> KpiSendTimesheetClientSites { get; set; }
+
         public DbSet<LoginUserHistory> LoginUserHistory { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

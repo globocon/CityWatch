@@ -233,6 +233,8 @@ namespace CityWatch.Data.Providers
         public void UpdateClientSiteStatus(int clientSiteId, DateTime? updateDatetime, int status, int kpiSettingsid);
         public List<GuardLogin> GetClientSiteGuradLoginDetails(int clientSiteId);
         public List<GuardLogin> GetGuardDetailsAll(int[] clientSiteIds, string startdate, string endDate);
+        public GuardLogin GetGuardDetailsAllTimesheet(int clientSiteIds, string startdate, string endDate);
+        public GuardLogin GetGuardDetailsAllTimesheet1(int clientSiteIds, DateTime startdate, DateTime endDate);
 
     }
 
@@ -2596,6 +2598,50 @@ namespace CityWatch.Data.Providers
        .AsEnumerable() // Switch to client-side evaluation
        .DistinctBy(x => x.GuardId) // Now this works on the client side
        .ToList();
+
+            return clientSiteDetails;
+        }
+
+        public GuardLogin GetGuardDetailsAllTimesheet(int clientSiteIds, string startdate, string endDate)
+        {
+            DateTime startDateParsed;
+            DateTime endDateParsed;
+
+            // Use DateTime.TryParse to handle invalid date formats
+            if (!DateTime.TryParse(startdate, out startDateParsed))
+            {
+                throw new ArgumentException("Invalid start date format");
+            }
+            string format = "MM/dd/yyyy";
+            if (!DateTime.TryParseExact(endDate, format, null, System.Globalization.DateTimeStyles.None, out endDateParsed))
+            {
+                
+                throw new ArgumentException("Invalid end date format");
+            }
+            var clientSiteDetails = _context.GuardLogins
+    .Include(x => x.ClientSite)
+    .Where(x => x.ClientSiteId == clientSiteIds && // Direct comparison instead of Contains
+                (startDateParsed == endDateParsed
+                     ? x.LoginDate.Date == startDateParsed.Date // If dates are equal, check exact date
+                     : x.LoginDate.Date >= startDateParsed.Date && x.LoginDate.Date <= endDateParsed.Date))
+    .AsEnumerable() // Switch to client-side evaluation
+    .DistinctBy(x => x.GuardId) // Ensures distinct guards on the client side
+    .FirstOrDefault();
+
+            return clientSiteDetails;
+        }
+        public GuardLogin GetGuardDetailsAllTimesheet1(int clientSiteIds, DateTime startdate, DateTime endDate)
+        {
+            
+            var clientSiteDetails = _context.GuardLogins
+    .Include(x => x.ClientSite)
+    .Where(x => x.ClientSiteId == clientSiteIds && // Direct comparison instead of Contains
+                (startdate == endDate
+                     ? x.LoginDate.Date == startdate.Date // If dates are equal, check exact date
+                     : x.LoginDate.Date >= startdate.Date && x.LoginDate.Date <= endDate.Date))
+    .AsEnumerable() // Switch to client-side evaluation
+    .DistinctBy(x => x.GuardId) // Ensures distinct guards on the client side
+    .FirstOrDefault();
 
             return clientSiteDetails;
         }

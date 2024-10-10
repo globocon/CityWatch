@@ -20,6 +20,8 @@ using System.Text;
 using System.Threading.Tasks;
 using CityWatch.Data.Services;
 using CityWatch.Common.Helpers;
+using System.Security.Policy;
+using System.Globalization;
 
 namespace CityWatch.Kpi.Services
 {
@@ -27,6 +29,9 @@ namespace CityWatch.Kpi.Services
     {
         Task<string> ProcessSchedule(KpiSendSchedule schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
         byte[] ProcessDownload(KpiSendSchedule schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
+        byte[] ProcessDownloadTimeSheet(KpiSendTimesheetSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
+
+        Task<string> ProcessTimeSheetSchedule(KpiSendTimesheetSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload);
     }
 
     public class SendScheduleService : ISendScheduleService
@@ -42,6 +47,7 @@ namespace CityWatch.Kpi.Services
         private readonly IClientDataProvider _clientDataProvider;
         private readonly ILogger<SendScheduleService> _logger;
         private readonly Settings _settings;
+        private readonly ITimesheetGenerator _kpiTimesheetReportGenerator;
 
         public SendScheduleService(IWebHostEnvironment webHostEnvironment,
             IOptions<EmailOptions> emailOptions,
@@ -53,7 +59,8 @@ namespace CityWatch.Kpi.Services
             IViewDataService viewDataService,
             IClientDataProvider clientDataProvider,
             ILogger<SendScheduleService> logger,            
-            IOptions<Settings> settings)
+            IOptions<Settings> settings,
+            ITimesheetGenerator kpiTimesheetReportGenerator)
         {
             _webHostEnvironment = webHostEnvironment;
             _emailOptions = emailOptions.Value;
@@ -66,6 +73,7 @@ namespace CityWatch.Kpi.Services
             _clientDataProvider = clientDataProvider;
             _logger = logger;
             _settings = settings.Value;
+            _kpiTimesheetReportGenerator = kpiTimesheetReportGenerator;
         }
 
         public async Task<string> ProcessSchedule(KpiSendSchedule schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload)
@@ -150,6 +158,87 @@ namespace CityWatch.Kpi.Services
             return statusLog.ToString();
         }
 
+        public async Task<string> ProcessTimeSheetSchedule(KpiSendTimesheetSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload)
+        {
+            var statusLog = new StringBuilder();
+            try
+            {
+                statusLog.AppendFormat("Schedule {0} - Starting. ", schedule.Id);
+                var siteIds = schedule.KpiSendTimesheetClientSites.Select(z => z.ClientSiteId);
+                var reportEndDate = reportStartDate.AddMonths(1).AddDays(-1);
+
+                var siteReportFileNames = new List<string>();
+                foreach (var siteId in siteIds)
+                {
+                    string StartDate = reportStartDate.ToString("MM/dd/yyyy");
+                    string EndDate = "";
+                    if (reportEndDate != null)
+                    {
+                        EndDate = reportEndDate.ToString("MM/dd/yyyy");
+                    }
+                    // Create Pdf Report
+                    
+                    var clientSiteDetails = _clientDataProvider.GetGuardDetailsAllTimesheet1(siteId, reportStartDate, reportEndDate);
+                    var fileName = _kpiTimesheetReportGenerator.GeneratePdfTimesheetReport(reportStartDate, reportEndDate, clientSiteDetails.GuardId);
+                    if (string.IsNullOrEmpty(fileName))
+                    {
+                        statusLog.AppendFormat("Site {0} - Error creating pdf. ", siteId);
+                        continue;
+                    }
+
+                    siteReportFileNames.Add(Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
+                    statusLog.AppendFormat("Site {0} - Completed. ", siteId);
+                }
+
+
+                if (siteReportFileNames.Any())
+                {
+                    schedule.ProjectName = GetSchduleIdentifierTimesheet(schedule);
+
+                    // Create summary page
+                    var summaryFileName = CreateSummaryReportTimesheet(schedule, reportStartDate, reportEndDate);
+
+                    // Combine reports to a single pdf                    
+                    var reportFileName = $"{FileNameHelper.GetSanitizedFileNamePart(schedule.ProjectName)} - Daily KPI Reports - {reportStartDate:MMM} {reportStartDate.Year}.pdf";
+                    reportFileName = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", reportFileName);
+                    PdfHelper.CombinePdfReports(reportFileName, siteReportFileNames, summaryFileName);
+
+                    // Send Email
+                    SendEmailTimesheet(reportFileName, schedule, reportStartDate, ignoreRecipients);
+
+                    if (upload)
+                    {
+                        schedule.NextRunOn = KpiTimesheetScheduleRunOnCalculator.GetNextRunOn(schedule);
+                        _kpiSchedulesDataProvider.SaveTimesheetSchedule(schedule);
+
+                        if (!_webHostEnvironment.IsDevelopment())
+                            UploadReportTime(reportFileName, schedule, reportStartDate);
+                    }
+
+                    // Cleanup files
+                    foreach (var fileName in siteReportFileNames)
+                    {
+                        if (File.Exists(fileName))
+                            File.Delete(fileName);
+                    }
+
+                    if (File.Exists(reportFileName))
+                        File.Delete(reportFileName);
+
+                    if (File.Exists(summaryFileName))
+                        File.Delete(summaryFileName);
+                }
+
+                statusLog.AppendFormat("Schedule {0} - Completed. ", schedule.Id);
+            }
+            catch (Exception ex)
+            {
+                statusLog.AppendFormat("Schedule {0} - Exception - {1}", schedule.Id, ex.Message);
+            }
+
+            return statusLog.ToString();
+        }
+
         private bool UploadReport(string reportFileName, KpiSendSchedule schedule, DateTime reportDate)
         {
             var clientSiteIds = schedule.KpiSendScheduleClientSites.Select(z => z.ClientSiteId).ToArray();
@@ -175,7 +264,31 @@ namespace CityWatch.Kpi.Services
 
             return success;
         }
+        private bool UploadReportTime(string reportFileName, KpiSendTimesheetSchedules schedule, DateTime reportDate)
+        {
+            var clientSiteIds = schedule.KpiSendTimesheetClientSites.Select(z => z.ClientSiteId).ToArray();
+            var ClientSiteKpiSettings = _clientDataProvider.GetClientSiteKpiSetting(clientSiteIds);
 
+            var success = false;
+            foreach (var settings in ClientSiteKpiSettings)
+            {
+                if (settings != null && !string.IsNullOrEmpty(settings.DropboxImagesDir))
+                {
+                    try
+                    {
+                        var dbxFilePath = $"{settings.DropboxImagesDir}/FLIR - Wand Recordings - IRs - Daily Logs/{reportDate.Date.Year}/{reportDate.Date:yyyyMM} - {reportDate.Date.ToString("MMMM").ToUpper()} DATA/x - Site KPI Telematics & Statistics/" + Path.GetFileName(reportFileName);
+                        success = Task.Run(() => UploadDailyLogToDropbox(reportFileName, dbxFilePath)).Result;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"KPI Report Upload | Failed | Schedule Id: {schedule.Id} Client Site Id: {settings.ClientSiteId}. Error: {ex.Message}");
+                        _logger.LogError(ex.StackTrace);
+                    }
+                }
+            }
+
+            return success;
+        }
         private async Task<bool> UploadDailyLogToDropbox(string fileToUpload, string dbxFilePath)
         {
             using var dbxTeam = new DropboxTeamClient(_settings.DropboxAccessToken, _settings.DropboxRefreshToken, _settings.DropboxAppKey, _settings.DropboxAppSecret, new DropboxClientConfig());
@@ -314,6 +427,69 @@ namespace CityWatch.Kpi.Services
             }
         }
 
+        private void SendEmailTimesheet(string fileName, KpiSendTimesheetSchedules schedule, DateTime reportDate, bool ignoreRecipients)
+        {
+            var fromAddress = _emailOptions.FromAddress.Split('|');
+            
+
+            var subject = _emailOptions.Subject;
+            var messageHtml = _emailOptions.Message;
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+            /*Default to adresss for kpi Schedule Start*/
+            var Emails = _clientDataProvider.GetKPIScheduleDeafultMailbox().ToList();
+            var emailAddresses = string.Join(",", Emails.Select(email => email.Email));
+            if (emailAddresses != null && emailAddresses != "")
+            {
+                var toAddressNew = emailAddresses.Split(',');
+                foreach (var address in GetToEmailAddressList(toAddressNew))
+                    message.To.Add(address);
+            }
+            /*Default to adresss for kpi Schedule end*/
+            /* Mail Id added Bcc globoconsoftware for checking KPI Mail not getting Issue Start(date 17,01,2024) */
+
+            message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
+            // message.Bcc.Add(new MailboxAddress("globoconsoftware2", "jishakallani@gmail.com"));
+            /* Mail Id added Bcc globoconsoftware end */
+            if (!ignoreRecipients)
+            {
+                if (!string.IsNullOrEmpty(schedule.EmailTo))
+                {
+                    foreach (var email in schedule.EmailTo.Split(","))
+                    {
+                        if (CommonHelper.IsValidEmail(email))
+                            message.Cc.Add(new MailboxAddress(string.Empty, email.Trim()));
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(schedule.EmailBcc))
+                {
+                    foreach (var email in schedule.EmailBcc.Split(","))
+                    {
+                        if (CommonHelper.IsValidEmail(email))
+                            message.Bcc.Add(new MailboxAddress(string.Empty, email.Trim()));
+                    }
+                }
+            }
+            message.Subject = $"{subject} - {schedule.ProjectName} - {reportDate:MMM yyyy}";
+
+            var builder = new BodyBuilder()
+            {
+                HtmlBody = messageHtml
+            };
+            builder.Attachments.Add(fileName);
+            message.Body = builder.ToMessageBody();
+
+            using (var client = new SmtpClient())
+            {
+                client.Connect(_emailOptions.SmtpServer, _emailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                if (!string.IsNullOrEmpty(_emailOptions.SmtpUserName) &&
+                    !string.IsNullOrEmpty(_emailOptions.SmtpPassword))
+                    client.Authenticate(_emailOptions.SmtpUserName, _emailOptions.SmtpPassword);
+                client.Send(message);
+                client.Disconnect(true);
+            }
+        }
         private List<MailboxAddress> GetToEmailAddressList(string[] toAddress)
         {
             var emailAddressList = new List<MailboxAddress>();
@@ -350,7 +526,35 @@ namespace CityWatch.Kpi.Services
             summaryFileName = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", summaryFileName);
             return summaryFileName;
         }
+        private string GetSchduleIdentifierTimesheet(KpiSendTimesheetSchedules schedule)
+        {
+            if (!string.IsNullOrEmpty(schedule.ProjectName))
+                return schedule.ProjectName;
 
+            if (schedule.KpiSendTimesheetClientSites.Count == 1)
+                return schedule.KpiSendTimesheetClientSites.Single().ClientSite.Name;
+
+            return string.Join(", ", schedule.KpiSendTimesheetClientSites.Select(z => z.ClientSite.ClientType.Name).Distinct());
+        }
+
+        private string CreateSummaryReportTimesheet(KpiSendTimesheetSchedules schedule, DateTime reportStartDate, DateTime reportEndDate)
+        {
+
+            var coverSheetType = CoverSheetType.Monthly;
+            if (reportStartDate.Month != DateTime.Today.Month)
+                coverSheetType = CoverSheetType.Monthly;
+
+            ISummaryReportGenerator summaryReportGenerator = coverSheetType == CoverSheetType.Weekly ?
+                new WeeklySummaryReportGenerator(_webHostEnvironment, _viewDataService, _patrolDataReportService) :
+                new MonthlySummaryReportGenerator(_webHostEnvironment, _viewDataService, _patrolDataReportService);
+            var summaryReportFromDate = coverSheetType == CoverSheetType.Weekly ? DateTime.Today.AddDays(-6) : reportStartDate;
+            var summaryReportToDate = coverSheetType == CoverSheetType.Weekly ? DateTime.Today : reportEndDate;
+            string StartDate = reportStartDate.ToString("MM/dd/yyyy");
+            string EndDate = reportEndDate.ToString("MM/dd/yyyy");
+            var summaryFileName = _kpiTimesheetReportGenerator.GeneratePdfTimesheetReport(reportStartDate, reportEndDate, schedule.Id);
+            summaryFileName = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", summaryFileName);
+            return summaryFileName;
+        }
         public byte[] ProcessDownload(KpiSendSchedule schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload)
         {
             var statusLog = new StringBuilder();
@@ -439,6 +643,89 @@ namespace CityWatch.Kpi.Services
 
             return fileBytes;
         }
-       
+
+        public byte[] ProcessDownloadTimeSheet(KpiSendTimesheetSchedules schedule, DateTime reportStartDate, bool ignoreRecipients, bool upload)
+        {
+            var statusLog = new StringBuilder();
+            byte[] fileBytes = null;
+            try
+            {
+                statusLog.AppendFormat("Schedule {0} - Starting. ", schedule.Id);
+                var siteIds = schedule.KpiSendTimesheetClientSites.Select(z => z.ClientSiteId);
+                var reportEndDate = reportStartDate.AddMonths(1).AddDays(-1);
+
+                var siteReportFileNames = new List<string>();
+                foreach (var siteId in siteIds)
+                {
+                    string StartDate = reportStartDate.ToString("MM/dd/yyyy");
+                    string EndDate = "";
+                    if (reportEndDate!=null)
+                    {
+                         EndDate = reportEndDate.ToString("MM/dd/yyyy");
+                    }
+                    // Create Pdf Report
+                    //DateTime reportEndDate = DateTime.ParseExact("your_input_here", "MM/dd/yyyy", CultureInfo.InvariantCulture);
+                    var clientSiteDetails = _clientDataProvider.GetGuardDetailsAllTimesheet1(siteId, reportStartDate, reportEndDate);
+                    var fileName = _kpiTimesheetReportGenerator.GeneratePdfTimesheetReport(reportStartDate, reportEndDate, siteId);
+                    if (string.IsNullOrEmpty(fileName))
+                    {
+                        statusLog.AppendFormat("Site {0} - Error creating pdf. ", siteId);
+                        continue;
+                    }
+
+                    siteReportFileNames.Add(Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
+                    statusLog.AppendFormat("Site {0} - Completed. ", siteId);
+                }
+
+                if (siteReportFileNames.Any())
+                {
+                    schedule.ProjectName = GetSchduleIdentifierTimesheet(schedule);
+
+                    // Create summary page
+                    var summaryFileName = CreateSummaryReportTimesheet(schedule, reportStartDate, reportEndDate);
+
+                    // Combine reports to a single pdf                    
+                    var reportFileName = $"{FileNameHelper.GetSanitizedFileNamePart(schedule.ProjectName)} - Daily KPI Reports - {reportStartDate:MMM} {reportStartDate.Year}.pdf";
+                    reportFileName = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", reportFileName);
+                    PdfHelper.CombinePdfReports(reportFileName, siteReportFileNames, summaryFileName);
+
+
+                   
+
+
+                    if (upload)
+                    {
+                        schedule.NextRunOn = KpiTimesheetScheduleRunOnCalculator.GetNextRunOn(schedule);
+                       // _kpiSchedulesDataProvider.SaveSendSchedule(schedule);
+
+                        if (!_webHostEnvironment.IsDevelopment())
+                            UploadReportTime(reportFileName, schedule, reportStartDate);
+                    }
+
+                    fileBytes = System.IO.File.ReadAllBytes(reportFileName);
+                    //// Cleanup files
+                    foreach (var fileName in siteReportFileNames)
+                    {
+                        if (File.Exists(fileName))
+                            File.Delete(fileName);
+                    }
+
+                    if (File.Exists(reportFileName))
+                        File.Delete(reportFileName);
+
+                    if (File.Exists(summaryFileName))
+                        File.Delete(summaryFileName);
+                }
+
+                statusLog.AppendFormat("Schedule {0} - Completed. ", schedule.Id);
+            }
+            catch (Exception ex)
+            {
+                statusLog.AppendFormat("Schedule {0} - Exception - {1}", schedule.Id, ex.Message);
+            }
+
+            return fileBytes;
+        }
+
     }
 }
