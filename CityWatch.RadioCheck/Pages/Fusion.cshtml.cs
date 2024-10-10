@@ -234,7 +234,7 @@ namespace CityWatch.RadioCheck.Pages
             var rcChartTypesGuardsFromPrealarmNew = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
             int rcChartTypesGuardsFromPrealarmCountnew = 0;
             var rcChartTypesGuardsFromPrealarm = _auditLogViewDataService.GetAuditGuardFusionLogs(clientSiteId, logFromDate, logToDate, excludeSystemLogs).Where(z => (z.LogBookNotes != null && z.LogBookNotes.Contains("Guard Off Duty (NOTE: CRO did manual stamp as Guard went home without hitting OFF DUTY which is a breach of SOP"))).GroupBy(z => z.ClientSiteId); ;
-            foreach (var item in rcChartTypesGuardsPrealarm)
+            foreach (var item in rcChartTypesGuardsFromPrealarm)
             {
 
                 string newdaterange = item.FirstOrDefault().SiteName;
