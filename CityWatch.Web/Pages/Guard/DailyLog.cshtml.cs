@@ -1429,7 +1429,7 @@ namespace CityWatch.Web.Pages.Guard
                     Issuccess = false;
 
                 }
-
+                
 
             }
             catch (Exception ex)
@@ -1437,7 +1437,8 @@ namespace CityWatch.Web.Pages.Guard
                 _logger.LogError(ex.StackTrace);
                 exMessage = $"Error: {ex.Message}.";
             }
-
+            //always downlaod the Pdf
+            Issuccess = true;
             return new JsonResult(new { success = Issuccess, message = exMessage });
         }
 

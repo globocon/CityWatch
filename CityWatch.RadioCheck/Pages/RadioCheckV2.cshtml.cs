@@ -2143,7 +2143,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 //_logger.LogError(ex.StackTrace);
                 exMessage = $"Error: {ex.Message}.";
             }
-
+            Issuccess = true;
             return new JsonResult(new { success = Issuccess, message = exMessage });
         }
 
