@@ -1090,6 +1090,8 @@ namespace CityWatch.Data.Providers
                     guard = l.GuardId != 0 ? _context.Guards.FirstOrDefault(g => g.Id == l.GuardId).Name : string.Empty,
                     SiteName = l.ClientSiteId != 0 ? _context.ClientSites.FirstOrDefault(c => c.Id == l.ClientSiteId).Name : string.Empty
                 })
+                .OrderByDescending(x => x.LoginTime)
+                .Take(5)
                 .ToList();
 
             return lastLogins;
