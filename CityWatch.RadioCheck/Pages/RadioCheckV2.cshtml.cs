@@ -1751,7 +1751,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 }
                 else
                 {
-                    rtn.SOPFileNme = string.Empty;
+                    rtn.SOPFileNme = null;
                 }
             }
             return new JsonResult(rtn);
