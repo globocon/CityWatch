@@ -2717,6 +2717,12 @@ $('#dglClientSiteIdActionList').on('change', function () {
                 $('#download_imageRCList').removeAttr('href');
                 $('#download_imageRCList').removeAttr('download');
             }
+            if (data.sopFileNme != null && data.sopFileNme !='') {
+                
+                $('#download_siteRCSOPList').attr('href', 'https://localhost:44356/StaffDocs/' + data.sopFileNme );
+            } else {
+                $('#download_siteRCSOPList').removeAttr('href');
+            }
 
         }
     });
