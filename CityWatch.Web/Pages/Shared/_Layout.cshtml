@@ -23,6 +23,8 @@
     var companydetailsprimarylogo = companydetail.PrimaryLogoPath;
     var alldocWithModeleName = new List<StaffDocument>();
     var pageName = ViewContext.RouteData.Values["page"]?.ToString();
+    var host = Context.Request.Host.Host;
+    var clientName = host.Split('.')[0]; // e.g., acmecompany from www.acmecompany.localhost
     if (!string.IsNullOrEmpty(pageName))
     {
         if (pageName.Contains("DailyLog"))
@@ -106,6 +108,7 @@
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom mb-3">
             <div class="container">
                 <input type="hidden" id="pageName" name="pageName" value="@pageName" />
+                <input type="hidden" id="ClientName" name="pageName" value="@clientName" />
                 @if (User.Identity.IsAuthenticated)
                 {
                     <div style="width:12px">
@@ -198,8 +201,16 @@
                 }
                 @*<a class="navbar-brand" href="https://www.citywatchsecurity.com.au" target="_blank">*@
                 <a class="navbar-brand" href="https://@companydetail.LogoHyperlink" target="_blank">
+                    @if (clientName.Trim() == "cws-ir" || clientName.Trim() == "test" || clientName.Trim() == "localhost")
+                    {
+                        <img src="@companydetail.PrimaryLogoPath" alt="cws logo" height="60px" />
 
-                    <img src="@companydetail.PrimaryLogoPath" alt="cws logo" height="60px" />
+                    }
+                    else
+                    {
+
+                        
+                    }
                 </a>
 
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse"

@@ -2,6 +2,7 @@
 using Dropbox.Api.Users;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.Asn1.BC;
 using System;
 using System.Collections.Generic;
@@ -93,6 +94,8 @@ namespace CityWatch.Data.Providers
         public List<StaffDocument> GetStaffDocumentModuleDetails();
 
         public List<StaffDocument> GetStaffDocumentSOPDocDetails(int clientSiteId);
+
+        public void SaveSubDomain(SubDomain subDomain);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -273,6 +276,27 @@ namespace CityWatch.Data.Providers
                     documentToUpdate.ClientSite = staffdocument.ClientSite;
                 }
             }
+            _context.SaveChanges();
+        }
+
+
+        public void SaveSubDomain(SubDomain subDomain)
+        {
+
+            var subDomainToUpdate = _context.SubDomain.SingleOrDefault(x => x.Id == subDomain.Id);
+            if (subDomainToUpdate != null)
+            {
+                subDomainToUpdate.Domain = subDomain.Domain;
+                subDomainToUpdate.Logo = subDomain.Logo;
+                subDomainToUpdate.Enabled = subDomain.Enabled;
+                subDomainToUpdate.TypeId = subDomain.TypeId;
+            }
+            else
+            {
+                _context.SubDomain.Add(subDomain);
+
+            }
+
             _context.SaveChanges();
         }
 
@@ -962,7 +986,7 @@ namespace CityWatch.Data.Providers
         public List<StaffDocument> GetStaffDocumentSOPDocDetails(int clientSiteId)
         {
 
-            return _context.StaffDocuments.Where(x => x.DocumentType==4 && x.ClientSite== clientSiteId && x.SOP!=string.Empty).ToList();
+            return _context.StaffDocuments.Where(x => x.DocumentType == 4 && x.ClientSite == clientSiteId && x.SOP != string.Empty).ToList();
 
 
 
