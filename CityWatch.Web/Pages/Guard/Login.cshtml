@@ -10,6 +10,11 @@
     ViewData["PageName"] = CityWatch.Web.Helpers.PageNameHelper.DailyGuardLog;
     var mapSettings = @Configuration.GetSection("GoogleMap").Get(typeof(GoogleMapSettings)) as GoogleMapSettings;
     var ApiKey = mapSettings.ApiKey;
+    var IsLB_KV_IR = false;
+    if (Model.GuardLogin != null)
+    {
+        IsLB_KV_IR = Model.GuardLogin.Guard.IsLB_KV_IR;
+    }
 }
 <div id="loader"></div>
 <div class="m-auto p-1 main-container">
@@ -17,7 +22,9 @@
         <form id="frmGuardLogin" style="margin-left: 5px; margin-right: 5px;">
             <input type="hidden" asp-for="@Model.GuardLogin.Id" />
             <input type="hidden" asp-for="@Model.GuardLogin.Guard.Id" />
-            <input type="hidden" asp-for="@Model.GuardLogin.Guard.IsLB_KV_IR" />
+            
+            
+            <input type="hidden" asp-for="@Model.GuardLogin.Guard.IsLB_KV_IR" value="@IsLB_KV_IR" />
             <input type="hidden" asp-for="@Model.LogBookType" />
             <input type="hidden" id="hid_duressEnabledGpsCoordinates" asp-for="@Model.GuardLogin.GpsCoordinates">
 
