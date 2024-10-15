@@ -102,7 +102,7 @@ namespace CityWatch.Web.Pages
             if (clientName != string.Empty)
             {
                 if (clientName.Trim() != "cws-ir" 
-                //&& clientName.Trim() != "test"
+                && clientName.Trim() != "test"
                 && clientName.Trim() != "localhost"
                 )
                 {
