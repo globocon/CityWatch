@@ -1150,6 +1150,7 @@ $(function () {
             $deleteBtn.hide();
             $updateBtn.show();
             $cancelBtn.show();
+            isPaused = true;
         });
 
         $updateBtn.on('click', function (e) {
@@ -1158,6 +1159,7 @@ $(function () {
             $deleteBtn.show();
             $updateBtn.hide();
             $cancelBtn.hide();
+            isPaused = false;
         });
 
         $cancelBtn.on('click', function (e) {
@@ -1166,6 +1168,7 @@ $(function () {
             $deleteBtn.show();
             $updateBtn.hide();
             $cancelBtn.hide();
+            isPaused = false;
         });
 
         $deleteBtn.on('click', function (e) {
@@ -1443,25 +1446,30 @@ $(function () {
                 }
             }
         });
-        gridGuardLog.on('rowSelect', function (e, $row, id, record) {
-            /*timer pause while editing*/
-            if (isPaused == true) {
-                isPaused = false;
+        //gridGuardLog.on('rowSelect', function (e, $row, id, record) {
+        //    /*timer pause while editing*/
+        //    if (isPaused == true) {
+        //        isPaused = false;
 
-            }
-            else {
-                isPaused = true;
+        //    }
+        //    else {
+        //        isPaused = true;
 
-            }
-
-
-        });
-        gridGuardLog.on('rowUnselect', function (e, $row, id, record) {
-            /*timer pause while editing*/
-            isPaused = false;
+        //    }
 
 
-        });
+        //});
+        //gridGuardLog.on('rowUnselect', function (e, $row, id, record) {
+        //    /*timer pause while editing*/
+        //    if ($(this).closest("tr").hasClass("active")) {
+        //        isPaused = true;
+        //    }
+        //    else { 
+        //        isPaused = false;
+        //    }
+
+
+        //});
         gridGuardLog.on('rowDataChanged', function (e, id, record) {
             /*timer pause while editing*/
             isPaused = true;
