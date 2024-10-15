@@ -108,6 +108,11 @@ namespace CityWatch.Web.Pages.Admin
             foreach (var item in clienttypes)
             {
                 item.ClientSiteCount = _viewDataService.GetClientTypeCount(item.Id);
+                var result = _userDataProvider.GetDomainDeatils(item.Id);
+                if (result != null)
+                {
+                    item.IsSubDomainEnabled = result.Enabled;
+                }
             }
             return new JsonResult(clienttypes);
             //p1-259 counter-stop
@@ -1691,6 +1696,7 @@ namespace CityWatch.Web.Pages.Admin
             var success = false;
             var message = "Uploaded successfully";
             var files = Request.Form.Files;
+            var newFileName = string.Empty;
             if (files.Count == 1)
             {
                 var file = files[0];
@@ -1698,17 +1704,32 @@ namespace CityWatch.Web.Pages.Admin
                 {
                     try
                     {
+                        // Check for valid image extensions
                         if (".jpg,.png,.jpeg,.gif".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
                             throw new ArgumentException("Unsupported file type");
 
-                        var staffDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "StaffDocs");
+                        // Get the folder path where images will be saved
+                        var staffDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "SubdomainLogo");
                         if (!Directory.Exists(staffDocsFolder))
                             Directory.CreateDirectory(staffDocsFolder);
-                        using (var stream = System.IO.File.Create(Path.Combine(staffDocsFolder, file.FileName)))
+
+                        // Get the file extension
+                        var fileExtension = Path.GetExtension(file.FileName);
+
+                        // Get the original file name without the extension
+                        var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
+
+                        // Add the last 6 digits of the current UTC ticks to the file name
+                        newFileName = $"{originalFileName}_{DateTime.UtcNow.Ticks.ToString().Substring(DateTime.UtcNow.Ticks.ToString().Length - 6)}{fileExtension}";
+
+                        // Create the full path with the new file name
+                        var filePath = Path.Combine(staffDocsFolder, newFileName);
+
+                        // Save the file
+                        using (var stream = System.IO.File.Create(filePath))
                         {
                             file.CopyTo(stream);
                         }
-
                     }
                     catch (Exception ex)
                     {
@@ -1720,24 +1741,36 @@ namespace CityWatch.Web.Pages.Admin
             var domainName = Request.Form["domainName"];
             var siteTypeId = int.Parse(Request.Form["siteTypeId"]);
             var checkDomainStatus = Convert.ToBoolean(Request.Form["checkDomainStatus"]);
-            var fileName = Request.Form["filename"];
+            if (newFileName == string.Empty)
+            {
+               newFileName = Request.Form["filename"];
+
+            }
             var domainId = int.Parse(Request.Form["domainId"]);
             if (siteTypeId != 0)
             {
 
 
-                _configDataProvider.SaveSubDomain(new SubDomain()
+             var status=_configDataProvider.SaveSubDomain(new SubDomain()
                 {
                     Id = domainId,
                     Domain = domainName,
                     TypeId = siteTypeId,
                     Enabled = checkDomainStatus,
-                    Logo = fileName
+                    Logo = newFileName
 
 
                 });
+                if (status == 1)
+                {
+                    success = true;
+                }
+                else
+                {
+                    success = false;
+                    message = "Domain Name '"+domainName+"' already exist.";
 
-                success = true;
+                }
             }
             else
             {

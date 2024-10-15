@@ -300,7 +300,7 @@
         inlineEditing: { mode: 'command' },
         columns: [
             { field: 'name', title: 'Client Type', width: 400, editor: true },
-            { title: 'Activity', width: 50, renderer: domainSettings },
+            { title: '3rd Party', width: 50, renderer: domainSettings ,cssClass: 'text-center' },
             { field: 'clientSiteCount', width: 50, editor: false, cssClass: 'text-center' }
         ],
 
@@ -314,8 +314,14 @@
 
     function domainSettings(value, record) {
 
+        if (record.isSubDomainEnabled) {
 
-        return '[<a href="#siteTypeDomainDeatils" id="btnDomianDetailsforUser">1</a>]<input type="hidden" id="typeId" value="' + record.id + '"> <input type="hidden" id="typeName" value="' + record.name + '">'
+            return '<a href="#siteTypeDomainDeatils" id="btnDomianDetailsforUser"><input type="checkbox" checked></a><input type="hidden" id="typeId" value="' + record.id + '"> <input type="hidden" id="typeName" value="' + record.name + '">'
+
+        }
+        else {
+            return '<a href="#siteTypeDomainDeatils" id="btnDomianDetailsforUser"><input type="checkbox"></a><input type="hidden" id="typeId" value="' + record.id + '"> <input type="hidden" id="typeName" value="' + record.name + '">'
+        }
 
     }
 
@@ -337,7 +343,8 @@
         $('#siteTypeDomainDeatils').find('#checkDomainStatus').prop('checked', false);  // Uncheck checkbox
         $('#siteTypeDomainDeatils').find('#domainName').val('');              // Clear domain name
         $('#siteTypeDomainDeatils').find('#add_ContractorLogo').val(null);  
-        $('#siteTypeDomainDeatils').find('#domainId').val(0);   
+        $('#siteTypeDomainDeatils').find('#domainId').val(0);  
+        $('#ImageDiv').html('');
         
     }
 
@@ -353,7 +360,11 @@
                     $('#siteTypeDomainDeatils').find('#domainName').val(data.result.domain);
                     $('#siteTypeDomainDeatils').find('#checkDomainStatus').prop('checked', data.result.enabled);
                     $('#siteTypeDomainDeatils').find('#Domainfilename').val(data.result.logo);  
-                    $('#siteTypeDomainDeatils').find('#domainId').val(data.result.id);  
+                    $('#siteTypeDomainDeatils').find('#domainId').val(data.result.id);   
+
+                    $('#ImageDiv').html('<a href="../SubdomainLogo/' + data.result.logo + '" target="_blank"><img src="../SubdomainLogo/' + data.result.logo + '" alt="logo" style="width:50px;height:50px;" /></a> <a href="../SubdomainLogo/' + data.result.logo + '" target="_blank">'+data.result.logo+'</a>');
+                    //$('#domainImage').attr('src', ');
+                    
                 }
             },
             error: function (xhr, status, error) {
@@ -448,6 +459,21 @@
             gridType.addRow({ 'id': -1, 'name': '' }).edit(-1);
         }
     });
+
+
+    $('#siteTypeDomainDeatils').on('hidden.bs.modal', function (e) {
+        // Code to run when the modal is closed
+        if (gridType) {
+            gridType.reload();
+
+        }
+
+
+    });
+
+    function reloadgridType() {
+        gridType.reload();
+    }
 
     function gpsEditor($editorContainer, value, record) {
         if (!value) value = '';
@@ -3947,7 +3973,7 @@
         var subdomainPattern = /^[a-zA-Z0-9]([a-zA-Z0-9-]{1,61}[a-zA-Z0-9])?$/;
 
         if (!subdomainPattern.test(domainName)) {
-            showModal('Please enter a valid domain name');
+            showModal('Please enter a valid domain name. The name should be less than 50 characters long without spaces or special characters.');
             return false;
         } 
 
@@ -3969,13 +3995,16 @@
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
         }).done(function (data) {
             if (data.success) {
-                gridSchedules.reload();
-                gridStaffDocsTypeCompanySop.reload();
-                gridStaffDocsTypeTraining.reload();
-                gridStaffDocsTypeTemplatesAndForms.reload();
+
+                reloadgridType();
+                gridType.reload();
                 $('#siteTypeDomainDeatils').modal('hide');
                 showStatusNotification(data.success, data.message);
 
+            }
+            else {
+
+                showModal(data.message);
             }
         }).fail(function () {
             showStatusNotification(false, 'Something went wrong');
@@ -3988,6 +4017,7 @@
     });
 
 });
+
 
 
 

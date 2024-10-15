@@ -23,8 +23,7 @@
     var companydetailsprimarylogo = companydetail.PrimaryLogoPath;
     var alldocWithModeleName = new List<StaffDocument>();
     var pageName = ViewContext.RouteData.Values["page"]?.ToString();
-    var host = Context.Request.Host.Host;
-    var clientName = host.Split('.')[0]; // e.g., acmecompany from www.acmecompany.localhost
+
     if (!string.IsNullOrEmpty(pageName))
     {
         if (pageName.Contains("DailyLog"))
@@ -55,6 +54,25 @@
             alldocWithModeleName = null;
         }
 
+    }
+    var host = Context.Request.Host.Host;
+    var clientName = host.Split('.')[0];
+    var clientLogo = string.Empty;
+    if (clientName != string.Empty)
+    {
+        if (clientName.Trim() != "cws-ir" 
+        //&& clientName.Trim() != "test"
+         && clientName.Trim() != "localhost"
+        )
+        {
+            var domain = dataProvider.GetSubDomainDetails(clientName);
+            if (domain != null)
+            {
+                clientLogo = "../subdomainlogo/" + domain.Logo;
+
+            }
+
+        }
     }
 }
 <html>
@@ -133,7 +151,7 @@
                     <button id="downloadButton"><i class="fa fa-question-circle" aria-hidden="true"></i></button>*@
 
 
-                                    <ul  style="list-style-type:none;padding-left:0;">
+                                    <ul style="list-style-type:none;padding-left:0;">
                                         <li>
                                             <i class="fa fa-question-circle text-primary btn-delete-dgl-attachment1" style="cursor: pointer;" id="@singleDoc.FileName" title="@singleDoc.FileName" aria-hidden="true"></i>
                                         </li>
@@ -170,9 +188,9 @@
                                                                     <td><span style="color:red"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></span> @file.FileName</td>
                                                                     <td>
 
-                                                                        <ul  style="list-style-type:none;padding-left:0;">
+                                                                        <ul style="list-style-type:none;padding-left:0;">
                                                                             <li>
-                                                                                <a href="#" class="btn btn-outline-success ml-2" >
+                                                                                <a href="#" class="btn btn-outline-success ml-2">
                                                                                     <i class="fa fa-download mr-3 text-primary btn-delete-dgl-attachment1" style="cursor: pointer;" id="@file.FileName" title="@file.FileName" aria-hidden="true">&nbsp;Download</i>
                                                                                 </a>
                                                                             </li>
@@ -201,15 +219,15 @@
                 }
                 @*<a class="navbar-brand" href="https://www.citywatchsecurity.com.au" target="_blank">*@
                 <a class="navbar-brand" href="https://@companydetail.LogoHyperlink" target="_blank">
-                    @if (clientName.Trim() == "cws-ir" || clientName.Trim() == "test" || clientName.Trim() == "localhost")
+                    @if (clientLogo == string.Empty)
                     {
                         <img src="@companydetail.PrimaryLogoPath" alt="cws logo" height="60px" />
 
                     }
                     else
                     {
+                        <img src="@clientLogo" alt="cws logo" height="60px" />
 
-                        
                     }
                 </a>
 
@@ -247,24 +265,54 @@
     {
         @RenderSection("LiveEvents")
     }
-    <div class="container d-flex flex-column flex-md-row pb-0 mb-2">
+
+    @if (clientLogo == string.Empty)
+    {
+        <div class="container d-flex flex-column flex-md-row pb-0 mb-2">
+            @if (IsSectionDefined("ProductLogo"))
+            {
+                @RenderSection("ProductLogo",false)
+            }
+            @if (IsSectionDefined("CalendarLogo"))
+            {
+                @RenderSection("CalendarLogo",false)
+            }
+            @*<img src="~/images/ISOv3.jpg" alt="iso certification" height="80px" class="ml-md-auto"/>*@
+            <img src="@companydetail.BannerLogoPath" alt="iso certification" height="80px" class="ml-md-auto" />
+        </div>
+    }
+    else
+    {
         @if (IsSectionDefined("ProductLogo"))
         {
-            @RenderSection("ProductLogo")
+            IgnoreSection("ProductLogo");
         }
         @if (IsSectionDefined("CalendarLogo"))
         {
-            @RenderSection("CalendarLogo")
+            IgnoreSection("CalendarLogo");
         }
-        @*<img src="~/images/ISOv3.jpg" alt="iso certification" height="80px" class="ml-md-auto"/>*@
-        <img src="@companydetail.BannerLogoPath" alt="iso certification" height="80px" class="ml-md-auto" />
-    </div>
+    }
+
 
     <footer class="border-top footer text-muted">
         <div class="container">
             <div class="row">
                 <div class="col-md-12 d-flex flex-wrap justify-content-center">
-                    @Html.Raw(CityWatch.Web.Helpers.SiteMenuHelper.GetMenuHtml(ViewBag.PageName))
+
+                    @if (clientLogo == string.Empty)
+                    {
+                        @Html.Raw(CityWatch.Web.Helpers.SiteMenuHelper.GetMenuHtml(ViewBag.PageName))
+
+                    }
+                    else
+                    {
+                        if (ViewBag.PageName != PageNameHelper.Login)
+                        {
+                            <div><a href="/Guard/Login?t=gl" class="nav-link py-0"><i class="fa fa-list-alt mr-2"></i>Daily Log Book (LB)</a></div>
+                            <div><a href="/Incident/ToolSelecter" class="nav-link py-0"><i class="fa fa-wrench mr-2"></i>Tools</a></div>
+                        }
+                    }
+
                 </div>
             </div>
             <div class="row">
