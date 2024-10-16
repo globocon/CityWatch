@@ -134,6 +134,7 @@ namespace CityWatch.Data
         public DbSet<KpiSendTimesheetClientSites> KpiSendTimesheetClientSites { get; set; }
 
         public DbSet<LoginUserHistory> LoginUserHistory { get; set; }
+        public DbSet<ANPR> ANPR { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

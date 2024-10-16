@@ -1732,6 +1732,66 @@ namespace CityWatch.Kpi.Pages.Admin
 
             return new JsonResult(new { success });
         }
+
+        //code for anpr start
+        public JsonResult OnPostANPR(ANPR anpr)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                if (anpr.Apicalls == null)
+                {
+                    message = "API Calls Required";
+                }
+                else
+                {
+                    _guardSettingsDataProvider.SaveANPR(anpr);
+                    success = true;
+                }
+                
+            }
+
+            catch (Exception ex)
+            {
+                message = ex.Message;
+                if (ex.InnerException != null &&
+                    ex.InnerException is SqlException &&
+                    ex.InnerException.Message.StartsWith("Violation of UNIQUE KEY constraint"))
+                {
+                    message = "Key number already exists";
+                }
+               
+            }
+
+            return new JsonResult(new { success, message });
+        }
+
+        public JsonResult OnGetANPR(int clientSiteId)
+        {
+           
+            var clientSiteKeys = _guardSettingsDataProvider.GetANPR(clientSiteId).ToList();
+            
+            return new JsonResult(clientSiteKeys);
+            
+        }
+        public JsonResult OnPostDeleteANPR(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _guardSettingsDataProvider.DeleteANPR(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
+        //code for anpr stop
     }
 
 }

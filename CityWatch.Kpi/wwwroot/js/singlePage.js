@@ -12,6 +12,7 @@ $(function () {
     var clientSiteId = getUrlVars()["clientSiteId"];
     $("#gl_client_site_id").val(window.sharedVariable);
     $("#ClientSiteKey_ClientSiteId").val(window.sharedVariable);
+    $("#ANPR_ClientSiteId").val(window.sharedVariable);
     $('#ClientSiteCustomField_ClientSiteId').val(window.sharedVariable);
 
     gritdSmartWands = $('#cs-smart-wands').grid({
@@ -528,6 +529,106 @@ $(function () {
        
     });
     //p2-140 key photos  -start
+    let gridANPR = $('#cs_ANPR').DataTable({
+        lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+        paging: false,
+        ordering: true,
+        order: [[1, "asc"]],
+        info: false,
+        searching: false,
+        autoWidth: false,
+        "bDestroy": true,
+        ajax: {
+            url: '/Admin/Settings?handler=ANPR',
+            data: function (d) {
+                d.clientSiteId = $('#gl_client_site_id').val();
+            },
+            dataSrc: ''
+        },
+        columns: [
+            { data: 'id', visible: false },
+            { data: 'profile', width: '4%' },
+            { data: 'apicalls', width: '12%', orderable: false },
+            { data: 'laneLabel', width: '12%', orderable: false },
+            //p2-140 key photos-end
+            {
+                targets: -1,
+                orderable: false,
+                width: '4%',
+                data: null,
+                defaultContent: '<button  class="btn btn-outline-primary mr-2" id="btn_edit_anpr"><i class="fa fa-pencil mr-2"></i></button>' +
+                    '<button id="btn_delete_anpr_key" class="btn btn-outline-danger mr-2 mt-1"><i class="fa fa-trash mr-2"></i></button>',
+
+
+                className: "text-center"
+            },
+        ],
+
+    });
+
+    $('#cs_ANPR tbody').on('click', '#btn_edit_anpr', function () {
+        var data = gridANPR.row($(this).parents('tr')).data();
+        loadANPRModal(data);
+    });
+    $('#cs_ANPR tbody').on('click', '#btn_delete_anpr_key', function () {
+        var data = gridANPR.row($(this).parents('tr')).data();
+        if (confirm('Are you sure want to delete this key?')) {
+            $.ajax({
+                type: 'POST',
+                url: '/Admin/Settings?handler=DeleteANPR',
+                data: { 'id': data.id },
+                dataType: 'json',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function () {
+                gridANPR.ajax.reload();
+            });
+        }
+    });
+    function loadANPRModal(data) {
+        console.log(data);
+        $('#ANPR_Id').val(data.id);
+        $('#AnprKey_Profile').val(data.profile);
+        $('#AnprKey_ApiCalls').val(data.apicalls);
+        $('#AnprKey_LineLabel').val(data.laneLabel);
+        $('#AnprKey_Disabled').prop('checked', data.isDisabled);  
+        $('#AnprKey_SingleLane').prop('checked', data.isSingleLane);  
+        $('#AnprKey_SeperateEntryAndExit').prop('checked', data.isSeparateEntryExitLane);
+        $('#csANPRValidationSummary').html('');
+        $('#anpr-modal').modal('show');
+        
+    }
+    $('#btn_save_anpr_key').on('click', function () {
+        var formData = $('#frm_add_key1').serializeArray(); // Serialize to array for easier manipulation
+
+        // Filter out the default "on" checkbox values from the serialized array
+        formData = formData.filter(function (item) {
+            return item.name !== 'ANPR.IsDisabled' && item.name !== 'ANPR.IsSingleLane' && item.name !== 'ANPR.IsSeperateEntryAndExitLane';
+        });
+
+        // Manually append the correct checkbox values (true/false)
+        formData.push({ name: 'ANPR.IsDisabled', value: $('#AnprKey_Disabled').is(':checked') ? 'true' : 'false' });
+        formData.push({ name: 'ANPR.IsSingleLane', value: $('#AnprKey_SingleLane').is(':checked') ? 'true' : 'false' });
+        formData.push({ name: 'ANPR.IsSeperateEntryAndExitLane', value: $('#AnprKey_SeperateEntryAndExit').is(':checked') ? 'true' : 'false' });
+
+        // Convert form data array to URL-encoded string
+        var formDataString = $.param(formData);
+
+       
+        //console.log(formDataString);
+        $.ajax({
+            url: '/Admin/Settings?handler=ANPR',
+            data: formDataString,
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.success) {
+                $('#anpr-modal').modal('hide');
+                gridANPR.ajax.reload();
+            } else {
+                displayANPRValidationSummary(result.message);
+            }
+        });
+    });
     $("#KeyImagefileUpload").fileUpload();
     
     $('#upload_KeyImage_file').on('change', function () {
@@ -1523,4 +1624,49 @@ $(function () {
 
     });
 });
-       
+
+
+//ANPR Details start
+function resetAnprModal() {
+    $('#ANPR_Id').val('');
+    $('#AnprKey_Profile').val('');
+    $('#AnprKey_ApiCalls').val('');
+    $('#AnprKey_LineLabel').val('');
+    $('#AnprKey_Disabled').prop('checked', false);
+    $('#AnprKey_SingleLane').prop('checked', false);
+    $('#AnprKey_SeperateEntryAndExit').prop('checked', false);
+
+    $('#csANPRValidationSummary').html('');
+    $('#anpr-modal').modal('hide');
+}
+$('#add_anpr_key').on('click', function () {
+    resetAnprModal();
+    
+    $('#anpr-modal').modal('show');
+    
+});
+$('#btnanprclose').on('click', function () {
+    $('#anpr-modal').modal('hide');
+});
+
+function displayANPRValidationSummary(errors) {
+    $('#csANPRValidationSummary').removeClass('validation-summary-valid').addClass('validation-summary-errors');
+    $('#csANPRValidationSummary').html('');
+    $('#csANPRValidationSummary').append('<ul></ul>');
+    if (!Array.isArray(errors)) {
+        $('#csANPRValidationSummary ul').append('<li>' + errors + '</li>');
+    } else {
+        errors.forEach(function (item) {
+            if (item.indexOf(',') > 0) {
+                item.split(',').forEach(function (itemInner) {
+                    $('#csANPRValidationSummary ul').append('<li>' + itemInner + '</li>');
+                });
+            } else {
+                $('#csANPRValidationSummary ul').append('<li>' + item + '</li>');
+            }
+        });
+    }
+}
+
+//ANPR Details stop
+
