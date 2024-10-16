@@ -87,8 +87,7 @@ namespace CityWatch.Web.Pages.Guard
             try
             {
                 //p1-266 checking whether guard has access in login 
-                if (GuardLogin.Guard.IsLB_KV_IR)
-                {
+                
 
 
                     GuardLogin.SmartWandOrPositionId = smartWandOrPositionId;
@@ -132,7 +131,9 @@ namespace CityWatch.Web.Pages.Guard
                 var eventDateTimeUtcOffsetMinute = GuardLogin.EventDateTimeUtcOffsetMinute.Value;
                 // Task p6#73_TimeZone issue -- added by Binoy - End
                 //Save history for the Guard Login Start
-                _guardLogDataProvider.SaveUserLoginHistoryDetails(new LoginUserHistory()
+                if (GuardLogin.Guard.IsLB_KV_IR)
+                {
+                    _guardLogDataProvider.SaveUserLoginHistoryDetails(new LoginUserHistory()
                 {
                     LoginUserId = AuthUserHelper.LoggedInUserId.GetValueOrDefault(),
                     IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString(),
