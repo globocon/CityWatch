@@ -41,10 +41,11 @@ namespace CityWatch.RadioCheck.Pages.Radio
         private readonly Settings _settings;
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly IViewDataService _viewDataService;
+        public readonly IConfigDataProvider _configDataProvider;
 
         public RadioCheckNewModel(IGuardLogDataProvider guardLogDataProvider, IOptions<EmailOptions> emailOptions,
             IConfiguration configuration, ISmsSenderProvider smsSenderProvider, IClientDataProvider clientDataProvider, IGuardDataProvider guardDataProvider,
-            IOptions<Settings> settings, IViewDataService viewDataService)
+            IOptions<Settings> settings, IViewDataService viewDataService, IConfigDataProvider configDataProvider)
         {
             _guardLogDataProvider = guardLogDataProvider;
             _EmailOptions = emailOptions.Value;
@@ -54,6 +55,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
             _settings = settings.Value;
             _guardDataProvider = guardDataProvider;
             _viewDataService = viewDataService;
+            _configDataProvider = configDataProvider;
         }
         public int UserId { get; set; }
         public int GuardId { get; set; }
@@ -1741,6 +1743,15 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 if (rtn.Imagepath != null)
                 {
                     rtn.Imagepath = rtn.Imagepath + ":-:" + ConvertFileToBase64(rtn.Imagepath);
+                }
+                var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == clientSiteId);
+                if (sopfiletype.Count() != 0)
+                {
+                    rtn.SOPFileNme = sopfiletype.FirstOrDefault().FileName;
+                }
+                else
+                {
+                    rtn.SOPFileNme = null;
                 }
             }
             return new JsonResult(rtn);

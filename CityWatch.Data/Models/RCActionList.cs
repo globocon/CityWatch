@@ -31,5 +31,7 @@ namespace CityWatch.Data.Models
         [ForeignKey("SettingsId")]
         [JsonIgnore]
         public ClientSiteKpiSetting ClientSiteKpiSetting { get; set; }
+        [NotMapped]
+        public string SOPFileNme { get; set; }
     }
 }
