@@ -15,12 +15,29 @@
                 <form id="frm_add_key1">
                     <input hidden id="ANPR_ClientSiteId" name="ANPR.ClientSiteId" />
                     <input hidden id="ANPR_Id" name="ANPR.Id" />
+                     <div class="form-group row">
+                        <label class="col-md-3 col-form-label">ANPR Type</label>
+                        <div class="col-md-9" style="display:inline-flex">
+                            <div class="form-check">
+                                <input type="checkbox" id="AnprKey_Disabled" class="form-check-input mb-2" name="ANPR.IsDisabled">
+                                <label class="form-check-label">Disabled</label>
+                            </div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <div class="form-check">
+                                <input type="checkbox" id="AnprKey_SingleLane" class="form-check-input mb-2" name="ANPR.IsSingleLane">
+                                <label class="form-check-label">Single Lane</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" id="AnprKey_SeperateEntryAndExit" class="form-check-input mb-2" name="ANPR.IsSeperateEntryAndExitLane">
+                                <label class="form-check-label">Separate Entry &amp; Exit lane</label>
+                            </div>
+                            </div>
+                         </div>
                     <div class="form-group row">
                         <label class="col-md-3 col-form-label">Profile</label>
                         <div class="col-md-8">
                            
                             <select class="form-control" id="AnprKey_Profile" name="ANPR.profile">
-                                <option value="">Select</option>
+                               @*  <option value="">Select</option> *@
                                 <option value=""></option>
                                 <option value="VERKADA">VERKADA</option>
                                 
@@ -39,7 +56,7 @@
                         <label class="col-md-3 col-form-label">Lane Label</label>
                         <div class="col-md-8">
                             <select class="form-control" id="AnprKey_LineLabel" name="ANPR.LaneLabel">
-                                <option value="">Select</option>
+                                @* <option value="">Select</option> *@
                                 <option value=""></option>
                                 <option value="Entry Lane 01">Entry Lane 01 </option>
                                 <option value="Entry Lane 02">Entry Lane 02 </option>
@@ -47,37 +64,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="modal-header">
-                        <h5 class="modal-title">Manage ANPR Type</h5>
-                       
-                    </div><br/>
-                    <div class="form-group row">
-                        <div class="col-md-12">
-                            <div class="form-check">
-                                <input type="checkbox" id="AnprKey_Disabled" class="form-check-input mb-2" name="ANPR.IsDisabled">
-                                <label class="form-check-label">Disabled</label>
-                            </div>
-                        </div>
-                       
-                    </div>
-                    <div class="form-group row">
-                        <div class="col-md-12">
-                            <div class="form-check">
-                                <input type="checkbox" id="AnprKey_SingleLane" class="form-check-input mb-2" name="ANPR.IsSingleLane">
-                                <label class="form-check-label">Single Lane</label>
-                            </div>
-                        </div>
-                      
-                    </div>
-                    <div class="form-group row">
-                        <div class="col-md-12">
-                            <div class="form-check">
-                                <input type="checkbox" id="AnprKey_SeperateEntryAndExit" class="form-check-input mb-2" name="ANPR.IsSeperateEntryAndExitLane">
-                                <label class="form-check-label">Separate Entry &amp; Exit lane</label>
-                            </div>
-                        </div>
-                      
-                    </div>
+                  
                    
                     <div class="form-row">
                         <div asp-validation-summary="All" id="csANPRValidationSummary"></div>
