@@ -92,6 +92,7 @@ namespace CityWatch.Web.Pages.Admin
             keyVehicleLogAuditLogRequestnew = keyVehicleLogAuditLogRequest;
             for (int i = 1; i <= totalWeeks; i++)
             {
+                keyVehicleLogAuditLogRequest.LogToDate = todatenew;
 
                 var thisWeekStart = today.AddDays(-(int)today.DayOfWeek);
                 var thisWeekEnd = thisWeekStart.AddDays(7).AddSeconds(-1);
