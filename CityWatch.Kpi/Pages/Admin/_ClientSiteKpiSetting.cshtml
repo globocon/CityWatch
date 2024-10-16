@@ -194,6 +194,9 @@
                 <li class="nav-item" role="presentation">
                     <a class="nav-link" id="toggleKeysTab" data-toggle="tab" href="#toggleKeys" role="tab" aria-controls="toggelKeys" aria-selected="false">Toggle</a>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="ANPRTab" data-toggle="tab" href="#anprKeys" role="tab" aria-controls="anprKeys" aria-selected="false">ANPR</a>
+                </li>
                 @*for toggle areas-end*@
                 <li class="nav-item" role="presentation">
                     <a class="nav-link" id="ringFenceTab" data-toggle="tab" href="#ringFence" role="tab" aria-controls="ringFence" aria-selected="false">RingFence</a>
@@ -386,6 +389,46 @@
                         <p>
                             <button class="btn btn-primary" id="btnDisableDataCollection">Save</button>
                         </p>
+                    </div>
+                </div>
+
+                <div class="tab-pane" id="anprKeys" role="tabpanel" aria-labelledby="ANPRTab">
+                    <div class="row m-0">
+                        <div class="col-md-12 text-left mt-2"><label>Default Mode</label></div>
+                        <hr style="width: 100%; margin: 10px 0;" />
+                        <div class="col-md-12 text-right mt-2">
+                            @* <div style="position:relative;display:inline-flex;padding-right:214px;">
+                                <input type="checkbox" id="enableLogDump1" class="form-check-input mb-2">
+                                <label class="form-check-label font-weight-bold" for="enableLogDump1">Disabled</label>
+                            </div>
+
+                            <div style="position:relative;display:inline-flex;padding-right:152px;">
+                                <input type="checkbox" id="enableLogDump2" class="form-check-input mb-2">
+                                <label class="form-check-label font-weight-bold" for="enableLogDump2">Single Lane</label>
+                            </div>
+
+                            <div style="position:relative;display:inline-flex;padding-right:232px;">
+                                <input type="checkbox" id="enableLogDump3" class="form-check-input mb-2" checked>
+                                <label class="form-check-label font-weight-bold" for="enableLogDump3">Separate Entry &amp; Exit lane</label>
+                            </div>*@
+                           
+                            <button class="btn btn-primary mb-3" id="add_anpr_key"><i class="fa fa-plus mr-2"></i>Add</button>
+                        </div>
+                    </div>
+                    <div class="row m-0">
+                        <div class="col-md-12">
+                            <table class="table table-bordered" width="100%" id="cs_ANPR">
+                                <thead>
+                                    <tr>
+                                        <th hidden></th>
+                                        <th>Profile</th>
+                                        <th>API Calls</th>
+                                        <th>Lane Label</th>
+                                        <th><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1282,3 +1325,4 @@
     </div>
 </div>
 <partial name="_KeySiteSettingsPopup" />
+<partial name="_AnprPopup" />
