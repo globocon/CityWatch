@@ -2,6 +2,7 @@
 using Dropbox.Api.Users;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.Asn1.BC;
 using System;
 using System.Collections.Generic;
@@ -93,6 +94,10 @@ namespace CityWatch.Data.Providers
         public List<StaffDocument> GetStaffDocumentModuleDetails();
 
         public List<StaffDocument> GetStaffDocumentSOPDocDetails(int clientSiteId);
+
+        public int SaveSubDomain(SubDomain subDomain);
+
+        public SubDomain GetSubDomainDetails(string domain);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -274,6 +279,44 @@ namespace CityWatch.Data.Providers
                 }
             }
             _context.SaveChanges();
+        }
+
+
+        public int SaveSubDomain(SubDomain subDomain)
+        {
+            var status = 0;
+            var subDomainToUpdate = _context.SubDomain.SingleOrDefault(x => x.Id == subDomain.Id);
+
+            if (subDomainToUpdate != null)
+            {
+                // Check if another subdomain with the same domain exists
+                var ifAlreadyExist = _context.SubDomain.Any(x => x.Domain == subDomain.Domain && x.Id != subDomain.Id);
+
+                if (!ifAlreadyExist)
+                {
+                    // Update only if no conflicting domain exists
+                    subDomainToUpdate.Domain = subDomain.Domain;
+                    subDomainToUpdate.Logo = subDomain.Logo;
+                    subDomainToUpdate.Enabled = subDomain.Enabled;
+                    subDomainToUpdate.TypeId = subDomain.TypeId;
+                    _context.SubDomain.Update(subDomainToUpdate);
+                    status = 1;
+                }
+            }
+            else
+            {
+                // Check if the domain already exists before adding a new subdomain
+                var ifAlreadyExist = _context.SubDomain.Any(x => x.Domain == subDomain.Domain);
+
+                if (!ifAlreadyExist)
+                {
+                    _context.SubDomain.Add(subDomain);
+                    status = 1;
+                }
+            }
+
+            _context.SaveChanges();
+            return status;
         }
 
         public void UpdateStaffDocumentModuleType(StaffDocument staffdocument)
@@ -962,7 +1005,17 @@ namespace CityWatch.Data.Providers
         public List<StaffDocument> GetStaffDocumentSOPDocDetails(int clientSiteId)
         {
 
-            return _context.StaffDocuments.Where(x => x.DocumentType==4 && x.ClientSite== clientSiteId && x.SOP!=string.Empty).ToList();
+            return _context.StaffDocuments.Where(x => x.DocumentType == 4 && x.ClientSite == clientSiteId && x.SOP != string.Empty).ToList();
+
+
+
+        }
+
+
+        public SubDomain GetSubDomainDetails(string domain)
+        {
+
+            return _context.SubDomain.Where(x => x.Domain.Trim() == domain.Trim()).FirstOrDefault();
 
 
 

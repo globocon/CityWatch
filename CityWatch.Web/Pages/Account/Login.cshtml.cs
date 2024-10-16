@@ -1,10 +1,14 @@
 using CityWatch.Data.Models;
+using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
+using DocumentFormat.OpenXml.InkML;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -14,9 +18,11 @@ namespace CityWatch.Web.Pages
     public class LoginModel : PageModel
     {
         private readonly IUserAuthenticationService _userAuthentication;
-        public LoginModel(IUserAuthenticationService userAuthentication)
+        private readonly IConfigDataProvider _dataProvider;
+        public LoginModel(IUserAuthenticationService userAuthentication, IConfigDataProvider dataProvider)
         {
             _userAuthentication = userAuthentication;
+            _dataProvider = dataProvider;
         }
 
         [BindProperty]
@@ -25,10 +31,12 @@ namespace CityWatch.Web.Pages
         public void OnGet()
         {
             LoginUser = new User();
+
         }
 
         public IActionResult OnPost(string returnUrl)
         {
+
             if (string.IsNullOrEmpty(returnUrl))
                 returnUrl = Url.Page("/");
 
@@ -44,7 +52,18 @@ namespace CityWatch.Web.Pages
             {
                 SignInUser(user);
                 _userAuthentication.SaveUserLoginHistoryDetails(user, Request.HttpContext.Connection.RemoteIpAddress.ToString());
-                return Redirect(Url.Page(returnUrl));
+                var subDomainRedirect = GetClientDetailsUsingSubDomain();
+                // Check if the subDomainRedirect has a value and update the returnUrl accordingly
+                if (!string.IsNullOrEmpty(subDomainRedirect))
+                {
+                    return Redirect(subDomainRedirect);
+                }
+                else
+                {
+                    return Redirect(Url.Page(returnUrl));
+                }
+
+                
             }
             return Page();
         }
@@ -72,5 +91,40 @@ namespace CityWatch.Web.Pages
             // clear the GuardId for IR when the user Login
             HttpContext.Session.Remove("GuardId");
         }
+
+        public string GetClientDetailsUsingSubDomain()
+        {
+
+            var host = HttpContext.Request.Host.Host;
+            var clientName = host.Split('.')[0];
+            var clientLogo = string.Empty;
+            var url = string.Empty;
+            if (clientName != string.Empty)
+            {
+                if (clientName.Trim() != "cws-ir" 
+                && clientName.Trim() != "test"
+                && clientName.Trim() != "localhost"
+                )
+                {
+                    var domain = _dataProvider.GetSubDomainDetails(clientName);
+                    if (domain != null)
+                    {
+                        url = "/Guard/Login?t=gl";
+
+                    }
+                    else
+                    {
+                        url = "/Account/Login";
+
+                    }
+
+                }
+            }
+
+            return url;
+        }
     }
+
+
+
 }

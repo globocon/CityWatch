@@ -75,7 +75,7 @@ namespace CityWatch.Web.Pages.Admin
 
         [BindProperty]
         public ReportTemplate ReportTemplate { get; set; }
-       
+
         public string SecurityLicenseNo { get; set; }
         public string loggedInUserId { get; set; }
         public string GuardId { get; set; }
@@ -105,9 +105,14 @@ namespace CityWatch.Web.Pages.Admin
             // return new JsonResult(_viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId));
             //p1-259 counter-start
             var clienttypes = _viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId);
-            foreach(var item in clienttypes)
+            foreach (var item in clienttypes)
             {
-                 item.ClientSiteCount = _viewDataService.GetClientTypeCount(item.Id);
+                item.ClientSiteCount = _viewDataService.GetClientTypeCount(item.Id);
+                var result = _userDataProvider.GetDomainDeatils(item.Id);
+                if (result != null)
+                {
+                    item.IsSubDomainEnabled = result.Enabled;
+                }
             }
             return new JsonResult(clienttypes);
             //p1-259 counter-stop
@@ -146,7 +151,7 @@ namespace CityWatch.Web.Pages.Admin
             var message = "Success";
             try
             {
-                if(string.IsNullOrEmpty(record.Address))
+                if (string.IsNullOrEmpty(record.Address))
                 {
                     record.Gps = string.Empty;
                 }
@@ -490,8 +495,8 @@ namespace CityWatch.Web.Pages.Admin
         {
             var users = _userDataProvider.GetUsers()
              .Where(x => string.IsNullOrEmpty(searchTerm) || x.UserName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
-             .Select(x => new { x.Id, x.UserName, x.IsDeleted,x.LastLoginDate,x.LastLoginIPAdress,x.FormattedLastLoginDate });
-              return new JsonResult(users);
+             .Select(x => new { x.Id, x.UserName, x.IsDeleted, x.LastLoginDate, x.LastLoginIPAdress, x.FormattedLastLoginDate });
+            return new JsonResult(users);
         }
 
 
@@ -1546,10 +1551,10 @@ namespace CityWatch.Web.Pages.Admin
             var message = "Success";
             _configDataProvider.UpdateStaffDocumentModuleType(new StaffDocument()
             {
-                Id= record.Id,
-                LastUpdated= record.LastUpdated,
-                DocumentModuleName =record.DocumentModuleName
-                
+                Id = record.Id,
+                LastUpdated = record.LastUpdated,
+                DocumentModuleName = record.DocumentModuleName
+
 
             });
             return new JsonResult(new { status = status, message = message });
@@ -1558,7 +1563,7 @@ namespace CityWatch.Web.Pages.Admin
 
         #region SOPClientSite
 
-       
+
 
         public IActionResult OnGetClientSitesSOPClientSite(string type)
         {
@@ -1572,10 +1577,10 @@ namespace CityWatch.Web.Pages.Admin
 
         public JsonResult OnGetClientSitesNew(int? page, int? limit, int? typeId, string searchTerm, string searchTermtwo)
         {
-           
-                return new JsonResult(_viewDataService.GetUserClientSitesHavingAccess(typeId, null, searchTerm, searchTermtwo));
 
-           
+            return new JsonResult(_viewDataService.GetUserClientSitesHavingAccess(typeId, null, searchTerm, searchTermtwo));
+
+
         }
 
         public JsonResult OnGetSOPClientSitebyId(int id)
@@ -1626,7 +1631,7 @@ namespace CityWatch.Web.Pages.Admin
                         {
                             file.CopyTo(stream);
                         }
-                        
+
                     }
                     catch (Exception ex)
                     {
@@ -1668,9 +1673,114 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
 
-       
+
         #endregion
 
+
+        #region domain
+
+        public JsonResult OnGetDomainDetails(int typeId)
+        {
+            var success = false;
+            var result = _userDataProvider.GetDomainDeatils(typeId);
+            if (result != null)
+            {
+                success = true;
+            }
+            return new JsonResult(new { success, result });
+
+        }
+
+        public JsonResult OnPostClientSiteTypeDomainSettings()
+        {
+            var success = false;
+            var message = "Uploaded successfully";
+            var files = Request.Form.Files;
+            var newFileName = string.Empty;
+            if (files.Count == 1)
+            {
+                var file = files[0];
+                if (file.Length > 0)
+                {
+                    try
+                    {
+                        // Check for valid image extensions
+                        if (".jpg,.png,.jpeg,.gif".IndexOf(Path.GetExtension(file.FileName).ToLower()) < 0)
+                            throw new ArgumentException("Unsupported file type");
+
+                        // Get the folder path where images will be saved
+                        var staffDocsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "SubdomainLogo");
+                        if (!Directory.Exists(staffDocsFolder))
+                            Directory.CreateDirectory(staffDocsFolder);
+
+                        // Get the file extension
+                        var fileExtension = Path.GetExtension(file.FileName);
+
+                        // Get the original file name without the extension
+                        var originalFileName = Path.GetFileNameWithoutExtension(file.FileName);
+
+                        // Add the last 6 digits of the current UTC ticks to the file name
+                        newFileName = $"{originalFileName}_{DateTime.UtcNow.Ticks.ToString().Substring(DateTime.UtcNow.Ticks.ToString().Length - 6)}{fileExtension}";
+
+                        // Create the full path with the new file name
+                        var filePath = Path.Combine(staffDocsFolder, newFileName);
+
+                        // Save the file
+                        using (var stream = System.IO.File.Create(filePath))
+                        {
+                            file.CopyTo(stream);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        message = ex.Message;
+                    }
+                }
+            }
+
+            var domainName = Request.Form["domainName"];
+            var siteTypeId = int.Parse(Request.Form["siteTypeId"]);
+            var checkDomainStatus = Convert.ToBoolean(Request.Form["checkDomainStatus"]);
+            if (newFileName == string.Empty)
+            {
+               newFileName = Request.Form["filename"];
+
+            }
+            var domainId = int.Parse(Request.Form["domainId"]);
+            if (siteTypeId != 0)
+            {
+
+
+             var status=_configDataProvider.SaveSubDomain(new SubDomain()
+                {
+                    Id = domainId,
+                    Domain = domainName,
+                    TypeId = siteTypeId,
+                    Enabled = checkDomainStatus,
+                    Logo = newFileName
+
+
+                });
+                if (status == 1)
+                {
+                    success = true;
+                }
+                else
+                {
+                    success = false;
+                    message = "Domain Name '"+domainName+"' already exist.";
+
+                }
+            }
+            else
+            {
+                throw new ArgumentException("Select the site and SOP");
+            }
+
+
+            return new JsonResult(new { success, message });
+        }
+        #endregion
     }
     public class helpDocttype
     {

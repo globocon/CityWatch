@@ -11,5 +11,8 @@ namespace CityWatch.Data.Models
         [NotMapped]
         public int ClientSiteCount { get; set; }
         public bool IsActive { get; set; }
+
+        [NotMapped]
+        public bool IsSubDomainEnabled { get; set; }
     }
 }

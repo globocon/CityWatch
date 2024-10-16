@@ -136,6 +136,9 @@ namespace CityWatch.Data
         public DbSet<LoginUserHistory> LoginUserHistory { get; set; }
         public DbSet<ANPR> ANPR { get; set; }
 
+        public DbSet<SubDomain> SubDomain { get; set; }
+        
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

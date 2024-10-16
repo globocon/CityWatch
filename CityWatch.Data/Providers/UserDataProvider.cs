@@ -16,6 +16,7 @@ namespace CityWatch.Data.Providers
         List<UserClientSiteAccess> GetUserClientSiteAccess(int? userId);
         void SaveUserClientSiteAccess(int userId, List<UserClientSiteAccess> userClientSiteAccess);
         List<LoginUserHistory> GetUserLoginHistory(int userId);
+        public SubDomain GetDomainDeatils(int typeId);
     }
     public class UserDataProvider : IUserDataProvider
     {
@@ -223,5 +224,13 @@ namespace CityWatch.Data.Providers
                                             //.Take(10)                            // Get the top 10 records
        .ToList();
         }
+
+
+
+        public SubDomain GetDomainDeatils(int typeId)
+        {
+            return _context.SubDomain.FirstOrDefault(x => x.TypeId == typeId);
+        }
+
     }
 }
