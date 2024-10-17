@@ -1671,6 +1671,9 @@ function displayANPRValidationSummary(errors) {
         });
     }
 }
-
+$('#AnprKey_Disabled, #AnprKey_SingleLane, #AnprKey_SeperateEntryAndExit').on('click', function () {
+    // Uncheck all checkboxes except the one that was clicked
+    $('#AnprKey_Disabled, #AnprKey_SingleLane, #AnprKey_SeperateEntryAndExit').not(this).prop('checked', false);
+});
 //ANPR Details stop
 
