@@ -94,32 +94,43 @@ namespace CityWatch.Web.Pages
 
         public string GetClientDetailsUsingSubDomain()
         {
-
             var host = HttpContext.Request.Host.Host;
-            var clientName = host.Split('.')[0];
+            var clientName = string.Empty;
             var clientLogo = string.Empty;
             var url = string.Empty;
-            if (clientName != string.Empty)
+
+            // Split the host by dots to separate subdomains and domain name
+            var hostParts = host.Split('.');
+
+            // If the first part is "www", take the second part as the client name
+            if (hostParts.Length > 1 && hostParts[0].Trim().ToLower() == "www")
             {
+                clientName = hostParts[1];
+            }
+            else
+            {
+                clientName = hostParts[0];
+            }
+
+            if (!string.IsNullOrEmpty(clientName))
+            {
+                // Check if clientName is valid and not a reserved keyword
                 if (
-                 clientName.Trim() != "www"
-                 && clientName.Trim() != "cws-ir" 
-                && clientName.Trim() != "test"
-                && clientName.Trim() != "localhost"
+                    clientName.Trim().ToLower() != "www" &&
+                    clientName.Trim().ToLower() != "cws-ir" &&
+                    clientName.Trim().ToLower() != "test" &&
+                    clientName.Trim().ToLower() != "localhost"
                 )
                 {
                     var domain = _dataProvider.GetSubDomainDetails(clientName);
                     if (domain != null)
                     {
                         url = "/Guard/Login?t=gl";
-
                     }
                     else
                     {
                         url = "/Account/Login";
-
                     }
-
                 }
             }
 
