@@ -177,9 +177,22 @@ namespace CityWatch.Kpi.Services
                         EndDate = reportEndDate.ToString("MM/dd/yyyy");
                     }
                     // Create Pdf Report
-                    
+                    var fileName = "";
                     var clientSiteDetails = _clientDataProvider.GetGuardDetailsAllTimesheet1(siteId, reportStartDate, reportEndDate);
-                    var fileName = _kpiTimesheetReportGenerator.GeneratePdfTimesheetReport(reportStartDate, reportEndDate, clientSiteDetails.GuardId);
+                    if (clientSiteDetails!=null)
+                    {
+                        if (clientSiteDetails.GuardId!=null)
+                        {
+                            fileName = _kpiTimesheetReportGenerator.GeneratePdfTimesheetReport(reportStartDate, reportEndDate, clientSiteDetails.GuardId);
+                        }
+                         
+                    }
+                    else
+                    {
+                        int GuardID = 0;
+                        fileName = _kpiTimesheetReportGenerator.GeneratePdfTimesheetReport(reportStartDate, reportEndDate, GuardID);
+                    }
+                  
                     if (string.IsNullOrEmpty(fileName))
                     {
                         statusLog.AppendFormat("Site {0} - Error creating pdf. ", siteId);
