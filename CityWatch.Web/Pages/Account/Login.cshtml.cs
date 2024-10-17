@@ -101,7 +101,9 @@ namespace CityWatch.Web.Pages
             var url = string.Empty;
             if (clientName != string.Empty)
             {
-                if (clientName.Trim() != "cws-ir" 
+                if (
+                 clientName.Trim() != "www"
+                 && clientName.Trim() != "cws-ir" 
                 && clientName.Trim() != "test"
                 && clientName.Trim() != "localhost"
                 )
