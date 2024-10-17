@@ -56,9 +56,22 @@
 
     }
     var host = Context.Request.Host.Host;
-    var clientName = host.Split('.')[0];
+    var clientName = string.Empty;
     var clientLogo = string.Empty;
-    if (clientName != string.Empty)
+    // Split the host by dots to separate subdomains and domain name
+    var hostParts = host.Split('.');
+
+    // If the first part is "www", take the second part as the client name
+    if (hostParts.Length > 1 && hostParts[0].Trim().ToLower() == "www")
+    {
+        clientName = hostParts[1];
+    }
+    else
+    {
+        clientName = hostParts[0];
+    }
+    
+    if (!string.IsNullOrEmpty(clientName))
     {
         if (
              clientName.Trim() != "www" 
