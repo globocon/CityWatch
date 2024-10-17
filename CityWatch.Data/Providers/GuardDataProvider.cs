@@ -245,7 +245,7 @@ namespace CityWatch.Data.Providers
                 initalsUsed = MakeGuardInitials(guard.Initial);
                 guard.Initial = initalsUsed;
                 guard.DateEnrolled = DateTime.Today;
-                guard.IsLB_KV_IR = false;
+                guard.IsLB_KV_IR = true;
                 guard.IsKPIAccess = false;
                 guard.IsRCAccess = false;
                 guard.IsSTATS = false;
