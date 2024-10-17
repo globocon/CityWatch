@@ -586,13 +586,16 @@ $(function () {
     });
     function loadANPRModal(data) {
         console.log(data);
+        //$('#AnprKey_Disabled').prop('checked', false);
+        //$('#AnprKey_SingleLane').prop('checked', false);
+        //$('#AnprKey_SeperateEntryAndExit').prop('checked', false);
         $('#ANPR_Id').val(data.id);
         $('#AnprKey_Profile').val(data.profile);
         $('#AnprKey_ApiCalls').val(data.apicalls);
         $('#AnprKey_LineLabel').val(data.laneLabel);
-        $('#AnprKey_Disabled').prop('checked', data.isDisabled);  
-        $('#AnprKey_SingleLane').prop('checked', data.isSingleLane);  
-        $('#AnprKey_SeperateEntryAndExit').prop('checked', data.isSeparateEntryExitLane);
+        $('#AnprKey_Disabled').prop('checked', !!data.isDisabled);  // Ensure it's a boolean
+        $('#AnprKey_SingleLane').prop('checked', !!data.isSingleLane);  // Ensure it's a boolean
+        $('#AnprKey_SeperateEntryAndExit').prop('checked', !!data.isSeperateEntryAndExitLane);
         $('#csANPRValidationSummary').html('');
         $('#anpr-modal').modal('show');
         
@@ -1628,13 +1631,14 @@ $(function () {
 
 //ANPR Details start
 function resetAnprModal() {
+   
     $('#ANPR_Id').val('');
     $('#AnprKey_Profile').val('');
     $('#AnprKey_ApiCalls').val('');
     $('#AnprKey_LineLabel').val('');
     $('#AnprKey_Disabled').prop('checked', false);
     $('#AnprKey_SingleLane').prop('checked', false);
-    $('#AnprKey_SeperateEntryAndExit').prop('checked', false);
+    $('#AnprKey_SeperateEntryAndExit').prop('checked', true);
 
     $('#csANPRValidationSummary').html('');
     $('#anpr-modal').modal('hide');
