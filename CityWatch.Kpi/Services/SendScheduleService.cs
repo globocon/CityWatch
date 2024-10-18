@@ -212,7 +212,7 @@ namespace CityWatch.Kpi.Services
                     var summaryFileName = CreateSummaryReportTimesheet(schedule, reportStartDate, reportEndDate);
 
                     // Combine reports to a single pdf                    
-                    var reportFileName = $"{FileNameHelper.GetSanitizedFileNamePart(schedule.ProjectName)} - Daily KPI Reports - {reportStartDate:MMM} {reportStartDate.Year}.pdf";
+                    var reportFileName = $"{FileNameHelper.GetSanitizedFileNamePart(schedule.ProjectName)} - Daily TimeSheet Reports - {reportStartDate:MMM} {reportStartDate.Year}.pdf";
                     reportFileName = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", reportFileName);
                     PdfHelper.CombinePdfReports(reportFileName, siteReportFileNames, summaryFileName);
 
@@ -443,9 +443,9 @@ namespace CityWatch.Kpi.Services
         private void SendEmailTimesheet(string fileName, KpiSendTimesheetSchedules schedule, DateTime reportDate, bool ignoreRecipients)
         {
             var fromAddress = _emailOptions.FromAddress.Split('|');
-            
 
-            var subject = _emailOptions.Subject;
+
+            var subject = "Monthly TimeSheet Report";
             var messageHtml = _emailOptions.Message;
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
@@ -698,7 +698,7 @@ namespace CityWatch.Kpi.Services
                     var summaryFileName = CreateSummaryReportTimesheet(schedule, reportStartDate, reportEndDate);
 
                     // Combine reports to a single pdf                    
-                    var reportFileName = $"{FileNameHelper.GetSanitizedFileNamePart(schedule.ProjectName)} - Daily KPI Reports - {reportStartDate:MMM} {reportStartDate.Year}.pdf";
+                    var reportFileName = $"{FileNameHelper.GetSanitizedFileNamePart(schedule.ProjectName)} - Daily TimeSheet Reports - {reportStartDate:MMM} {reportStartDate.Year}.pdf";
                     reportFileName = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", reportFileName);
                     PdfHelper.CombinePdfReports(reportFileName, siteReportFileNames, summaryFileName);
 
