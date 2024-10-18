@@ -1754,6 +1754,20 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     rtn.SOPFileNme = null;
                 }
             }
+            else
+            {
+                //if null assign the value of the SOPFileNme
+                rtn = new RCActionList();
+              var sopfiletype = _configDataProvider.GetStaffDocumentsUsingType(4).Where(z => z.ClientSite == clientSiteId);
+                if (sopfiletype.Count() != 0)
+                {
+                    rtn.SOPFileNme = sopfiletype.FirstOrDefault().FileName;
+                }
+                else
+                {
+                    rtn.SOPFileNme = null;
+                }
+            }
             return new JsonResult(rtn);
         }
         public JsonResult OnPostGetClientType(int clientSiteId)
