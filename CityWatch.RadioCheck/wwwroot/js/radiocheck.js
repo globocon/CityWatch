@@ -2289,6 +2289,7 @@ $('#btnSaveRadioStatusActive').on('click', function () {
 /*for pushing notifications from the control room - start*/
 $('#pushNoTificationsControlRoomModal').on('show.bs.modal', function (event) {
     var inpcallfun = $('#inpCallingFunction').val();
+    $('#download_siteRCSOPList').removeAttr('href');
     if (inpcallfun == 'STEPBUTTON') {
         $('#textMessageTab').addClass('d-none').removeClass('active');
         $('#textMessage').addClass('d-none').removeClass('show').removeClass('active');
@@ -2325,7 +2326,7 @@ $('#pushNoTificationsControlRoomModal').on('show.bs.modal', function (event) {
 $('#pushNoTificationsControlRoomModal').on('shown.bs.modal', function (event) {
 
     isPaused = true;
-
+    $('#download_siteRCSOPList').removeAttr('href');
     $('#btnSendPushLotificationMessage').prop('disabled', false);
     $('#btnSendGlabalNotificationMessage').prop('disabled', false);
     $('#btnSendActionList').prop('disabled', false);
