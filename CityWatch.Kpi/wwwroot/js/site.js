@@ -466,6 +466,31 @@ $(function () {
         buttonHtml += '<button class=" btn mr-2 p-0" data-toggle="modal" data-target="#TimeSheetschedule-modal" data-sch-id="' + record.id + '" ';
         buttonHtml += 'data-action="copySchedule1"><i class="fa fa-copy fa-2x mr-2"></i></button>'; return buttonHtml;
     }
+    $('#btnSaveTimesheetSchedule').on('click', function () {
+        $("input[name=clientSiteIds]").remove();
+        var options = $('#selectedSitesTimeSheet option');
+        options.each(function () {
+            const elem = '<input type="hidden" name="clientSiteIds" value="' + $(this).val() + '">';
+            $('#frm_kpi_Timesheetschedule').append(elem);
+        });
+
+        $.ajax({
+            url: '/Admin/Settings?handler=SaveKpiTimesheetSchedule',
+            type: 'POST',
+            data: $('#frm_kpi_Timesheetschedule').serialize(),
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (data) {
+            if (data.success) {
+                $('#TimeSheetschedule-modal').modal('hide');
+                alert('Schedule saved successfully');
+                gridTimesheetSchedules.reload({ type: $('#sel_schedule').val(), searchTerm: $('#search_kw_client_site').val() });
+            } else {
+                $('#sch-modal-validation1').html('');
+                data.message.split(',').map(function (item) { $('#sch-modal-validation1').append('<li>' + item + '</li>') });
+                $('#sch-modal-validation1').show().delay(5000).fadeOut();
+            }
+        });
+    });
     $('#kpi_send_Timesheetschedules').on('click', '.del-schedule1', function () {
         const idToDelete = $(this).attr('data-sch-id');
         if (confirm('Are you sure want to delete this Timesheet schedule?')) {
@@ -2109,31 +2134,7 @@ $('#clientSitesTimesheet').on('change', function () {
         }
     }
 });
-$('#btnSaveTimesheetSchedule').on('click', function () {
-    $("input[name=clientSiteIds]").remove();
-    var options = $('#selectedSitesTimeSheet option');
-    options.each(function () {
-        const elem = '<input type="hidden" name="clientSiteIds" value="' + $(this).val() + '">';
-        $('#frm_kpi_Timesheetschedule').append(elem);
-    });
-    
-    $.ajax({
-        url: '/Admin/Settings?handler=SaveKpiTimesheetSchedule',
-        type: 'POST',
-        data: $('#frm_kpi_Timesheetschedule').serialize(),
-        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-    }).done(function (data) {
-        if (data.success) {
-            $('#TimeSheetschedule-modal').modal('hide');
-            alert('Schedule saved successfully');
-            gridTimesheetSchedules.reload({ type: $('#sel_schedule').val(), searchTerm: $('#search_kw_client_site').val() });
-        } else {
-            $('#sch-modal-validation1').html('');
-            data.message.split(',').map(function (item) { $('#sch-modal-validation1').append('<li>' + item + '</li>') });
-            $('#sch-modal-validation1').show().delay(5000).fadeOut();
-        }
-    });
-});
+
 function scheduleModalOnAddTimesheet() {
     const dateToday = new Date().toISOString().split('T')[0];
     $('#startDateTimesheet').val(dateToday);
