@@ -236,6 +236,8 @@ namespace CityWatch.Data.Providers
         public GuardLogin GetGuardDetailsAllTimesheet(int clientSiteIds, string startdate, string endDate);
         public GuardLogin GetGuardDetailsAllTimesheet1(int clientSiteIds, DateTime startdate, DateTime endDate);
 
+        public List<GuardLogin> GetGuardDetailsAllTimesheetList(int[] clientSiteIds, DateTime startdate, DateTime endDate);
+
     }
 
     public class ClientDataProvider : IClientDataProvider
@@ -2642,6 +2644,20 @@ namespace CityWatch.Data.Providers
     .AsEnumerable() // Switch to client-side evaluation
     .DistinctBy(x => x.GuardId) // Ensures distinct guards on the client side
     .FirstOrDefault();
+
+            return clientSiteDetails;
+        }
+        public List<GuardLogin> GetGuardDetailsAllTimesheetList(int[] clientSiteIds, DateTime startdate, DateTime endDate)
+        {
+            var clientSiteDetails = _context.GuardLogins
+                .Include(x => x.ClientSite)
+                .Where(x => clientSiteIds.Contains(x.ClientSiteId) && // Use Contains for array comparison
+                            (startdate == endDate
+                                 ? x.LoginDate.Date == startdate.Date // If dates are equal, check exact date
+                                 : x.LoginDate.Date >= startdate.Date && x.LoginDate.Date <= endDate.Date))
+                .AsEnumerable() // Switch to client-side evaluation
+                .DistinctBy(x => x.GuardId) // Ensures distinct guards on the client side
+                .ToList();
 
             return clientSiteDetails;
         }
