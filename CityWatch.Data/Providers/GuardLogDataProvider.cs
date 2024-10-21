@@ -2490,8 +2490,22 @@ namespace CityWatch.Data.Providers
                             /* find the emp Hours  Start time -5 (ie show notification 5 min before the guard login in the site) */
                             var dateTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None).AddMinutes(-5);
                             var dateendTime = DateTime.ParseExact(manning.EmpHoursEnd, "H:mm", null, System.Globalization.DateTimeStyles.None).AddMinutes(1);
-                            if (DateTime.Now >= dateTime && DateTime.Now <= dateendTime)
-                            {
+
+                            // Get the current server time (UTC)
+                            DateTime serverTimeUtc = DateTime.UtcNow;
+                            // Find the site's time zone (for example, W. Australia Standard Time)
+                            TimeZoneInfo siteTimeZone = TimeZoneInfo.FindSystemTimeZoneById(manning.ClientSiteKpiSetting.TimezoneString);
+
+                            // Convert server time (UTC) to site's local time
+                            DateTime siteLocalTime = TimeZoneInfo.ConvertTimeFromUtc(serverTimeUtc, siteTimeZone);
+
+                            //DateTime perthLocalTime = TimeZoneInfo.ConvertTimeFromUtc(siteLocalTime, siteTimeZone);
+
+                            if(siteLocalTime>= dateTime && siteLocalTime <= dateendTime)
+                            { 
+                                //Commneted for fix the time zone issue
+                            //if (DateTime.Now >= dateTime && DateTime.Now <= dateendTime)
+                            //{
                                 /* Check if anylogbook entery exits in that timing */
                                 var checkSiteLogBook = _context.ClientSiteLogBooks.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.Date == DateTime.Now.Date).ToList();
                                 bool iflogbookentryexist = false;
@@ -2525,7 +2539,8 @@ namespace CityWatch.Data.Providers
                                                 /* New Field Added for NotificationType only for manning notification*/
                                                     NotificationType = 1,
                                                     /* added for show the crm CrmSupplier deatils in the 'no guard on duty' */
-                                                    CRMSupplier = manning.CrmSupplier
+                                                    CRMSupplier = manning.CrmSupplier,
+                                                    UTCOffset = manning.ClientSiteKpiSetting.TimezoneString
                                                 };
                                                 _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
                                                 _context.SaveChanges();
@@ -2647,8 +2662,24 @@ namespace CityWatch.Data.Providers
                                 /* find the emp Hours  Start time -5 (ie show notification 5 min before the guard login in the site) */
                                 var dateTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None).AddMinutes(-5);
                                 var dateendTime = DateTime.ParseExact(manning.EmpHoursEnd, "H:mm", null, System.Globalization.DateTimeStyles.None).AddMinutes(1);
-                                if (DateTime.Now >= dateTime && DateTime.Now <= dateendTime)
+
+                                // Get the current server time (UTC)
+                                DateTime serverTimeUtc = DateTime.UtcNow;
+                                // Find the site's time zone (for example, W. Australia Standard Time)
+                                TimeZoneInfo siteTimeZone = TimeZoneInfo.FindSystemTimeZoneById(manning.ClientSiteKpiSetting.TimezoneString);
+
+                                // Convert server time (UTC) to site's local time
+                                DateTime siteLocalTime = TimeZoneInfo.ConvertTimeFromUtc(serverTimeUtc, siteTimeZone);
+
+                                //DateTime perthLocalTime = TimeZoneInfo.ConvertTimeFromUtc(siteLocalTime, siteTimeZone);
+
+
+
+                                //if (DateTime.Now >= dateTime && DateTime.Now <= dateendTime)
+                                //{
+                                if (siteLocalTime >= dateTime && siteLocalTime <= dateendTime)
                                 {
+
                                     /* Check if anylogbook entery exits in that timing */
                                     var checkSiteLogBook = _context.ClientSiteLogBooks.Where(x => x.ClientSiteId == manning.ClientSiteKpiSetting.ClientSiteId && x.Date == DateTime.Now.Date).ToList();
                                     bool iflogbookentryexist = false;
@@ -2682,7 +2713,9 @@ namespace CityWatch.Data.Providers
                                                 /* New Field Added for NotificationType only for manning notification*/
                                                         NotificationType = 1,
                                                         /* added for show the crm CrmSupplier deatils in the 'no guard on duty' */
-                                                        CRMSupplier = manning.CrmSupplier
+                                                        CRMSupplier = manning.CrmSupplier,
+                                                        UTCOffset= manning.ClientSiteKpiSetting.TimezoneString
+
                                                     };
                                                     _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
                                                     _context.SaveChanges();

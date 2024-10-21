@@ -206,7 +206,7 @@
 
             @*Scheduler is Active Start15072024*@
             <div class="form-row ml-2 mt-2">
-                <div class="col-md-10">
+                <div class="col-md-2 pt-2">
                     <div class="d-flex flex-row">
                         <label class="form-label pr-2">Schedule is Active</label>
                         <div class="custom-control custom-switch custom-control-inline" title="Switch between schedule is Active or not">
@@ -214,6 +214,43 @@
                             <label class="custom-control-label" for="scheduleisActive"></label>
                         </div>
                     </div>
+                </div>
+
+                <div class="col-md-5">
+                    <div class="d-flex flex-row">
+                        <label class="form-label pr-2 mb'0 mt-2" style="white-space: nowrap;">Time  Zone</label>
+                        <select class="form-control dd-client-status" asp-for="@Model.TimezoneString">
+                            <option value="0">-Select-</option>
+                            <option value="UTC">(UTC+00:00) Coordinated Universal Time</option>
+                            <option value="GMT Standard Time">(UTC+00:00) Greenwich Mean Time</option>
+                            <option value="Eastern Standard Time">(UTC-05:00) Eastern Standard Time (US & Canada)</option>
+                            <option value="Central Standard Time">(UTC-06:00) Central Standard Time (US & Canada)</option>
+                            <option value="Pacific Standard Time">(UTC-08:00) Pacific Standard Time (US & Canada)</option>
+                            <option value="Morocco Standard Time">(UTC+00:00) Morocco Standard Time</option>
+                            <option value="South Africa Standard Time">(UTC+02:00) South Africa Standard Time</option>
+                            <option value="Egypt Standard Time">(UTC+02:00) Egypt Standard Time</option>
+                            <option value="Singapore Standard Time">(UTC+08:00) Singapore Standard Time</option>
+                            <option value="China Standard Time">(UTC+08:00) China Standard Time</option>
+                            <option value="India Standard Time">(UTC+05:30) India Standard Time</option>
+                            <option value="Japan Standard Time">(UTC+09:00) Japan Standard Time</option>
+                            <option value="AUS Eastern Standard Time">(UTC+10:00) AUS Eastern Standard Time (Melbourne, Sydney)</option>
+                            <option value="AUS Central Standard Time">(UTC+09:30) AUS Central Standard Time (Adelaide)</option>
+                            <option value="W. Australia Standard Time">(UTC+08:00) Western Australia Standard Time (Perth)</option>
+                            <option value="Central Europe Standard Time">(UTC+01:00) Central European Standard Time</option>
+                            <option value="Eastern Europe Standard Time">(UTC+02:00) Eastern European Standard Time</option>
+                            <option value="Western Europe Standard Time">(UTC+00:00) Western European Standard Time</option>
+                            <option value="Mountain Standard Time">(UTC-07:00) Mountain Standard Time (US & Canada)</option>
+                            <option value="Alaskan Standard Time">(UTC-09:00) Alaskan Standard Time</option>
+                            <option value="Hawaiian Standard Time">(UTC-10:00) Hawaiian Standard Time</option>
+                            <option value="SA Eastern Standard Time">(UTC-03:00) SA Eastern Standard Time (Buenos Aires)</option>
+                            <option value="SA Pacific Standard Time">(UTC-05:00) SA Pacific Standard Time (Bogota)</option>
+                            <option value="Pacific SA Standard Time">(UTC-04:00) Pacific SA Standard Time (Santiago)</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="col-md-3">
                 </div>
 
                 <div class="col-md-2">
