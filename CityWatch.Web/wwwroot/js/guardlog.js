@@ -3556,7 +3556,7 @@ $(function () {
             data: $('#form_kvl_auditlog_request').serialize(),
         }).done(function (response) {
             $('#loader').hide();
-            keyVehicleLogReportnew.clear().rows.add(response).draw();
+            keyVehicleLogReportnew.clear().rows.add(response.keyVehicleAuditLogRequest).draw();
             /*p1-218 search download select-start*/
             var searchtext = keyVehicleLogReport.search();
             keyVehicleLogReportnew.search(searchtext).draw();
