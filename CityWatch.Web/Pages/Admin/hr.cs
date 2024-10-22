@@ -1628,6 +1628,23 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(new { success, message });
         }
+
+        public JsonResult OnPostUpdateLockSettings(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _guardLogDataProvider.UpdateHRLockSettings(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+
+            return new JsonResult(new { success, message });
+        }
         public JsonResult OnGetHRSettings()
         {
             var jresult = _configDataProvider.GetHRSettings()

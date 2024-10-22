@@ -28,6 +28,9 @@ namespace CityWatch.Web.Models
         public int hrGroupId { get; set; }
         public string ClientSitesSummary { get; set; }
 
+        public bool hrlock { get; set; }
+
+
 
         public static HrDoumentViewModel FromDataModel(HrSettings hrSettings)
         {
@@ -44,7 +47,8 @@ namespace CityWatch.Web.Models
                 referenceNoNumberId = hrSettings.ReferenceNoNumberId,
                 referenceNoAlphabetId = hrSettings.ReferenceNoAlphabetId,
                 hrGroupId = hrSettings.HRGroupId,
-                ClientSitesSummary = hrSettings.hrSettingsClientSites != null ? GetFormattedClientSites(hrSettings.hrSettingsClientSites) : string.Empty
+                ClientSitesSummary = hrSettings.hrSettingsClientSites != null ? GetFormattedClientSites(hrSettings.hrSettingsClientSites) : string.Empty,
+                hrlock= hrSettings.HRLock
             };
         }
 

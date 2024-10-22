@@ -300,7 +300,7 @@
         inlineEditing: { mode: 'command' },
         columns: [
             { field: 'name', title: 'Client Type', width: 400, editor: true },
-            { title: '3rd Party', width: 50, renderer: domainSettings ,cssClass: 'text-center' },
+            { title: '3rd Party', width: 50, renderer: domainSettings, cssClass: 'text-center' },
             { field: 'clientSiteCount', width: 50, editor: false, cssClass: 'text-center' }
         ],
 
@@ -337,15 +337,15 @@
     });
 
     function ClearModelControls() {
-       // $('#siteTypeDomainDeatils').find('#userName').text('');               // Clear text
+        // $('#siteTypeDomainDeatils').find('#userName').text('');               // Clear text
         $('#siteTypeDomainDeatils').find('#siteTypeId').val(0);               // Reset value to 0
         $('#siteTypeDomainDeatils').find('#Domainfilename').val('');                // Clear value
         $('#siteTypeDomainDeatils').find('#checkDomainStatus').prop('checked', false);  // Uncheck checkbox
         $('#siteTypeDomainDeatils').find('#domainName').val('');              // Clear domain name
-        $('#siteTypeDomainDeatils').find('#add_ContractorLogo').val(null);  
-        $('#siteTypeDomainDeatils').find('#domainId').val(0);  
+        $('#siteTypeDomainDeatils').find('#add_ContractorLogo').val(null);
+        $('#siteTypeDomainDeatils').find('#domainId').val(0);
         $('#ImageDiv').html('');
-        
+
     }
 
     function fetchUDomainDeatils(typeId) {
@@ -359,12 +359,12 @@
                     $('#siteTypeDomainDeatils').find('#siteTypeId').val(typeId)
                     $('#siteTypeDomainDeatils').find('#domainName').val(data.result.domain);
                     $('#siteTypeDomainDeatils').find('#checkDomainStatus').prop('checked', data.result.enabled);
-                    $('#siteTypeDomainDeatils').find('#Domainfilename').val(data.result.logo);  
-                    $('#siteTypeDomainDeatils').find('#domainId').val(data.result.id);   
+                    $('#siteTypeDomainDeatils').find('#Domainfilename').val(data.result.logo);
+                    $('#siteTypeDomainDeatils').find('#domainId').val(data.result.id);
 
-                    $('#ImageDiv').html('<a href="../SubdomainLogo/' + data.result.logo + '" target="_blank"><img src="../SubdomainLogo/' + data.result.logo + '" alt="logo" style="width:50px;height:50px;" /></a> <a href="../SubdomainLogo/' + data.result.logo + '" target="_blank">'+data.result.logo+'</a>');
+                    $('#ImageDiv').html('<a href="../SubdomainLogo/' + data.result.logo + '" target="_blank"><img src="../SubdomainLogo/' + data.result.logo + '" alt="logo" style="width:50px;height:50px;" /></a> <a href="../SubdomainLogo/' + data.result.logo + '" target="_blank">' + data.result.logo + '</a>');
                     //$('#domainImage').attr('src', ');
-                    
+
                 }
             },
             error: function (xhr, status, error) {
@@ -3926,7 +3926,7 @@
     $('#btnSaveContractorDomain').on('click', function () {
         $('#loadinDiv').show();
 
-       
+
         var domainId = $('#domainId').val();
         var fileName = $('#Domainfilename').val();
         var domainName = $('#domainName').val();
@@ -3949,7 +3949,7 @@
             const fileExtn = file.name.split('.').pop().toLowerCase(); // Get file extension
             fileName = file.name;
             // Validate file extension
-            if (!fileExtn || ['jpg', 'png', 'jpeg','gif'].indexOf(fileExtn) < 0) {
+            if (!fileExtn || ['jpg', 'png', 'jpeg', 'gif'].indexOf(fileExtn) < 0) {
                 showModal('Unsupported file type. Please upload a .jpg, .jpeg, .png, or .gif file');
                 return false;
             }
@@ -3969,13 +3969,13 @@
             fileForm.append('file', '');
         }
 
-       
+
         var subdomainPattern = /^[a-zA-Z0-9]([a-zA-Z0-9-]{1,61}[a-zA-Z0-9])?$/;
 
         if (!subdomainPattern.test(domainName)) {
             showModal('Please enter a valid domain name. The name should be less than 50 characters long without spaces or special characters.');
             return false;
-        } 
+        }
 
         fileForm.append('domainId', domainId);
         fileForm.append('domainName', domainName);
@@ -4173,13 +4173,16 @@ gridHrSettings = $('#tbl_hr_settings').grid({
 });
 
 function hrgroupLockButtonRenderer(value, record) {
-    return '<div class="text-center">' +
-        '<div class="custom-control custom-switch custom-control-inline"  title="Toggle">' +
-        '<input type="checkbox" class="custom-control-input" id="toggleDarkMode" name="toggle" disabled>' +
-        '<label class="custom-control-label" for="toggleDarkMode"></label>' +
-        '</div>' +
-
+    if (record.hrlock) {
+        return '<div class="text-center">' +
+            '<a id="btnLock" data-doc-id="' + record.id + '" data-doc-hrgroupid="' + record.hrGroupId + '" data-doc-refnonumberid="' + record.referenceNoNumberId + '" data-doc-refalphnumberid="' + record.referenceNoAlphabetId + '" data-doc-description="' + record.description + '"><img src="../images/icons/chkenabled.png"  style="padding-top:10px;" /></a>' +
         '</div>'
+    }
+    else {
+        return '<div class="text-center">' +
+            '<a id="btnLock" data-doc-id="' + record.id + '" data-doc-hrgroupid="' + record.hrGroupId + '" data-doc-refnonumberid="' + record.referenceNoNumberId + '" data-doc-refalphnumberid="' + record.referenceNoAlphabetId + '" data-doc-description="' + record.description + '"><img src="../images/icons/chkdesabled.png" style="padding-top:10px;" /></a>' +
+            '</div>'
+    }
 }
 function hrgroupButtonRenderer(value, record) {
     return '<div class="text-center">' +
@@ -4194,7 +4197,32 @@ let isHrSettingsAdding = false
 //        toggleUserStatus($(this).attr('data-user-id'), true);
 //    }
 //});
+
+$('#tbl_hr_settings tbody').on('click', '#btnLock', function () {
+
+    $('#loader').show();
+     $.ajax({
+         type: 'POST',
+         url: '/Admin/GuardSettings?handler=UpdateLockSettings',
+         data: { 'id': $(this).attr('data-doc-id') },
+         dataType: 'json',
+         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+         beforeSend: function () {
+             $('#loader').show();
+         }
+     }).done(function () {
+         gridHrSettings.reload();
+     }).always(function () {
+         $('#loader').hide();
+     });
+
+});
+
+
+
 $('#tbl_hr_settings tbody').on('click', '#btnEditHrGroup', function () {
+
+
     $('#loader').show();
     $('#hrSettingsModal').modal('show');
     $('#HrSettings_Id').val($(this).attr('data-doc-id'))

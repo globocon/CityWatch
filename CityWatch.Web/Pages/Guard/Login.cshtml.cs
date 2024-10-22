@@ -362,131 +362,151 @@ namespace CityWatch.Web.Pages.Guard
             var HR1 = "Grey";
             var HR2 = "Grey";
             var HR3 = "Grey";
-            var hrGroupStatusesNew = LEDStatusForLoginUser(guard.Id);
-            if (hrGroupStatusesNew != null && hrGroupStatusesNew.Count > 0)
+            bool guardLockStatusBasedOnRedDoc = false;
+            if (guard != null)
             {
-
-                var HR1List = hrGroupStatusesNew.Where(x => x.GroupName.Trim() == "HR1 (C4i)").ToList();
-                if (HR1List != null && HR1List.Count > 0)
+                var hrGroupStatusesNew = LEDStatusForLoginUser(guard.Id);
+                if (hrGroupStatusesNew != null && hrGroupStatusesNew.Count > 0)
                 {
-                    if (HR1List.Where(x => x.ColourCodeStatus == "Red").ToList().Count > 0)
-                    {
-                        HR1 = "Red";
-                    }
-                    else if (HR1List.Where(x => x.ColourCodeStatus == "Yellow").ToList().Count > 0)
-                    {
-                        HR1 = "Yellow";
-                    }
-                    else
-                    {
-                        HR1 = "Green";
-                    }
-                }
-                var HR2List = hrGroupStatusesNew.Where(x => x.GroupName.Trim() == "HR2 (Client)").ToList();
-                if (HR2List != null && HR2List.Count > 0)
-                {
-                    if (HR2List.Where(x => x.ColourCodeStatus == "Red").ToList().Count > 0)
-                    {
-                        HR2 = "Red";
-                    }
-                    else if (HR2List.Where(x => x.ColourCodeStatus == "Yellow").ToList().Count > 0)
-                    {
-                        HR2 = "Yellow";
-                    }
-                    else
-                    {
-                        HR2 = "Green";
-                    }
-                }
-                var HR3List = hrGroupStatusesNew.Where(x => x.GroupName.Trim() == "HR3 (Special)").ToList();
-                if (HR3List != null && HR3List.Count > 0)
-                {
-                    if (HR3List.Where(x => x.ColourCodeStatus == "Red").ToList().Count > 0)
-                    {
-                        HR3 = "Red";
-                    }
-                    else if (HR3List.Where(x => x.ColourCodeStatus == "Yellow").ToList().Count > 0)
-                    {
-                        HR3 = "Yellow";
-                    }
-                    else
-                    {
-                        HR3 = "Green";
-                    }
-                }
-            }
-            return new JsonResult(new { guard, lastLogin, HR1, HR2, HR3 });
-        }
-        public List<HRGroupStatusNew> LEDStatusForLoginUser(int GuardID)
-        {
-            var MasterGroup = _guardDataProvider.GetHRDescFull();
-            var GuardDocumentDetails = _guardDataProvider.GetGuardLicensesandcompliance(GuardID);
-            var hrGroupStatusesNew = new List<HRGroupStatusNew>();
-
-            foreach (var item in MasterGroup)
-            {
-
-                var TemDescription = item.ReferenceNo + " " + item.Description.Trim();
-                var SelectedGuardDocument = GuardDocumentDetails.Where(x => x.Description == TemDescription).ToList();
-
-
-                if (SelectedGuardDocument.Count > 0)
-                {
-                    hrGroupStatusesNew.Add(new HRGroupStatusNew
+                    if (hrGroupStatusesNew != null || hrGroupStatusesNew.Count != 0)
                     {
 
-                        Status = 1,
-                        GroupName = item.GroupName.Trim(),
-                        ColourCodeStatus = GuardledColourCodeGenerator(SelectedGuardDocument)
 
-                    });
-                }
+                        // Group document statuses by GroupName for faster lookups
+                        var statusLookup = hrGroupStatusesNew.ToLookup(x => x.GroupName.Trim());
 
-
-            }
-            var Temp = hrGroupStatusesNew;
-
-            return Temp;
-        }
-        public string GuardledColourCodeGenerator(List<GuardComplianceAndLicense> SelectedList)
-        {
-            var today = DateTime.Now;
-            var ColourCode = "Green";
-
-            if (SelectedList.Count > 0)
-            {
-                var SelectDatatype = SelectedList.Where(x => x.DateType == true).ToList();
-                if (SelectDatatype.Count > 0)
-                {
-                    ColourCode = "Green";
-                }
-                else
-                {
-                    if (SelectedList.FirstOrDefault() != null)
-                    {
-                        if (SelectedList.FirstOrDefault().ExpiryDate != null)
+                        // Set HR1Status
+                        var HR1List = statusLookup["HR 1 (C4i)"];
+                        if (HR1List.Any())
                         {
-                            var ExpiryDate = SelectedList.FirstOrDefault().ExpiryDate;
-                            var timeDifference = ExpiryDate - today;
+                            HR1 = HR1List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
+                                              HR1List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
+                                              "Green";
+                        }
 
-                            if (ExpiryDate < today)
+                        // Set HR2Status
+                        var HR2List = statusLookup["HR 2 (Client)"];
+                        if (HR2List.Any())
+                        {
+                            HR2 = HR2List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
+                                              HR2List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
+                                              "Green";
+                        }
+
+                        // Set HR3Status
+                        var HR3List = statusLookup["HR 3 (Special)"];
+                        if (HR3List.Any())
+                        {
+                            HR3 = HR3List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
+                                              HR3List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
+                                              "Green";
+                        }
+
+
+                        if (HR1 == "Red" || HR2 == "Red" || HR3 == "Red")
+                        {
+                            // Lookup to group items by their ColourCodeStatus
+                            var statusLookupColourCode = hrGroupStatusesNew.ToLookup(x => x.ColourCodeStatus.Trim());
+
+                            // Get the 'Red' status group from the lookup
+                            var redStatuses = statusLookupColourCode["Red"];
+
+                            // Fetch the HR settings list with the HR Lock enabled
+                            var enabledHrSettingsList = _configDataProvider.GetHRSettingsWithHRLockEnable();
+
+                            if (enabledHrSettingsList.Count != 0)
                             {
-                                ColourCode = "Red";
-                            }
-                            else if ((ExpiryDate - DateTime.Now).Value.Days < 45)
-                            {
-                                var Date = (ExpiryDate - DateTime.Now).Value.Days;
-                                ColourCode = "Yellow";
+                                foreach (var document in enabledHrSettingsList)
+                                {
+                                    foreach (var redStatus in redStatuses)
+                                    {
+                                        var redDescriptionParts = redStatus.documentDescription.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
+
+                                        if (redDescriptionParts.Length == 2)
+                                        {
+                                            var prefix = redDescriptionParts[0];    // "02c"
+                                            var description = redDescriptionParts[1]; // "VISY - Recycling - QLD - State Specific Induction (600-003)"
+
+                                            // Now you can compare or perform operations with prefix and description
+                                            if (document.Description == description)
+                                            {
+                                                guardLockStatusBasedOnRedDoc = true;
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
 
+
+
                     }
+                }
 
+                
 
+            }
 
+           
+            return new JsonResult(new { guard, lastLogin, HR1, HR2, HR3, guardLockStatusBasedOnRedDoc });
+        }
+        private List<HRGroupStatusNew> LEDStatusForLoginUser(int GuardID)
+        {
+            // Retrieve guard document details in one call
+            var guardDocumentDetails = _guardDataProvider.GetGuardLicensesandcompliance(GuardID);
+            var hrGroupStatusesNew = new List<HRGroupStatusNew>();
+
+            // Iterate through each document detail
+            foreach (var item in guardDocumentDetails)
+            {
+                // Directly use the item without filtering again
+                hrGroupStatusesNew.Add(new HRGroupStatusNew
+                {
+                    documentDescription=item.Description,
+                    Status = 1,
+                    GroupName = item.HrGroupText.Trim(), // Assuming HrGroupText replaces GroupName
+                                                         // Generate the color code based on the current item
+                    ColourCodeStatus = GuardledColourCodeGenerator(new List<GuardComplianceAndLicense> { item })
+                });
+            }
+
+            return hrGroupStatusesNew;
+        }
+        private string GuardledColourCodeGenerator(List<GuardComplianceAndLicense> selectedList)
+        {
+            var today = DateTime.Now;
+            var colourCode = "Green"; // Default to green
+
+            if (selectedList.Count > 0)
+            {
+                // Check if any entry has DateType == true
+                var hasDateTypeTrue = selectedList.Any(x => x.DateType == true);
+
+                if (hasDateTypeTrue)
+                {
+                    return "Green"; // Return immediately if DateType == true exists
+                }
+
+                // Get the first non-null expiry date (if any)
+                var firstItem = selectedList.FirstOrDefault(x => x.ExpiryDate != null);
+
+                if (firstItem != null)
+                {
+                    var expiryDate = firstItem.ExpiryDate.Value; // Assuming ExpiryDate is not null here
+
+                    // Compare expiry date with today's date
+                    if (expiryDate < today)
+                    {
+                        return "Red";
+                    }
+                    else if ((expiryDate - today).Days < 45)
+                    {
+                        return "Yellow";
+                    }
                 }
             }
-            return ColourCode;
+
+            return colourCode; // Default return is green
         }
         public class HRGroupStatusNew
         {
@@ -495,6 +515,8 @@ namespace CityWatch.Web.Pages.Guard
 
             public string GroupName { get; set; }
             public string ColourCodeStatus { get; set; }
+
+            public string documentDescription { get; set; }
         }
         public JsonResult OnGetSmartWands(string siteName, int? guardId)
         {
