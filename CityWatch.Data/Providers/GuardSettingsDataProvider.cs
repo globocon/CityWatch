@@ -33,6 +33,7 @@ namespace CityWatch.Data.Providers
         public void SaveANPR(ANPR anpr);
         public List<ANPR> GetANPR(int clientSiteId);
         public void DeleteANPR(int id);
+        public ANPR GetANPRCheckbox(int clientSiteId);
     }
 
     public class GuardSettingsDataProvider : IGuardSettingsDataProvider
@@ -142,6 +143,13 @@ namespace CityWatch.Data.Providers
                 .Include(x => x.ClientSite)
                 .OrderBy(z => z.KeyNo)
                 .ToList();
+        }
+        public ANPR GetANPRCheckbox(int clientSiteId)
+        {
+            return _context.ANPR
+                .Where(z => z.ClientSiteId == clientSiteId)
+                .Include(x => x.ClientSite)
+                .FirstOrDefault();
         }
         public List<ANPR> GetANPR(int clientSiteId)
         {

@@ -146,6 +146,7 @@ namespace CityWatch.Web.Services
         IEnumerable<string> GetDailyGuardLogAttachments(string uploadsDir, string reportReference);
         List<SelectListItem> GetOfficerPositionsNew(OfficerPositionFilter positionFilter);
         ClientSiteKey GetClientSiteKeyDescriptionAndImage(int keyId, int clientSiteId);
+         public ANPR GetANPR(int clientSiteId);
     }
 
     public class ViewDataService : IViewDataService
@@ -1132,7 +1133,10 @@ namespace CityWatch.Web.Services
         {
             return _guardSettingsDataProvider.GetClientSiteKeys(clientSiteId).SingleOrDefault(z => z.Id == keyId)?.KeyNo;
         }
-
+        public ANPR GetANPR(int clientSiteId)
+        {
+            return _guardSettingsDataProvider.GetANPRCheckbox(clientSiteId);
+        }
         public void CopyOpenLogbookEntriesFromPreviousDay(int previousDayLogBookId, int logBookId, int guardLoginId)
         {
             var kvlFieldsToLookup = _guardLogDataProvider.GetKeyVehicleLogFields()

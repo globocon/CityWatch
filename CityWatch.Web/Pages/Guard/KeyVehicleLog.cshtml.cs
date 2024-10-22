@@ -2128,5 +2128,11 @@ namespace CityWatch.Web.Pages.Guard
             }
             return new JsonResult(new { status, dbxUploaded, message });
         }
+
+        public JsonResult OnGetANPRDetails(int clientSiteId)
+        {
+            var test = _viewDataService.GetANPR(clientSiteId);
+            return new JsonResult(_viewDataService.GetANPR(clientSiteId));
+        }
     }
 }

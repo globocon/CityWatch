@@ -6,7 +6,28 @@
     });
 
     $(document).on('hidden.bs.modal', '.modal', () => $('.modal:visible').length && $(document.body).addClass('modal-open'));
+    $.ajax({
+        url: '/Guard/KeyVehicleLog?handler=ANPRDetails',
+        type: 'GET',
+        data: {
+            clientSiteId: $('#KeyVehicleLog_ClientSiteLogBook_ClientSiteId').val(),
+        }
+    }).done(function (response) {
+        if (response != null) {
+            const singleEntry = response.isSingleLane
+            const SeperateEntry = response.isSeperateEntryAndExitLane
+            if (singleEntry == true) {
+                $("#ANPRDv").show();
+                $("#ExitLaneDv").hide();
 
+            }
+            else if (SeperateEntry == true) {
+                $("#ANPRDv").show();
+            }
+        }
+        
+           
+    });
 
 });
 

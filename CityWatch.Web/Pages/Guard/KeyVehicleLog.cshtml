@@ -318,6 +318,49 @@
         <label class="col-form-label mt-2">Total Events: <span id="total_events"></span></label>
         <button type="button" class="btn btn-primary mt-1" id="add_new_vehicle_and_key_log"><i class="fa fa-plus mr-2"></i>Add Entry</button>
     </div>
+</div><br/>
+<div class="row" id="ANPRDv" style="display:none">
+    <div class="col-md-2 text-left ">
+        <button type="button" class="btn btn-primary mt-3" id="add_anpr"><i class="fa fa-cloud mr-2"></i>ANPR</button>
+    </div>
+    <div class="col-md-7 text-left">
+
+        <div class="d-flex flex-row">
+
+            <div id="EntryLaneDv">
+                <div class="dropdown kvl-rec-filter  mr-2">
+                    <label class="col-form-label" width="100%">Entry Lane(Inbound)</label>
+                    <div class="input-group">
+                       
+                        <input type="text" class="form-control" id="entryLane"  style="width:130px"/>
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">
+                                <i class="fa fa-plus-circle"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-1"></div>&nbsp;&nbsp;&nbsp;
+            <div id="ExitLaneDv">
+                <div class="dropdown kvl-rec-filter  mr-2">
+                    <label class="col-form-label" width="100%">Exit Lane(Outbound)</label>
+                    <div class="input-group">
+                        
+                        <input type="text" class="form-control" id="ExitLane" style="width:130px" />
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">
+                                <i class="fa fa-plus-circle"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+    </div>
 </div>
 <div class="row mt-2">
     <div class="col-md-12">
