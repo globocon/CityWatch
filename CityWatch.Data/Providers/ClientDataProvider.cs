@@ -430,7 +430,7 @@ namespace CityWatch.Data.Providers
                 CreateGpsImage(clientSite);
 
 
-           
+
 
         }
 
@@ -575,9 +575,15 @@ namespace CityWatch.Data.Providers
         public void SaveClientSiteKpiSetting(ClientSiteKpiSetting setting)
         {
             var entityState = !_context.ClientSiteKpiSettings.Any(x => x.ClientSiteId == setting.ClientSiteId) ? EntityState.Added : EntityState.Modified;
-            _context.ClientSiteKpiSettings.Attach(setting);
-            _context.Entry(setting).State = entityState;
-            _context.SaveChanges();
+
+            if (entityState != EntityState.Modified)
+            {
+                setting.TimezoneString = "AUS Eastern Standard Time";
+                setting.UTC = "+10:00";
+                _context.ClientSiteKpiSettings.Attach(setting);
+                _context.Entry(setting).State = entityState;
+                _context.SaveChanges();
+            }
 
             if (entityState == EntityState.Modified)
             {
@@ -880,11 +886,33 @@ namespace CityWatch.Data.Providers
 
                     //update the value of the ScheduleisActive Start
 
+                    try
+                    {
+                        _context.ClientSiteKpiSettings
+                        .Where(u => u.Id == setting.Id)
+                         .ExecuteUpdate(b => b.SetProperty(u => u.ScheduleisActive, setting.ScheduleisActive)
+                         );
 
-                    _context.ClientSiteKpiSettings
-                    .Where(u => u.Id == setting.Id)
-                     .ExecuteUpdate(b => b.SetProperty(u => u.ScheduleisActive, setting.ScheduleisActive)
-                     );
+                        _context.ClientSiteKpiSettings
+                      .Where(u => u.Id == setting.Id)
+                       .ExecuteUpdate(b => b.SetProperty(u => u.TimezoneString, setting.TimezoneString)
+                       );
+
+                        TimeZoneInfo westernAustraliaTimeZone = TimeZoneInfo.FindSystemTimeZoneById(setting.TimezoneString);
+                        string offset = westernAustraliaTimeZone.BaseUtcOffset.ToString(@"hh\:mm");
+                        string sign = westernAustraliaTimeZone.BaseUtcOffset.Hours >= 0 ? "+" : "-";
+                        string utcOffset = $"{sign}{offset}";
+                        _context.ClientSiteKpiSettings
+                     .Where(u => u.Id == setting.Id)
+                      .ExecuteUpdate(b => b.SetProperty(u => u.UTC, utcOffset)
+                      );
+
+                    }
+                    catch
+                    {
+
+
+                    }
                     //update the value of the ScheduleisActive end
 
                     if (setting.ClientSiteManningGuardKpiSettings.Any() || setting.ClientSiteManningPatrolCarKpiSettings.Any())
@@ -2617,7 +2645,7 @@ namespace CityWatch.Data.Providers
             string format = "MM/dd/yyyy";
             if (!DateTime.TryParseExact(endDate, format, null, System.Globalization.DateTimeStyles.None, out endDateParsed))
             {
-                
+
                 throw new ArgumentException("Invalid end date format");
             }
             var clientSiteDetails = _context.GuardLogins
@@ -2634,7 +2662,7 @@ namespace CityWatch.Data.Providers
         }
         public GuardLogin GetGuardDetailsAllTimesheet1(int clientSiteIds, DateTime startdate, DateTime endDate)
         {
-            
+
             var clientSiteDetails = _context.GuardLogins
     .Include(x => x.ClientSite)
     .Where(x => x.ClientSiteId == clientSiteIds && // Direct comparison instead of Contains

@@ -61,5 +61,7 @@ namespace CityWatch.Data.Models
         public int? GuardLoginTimeUtcOffsetMinute { get; set; }
         public string CRMSupplier { get; set; }
 
+        public string UTCOffset { get; set; }
+
     }
 }

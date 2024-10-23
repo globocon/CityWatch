@@ -270,5 +270,9 @@ namespace CityWatch.Data.Models
         }
 
         public bool ScheduleisActive { get; set; }
+
+        public string TimezoneString { get; set; }
+
+        public string UTC { get; set; }
     }
 }
