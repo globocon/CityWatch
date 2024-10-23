@@ -46,6 +46,7 @@ public interface ITimesheetGenerator
         Task<string> GenerateTimesheetZipFile(int[] clientSiteIds, string startdate, string endDate);
         Task<string> GenerateTimesheetZipFileFrequency(int[] clientSiteIds, string startdate, string endDate);
         public string GeneratePdfTimesheetReportBulk(string startdate, string endDate, int guradid, string fileNamePart);
+    public string GeneratePdfTimesheetReportList(DateTime startdate, DateTime endDate, int[] guardIds);
 
     }
     public class TimeSheetGenerator : ITimesheetGenerator
@@ -326,7 +327,64 @@ public interface ITimesheetGenerator
 
             return reportFileName;
         }
-        public string GeneratePdfTimesheetReport(DateTime startdate, DateTime endDate, int guradid)
+    public string GeneratePdfTimesheetReportList(DateTime startdate, DateTime endDate, int[] guardIds)
+    {
+        // Generate a single file name for the combined PDF
+        var reportFileName = $"{DateTime.Now.ToString("yyyyMMdd")} - Time Sheet - Combined - {new Random().Next()}.pdf";
+        var reportPdf = IO.Path.Combine(_reportRootDir, REPORT_DIR, reportFileName);
+
+        // Create a new PDF document
+        var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
+        pdfDoc.SetDefaultPageSize(PageSize.A4.Rotate());
+        var doc = new Document(pdfDoc);
+        doc.SetMargins(PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN);
+
+        foreach (var guardId in guardIds)
+        {
+            // Fetch guard-specific details
+            var LoginDetails = _clientDataProvider.GetLoginDetailsGuard(guardId, startdate, endDate);
+            var Name = _clientDataProvider.GetGuardlogName(guardId, endDate);
+            var LicenseNo = _clientDataProvider.GetGuardLicenseNo(guardId, endDate);
+            var SiteName = _clientDataProvider.GetGuardlogSite(guardId, endDate);
+            var TimesheetDetails = _clientDataProvider.GetTimesheetDetails();
+
+            // Add a header for each guard's section
+            doc.Add(CreateReportHeader());
+            doc.Add(CreateNameTable(Name));
+            doc.Add(CreateLicenseTable(LicenseNo));
+            doc.Add(CreateDateTable(endDate));
+            doc.Add(new Paragraph("\n")); // Add some spacing
+
+            // Generate timesheet content for this guard
+            var (GuardLoginTables, totalHours) = CreateGuardLoginDetails(startdate, endDate, LoginDetails, TimesheetDetails.weekName);
+            for (int i = 0; i < GuardLoginTables.Count; i++)
+            {
+                var GuardLoginTable = GuardLoginTables[i];
+                if (GuardLoginTable.GetNumberOfRows() > 0)
+                {
+                    doc.Add(GuardLoginTable);
+                    if (i < GuardLoginTables.Count - 1) // Only add space if it's not the last table
+                    {
+                        doc.Add(new Paragraph("\n"));
+                    }
+                }
+            }
+
+            // Optionally, add a page break between guards
+            if (guardId != guardIds.Last())  // Add a page break if not the last guard
+            {
+                doc.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+            }
+        }
+
+        // Close the document
+        doc.Close();
+        pdfDoc.Close();
+
+        // Return the single report file name
+        return reportFileName;
+    }
+    public string GeneratePdfTimesheetReport(DateTime startdate, DateTime endDate, int guradid)
         {
             //DateTime startdateTime = DateTime.Parse(startdate);
         
@@ -341,13 +399,16 @@ public interface ITimesheetGenerator
             var reportFileName = $"{DateTime.Now.ToString("yyyyMMdd")} - {FileNameHelper.GetSanitizedFileNamePart(Name)} - Time Sheet -_{new Random().Next()}.pdf";
             var reportPdf = IO.Path.Combine(_reportRootDir, REPORT_DIR, reportFileName);
             var TimesheetDetails = _clientDataProvider.GetTimesheetDetails();
+        
 
+        
             var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
             pdfDoc.SetDefaultPageSize(PageSize.A4.Rotate());
             var doc = new Document(pdfDoc);
             doc.SetMargins(PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN);
 
-
+        if (guradid != 0)
+        {
             var headerTable = CreateReportHeader();
             doc.Add(headerTable);
 
@@ -380,10 +441,11 @@ public interface ITimesheetGenerator
             }
             var commentTable = GetCommentTable(totalHours);
             doc.Add(commentTable);
-            doc.Close();
+        }
+        doc.Close();
             pdfDoc.Close();
-
-            return reportFileName;
+        
+        return reportFileName;
         }
 
         private static Table CreateNameTable(string Name)

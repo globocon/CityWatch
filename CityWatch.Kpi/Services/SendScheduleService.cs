@@ -22,6 +22,7 @@ using CityWatch.Data.Services;
 using CityWatch.Common.Helpers;
 using System.Security.Policy;
 using System.Globalization;
+using Dropbox.Api.Users;
 
 namespace CityWatch.Kpi.Services
 {
@@ -164,12 +165,11 @@ namespace CityWatch.Kpi.Services
             try
             {
                 statusLog.AppendFormat("Schedule {0} - Starting. ", schedule.Id);
-                var siteIds = schedule.KpiSendTimesheetClientSites.Select(z => z.ClientSiteId);
+                var siteIds = schedule.KpiSendTimesheetClientSites.Select(z => z.ClientSiteId).ToArray();
                 var reportEndDate = reportStartDate.AddMonths(1).AddDays(-1);
 
                 var siteReportFileNames = new List<string>();
-                foreach (var siteId in siteIds)
-                {
+                
                     string StartDate = reportStartDate.ToString("MM/dd/yyyy");
                     string EndDate = "";
                     if (reportEndDate != null)
@@ -178,30 +178,30 @@ namespace CityWatch.Kpi.Services
                     }
                     // Create Pdf Report
                     var fileName = "";
-                    var clientSiteDetails = _clientDataProvider.GetGuardDetailsAllTimesheet1(siteId, reportStartDate, reportEndDate);
-                    if (clientSiteDetails!=null)
-                    {
-                        if (clientSiteDetails.GuardId!=null)
-                        {
-                            fileName = _kpiTimesheetReportGenerator.GeneratePdfTimesheetReport(reportStartDate, reportEndDate, clientSiteDetails.GuardId);
-                        }
-                         
-                    }
-                    else
-                    {
+                    var clientSiteDetails = _clientDataProvider.GetGuardDetailsAllTimesheetList(siteIds, reportStartDate, reportEndDate);
+                if (clientSiteDetails != null)
+                {
+                    int[] guardIds = clientSiteDetails.Select(x => x.GuardId).ToArray();
+                    fileName = _kpiTimesheetReportGenerator.GeneratePdfTimesheetReportList(reportStartDate, reportEndDate, guardIds);
+
+
+                }
+
+                else
+                {
                         int GuardID = 0;
                         fileName = _kpiTimesheetReportGenerator.GeneratePdfTimesheetReport(reportStartDate, reportEndDate, GuardID);
                     }
                   
                     if (string.IsNullOrEmpty(fileName))
                     {
-                        statusLog.AppendFormat("Site {0} - Error creating pdf. ", siteId);
-                        continue;
+                        statusLog.AppendFormat("Site {0} - Error creating pdf. ", siteIds);
+                        //continue;
                     }
 
                     siteReportFileNames.Add(Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
-                    statusLog.AppendFormat("Site {0} - Completed. ", siteId);
-                }
+                    statusLog.AppendFormat("Site {0} - Completed. ", siteIds);
+                
 
 
                 if (siteReportFileNames.Any())
@@ -214,7 +214,7 @@ namespace CityWatch.Kpi.Services
                     // Combine reports to a single pdf                    
                     var reportFileName = $"{FileNameHelper.GetSanitizedFileNamePart(schedule.ProjectName)} - Daily TimeSheet Reports - {reportStartDate:MMM} {reportStartDate.Year}.pdf";
                     reportFileName = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", reportFileName);
-                    PdfHelper.CombinePdfReports(reportFileName, siteReportFileNames, summaryFileName);
+                    PdfHelper.CombinePdfReportsTimesheet(reportFileName, siteReportFileNames, summaryFileName);
 
                     // Send Email
                     SendEmailTimesheet(reportFileName, schedule, reportStartDate, ignoreRecipients);
@@ -229,10 +229,10 @@ namespace CityWatch.Kpi.Services
                     }
 
                     // Cleanup files
-                    foreach (var fileName in siteReportFileNames)
+                    foreach (var fileName1 in siteReportFileNames)
                     {
-                        if (File.Exists(fileName))
-                            File.Delete(fileName);
+                        if (File.Exists(fileName1))
+                            File.Delete(fileName1);
                     }
 
                     if (File.Exists(reportFileName))
@@ -549,8 +549,13 @@ namespace CityWatch.Kpi.Services
 
             return string.Join(", ", schedule.KpiSendTimesheetClientSites.Select(z => z.ClientSite.ClientType.Name).Distinct());
         }
-
-        private string CreateSummaryReportTimesheet(KpiSendTimesheetSchedules schedule, DateTime reportStartDate, DateTime reportEndDate)
+        private string CreateSummaryReportTimesheetNew(KpiSendTimesheetSchedules schedule, DateTime reportStartDate, DateTime reportEndDate,string FileName)
+        {
+            var summaryFileName = FileName;
+            summaryFileName = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", summaryFileName);
+            return summaryFileName;
+        }
+            private string CreateSummaryReportTimesheet(KpiSendTimesheetSchedules schedule, DateTime reportStartDate, DateTime reportEndDate)
         {
 
             var coverSheetType = CoverSheetType.Monthly;
@@ -564,7 +569,25 @@ namespace CityWatch.Kpi.Services
             var summaryReportToDate = coverSheetType == CoverSheetType.Weekly ? DateTime.Today : reportEndDate;
             string StartDate = reportStartDate.ToString("MM/dd/yyyy");
             string EndDate = reportEndDate.ToString("MM/dd/yyyy");
-            var summaryFileName = _kpiTimesheetReportGenerator.GeneratePdfTimesheetReport(reportStartDate, reportEndDate, schedule.Id);
+            int[] ClientsiteIds = schedule.KpiSendTimesheetClientSites.Select(x => x.ClientSiteId).ToArray();
+
+            var clientSiteDetails = _clientDataProvider.GetGuardDetailsAllTimesheetList(ClientsiteIds, reportStartDate, reportEndDate);
+            var summaryFileName = "";
+            if (clientSiteDetails != null)
+            {
+                int[] guardIds = clientSiteDetails.Select(x => x.GuardId).ToArray();
+                summaryFileName = _kpiTimesheetReportGenerator.GeneratePdfTimesheetReportList(reportStartDate, reportEndDate, guardIds);
+
+
+            }
+            else
+            {
+                var GuardId = 0;
+                 summaryFileName = _kpiTimesheetReportGenerator.GeneratePdfTimesheetReport(reportStartDate, reportEndDate, GuardId);
+                //fileName = $"{DateTime.Now.ToString("yyyyMMdd")} - Time Sheet -_{new Random().Next()}.pdf";
+            }
+
+           
             summaryFileName = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", summaryFileName);
             return summaryFileName;
         }
@@ -664,43 +687,57 @@ namespace CityWatch.Kpi.Services
             try
             {
                 statusLog.AppendFormat("Schedule {0} - Starting. ", schedule.Id);
-                var siteIds = schedule.KpiSendTimesheetClientSites.Select(z => z.ClientSiteId);
+                int[] siteIds = schedule.KpiSendTimesheetClientSites.Select(z => z.ClientSiteId).ToArray();
                 var reportEndDate = reportStartDate.AddMonths(1).AddDays(-1);
 
                 var siteReportFileNames = new List<string>();
-                foreach (var siteId in siteIds)
-                {
+               
                     string StartDate = reportStartDate.ToString("MM/dd/yyyy");
                     string EndDate = "";
                     if (reportEndDate!=null)
                     {
                          EndDate = reportEndDate.ToString("MM/dd/yyyy");
                     }
-                    // Create Pdf Report
-                    //DateTime reportEndDate = DateTime.ParseExact("your_input_here", "MM/dd/yyyy", CultureInfo.InvariantCulture);
-                    var clientSiteDetails = _clientDataProvider.GetGuardDetailsAllTimesheet1(siteId, reportStartDate, reportEndDate);
-                    var fileName = _kpiTimesheetReportGenerator.GeneratePdfTimesheetReport(reportStartDate, reportEndDate, siteId);
+                var fileName = "";
+                // Create Pdf Report
+                //DateTime reportEndDate = DateTime.ParseExact("your_input_here", "MM/dd/yyyy", CultureInfo.InvariantCulture);
+                var clientSiteDetails = _clientDataProvider.GetGuardDetailsAllTimesheetList(siteIds, reportStartDate, reportEndDate);
+                    
+                    if (clientSiteDetails != null)
+                    {
+                        int[] guardIds = clientSiteDetails.Select(x => x.GuardId).ToArray();
+                            fileName = _kpiTimesheetReportGenerator.GeneratePdfTimesheetReportList(reportStartDate, reportEndDate, guardIds);
+                        
+
+                    }
+                    else
+                    {
+                        var GuardId = 0;
+                        fileName= _kpiTimesheetReportGenerator.GeneratePdfTimesheetReport(reportStartDate, reportEndDate, GuardId);
+                        //fileName = $"{DateTime.Now.ToString("yyyyMMdd")} - Time Sheet -_{new Random().Next()}.pdf";
+                    }
+                    
                     if (string.IsNullOrEmpty(fileName))
                     {
-                        statusLog.AppendFormat("Site {0} - Error creating pdf. ", siteId);
-                        continue;
+                        statusLog.AppendFormat("Site {0} - Error creating pdf. ", siteIds);
+                        //continue;
                     }
 
                     siteReportFileNames.Add(Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", fileName));
-                    statusLog.AppendFormat("Site {0} - Completed. ", siteId);
-                }
+                    statusLog.AppendFormat("Site {0} - Completed. ", siteIds);
+                
 
                 if (siteReportFileNames.Any())
                 {
                     schedule.ProjectName = GetSchduleIdentifierTimesheet(schedule);
 
                     // Create summary page
-                    var summaryFileName = CreateSummaryReportTimesheet(schedule, reportStartDate, reportEndDate);
+                    var summaryFileName = CreateSummaryReportTimesheetNew(schedule, reportStartDate, reportEndDate, fileName);
 
                     // Combine reports to a single pdf                    
                     var reportFileName = $"{FileNameHelper.GetSanitizedFileNamePart(schedule.ProjectName)} - Daily TimeSheet Reports - {reportStartDate:MMM} {reportStartDate.Year}.pdf";
                     reportFileName = Path.Combine(_webHostEnvironment.WebRootPath, "Pdf", "Output", reportFileName);
-                    PdfHelper.CombinePdfReports(reportFileName, siteReportFileNames, summaryFileName);
+                    PdfHelper.CombinePdfReportsTimesheet(reportFileName, siteReportFileNames, summaryFileName);
 
 
                    
@@ -717,10 +754,10 @@ namespace CityWatch.Kpi.Services
 
                     fileBytes = System.IO.File.ReadAllBytes(reportFileName);
                     //// Cleanup files
-                    foreach (var fileName in siteReportFileNames)
+                    foreach (var fileName1 in siteReportFileNames)
                     {
-                        if (File.Exists(fileName))
-                            File.Delete(fileName);
+                        if (File.Exists(fileName1))
+                            File.Delete(fileName1);
                     }
 
                     if (File.Exists(reportFileName))
