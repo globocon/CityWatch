@@ -50,7 +50,13 @@
                     //p1 - 202 site allocation - start
                     clientAreaControl.html('');
                     toggleClientGpsLink(false);
-
+                    /*p1-226 gps ir map issue -start*/
+                    const ahrefElem = getGpsAsHyperLink(data.clientSite.gps);
+                    $('#liveGpsWrapper').html(ahrefElem);
+                    $('#Report_DateLocation_ClientSiteLiveGps').val(data.clientSite.gps);
+                    toggleClientGpsLink(true, data.clientSite.gps);
+                    
+                    //p1 - 226 gps ir map issue - end
                     //const ulClients = $('#Report_DateLocation_ClientArea').siblings('ul.es-list');
                     //ulClients.html('');
 

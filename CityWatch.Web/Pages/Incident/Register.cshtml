@@ -753,10 +753,14 @@
         autoCompleteLocation.addListener('place_changed', function () {
             const place = this.getPlace();
             if (place.geometry) {
+              
                 var lat = place.geometry.location.lat();
                 var lon = place.geometry.location.lng();
                 const liveGps = lat + ',' + lon;
                 document.getElementById("Report_DateLocation_ClientSiteLiveGps").value = liveGps;
+                const ahrefElem = getGpsAsHyperLink(liveGps);
+                document.getElementById("liveGpsWrapper").innerHTML=ahrefElem;
+               
                 toggleClientGpsLink(true, liveGps);
             }
         });
