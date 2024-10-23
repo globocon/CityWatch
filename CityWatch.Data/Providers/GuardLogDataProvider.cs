@@ -308,6 +308,8 @@ namespace CityWatch.Data.Providers
         void SaveUserLoginHistoryDetails(LoginUserHistory loginUserHistory);
 
         List<LoginUserHistory> GetLastLoginUsingUserHistory(int GuardId);
+
+        public void UpdateHRLockSettings(int id);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -4936,6 +4938,23 @@ namespace CityWatch.Data.Providers
                 _context.HrSettings.Remove(deleteHrSettings);
 
             _context.SaveChanges();
+        }
+
+        public void UpdateHRLockSettings(int id)
+        {
+            var updateHRLockSettings = _context.HrSettings.SingleOrDefault(x => x.Id == id);
+            if (updateHRLockSettings != null)
+            {
+                if (updateHRLockSettings.HRLock)
+                {
+                    updateHRLockSettings.HRLock = false;
+                }
+                else
+                {
+                    updateHRLockSettings.HRLock = true;
+                }
+                _context.SaveChanges();
+            }
         }
         public void SaveLicensesTypes(LicenseTypes licenseTypes)
         {

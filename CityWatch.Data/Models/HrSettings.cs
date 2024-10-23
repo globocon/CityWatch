@@ -66,6 +66,8 @@ namespace CityWatch.Data.Models
         [NotMapped]
         public string GroupName { get { return HRGroups.Name ; } }
 
+        public bool HRLock { get; set; }
+
         public ICollection<HrSettingsClientSites> hrSettingsClientSites { get; set; }
 
         public ICollection<HrSettingsClientStates> hrSettingsClientStates { get; set; }

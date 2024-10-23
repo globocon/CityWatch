@@ -98,6 +98,8 @@ namespace CityWatch.Data.Providers
         public int SaveSubDomain(SubDomain subDomain);
 
         public SubDomain GetSubDomainDetails(string domain);
+
+        List<HrSettings> GetHRSettingsWithHRLockEnable();
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -732,9 +734,6 @@ namespace CityWatch.Data.Providers
         //p1-191 hr files task 3-start
         public List<HrSettings> GetHRSettings()
         {
-
-
-
             return _context.HrSettings.Include(z => z.HRGroups)
                 .Include(z => z.ReferenceNoNumbers)
                 .Include(z => z.ReferenceNoAlphabets)
@@ -744,6 +743,11 @@ namespace CityWatch.Data.Providers
               .ThenInclude(y => y.ClientType)
                 .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
                 ThenBy(x => x.ReferenceNoAlphabets.Name).ToList();
+        }
+
+        public List<HrSettings> GetHRSettingsWithHRLockEnable()
+        {
+            return _context.HrSettings.Where(x => x.HRLock == true).ToList();
         }
         public List<LicenseTypes> GetLicensesTypes()
         {

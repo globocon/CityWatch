@@ -343,6 +343,10 @@ $(function () {
                 else if (!result.guard.isActive) {
                     showGuardSearchResult('A guard with given security license number is disabled. Please contact admin to activate', true);
                 }
+                else if (result.guardLockStatusBasedOnRedDoc) {
+                    showGuardSearchResult('A guard with given security licence number is disabled due to HR RECORD issues. Please contact admin to activate.', true);
+                }
+
                 else {
                     $('#GuardLogin_IsNewGuard').prop('checked', false);
 
