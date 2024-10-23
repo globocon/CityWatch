@@ -927,7 +927,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
         {
             data: 'guardName',
 
-            width: '18%',
+            width: '25%',
             createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
                 // Define your conditions to add a class
                 if (rowData.isEnabled == 1) {
@@ -1030,7 +1030,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
         {
             data: 'rcStatus',
-            width: '8%',
+            width: '7%',
             className: "text-center",
             createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
                 // Define your conditions to add a class

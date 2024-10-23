@@ -2540,7 +2540,8 @@ namespace CityWatch.Data.Providers
                                                     NotificationType = 1,
                                                     /* added for show the crm CrmSupplier deatils in the 'no guard on duty' */
                                                     CRMSupplier = manning.CrmSupplier,
-                                                    UTCOffset = manning.ClientSiteKpiSetting.TimezoneString
+                                                    UTCOffset = "ETA was "+ manning.EmpHoursStart+ " GMT ("+manning.ClientSiteKpiSetting.UTC+")",
+                                                    GuardLoginTimeZoneShort= manning.ClientSiteKpiSetting.UTC
                                                 };
                                                 _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
                                                 _context.SaveChanges();

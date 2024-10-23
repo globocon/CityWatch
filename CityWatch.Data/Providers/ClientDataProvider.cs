@@ -577,7 +577,7 @@ namespace CityWatch.Data.Providers
             if (entityState != EntityState.Modified)
             {
                 setting.TimezoneString = "AUS Eastern Standard Time";
-                setting.UTC = "10:00:00";
+                setting.UTC = "+10:00";
                 _context.ClientSiteKpiSettings.Attach(setting);
                 _context.Entry(setting).State = entityState;
                 _context.SaveChanges();
@@ -897,9 +897,12 @@ namespace CityWatch.Data.Providers
                        );
 
                         TimeZoneInfo westernAustraliaTimeZone = TimeZoneInfo.FindSystemTimeZoneById(setting.TimezoneString);
+                        string offset = westernAustraliaTimeZone.BaseUtcOffset.ToString(@"hh\:mm");
+                        string sign = westernAustraliaTimeZone.BaseUtcOffset.Hours >= 0 ? "+" : "-";
+                        string utcOffset = $"{sign}{offset}";
                         _context.ClientSiteKpiSettings
                      .Where(u => u.Id == setting.Id)
-                      .ExecuteUpdate(b => b.SetProperty(u => u.UTC, westernAustraliaTimeZone.BaseUtcOffset.ToString())
+                      .ExecuteUpdate(b => b.SetProperty(u => u.UTC, utcOffset)
                       );
 
                     }
