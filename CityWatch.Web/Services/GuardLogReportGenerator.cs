@@ -549,7 +549,7 @@ namespace CityWatch.Web.Services
                 foreach (var guardLogImage in guardlogImages)
                 {
                     var reportDataTablenew = new Table(UnitValue.CreatePercentArray(new float[] { 10, 90, 4 })).UseAllAvailableWidth();
-                    Paragraph notesParagraphnew1 = new Paragraph("See attached file  ").SetFontSize(CELL_FONT_SIZE);
+                    Paragraph notesParagraphnew1 = new Paragraph("See ").SetFontSize(CELL_FONT_SIZE);
                     if (guardLogImage.IsRearfile == true)
                     {
                         
@@ -558,11 +558,12 @@ namespace CityWatch.Web.Services
                         string linkText = IO.Path.GetFileName(guardLogImage.ImagePath);
 
 
-                        var link = new Link(linkText, PdfAction.CreateURI(url))
-                        .SetFontColor(DeviceGray.BLACK)
-                        .SetFontColor(ColorConstants.BLUE);
+                        //var link = new Link(linkText, PdfAction.CreateURI(url))
+                        //.SetFontColor(DeviceGray.BLACK)
+                        //.SetFontColor(ColorConstants.BLUE);
 
-                         notesParagraphnew1.Add(link);
+                        //notesParagraphnew1.Add(link);
+                        notesParagraphnew1.Add(linkText + " attached to this document");
                        
                         notesParagraphnew.Add(notesParagraphnew1);
                       
