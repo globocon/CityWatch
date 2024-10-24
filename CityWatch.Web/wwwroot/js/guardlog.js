@@ -5151,6 +5151,13 @@ $(function () {
     });
 
 
+
+    
+
+
+
+    
+
     // P1#231 HR Download Excel for settings -end
 
 
@@ -8054,3 +8061,62 @@ function downloadDailyGuardTimeSheetLogBulkZipFile() {
         }
     });
 }
+
+
+// Initialize Select2
+$('#list_HrSearchandEdit_keys').select2({
+    placeholder: "Select",
+    theme: 'bootstrap4',
+    allowClear: true,
+    ajax: {
+        url: '/Admin/GuardSettings?handler=HrsettingsUisngHrGroupId',
+        dataType: 'json',
+        delay: 250,
+        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        data: function (params) {
+            return {
+                hrgroupId: 1,
+                searchKeyNo: params.term,
+            };
+        },
+        processResults: function (data) {
+            // Store results in the Select2 instance for later filtering
+            $('#list_HrSearchandEdit_keys').data('select2-data', data);
+            return {
+                results: $.map(data, function (item) {
+                    return {
+                        text: item.referenceNo + ' ' + item.description,
+                        id: item.id,
+                        title: item.description
+                    };
+                })
+            };
+        },
+        cache: true
+    },
+    // Enable searching through the loaded data
+    minimumInputLength: 0,
+}).on("select2:select", function (e) {
+
+    // when select it will filter the grid 
+    const kvlStatusFilter = e.params.data.text;
+    if (kvlStatusFilter !== 0) {
+        var filter = 'true'; // or 'false'
+        var regex = true;   // No need for regex
+        var smart = false;   // Exact match only
+        if ($('#chkbxHR1').is(':checked')) {
+            $('#chkbxHR2').prop('checked', false);
+            $('#chkbxHR3').prop('checked', false);
+            // Apply the search filter to the 'isactive' column
+            guardSettings.column('hR1Status:name').search(kvlStatusFilter, regex, smart).draw();
+            guardSettings.ajax.reload();
+
+        }
+    }
+    
+}).on("select2:clear", function (e) {
+    // Handle clear event
+});
+
+// Extend the Select2 search functionality to filter the loaded data
+

@@ -27,6 +27,7 @@ using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
+using static Dropbox.Api.Team.GroupSelector;
 
 namespace CityWatch.Web.Pages.Admin
 {
@@ -1808,6 +1809,13 @@ namespace CityWatch.Web.Pages.Admin
             }
 
             return new JsonResult(new { AccessPermission, SuccessMessage });
+        }
+
+        public JsonResult OnGetHrsettingsUisngHrGroupId(int hrgroupId,string searchKeyNo)
+        {
+          
+            return new JsonResult(_configDataProvider.GetHRSettingsUsingGroupId(hrgroupId, searchKeyNo));
+           
         }
 
     }
