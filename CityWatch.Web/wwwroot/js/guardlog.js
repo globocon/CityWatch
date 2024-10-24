@@ -3556,64 +3556,142 @@ $(function () {
             data: $('#form_kvl_auditlog_request').serialize(),
         }).done(function (response) {
             $('#loader').hide();
-            keyVehicleLogReportnew.clear().rows.add(response.keyVehicleAuditLogRequest).draw();
-            /*p1-218 search download select-start*/
-            var searchtext = keyVehicleLogReport.search();
-            keyVehicleLogReportnew.search(searchtext).draw();
-            /*p1-218 search download select-end*/
+            const rawData = Array.isArray(response.keyVehicleAuditLogRequest) ? response.keyVehicleAuditLogRequest : [];
+            if (rawData.length === 0) {
+                console.error("No data available to export.");
+                alert("No data available to export.");
+                return;
+            }
+            // Define headers and column widths
+            const headers = ['Client Site', 'Clocks','','','', 'ID No / Vehicle Rego', 'ID / Plate', 'Vehicle Description','', 'Trailers Rego or ISO','','','', 'Key / Card Scan', 'Company Name', 'Individual','','', 'Site POC', 'Site Location', 'Purpose Of Entry', 'Weight','','','Notes'];
+            const headersnew = ['', 'Initial Call', 'Entry Time', 'Exit Time', 'Time Slot No', '', '', 'Truck Config', 'Trailer Type', '1', '2', '3', '4', '', '', 'Name', 'Mobile No:', 'Type', '', '', '', 'In Gross(t)','Out Net(t)','Tare(t)',''];
+            const columnWidths = [20,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10]; // Example widths
+
+
+
+            const ws = XLSX.utils.aoa_to_sheet([[]]);
+            const dataRows = [headers, headersnew, ...rawData.map(item => [
+                
                 item.detail.clientSiteLogBook.clientSite.name,
+                convertDateTimeString(item.detail.entryTime),
+                convertDateTimeString(item.detail.entryTime),
+                convertDateTimeString(item.detail.exitTime),
+                convertDateTimeString(item.detail.timeSlotNo),
+             item.detail.vehicleRego,
+             item.plate,
+             item.truckConfigText,
+             item.trailerTypeText,
+             item.detail.trailer1Rego,
+             item.detail.trailer2Rego,
+             item.detail.trailer3Rego,
+             item.detail.trailer4Rego,
+             item.detail.keyNo,
+             item.detail.companyName,
+             item.detail.personName,
+             item.detail.mobileNumber,
+             item.personTypeText,
+             item.clientSitePocName,
+             item.clientSiteLocationName,
+             item.purposeOfEntry,
+             item.detail.inWeight,
+             item.detail.outWeight,
+             item.detail.tareWeight,
+             item.detail.notes
+            ])];
+           
+            // Update the worksheet with headers and data
+            XLSX.utils.sheet_add_aoa(ws, dataRows);
+
+            // Set column widths
+            ws['!cols'] = columnWidths.map(width => ({ wch: width }));
+
+            ws['!merges'] = [
+                { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } },
+                { s: { r: 0, c: 1 }, e: { r: 0, c: 4 } },
+                { s: { r: 0, c: 5 }, e: { r: 1, c: 5 } },
+                { s: { r: 0, c: 6 }, e: { r: 1, c: 6 } },
+                { s: { r: 0, c: 7 }, e: { r: 0, c: 8 } },
+                { s: { r: 0, c: 9 }, e: { r: 0, c: 12 } },
+                { s: { r: 0, c: 13 }, e: { r: 1, c: 13 } },
+                { s: { r: 0, c: 14 }, e: { r: 1, c: 14 } },
+                { s: { r: 0, c: 15 }, e: { r: 0, c: 17 } },
+                { s: { r: 0, c: 18 }, e: { r: 1, c: 18 } },
+                { s: { r: 0, c: 19 }, e: { r: 1, c: 19 } },
+                { s: { r: 0, c: 20 }, e: { r: 1, c: 20 } },
+                { s: { r: 0, c: 21 }, e: { r: 0, c: 23 } },
+                { s: { r: 0, c: 24 }, e: { r: 1, c: 24 } }
+
+
+            ];
+            
+            // Create a new workbook and append the worksheet
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'KeyVehicleLogs');
             var Key = 'Key & Vehicle Logs - ' + $('#vklAudtitFromDate').val() + ' to ' + $('#vklAudtitToDate').val();
 
             var type = 'xlsx';
             var name = Key + '.';
+            // Write the file
+            XLSX.writeFile(wb, name + type);
 
-            var data = document.getElementById('vkl_site_lognew');
+            //keyVehicleLogReportnew.clear().draw();
+            //keyVehicleLogReportnew.clear().rows.add(response.keyVehicleAuditLogRequest).draw();
+            ///*p1-218 search download select-start*/
+            //var searchtext = keyVehicleLogReport.search();
+            //keyVehicleLogReportnew.search(searchtext).draw();
+            ///*p1-218 search download select-end*/
+            //var Key = 'Key & Vehicle Logs - ' + $('#vklAudtitFromDate').val() + ' to ' + $('#vklAudtitToDate').val();
 
+            //var type = 'xlsx';
+            //var name = Key + '.';
 
-            // Check if all columns are empty
-            var isEmptyTable = true;
-            var rows = data.getElementsByTagName('tr');
-            for (var i = 0; i < rows.length; i++) {
-                var cells = rows[i].getElementsByTagName('td');
-                for (var j = 1; j < cells.length; j++) {
-                    if (cells[j].textContent.trim() !== '') {
-                        isEmptyTable = false;
-                        break;
-                    }
-                }
-            }
-
-            if (isEmptyTable) {
-                // Create a message row with the desired text
-                var messageRow = document.createElement('tr');
-                var messageCell = document.createElement('td');
-                messageCell.innerText = 'No data available in table';
-                messageRow.appendChild(messageCell);
-
-                // Create a new table with the message
-                var tableClone = document.createElement('table');
-                var tbody = document.createElement('tbody');
-                tbody.appendChild(messageRow);
-                tableClone.appendChild(tbody);
-            } else {
-                // Clone the table and remove the last column
-                var tableClone = data.cloneNode(true);
-                //var rows = tableClone.getElementsByTagName('tr');
-                //for (var i = 0; i < rows.length; i++) {
-                //    var lastCell = rows[i].lastElementChild;
-                //    if (lastCell) {
-                //        rows[i].removeChild(lastCell);
-                //    }
-                //}
-            }
+            //var data = document.getElementById('vkl_site_lognew');
 
 
+            //// Check if all columns are empty
+            //var isEmptyTable = true;
+            //var rows = data.getElementsByTagName('tr');
+            //for (var i = 0; i < rows.length; i++) {
+            //    var cells = rows[i].getElementsByTagName('td');
+            //    for (var j = 1; j < cells.length; j++) {
+            //        if (cells[j].textContent.trim() !== '') {
+            //            isEmptyTable = false;
+            //            break;
+            //        }
+            //    }
+            //}
+
+            //if (isEmptyTable) {
+            //    // Create a message row with the desired text
+            //    var messageRow = document.createElement('tr');
+            //    var messageCell = document.createElement('td');
+            //    messageCell.innerText = 'No data available in table';
+            //    messageRow.appendChild(messageCell);
+
+            //    // Create a new table with the message
+            //    var tableClone = document.createElement('table');
+            //    var tbody = document.createElement('tbody');
+            //    tbody.appendChild(messageRow);
+            //    tableClone.appendChild(tbody);
+            //} else {
+            //    // Clone the table and remove the last column
+            //    var tableClone = data.cloneNode(true);
+            //    //var rows = tableClone.getElementsByTagName('tr');
+            //    //for (var i = 0; i < rows.length; i++) {
+            //    //    var lastCell = rows[i].lastElementChild;
+            //    //    if (lastCell) {
+            //    //        rows[i].removeChild(lastCell);
+            //    //    }
+            //    //}
+            //}
 
 
-            var excelFile = XLSX.utils.table_to_book(tableClone, { sheet: "KeyVehicleLogs" });
 
-            // Use XLSX.writeFile to generate and download the Excel file
-            XLSX.writeFile(excelFile, name + type);
+
+           //var excelFile = XLSX.utils.table_to_book(tableClone, { sheet: "KeyVehicleLogs" });
+
+           // // Use XLSX.writeFile to generate and download the Excel file
+           // XLSX.writeFile(excelFile, name + type);
         });
 
     });
