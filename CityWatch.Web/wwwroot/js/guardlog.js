@@ -3561,6 +3561,7 @@ $(function () {
             var searchtext = keyVehicleLogReport.search();
             keyVehicleLogReportnew.search(searchtext).draw();
             /*p1-218 search download select-end*/
+                item.detail.clientSiteLogBook.clientSite.name,
             var Key = 'Key & Vehicle Logs - ' + $('#vklAudtitFromDate').val() + ' to ' + $('#vklAudtitToDate').val();
 
             var type = 'xlsx';
