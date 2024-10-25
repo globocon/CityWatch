@@ -2498,8 +2498,18 @@ namespace CityWatch.Data.Providers
                             // Find the site's time zone (for example, W. Australia Standard Time)
                             TimeZoneInfo siteTimeZone = TimeZoneInfo.FindSystemTimeZoneById(manning.ClientSiteKpiSetting.TimezoneString);
 
+                            TimeSpan offset = siteTimeZone.GetUtcOffset(serverTimeUtc);
+
+                            // Format the offset to display as +HH:mm or -HH:mm
+                            string offsetString = (offset >= TimeSpan.Zero ? "+" : "-") + offset.ToString(@"hh\:mm");
+
+                            // Convert UTC time to site's local time using the offset
+                            DateTime siteLocalTime2 = serverTimeUtc.Add(offset);
+
                             // Convert server time (UTC) to site's local time
                             DateTime siteLocalTime = TimeZoneInfo.ConvertTimeFromUtc(serverTimeUtc, siteTimeZone);
+
+
 
                             //DateTime perthLocalTime = TimeZoneInfo.ConvertTimeFromUtc(siteLocalTime, siteTimeZone);
 
@@ -2542,8 +2552,8 @@ namespace CityWatch.Data.Providers
                                                     NotificationType = 1,
                                                     /* added for show the crm CrmSupplier deatils in the 'no guard on duty' */
                                                     CRMSupplier = manning.CrmSupplier,
-                                                    UTCOffset = "ETA was "+ manning.EmpHoursStart+ " GMT ("+manning.ClientSiteKpiSetting.UTC+")",
-                                                    GuardLoginTimeZoneShort= manning.ClientSiteKpiSetting.UTC
+                                                    UTCOffset = "ETA was "+ manning.EmpHoursStart+ " GMT ("+ offsetString.ToString() + ")",
+                                                    GuardLoginTimeZoneShort= offsetString.ToString(),
                                                 };
                                                 _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
                                                 _context.SaveChanges();
@@ -2671,6 +2681,13 @@ namespace CityWatch.Data.Providers
                                 // Find the site's time zone (for example, W. Australia Standard Time)
                                 TimeZoneInfo siteTimeZone = TimeZoneInfo.FindSystemTimeZoneById(manning.ClientSiteKpiSetting.TimezoneString);
 
+
+                                TimeSpan offset = siteTimeZone.GetUtcOffset(serverTimeUtc);
+
+                                string offsetString = (offset >= TimeSpan.Zero ? "+" : "-") + offset.ToString(@"hh\:mm");
+                                // Convert UTC time to site's local time using the offset
+                                DateTime siteLocalTime2 = serverTimeUtc.Add(offset);
+
                                 // Convert server time (UTC) to site's local time
                                 DateTime siteLocalTime = TimeZoneInfo.ConvertTimeFromUtc(serverTimeUtc, siteTimeZone);
 
@@ -2716,9 +2733,8 @@ namespace CityWatch.Data.Providers
                                                 /* New Field Added for NotificationType only for manning notification*/
                                                         NotificationType = 1,
                                                         /* added for show the crm CrmSupplier deatils in the 'no guard on duty' */
-                                                        CRMSupplier = manning.CrmSupplier,
-                                                        UTCOffset= manning.ClientSiteKpiSetting.TimezoneString
-
+                                                        UTCOffset = "ETA was " + manning.EmpHoursStart + " GMT (" + offsetString.ToString() + ")",
+                                                        GuardLoginTimeZoneShort = offsetString.ToString(),
                                                     };
                                                     _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
                                                     _context.SaveChanges();
