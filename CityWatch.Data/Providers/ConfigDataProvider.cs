@@ -100,6 +100,8 @@ namespace CityWatch.Data.Providers
         public SubDomain GetSubDomainDetails(string domain);
 
         List<HrSettings> GetHRSettingsWithHRLockEnable();
+
+        List<HrSettings> GetHRSettingsUsingGroupId(int hrgroupId, string searchKeyNo);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -744,7 +746,26 @@ namespace CityWatch.Data.Providers
                 .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
                 ThenBy(x => x.ReferenceNoAlphabets.Name).ToList();
         }
+        public List<HrSettings> GetHRSettingsUsingGroupId(int hrgroupId,string searchKeyNo)
+        {
 
+
+
+            var result = _context.HrSettings
+       .Where(x => x.HRGroupId == hrgroupId)
+       .Include(z => z.HRGroups)
+       .Include(x => x.ReferenceNoNumbers)
+       .Include(x => x.ReferenceNoAlphabets)
+       .OrderBy(x => x.Description)
+        .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
+        ThenBy(x => x.ReferenceNoAlphabets.Name).ToList();
+
+            //.Where(z => string.IsNullOrEmpty(searchKeyNo) || z.KeyNo.Contains(searchKeyNo, StringComparison.OrdinalIgnoreCase))
+            return result.Where(x => (string.IsNullOrEmpty(searchKeyNo) ||
+                 x.Description.Contains(searchKeyNo, StringComparison.OrdinalIgnoreCase) ||
+                 x.ReferenceNo.Contains(searchKeyNo, StringComparison.OrdinalIgnoreCase))).ToList(); // Adding search by ReferenceNoAlphabets
+
+        }
         public List<HrSettings> GetHRSettingsWithHRLockEnable()
         {
             return _context.HrSettings.Where(x => x.HRLock == true).ToList();

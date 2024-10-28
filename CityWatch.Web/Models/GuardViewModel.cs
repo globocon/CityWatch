@@ -90,5 +90,8 @@ namespace CityWatch.Web.Models
         public string HR2Status { get; set; }
         public string HR3Status { get; set; }
 
+        public string hr1Description { get; set; }
+        public string hr2Description { get; set; }
+        public string hr3Description { get; set; }
     }
 }

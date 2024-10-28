@@ -4430,9 +4430,9 @@ $(function () {
 
 
 
-        // { data: 'hR1Status', name: 'hR1Status', width: "2%" },
-        // { data: 'hR2Status', name: 'hR2Status', width: "2%" },
-        //{ data: 'hR3Status', name: 'hR3Status', width: "2%" },
+            { data: 'hr1Description', name: 'hr1Description', width: "2%", visible: false, searchable: true },
+            { data: 'hr2Description', name: 'hr2Description', width: "2%", visible: false, searchable: true },
+            { data: 'hr3Description', name: 'hr3Description', width: "2%", visible: false, searchable: true },
 
 
         {
@@ -4555,6 +4555,118 @@ $(function () {
         //table.search(filter.value, regex, smart).draw();
         table.column('isactive:name').search(filter, regex, smart).draw();
     }
+
+
+    // Initialize Select2
+    $('#list_HrSearchandEdit_keys').select2({
+        placeholder: "Select",
+        theme: 'bootstrap4',
+        allowClear: true,
+        ajax: {
+            url: '/Admin/GuardSettings?handler=HrsettingsUisngHrGroupId',
+            dataType: 'json',
+            delay: 250,
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            data: function (params) {
+                // Determine hrgroupId based on which checkbox is checked
+                let hrgroupId = 0; // default value
+
+                if ($('#chkbxHR1').is(':checked')) {
+                    hrgroupId = 1;
+                } else if ($('#chkbxHR2').is(':checked')) {
+                    hrgroupId = 2;
+                } else if ($('#chkbxHR3').is(':checked')) {
+                    hrgroupId = 3;
+                }
+
+                return {
+                    hrgroupId: hrgroupId,
+                    searchKeyNo: params.term,
+                };
+            },
+            processResults: function (data) {
+                // Store results in the Select2 instance for later filtering
+                $('#list_HrSearchandEdit_keys').data('select2-data', data);
+                return {
+                    results: $.map(data, function (item) {
+                        return {
+                            text: item.referenceNo + ' ' + item.description,
+                            id: item.id,
+                            title: item.description
+                        };
+                    })
+                };
+            },
+            cache: true
+        },
+        // Enable searching through the loaded data
+        minimumInputLength: 0,
+    }).on("select2:select", function (e) {
+
+        // when select it will filter the grid
+        const kvlStatusFilter = e.params.data.text;
+        //var kvlStatusFilter = 'green';
+        if (kvlStatusFilter !== 0) {
+
+
+            var filter = 'true'; // or 'false'
+            var regex = false;   // No need for regex
+            var smart = false;   // Exact match only
+            if ($('#chkbxHR1').is(':checked')) {
+
+                $('#chkbxHR2').prop('checked', false);
+                $('#chkbxHR3').prop('checked', false);
+                // Apply the search filter to the 'isactive' column
+                guardSettings.column('hr1Description:name').search(kvlStatusFilter, regex, smart).draw();
+                guardSettings.ajax.reload();
+                
+
+            }
+            else if ($('#chkbxHR2').is(':checked')) {
+
+                $('#chkbxHR1').prop('checked', false);
+                $('#chkbxHR3').prop('checked', false);
+                // Apply the search filter to the 'isactive' column
+                guardSettings.column('hr2Description:name').search(kvlStatusFilter, regex, smart).draw();
+                guardSettings.ajax.reload();
+
+
+            }
+            else if ($('#chkbxHR3').is(':checked')) {
+
+                $('#chkbxHR1').prop('checked', false);
+                $('#chkbxHR2').prop('checked', false);
+                // Apply the search filter to the 'isactive' column
+                guardSettings.column('hr3Description:name').search(kvlStatusFilter, regex, smart).draw();
+                guardSettings.ajax.reload();
+
+
+            }
+        }
+
+    }).on("select2:clear", function (e) {
+       
+        guardSettings.search('');
+        // Clear individual column searches
+        guardSettings.columns().search('');
+        // Redraw the table
+
+        // Clear the sorting
+        guardSettings.order([]).draw(false);
+        guardSettings.draw(false);
+        filterActiveInActiveGuards(guardSettings);
+       
+        // Handle clear event
+    });
+
+
+    $('#list_HrSearchandEdit_keys').prop('disabled', true);
+    function reloadDropdown() {
+        $('#list_HrSearchandEdit_keys').val(null).trigger('change'); // Clear the current selection
+        //$('#list_HrSearchandEdit_keys').select2('open'); // Open the dropdown to reload data
+    }
+
+// Extend the Select2 search functionality to filter the loaded data
 
     //$('#guard_settings tbody').on('click', 'td.dt-control', function () {
     //    var tr = $(this).closest('tr');
@@ -5071,16 +5183,21 @@ $(function () {
 
     });
 
+   
+
     $('#chkbxHR1').on('click', function () {
         var thisCheck = $(this);
-
+        reloadDropdown();
         if (thisCheck.is(':checked')) {
             $('#chkbxHR2').prop('checked', false);
             $('#chkbxHR3').prop('checked', false);
             $('.dropdownGuardHrFilter > button').prop('disabled', false);
+
+            $('#list_HrSearchandEdit_keys').prop('disabled', false);
         }
         else {
             $('.dropdownGuardHrFilter > button').prop('disabled', true);
+            $('#list_HrSearchandEdit_keys').prop('disabled', true);
         }
         $('.dropdownGuardHrFilter > button').html('<i class="fa fa-circle text-primary mr-2"></i>Show All Entries');
         // Clear global search
@@ -5099,14 +5216,16 @@ $(function () {
     });
     $('#chkbxHR2').on('click', function () {
         var thisCheck = $(this);
-
+        reloadDropdown();
         if (thisCheck.is(':checked')) {
             $('#chkbxHR1').prop('checked', false);
             $('#chkbxHR3').prop('checked', false);
             $('.dropdownGuardHrFilter > button').prop('disabled', false);
+            $('#list_HrSearchandEdit_keys').prop('disabled', false);
         }
         else {
             $('.dropdownGuardHrFilter > button').prop('disabled', true);
+            $('#list_HrSearchandEdit_keys').prop('disabled', true);
         }
         $('.dropdownGuardHrFilter > button').html('<i class="fa fa-circle text-primary mr-2"></i>Show All Entries');
         // Clear global search
@@ -5125,14 +5244,16 @@ $(function () {
     });
     $('#chkbxHR3').on('click', function () {
         var thisCheck = $(this);
-
+        reloadDropdown();
         if (thisCheck.is(':checked')) {
             $('#chkbxHR1').prop('checked', false);
             $('#chkbxHR2').prop('checked', false);
             $('.dropdownGuardHrFilter > button').prop('disabled', false);
+            $('#list_HrSearchandEdit_keys').prop('disabled', false);
         }
         else {
             $('.dropdownGuardHrFilter > button').prop('disabled', true);
+            $('#list_HrSearchandEdit_keys').prop('disabled', true);
         }
         $('.dropdownGuardHrFilter > button').html('<i class="fa fa-circle text-primary mr-2"></i>Show All Entries');
         // Clear global search
@@ -5150,6 +5271,13 @@ $(function () {
         //$('.dropdownGuardHrFilter > .dropdown-menu > .dropdown-item').first().trigger('click');
     });
 
+
+
+    
+
+
+
+    
 
     // P1#231 HR Download Excel for settings -end
 
@@ -8054,3 +8182,7 @@ function downloadDailyGuardTimeSheetLogBulkZipFile() {
         }
     });
 }
+
+
+
+
