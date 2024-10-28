@@ -763,6 +763,31 @@ $(function () {
 
 
     });
+    //ANPR Task 4 start
+    $("#iconClick").on("click", function () {
+        var item = $("#entryLane").val();
+        $.ajax({
+            url: '/Guard/KeyVehicleLog?handler=ProfileByRego&truckRego=' + item,
+            type: 'GET',
+            dataType: 'json',
+        }).done(function (result) {
+            if (result.length > 0) {
+                var firstItem = result["0"];
+                var detailId = firstItem.detail.id;
+
+
+                if (detailId) {
+                    populateKvlModal(detailId);
+                    loadVklPopup(0, true);
+                    //GetVehicleImage()
+
+                } else {
+                    console.log("No data found in the first row.");
+                }
+            }
+        });
+    });
+     //ANPT Task 4 stop
     /*to get the vehicle image-start*/
 
 
@@ -950,7 +975,7 @@ $(function () {
                 $('#lblIsBDMOrSales').text('Supplier/Partner');
                 $('#list_BDM').prop('hidden', false);
             }
-
+            
 
 
             /*for cheking  the BDM is true-end*/
@@ -1061,11 +1086,235 @@ $(function () {
         $('#kvl-trailer_profiles-modal').modal('hide');
 
     }
+
+        function populateKvlModalANPR(id) {
+
+            $.ajax({
+                url: '/Guard/KeyVehicleLog?handler=ProfileById&id=' + id,
+                type: 'GET',
+                dataType: 'json',
+            }).done(function (result) {
+                let personName = result.personName ? result.personName : 'Unknown';
+
+
+                var check1 = $('#PlateId').val();
+                var check = result.keyVehicleLogProfile.plateId;
+                if (check1 != 0 && check1 != '') {
+
+                }
+                else {
+
+                    if (check != 0) {
+                        $('#PlateId').val(result.keyVehicleLogProfile.plateId);
+                    }
+
+                }
+                /* if ($('#VehicleRego').val() === '') {*/
+                $('#VehicleRego').val(result.keyVehicleLogProfile.vehicleRego);
+                /*}*/
+
+                /* if (!$('#kvl_list_plates').val()) {*/
+                $('#kvl_list_plates').val(result.keyVehicleLogProfile.plateId);
+                /* }*/
+                /* if (!$('#TruckConfig').val()) {*/
+                $('#TruckConfig').val(result.keyVehicleLogProfile.truckConfig);
+                /* }*/
+                /* if (!$('#TrailerType').val()) {*/
+                $('#TrailerType').val(result.keyVehicleLogProfile.trailerType);
+                /* }*/
+                /*if (!$('#MaxWeight').val()) {*/
+                $('#MaxWeight').val(result.keyVehicleLogProfile.maxWeight);
+                /*}*/
+                if (!$('#Trailer1Rego').val()) {
+                    // $('#Trailer1Rego').val(result.keyVehicleLogProfile.trailer1Rego);
+                }
+                if (!$('#Trailer2Rego').val()) {
+                    // $('#Trailer2Rego').val(result.keyVehicleLogProfile.trailer2Rego);
+                }
+                if (!$('#Trailer3Rego').val()) {
+                    // $('#Trailer3Rego').val(result.keyVehicleLogProfile.trailer3Rego);
+                }
+                if (!$('#Trailer4Rego').val()) {
+                    //$('#Trailer4Rego').val(result.keyVehicleLogProfile.trailer4Rego);
+
+                }
+                /* if (!$('#CompanyName').val()) {*/
+                $('#CompanyName').val(result.companyName);
+                /* }*/
+                /*if (!$('#PersonName').val() || $('#PersonName').val() ==='Unknown') {*/
+                $('#PersonName').val(personName);
+                /*}*/
+                /* if (!$('#PersonType').val()) {*/
+                $('#PersonType').val(result.personType);
+                /*}*/
+
+                /*if (!$('#MobileNumber').val() || $('#MobileNumber').val() === '+61 (0) ') {*/
+                $('#MobileNumber').val(result.keyVehicleLogProfile.mobileNumber);
+                /* }*/
+                /*  if (!$('#EntryReason').val()) {*/
+                $('#EntryReason').val(result.keyVehicleLogProfile.entryReason);
+                /* }*/
+                /*if (!$('#Product').val()) {*/
+                $('#Product').val(result.keyVehicleLogProfile.product);
+                /*}*/
+                /*if (!$('#Notes').val()) {*/
+                $('#Notes').val(result.keyVehicleLogProfile.notes);
+                /* }*/
+                //=========================================
+                $("#list_product").val(result.keyVehicleLogProfile.product);
+                $("#list_product").trigger('change');
+                $('#Sender').val(result.sender);
+                $('#lblIsSender').text(result.isSender ? 'Sender Address' : 'Reciever Address');
+                $('#cbIsSender').prop('checked', result.isSender);
+                //for checking whether the person is under scam or not(jisha james)
+                $('#PersonOfInterest').val(result.personOfInterest)
+                if ($('#PersonOfInterest').val() != '') {
+                    $('#titlePOIWarning').attr('hidden', false);
+                    $('#imagesiren').attr('hidden', false);
+
+
+                }
+                else {
+                    $('#titlePOIWarning').attr('hidden', true);
+                    $('#imagesiren').attr('hidden', true);
+                }
+                /*to load the common fields to crmtab -start*/
+                $('#crm_list_plates').val(result.keyVehicleLogProfile.plateId);
+                $('#crmTruckConfig').val(result.keyVehicleLogProfile.truckConfig);
+                $('#crmTrailerType').val(result.keyVehicleLogProfile.trailerType);
+
+                $('#IndividualTitle').val(result.individualTitle);
+                $('#Gender').val(result.gender);
+                $('#crmCompanyABN').val(result.companyABN);
+                if (result.companyLandline == null)
+                    $('#LandLineNumber').val('+61 (0) ');
+                else
+                    $('#LandLineNumber').val(result.companyLandline);
+                $('#Email').val(result.email);
+                $('#Website').val(result.website);
+
+
+                /*for cheking  the BDM is true-start*/
+                let isBDM = $('#IsBDM').val(result.isBDM);
+                $('#cbIsBDMOrSales').prop('checked', result.isBDM);
+
+                if (result.isBDM == true) {
+                    $('#lblIsBDMOrSales').text('BDM/Sales');
+                    $('#list_BDM').prop('hidden', false);
+                }
+                else {
+                    $('#lblIsBDMOrSales').text('Supplier/Partner');
+                    $('#list_BDM').prop('hidden', false);
+                }
+
+
+
+                /*for cheking  the BDM is true-end*/
+                $('#IsCRMId').val(result.bdmList);
+                var checkedornot = $('#IsCRMId').val();
+
+                /* to load the selected items in BDM-start*/
+                $("#list_BDM  input[type=checkbox]").each(function () {
+                    crmindivid = $(this).closest('li').find('#IsCRMIndividualId').val();
+                    if (checkedornot.indexOf(crmindivid) != -1) {
+                        $(this).prop('checked', true);
+                    }
+                    else {
+                        $(this).prop('checked', false);
+                    }
+
+                });
+                /*to load the plate to crmtab -end*/
+
+           
+
+                GetPersonImage()
+
+
+                /* For attachements Start  */
+                $("#kvl-attachment-list").empty();
+                for (var attachIndex = 0; attachIndex < result.attachments.length; attachIndex++) {
+                    const file = result.attachments[attachIndex];
+                    const attachment_id = 'attach_' + attachIndex;
+                    const li = document.createElement('li');
+                    li.id = attachment_id;
+                    li.className = 'list-group-item';
+                    li.dataset.index = attachIndex;
+                    let liText = document.createTextNode(file);
+                    const icon = document.createElement("i");
+                    icon.className = 'fa fa-trash-o ml-2 text-danger btn-delete-kvl-attachment';
+                    icon.title = 'Delete';
+                    icon.style = 'cursor:pointer';
+                    li.appendChild(liText);
+                    li.appendChild(icon);
+                    const anchorTag = document.createElement("a");
+                    anchorTag.href = '/KvlUploads/' + $('#VehicleRego').val() + "/" + file;
+                    anchorTag.target = "_blank";
+                    const icon2 = document.createElement("i");
+                    icon2.className = 'fa fa-download ml-2 text-primary';
+                    icon2.title = 'Download';
+                    icon2.style = 'cursor:pointer';
+                    anchorTag.appendChild(icon2);
+                    li.appendChild(anchorTag);
+                    document.getElementById('kvl-attachment-list').append(li);
+
+
+
+                }
+
+                $('#kvl_attachments_count').html(result.attachments.length);
+                /* For attachements end  */
+                //traliler changes New change for Add rigo without plate number 21032024 dileep Start
+                if (!$('#Trailer1PlateId').val()) {
+                    // $('#Trailer1PlateId').val(result.keyVehicleLogProfile.trailer1PlateId);
+                }
+                if (!$('#Trailer1Rego_Vehicle_type').val()) {
+                    //$('#Trailer1Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer1PlateId);
+                }
+                if (!$('#Trailer2PlateId').val()) {
+                    //$('#Trailer2PlateId').val(result.keyVehicleLogProfile.trailer2PlateId);
+                }
+                if (!$('#Trailer2Rego_Vehicle_type').val()) {
+                    // $('#Trailer2Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer2PlateId);
+                }
+                if (!$('#Trailer3PlateId').val()) {
+                    //$('#Trailer3PlateId').val(result.keyVehicleLogProfile.trailer3PlateId);
+                }
+                if (!$('#Trailer3Rego_Vehicle_type').val()) {
+                    // $('#Trailer3Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer3PlateId);
+                }
+                if (!$('#Trailer4PlateId').val()) {
+                    // $('#Trailer4PlateId').val(result.keyVehicleLogProfile.trailer4PlateId);
+                }
+                if (!$('#Trailer4Rego_Vehicle_type').val()) {
+                    //$('#Trailer4Rego_Vehicle_type').val(result.keyVehicleLogProfile.trailer4PlateId);
+                }
+                if ($('#Trailer1Rego').val() !== '') {
+                    $('#Trailer1Rego_Vehicle_type').attr('disabled', false);
+                }
+                if ($('#Trailer2Rego').val() !== '') {
+                    $('#Trailer2Rego_Vehicle_type').attr('disabled', false);
+                }
+                if ($('#Trailer3Rego').val() !== '') {
+                    $('#Trailer3Rego_Vehicle_type').attr('disabled', false);
+                }
+                if ($('#Trailer4Rego').val() !== '') {
+                    $('#Trailer4Rego_Vehicle_type').attr('disabled', false);
+                }
+                //traliler changes New change for Add rigo without plate number 21032024 dileep end
+
+
+            });
+            $('#kvl-profiles-modal').modal('hide');
+
+            $('#kvl-trailer_profiles-modal').modal('hide');
+
+        }
     $('#key_vehicle_log_profiles tbody').on('click', 'tr', function () {
         gridKeyVehicleLogProfile.$('tr.selected').removeClass('selected');
         $(this).addClass('selected');
     });
-
+   
     let gridIncidentReportsVehicleLogProfile = $('#incident_reports_vehicle_log_profiles').DataTable({
         paging: false,
         ordering: false,
@@ -1086,6 +1335,7 @@ $(function () {
             },
         ],
     });
+    
     $('#incident_reports_vehicle_log_profiles tbody').on('click', '#btnSelectProfile', function () {
         var data = gridIncidentReportsVehicleLogProfile.row($(this).parents('tr')).data();
         populateIncidentReportModal(data.detail.id);
@@ -5829,4 +6079,6 @@ function GetToggles(siteId, toggleId) {
 }
 
 /*for manifest options-start*/
+
+
 
