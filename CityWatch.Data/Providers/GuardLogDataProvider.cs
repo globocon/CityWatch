@@ -310,6 +310,9 @@ namespace CityWatch.Data.Providers
         List<LoginUserHistory> GetLastLoginUsingUserHistory(int GuardId);
 
         public void UpdateHRLockSettings(int id);
+        List<ClientSiteRadioChecksActivityStatus> GetActiveGuardIncidentReportHistoryForRC(List<IncidentReport> IncidentReportHistory);
+        List<ClientSiteRadioChecksActivityStatus_History> GetActiveGuardIncidentReportHistoryForRCNew(int clientSiteId, int guardId);
+        
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -5251,6 +5254,39 @@ namespace CityWatch.Data.Providers
 
 
         }
+        public List<ClientSiteRadioChecksActivityStatus> GetActiveGuardIncidentReportHistoryForRC(List<IncidentReport> IncidentReportHistory)
+        {
+            var newirh = new List<ClientSiteRadioChecksActivityStatus>();
+
+            foreach (var item in IncidentReportHistory)
+            {
+                newirh.Add(_context.ClientSiteRadioChecksActivityStatus.Where(x => x.GuardId == item.GuardId && x.IRId == item.Id).Include(x=>x.ClientSite).
+                    Include(x=>x.IncidentReport).OrderByDescending(x => x.LastIRCreatedTime).FirstOrDefault());
+
+            }
+
+
+            return newirh;
+        }
+        public List<ClientSiteRadioChecksActivityStatus_History> GetActiveGuardIncidentReportHistoryForRCNew(int clientSiteId, int guardId)
+        {
+            List<ClientSiteRadioChecksActivityStatus_History> newrl = new List<ClientSiteRadioChecksActivityStatus_History>();
+            if ((clientSiteId == 0 ) || (guardId == 0))
+            {
+                return newrl;
+            }
+
+            var newirh = _context.ClientSiteRadioChecksActivityStatus_History.Where(x => x.GuardId == guardId && !string.IsNullOrEmpty(x.IRId.ToString()))
+                .Include(x => x.ClientSite)
+                        .Include(x => x.IncidentReport)
+                        .OrderByDescending(x => x.LastIRCreatedTime)
+                        .Take(1)
+                    .ToList();
+            
+
+            return newirh;
+        }
+        
     }
 
 }

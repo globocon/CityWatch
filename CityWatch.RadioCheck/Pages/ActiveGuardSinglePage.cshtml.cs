@@ -458,7 +458,13 @@ namespace CityWatch.Web.Pages.Radio
         }
 
         //Send Text Notifications-end
-
+        public IActionResult OnGetClientSiteLastIncidentReportActivityStatus(int clientSiteId, int guardId)
+        {
+            
+            var clientIncidentReports = _guardLogDataProvider.GetActiveGuardIncidentReportHistoryForRCNew( clientSiteId,  guardId);
+           
+            return new JsonResult(clientIncidentReports);
+        }
 
         //to check whthere there is any siteemail or smartwand or guards exists
         //for getting guards not available -end
