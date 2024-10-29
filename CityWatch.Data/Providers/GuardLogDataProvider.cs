@@ -310,6 +310,7 @@ namespace CityWatch.Data.Providers
         List<LoginUserHistory> GetLastLoginUsingUserHistory(int GuardId);
 
         public void UpdateHRLockSettings(int id);
+        public int GetDosandDontsFieldsCount(int type);
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -4616,8 +4617,12 @@ namespace CityWatch.Data.Providers
         {
             return _context.DosAndDontsField
                 .Where(x => x.TypeId == type)
-                .OrderBy(x => x.Id)
+                .OrderBy(x => Convert.ToInt32(x.ReferenceNo))
                 .ToList();
+        }
+        public int GetDosandDontsFieldsCount(int type)
+        {
+            return _context.DosAndDontsField.Where(x => x.TypeId == type).Count();
         }
         public void SaveDosandDontsField(DosAndDontsField dosanddontsField)
         {
@@ -4633,6 +4638,7 @@ namespace CityWatch.Data.Providers
                 {
                     dosanddontsFieldUpdate.Name = dosanddontsField.Name;
                     dosanddontsFieldUpdate.TypeId = dosanddontsField.TypeId;
+                    dosanddontsFieldUpdate.ReferenceNo = dosanddontsField.ReferenceNo;
                 }
             }
             _context.SaveChanges();

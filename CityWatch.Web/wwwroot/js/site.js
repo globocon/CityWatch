@@ -3534,7 +3534,9 @@
         primaryKey: 'id',
         inlineEditing: { mode: 'command' },
         columns: [
-            { field: 'name', title: 'Name', width: 200, editor: true },
+            
+            { field: 'referenceNo', title: 'REF NO', width: 100, editor: true },
+            { field: 'name', title: 'Name', width: 400, editor: true },
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -3568,14 +3570,55 @@
     if (gridDosAndDontsFields) {
         gridDosAndDontsFields.on('rowDataChanged', function (e, id, record) {
             const data = $.extend(true, {}, record);
+            if (isNaN(data.referenceNo)) {
+                $.notify('Reference number should only contains numbers. !!!',
+                    {
+                        align: "center",
+                        verticalAlign: "top",
+                        color: "#fff",
+                        background: "#D44950",
+                        blur: 0.4,
+                        delay: 0
+                    }
+                );
+                gridDosAndDontsFields.edit(id);
+                return;
+            }
             $.ajax({
                 url: '/Admin/GuardSettings?handler=SaveDosandDontsField',
                 data: { record: data },
                 type: 'POST',
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function (result) {
-                if (result.success) gridDosAndDontsFields.reload({ typeId: $('#doanddontfields_types').val() });
-                else alert(result.message);
+                if (result.success) {
+                    //$.notify(result.message,
+                    //    {
+                    //        align: "center",
+                    //        verticalAlign: "top",
+                    //        color: "#fff",
+                    //        background: "#20D67B",
+                    //        blur: 0.4,
+                    //        delay: 0
+                    //    }
+                    //);
+                    
+                    gridDosAndDontsFields.reload({ typeId: $('#doanddontfields_types').val() });
+                    }
+                else {
+                    alert(result.message);
+                    //$.notify(result.message,
+                    //    {
+                    //        align: "center",
+                    //        verticalAlign: "top",
+                    //        color: "#fff",
+                    //        background: "#20D67B",
+                    //        blur: 0.4,
+                    //        delay: 0
+                    //    }
+                    //);
+                    gridDosAndDontsFields.edit(id);
+                
+                }
             }).fail(function () {
                 console.log('error');
             }).always(function () {

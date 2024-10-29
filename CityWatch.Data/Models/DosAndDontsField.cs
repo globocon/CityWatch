@@ -15,6 +15,7 @@ namespace CityWatch.Data.Models
         public int TypeId { get; set; }
 
         public string Name { get; set; }
+        public string ReferenceNo { get; set; }
 
     }
 }
