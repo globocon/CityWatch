@@ -337,7 +337,7 @@
         var typeId = $(this).closest("td").find('#typeId').val();
         var typeName = $(this).closest("td").find('#typeName').val();
         //var userName = $(this).closest("td").find('#userName').val();
-        $('#siteTypeDomainDeatils').find('#userName').text(typeName)
+        $('#siteTypeDomainDeatils').find('#userName1').text(typeName)
         $('#siteTypeDomainDeatils').find('#siteTypeId').val(typeId)
         fetchUDomainDeatils(typeId);
     });
@@ -1924,13 +1924,13 @@
                 return '<table class="table table-sm m-0"><thead><tr><th scope="col">Last Login</th><th scope="col">IP Address</th><th scope="col" style="text-align:center;"><i class="fa fa-cogs" aria-hidden="true"></i></th></tr></thead>' +
                     '<tbody><tr><th scope="row"><i class="fa fa-key" aria-hidden="true"></i> ' + record.formattedLastLoginDate + '</th><td><i class="fa fa-desktop" aria-hidden="true"></i> ' + record.lastLoginIPAdress + '</td><td style="text-align:center;">' +
                     '<i class="fa fa-check-circle text-success"></i>' +
-                    '[<a href="#userLoginHistoryInfoModal" id="btnLoginDetailsforUser">1</a>]<input type="hidden" id="userId" value="' + record.id + '"><input type="hidden" id="userName" value="' + record.userName + '"></td></tr></tbody></table> ';
+                    '[<a href="#userLoginHistoryInfoModal" id="btnLoginDetailsforUser">1</a>]<input type="hidden" id="userId" value="' + record.id + '"><input type="hidden" id="userName3" value="' + record.userName + '"></td></tr></tbody></table> ';
             }
             else {
                 return '<table class="table table-sm m-0"><thead><tr><th scope="col">Last Login</th><th scope="col">IP Address</th><th scope="col" style="text-align:center;"><i class="fa fa-cogs" aria-hidden="true"></i></th></tr></thead>' +
                     '<tbody><tr><th scope="row"><i class="fa fa-key" aria-hidden="true"></i> ' + record.formattedLastLoginDate + '</th><td></td><td style="text-align:center;">' +
                     '<i class="fa fa-check-circle text-success"></i>' +
-                    '[<a href="#userLoginHistoryInfoModal" id="btnLoginDetailsforUser">1</a>]<input type="hidden" id="userId" value="' + record.id + '"><input type="hidden" id="userName" value="' + record.userName + '"></td></tr></tbody></table> ';
+                    '[<a href="#userLoginHistoryInfoModal" id="btnLoginDetailsforUser">1</a>]<input type="hidden" id="userId" value="' + record.id + '"><input type="hidden" id="userName3" value="' + record.userName + '"></td></tr></tbody></table> ';
             }
         }
     }
@@ -1939,8 +1939,8 @@
 
         $('#userLoginHistoryInfoModal').modal('show');
         var userId = $(this).closest("td").find('#userId').val();
-        var userName = $(this).closest("td").find('#userName').val();
-        $('#userLoginHistoryInfoModal').find('#userName').text(userName)
+        var userName = $(this).closest("td").find('#userName3').val();
+        $('#userLoginHistoryInfoModal').find('#userName2').text(userName)
         fetchUserLoginDetails(userId);
     });
 
@@ -3534,7 +3534,9 @@
         primaryKey: 'id',
         inlineEditing: { mode: 'command' },
         columns: [
-            { field: 'name', title: 'Name', width: 200, editor: true },
+            
+            { field: 'referenceNo', title: 'REF NO', width: 100, editor: true },
+            { field: 'name', title: 'Name', width: 400, editor: true },
         ],
         initialized: function (e) {
             $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
@@ -3568,14 +3570,55 @@
     if (gridDosAndDontsFields) {
         gridDosAndDontsFields.on('rowDataChanged', function (e, id, record) {
             const data = $.extend(true, {}, record);
+            if (isNaN(data.referenceNo)) {
+                $.notify('Reference number should only contains numbers. !!!',
+                    {
+                        align: "center",
+                        verticalAlign: "top",
+                        color: "#fff",
+                        background: "#D44950",
+                        blur: 0.4,
+                        delay: 0
+                    }
+                );
+                gridDosAndDontsFields.edit(id);
+                return;
+            }
             $.ajax({
                 url: '/Admin/GuardSettings?handler=SaveDosandDontsField',
                 data: { record: data },
                 type: 'POST',
                 headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             }).done(function (result) {
-                if (result.success) gridDosAndDontsFields.reload({ typeId: $('#doanddontfields_types').val() });
-                else alert(result.message);
+                if (result.success) {
+                    //$.notify(result.message,
+                    //    {
+                    //        align: "center",
+                    //        verticalAlign: "top",
+                    //        color: "#fff",
+                    //        background: "#20D67B",
+                    //        blur: 0.4,
+                    //        delay: 0
+                    //    }
+                    //);
+                    
+                    gridDosAndDontsFields.reload({ typeId: $('#doanddontfields_types').val() });
+                    }
+                else {
+                    alert(result.message);
+                    //$.notify(result.message,
+                    //    {
+                    //        align: "center",
+                    //        verticalAlign: "top",
+                    //        color: "#fff",
+                    //        background: "#20D67B",
+                    //        blur: 0.4,
+                    //        delay: 0
+                    //    }
+                    //);
+                    gridDosAndDontsFields.edit(id);
+                
+                }
             }).fail(function () {
                 console.log('error');
             }).always(function () {

@@ -27,6 +27,7 @@ using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static Dropbox.Api.Sharing.ListFileMembersIndividualResult;
+using static Dropbox.Api.Team.GroupSelector;
 
 namespace CityWatch.Web.Pages.Admin
 {
@@ -1486,6 +1487,69 @@ namespace CityWatch.Web.Pages.Admin
             try
             {
 
+                if (record.Id == -1)
+                {
+                    if (record.ReferenceNo != null)
+                    {
+                        record.ReferenceNo = record.ReferenceNo.Trim();
+                        int refno;
+                        if (int.TryParse(record.ReferenceNo, out refno) == false)
+                        {
+                            return new JsonResult(new { success = false, message = "Reference number should only contains numbers. !!!" });
+                        }
+
+                        var eventReferenceExists = _guardLogDataProvider.GetDosandDontsFields(record.TypeId).Where(x=>x.ReferenceNo==record.ReferenceNo);
+                        if (eventReferenceExists.Count() > 0)
+                        {
+                            return new JsonResult(new { success = false, message = "Similar reference number already exists !!!" });
+                        }
+                    }
+                    else
+                    {
+                        // Set Referenece number.
+                        int LastOne = _guardLogDataProvider.GetDosandDontsFieldsCount(record.TypeId);
+                        string newrefnumb = "";
+                        bool refok = false;
+                        do
+                        {
+
+                            LastOne++;
+                            newrefnumb = LastOne.ToString("00");
+                            var eventReferenceExists = _guardLogDataProvider.GetDosandDontsFields(record.TypeId).Where(x => x.ReferenceNo == record.ReferenceNo);
+                            if (eventReferenceExists.Count() < 1)
+                            {
+                                refok = true;
+                            }
+
+
+                        } while (refok == false);
+                        record.ReferenceNo = newrefnumb;
+                    }
+                   
+                }
+                else
+                {
+                    if (record.ReferenceNo != null)
+                    {
+                        record.ReferenceNo = record.ReferenceNo.Trim();
+                        int refno;
+                        if (int.TryParse(record.ReferenceNo, out refno) == false)
+                        {
+                            return new JsonResult(new { success = false, message = "Reference number should only contains numbers. !!!" });
+                        }
+
+                        var oldrefNo = _guardLogDataProvider.GetDosandDontsFields(record.TypeId).Where(x => x.Id == record.Id).FirstOrDefault().ReferenceNo;
+                        if (!oldrefNo.Equals(record.ReferenceNo))
+                        {
+                            var eventReferenceExists = _guardLogDataProvider.GetDosandDontsFields(record.TypeId).Where(x => x.ReferenceNo == record.ReferenceNo);
+                            if (eventReferenceExists.Count() > 0)
+                            {
+                                return new JsonResult(new { success = false, message = "Similar reference number already exists !!!" });
+                            }
+                        }
+                    }
+
+                }
                 _guardLogDataProvider.SaveDosandDontsField(record);
 
                 success = true;
@@ -1808,6 +1872,13 @@ namespace CityWatch.Web.Pages.Admin
             }
 
             return new JsonResult(new { AccessPermission, SuccessMessage });
+        }
+
+        public JsonResult OnGetHrsettingsUisngHrGroupId(int hrgroupId,string searchKeyNo)
+        {
+          
+            return new JsonResult(_configDataProvider.GetHRSettingsUsingGroupId(hrgroupId, searchKeyNo));
+           
         }
 
     }

@@ -658,6 +658,11 @@ namespace CityWatch.Web.Services
                 guard.HR1Status = "Grey";
                 guard.HR2Status = "Grey";
                 guard.HR3Status = "Grey";
+                guard.hr1Description = string.Empty;
+                guard.hr2Description = string.Empty;
+                guard.hr3Description = string.Empty;
+
+
 
                 if (documentStatuses == null || documentStatuses.Count == 0)
                     continue;
@@ -690,6 +695,22 @@ namespace CityWatch.Web.Services
                     guard.HR3Status = HR3List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
                                       HR3List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
                                       "Green";
+                }
+
+                foreach (var desc in documentStatuses)
+                {
+                    if (desc.GroupName == "HR 1 (C4i)")
+                    {
+                        guard.hr1Description = guard.hr1Description+desc.Description+" ";
+                    }
+                    else if (desc.GroupName == "HR 2 (Client)")
+                    {
+                        guard.hr2Description = guard.hr2Description+desc.Description + " ";
+                    }
+                    else if (desc.GroupName == "HR 3 (Special)")
+                    {
+                        guard.hr3Description = guard.hr3Description+desc.Description + " ";
+                    }
                 }
             }
 
@@ -740,7 +761,8 @@ namespace CityWatch.Web.Services
                     Status = 1,
                     GroupName = item.HrGroupText.Trim(), // Assuming HrGroupText replaces GroupName
                                                          // Generate the color code based on the current item
-                    ColourCodeStatus = GuardledColourCodeGenerator(new List<GuardComplianceAndLicense> { item })
+                    ColourCodeStatus = GuardledColourCodeGenerator(new List<GuardComplianceAndLicense> { item }),
+                    Description=item.Description,
                 });
             }
 
@@ -1715,4 +1737,5 @@ public class HRGroupStatusNew
     public int Status { get; set; }
     public string GroupName { get; set; }
     public string ColourCodeStatus { get; set; }
+    public string Description { get; set; }
 }

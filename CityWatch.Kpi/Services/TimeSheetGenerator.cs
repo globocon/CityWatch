@@ -366,6 +366,7 @@ public interface ITimesheetGenerator
                     if (i < GuardLoginTables.Count - 1) // Only add space if it's not the last table
                     {
                         doc.Add(new Paragraph("\n"));
+                        doc.Add(new Paragraph("\n"));
                     }
                 }
             }
