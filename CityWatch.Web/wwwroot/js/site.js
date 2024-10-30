@@ -337,7 +337,7 @@
         var typeId = $(this).closest("td").find('#typeId').val();
         var typeName = $(this).closest("td").find('#typeName').val();
         //var userName = $(this).closest("td").find('#userName').val();
-        $('#siteTypeDomainDeatils').find('#userName').text(typeName)
+        $('#siteTypeDomainDeatils').find('#userName1').text(typeName)
         $('#siteTypeDomainDeatils').find('#siteTypeId').val(typeId)
         fetchUDomainDeatils(typeId);
     });
@@ -1924,13 +1924,13 @@
                 return '<table class="table table-sm m-0"><thead><tr><th scope="col">Last Login</th><th scope="col">IP Address</th><th scope="col" style="text-align:center;"><i class="fa fa-cogs" aria-hidden="true"></i></th></tr></thead>' +
                     '<tbody><tr><th scope="row"><i class="fa fa-key" aria-hidden="true"></i> ' + record.formattedLastLoginDate + '</th><td><i class="fa fa-desktop" aria-hidden="true"></i> ' + record.lastLoginIPAdress + '</td><td style="text-align:center;">' +
                     '<i class="fa fa-check-circle text-success"></i>' +
-                    '[<a href="#userLoginHistoryInfoModal" id="btnLoginDetailsforUser">1</a>]<input type="hidden" id="userId" value="' + record.id + '"><input type="hidden" id="userName" value="' + record.userName + '"></td></tr></tbody></table> ';
+                    '[<a href="#userLoginHistoryInfoModal" id="btnLoginDetailsforUser">1</a>]<input type="hidden" id="userId" value="' + record.id + '"><input type="hidden" id="userName3" value="' + record.userName + '"></td></tr></tbody></table> ';
             }
             else {
                 return '<table class="table table-sm m-0"><thead><tr><th scope="col">Last Login</th><th scope="col">IP Address</th><th scope="col" style="text-align:center;"><i class="fa fa-cogs" aria-hidden="true"></i></th></tr></thead>' +
                     '<tbody><tr><th scope="row"><i class="fa fa-key" aria-hidden="true"></i> ' + record.formattedLastLoginDate + '</th><td></td><td style="text-align:center;">' +
                     '<i class="fa fa-check-circle text-success"></i>' +
-                    '[<a href="#userLoginHistoryInfoModal" id="btnLoginDetailsforUser">1</a>]<input type="hidden" id="userId" value="' + record.id + '"><input type="hidden" id="userName" value="' + record.userName + '"></td></tr></tbody></table> ';
+                    '[<a href="#userLoginHistoryInfoModal" id="btnLoginDetailsforUser">1</a>]<input type="hidden" id="userId" value="' + record.id + '"><input type="hidden" id="userName3" value="' + record.userName + '"></td></tr></tbody></table> ';
             }
         }
     }
@@ -1939,8 +1939,8 @@
 
         $('#userLoginHistoryInfoModal').modal('show');
         var userId = $(this).closest("td").find('#userId').val();
-        var userName = $(this).closest("td").find('#userName').val();
-        $('#userLoginHistoryInfoModal').find('#userName').text(userName)
+        var userName = $(this).closest("td").find('#userName3').val();
+        $('#userLoginHistoryInfoModal').find('#userName2').text(userName)
         fetchUserLoginDetails(userId);
     });
 
