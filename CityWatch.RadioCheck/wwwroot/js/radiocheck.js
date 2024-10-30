@@ -1701,6 +1701,89 @@ let clientSiteActiveGuardsIncidentReportsDetails = $('#clientSiteActiveGuardsInc
 });
 
 
+let clientSiteActiveGuardsLastIncidentReportsDetails = $('#clientSiteActiveGuardsLastIncidentReportsDetails').DataTable({
+    lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+    ordering: true,
+    "columnDefs": [
+        { "visible": false, "targets": 1 } // Hide the group column initially
+    ],
+    order: [[groupColumn, 'asc']],
+    info: false,
+    searching: false,
+    autoWidth: false,
+    fixedHeader: true,
+    "scrollY": "300px", // Set the desired height for the scrollable area
+    "paging": false,
+    "footer": false,
+    "header":false,
+    ajax: {
+        url: '/ActiveGuardSinglePage?handler=ClientSiteLastIncidentReportActivityStatus',
+        datatype: 'json',
+        data: function (d) {
+            d.clientSiteId = $('#txtClientSiteId').val();
+            d.guardId = $('#txtGuardId').val();
+        },
+        dataSrc: ''
+    },
+    columns: [
+        { data: 'id', visible: false },
+        {
+            data: 'clientSite.name',
+            width: '20%',
+            render: function (value, type, data) {
+
+                return '<tr class="group group-start"><td class="' + (groupColumn == '1' ? 'bg-danger' : (groupColumn == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumn + '</td></tr>';
+            }
+        },
+        {
+            data: 'irId',
+            width: '10%',
+            visible: false
+
+        },
+        {
+            data: 'incidentReport.fileName',
+            width: '20%'
+
+        },
+
+        {
+            data: 'activityDescription',
+            width: '9%',
+            className: "text-center",
+
+        },
+        {
+            data: 'lastIRCreatedTime',
+            width: '9%',
+            className: "text-center",
+
+        },
+
+
+    ],
+    drawCallback: function () {
+        $('#clientSiteActiveGuardsLastIncidentReportsDetails').closest('div.dataTables_scrollBody').css('overflow-x', 'hidden'); //Remove the x scrollbar
+        var api = this.api();
+        var rows = api.rows({ page: 'current' }).nodes();
+        var last = null;
+
+        api.column(groupColumn, { page: 'current' })
+            .data()
+            .each(function (group, i) {
+                if (last !== group) {
+                    $(rows)
+                        .eq(i)
+                        .before('<tr class="group bg-info text-white"><td colspan="25">' + group + '</td></tr>');
+
+                    last = group;
+                }
+            });
+    },
+});
+$("#clientSiteActiveGuardsLastIncidentReportsDetails_wrapper thead").hide();
+$('#clientSiteActiveGuardsLastIncidentReportsDetails').closest('.dataTables_scrollBody').css('border-bottom', 'none');
+$('#clientSiteActiveGuardsIncidentReportsDetails').closest('.dataTables_scrollBody').css('border-bottom', 'none');
 
 /* for SW details of the guard-start*/
 
@@ -1809,6 +1892,7 @@ $('#clientSiteActiveGuards tbody').on('click', '#btnIncidentReportdetails', func
     // $('#lbl_GuardActivityHeader').val($(this).closest("tr").find("td").eq(2).text() + 'Log Book Details');
     $('#lbl_GuardActivityHeader2').text(GuardName + '-' + 'Incident Report Details');
     clientSiteActiveGuardsIncidentReportsDetails.ajax.reload();
+    clientSiteActiveGuardsLastIncidentReportsDetails.ajax.reload();
 
 });
 /*for incident report details of the guard - end*/
@@ -3988,6 +4072,7 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnIncidentReportdeta
     // $('#lbl_GuardActivityHeader').val($(this).closest("tr").find("td").eq(2).text() + 'Log Book Details');
     $('#lbl_GuardActivityHeader2').text(GuardName + '-' + 'Incident Report Details');
     clientSiteActiveGuardsIncidentReportsDetails.ajax.reload();
+    clientSiteActiveGuardsLastIncidentReportsDetails.ajax.reload();
 
 });
 

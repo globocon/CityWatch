@@ -97,6 +97,8 @@ namespace CityWatch.Data.Models
         public int RecordCount { get; set; }
         [NotMapped]
         public string DateRange { get; set; }
+        [ForeignKey("IRId")]
+        public IncidentReport IncidentReport { get; set; }
 
     }
     public class ClientSiteRadioChecksActivityStatus_HistoryReport
