@@ -4996,7 +4996,7 @@ $(function () {
         searching: false,
         autoWidth: false,
         fixedHeader: true,
-        "scrollY": "300px", // Set the desired height for the scrollable area
+        "scrollY": "150px", // Set the desired height for the scrollable area
         "paging": false,
         "footer": false,
         "header": false,
