@@ -1757,7 +1757,28 @@ let clientSiteActiveGuardsLastIncidentReportsDetails = $('#clientSiteActiveGuard
             data: 'lastIRCreatedTime',
             width: '9%',
             className: "text-center",
+            render: function (value, type, data) {
 
+                // Convert the date string to a JavaScript Date object
+                var date = new Date(data.incidentReport.createdOnDateTimeLocal);
+
+                // Format the date to display only the date part without the time
+                var formattedDate = date.toLocaleTimeString('en-GB', {
+                    //day: '2-digit',
+                    //month: '2-digit',
+                    //year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                var additionalData = data.incidentReport.createdOnDateTimeZoneShort;
+                if (additionalData != null) {
+                    return formattedDate + '(' + additionalData + ')';
+                } else {
+                    return formattedDate;
+                }
+
+            }
         },
 
 
