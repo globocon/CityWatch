@@ -4796,9 +4796,17 @@ $(function () {
 
         $('#guardLogBookInfoModal').modal('show');
         var GuardId = $(this).closest("td").find('#GuardId').val();
-        $('#txtGuardId').val(GuardId);
+        $('#txtGuardId').val($(this).closest("td").find('#GuardId').val());
+        
         //ActiveGuardsLogBookDetails.ajax.reload();
+        
+        $('#ActiveGuardsLogBookDetails').closest('.dataTables_scrollBody').css('border-bottom', 'none');//to hide the line under table
         fetchGuardLogBookDetails(GuardId);
+        $("#clientSiteActiveGuardsLastIncidentReportsDetails_wrapper thead").hide();//to hide the header of the  table
+        $('#clientSiteActiveGuardsLastIncidentReportsDetails').closest('.dataTables_scrollBody').css('border-bottom', 'none');//to hide the line under table
+        clientSiteActiveGuardsLastIncidentReportsDetails.ajax.reload();
+       
+
     });
 
     function fetchGuardLogBookDetails(guardId) {
@@ -4864,7 +4872,88 @@ $(function () {
             }
         });
     }
+    const groupColumnnew = 1;
+    let clientSiteActiveGuardsLastIncidentReportsDetails = $('#clientSiteActiveGuardsLastIncidentReportsDetails').DataTable({
+        lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+        ordering: true,
+        "columnDefs": [
+            { "visible": false, "targets": 1 } // Hide the group column initially
+        ],
+        order: [[groupColumnnew, 'asc']],
+        info: false,
+        searching: false,
+        autoWidth: false,
+        fixedHeader: true,
+        "scrollY": "300px", // Set the desired height for the scrollable area
+        "paging": false,
+        "footer": false,
+        "header": false,
+        ajax: {
+            url: '/Admin/Settings?handler=ClientSiteLastIncidentReportHistory',
+            datatype: 'json',
+            data: function (d) {
+                d.guardId = $('#txtGuardId').val();
+            },
+            dataSrc: ''
+        },
+        columns: [
+            { data: 'id', visible: false },
+            {
+                data: 'clientSite.name',
+                width: '20%',
+                render: function (value, type, data) {
 
+                    return '<tr class="group group-start"><td class="' + (groupColumnnew == '1' ? 'bg-danger' : (groupColumnnew == '0' ? 'bg-danger' : 'bg-danger')) + '" colspan="5">' + groupColumnnew + '</td></tr>';
+                }
+            },
+            {
+                data: 'id',
+                width: '10%',
+                visible: false
+
+            },
+            {
+                data: 'fileName',
+                width: '20%'
+
+            },
+
+            {
+                data: 'id',
+                width: '9%',
+                className: "text-center",
+                visible: false
+
+            },
+            {
+                data: 'createdOn',
+                width: '9%',
+                className: "text-center",
+
+            },
+
+
+        ],
+        drawCallback: function () {
+            $('#clientSiteActiveGuardsLastIncidentReportsDetails').closest('div.dataTables_scrollBody').css('overflow-x', 'hidden'); //Remove the x scrollbar
+            var api = this.api();
+            var rows = api.rows({ page: 'current' }).nodes();
+            var last = null;
+
+            api.column(groupColumnnew, { page: 'current' })
+                .data()
+                .each(function (group, i) {
+                    if (last !== group) {
+                        $(rows)
+                            .eq(i)
+                            .before('<tr class="group bg-info text-white"><td colspan="25">' + group + '</td></tr>');
+
+                        last = group;
+                    }
+                });
+        },
+    });
+    
     // P1#231 HR Download Excel for settings -start
     $("#btnDownloadGuardLogExcel").click(async function () {
         const activeChecked = $('#chkbxfilterGuardActive').is(':checked');

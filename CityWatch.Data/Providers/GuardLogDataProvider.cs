@@ -313,6 +313,8 @@ namespace CityWatch.Data.Providers
         List<ClientSiteRadioChecksActivityStatus> GetActiveGuardIncidentReportHistoryForRC(List<IncidentReport> IncidentReportHistory);
         List<ClientSiteRadioChecksActivityStatus_History> GetActiveGuardIncidentReportHistoryForRCNew(int clientSiteId, int guardId);
         
+        List<IncidentReport> GetActiveGuardIncidentReportHistoryForAdmin( int guardId);
+
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -5286,7 +5288,20 @@ namespace CityWatch.Data.Providers
 
             return newirh;
         }
-        
+        public List<IncidentReport> GetActiveGuardIncidentReportHistoryForAdmin(int guardId)
+        {
+            List<IncidentReport> irl = new List<IncidentReport>();
+            if (guardId == 0)
+            {
+                return irl;
+            }
+
+            var irh = _context.IncidentReports.Where(x => x.GuardId == guardId) // && x.ClientSiteId == clientSiteId
+                .Include(x=>x.ClientSite)
+                .OrderByDescending(x => x.CreatedOn)
+                .Take(1).ToList();
+            return irh;
+        }
     }
 
 }

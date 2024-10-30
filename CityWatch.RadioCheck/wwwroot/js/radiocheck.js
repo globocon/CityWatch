@@ -1781,7 +1781,9 @@ let clientSiteActiveGuardsLastIncidentReportsDetails = $('#clientSiteActiveGuard
             });
     },
 });
-
+$("#clientSiteActiveGuardsLastIncidentReportsDetails_wrapper thead").hide();
+$('#clientSiteActiveGuardsLastIncidentReportsDetails').closest('.dataTables_scrollBody').css('border-bottom', 'none');
+$('#clientSiteActiveGuardsIncidentReportsDetails').closest('.dataTables_scrollBody').css('border-bottom', 'none');
 
 /* for SW details of the guard-start*/
 

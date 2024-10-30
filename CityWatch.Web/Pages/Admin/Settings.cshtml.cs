@@ -1781,6 +1781,13 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(new { success, message });
         }
         #endregion
+        public IActionResult OnGetClientSiteLastIncidentReportHistory(int guardId)
+        {
+
+            var clientIncidentReports = _guardLogDataProvider.GetActiveGuardIncidentReportHistoryForAdmin( guardId);
+
+            return new JsonResult(clientIncidentReports);
+        }
     }
     public class helpDocttype
     {
