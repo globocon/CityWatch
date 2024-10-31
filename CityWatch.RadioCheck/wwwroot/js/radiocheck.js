@@ -1763,7 +1763,7 @@ let clientSiteActiveGuardsLastIncidentReportsDetails = $('#clientSiteActiveGuard
                 var date = new Date(data.incidentReport.createdOnDateTimeLocal);
 
                 // Format the date to display only the date part without the time
-                var formattedDate = date.toLocaleTimeString('en-GB', {
+                var formattedDate = date.toLocaleDateString('en-GB', {
                     //day: '2-digit',
                     //month: '2-digit',
                     //year: 'numeric',
