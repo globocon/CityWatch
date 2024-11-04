@@ -47,7 +47,7 @@ namespace CityWatch.Web.Services
                         }
                         if (guardLogImage.IsTwentyfivePercentfile == true)
                         {
-                            guardlog.Notes = guardlog.Notes + "</br> <a href =\"" + guardLogImage.ImagePath + " \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\"/></a>";
+                            guardlog.Notes = guardlog.Notes + "</br> <a href =\"" + guardLogImage.ImagePath + " \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\" class=\"mt-2\"/></a>";
                         }
                     }
                 }

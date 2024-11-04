@@ -127,6 +127,7 @@ namespace CityWatch.Web.Pages.Guard
             {
                 var guardlogImages = _guardLogDataProvider.GetGuardLogDocumentImaes(guardlog.Id);
                 guardlog.NotesNew = string.Empty;
+               
                 foreach (var guardLogImage in guardlogImages)
                 {
                     if (guardLogImage.IsRearfile == true)
@@ -136,9 +137,12 @@ namespace CityWatch.Web.Pages.Guard
                     }
                     if (guardLogImage.IsTwentyfivePercentfile == true)
                     {
-                        guardlog.Notes = guardlog.Notes + "</br> <a href =\"" + guardLogImage.ImagePath + " \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\"/></a>";
+                        
+                            guardlog.Notes = guardlog.Notes + " </br> <a href =\"" + guardLogImage.ImagePath + " \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\" class=\"mt-2\"/></a>";
 
-                        guardlog.NotesNew = guardlog.NotesNew + "</br> <a href =\"" + guardLogImage.ImagePath + " \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\"/></a>";
+                            guardlog.NotesNew = guardlog.NotesNew + "</br> <a href =\"" + guardLogImage.ImagePath + " \" target=\"_blank\"><img src =\"" + guardLogImage.ImagePath + "\"height=\"200px\" width=\"200px\" class=\"mt-2\"/></a>";
+
+                        
                     }
                 }
             }
