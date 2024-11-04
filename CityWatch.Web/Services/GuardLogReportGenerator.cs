@@ -575,6 +575,8 @@ namespace CityWatch.Web.Services
                         var logimage = new Image(ImageDataFactory.Create(guardLogImage.ImagePath))
                        .SetWidth(UnitValue.CreatePercentValue(27));
                         logimage.SetTextAlignment(TextAlignment.RIGHT);
+                        logimage.SetMarginTop(10);
+                        logimage.SetMarginLeft(10);
                         notesParagraphImage.Add(logimage);
                         
                     }
