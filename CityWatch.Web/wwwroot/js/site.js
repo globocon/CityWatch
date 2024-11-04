@@ -1921,13 +1921,13 @@
         if (record.formattedLastLoginDate !== null) {
 
             if (record.lastLoginIPAdress !== null) {
-                return '<table class="table table-sm m-0"><thead><tr><th scope="col">Last Login</th><th scope="col">IP Address</th><th scope="col" style="text-align:center;"><i class="fa fa-cogs" aria-hidden="true"></i></th></tr></thead>' +
+                return '<table class="table table-sm m-0"><thead><tr><th scope="col" style="width:40%;">Last Login</th><th scope="col" style="width:50%;">IP Address</th><th scope="col" style="width:10%; text-align: center;"><i class="fa fa-cogs" aria-hidden="true"></i></th></tr></thead>' +
                     '<tbody><tr><th scope="row"><i class="fa fa-key" aria-hidden="true"></i> ' + record.formattedLastLoginDate + '</th><td><i class="fa fa-desktop" aria-hidden="true"></i> ' + record.lastLoginIPAdress + '</td><td style="text-align:center;">' +
                     '<i class="fa fa-check-circle text-success"></i>' +
                     '[<a href="#userLoginHistoryInfoModal" id="btnLoginDetailsforUser">1</a>]<input type="hidden" id="userId" value="' + record.id + '"><input type="hidden" id="userName3" value="' + record.userName + '"></td></tr></tbody></table> ';
             }
             else {
-                return '<table class="table table-sm m-0"><thead><tr><th scope="col">Last Login</th><th scope="col">IP Address</th><th scope="col" style="text-align:center;"><i class="fa fa-cogs" aria-hidden="true"></i></th></tr></thead>' +
+                return '<table class="table table-sm m-0"><thead><tr><th scope="col" style="width:40%;">Last Login</th><th scope="col" style="width:50%;">IP Address</th><th scope="col" style="width:10%; text-align: center;"><i class="fa fa-cogs" aria-hidden="true"></i></th></tr></thead>' +
                     '<tbody><tr><th scope="row"><i class="fa fa-key" aria-hidden="true"></i> ' + record.formattedLastLoginDate + '</th><td></td><td style="text-align:center;">' +
                     '<i class="fa fa-check-circle text-success"></i>' +
                     '[<a href="#userLoginHistoryInfoModal" id="btnLoginDetailsforUser">1</a>]<input type="hidden" id="userId" value="' + record.id + '"><input type="hidden" id="userName3" value="' + record.userName + '"></td></tr></tbody></table> ';
