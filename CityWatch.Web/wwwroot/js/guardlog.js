@@ -4720,22 +4720,40 @@ $(function () {
         // ;
         var selectedValues = [];
         if (data.isAdminGlobal) {
-            selectedValues.push(6);
+            selectedValues.push(12);
         }
         if (data.isAdminPowerUser) {
-            selectedValues.push(5);
+            selectedValues.push(7);
         }
         if (data.isRCAccess) {
-            selectedValues.push(4);
+            selectedValues.push(5);
         }
         if (data.isKPIAccess) {
-            selectedValues.push(3);
+            selectedValues.push(4);
         }
         if (data.isLB_KV_IR) {
             selectedValues.push(1);
         }
         if (data.isSTATS) {
             selectedValues.push(2);
+        }
+        if (data.isSTATSChartsAccess) {
+            selectedValues.push(3);
+        }
+        if (data.isRCFusionAccess) {
+            selectedValues.push(6);
+        }
+        if (data.isAdminSOPToolsAccess) {
+            selectedValues.push(8);
+        }
+        if (data.isAdminAuditorAccess) {
+            selectedValues.push(9);
+        }
+        if (data.isAdminInvestigatorAccess) {
+            selectedValues.push(10);
+        }
+        if (data.isAdminThirdPartyAccess) {
+            selectedValues.push(11);
         }
         selectedValues.forEach(function (value) {
 

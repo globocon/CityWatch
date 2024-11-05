@@ -93,5 +93,18 @@ namespace CityWatch.Web.Models
         public string hr1Description { get; set; }
         public string hr2Description { get; set; }
         public string hr3Description { get; set; }
+        public bool IsSTATSChartsAccess { get { return _guard.IsSTATSChartsAccess; } }
+        public bool IsRCFusionAccess { get { return _guard.IsRCFusionAccess; } }
+
+        public bool IsAdminSOPToolsAccess { get { return _guard.IsAdminSOPToolsAccess; } }
+
+
+        public bool IsAdminAuditorAccess { get { return _guard.IsAdminAuditorAccess; } }
+
+
+        public bool IsAdminInvestigatorAccess { get { return _guard.IsAdminInvestigatorAccess; } }
+
+
+        public bool IsAdminThirdPartyAccess { get { return _guard.IsAdminThirdPartyAccess; } }
     }
 }
