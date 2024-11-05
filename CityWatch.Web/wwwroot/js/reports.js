@@ -3792,7 +3792,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(dataValue) {
                             return args.value;
 
                         },
-
+                        
                         outsidePadding: 4,
                         textMargin: 4
 
@@ -3829,14 +3829,14 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(dataValue) {
                         'rgba(153, 102, 255, 1)',
                         'rgba(255, 159, 64, 1)'
                     ],
-                    borderWidth: 0
+                    borderWidth: 0, radius: '80%',
                 }]
             },
             options: {
                 layout: {
                     padding: {
-                        left: 10,
-                        right: 10,
+                        left: 30,
+                        right: 0,
                         top: 20,
                         bottom: 20
                     }
