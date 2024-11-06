@@ -318,7 +318,15 @@
     });
 
 
+   
+
     function domainSettings(value, record) {
+
+        // Check if the row is a newly added row by ID or another condition
+        if (record.id === -1) {
+            // Skip rendering the checkbox for new rows
+            return '';
+        }
 
         if (record.isSubDomainEnabled) {
 
@@ -355,13 +363,14 @@
     }
 
     function fetchUDomainDeatils(typeId) {
+        ClearModelControls();
         $.ajax({
             url: '/Admin/Settings?handler=DomainDetails',
             method: 'GET',
             data: { typeId: typeId },
             success: function (data) {
                 if (data.success) {
-                    ClearModelControls();
+                  
                     $('#siteTypeDomainDeatils').find('#siteTypeId').val(typeId)
                     $('#siteTypeDomainDeatils').find('#domainName').val(data.result.domain);
                     $('#siteTypeDomainDeatils').find('#checkDomainStatus').prop('checked', data.result.enabled);
@@ -463,6 +472,9 @@
         } else {
             isClientTypeAdding = true;
             gridType.addRow({ 'id': -1, 'name': '' }).edit(-1);
+
+           
+           
         }
     });
 
