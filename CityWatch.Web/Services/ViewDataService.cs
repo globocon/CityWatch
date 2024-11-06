@@ -147,6 +147,8 @@ namespace CityWatch.Web.Services
         List<SelectListItem> GetOfficerPositionsNew(OfficerPositionFilter positionFilter);
         ClientSiteKey GetClientSiteKeyDescriptionAndImage(int keyId, int clientSiteId);
          public ANPR GetANPR(int clientSiteId);
+
+        List<object> GetHrSettingsClientSiteLockStatus(int hrSettingsId);
     }
 
     public class ViewDataService : IViewDataService
@@ -572,6 +574,31 @@ namespace CityWatch.Web.Services
         {
             var results = new List<object>();
             var userAccess = _userDataProvider.GetUserClientSiteAccess(userId);
+            var clientSitesUserAccess = userAccess.Select(x => x.ClientSiteId);
+            var allClientSitesGrouped = _clientDataProvider.GetClientSites(null).GroupBy(x => x.ClientType.Name);
+
+            foreach (var item in allClientSitesGrouped)
+            {
+                results.Add(new
+                {
+                    Name = item.Key,
+                    ClientSites = item.Select(x => new
+                    {
+                        Id = x.Id,
+                        x.Name,
+                        Checked = clientSitesUserAccess.Contains(x.Id)
+                    }).ToList()
+                });
+            }
+
+            return results;
+        }
+
+
+        public List<object> GetHrSettingsClientSiteLockStatus(int hrSettingsId)
+        {
+            var results = new List<object>();
+            var userAccess = _userDataProvider.GetHrSettingsLockedClientSites(hrSettingsId);
             var clientSitesUserAccess = userAccess.Select(x => x.ClientSiteId);
             var allClientSitesGrouped = _clientDataProvider.GetClientSites(null).GroupBy(x => x.ClientType.Name);
 

@@ -137,8 +137,9 @@ namespace CityWatch.Data
         public DbSet<ANPR> ANPR { get; set; }
 
         public DbSet<SubDomain> SubDomain { get; set; }
-        
+        public DbSet<HrSettingsLockedClientSites> HrSettingsLockedClientSites { get; set; }
 
+        
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -2198,7 +2198,7 @@
     });
 
 
-    /****** Feedback Template Settings *******/
+     /****** Feedback Template Settings *******/
     $('#sel_fbktpl').on('change', function () {
         const selfeedback = $(this).val();
         if (selfeedback === '') {
@@ -4235,13 +4235,16 @@ gridHrSettings = $('#tbl_hr_settings').grid({
 
 function hrgroupLockButtonRenderer(value, record) {
     if (record.hrlock) {
+       // return '<button class="btn btn-outline-primary" data-toggle="modal" data-target="#user-client-access-modal-lock" data-id="{id}"><img src="../images/icons/chkenabled.png"  style="padding-top:10px;" /></button>'
         return '<div class="text-center">' +
-            '<a id="btnLock" data-doc-id="' + record.id + '" data-doc-hrgroupid="' + record.hrGroupId + '" data-doc-refnonumberid="' + record.referenceNoNumberId + '" data-doc-refalphnumberid="' + record.referenceNoAlphabetId + '" data-doc-description="' + record.description + '"><img src="../images/icons/chkenabled.png"  style="padding-top:10px;" /></a>' +
+            '<a id="btnLock"    data-doc-id="' + record.id + '" data-lock-status=1 data-doc-hrgroupid="' + record.hrGroupId + '" data-doc-refnonumberid="' + record.referenceNoNumberId + '" data-doc-refalphnumberid="' + record.referenceNoAlphabetId + '" data-doc-description="' + record.description + '"><img src="../images/icons/chkenabled.png"  style="padding-top:10px;" /></a>' +
         '</div>'
     }
     else {
-        return '<div class="text-center">' +
-            '<a id="btnLock" data-doc-id="' + record.id + '" data-doc-hrgroupid="' + record.hrGroupId + '" data-doc-refnonumberid="' + record.referenceNoNumberId + '" data-doc-refalphnumberid="' + record.referenceNoAlphabetId + '" data-doc-description="' + record.description + '"><img src="../images/icons/chkdesabled.png" style="padding-top:10px;" /></a>' +
+
+        //return '<button class="btn btn-outline-primary" data-toggle="modal" data-target="#user-client-access-modal-lock" data-id="{id}"><img src="../images/icons/chkdesabled.png" style="padding-top:10px;" /></button>'
+       return '<div class="text-center">' +
+           '<a id="btnLock"   data-doc-id="' + record.id + '" data-lock-status=0 data-doc-hrgroupid="' + record.hrGroupId + '" data-doc-refnonumberid="' + record.referenceNoNumberId + '" data-doc-refalphnumberid="' + record.referenceNoAlphabetId + '" data-doc-description="' + record.description + '"><img src="../images/icons/chkdesabled.png" style="padding-top:10px;" /></a>' +
             '</div>'
     }
 }
@@ -4258,25 +4261,57 @@ let isHrSettingsAdding = false
 //        toggleUserStatus($(this).attr('data-user-id'), true);
 //    }
 //});
-
+let  ucaTreeLock;
 $('#tbl_hr_settings tbody').on('click', '#btnLock', function () {
+    $('#lockHRRcord').prop('checked', false);
+    const userId = $(this).attr('data-doc-id');
+    const lockStatus = $(this).attr('data-lock-status');
+    $('#user-access-for-idlock').val($(this).attr('data-doc-id'));
+    if (lockStatus === '1') {
+        $('#lockHRRcord').prop('checked', true);
+    }
+    else {
+        $('#lockHRRcord').prop('checked', false);
+    }
+    
+    if (ucaTreeLock === undefined) {
 
+
+
+        ucaTreeLock = $('#ucaTreeViewlock').tree({
+            uiLibrary: 'bootstrap4',
+            checkboxes: true,
+            primaryKey: 'id',
+            dataSource: '/Admin/Settings?handler=HrSettingsLockedClientSites',
+            autoLoad: false,
+            textField: 'name',
+            childrenField: 'clientSites',
+            checkedField: 'checked'
+        });
+    }
+    else {
+
+        ucaTreeLock.destroy(); // Destroys and removes the current tree
+
+        // Clear the container's inner HTML to remove any tree remnants
+        $('#ucaTreeViewlock').empty();
+
+        ucaTreeLock = $('#ucaTreeViewlock').tree({
+            uiLibrary: 'bootstrap4',
+            checkboxes: true,
+            primaryKey: 'id',
+            dataSource: '/Admin/Settings?handler=HrSettingsLockedClientSites',
+            autoLoad: false,
+            textField: 'name',
+            childrenField: 'clientSites',
+            checkedField: 'checked'
+        });
+    }
+   
+    ucaTreeLock.uncheckAll();
+    ucaTreeLock.reload({ hrSttingsId: userId });
     $('#loader').show();
-     $.ajax({
-         type: 'POST',
-         url: '/Admin/GuardSettings?handler=UpdateLockSettings',
-         data: { 'id': $(this).attr('data-doc-id') },
-         dataType: 'json',
-         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
-         beforeSend: function () {
-             $('#loader').show();
-         }
-     }).done(function () {
-         gridHrSettings.reload();
-     }).always(function () {
-         $('#loader').hide();
-     });
-
+    $('#user-client-access-modal-lock').modal('show');
 });
 
 
@@ -4286,7 +4321,7 @@ $('#tbl_hr_settings tbody').on('click', '#btnEditHrGroup', function () {
 
     $('#loader').show();
     $('#hrSettingsModal').modal('show');
-    $('#HrSettings_Id').val($(this).attr('data-doc-id'))
+    $('#HrSettings_Id').val($(this).attr('data-doc-id'));
     $('#list_hrGroups').val($(this).attr('data-doc-hrgroupid'));
     $('#list_ReferenceNoNumber').val($(this).attr('data-doc-refnonumberid'));
     $('#list_ReferenceNoAlphabet').val($(this).attr('data-doc-refalphnumberid'));
@@ -4343,6 +4378,69 @@ $('#tbl_hr_settings tbody').on('click', '#btnDeleteHrGroup', function () {
         });
     }
 });
+
+
+/*Lock Start*/
+
+$('#btnSaveUserAccesslock').on('click', function () {
+    if (ucaTreeLock) {
+
+        let enableStatus = 0;
+        const userId = $('#user-access-for-idlock').val();
+        if ($('#lockHRRcord').is(':checked')) {
+            enableStatus = 1;
+           
+        }
+       
+        let selectedSites = ucaTreeLock.getCheckedNodes().filter(function (item) {
+            return item !== 'undefined';
+        });
+        $.ajax({
+            url: '/Admin/Settings?handler=HrSettingsLockedClientSites',
+            data: {
+                hrSttingsId: userId,
+                selectedSites: selectedSites,
+                enableStatus: enableStatus
+            },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function () {
+            gridHrSettings.reload();
+            //showStatusNotification(true, 'Saved successfully');
+        }).fail(function () {
+            console.log('error');
+        });
+    }
+});
+
+$('#grantAllUserAccesslock').on('click', function () {
+    if (ucaTreeLock !== undefined) {
+        ucaTreeLock.checkAll();
+    }
+});
+
+$('#revokeAllUserAccesslock').on('click', function () {
+    if (ucaTreeLock !== undefined && confirm('Are you sure want to revoke all access?')) {
+        ucaTreeLock.uncheckAll();
+    }
+});
+
+$('#expandAllUserAccesslock').on('click', function () {
+    if (ucaTreeLock !== undefined) {
+        ucaTreeLock.expandAll();
+    }
+});
+
+$('#collapseAllUserAccesslock').on('click', function () {
+    if (ucaTreeLock !== undefined) {
+        ucaTreeLock.collapseAll();
+    }
+});
+
+
+/*Lock end */
+
+
 let gridLicenseTypes
 gridLicenseTypes = $('#tbl_license_type').grid({
     dataSource: '/Admin/GuardSettings?handler=LicensesTypes',

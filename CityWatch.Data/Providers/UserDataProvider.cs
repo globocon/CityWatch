@@ -17,6 +17,8 @@ namespace CityWatch.Data.Providers
         void SaveUserClientSiteAccess(int userId, List<UserClientSiteAccess> userClientSiteAccess);
         List<LoginUserHistory> GetUserLoginHistory(int userId);
         public SubDomain GetDomainDeatils(int typeId);
+        List<HrSettingsLockedClientSites> GetHrSettingsLockedClientSites(int? hrSettingsId);
+        void SaveHrSettingsLockedClientSites(int hrSettingsId, List<HrSettingsLockedClientSites> hrSettingsLockedClientSites);
     }
     public class UserDataProvider : IUserDataProvider
     {
@@ -150,11 +152,30 @@ namespace CityWatch.Data.Providers
                 .ToList();
         }
 
+        public List<HrSettingsLockedClientSites> GetHrSettingsLockedClientSites(int? hrSettingsId)
+        {
+            return _context.HrSettingsLockedClientSites
+                .Where(x => (!hrSettingsId.HasValue || hrSettingsId.HasValue && x.HrSettingsId == hrSettingsId) && x.ClientSite.IsActive == true)
+                .Include(x => x.ClientSite)
+                .Include(x => x.ClientSite.ClientType)
+                .Include(x => x.HrSettings)
+                .ToList();
+        }
+
         public void SaveUserClientSiteAccess(int userId, List<UserClientSiteAccess> userClientSiteAccess)
         {
             var currentAccess = _context.UserClientSiteAccess.Where(x => x.UserId == userId).ToList();
             _context.RemoveRange(currentAccess);
             _context.AddRange(userClientSiteAccess);
+            _context.SaveChanges();
+        }
+
+
+        public void SaveHrSettingsLockedClientSites(int hrSettingsId, List<HrSettingsLockedClientSites> hrSettingsLockedClientSites)
+        {
+            var currentAccess = _context.HrSettingsLockedClientSites.Where(x => x.HrSettingsId == hrSettingsId).ToList();
+            _context.RemoveRange(currentAccess);
+            _context.AddRange(hrSettingsLockedClientSites);
             _context.SaveChanges();
         }
 

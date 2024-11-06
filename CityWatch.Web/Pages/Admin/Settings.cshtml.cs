@@ -731,6 +731,11 @@ namespace CityWatch.Web.Pages.Admin
             return new JsonResult(_viewDataService.GetUserClientSiteAccess(userId));
         }
 
+        public JsonResult OnGetHrSettingsLockedClientSites(int hrSttingsId)
+        {
+            return new JsonResult(_viewDataService.GetHrSettingsClientSiteLockStatus(hrSttingsId));
+        }
+
         public JsonResult OnPostClientAccessByUserId(int userId, int[] selectedSites)
         {
             var status = true;
@@ -743,6 +748,29 @@ namespace CityWatch.Web.Pages.Admin
                     UserId = userId
                 }).ToList();
                 _userDataProvider.SaveUserClientSiteAccess(userId, clientSiteAccess);
+            }
+            catch (Exception ex)
+            {
+                status = false;
+                message = "Error " + ex.Message;
+            }
+
+            return new JsonResult(new { status = status, message = message });
+        }
+
+        public JsonResult OnPostHrSettingsLockedClientSites(int hrSttingsId, int[] selectedSites,int enableStatus)
+        {
+            var status = true;
+            var message = "Success";
+            try
+            {
+                _guardLogDataProvider.UpdateHRLockSettings(hrSttingsId,Convert.ToBoolean(enableStatus));
+                var clientSiteAccess = selectedSites.Select(x => new HrSettingsLockedClientSites()
+                {
+                    ClientSiteId = x,
+                    HrSettingsId = hrSttingsId
+                }).ToList();
+                _userDataProvider.SaveHrSettingsLockedClientSites(hrSttingsId, clientSiteAccess);
             }
             catch (Exception ex)
             {
