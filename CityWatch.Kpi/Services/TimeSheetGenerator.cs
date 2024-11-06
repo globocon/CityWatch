@@ -677,16 +677,16 @@ public interface ITimesheetGenerator
             }
 
             // If not the same date, proceed with weekly logic
-            DateTime currentDate = startDate;
+            DateTime currentDate = new DateTime(startDate.Year, startDate.Month, 1); 
             int totalDays = (endDate - startDate).Days + 1; // Total days between the start and end date
             string[] daysOfWeek = CultureInfo.CurrentCulture.DateTimeFormat.DayNames;
             int startDayIndex = Array.IndexOf(daysOfWeek, weekname);
 
             // Adjust the currentDate to the correct starting day (e.g., Monday)
-            while ((int)currentDate.DayOfWeek != startDayIndex)
-            {
-                currentDate = currentDate.AddDays(1);
-            }
+            //while ((int)currentDate.DayOfWeek != startDayIndex)
+            //{
+            //    currentDate = currentDate.AddDays(1);
+            //}
 
             List<Table> weeklyTables = new List<Table>();
             int TotalWeeklyHrs = 0;
@@ -733,8 +733,8 @@ public interface ITimesheetGenerator
                             GuardTable.AddCell(GetSiteValueCell(enddate1));
 
                             // Parse and calculate hours and minutes manually
-                            TimeSpan enddate = TimeSpan.FromHours(endDateDifference.Value.TotalHours) + TimeSpan.FromMinutes(endDateDifference.Value.Minutes);
-                            TimeSpan startd = TimeSpan.ParseExact(start.OnDuty.ToString("HH:mm"), "hh\\:mm", CultureInfo.InvariantCulture);
+                            TimeSpan enddate = TimeSpan.Parse(enddate1);
+                        TimeSpan startd = TimeSpan.ParseExact(start.OnDuty.ToString("HH:mm"), "hh\\:mm", CultureInfo.InvariantCulture);
 
                             TimeSpan TotalHrs = (enddate - startd).Duration();
                             int totalHrs = (int)TotalHrs.TotalMinutes;

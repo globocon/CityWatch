@@ -539,7 +539,11 @@ namespace CityWatch.Web.Services
                 
 
         }
-        private (List<Table> weeklyTables, int totalHours) CreateGuardLoginDetails(DateTime startDate, DateTime endDate, List<GuardLogin> LoginDetails, string weekname)
+        private (List<Table> weeklyTables, int totalHours) CreateGuardLoginDetails(
+    DateTime startDate,
+    DateTime endDate,
+    List<GuardLogin> LoginDetails,
+    string weekname)
         {
             // Method to create a new table with headers
             Table CreateNewGuardTable()
@@ -549,101 +553,82 @@ namespace CityWatch.Web.Services
                 CreateGuardDetailsHeader(GuardTable);
                 return GuardTable;
             }
-            var SiteName = LoginDetails.Select(x => x.ClientSite.Name).FirstOrDefault(); 
-            // Check if startDate and endDate are the same
+
+            var SiteName = LoginDetails.Select(x => x.ClientSite.Name).FirstOrDefault();
+
+            // Handle single-day logic
             if (startDate.Date == endDate.Date)
             {
                 var GuardTable = CreateNewGuardTable();
                 int dailyTotalHours = 0;
 
                 // Only create a table for the specific day
-                string weekName = startDate.ToString("dddd");
-                GuardTable.AddCell(GetSiteValueCell(weekName));
+                string dayName = startDate.ToString("dddd");
+                GuardTable.AddCell(GetSiteValueCell(dayName));
                 GuardTable.AddCell(GetSiteValueCell(startDate.ToString("dd/MM/yyyy")));
 
                 var start = LoginDetails.FirstOrDefault(x => x.LoginDate.Date == startDate.Date);
                 if (start != null)
                 {
                     GuardTable.AddCell(GetSiteValueCell(start.OnDuty.ToString("HH:mm")));
-                    TimeSpan? endDateDifference = null;
 
-                    if (start.OffDuty.HasValue)
+                    TimeSpan? endDateDifference = start.OffDuty.HasValue ? start.OffDuty.Value - start.OnDuty : null;
+                    if (endDateDifference.HasValue)
                     {
-                        endDateDifference = start.OffDuty.Value - start.OnDuty;
-                    }
+                        string enddate1 = string.Format("{0:D2}:{1:D2}",
+                                                        (int)endDateDifference.Value.TotalHours,
+                                                        endDateDifference.Value.Minutes);
+                        GuardTable.AddCell(GetSiteValueCell(enddate1));
 
-                    string enddate1 = string.Format("{0:D2}:{1:D2}", (int)endDateDifference.Value.TotalHours, endDateDifference.Value.Minutes);
-                    GuardTable.AddCell(GetSiteValueCell(enddate1));
+                        DateTime enddate = DateTime.ParseExact(enddate1, "HH:mm", CultureInfo.InvariantCulture);
+                        DateTime startd = DateTime.ParseExact(start.OnDuty.ToString("HH:mm"), "HH:mm", CultureInfo.InvariantCulture);
 
-                    DateTime enddate = DateTime.ParseExact(enddate1, "HH:mm", CultureInfo.InvariantCulture);
-                    DateTime startd = DateTime.ParseExact(start.OnDuty.ToString("HH:mm"), "HH:mm", CultureInfo.InvariantCulture);
-
-                    TimeSpan TotalHrs = (enddate - startd).Duration();
-                    int totalHrs = (int)TotalHrs.TotalMinutes;
-                    dailyTotalHours += totalHrs;
-                    int hoursDail = totalHrs / 60;
-                    int minutesDail = totalHrs % 60;
-                    GuardTable.AddCell(GetSiteValueCell($"{hoursDail}:{minutesDail}"));
-                    if (start.ClientSite.Name != null)
-                    {
-                        GuardTable.AddCell(GetSiteValueCell(start.ClientSite.Name.ToString()));
+                        TimeSpan TotalHrs = (enddate - startd).Duration();
+                        int totalHrs = (int)TotalHrs.TotalMinutes;
+                        dailyTotalHours += totalHrs;
+                        int hoursDail = totalHrs / 60;
+                        int minutesDail = totalHrs % 60;
+                        GuardTable.AddCell(GetSiteValueCell($"{hoursDail}:{minutesDail}"));
                     }
-                    else
-                    {
-                        GuardTable.AddCell(GetSiteValueCell(""));
-                    }
+                    GuardTable.AddCell(GetSiteValueCell(start.ClientSite.Name ?? ""));
                 }
                 else
                 {
                     GuardTable.AddCell(GetSiteValueCell(""));
                     GuardTable.AddCell(GetSiteValueCell(""));
                     GuardTable.AddCell(GetSiteValueCell(""));
-                    if (start != null)
-                    {
-                        GuardTable.AddCell(GetSiteValueCell(start.ClientSite.Name.ToString()));
-                    }
-                    else
-                    {
-                        GuardTable.AddCell(GetSiteValueCell(""));
-                    }
-                    
+                    GuardTable.AddCell(GetSiteValueCell(start?.ClientSite.Name ?? ""));
                 }
-               
+
                 return (new List<Table> { GuardTable }, dailyTotalHours);
             }
 
-            // If not the same date, proceed with weekly logic
-            DateTime currentDate = startDate;
-            int totalDays = (endDate - startDate).Days + 1; // Total days between the start and end date
-            string[] daysOfWeek = CultureInfo.CurrentCulture.DateTimeFormat.DayNames;
-            int startDayIndex = Array.IndexOf(daysOfWeek, weekname);
+            // Weekly logic for a range of dates
+            DateTime currentDate = new DateTime(startDate.Year, startDate.Month, 1); 
+            int totalDays = (endDate - startDate).Days + 1;
+            int startDayIndex = Array.IndexOf(CultureInfo.CurrentCulture.DateTimeFormat.DayNames, weekname);
 
-            // Adjust the currentDate to the correct starting day (e.g., Monday)
-            while ((int)currentDate.DayOfWeek != startDayIndex)
-            {
-                currentDate = currentDate.AddDays(1);
-            }
+            // Adjust the currentDate to start on the specified day of the week
+            //while ((int)currentDate.DayOfWeek != startDayIndex && currentDate <= endDate)
+            //{
+            //    currentDate = currentDate.AddDays(1);
+            //}
 
             List<Table> weeklyTables = new List<Table>();
             int TotalWeeklyHrs = 0;
-            TimeSpan totalAccumulatedHrs = TimeSpan.Zero;
-
             int daysProcessed = 0;
-            int weeklyTotalHours = 0;
-            var SiteName1 = LoginDetails.Select(x => x.ClientSite.Name).ToList();
-            // Loop through each week and break it into individual days
+
             while (daysProcessed < totalDays)
             {
                 var GuardTable = CreateNewGuardTable();
-                weeklyTotalHours = 0;
+                int weeklyTotalHours = 0;
 
                 // Process each day in the week (up to 7 days or remaining days)
                 for (int j = 0; j < 7 && daysProcessed < totalDays; j++)
                 {
-                    string weekName = currentDate.ToString("dddd"); // e.g., "Monday"
-                    GuardTable.AddCell(GetSiteValueCellHeader(weekName));
+                    string dayName = currentDate.ToString("dddd");
+                    GuardTable.AddCell(GetSiteValueCellHeader(dayName));
 
-                    // Add the date, but skip if currentDate > endDate
                     if (currentDate > endDate)
                     {
                         GuardTable.AddCell(GetSiteValueCell(""));
@@ -654,22 +639,17 @@ namespace CityWatch.Web.Services
                     }
 
                     var start = LoginDetails.FirstOrDefault(x => x.LoginDate.Date == currentDate.Date);
-
                     if (start != null)
                     {
-                        // Add OnDuty time
                         GuardTable.AddCell(GetSiteValueCell(start.OnDuty.ToString("HH:mm")));
 
-                        // Handle OffDuty, and calculate total hours
                         TimeSpan? endDateDifference = start.OffDuty?.TimeOfDay;
                         if (endDateDifference.HasValue)
                         {
-                            // Format OffDuty time
                             string enddate1 = string.Format("{0:D2}:{1:D2}", (int)endDateDifference.Value.TotalHours, endDateDifference.Value.Minutes);
                             GuardTable.AddCell(GetSiteValueCell(enddate1));
 
-                            // Parse and calculate hours and minutes manually
-                            TimeSpan enddate = TimeSpan.FromHours(endDateDifference.Value.TotalHours) + TimeSpan.FromMinutes(endDateDifference.Value.Minutes);
+                            TimeSpan enddate = TimeSpan.Parse(enddate1);
                             TimeSpan startd = TimeSpan.ParseExact(start.OnDuty.ToString("HH:mm"), "hh\\:mm", CultureInfo.InvariantCulture);
 
                             TimeSpan TotalHrs = (enddate - startd).Duration();
@@ -681,17 +661,14 @@ namespace CityWatch.Web.Services
                         }
                         else
                         {
-                            // OffDuty is null, so add empty cells for end time and total hours
                             GuardTable.AddCell(GetSiteValueCell(""));
                             GuardTable.AddCell(GetSiteValueCell(""));
                         }
 
-                        // Add Client Site Name or empty cell
                         GuardTable.AddCell(GetSiteValueCell(start.ClientSite?.Name ?? ""));
                     }
                     else
                     {
-                        // If no login details for the day, add empty cells
                         GuardTable.AddCell(GetSiteValueCell(""));
                         GuardTable.AddCell(GetSiteValueCell(""));
                         GuardTable.AddCell(GetSiteValueCell(""));
@@ -702,27 +679,23 @@ namespace CityWatch.Web.Services
                     daysProcessed++;
                 }
 
-                // Add footer to table
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
 
-                // Convert weeklyTotalHours to hours and minutes
                 int hours1 = weeklyTotalHours / 60;
                 int minutes1 = weeklyTotalHours % 60;
                 GuardTable.AddCell(GetSiteValueCell($"{hours1:D2}:{minutes1:D2}"));
 
-                // Add the site name in the footer
                 GuardTable.AddCell(GetNoBorderTotalHrsCell(SiteName));
-
                 TotalWeeklyHrs += weeklyTotalHours;
                 weeklyTables.Add(GuardTable);
             }
 
-
             return (weeklyTables, TotalWeeklyHrs);
         }
+
 
 
 
