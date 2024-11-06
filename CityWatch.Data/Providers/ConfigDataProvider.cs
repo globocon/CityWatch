@@ -584,7 +584,6 @@ namespace CityWatch.Data.Providers
         {
             //To get the Name in order
             var filteredRecords = _context.RadioCheckStatusColor
-                .Where(x => string.IsNullOrEmpty(name) || x.Name == name)
                 .OrderBy(x => x.Name)
                 .ToList();
 
@@ -596,7 +595,16 @@ namespace CityWatch.Data.Providers
                 .Where(x => x.Name.StartsWith("Green", StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
+
             var orderedRecords = new List<RadioCheckStatusColor>();
+
+            // Add blank record from DB (if it has an empty or specific Name like "")
+            var blankRecord = filteredRecords.FirstOrDefault(x => string.IsNullOrEmpty(x.Name) || x.Name == "");
+            if (blankRecord != null)
+            {
+                orderedRecords.Add(blankRecord);
+            }
+
             orderedRecords.AddRange(redRecords);
             orderedRecords.AddRange(greenRecords);
 
