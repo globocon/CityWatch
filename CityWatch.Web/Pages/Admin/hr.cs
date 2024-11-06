@@ -1697,15 +1697,15 @@ namespace CityWatch.Web.Pages.Admin
         {
             var success = false;
             var message = string.Empty;
-            try
-            {
-                _guardLogDataProvider.UpdateHRLockSettings(id);
-                success = true;
-            }
-            catch (Exception ex)
-            {
-                message = ex.Message;
-            }
+            //try
+            //{
+            //    _guardLogDataProvider.UpdateHRLockSettings(id);
+            //    success = true;
+            //}
+            //catch (Exception ex)
+            //{
+            //    message = ex.Message;
+            //}
 
             return new JsonResult(new { success, message });
         }
