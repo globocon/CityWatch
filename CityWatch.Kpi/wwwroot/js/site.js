@@ -2280,8 +2280,8 @@ $('#btnScheduleDownload1').on('click', function () {
         url: '/Admin/Settings?handler=DownloadPdfTimesheet',
         data: {
             scheduleId: $('#sch-id').val(),
-            reportYear: $('#schRunYear').val(),
-            reportMonth: $('#schRunMonth').val(),
+            reportYear: $('#schRunYear1').val(),
+            reportMonth: $('#schRunMonth1').val(),
             ignoreRecipients: $('#cbIgnoreRecipients').is(':checked'),
         },
         xhrFields: {
