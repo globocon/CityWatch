@@ -1501,11 +1501,12 @@ namespace CityWatch.Web.Pages.Admin
                 }
                 else if (frequency == "LastMonth")
                 {
-                    // Set startDate to the first day of the previous month
-                    startDate = new DateTime(today.Year, today.Month, 1);
+                    // Calculate the start date as the first day of the last month
+                    startDate = new DateTime(today.Year, today.Month, 1).AddMonths(-1);
 
-                    // Set endDate to the last day of the previous month
+                    // Calculate the end date as the last day of the last month
                     endDate = startDate.AddMonths(1).AddDays(-1);
+                    
                 }
                 else if (frequency == "Last2weeks")
                 {
@@ -1527,10 +1528,9 @@ namespace CityWatch.Web.Pages.Admin
                 }
                 else if (frequency == "Month")
                 {
-                    // Calculate the start date as the first day of the last month
-                    startDate = new DateTime(today.Year, today.Month, 1).AddMonths(-1);
+                    startDate = new DateTime(today.Year, today.Month, 1);
 
-                    // Calculate the end date as the last day of the last month
+
                     endDate = startDate.AddMonths(1).AddDays(-1);
                 }
                 else if (frequency == "Today")
