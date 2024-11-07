@@ -140,6 +140,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     {
                         AuthUserHelper.IsAdminGlobal = false;
                     }
+                   
                 }
 
 

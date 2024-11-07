@@ -1249,7 +1249,7 @@ namespace CityWatch.Web.Pages.Admin
                                     LoggedInUserId = AuthUserHelper.LoggedInUserId;
 
                                 }
-
+                                HttpContext.Session.SetString("GuardId", guard.Id.ToString());
                                 SuccessCode = 1;
                             }
                             else
