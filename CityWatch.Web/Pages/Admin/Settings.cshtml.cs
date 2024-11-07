@@ -1499,6 +1499,14 @@ namespace CityWatch.Web.Pages.Admin
 
                     endDate = startDate.AddDays(6);
                 }
+                else if (frequency == "LastMonth")
+                {
+                    // Set startDate to the first day of the previous month
+                    startDate = new DateTime(today.Year, today.Month, 1);
+
+                    // Set endDate to the last day of the previous month
+                    endDate = startDate.AddMonths(1).AddDays(-1);
+                }
                 else if (frequency == "Last2weeks")
                 {
                     // Calculate the end of last week (Sunday)
