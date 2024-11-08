@@ -613,6 +613,24 @@ namespace CityWatch.Web.Services
             //{
             //    currentDate = currentDate.AddDays(1);
             //}
+            DayOfWeek targetStartDay = DayOfWeek.Monday; // Set this to your desired week start day
+            int daysToAdjust = ((int)startDate.DayOfWeek - (int)targetStartDay + 7) % 7;
+            bool isMonthlyView = (endDate - startDate).Days >= 28;
+            if (!isMonthlyView)
+            {
+                currentDate = startDate.AddDays(-daysToAdjust);
+            }
+            else
+            {
+                currentDate = currentDate;
+            }
+                
+
+            // Ensure endDate is exactly one week after startDate for single-week mode
+            //if ((endDate - startDate).Days >= 7)
+            //{
+            //    endDate = startDate.AddDays(6);
+            //}
 
             List<Table> weeklyTables = new List<Table>();
             int TotalWeeklyHrs = 0;

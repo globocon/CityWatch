@@ -1510,20 +1510,14 @@ namespace CityWatch.Web.Pages.Admin
                 }
                 else if (frequency == "Last2weeks")
                 {
-                    // Calculate the end of last week (Sunday)
-                    int daysToSubtract = (int)today.DayOfWeek - (int)DayOfWeek.Sunday + 7;
-                    endDate = today.AddDays(-daysToSubtract);
+                    endDate = today;
 
-                    // Start date is 13 days before the end date (2 weeks)
                     startDate = endDate.AddDays(-13);
                 }
                 else if (frequency == "Last4weeks")
                 {
-                    // Calculate the end of last week (Sunday)
-                    int daysToSubtract = (int)today.DayOfWeek + 1; // daysToSubtract for the previous Sunday
-                    endDate = today.AddDays(-daysToSubtract);
+                    endDate = today;
 
-                    // Start date is 27 days before the end date (for four weeks)
                     startDate = endDate.AddDays(-27);
                 }
                 else if (frequency == "Month")
