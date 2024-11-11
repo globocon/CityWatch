@@ -12,7 +12,9 @@
 @inject IViewDataService viewDataServiceNew
 @inject IClientDataProvider clientDataProvider
 @inject IClientSiteViewDataService clientViewDataService
+@inject IGuardDataProvider guarddataProvider
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css" rel="stylesheet">
+
 
 @{
     ViewData["Title"] = "CityWatch Security | Settings";
@@ -40,13 +42,14 @@
 
     var totalSiteCount = clientDataProvider.GetClientSites(null).Count;
     var companydetail = viewDataService.GetCompanyDetails().SingleOrDefault(x => x.Id == 1);
+  
 }
 
 
 @* } *@
 <div>
     <input type="hidden" id="hdnIsAdminLoggedIn" value="@AuthUserHelper.IsAdminUserLoggedIn.ToString()" />
-    <input type="hidden" id="txt_IsAdminPowerUser" value="@Model.IsAdminminOrPoweruser" />
+    <input type="hidden" id="txt_IsAdminPowerUser" asp-for="@AuthUserHelper.IsAdminPowerUser" />
     <ul class="nav nav-tabs" id="settingsTab" role="tablist">
         @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal)
         {
@@ -85,16 +88,82 @@
         else
         {
             //Power User menu start
-            <li class="nav-item">
-                <a class="nav-link p-2 active" id="c4ihr-tab" data-toggle="tab" href="#c4ihr" role="tab" aria-controls="uca" aria-selected="false">C4i HR</a>
+            if (AuthUserHelper.IsAdminPowerUser)
+            {
+              
+                <li class="nav-item">
+                    <a class="nav-link p-2" id="csite-tab" data-toggle="tab" href="#csite" role="tab" aria-controls="csite" aria-selected="false">IR Client Site</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link p-2" id="uca-tab" data-toggle="tab" href="#uca" role="tab" aria-controls="uca" aria-selected="false">C4i Access Control</a>
+                </li>
+                  <li class="nav-item">
+                    <a class="nav-link p-2 " id="c4ihr-tab" data-toggle="tab" href="#c4ihr" role="tab" aria-controls="uca" aria-selected="false">C4i HR</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link p-2 active" id="c4isettings-tab" data-toggle="tab" href="#c4isettings" role="tab" aria-controls="c4isettings" aria-selected="false">C4i Core</a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link p-2" id="csite-tab" data-toggle="tab" href="#csite" role="tab" aria-controls="csite" aria-selected="false">IR Client Site</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link p-2" id="uca-tab" data-toggle="tab" href="#uca" role="tab" aria-controls="uca" aria-selected="false">C4i Access Control</a>
-            </li>
+            }
             //Power User menu end
+            //Auditor User menu start
+            @if (Model.Guard != null)
+            {
+            if (Model.Guard.IsAdminSOPToolsAccess)
+            {
+
+                <li class="nav-item">
+                    <a class="nav-link p-2" id="csite-tab" data-toggle="tab" href="#csite" role="tab" aria-controls="csite" aria-selected="false">IR Client Site</a>
+                </li>
+                    <li class="nav-item">
+                        <a class="nav-link p-2" id="irdocs-tab" data-toggle="tab" href="#irdocs" role="tab" aria-controls="irdocs" aria-selected="false">IR Template & Downloads</a>
+                    </li>
+                    <li class="nav-item" >
+                        <a class="nav-link p-2" id="tools-tab" data-toggle="tab" href="#tools" role="tab" aria-controls="tools" aria-selected="false">C4i Tools</a>
+                    </li>
+                <li class="nav-item">
+                    <a class="nav-link p-2" id="uca-tab" data-toggle="tab" href="#uca" role="tab" aria-controls="uca" aria-selected="false">C4i Access Control</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link p-2 " id="c4ihr-tab" data-toggle="tab" href="#c4ihr" role="tab" aria-controls="uca" aria-selected="false">C4i HR</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link p-2 active" id="c4isettings-tab" data-toggle="tab" href="#c4isettings" role="tab" aria-controls="c4isettings" aria-selected="false">C4i Core</a>
+                </li>
+            }
+            if (Model.Guard.IsAdminAuditorAccess)
+                {
+
+                    <li class="nav-item">
+                        <a class="nav-link p-2" id="csite-tab" data-toggle="tab" href="#csite" role="tab" aria-controls="csite" aria-selected="false">IR Client Site</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link p-2" id="uca-tab" data-toggle="tab" href="#uca" role="tab" aria-controls="uca" aria-selected="false">C4i Access Control</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link p-2 " id="c4ihr-tab" data-toggle="tab" href="#c4ihr" role="tab" aria-controls="uca" aria-selected="false">C4i HR</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link p-2 active" id="c4isettings-tab" data-toggle="tab" href="#c4isettings" role="tab" aria-controls="c4isettings" aria-selected="false">C4i Core</a>
+                    </li>
+                }
+            if (Model.Guard.IsAdminInvestigatorAccess)
+                {
+
+                    <li class="nav-item">
+                        <a class="nav-link p-2" id="csite-tab" data-toggle="tab" href="#csite" role="tab" aria-controls="csite" aria-selected="false">IR Client Site</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link p-2" id="uca-tab" data-toggle="tab" href="#uca" role="tab" aria-controls="uca" aria-selected="false">C4i Access Control</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link p-2 " id="c4ihr-tab" data-toggle="tab" href="#c4ihr" role="tab" aria-controls="uca" aria-selected="false">C4i HR</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link p-2 active" id="c4isettings-tab" data-toggle="tab" href="#c4isettings" role="tab" aria-controls="c4isettings" aria-selected="false">C4i Core</a>
+                    </li>
+                }
+            }
+                //Auditor User menu end
         }
     </ul>
     <div class="tab-content" id="settingsTabContent">
@@ -768,12 +837,15 @@
             </div>
             <div class="tab-pane fade py-3" id="c4ihr" role="tabpanel" aria-labelledby="c4ihr-tab" @hideTabStyle>
                 <ul class="nav nav-tabs" id="guardSettingsTab" role="tablist">
-                    <li class="nav-item">
-                        <a class="nav-link active" id="guard_tab" data-toggle="tab" href="#guard" role="tab" aria-controls="guard" aria-selected="true">HR</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" id="kvl-fields-tab" data-toggle="tab" href="#hrSettings" role="tab" aria-controls="hrSettings" aria-selected="false">HR Settings</a>
-                    </li>
+                    
+                      
+                        <li class="nav-item">
+                            <a class="nav-link active" id="guard_tab" data-toggle="tab" href="#guard" role="tab" aria-controls="guard" aria-selected="true">HR</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="kvl-fields-tab" data-toggle="tab" href="#hrSettings" role="tab" aria-controls="hrSettings" aria-selected="false">HR Settings</a>
+                        </li>
+                    
                 </ul>
                 <div class="tab-content" id="guardSettingsTabContent">
                     <div class="tab-pane fade show active py-3" id="guard" role="tabpanel" aria-labelledby="guard-tab">
@@ -1060,14 +1132,16 @@
         }
         else
         {  //Power User start
-            <div class="tab-pane fade show active py-3" id="c4ihr" role="tabpanel" aria-labelledby="c4ihr-tab">
+            if (AuthUserHelper.IsAdminPowerUser)
+        {
+            <div class="tab-pane fade  py-3" id="c4ihr" role="tabpanel" aria-labelledby="c4ihr-tab">
                 <ul class="nav nav-tabs" id="guardSettingsTab" role="tablist">
                     <li class="nav-item">
                         <a class="nav-link active" id="guard_tab" data-toggle="tab" href="#guard" role="tab" aria-controls="guard" aria-selected="true">HR</a>
                     </li>
-                    <li class="nav-item">
+                 @*    <li class="nav-item">
                         <a class="nav-link" id="kvl-fields-tab" data-toggle="tab" href="#hrSettings" role="tab" aria-controls="hrSettings" aria-selected="false">HR Settings</a>
-                    </li>
+                    </li> *@
                 </ul>
                 <div class="tab-content" id="guardSettingsTabContent">
                     <div class="tab-pane fade show active py-3" id="guard" role="tabpanel" aria-labelledby="guard-tab">
@@ -1341,7 +1415,1714 @@
                     </div>
                 </div>
             </div>
+            <div class="tab-pane fade show active py-3" id="c4isettings" role="tabpanel" aria-labelledby="c4isettings-tab" >
+                <form id="form_CompanyDetails">
+                    <div class="form-group row">
+
+                        <div class="col-md-4">
+                            <input type="hidden" id="txt_CompanyId" class="form-control" />
+                        </div>
+
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-form-label col-md-2">Company Name</label>
+                        <div class="col-md-4">
+                            <input type="text" id="txt_CompanyName" class="form-control" name="CompanyDetails.Name" />
+                        </div>
+                        <label class="col-form-label col-md-2">Domain</label>
+                        <div class="col-md-4">
+                            <input type="text" id="txt_CompanyDomain" class="form-control" name="CompanyDetails.Domain" />
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-form-label col-md-2">Primary Logo</label>
+                        <div class="col-md-4">
+                            <a class="navbar-brand" href="https://@companydetail.LogoHyperlink" target="_blank">
+                                @*<img id="img_PrimaryLogo" height="60px" src="CompanyDetails.PrimaryLogoPath" />*@
+                                <img id="img_PrimaryLogo" height="60px" src="" />
+                            </a>
+
+
+                            <label class="btn btn-success mb-0">
+                                <form id="form_cs_primarylogo" method="post">
+                                    <i class="fa fa-upload mr-2"></i>Replace
+                                    <input type="file" id="cr_primarylogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.gif,.GIF" hidden />
+                                </form>
+                            </label>
+                        </div>
+
+
+
+                        <label class="col-form-label col-md-2">Banner Logo</label>
+                        <div style="padding-left: 8px;">
+                            <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
+                                @*<img id="img_BannerLogo" height="60px" src="CompanyDetails.BannerLogoPath" />*@
+                                <img id="img_BannerLogo" height="60px" src="" />
+                            </a>
+                            <label class="btn btn-success mb-0">
+                                <form id="form_cs_primarylogo" method="post">
+                                    <i class="fa fa-upload mr-2"></i>Replace
+                                    <input type="file" id="cr_bannerlogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.GIF,.gif" hidden />
+                                </form>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-form-label col-md-2">Logo Hyperlink</label>
+                        <div class="col-md-4">
+                            <input type="text" id="txt_LogoHyplerLink" class="form-control" />
+                        </div>
+                        <label class="col-form-label col-md-2 pr-0">API Provider (heic to jpg)</label>
+                        <div class="col-md-4">
+                            <input type="text" id="txt_APIProvider" class="form-control" />
+                        </div>
+                    </div>
+
+
+                    @*for logo in report-start*@
+                    <div class="form-group row">
+                        <label class="col-form-label col-md-2">Report Logo</label>
+                        <div class="col-md-4">
+                            <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
+                                @*<img id="img_PrimaryLogo" height="60px" src="CompanyDetails.PrimaryLogoPath" />*@
+                                <img id="img_ReportLogo" height="60px" src="~/images/CWSLogoPdf.png" />
+                            </a>
+
+
+                            <label class="btn btn-success mb-0">
+                                <form id="form_cs_reportlogo" method="post">
+                                    <i class="fa fa-upload mr-2"></i>Replace
+                                    <input type="file" id="cr_reportlogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.gif,.GIF" hidden />
+                                </form>
+                            </label>
+                        </div>
+
+                        <label class="col-form-label col-md-2">API secret key</label>
+                        <div class="col-md-4">
+                            <input type="text" id="txt_APIsecretkey" class="form-control" />
+                        </div>
+                    </div>
+                    @*for logo in report-end*@
+                    <div class="form-group row">
+                        @*  <label class="col-form-label col-md-2">Home Page Message</label>
+                    <div class="col-md-4">
+                    <textarea id="txt_HomePageMessage" class="form-control"></textarea>
+                    </div>*@
+                        <label class="col-form-label col-md-2">Home Page Message1</label>
+                        <div class="col-md-4">
+                            <textarea id="txt_HomePageMessage" class="form-control"></textarea>
+                        </div>
+                        <label class="col-form-label col-md-2">Footer Hyperlink Label</label>
+                        <div class="col-md-4">
+                            <input type="text" id="txt_HyplerLinkLabel" class="form-control" />
+                        </div>
+
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-form-label col-md-2">Banner Message</label>
+                        <div class="col-md-4">
+                            <textarea id="txt_BannerMessage" class="form-control"></textarea>
+                        </div>
+                        <label class="col-form-label col-md-2">Footer Hyperlink</label>
+                        <div class="col-md-4">
+                            <input type="text" id="txt_HyplerLink" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-form-label col-md-2">Banner Colour</label>
+                        <div class="col-md-4">
+                            <input type="color" id="txt_color" />
+                        </div>
+                        <label class="col-form-label col-md-2">Footer Hyperlink Colour</label>
+                        <div class="col-md-4">
+                            <input type="color" id="txt_HyperlinkColor" />
+                        </div>
+
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-form-label col-md-2">Home Page Message2</label>
+                        <div class="col-md-4">
+                            <textarea id="txt_HomePageMessage2" class="form-control"></textarea>
+                        </div>
+                        <label class="col-form-label col-md-2">Email Message</label>
+                        <div class="col-md-4">
+                            <textarea id="txt_EmailMessage" class=" form-control"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-form-label col-md-2">Software License</label>
+                        <div class="col-md-2">
+                            <select id="drp_swlicense" disabled="disabled">
+                                <option value="1">Gold</option>
+                                <option value="2">Silver</option>
+                                <option value="3">Bronze</option>
+                            </select>
+
+                        </div>
+                        <label class="col-form-label col-md-2">Type</label>
+                        <div class="col-md-2">
+                            <select id="drp_type" disabled="disabled">
+                                <option value="1">Annual</option>
+                                <option value="2">Monthly</option>
+                                <option value="3">Perpectual</option>
+                            </select>
+
+                        </div>
+                        <label class="col-form-label col-md-2">Expires</label>
+                        <div class="col-md-2">
+                            <input type="date" id="txt_ExpiryDate" value="30-06-2050" disabled="disabled" />
+
+                        </div>
+
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-md-10">
+                            <button class="btn btn-success" id="btn_CompanySave">Save</button>
+                        </div>
+
+                    </div>
+                </form>
+                </div>
+            }
             //Power User end
+            if(Model.Guard!=null)
+            {
+                if(Model.Guard.IsAdminSOPToolsAccess)
+                {
+                    <div class="tab-pane fade py-3" id="irdocs" role="tabpanel" aria-labelledby="irdocs-tab" >
+                        <div class="row my-3">
+                            <label class="col-form-label col-md-3">C4i Module</label>
+                            <div class="col-md-4">
+
+                                <select class="form-control" id="report_module_types_irtemplate">
+                                    @*  <option value="">None</option> *@
+                                    <option value="1" selected>Details of Incident Report Pdf Template</option>
+                                    <option value="5">Client(Site) SOP</option>
+                                    <option value="2">Company SOP</option>
+                                    <option value="3">Training</option>
+                                    <option value="4">Templates & Forms</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="incident_report_pdf_template">
+
+                            <div class="col">
+                                <label class="fw-bold" hidden>Details of Incident Report Pdf Template</label>
+                                <table class="table table-bordered tbl-settings">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:267px">Current Location</th>
+                                            <th style="width:168px">Last Uploaded DTG</th>
+                                            <th style="width:257px">Default Email for IR sending/HR Warning</th>
+                                            <th style="width:240px" class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="align-middle">@Model.ReportTemplate.Path</td>
+                                            <td id="ir_template_updatedOn" class="align-middle">@Model.ReportTemplate.LastUpdated.ToString("dd MMM yyyy @ HH:mm")</td>
+
+                                            <td class="align-middle" id="DefaultMail">@Model.ReportTemplate.DefaultEmail</td>
+                                            <td class="align-middle" style="display: none;" id="DefaultMailTextbox"><input type="text" id="DefaultMailTextboxval" style="width:100%" name="DefaultEmail" value="@Model.ReportTemplate.DefaultEmail" /></td>
+
+                                            <td class="text-center">
+                                                <button role="edit" id="btn_DefaultEmailEdit" class="btn btn-outline-primary" key="33"><i class="gj-icon pencil" style="font-size:15px"></i></button>
+                                                <button role="update" id="btn_DefaultEmailUpdate" class="btn btn-outline-primary" key="1" style="display:none"><i class="gj-icon check-circle" style="font-size:15px"></i></button>
+                                                <label class="btn btn-success mb-0">
+                                                    <form id="form_ir_template" method="post">
+                                                        <i class="fa fa-upload mr-2"></i>Replace
+                                                        <input type="file" id="ir_template_upload" accept=".pdf" hidden>
+                                                    </form>
+                                                </label>
+                                                <a href="@Url.Content("~/Pdf/Template/IR_Form_Template.pdf")" target="_blank" class="btn btn-outline-primary"><i class="fa fa-download mr-2"></i>Download</a>
+
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+
+                        <div id="company_sop">
+                            <div class="row mb-2">
+                                <div class="col-md-6 position-relative">
+                                    <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Company SOP</label> <label class="fw-bold mb-0" style="bottom:0">Documents available for staff to download in the field:</label>
+                                </div>
+                                <div class="col-md-6 text-right">
+                                    <label class="btn btn-success mb-2">
+                                        <form id="form_add_staff_document_file_company_sop" method="post">
+                                            <i class="fa fa-upload mr-2"></i>Add File
+                                            <input type="file" id="add_staff_document_file_company_sop" accept=".pdf, .docx, .xlsx" hidden>
+                                        </form>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <table class="table" id="staff_document_files_type_CompanySop"></table>
+
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-2" id="training">
+                            <div class="col-md-6 position-relative">
+                                <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Training</label>  <label class="fw-bold mb-0" style="bottom:0">Documents available for staff to download in the field:</label>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <label class="btn btn-success mb-3">
+                                    <form id="form_add_staff_document_file_training" method="post">
+                                        <i class="fa fa-upload mr-2"></i>Add File
+                                        <input type="file" id="add_staff_document_file_training" accept=".pdf, .docx, .xlsx" hidden>
+                                    </form>
+                                </label>
+                            </div>
+
+                            <div class="row mb-4" id="staffdocumentfilesfortraining">
+                                <div class="col-md-12">
+                                    <table class="table" id="staff_document_files_type_Training"></table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-2" id="templatesandforms">
+                            <div class="col-md-6 position-relative">
+                                <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Templates & Forms</label><label class="fw-bold mb-0" style="bottom:0">Documents available for staff to download in the field:</label>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <label class="btn btn-success mb-3">
+                                    <form id="form_add_staff_document_file_templates_and_forms" method="post">
+                                        <i class="fa fa-upload mr-2"></i>Add File
+                                        <input type="file" id="add_staff_document_file_templates_and_forms" accept=".pdf, .docx, .xlsx" hidden>
+                                    </form>
+                                </label>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <table class="table" id="staff_document_files_type_TemplatesAndForms"></table>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+
+                        @*//Client Site SOP Start//*@
+
+
+
+                        <div class="row mb-2" id="clientSOP">
+                            <div class="col-md-9 position-relative">
+                                <label class="fw-bold mb-0 mr-3" style="color:#eb804d;font-weight:500;float:left">Client(Site) SOP</label><label class="fw-bold mb-0" style="bottom:0">Site Specific documents such as SOP's and 'Quick Guides' available for Staff to download in the field:</label>
+                            </div>
+                            <div class="col-md-3 text-right">
+                                <button class="btn btn-success mb-3" id="add_newLinkedDuress" data-toggle="modal" data-target="#schedule-modal"><i class="fa fa-plus mr-2"></i>Add File</button>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <table class="table" id="staff_document_siteSOP"></table>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+
+                        @*///Client Site SOP end//*@
+
+
+                    </div>
+                    <div class="tab-pane fade py-3" id="tools" role="tabpanel" aria-labelledby="tools-tab" @hideTabStyle>
+                        <div class="form-group row">
+                            <label class="col-form-label col-md-3">Select a Button</label>
+                            <div class="col-md-4">
+                                <select class="form-control" id="report_tools_types">
+                                    <option value="">None</option>
+                                    @foreach (var item in Model.ClientDataProvider.GetSiteLinksPageTypes())
+                                    {
+                                        <option value="@item.Id">@item.PageTypeName</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-5 text-right"><button class="btn btn-success mb-3" id="add_tools_page"><i class="fa fa-plus mr-2"></i>Add / Delete Button</button></div>
+                        </div>
+                        <div class="row" id="toolsSettings">
+                            <div class="form-group row col-md-12 ml-0 mr-0 mb-0">
+                                <div class="col-md-10 ml-0 p-0">
+                                    <label class="col-form-label col-md-10 p-0" style="position: absolute;bottom: 0;">Web links available for staff to access in the field:</label>
+                                </div>
+
+                                <div class="col-2 text-right ml-0 p-0">
+                                    <button class="btn btn-success mb-3 text-right" id="add_tools_settings"><i class="fa fa-plus mr-2"></i>Add Tools</button>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <table class="table" id="tools_settings"></table>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="tab-pane fade  py-3" id="c4ihr" role="tabpanel" aria-labelledby="c4ihr-tab">
+                <ul class="nav nav-tabs" id="guardSettingsTab" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="guard_tab" data-toggle="tab" href="#guard" role="tab" aria-controls="guard" aria-selected="true">HR</a>
+                    </li>
+                 @*    <li class="nav-item">
+                        <a class="nav-link" id="kvl-fields-tab" data-toggle="tab" href="#hrSettings" role="tab" aria-controls="hrSettings" aria-selected="false">HR Settings</a>
+                    </li> *@
+                </ul>
+                <div class="tab-content" id="guardSettingsTabContent">
+                    <div class="tab-pane fade show active py-3" id="guard" role="tabpanel" aria-labelledby="guard-tab">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group row">
+                                    <div class="col-md-2 text-left mr-5">
+                                        <a href="#" class="btn btn-primary mb-3" id="btnDownloadGuardLogExcel">Download <i class="fa fa-file-excel-o"></i></a>
+                                        <div id="loader"></div>
+                                    </div>
+
+                                    <div class="" style="width: 142px;">
+                                        <input type="checkbox" class="form-check-input" id="chkbxHR1">
+                                        <label class="font-weight-normal pr-4" for="chkbxfilterGuardActive">HR1</label>
+                                        <input type="checkbox" class="form-check-input" id="chkbxHR2">
+                                        <label class="font-weight-normal pr-4" for="chkbxHR2">HR2</label>
+                                        <input type="checkbox" class="form-check-input" id="chkbxHR3">
+                                        <label class="font-weight-normal" for="chkbxHR3">HR3</label>
+
+                                    </div>
+                                    <div class="col-md-2 text-left p-0">
+                                        <div class="dropdown dropdownGuardHrFilter">
+                                            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
+                                                <i class="fa fa-circle text-primary mr-2"></i>Show All Entries
+                                            </button>
+                                            <div class="dropdown-menu" x-placement="bottom-start" style="position: absolute; will-change: transform; top: 0px; left: 0px; transform: translate3d(0px, 66px, 0px);">
+                                                <a class="dropdown-item" href="#" data-val="0"><i class="fa fa-circle text-primary mr-2"></i>Show All Entries</a>
+                                                <a class="dropdown-item" href="#" data-val="green"><i class="fa fa-circle text-success mr-2"></i>Valid</a>
+                                                <a class="dropdown-item" href="#" data-val="yellow"><i class="fa fa-circle text-warning mr-2"></i>Expiring</a>
+                                                <a class="dropdown-item" href="#" data-val="red"><i class="fa fa-circle text-danger mr-2"></i>Expired</a>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 text-left p-0 mr-2">
+                                        <select class="form-control" id="list_HrSearchandEdit_keys">
+                                            <option></option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-1 offset-md-2 px-0 text-left ml-5">
+
+                                        <input type="checkbox" class="form-check-input" id="chkbxfilterGuardActive">
+                                        <label class="font-weight-normal" for="chkbxfilterGuardActive">Active</label>
+                                        <br />
+                                        <input type="checkbox" class="form-check-input" id="chkbxfilterGuardInActive">
+                                        <label class="font-weight-normal" for="chkbxfilterGuardInActive">Non-Active</label>
+                                    </div>
+                                    <div class="col-md-2 text-right ml-2">
+
+                                        <button class="btn btn-success mb-3" id="btn_add_guard_top"><i class="fa fa-plus mr-2"></i>Add Guard</button>
+                                    </div>
+                                    @*  <div class="col-md-2 text-right">
+                                <button class="btn btn-success mb-3" id="btn_refresh_guard_top"><i class="fa fa-refresh mr-2"></i>Refresh</button>
+                                </div> *@
+
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <table id="guard_settings" class="table table-bordered" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Name</th>
+                                            <th>License No</th>
+                                            <th>Initial</th>
+                                            <th>State</th>
+                                            <th>CRM (Supplier)</th>
+                                            <th>Sites</th>
+                                            <th>Pin</th>
+                                            <th></th>
+                                            <th>Gender</th>
+                                            <th>Active</th>
+                                            <th>HR1</th>
+                                            <th>HR2</th>
+                                            <th>HR3</th>
+                                            <th>hr1Description</th>
+                                            <th>hr2Description</th>
+                                            <th>hr3Description</th>
+                                            <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 mt-2 text-left">
+                                <button class="btn btn-success mb-3" id="btn_add_guard_bottom"><i class="fa fa-plus mr-2"></i>Add Guard</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade py-3" id="hrSettings" role="tabpanel" aria-labelledby="hr-settings-tab">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group row">
+                                    <label class="col-form-label col-md-2">Select a Field Type</label>
+                                    <div class="col-md-5">
+                                        <select class="form-control" id="hr_settings_fields_types" asp-items="@Html.GetEnumSelectList<HrSettingsType>().OrderBy(x=>x.Text)">
+                                            <option value="">None</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="text-right">
+                                    <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                                    <button class="btn btn-success mb-3" id="add_criticalDocuments" style="display:none"><i class="fa fa-plus mr-2"></i>Add Critical Documents</button>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings">
+                                    <thead>
+                                        <tr>
+                                            <th rowspan="2" style="display:none"></th>
+                                            <th rowspan="2">HR Group</th>
+                                            <th colspan="2">Reference No</th>
+                                            <th rowspan="2">Description</th>
+                                            <th rowspan="2">State</th>
+                                            <th rowspan="2">Site</th>
+                                            <th rowspan="2"></th>
+                                            <th rowspan="2"></th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                                <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
+
+                                <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
+                                <div id="SettingsDiv" style="display:none">
+                                    <div class="form-group row">
+                                        <div class="col-md-8">
+                                            <label class="form-label" id="DropboxImagesDir">Dropbox Directory</label>
+                                            <input class="form-control" id="DropboxDir">
+                                        </div>
+                                        <div class="col-md-3" style="padding-top:28px">
+                                            <button class="btn btn-success" id="add_Dropbox">Save</button>
+                                        </div>
+                                    </div>
+                                    <div class="card">
+                                        <div class="card-header d-flex justify-content-between">
+                                            <b><u>HR Compliance Alerts (Global)</u></b>
+                                            @* <div class="col text-right">
+
+                                        </div> *@
+                                        </div>
+
+                                        <div class="card-body row m-0">
+                                            <div class="col-md-12">
+                                                <div class="form-group row">
+                                                    <label for="hr_compliance_email" class="col-md-2 col-form-label">Email alert</label>
+                                                    <div class="col-md-3">
+                                                        <input type="email" class="form-control" id="hr_compliance_email">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <button class="btn btn-success" id="add_ComplianceEmail">Save</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                @*  Timesheet *@
+                                <div id="TimesheetDiv" style="display:none">
+                                    <div class="col-md-12">
+                                        <div class="form-group row">
+                                            <div class="col-md-3">
+                                                <label class="form-label" id="Week">select first day of the week</label>
+                                                <select class="form-control" id="week" name="week">
+                                                    <option value="">Select</option>
+                                                    <option value="Monday">Monday</option>
+                                                    <option value="Tuesday">Tuesday</option>
+                                                    <option value="Wednesday">Wednesday</option>
+                                                    <option value="Thursday">Thursday</option>
+                                                    <option value="Friday">Friday</option>
+                                                    <option value="saturday">saturday</option>
+                                                    <option value="Sunday">Sunday</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="time">Report Frequency</label>
+                                                <select class="form-control" id="Reportfrequency" name="Reportfrequency">
+                                                    <option value="">Select</option>
+                                                    <option value="Today">Today</option>
+                                                    <option value="ThisWeek">This Week</option>
+                                                    <option value="Last2weeks">Last 2 weeks(fortnight)</option>
+                                                    <option value="Last4weeks">Last 4 weeks(month)</option>
+                                                    <option value="Month">Month Only</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3" style="padding-top:28px">
+                                                <button class="btn btn-success" id="add_Timesheet">Save</button>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <div class="col-md-3">
+                                                <label class="form-label" id="Defaultmailbox">Designated Mailbox</label>
+                                                <input type="text" class="form-control" name="mailbox" id="mailbox" />
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label" id="dropbox">Designated Dropbox</label>
+                                                <input type="text" class="form-control" name="Defaultdropbox" id="Defaultdropbox" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="tab-pane fade py-3" id="csite" role="tabpanel" aria-labelledby="csite-tab">
+                <div class="row mb-3">
+                    <div class="col-md-10">
+                        <div class="form-group row">
+                            <label class="col-form-label ">Filter by Client Type</label>
+                            <div class="col-md-3">
+                                <select class="form-control" id="sel_client_type">
+                                    <option value="">All</option>
+                                    @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
+                                    {
+                                        <option value="@item.Id">@item.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            @*p1-192 client email search-start*@
+                            <label class="col-form-label">Email</label>
+                            <div class="input-group col-md-3">
+
+                                <input type="text" id="search_kw_client_site_email" class="form-control" placeholder="Search Client Email">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-primary" id="btnSearchClientEmail"><i class="fa fa-search"></i></button>
+                                </div>
+                            </div>
+                            @*p1-192 client email search-end*@
+                            <div class="input-group col-md-3">
+                                <input type="text" id="search_kw_client_site" class="form-control" placeholder="Search Client Site">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-primary" id="btnSearchClientSite"><i class="fa fa-search"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2 text-right" @hideTabStyle>
+                        <button class="btn btn-success mb-3" id="add_client_site"><i class="fa fa-plus mr-2"></i>Add Client Site</button>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <table class="table" id="client_site_settings"></table>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="tab-pane fade py-3" id="uca" role="tabpanel" aria-labelledby="uca-tab">
+                <div class="input-group col-md-3 mb-2 ml-1">
+                    <input type="text" id="search_site_access_control" class="form-control" placeholder="Search Client Site Access">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-primary" id="btnSearchClientSiteAccess"><i class="fa fa-search"></i></button>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 justify-content-center">
+                        <table class="table" id="user_client_access"></table>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade show active py-3" id="c4isettings" role="tabpanel" aria-labelledby="c4isettings-tab" >
+                <form id="form_CompanyDetails">
+                    <div class="form-group row">
+
+                        <div class="col-md-4">
+                            <input type="hidden" id="txt_CompanyId" class="form-control" />
+                        </div>
+
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-form-label col-md-2">Company Name</label>
+                        <div class="col-md-4">
+                            <input type="text" id="txt_CompanyName" class="form-control" name="CompanyDetails.Name" />
+                        </div>
+                        <label class="col-form-label col-md-2">Domain</label>
+                        <div class="col-md-4">
+                            <input type="text" id="txt_CompanyDomain" class="form-control" name="CompanyDetails.Domain" />
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-form-label col-md-2">Primary Logo</label>
+                        <div class="col-md-4">
+                            <a class="navbar-brand" href="https://@companydetail.LogoHyperlink" target="_blank">
+                                @*<img id="img_PrimaryLogo" height="60px" src="CompanyDetails.PrimaryLogoPath" />*@
+                                <img id="img_PrimaryLogo" height="60px" src="" />
+                            </a>
+
+
+                            <label class="btn btn-success mb-0">
+                                <form id="form_cs_primarylogo" method="post">
+                                    <i class="fa fa-upload mr-2"></i>Replace
+                                    <input type="file" id="cr_primarylogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.gif,.GIF" hidden />
+                                </form>
+                            </label>
+                        </div>
+
+
+
+                        <label class="col-form-label col-md-2">Banner Logo</label>
+                        <div style="padding-left: 8px;">
+                            <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
+                                @*<img id="img_BannerLogo" height="60px" src="CompanyDetails.BannerLogoPath" />*@
+                                <img id="img_BannerLogo" height="60px" src="" />
+                            </a>
+                            <label class="btn btn-success mb-0">
+                                <form id="form_cs_primarylogo" method="post">
+                                    <i class="fa fa-upload mr-2"></i>Replace
+                                    <input type="file" id="cr_bannerlogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.GIF,.gif" hidden />
+                                </form>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-form-label col-md-2">Logo Hyperlink</label>
+                        <div class="col-md-4">
+                            <input type="text" id="txt_LogoHyplerLink" class="form-control" />
+                        </div>
+                        <label class="col-form-label col-md-2 pr-0">API Provider (heic to jpg)</label>
+                        <div class="col-md-4">
+                            <input type="text" id="txt_APIProvider" class="form-control" />
+                        </div>
+                    </div>
+
+
+                    @*for logo in report-start*@
+                    <div class="form-group row">
+                        <label class="col-form-label col-md-2">Report Logo</label>
+                        <div class="col-md-4">
+                            <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
+                                @*<img id="img_PrimaryLogo" height="60px" src="CompanyDetails.PrimaryLogoPath" />*@
+                                <img id="img_ReportLogo" height="60px" src="~/images/CWSLogoPdf.png" />
+                            </a>
+
+
+                            <label class="btn btn-success mb-0">
+                                <form id="form_cs_reportlogo" method="post">
+                                    <i class="fa fa-upload mr-2"></i>Replace
+                                    <input type="file" id="cr_reportlogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.gif,.GIF" hidden />
+                                </form>
+                            </label>
+                        </div>
+
+                        <label class="col-form-label col-md-2">API secret key</label>
+                        <div class="col-md-4">
+                            <input type="text" id="txt_APIsecretkey" class="form-control" />
+                        </div>
+                    </div>
+                    @*for logo in report-end*@
+                    <div class="form-group row">
+                        @*  <label class="col-form-label col-md-2">Home Page Message</label>
+                    <div class="col-md-4">
+                    <textarea id="txt_HomePageMessage" class="form-control"></textarea>
+                    </div>*@
+                        <label class="col-form-label col-md-2">Home Page Message1</label>
+                        <div class="col-md-4">
+                            <textarea id="txt_HomePageMessage" class="form-control"></textarea>
+                        </div>
+                        <label class="col-form-label col-md-2">Footer Hyperlink Label</label>
+                        <div class="col-md-4">
+                            <input type="text" id="txt_HyplerLinkLabel" class="form-control" />
+                        </div>
+
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-form-label col-md-2">Banner Message</label>
+                        <div class="col-md-4">
+                            <textarea id="txt_BannerMessage" class="form-control"></textarea>
+                        </div>
+                        <label class="col-form-label col-md-2">Footer Hyperlink</label>
+                        <div class="col-md-4">
+                            <input type="text" id="txt_HyplerLink" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-form-label col-md-2">Banner Colour</label>
+                        <div class="col-md-4">
+                            <input type="color" id="txt_color" />
+                        </div>
+                        <label class="col-form-label col-md-2">Footer Hyperlink Colour</label>
+                        <div class="col-md-4">
+                            <input type="color" id="txt_HyperlinkColor" />
+                        </div>
+
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-form-label col-md-2">Home Page Message2</label>
+                        <div class="col-md-4">
+                            <textarea id="txt_HomePageMessage2" class="form-control"></textarea>
+                        </div>
+                        <label class="col-form-label col-md-2">Email Message</label>
+                        <div class="col-md-4">
+                            <textarea id="txt_EmailMessage" class=" form-control"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-form-label col-md-2">Software License</label>
+                        <div class="col-md-2">
+                            <select id="drp_swlicense" disabled="disabled">
+                                <option value="1">Gold</option>
+                                <option value="2">Silver</option>
+                                <option value="3">Bronze</option>
+                            </select>
+
+                        </div>
+                        <label class="col-form-label col-md-2">Type</label>
+                        <div class="col-md-2">
+                            <select id="drp_type" disabled="disabled">
+                                <option value="1">Annual</option>
+                                <option value="2">Monthly</option>
+                                <option value="3">Perpectual</option>
+                            </select>
+
+                        </div>
+                        <label class="col-form-label col-md-2">Expires</label>
+                        <div class="col-md-2">
+                            <input type="date" id="txt_ExpiryDate" value="30-06-2050" disabled="disabled" />
+
+                        </div>
+
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-md-10">
+                            <button class="btn btn-success" id="btn_CompanySave">Save</button>
+                        </div>
+
+                    </div>
+                </form>
+                </div>                    
+                }
+                if (Model.Guard.IsAdminAuditorAccess)
+                {
+                    <div class="tab-pane fade  py-3" id="c4ihr" role="tabpanel" aria-labelledby="c4ihr-tab">
+                        <ul class="nav nav-tabs" id="guardSettingsTab" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" id="guard_tab" data-toggle="tab" href="#guard" role="tab" aria-controls="guard" aria-selected="true">HR</a>
+                            </li>
+                            @*    <li class="nav-item">
+                <a class="nav-link" id="kvl-fields-tab" data-toggle="tab" href="#hrSettings" role="tab" aria-controls="hrSettings" aria-selected="false">HR Settings</a>
+                </li> *@
+                        </ul>
+                        <div class="tab-content" id="guardSettingsTabContent">
+                            <div class="tab-pane fade show active py-3" id="guard" role="tabpanel" aria-labelledby="guard-tab">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group row">
+                                            <div class="col-md-2 text-left mr-5">
+                                                <a href="#" class="btn btn-primary mb-3" id="btnDownloadGuardLogExcel">Download <i class="fa fa-file-excel-o"></i></a>
+                                                <div id="loader"></div>
+                                            </div>
+
+                                            <div class="" style="width: 142px;">
+                                                <input type="checkbox" class="form-check-input" id="chkbxHR1">
+                                                <label class="font-weight-normal pr-4" for="chkbxfilterGuardActive">HR1</label>
+                                                <input type="checkbox" class="form-check-input" id="chkbxHR2">
+                                                <label class="font-weight-normal pr-4" for="chkbxHR2">HR2</label>
+                                                <input type="checkbox" class="form-check-input" id="chkbxHR3">
+                                                <label class="font-weight-normal" for="chkbxHR3">HR3</label>
+
+                                            </div>
+                                            <div class="col-md-2 text-left p-0">
+                                                <div class="dropdown dropdownGuardHrFilter">
+                                                    <button class="btn btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
+                                                        <i class="fa fa-circle text-primary mr-2"></i>Show All Entries
+                                                    </button>
+                                                    <div class="dropdown-menu" x-placement="bottom-start" style="position: absolute; will-change: transform; top: 0px; left: 0px; transform: translate3d(0px, 66px, 0px);">
+                                                        <a class="dropdown-item" href="#" data-val="0"><i class="fa fa-circle text-primary mr-2"></i>Show All Entries</a>
+                                                        <a class="dropdown-item" href="#" data-val="green"><i class="fa fa-circle text-success mr-2"></i>Valid</a>
+                                                        <a class="dropdown-item" href="#" data-val="yellow"><i class="fa fa-circle text-warning mr-2"></i>Expiring</a>
+                                                        <a class="dropdown-item" href="#" data-val="red"><i class="fa fa-circle text-danger mr-2"></i>Expired</a>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2 text-left p-0 mr-2">
+                                                <select class="form-control" id="list_HrSearchandEdit_keys">
+                                                    <option></option>
+                                                </select>
+                                            </div>
+
+                                            <div class="col-md-1 offset-md-2 px-0 text-left ml-5">
+
+                                                <input type="checkbox" class="form-check-input" id="chkbxfilterGuardActive">
+                                                <label class="font-weight-normal" for="chkbxfilterGuardActive">Active</label>
+                                                <br />
+                                                <input type="checkbox" class="form-check-input" id="chkbxfilterGuardInActive">
+                                                <label class="font-weight-normal" for="chkbxfilterGuardInActive">Non-Active</label>
+                                            </div>
+                                            <div class="col-md-2 text-right ml-2">
+
+                                                <button class="btn btn-success mb-3" id="btn_add_guard_top"><i class="fa fa-plus mr-2"></i>Add Guard</button>
+                                            </div>
+                                            @*  <div class="col-md-2 text-right">
+                                <button class="btn btn-success mb-3" id="btn_refresh_guard_top"><i class="fa fa-refresh mr-2"></i>Refresh</button>
+                                </div> *@
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <table id="guard_settings" class="table table-bordered" style="width:100%">
+                                            <thead>
+                                                <tr>
+                                                    <th></th>
+                                                    <th>Name</th>
+                                                    <th>License No</th>
+                                                    <th>Initial</th>
+                                                    <th>State</th>
+                                                    <th>CRM (Supplier)</th>
+                                                    <th>Sites</th>
+                                                    <th>Pin</th>
+                                                    <th></th>
+                                                    <th>Gender</th>
+                                                    <th>Active</th>
+                                                    <th>HR1</th>
+                                                    <th>HR2</th>
+                                                    <th>HR3</th>
+                                                    <th>hr1Description</th>
+                                                    <th>hr2Description</th>
+                                                    <th>hr3Description</th>
+                                                    <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 mt-2 text-left">
+                                        <button class="btn btn-success mb-3" id="btn_add_guard_bottom"><i class="fa fa-plus mr-2"></i>Add Guard</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade py-3" id="hrSettings" role="tabpanel" aria-labelledby="hr-settings-tab">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group row">
+                                            <label class="col-form-label col-md-2">Select a Field Type</label>
+                                            <div class="col-md-5">
+                                                <select class="form-control" id="hr_settings_fields_types" asp-items="@Html.GetEnumSelectList<HrSettingsType>().OrderBy(x=>x.Text)">
+                                                    <option value="">None</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="text-right">
+                                            <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                                            <button class="btn btn-success mb-3" id="add_criticalDocuments" style="display:none"><i class="fa fa-plus mr-2"></i>Add Critical Documents</button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings">
+                                            <thead>
+                                                <tr>
+                                                    <th rowspan="2" style="display:none"></th>
+                                                    <th rowspan="2">HR Group</th>
+                                                    <th colspan="2">Reference No</th>
+                                                    <th rowspan="2">Description</th>
+                                                    <th rowspan="2">State</th>
+                                                    <th rowspan="2">Site</th>
+                                                    <th rowspan="2"></th>
+                                                    <th rowspan="2"></th>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                        <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
+
+                                        <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
+                                        <div id="SettingsDiv" style="display:none">
+                                            <div class="form-group row">
+                                                <div class="col-md-8">
+                                                    <label class="form-label" id="DropboxImagesDir">Dropbox Directory</label>
+                                                    <input class="form-control" id="DropboxDir">
+                                                </div>
+                                                <div class="col-md-3" style="padding-top:28px">
+                                                    <button class="btn btn-success" id="add_Dropbox">Save</button>
+                                                </div>
+                                            </div>
+                                            <div class="card">
+                                                <div class="card-header d-flex justify-content-between">
+                                                    <b><u>HR Compliance Alerts (Global)</u></b>
+                                                    @* <div class="col text-right">
+
+                                        </div> *@
+                                                </div>
+
+                                                <div class="card-body row m-0">
+                                                    <div class="col-md-12">
+                                                        <div class="form-group row">
+                                                            <label for="hr_compliance_email" class="col-md-2 col-form-label">Email alert</label>
+                                                            <div class="col-md-3">
+                                                                <input type="email" class="form-control" id="hr_compliance_email">
+                                                            </div>
+                                                            <div class="col-md-3">
+                                                                <button class="btn btn-success" id="add_ComplianceEmail">Save</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @*  Timesheet *@
+                                        <div id="TimesheetDiv" style="display:none">
+                                            <div class="col-md-12">
+                                                <div class="form-group row">
+                                                    <div class="col-md-3">
+                                                        <label class="form-label" id="Week">select first day of the week</label>
+                                                        <select class="form-control" id="week" name="week">
+                                                            <option value="">Select</option>
+                                                            <option value="Monday">Monday</option>
+                                                            <option value="Tuesday">Tuesday</option>
+                                                            <option value="Wednesday">Wednesday</option>
+                                                            <option value="Thursday">Thursday</option>
+                                                            <option value="Friday">Friday</option>
+                                                            <option value="saturday">saturday</option>
+                                                            <option value="Sunday">Sunday</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label for="time">Report Frequency</label>
+                                                        <select class="form-control" id="Reportfrequency" name="Reportfrequency">
+                                                            <option value="">Select</option>
+                                                            <option value="Today">Today</option>
+                                                            <option value="ThisWeek">This Week</option>
+                                                            <option value="Last2weeks">Last 2 weeks(fortnight)</option>
+                                                            <option value="Last4weeks">Last 4 weeks(month)</option>
+                                                            <option value="Month">Month Only</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-3" style="padding-top:28px">
+                                                        <button class="btn btn-success" id="add_Timesheet">Save</button>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group row">
+                                                    <div class="col-md-3">
+                                                        <label class="form-label" id="Defaultmailbox">Designated Mailbox</label>
+                                                        <input type="text" class="form-control" name="mailbox" id="mailbox" />
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label class="form-label" id="dropbox">Designated Dropbox</label>
+                                                        <input type="text" class="form-control" name="Defaultdropbox" id="Defaultdropbox" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade py-3" id="csite" role="tabpanel" aria-labelledby="csite-tab">
+                        <div class="row mb-3">
+                            <div class="col-md-10">
+                                <div class="form-group row">
+                                    <label class="col-form-label ">Filter by Client Type</label>
+                                    <div class="col-md-3">
+                                        <select class="form-control" id="sel_client_type">
+                                            <option value="">All</option>
+                                            @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
+                                            {
+                                                <option value="@item.Id">@item.Name</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    @*p1-192 client email search-start*@
+                                    <label class="col-form-label">Email</label>
+                                    <div class="input-group col-md-3">
+
+                                        <input type="text" id="search_kw_client_site_email" class="form-control" placeholder="Search Client Email">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-primary" id="btnSearchClientEmail"><i class="fa fa-search"></i></button>
+                                        </div>
+                                    </div>
+                                    @*p1-192 client email search-end*@
+                                    <div class="input-group col-md-3">
+                                        <input type="text" id="search_kw_client_site" class="form-control" placeholder="Search Client Site">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-primary" id="btnSearchClientSite"><i class="fa fa-search"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2 text-right" @hideTabStyle>
+                                <button class="btn btn-success mb-3" id="add_client_site"><i class="fa fa-plus mr-2"></i>Add Client Site</button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <table class="table" id="client_site_settings"></table>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="tab-pane fade py-3" id="uca" role="tabpanel" aria-labelledby="uca-tab">
+                        <div class="input-group col-md-3 mb-2 ml-1">
+                            <input type="text" id="search_site_access_control" class="form-control" placeholder="Search Client Site Access">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-primary" id="btnSearchClientSiteAccess"><i class="fa fa-search"></i></button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 justify-content-center">
+                                <table class="table" id="user_client_access"></table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade show active py-3" id="c4isettings" role="tabpanel" aria-labelledby="c4isettings-tab">
+                        <form id="form_CompanyDetails">
+                            <div class="form-group row">
+
+                                <div class="col-md-4">
+                                    <input type="hidden" id="txt_CompanyId" class="form-control" />
+                                </div>
+
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Company Name</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_CompanyName" class="form-control" name="CompanyDetails.Name" />
+                                </div>
+                                <label class="col-form-label col-md-2">Domain</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_CompanyDomain" class="form-control" name="CompanyDetails.Domain" />
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Primary Logo</label>
+                                <div class="col-md-4">
+                                    <a class="navbar-brand" href="https://@companydetail.LogoHyperlink" target="_blank">
+                                        @*<img id="img_PrimaryLogo" height="60px" src="CompanyDetails.PrimaryLogoPath" />*@
+                                        <img id="img_PrimaryLogo" height="60px" src="" />
+                                    </a>
+
+
+                                    <label class="btn btn-success mb-0">
+                                        <form id="form_cs_primarylogo" method="post">
+                                            <i class="fa fa-upload mr-2"></i>Replace
+                                            <input type="file" id="cr_primarylogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.gif,.GIF" hidden />
+                                        </form>
+                                    </label>
+                                </div>
+
+
+
+                                <label class="col-form-label col-md-2">Banner Logo</label>
+                                <div style="padding-left: 8px;">
+                                    <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
+                                        @*<img id="img_BannerLogo" height="60px" src="CompanyDetails.BannerLogoPath" />*@
+                                        <img id="img_BannerLogo" height="60px" src="" />
+                                    </a>
+                                    <label class="btn btn-success mb-0">
+                                        <form id="form_cs_primarylogo" method="post">
+                                            <i class="fa fa-upload mr-2"></i>Replace
+                                            <input type="file" id="cr_bannerlogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.GIF,.gif" hidden />
+                                        </form>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Logo Hyperlink</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_LogoHyplerLink" class="form-control" />
+                                </div>
+                                <label class="col-form-label col-md-2 pr-0">API Provider (heic to jpg)</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_APIProvider" class="form-control" />
+                                </div>
+                            </div>
+
+
+                            @*for logo in report-start*@
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Report Logo</label>
+                                <div class="col-md-4">
+                                    <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
+                                        @*<img id="img_PrimaryLogo" height="60px" src="CompanyDetails.PrimaryLogoPath" />*@
+                                        <img id="img_ReportLogo" height="60px" src="~/images/CWSLogoPdf.png" />
+                                    </a>
+
+
+                                    <label class="btn btn-success mb-0">
+                                        <form id="form_cs_reportlogo" method="post">
+                                            <i class="fa fa-upload mr-2"></i>Replace
+                                            <input type="file" id="cr_reportlogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.gif,.GIF" hidden />
+                                        </form>
+                                    </label>
+                                </div>
+
+                                <label class="col-form-label col-md-2">API secret key</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_APIsecretkey" class="form-control" />
+                                </div>
+                            </div>
+                            @*for logo in report-end*@
+                            <div class="form-group row">
+                                @*  <label class="col-form-label col-md-2">Home Page Message</label>
+                    <div class="col-md-4">
+                    <textarea id="txt_HomePageMessage" class="form-control"></textarea>
+                    </div>*@
+                                <label class="col-form-label col-md-2">Home Page Message1</label>
+                                <div class="col-md-4">
+                                    <textarea id="txt_HomePageMessage" class="form-control"></textarea>
+                                </div>
+                                <label class="col-form-label col-md-2">Footer Hyperlink Label</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_HyplerLinkLabel" class="form-control" />
+                                </div>
+
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Banner Message</label>
+                                <div class="col-md-4">
+                                    <textarea id="txt_BannerMessage" class="form-control"></textarea>
+                                </div>
+                                <label class="col-form-label col-md-2">Footer Hyperlink</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_HyplerLink" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Banner Colour</label>
+                                <div class="col-md-4">
+                                    <input type="color" id="txt_color" />
+                                </div>
+                                <label class="col-form-label col-md-2">Footer Hyperlink Colour</label>
+                                <div class="col-md-4">
+                                    <input type="color" id="txt_HyperlinkColor" />
+                                </div>
+
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Home Page Message2</label>
+                                <div class="col-md-4">
+                                    <textarea id="txt_HomePageMessage2" class="form-control"></textarea>
+                                </div>
+                                <label class="col-form-label col-md-2">Email Message</label>
+                                <div class="col-md-4">
+                                    <textarea id="txt_EmailMessage" class=" form-control"></textarea>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Software License</label>
+                                <div class="col-md-2">
+                                    <select id="drp_swlicense" disabled="disabled">
+                                        <option value="1">Gold</option>
+                                        <option value="2">Silver</option>
+                                        <option value="3">Bronze</option>
+                                    </select>
+
+                                </div>
+                                <label class="col-form-label col-md-2">Type</label>
+                                <div class="col-md-2">
+                                    <select id="drp_type" disabled="disabled">
+                                        <option value="1">Annual</option>
+                                        <option value="2">Monthly</option>
+                                        <option value="3">Perpectual</option>
+                                    </select>
+
+                                </div>
+                                <label class="col-form-label col-md-2">Expires</label>
+                                <div class="col-md-2">
+                                    <input type="date" id="txt_ExpiryDate" value="30-06-2050" disabled="disabled" />
+
+                                </div>
+
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-10">
+                                    <button class="btn btn-success" id="btn_CompanySave">Save</button>
+                                </div>
+
+                            </div>
+                        </form>
+                    </div>
+                }
+                if (Model.Guard.IsAdminInvestigatorAccess)
+                {
+                    <div class="tab-pane fade  py-3" id="c4ihr" role="tabpanel" aria-labelledby="c4ihr-tab">
+                        <ul class="nav nav-tabs" id="guardSettingsTab" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" id="guard_tab" data-toggle="tab" href="#guard" role="tab" aria-controls="guard" aria-selected="true">HR</a>
+                            </li>
+                            @*    <li class="nav-item">
+                <a class="nav-link" id="kvl-fields-tab" data-toggle="tab" href="#hrSettings" role="tab" aria-controls="hrSettings" aria-selected="false">HR Settings</a>
+                </li> *@
+                        </ul>
+                        <div class="tab-content" id="guardSettingsTabContent">
+                            <div class="tab-pane fade show active py-3" id="guard" role="tabpanel" aria-labelledby="guard-tab">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group row">
+                                            <div class="col-md-2 text-left mr-5">
+                                                <a href="#" class="btn btn-primary mb-3" id="btnDownloadGuardLogExcel">Download <i class="fa fa-file-excel-o"></i></a>
+                                                <div id="loader"></div>
+                                            </div>
+
+                                            <div class="" style="width: 142px;">
+                                                <input type="checkbox" class="form-check-input" id="chkbxHR1">
+                                                <label class="font-weight-normal pr-4" for="chkbxfilterGuardActive">HR1</label>
+                                                <input type="checkbox" class="form-check-input" id="chkbxHR2">
+                                                <label class="font-weight-normal pr-4" for="chkbxHR2">HR2</label>
+                                                <input type="checkbox" class="form-check-input" id="chkbxHR3">
+                                                <label class="font-weight-normal" for="chkbxHR3">HR3</label>
+
+                                            </div>
+                                            <div class="col-md-2 text-left p-0">
+                                                <div class="dropdown dropdownGuardHrFilter">
+                                                    <button class="btn btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
+                                                        <i class="fa fa-circle text-primary mr-2"></i>Show All Entries
+                                                    </button>
+                                                    <div class="dropdown-menu" x-placement="bottom-start" style="position: absolute; will-change: transform; top: 0px; left: 0px; transform: translate3d(0px, 66px, 0px);">
+                                                        <a class="dropdown-item" href="#" data-val="0"><i class="fa fa-circle text-primary mr-2"></i>Show All Entries</a>
+                                                        <a class="dropdown-item" href="#" data-val="green"><i class="fa fa-circle text-success mr-2"></i>Valid</a>
+                                                        <a class="dropdown-item" href="#" data-val="yellow"><i class="fa fa-circle text-warning mr-2"></i>Expiring</a>
+                                                        <a class="dropdown-item" href="#" data-val="red"><i class="fa fa-circle text-danger mr-2"></i>Expired</a>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2 text-left p-0 mr-2">
+                                                <select class="form-control" id="list_HrSearchandEdit_keys">
+                                                    <option></option>
+                                                </select>
+                                            </div>
+
+                                            <div class="col-md-1 offset-md-2 px-0 text-left ml-5">
+
+                                                <input type="checkbox" class="form-check-input" id="chkbxfilterGuardActive">
+                                                <label class="font-weight-normal" for="chkbxfilterGuardActive">Active</label>
+                                                <br />
+                                                <input type="checkbox" class="form-check-input" id="chkbxfilterGuardInActive">
+                                                <label class="font-weight-normal" for="chkbxfilterGuardInActive">Non-Active</label>
+                                            </div>
+                                            <div class="col-md-2 text-right ml-2">
+
+                                                <button class="btn btn-success mb-3" id="btn_add_guard_top"><i class="fa fa-plus mr-2"></i>Add Guard</button>
+                                            </div>
+                                            @*  <div class="col-md-2 text-right">
+                                <button class="btn btn-success mb-3" id="btn_refresh_guard_top"><i class="fa fa-refresh mr-2"></i>Refresh</button>
+                                </div> *@
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <table id="guard_settings" class="table table-bordered" style="width:100%">
+                                            <thead>
+                                                <tr>
+                                                    <th></th>
+                                                    <th>Name</th>
+                                                    <th>License No</th>
+                                                    <th>Initial</th>
+                                                    <th>State</th>
+                                                    <th>CRM (Supplier)</th>
+                                                    <th>Sites</th>
+                                                    <th>Pin</th>
+                                                    <th></th>
+                                                    <th>Gender</th>
+                                                    <th>Active</th>
+                                                    <th>HR1</th>
+                                                    <th>HR2</th>
+                                                    <th>HR3</th>
+                                                    <th>hr1Description</th>
+                                                    <th>hr2Description</th>
+                                                    <th>hr3Description</th>
+                                                    <th class="text-center"><i class="fa fa-cogs" aria-hidden="true"></i></th>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 mt-2 text-left">
+                                        <button class="btn btn-success mb-3" id="btn_add_guard_bottom"><i class="fa fa-plus mr-2"></i>Add Guard</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade py-3" id="hrSettings" role="tabpanel" aria-labelledby="hr-settings-tab">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group row">
+                                            <label class="col-form-label col-md-2">Select a Field Type</label>
+                                            <div class="col-md-5">
+                                                <select class="form-control" id="hr_settings_fields_types" asp-items="@Html.GetEnumSelectList<HrSettingsType>().OrderBy(x=>x.Text)">
+                                                    <option value="">None</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="text-right">
+                                            <button class="btn btn-success mb-3" id="add_hr_settings"><i class="fa fa-plus mr-2"></i>Add New Field</button>
+                                            <button class="btn btn-success mb-3" id="add_criticalDocuments" style="display:none"><i class="fa fa-plus mr-2"></i>Add Critical Documents</button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <table class="table table-bordered table-sm" width="100%" id="tbl_hr_settings">
+                                            <thead>
+                                                <tr>
+                                                    <th rowspan="2" style="display:none"></th>
+                                                    <th rowspan="2">HR Group</th>
+                                                    <th colspan="2">Reference No</th>
+                                                    <th rowspan="2">Description</th>
+                                                    <th rowspan="2">State</th>
+                                                    <th rowspan="2">Site</th>
+                                                    <th rowspan="2"></th>
+                                                    <th rowspan="2"></th>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                        <table class="table table-bordered table-sm" width="100%" id="tbl_license_type"></table>
+
+                                        <table class="table table-bordered table-sm" width="100%" id="tbl_CriticalDocument"></table>
+                                        <div id="SettingsDiv" style="display:none">
+                                            <div class="form-group row">
+                                                <div class="col-md-8">
+                                                    <label class="form-label" id="DropboxImagesDir">Dropbox Directory</label>
+                                                    <input class="form-control" id="DropboxDir">
+                                                </div>
+                                                <div class="col-md-3" style="padding-top:28px">
+                                                    <button class="btn btn-success" id="add_Dropbox">Save</button>
+                                                </div>
+                                            </div>
+                                            <div class="card">
+                                                <div class="card-header d-flex justify-content-between">
+                                                    <b><u>HR Compliance Alerts (Global)</u></b>
+                                                    @* <div class="col text-right">
+
+                                        </div> *@
+                                                </div>
+
+                                                <div class="card-body row m-0">
+                                                    <div class="col-md-12">
+                                                        <div class="form-group row">
+                                                            <label for="hr_compliance_email" class="col-md-2 col-form-label">Email alert</label>
+                                                            <div class="col-md-3">
+                                                                <input type="email" class="form-control" id="hr_compliance_email">
+                                                            </div>
+                                                            <div class="col-md-3">
+                                                                <button class="btn btn-success" id="add_ComplianceEmail">Save</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @*  Timesheet *@
+                                        <div id="TimesheetDiv" style="display:none">
+                                            <div class="col-md-12">
+                                                <div class="form-group row">
+                                                    <div class="col-md-3">
+                                                        <label class="form-label" id="Week">select first day of the week</label>
+                                                        <select class="form-control" id="week" name="week">
+                                                            <option value="">Select</option>
+                                                            <option value="Monday">Monday</option>
+                                                            <option value="Tuesday">Tuesday</option>
+                                                            <option value="Wednesday">Wednesday</option>
+                                                            <option value="Thursday">Thursday</option>
+                                                            <option value="Friday">Friday</option>
+                                                            <option value="saturday">saturday</option>
+                                                            <option value="Sunday">Sunday</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label for="time">Report Frequency</label>
+                                                        <select class="form-control" id="Reportfrequency" name="Reportfrequency">
+                                                            <option value="">Select</option>
+                                                            <option value="Today">Today</option>
+                                                            <option value="ThisWeek">This Week</option>
+                                                            <option value="Last2weeks">Last 2 weeks(fortnight)</option>
+                                                            <option value="Last4weeks">Last 4 weeks(month)</option>
+                                                            <option value="Month">Month Only</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-3" style="padding-top:28px">
+                                                        <button class="btn btn-success" id="add_Timesheet">Save</button>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group row">
+                                                    <div class="col-md-3">
+                                                        <label class="form-label" id="Defaultmailbox">Designated Mailbox</label>
+                                                        <input type="text" class="form-control" name="mailbox" id="mailbox" />
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label class="form-label" id="dropbox">Designated Dropbox</label>
+                                                        <input type="text" class="form-control" name="Defaultdropbox" id="Defaultdropbox" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade py-3" id="csite" role="tabpanel" aria-labelledby="csite-tab">
+                        <div class="row mb-3">
+                            <div class="col-md-10">
+                                <div class="form-group row">
+                                    <label class="col-form-label ">Filter by Client Type</label>
+                                    <div class="col-md-3">
+                                        <select class="form-control" id="sel_client_type">
+                                            <option value="">All</option>
+                                            @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
+                                            {
+                                                <option value="@item.Id">@item.Name</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    @*p1-192 client email search-start*@
+                                    <label class="col-form-label">Email</label>
+                                    <div class="input-group col-md-3">
+
+                                        <input type="text" id="search_kw_client_site_email" class="form-control" placeholder="Search Client Email">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-primary" id="btnSearchClientEmail"><i class="fa fa-search"></i></button>
+                                        </div>
+                                    </div>
+                                    @*p1-192 client email search-end*@
+                                    <div class="input-group col-md-3">
+                                        <input type="text" id="search_kw_client_site" class="form-control" placeholder="Search Client Site">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-primary" id="btnSearchClientSite"><i class="fa fa-search"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2 text-right" @hideTabStyle>
+                                <button class="btn btn-success mb-3" id="add_client_site"><i class="fa fa-plus mr-2"></i>Add Client Site</button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <table class="table" id="client_site_settings"></table>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="tab-pane fade py-3" id="uca" role="tabpanel" aria-labelledby="uca-tab">
+                        <div class="input-group col-md-3 mb-2 ml-1">
+                            <input type="text" id="search_site_access_control" class="form-control" placeholder="Search Client Site Access">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-primary" id="btnSearchClientSiteAccess"><i class="fa fa-search"></i></button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 justify-content-center">
+                                <table class="table" id="user_client_access"></table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade show active py-3" id="c4isettings" role="tabpanel" aria-labelledby="c4isettings-tab">
+                        <form id="form_CompanyDetails">
+                            <div class="form-group row">
+
+                                <div class="col-md-4">
+                                    <input type="hidden" id="txt_CompanyId" class="form-control" />
+                                </div>
+
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Company Name</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_CompanyName" class="form-control" name="CompanyDetails.Name" />
+                                </div>
+                                <label class="col-form-label col-md-2">Domain</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_CompanyDomain" class="form-control" name="CompanyDetails.Domain" />
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Primary Logo</label>
+                                <div class="col-md-4">
+                                    <a class="navbar-brand" href="https://@companydetail.LogoHyperlink" target="_blank">
+                                        @*<img id="img_PrimaryLogo" height="60px" src="CompanyDetails.PrimaryLogoPath" />*@
+                                        <img id="img_PrimaryLogo" height="60px" src="" />
+                                    </a>
+
+
+                                    <label class="btn btn-success mb-0">
+                                        <form id="form_cs_primarylogo" method="post">
+                                            <i class="fa fa-upload mr-2"></i>Replace
+                                            <input type="file" id="cr_primarylogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.gif,.GIF" hidden />
+                                        </form>
+                                    </label>
+                                </div>
+
+
+
+                                <label class="col-form-label col-md-2">Banner Logo</label>
+                                <div style="padding-left: 8px;">
+                                    <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
+                                        @*<img id="img_BannerLogo" height="60px" src="CompanyDetails.BannerLogoPath" />*@
+                                        <img id="img_BannerLogo" height="60px" src="" />
+                                    </a>
+                                    <label class="btn btn-success mb-0">
+                                        <form id="form_cs_primarylogo" method="post">
+                                            <i class="fa fa-upload mr-2"></i>Replace
+                                            <input type="file" id="cr_bannerlogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.GIF,.gif" hidden />
+                                        </form>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Logo Hyperlink</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_LogoHyplerLink" class="form-control" />
+                                </div>
+                                <label class="col-form-label col-md-2 pr-0">API Provider (heic to jpg)</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_APIProvider" class="form-control" />
+                                </div>
+                            </div>
+
+
+                            @*for logo in report-start*@
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Report Logo</label>
+                                <div class="col-md-4">
+                                    <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
+                                        @*<img id="img_PrimaryLogo" height="60px" src="CompanyDetails.PrimaryLogoPath" />*@
+                                        <img id="img_ReportLogo" height="60px" src="~/images/CWSLogoPdf.png" />
+                                    </a>
+
+
+                                    <label class="btn btn-success mb-0">
+                                        <form id="form_cs_reportlogo" method="post">
+                                            <i class="fa fa-upload mr-2"></i>Replace
+                                            <input type="file" id="cr_reportlogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.gif,.GIF" hidden />
+                                        </form>
+                                    </label>
+                                </div>
+
+                                <label class="col-form-label col-md-2">API secret key</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_APIsecretkey" class="form-control" />
+                                </div>
+                            </div>
+                            @*for logo in report-end*@
+                            <div class="form-group row">
+                                @*  <label class="col-form-label col-md-2">Home Page Message</label>
+                    <div class="col-md-4">
+                    <textarea id="txt_HomePageMessage" class="form-control"></textarea>
+                    </div>*@
+                                <label class="col-form-label col-md-2">Home Page Message1</label>
+                                <div class="col-md-4">
+                                    <textarea id="txt_HomePageMessage" class="form-control"></textarea>
+                                </div>
+                                <label class="col-form-label col-md-2">Footer Hyperlink Label</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_HyplerLinkLabel" class="form-control" />
+                                </div>
+
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Banner Message</label>
+                                <div class="col-md-4">
+                                    <textarea id="txt_BannerMessage" class="form-control"></textarea>
+                                </div>
+                                <label class="col-form-label col-md-2">Footer Hyperlink</label>
+                                <div class="col-md-4">
+                                    <input type="text" id="txt_HyplerLink" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Banner Colour</label>
+                                <div class="col-md-4">
+                                    <input type="color" id="txt_color" />
+                                </div>
+                                <label class="col-form-label col-md-2">Footer Hyperlink Colour</label>
+                                <div class="col-md-4">
+                                    <input type="color" id="txt_HyperlinkColor" />
+                                </div>
+
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Home Page Message2</label>
+                                <div class="col-md-4">
+                                    <textarea id="txt_HomePageMessage2" class="form-control"></textarea>
+                                </div>
+                                <label class="col-form-label col-md-2">Email Message</label>
+                                <div class="col-md-4">
+                                    <textarea id="txt_EmailMessage" class=" form-control"></textarea>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-form-label col-md-2">Software License</label>
+                                <div class="col-md-2">
+                                    <select id="drp_swlicense" disabled="disabled">
+                                        <option value="1">Gold</option>
+                                        <option value="2">Silver</option>
+                                        <option value="3">Bronze</option>
+                                    </select>
+
+                                </div>
+                                <label class="col-form-label col-md-2">Type</label>
+                                <div class="col-md-2">
+                                    <select id="drp_type" disabled="disabled">
+                                        <option value="1">Annual</option>
+                                        <option value="2">Monthly</option>
+                                        <option value="3">Perpectual</option>
+                                    </select>
+
+                                </div>
+                                <label class="col-form-label col-md-2">Expires</label>
+                                <div class="col-md-2">
+                                    <input type="date" id="txt_ExpiryDate" value="30-06-2050" disabled="disabled" />
+
+                                </div>
+
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-md-10">
+                                    <button class="btn btn-success" id="btn_CompanySave">Save</button>
+                                </div>
+
+                            </div>
+                        </form>
+                    </div>
+                }
+            }
+            
         }
     </div>
 
@@ -1474,7 +3255,7 @@
                                         {
                                             @foreach (var AccessType in viewDataServiceNew.GetAccessTypes(true))
                                             {
-                                                if (@AccessType.Value != "7" && @AccessType.Value != "8" && @AccessType.Value != "9" && @AccessType.Value != "10" && @AccessType.Value != "11" && @AccessType.Value != "12")
+                                                if (@AccessType.Value != "8" && @AccessType.Value != "9" && @AccessType.Value != "10" && @AccessType.Value != "11" && @AccessType.Value != "12" && @AccessType.Value != "2" && @AccessType.Value != "3" && @AccessType.Value != "4" && @AccessType.Value != "5" && @AccessType.Value != "6")
                                                 {
                                                     <option value="@AccessType.Value">@AccessType.Text</option>
                                                 }

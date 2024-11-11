@@ -4764,6 +4764,16 @@ $(function () {
         $("#Guard_Access").multiselect();
         $("#Guard_Access").val(selectedValues);
         $("#Guard_Access").multiselect("refresh");
+        
+       
+        if ($('#txt_IsAdminPowerUser').val() == 'True') {
+            if (data.isAdminGlobal) {
+                $('#cbIsActive').prop('disabled', true);
+            }
+            else {
+                $('#cbIsActive').prop('disabled', false);
+            }
+        }
     });
     $('#guard_settings tbody').on('click', 'img[name=btn_timesheet]', function () {
         $('#TimesheetGuard_Id').val('-1');
