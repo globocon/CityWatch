@@ -1295,7 +1295,7 @@ namespace CityWatch.Web.Pages.Admin
                     {
                         if (guard.IsActive)
                         {
-                            if (guard.IsRCAccess)
+                            if (guard.IsRCAccess || guard.IsRCFusionAccess)
                             {
                                 AccessPermission = true;
                                 GuId = guard.Id;
@@ -1304,6 +1304,7 @@ namespace CityWatch.Web.Pages.Admin
                                     LoggedInUserId = AuthUserHelper.LoggedInUserId;
                                 }
                                 SuccessCode = 1;
+                               
                             }
                             else
                             {

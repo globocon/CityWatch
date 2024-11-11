@@ -4,6 +4,7 @@
 @using Microsoft.AspNetCore.Http
 @model CityWatch.RadioCheck.Pages.Radio.RadioCheckNewModel
 @inject IConfigDataProvider configDataProvider
+@inject IGuardDataProvider guarddataProvider
 @{
 
     ViewData["Title"] = "Radio Check";
@@ -11,6 +12,7 @@
     Layout = "_Layout_InnerPage";
     ViewData["DisplayItem"] = Model.DisplayItem;
     var guardid = Request.Query["guid"];  // Initialize with a default value
+    var guard = guarddataProvider.GetGuards().SingleOrDefault(z => z.Id == Model.GuardId);
     
 
     var loginUserId = Request.Query["lud"];
@@ -29,6 +31,7 @@
 <input type="hidden" id="txtSignalRConnectionUrl" value="@Model.SignalRConnectionUrl" />
 <input type="hidden" asp-for="@guardid" id="GuardLog_GuardLogin_GuardId" />
 <input type="hidden" asp-for="@loginUserId" id="loginUserId" />
+<input type="hidden" id="txtguardGuardRCAccess" asp-for="@guard.IsRCAccess" />
 <!-----------------In Acive List -------------------->
 
 <div class="card">
@@ -345,8 +348,11 @@
                             </thead>
 
                         </table>
-                        <label class="mt-5"><h5 class="modal-title col-md-12">Last Known IR from this guard</h5></label>
-                        <table id="clientSiteActiveGuardsLastIncidentReportsDetails" class="table table-bordered" style="width:100%;"></table>
+                        @if (guard.IsRCAccess == false)
+                        {
+                            <label class="mt-5"><h5 class="modal-title col-md-12">Last Known IR from this guard</h5></label>
+                            <table id="clientSiteActiveGuardsLastIncidentReportsDetails" class="table table-bordered" style="width:100%;"></table>
+                        }
                     </div>
                 </div>
 
