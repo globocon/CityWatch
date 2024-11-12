@@ -880,7 +880,7 @@ namespace CityWatch.Kpi.Pages.Admin
             return new JsonResult(new { success, message });
         }
 
-        public void OnPostSaveSiteEmail(int siteId, string siteEmail, bool enableLogDump, string landLine, string guardEmailTo, string duressEmail, string duressSms)
+        public void OnPostSaveSiteEmail(int siteId, string siteEmail, bool enableLogDump, string landLine, string guardEmailTo, string duressEmail, string duressSms, bool IsDosDontList)
         {
             var clientSite = _clientDataProvider.GetClientSites(null).SingleOrDefault(z => z.Id == siteId);
             if (clientSite != null)
@@ -891,6 +891,7 @@ namespace CityWatch.Kpi.Pages.Admin
                 clientSite.GuardLogEmailTo = guardEmailTo;
                 clientSite.DuressEmail = duressEmail;
                 clientSite.DuressSms = duressSms;
+                clientSite.IsDosDontList = IsDosDontList;
             }
 
             _clientDataProvider.SaveClientSite(clientSite);

@@ -400,7 +400,8 @@ namespace CityWatch.Data.Providers
                     DuressSms = clientSite.DuressSms,
                     LandLine = "+61 (3)",
                     DataCollectionEnabled = true,
-                    IsActive = true
+                    IsActive = true,
+                    IsDosDontList= clientSite.IsDosDontList
                 });
 
                 gpsHasChanged = !string.IsNullOrEmpty(clientSite.Gps);
@@ -423,6 +424,7 @@ namespace CityWatch.Data.Providers
                 clientSiteToUpdate.SiteEmail = clientSite.SiteEmail;
                 clientSiteToUpdate.DuressSms = clientSite.DuressSms;
                 clientSiteToUpdate.DuressEmail = clientSite.DuressEmail;
+                clientSiteToUpdate.IsDosDontList = clientSite.IsDosDontList;
             }
             _context.SaveChanges();
 
