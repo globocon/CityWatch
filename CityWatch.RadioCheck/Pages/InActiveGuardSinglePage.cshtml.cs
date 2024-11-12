@@ -20,7 +20,7 @@ using CityWatch.RadioCheck.Models;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace CityWatch.RadioCheck.Pages.Radio
+namespace CityWatch.Web.Pages.Radio
 {
     public class InActiveGuardSinglePage : PageModel
     {
