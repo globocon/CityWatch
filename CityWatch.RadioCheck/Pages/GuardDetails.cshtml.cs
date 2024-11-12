@@ -17,6 +17,7 @@ using System.Security.Claims;
 using static Dropbox.Api.TeamLog.EventCategory;
 using MailKit.Net.Smtp;
 using CityWatch.RadioCheck.Services;
+using CityWatch.Web.Models;
 
 namespace CityWatch.Web.Pages.Radio
 {
@@ -45,6 +46,7 @@ namespace CityWatch.Web.Pages.Radio
         public int InActiveGuardCount { get; set; }
 
         public int ActiveGuardCount { get; set; }
+        public GuardViewModel Guard { get; set; }
         public IActionResult OnGet()
         {
 
@@ -63,6 +65,11 @@ namespace CityWatch.Web.Pages.Radio
             /* For Guard Login using securityLicenseNo the office staff UserId*/
             string loginUserId = Request.Query["lud"];
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            if (GuardId != 0)
+            {
+                Guard = _viewDataService.GetGuards().SingleOrDefault(x => x.Id == GuardId);
+
+            }
             SelectedGuardId = Request.Query["gId"];
             if (!string.IsNullOrEmpty(SelectedGuardId))
             {

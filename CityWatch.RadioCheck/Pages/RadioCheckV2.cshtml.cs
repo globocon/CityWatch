@@ -28,6 +28,7 @@ using CityWatch.RadioCheck.Models;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Text.Json;
+using CityWatch.Web.Models;
 
 namespace CityWatch.RadioCheck.Pages.Radio
 {
@@ -69,6 +70,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
         public string SignalRConnectionUrl { get; set; }
 
         public string DisplayItem { get; set; }
+        public GuardViewModel Guard { get; set; }
         public IActionResult OnGet(string displayItem)
         {
 
@@ -93,6 +95,11 @@ namespace CityWatch.RadioCheck.Pages.Radio
             /* For Guard Login using securityLicenseNo the office staff UserId*/
             string loginUserId = Request.Query["lud"];
             GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+            if (GuardId != 0)
+            {
+                Guard = _viewDataService.GetGuards().SingleOrDefault(x => x.Id == GuardId);
+
+            }
             string sidValue = "";
             var UserId1 = claimsIdentity.Claims;
             foreach (var item in UserId1)
@@ -127,6 +134,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     if (guard.IsAdminPowerUser)
                     {
                         AuthUserHelper.IsAdminPowerUser = true;
+                        return Redirect(Url.Page("/Admin/Settings"));
                     }
                     else
                     {

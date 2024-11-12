@@ -6649,6 +6649,13 @@ $(function () {
         $("#modelGuardLoginC4iSettingsPatrol").modal("show");
         return false;
     });
+    $("#AuditSiteLogsConformationBtnSettings").on('click', function () {
+        clearGuardValidationSummary('GuardLoginValidationSummary');
+        $('#txt_securityLicenseNoAuditSiteLog').val('');
+        $("#modelGuardLoginAuditSite").modal("show");
+        return false;
+    });
+    
     /* p1-203 Admin User Profile -start */
     /* Check if Guard can access the KPI */
     $('#btnGuardLoginKPI').on('click', function () {
@@ -6838,6 +6845,52 @@ $(function () {
         }
     });
     /* p1 - 203 Admin User Profile - end*/
+    $('#btnGuardAuditSiteLog').on('click', function () {
+        const securityLicenseNo = $('#txt_securityLicenseNoAuditSiteLog').val();
+        if (securityLicenseNo === '') {
+            displayGuardValidationSummary('GuardLoginValidationSummaryAuditSite', 'Please enter the security license No ');
+        }
+        else {
+
+
+
+            /* $('#txt_securityLicenseNoIR').val('');*/
+
+
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+                type: 'POST',
+                data: {
+                    securityLicenseNo: securityLicenseNo,
+                    type: 'Settings'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.accessPermission) {
+                    /* $('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginC4iSettingsPatrol').modal('hide');
+
+                    clearGuardValidationSummary('GuardLoginValidationSummaryC4iSettings');
+                    window.location.href = '/Admin/AuditSiteLog?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
+                }
+                else {
+
+                    // $('#txt_securityLicenseNo').val('');
+                    /*$('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginC4iSettingsPatrol').modal('show');
+                    if (result.successCode === 0) {
+                        displayGuardValidationSummary('GuardLoginValidationSummaryC4iSettings', result.successMessage);
+                    }
+                }
+            });
+
+
+            clearGuardValidationSummary('GuardLoginValidationSummaryIR');
+
+
+
+        }
+    });
     /*for pushing notifications from the control room - start*/
     $('#pushNoTificationsGuardModal').on('shown.bs.modal', function (event) {
         /*timer pause while editing*/
