@@ -1308,7 +1308,7 @@ namespace CityWatch.Web.Pages.Admin
                             }
                             else
                             {
-                                if (guard.IsAdminGlobal || guard.IsAdminPowerUser)
+                                if (guard.IsAdminGlobal || guard.IsAdminPowerUser || guard.IsAdminSOPToolsAccess || guard.IsAdminAuditorAccess || guard.IsAdminInvestigatorAccess)
                                 {
                                     AccessPermission = true;
                                     GuId = guard.Id;
@@ -1379,7 +1379,7 @@ namespace CityWatch.Web.Pages.Admin
 
                         if (guard.IsActive)
                         {
-                            if (guard.IsAdminGlobal || guard.IsAdminPowerUser)
+                            if (guard.IsAdminGlobal || guard.IsAdminPowerUser || guard.IsAdminSOPToolsAccess || guard.IsAdminAuditorAccess || guard.IsAdminInvestigatorAccess)
                             {
                                 AccessPermission = true;
                                 GuId = guard.Id;

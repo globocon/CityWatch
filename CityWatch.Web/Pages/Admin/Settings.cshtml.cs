@@ -85,7 +85,13 @@ namespace CityWatch.Web.Pages.Admin
             string securityLicenseNonew = Request.Query["Sl"];
             string guid = Request.Query["guid"];
             string luid = Request.Query["lud"];
-            if (!AuthUserHelper.IsAdminUserLoggedIn && !AuthUserHelper.IsAdminGlobal && !AuthUserHelper.IsAdminPowerUser)
+            GuardId = Convert.ToInt32(guid);
+            if (GuardId != 0)
+            {
+                Guard = _viewDataService.GetGuards().SingleOrDefault(x => x.Id == GuardId);
+
+            }
+            if (!AuthUserHelper.IsAdminUserLoggedIn && !AuthUserHelper.IsAdminGlobal && !AuthUserHelper.IsAdminPowerUser  && !Guard.IsAdminSOPToolsAccess && !Guard.IsAdminAuditorAccess && !Guard.IsAdminInvestigatorAccess)
             {
                 return Redirect(Url.Page("/Account/Unauthorized"));
             }
@@ -94,13 +100,9 @@ namespace CityWatch.Web.Pages.Admin
 
                 ReportTemplate = _configDataProvider.GetReportTemplate();
                 SecurityLicenseNo = securityLicenseNonew;
-                GuardId = Convert.ToInt32(guid);
+                
                 loggedInUserId = luid;
-                if (GuardId != 0)
-                {
-                    Guard = _viewDataService.GetGuards().SingleOrDefault(x => x.Id == GuardId);
-                    
-                }
+                
                 return Page();
 
             }
