@@ -357,6 +357,7 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     AuthUserHelper.IsAdminGlobal = false;
                 }
+               
             }
             //HRList Status start 
             var HR1 = "Grey";

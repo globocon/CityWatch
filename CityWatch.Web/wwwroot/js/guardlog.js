@@ -94,39 +94,133 @@ $(function () {
 
 
     /*P1-203 ADMIN USER PROFILE-START*/
+    $('#Guard_Access').on('change', function () {
+        var newval = $(this).val();
+        
+        if (newval.includes('6') && newval.includes('5')) {
+                //yourElement in yourArray
+            alert('Please select only one option among RC or RC-Fusion');
+            $(".multiselect-option input[type=checkbox]:checked").each(function () {
+                        var isChecked1 = $(this).is(':checked');
+                        if (isChecked1 == true) {
+                            var new1 = $(this).val();
+
+                            if (parseInt(new1) == 6 || parseInt(new1) == 5) {
+                                $(".multiselect-option input[type=checkbox][value='" + new1 + "']").prop("checked", false);
+                                newval = newval.filter(function (value) {
+                                    return value !== new1;
+                                });
+                            }
+                        }
+
+                    });
+
+        }
+
+        if (newval.includes('2') && newval.includes('3')) {
+            //yourElement in yourArray
+            alert('Please select only one option among STATS or STATS-CHART ');
+            $(".multiselect-option input[type=checkbox]:checked").each(function () {
+                var isChecked1 = $(this).is(':checked');
+                if (isChecked1 == true) {
+                    var new1 = $(this).val();
+
+                    if (parseInt(new1) == 2 || parseInt(new1) == 3) {
+                        $(".multiselect-option input[type=checkbox][value='" + new1 + "']").prop("checked", false);
+                        newval = newval.filter(function (value) {
+                            return value !== new1;
+                        });
+                    }
+                }
+
+            });
+
+        }
+        $('#Guard_Access').val(newval);
+    });
     //$('#Guard_Access').on('change', function () {
 
     //    var newval = $(this).val();
-    //    var newval1 = newval[newval.length - 1];
+    //    var selectrc = 0;
+    //    //var newval1 = newval[newval.length - 1];
+    //    var newval1 = $("#Guard_Access option:selected").last().val()
+    //    if ($.inArray(6, newval) ) {
+    //        //yourElement in yourArray
+    //        alert('hi')
+
+    //    }
+    //    //if (parseInt(newval1) == 5) {
+    //    //    $(".multiselect-option input[type=checkbox]:checked").each(function () {
+    //    //        var isChecked1 = $(this).is(':checked');
+    //    //        if (isChecked1 == true) {
+    //    //            var new1 = $(this).val();
+
+    //    //            if (parseInt(new1) == 6) {
+    //    //                $(".multiselect-option input[type=checkbox][value='" + 6 + "']").prop("checked", false);
+    //    //                newval = newval.filter(function (value) {
+    //    //                    return value !== new1;
+    //    //                });
+    //    //            }
+    //    //        }
+
+    //    //    });
+    //    //}
     //    if (parseInt(newval1) == 6) {
     //        $(".multiselect-option input[type=checkbox]:checked").each(function () {
     //            var isChecked1 = $(this).is(':checked');
     //            if (isChecked1 == true) {
     //                var new1 = $(this).val();
-    //                if (parseInt(new1) == 5)
 
-    //                    $(".multiselect-option input[type=checkbox][value='" + 5 + "']").prop("checked", false);
-    //                if (parseInt(new1) == 4)
-    //                    $(".multiselect-option input[type=checkbox][value='" + 4 + "']").prop("checked", false);
+    //                if (parseInt(new1) == 5) {
+    //                     $(".multiselect-option input[type=checkbox][value='" + 5 + "']").prop("checked", false);
+    //                       selectrc=1
+    //                    //newval = newval.filter(function (value) {
+    //                    //    return value !== new1;
+    //                    //});
+    //                }
     //            }
 
     //        });
     //    }
-    //    if (parseInt(newval1) == 5) {
-    //        $(".multiselect-option input[type=checkbox]:checked").each(function () {
-    //            var isChecked1 = $(this).is(':checked');
-    //            if (isChecked1 == true) {
-    //                var new1 = $(this).val();
-    //                if (parseInt(new1) == 6)
-    //                    $(".multiselect-option input[type=checkbox][value='" + 6 + "']").prop("checked", false);
-    //                if (parseInt(new1) == 4)
-    //                    $(".multiselect-option input[type=checkbox][value='" + 4 + "']").prop("checked", false);
-    //            }
+        
+    //    //if (parseInt(newval1) == 2) {
+    //    //    $(".multiselect-option input[type=checkbox]:checked").each(function () {
+    //    //        var isChecked1 = $(this).is(':checked');
+    //    //        if (isChecked1 == true) {
+    //    //            var new1 = $(this).val();
 
-    //        });
+    //    //            if (parseInt(new1) == 3) {
+    //    //                $(".multiselect-option input[type=checkbox][value='" + 3 + "']").prop("checked", false);
+    //    //                newval = newval.filter(function (value) {
+    //    //                    return value !== new1;
+    //    //                });
+    //    //            }
+    //    //        }
+
+    //    //    });
+    //    //}
+    //    //if (parseInt(newval1) == 3) {
+    //    //    $(".multiselect-option input[type=checkbox]:checked").each(function () {
+    //    //        var isChecked1 = $(this).is(':checked');
+    //    //        if (isChecked1 == true) {
+    //    //            var new1 = $(this).val();
+
+    //    //            if (parseInt(new1) == 2) {
+    //    //                $(".multiselect-option input[type=checkbox][value='" + 2 + "']").prop("checked", false);
+    //    //                newval = newval.filter(function (value) {
+    //    //                    return value !== new1;
+    //    //                });
+    //    //            }
+    //    //        }
+
+    //    //    });
+    //    //}
+    //    if (selectrc == 1) {
+    //        alert('Please select only one option among RC or RC-Fusion')
     //    }
+    //   // $("#Guard_Access").val(newval);
     //    //$("#Guard_Access").multiselect();
-    //    //$("#Guard_Access").multiselect("refresh");
+    //   // $("#Guard_Access").multiselect("refresh");
 
     //});
     /*P1-203 ADMIN USER PROFILE-END*/
@@ -4733,22 +4827,40 @@ $(function () {
         // ;
         var selectedValues = [];
         if (data.isAdminGlobal) {
-            selectedValues.push(6);
+            selectedValues.push(12);
         }
         if (data.isAdminPowerUser) {
-            selectedValues.push(5);
+            selectedValues.push(7);
         }
         if (data.isRCAccess) {
-            selectedValues.push(4);
+            selectedValues.push(5);
         }
         if (data.isKPIAccess) {
-            selectedValues.push(3);
+            selectedValues.push(4);
         }
         if (data.isLB_KV_IR) {
             selectedValues.push(1);
         }
         if (data.isSTATS) {
             selectedValues.push(2);
+        }
+        if (data.isSTATSChartsAccess) {
+            selectedValues.push(3);
+        }
+        if (data.isRCFusionAccess) {
+            selectedValues.push(6);
+        }
+        if (data.isAdminSOPToolsAccess) {
+            selectedValues.push(8);
+        }
+        if (data.isAdminAuditorAccess) {
+            selectedValues.push(9);
+        }
+        if (data.isAdminInvestigatorAccess) {
+            selectedValues.push(10);
+        }
+        if (data.isAdminThirdPartyAccess) {
+            selectedValues.push(11);
         }
         selectedValues.forEach(function (value) {
 
@@ -4759,6 +4871,16 @@ $(function () {
         $("#Guard_Access").multiselect();
         $("#Guard_Access").val(selectedValues);
         $("#Guard_Access").multiselect("refresh");
+        
+       
+        if ($('#txt_IsAdminPowerUser').val() == 'True') {
+            if (data.isAdminGlobal) {
+                $('#cbIsActive').prop('disabled', true);
+            }
+            else {
+                $('#cbIsActive').prop('disabled', false);
+            }
+        }
     });
     $('#guard_settings tbody').on('click', 'img[name=btn_timesheet]', function () {
         $('#TimesheetGuard_Id').val('-1');
@@ -6634,6 +6756,13 @@ $(function () {
         $("#modelGuardLoginC4iSettingsPatrol").modal("show");
         return false;
     });
+    $("#AuditSiteLogsConformationBtnSettings").on('click', function () {
+        clearGuardValidationSummary('GuardLoginValidationSummary');
+        $('#txt_securityLicenseNoAuditSiteLog').val('');
+        $("#modelGuardLoginAuditSite").modal("show");
+        return false;
+    });
+    
     /* p1-203 Admin User Profile -start */
     /* Check if Guard can access the KPI */
     $('#btnGuardLoginKPI').on('click', function () {
@@ -6823,6 +6952,52 @@ $(function () {
         }
     });
     /* p1 - 203 Admin User Profile - end*/
+    $('#btnGuardAuditSiteLog').on('click', function () {
+        const securityLicenseNo = $('#txt_securityLicenseNoAuditSiteLog').val();
+        if (securityLicenseNo === '') {
+            displayGuardValidationSummary('GuardLoginValidationSummaryAuditSite', 'Please enter the security license No ');
+        }
+        else {
+
+
+
+            /* $('#txt_securityLicenseNoIR').val('');*/
+
+
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+                type: 'POST',
+                data: {
+                    securityLicenseNo: securityLicenseNo,
+                    type: 'Settings'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.accessPermission) {
+                    /* $('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginC4iSettingsPatrol').modal('hide');
+
+                    clearGuardValidationSummary('GuardLoginValidationSummaryC4iSettings');
+                    window.location.href = '/Admin/AuditSiteLog?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
+                }
+                else {
+
+                    // $('#txt_securityLicenseNo').val('');
+                    /*$('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginC4iSettingsPatrol').modal('show');
+                    if (result.successCode === 0) {
+                        displayGuardValidationSummary('GuardLoginValidationSummaryC4iSettings', result.successMessage);
+                    }
+                }
+            });
+
+
+            clearGuardValidationSummary('GuardLoginValidationSummaryIR');
+
+
+
+        }
+    });
     /*for pushing notifications from the control room - start*/
     $('#pushNoTificationsGuardModal').on('shown.bs.modal', function (event) {
         /*timer pause while editing*/

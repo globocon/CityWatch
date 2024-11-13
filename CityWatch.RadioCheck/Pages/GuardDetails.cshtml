@@ -9,8 +9,8 @@
 @model CityWatch.Web.Pages.Radio.GuardDetails
 
 
-
 <div>
+    <input type="hidden" id="txtguardGuardRCAccess" asp-for="@Model.Guard.IsRCAccess" />
     <div class="row">
         <div class="col-md-12">
             <table id="guard_settings_for_control_room" class="table table-bordered" style="width:100%">

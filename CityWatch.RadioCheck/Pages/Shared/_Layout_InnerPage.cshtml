@@ -7,6 +7,8 @@
 @inject IWebHostEnvironment environment
 @inject IUserDataProvider viewDataService
 @inject IConfigDataProvider dataProvider
+@inject IGuardDataProvider guarddataProvider
+@model CityWatch.RadioCheck.Pages.Radio.RadioCheckNewModel;
 @{
 
     var check = AuthUserHelper.IsAdminGlobal;
@@ -28,7 +30,7 @@
     var alldocWithModeleName = new List<StaffDocument>();
     alldocWithModeleName = dataProvider.GetStaffDocumentModuleDetails();
     alldocWithModeleName = alldocWithModeleName.Where(x => x.DocumentModuleName == "RC").ToList();
-
+    var guard = guarddataProvider.GetGuards().SingleOrDefault(z => z.Id == Model.GuardId);
 }
 
 <!DOCTYPE html>
@@ -299,10 +301,11 @@
                     </div>
                     <div>
 
+                        @if (User.Identity.IsAuthenticated || guard.IsRCFusionAccess)
+                        {
+                            <a href="@Url.Page("/Fusion")" class="nav-link py-0"><i class="fa fa-snowflake-o mr-2"></i>Fusion</a>
 
-                        <a href="@Url.Page("/Fusion")" class="nav-link py-0"><i class="fa fa-snowflake-o mr-2"></i>Fusion</a>
-
-
+                        }
 
                     </div>
 

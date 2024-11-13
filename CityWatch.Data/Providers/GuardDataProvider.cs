@@ -219,6 +219,12 @@ namespace CityWatch.Data.Providers
                 updateGuard.Gender = guard.Gender;
                 updateGuard.IsRCBypass = guard.IsRCBypass;
                 //p1-224 RC Bypass For HR -end
+                updateGuard.IsSTATSChartsAccess = guard.IsSTATSChartsAccess;
+                updateGuard.IsRCFusionAccess = guard.IsRCFusionAccess;
+                updateGuard.IsAdminSOPToolsAccess = guard.IsAdminSOPToolsAccess;
+                updateGuard.IsAdminAuditorAccess = guard.IsAdminAuditorAccess;
+                updateGuard.IsAdminInvestigatorAccess = guard.IsAdminInvestigatorAccess;
+                updateGuard.IsAdminThirdPartyAccess = guard.IsAdminThirdPartyAccess;
             }
 
             _context.SaveChanges();
@@ -251,6 +257,11 @@ namespace CityWatch.Data.Providers
                 guard.IsKPIAccess = false;
                 guard.IsRCAccess = false;
                 guard.IsSTATS = false;
+                //P1-273 access levels-start
+                guard.IsSTATSChartsAccess = false;
+                guard.IsRCFusionAccess = false;
+                
+                //P1-273 access levels-end
                 _context.Guards.Add(guard);
             }
             else

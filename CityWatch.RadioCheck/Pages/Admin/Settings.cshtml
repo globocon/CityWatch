@@ -9,6 +9,7 @@
 @model CityWatch.RadioCheck.Pages.Admin.SettingsModel
 @inject IConfiguration Configuration
 @inject IConfigDataProvider configDataProvider
+@inject IGuardDataProvider guarddataProvider
 
 @{
     Layout = "_Layout_SettingsPage";
@@ -31,7 +32,7 @@
 
 
     };
-
+    var guard = guarddataProvider.GetGuards().SingleOrDefault(z => z.Id == Model.GuardId);
     
 }
 
@@ -44,7 +45,7 @@
     <input type="hidden" id="GuardLog_GuardLogin_GuardId" value=@Model.GuardIdCheck />
     <input type="hidden" id="loginUserId" value='@Model.loginUserId' />
     <ul class="nav nav-tabs" id="settingsTab" role="tablist">
-        @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal)
+        @if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminGlobal )
         {
             <li class="nav-item">
                 <a class="nav-link active" id="rcstype-tab" data-toggle="tab" href="#rcstype" role="tab" aria-controls="rcstype" aria-selected="true">Radio Check</a>

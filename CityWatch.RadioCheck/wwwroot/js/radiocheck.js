@@ -646,6 +646,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 });
 
 
+
 // Order by the grouping
 // Task p4#41_A~Z and Z~A sorting issue -- added by Binoy -- Start - 31-01-2024
 $(clientSiteActiveGuards.table().header()).on('click', 'th', function () {
@@ -1116,7 +1117,6 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
 
 });
-
 
 
 
@@ -2175,7 +2175,10 @@ let clientSiteActiveGuardsIncidentReportHistory = $('#clientSiteActiveGuardsInci
 });
 
 $('#clientSiteActiveGuards tbody').on('dblclick', '#btnIrHistoryByGuard', function (value, record) {
-    $('#guardIncidentReportsHistoryModal').modal('show');
+    
+    if ($('#txtguardGuardRCAccess').val() == 'False') { 
+        $('#guardIncidentReportsHistoryModal').modal('show');
+    }
     isPaused = true;
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
     var GuardId = $(this).attr("data-guardid");
@@ -2186,7 +2189,8 @@ $('#clientSiteActiveGuards tbody').on('dblclick', '#btnIrHistoryByGuard', functi
     $('#lbl_IrGuardActivityHistoryHeader').text(GuardName);
     $('#lbl_Ir_History_SitenameInfo').text('Last IR log');
     clientSiteActiveGuardsIncidentReportHistory.clear().draw();
-    clientSiteActiveGuardsIncidentReportHistory.ajax.reload();
+        clientSiteActiveGuardsIncidentReportHistory.ajax.reload();
+    
 });
 /* for Incident Reports history of the guard end*/
 
@@ -3547,6 +3551,31 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
 
 
 });
+if ($('#txtguardGuardRCAccess').val() == 'True') {
+
+
+    $("#clientSiteActiveGuards_wrapper .dt-buttons .btn-copy").hide();
+    $("#clientSiteActiveGuards_wrapper .dt-buttons .btn-excel").hide();
+    $("#clientSiteActiveGuards_wrapper .dt-buttons .btn-pdf").hide();
+    $("#clientSiteActiveGuards_wrapper .dt-buttons .btn-print").hide();
+
+    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-copy").hide();
+    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-excel").hide();
+    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-pdf").hide();
+    $("#clientSiteInActiveGuards_wrapper .dt-buttons .btn-print").hide();
+
+
+    $("#clientSiteActiveGuardsSinglePage_wrapper .dt-buttons .btn-copy").hide();
+    $("#clientSiteActiveGuardsSinglePage_wrapper .dt-buttons .btn-excel").hide();
+    $("#clientSiteActiveGuardsSinglePage_wrapper .dt-buttons .btn-pdf").hide();
+    $("#clientSiteActiveGuardsSinglePage_wrapper .dt-buttons .btn-print").hide();
+
+    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-copy").hide();
+    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-excel").hide();
+    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-pdf").hide();
+    $("#clientSiteInActiveGuardsSinglePage_wrapper .dt-buttons .btn-print").hide();
+
+}
 
 $('#clientSiteInActiveGuardsSinglePage tbody').on('click', '#btnUpArrow', function () {
 
@@ -5250,6 +5279,11 @@ function format_guard_settings_for_control_room_child_row(d) {
         } else {
             cellValue = '<i class="fa fa-check-circle text-success"></i>' +
                 '<input type="hidden" id="GuardId" value="' + d.id + '">';
+        }
+        if ($('#txtguardGuardRCAccess').val() == 'False') { 
+        if (d.dateEnrolled) {
+            cellValue += '<br/> <span class="small">Enrolled: ' + getFormattedDate(new Date(d.dateEnrolled), null, ' ') + '</span>';
+            }
         }
     } else {
 

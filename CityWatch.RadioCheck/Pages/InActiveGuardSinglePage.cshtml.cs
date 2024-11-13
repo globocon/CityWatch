@@ -91,6 +91,7 @@ namespace CityWatch.Web.Pages.Radio
                
                 UserId = int.Parse(loginUserId);
                 GuardId = int.Parse(LoginGuardId);
+
                 HttpContext.Session.SetInt32("GuardId", GuardId);
                 return Page();
             }

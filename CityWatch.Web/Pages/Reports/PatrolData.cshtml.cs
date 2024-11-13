@@ -4,11 +4,13 @@ using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
 using CityWatch.Data.Services;
 using CityWatch.Web.Helpers;
+using CityWatch.Web.Models;
 using CityWatch.Web.Services;
 using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Office2010.Excel;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
@@ -52,6 +54,7 @@ namespace CityWatch.Web.Pages.Reports
 
         [BindProperty]
         public PatrolRequest ReportRequest { get; set; }
+        public GuardViewModel guard { get; set; }
 
         public IViewDataService ViewDataService { get { return _viewDataService; } }
 
@@ -60,7 +63,17 @@ namespace CityWatch.Web.Pages.Reports
         {
             //if (!AuthUserHelper.IsAdminUserLoggedIn)
             //    return Redirect(Url.Page("/Account/Unauthorized"));
+            if (HttpContext.Session.GetString("GuardId") != null)
+            {
+                var guardList = _viewDataService.GetGuards().Where(x => x.Id == Convert.ToInt32(HttpContext.Session.GetString("GuardId")));
+                foreach (var item in guardList)
+                {
+                    guard = item;
+                    
+                }
 
+                
+            }
             return Page();
         }
 

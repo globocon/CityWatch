@@ -25,6 +25,7 @@ using System.Threading.Tasks;
 using static Dropbox.Api.FileRequests.GracePeriod;
 using static Dropbox.Api.TeamLog.ActorLogInfo;
 using static Dropbox.Api.TeamLog.EventCategory;
+using static Dropbox.Api.TeamLog.SpaceCapsType;
 
 
 namespace CityWatch.Web.Pages.Admin
@@ -38,7 +39,6 @@ namespace CityWatch.Web.Pages.Admin
         private readonly IViewDataService _viewDataService;
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly ITimesheetReportGenerator _TimesheetReportGenerator;
-
         public SettingsModel(IWebHostEnvironment webHostEnvironment,
             IClientDataProvider clientDataProvider,
             IConfigDataProvider configDataProvider,
@@ -78,13 +78,20 @@ namespace CityWatch.Web.Pages.Admin
 
         public string SecurityLicenseNo { get; set; }
         public string loggedInUserId { get; set; }
-        public string GuardId { get; set; }
+        public int GuardId { get; set; }
+        public GuardViewModel Guard { get; set; }
         public IActionResult OnGet()
         {
             string securityLicenseNonew = Request.Query["Sl"];
             string guid = Request.Query["guid"];
             string luid = Request.Query["lud"];
-            if (!AuthUserHelper.IsAdminUserLoggedIn && !AuthUserHelper.IsAdminGlobal && !AuthUserHelper.IsAdminPowerUser)
+            GuardId = Convert.ToInt32(guid);
+            if (GuardId != 0)
+            {
+                Guard = _viewDataService.GetGuards().SingleOrDefault(x => x.Id == GuardId);
+
+            }
+            if (!AuthUserHelper.IsAdminUserLoggedIn && !AuthUserHelper.IsAdminGlobal && !AuthUserHelper.IsAdminPowerUser  && !Guard.IsAdminSOPToolsAccess && !Guard.IsAdminAuditorAccess && !Guard.IsAdminInvestigatorAccess)
             {
                 return Redirect(Url.Page("/Account/Unauthorized"));
             }
@@ -93,8 +100,9 @@ namespace CityWatch.Web.Pages.Admin
 
                 ReportTemplate = _configDataProvider.GetReportTemplate();
                 SecurityLicenseNo = securityLicenseNonew;
-                GuardId = guid;
+                
                 loggedInUserId = luid;
+                
                 return Page();
 
             }

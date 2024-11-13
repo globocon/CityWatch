@@ -41,11 +41,24 @@ namespace CityWatch.Web.Pages.Admin
         }
 
         public KeyVehicleLogAuditLogRequest KeyVehicleLogAuditLogRequest { get; set; }
+        public string loggedInUserId { get; set; }
+        public int GuardId { get; set; }
+        public GuardViewModel Guard { get; set; }
 
         public ActionResult OnGet()
         {
+            string securityLicenseNonew = Request.Query["Sl"];
+            string guid = Request.Query["guid"];
+            string luid = Request.Query["lud"];
+            GuardId = Convert.ToInt32(guid);
+            loggedInUserId = luid;
+            if (GuardId != 0)
+            {
+                Guard = _viewDataService.GetGuards().SingleOrDefault(x => x.Id == GuardId);
+
+            }
             /* Normal admin,PowerAdmin and AdminGlobal can access this page */
-            if (!AuthUserHelper.IsAdminUserLoggedIn && !AuthUserHelper.IsAdminGlobal && !AuthUserHelper.IsAdminPowerUser)
+            if (!AuthUserHelper.IsAdminUserLoggedIn && !AuthUserHelper.IsAdminGlobal && !AuthUserHelper.IsAdminPowerUser && !Guard.IsAdminInvestigatorAccess && !Guard.IsAdminAuditorAccess)
                 return Redirect(Url.Page("/Account/Unauthorized"));
 
             return Page();

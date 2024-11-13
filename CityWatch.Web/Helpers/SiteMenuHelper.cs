@@ -234,6 +234,12 @@ namespace CityWatch.Web.Helpers
                     menuHtml.AppendLine(@"<a href=""/Admin/AuditSiteLog"" class=""nav-link py-0""><i class=""fa fa-list-alt mr-2""></i>Audit Site Logs</a>");
                     menuHtml.AppendLine("</div>");
                 }
+                else
+                {
+                    menuHtml.AppendLine("<div>");
+                    menuHtml.AppendLine(@"<a href=""{0}"" id=""AuditSiteLogsConformationBtnSettings""class=""nav-link py-0""><i class=""fa fa-cog mr-2""></i>Audit Site Logs</a>");
+                    menuHtml.AppendLine("</div>");
+                }
             }
            
 

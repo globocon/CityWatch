@@ -3,7 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.Metrics;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
 namespace CityWatch.Data.Models
@@ -31,6 +33,7 @@ namespace CityWatch.Data.Models
         public bool IsLB_KV_IR { get; set; }
         public bool IsAdminPowerUser { get; set; }
         public bool IsAdminGlobal { get; set; }
+        
         public bool IsSTATS { get; set; }
         [NotMapped]
         public List<string> GuardAccess { get;  set; }
@@ -113,5 +116,20 @@ namespace CityWatch.Data.Models
         //p1-224 RC Bypass For HR -start
         public bool IsRCBypass { get; set; }
         //p1-224 RC Bypass For HR -end
+        //p1-273 access level- start
+        public bool IsSTATSChartsAccess { get; set; }
+        public bool IsRCFusionAccess { get; set; }
+
+        public bool IsAdminSOPToolsAccess { get; set; }
+
+
+        public bool IsAdminAuditorAccess { get; set; }
+
+
+        public bool IsAdminInvestigatorAccess { get; set; }
+
+
+        public bool IsAdminThirdPartyAccess { get; set; }
+        //p1-273 access level- end
     }
 }

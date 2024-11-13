@@ -86,12 +86,25 @@
         <li class="nav-item" role="presentation">
             <a class="nav-link active" id="pd-report-tab" data-toggle="tab" href="#pd-report" role="tab" aria-controls="pd-report" aria-selected="true">Report</a>
         </li>
-        <li class="nav-item" role="presentation">
-            <a class="nav-link" id="pd-chart-tab" data-toggle="tab" href="#pd-chart" role="tab" aria-controls="pd-chart" aria-selected="false">Chart</a>
-        </li>
-        <li class="nav-item" role="presentation">
-            <a class="nav-link" id="rcstat-chart-tab" data-toggle="tab" href="#rcstat-chart" role="tab" aria-controls="rcstat-chart" aria-selected="false">RC Stats</a>
-        </li>
+        @if (Model.guard !=null)
+        {
+            @if (Model.guard.IsSTATSChartsAccess == true || Model.guard.IsAdminGlobal == true)
+            {
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="pd-chart-tab" data-toggle="tab" href="#pd-chart" role="tab" aria-controls="pd-chart" aria-selected="false">Chart</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="rcstat-chart-tab" data-toggle="tab" href="#rcstat-chart" role="tab" aria-controls="rcstat-chart" aria-selected="false">RC Stats</a>
+                    </li>
+                }
+        }else{
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="pd-chart-tab" data-toggle="tab" href="#pd-chart" role="tab" aria-controls="pd-chart" aria-selected="false">Chart</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="rcstat-chart-tab" data-toggle="tab" href="#rcstat-chart" role="tab" aria-controls="rcstat-chart" aria-selected="false">RC Stats</a>
+            </li>
+        }
     </ul>
     <div class="tab-content pt-3">
         <div class="tab-pane active" id="pd-report" role="tabpanel" aria-labelledby="pd-report-tab">
@@ -152,68 +165,70 @@
                 </div>
             </div>
         </div>
-        <div class="tab-pane" id="pd-chart" role="tabpanel" aria-labelledby="pd-chart-tab">
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-header">
-                            IR Records Percentage By Site (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_site"><span id="count_by_site" class="p-0 b-0"></span></a>)
-                            @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+       @*   @if (Model.guard.IsSTATSChartsAccess == true)
+        { *@
+            <div class="tab-pane" id="pd-chart" role="tabpanel" aria-labelledby="pd-chart-tab">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                IR Records Percentage By Site (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_site"><span id="count_by_site" class="p-0 b-0"></span></a>)
+                                @* <div class="float-right">Total Site Count: <a href="#" class="btn btn-link" id="btncount_by_site"><span id="count_by_site"></span></a></div>*@
+                            </div>
+                            <div class="card-body">
+                                <svg width="500" height="200" id="pie_chart_ir_by_site"></svg>
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <svg width="500" height="200" id="pie_chart_ir_by_site"></svg>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                IR Records Percentage By Area/Ward (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_area_ward"><span id="count_by_area_ward" class="p-0 b-0"></span></a>)
+                                @* <div class="float-right">Total Area/Ward Count: <a href="#" class="btn btn-link" id="btncount_by_area_ward"><span id="count_by_area_ward"></span></a></div>*@
+                            </div>
+                            <div class="card-body" style="height: 235px; width: 400px;">
+                                @*Old piechart modified to chart js chart*@
+                                @*<svg width="400" height="200" id="pie_chart_ir_by_areaward"></svg>*@
+                                <canvas id="pie_chart_ir_by_areaward"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                IR Records Percentage By Colour Code (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_color_code"><span id="count_color_code" class="p-0 b-0"></span></a>)
+                                @*<div class="float-right">Total Color Code Count: <a href="#" class="btn btn-link" id="btncount_color_code"><span id="count_color_code"></span></a></div>*@
+                            </div>
+                            <div class="card-body" style="height: 235px; width: 400px;">
+                                <canvas id="pie_chart_ir_by_colorcode"></canvas>
+                                @* <svg width="400" height="200" id="pie_chart_ir_by_colorcode"></svg>*@
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-header">
-                            IR Records Percentage By Area/Ward (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_by_area_ward"><span id="count_by_area_ward" class="p-0 b-0"></span></a>)
-                            @* <div class="float-right">Total Area/Ward Count: <a href="#" class="btn btn-link" id="btncount_by_area_ward"><span id="count_by_area_ward"></span></a></div>*@
-                        </div>
-                        <div class="card-body" style="height: 235px; width: 400px;">
-                            @*Old piechart modified to chart js chart*@
-                            @*<svg width="400" height="200" id="pie_chart_ir_by_areaward"></svg>*@
-                            <canvas id="pie_chart_ir_by_areaward"></canvas>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-header">
-                            IR Records Percentage By Colour Code (Count :<a href="#" class="btn btn-link p-0 b-0" id="btncount_color_code"><span id="count_color_code" class="p-0 b-0"></span></a>)
-                            @*<div class="float-right">Total Color Code Count: <a href="#" class="btn btn-link" id="btncount_color_code"><span id="count_color_code"></span></a></div>*@
-                        </div>
-                        <div class="card-body" style="height: 235px; width: 400px;">
-                            <canvas id="pie_chart_ir_by_colorcode"></canvas>
-                            @* <svg width="400" height="200" id="pie_chart_ir_by_colorcode"></svg>*@
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row mt-2">
-                <div class="col-md-12">
-                    <div class="card">
-                        <div class="card-header">
-                            IR Event Type Quantity (Count :<span id="count_by_ir" class="p-0 b-0"></span>)
-                            @* <div class="float-right">Total IR Count:  <a href="#" class="btn btn-link" id="btncount_event_type_quantity"><span id="count_by_ir"></span></a></div>*@
-                        </div>
-                        <div class="card-body">
-                            <div class="d-flex flex-row align-items-center">
-                                <div class="col-md-6">
-                                    <svg width="650" height="300" id="pie_chart_by_ireventype_quantity"></svg>
-                                </div>
-                                <div class="col-md-6">
-                                    <svg width="550" height="300" id="bar_chart_by_ireventype_quantity"></svg>
+                <div class="row mt-2">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                IR Event Type Quantity (Count :<span id="count_by_ir" class="p-0 b-0"></span>)
+                                @* <div class="float-right">Total IR Count:  <a href="#" class="btn btn-link" id="btncount_event_type_quantity"><span id="count_by_ir"></span></a></div>*@
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex flex-row align-items-center">
+                                    <div class="col-md-6">
+                                        <svg width="650" height="300" id="pie_chart_by_ireventype_quantity"></svg>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <svg width="550" height="300" id="bar_chart_by_ireventype_quantity"></svg>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="tab-pane" id="rcstat-chart" role="tabpanel" aria-labelledby="rcstat-chart-tab">
-            <div class="row">
+            <div class="tab-pane" id="rcstat-chart" role="tabpanel" aria-labelledby="rcstat-chart-tab">
+                <div class="row">
                 <div class="col-md-4">
                     <div class="card">
                         <div class="card-header">
@@ -290,6 +305,7 @@
                 </div>
             </div>
         </div>
+        @* } *@
     </div>
     @*/*html to PDF content for the download PDF Start*/*@
     <div style="width: 1px;height: 1px; border: 0px none;position: relative ;overflow: hidden; ">

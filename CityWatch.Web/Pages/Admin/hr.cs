@@ -327,17 +327,41 @@ namespace CityWatch.Web.Pages.Admin
                     }
                     else if (val == 3)
                     {
-                        guard.IsKPIAccess = true;
+                        guard.IsSTATSChartsAccess = true;
                     }
                     else if (val == 4)
                     {
-                        guard.IsRCAccess = true;
+                        guard.IsKPIAccess = true;
                     }
                     else if (val == 5)
                     {
-                        guard.IsAdminPowerUser = true;
+                        guard.IsRCAccess = true;
                     }
                     else if (val == 6)
+                    {
+                        guard.IsRCFusionAccess = true;
+                    }
+                    else if (val == 7)
+                    {
+                        guard.IsAdminPowerUser = true;
+                    }
+                    else if (val == 8)
+                    {
+                        guard.IsAdminSOPToolsAccess = true;
+                    }
+                    else if (val == 9)
+                    {
+                        guard.IsAdminAuditorAccess = true;
+                    }
+                    else if (val == 10)
+                    {
+                        guard.IsAdminInvestigatorAccess = true;
+                    }
+                    else if (val == 11)
+                    {
+                        guard.IsAdminThirdPartyAccess = true;
+                    }
+                    else if (val == 12)
                     {
                         guard.IsAdminGlobal = true;
                     }
@@ -1216,7 +1240,7 @@ namespace CityWatch.Web.Pages.Admin
                     {
                         if (guard.IsActive)
                         {
-                            if (guard.IsSTATS)
+                            if (guard.IsSTATS || guard.IsSTATSChartsAccess)
                             {
                                 AccessPermission = true;
                                 GuId = guard.Id;
@@ -1225,7 +1249,7 @@ namespace CityWatch.Web.Pages.Admin
                                     LoggedInUserId = AuthUserHelper.LoggedInUserId;
 
                                 }
-
+                                HttpContext.Session.SetString("GuardId", guard.Id.ToString());
                                 SuccessCode = 1;
                             }
                             else
@@ -1271,7 +1295,7 @@ namespace CityWatch.Web.Pages.Admin
                     {
                         if (guard.IsActive)
                         {
-                            if (guard.IsRCAccess)
+                            if (guard.IsRCAccess || guard.IsRCFusionAccess)
                             {
                                 AccessPermission = true;
                                 GuId = guard.Id;
@@ -1280,10 +1304,11 @@ namespace CityWatch.Web.Pages.Admin
                                     LoggedInUserId = AuthUserHelper.LoggedInUserId;
                                 }
                                 SuccessCode = 1;
+                               
                             }
                             else
                             {
-                                if (guard.IsAdminGlobal || guard.IsAdminPowerUser)
+                                if (guard.IsAdminGlobal || guard.IsAdminPowerUser || guard.IsAdminSOPToolsAccess || guard.IsAdminAuditorAccess || guard.IsAdminInvestigatorAccess)
                                 {
                                     AccessPermission = true;
                                     GuId = guard.Id;
@@ -1354,7 +1379,7 @@ namespace CityWatch.Web.Pages.Admin
 
                         if (guard.IsActive)
                         {
-                            if (guard.IsAdminGlobal || guard.IsAdminPowerUser)
+                            if (guard.IsAdminGlobal || guard.IsAdminPowerUser || guard.IsAdminSOPToolsAccess || guard.IsAdminAuditorAccess || guard.IsAdminInvestigatorAccess)
                             {
                                 AccessPermission = true;
                                 GuId = guard.Id;

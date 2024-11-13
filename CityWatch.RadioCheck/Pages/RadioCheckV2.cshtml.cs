@@ -28,6 +28,7 @@ using CityWatch.RadioCheck.Models;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Text.Json;
+using CityWatch.Web.Models;
 
 namespace CityWatch.RadioCheck.Pages.Radio
 {
@@ -69,6 +70,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
         public string SignalRConnectionUrl { get; set; }
 
         public string DisplayItem { get; set; }
+        public GuardViewModel Guard { get; set; }
+        public bool IsRCAccess { get; set; }
         public IActionResult OnGet(string displayItem)
         {
 
@@ -92,7 +95,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
             string LoginGuardId = Request.Query["guid"];
             /* For Guard Login using securityLicenseNo the office staff UserId*/
             string loginUserId = Request.Query["lud"];
-            GuardId = HttpContext.Session.GetInt32("GuardId") ?? 0;
+           
             string sidValue = "";
             var UserId1 = claimsIdentity.Claims;
             foreach (var item in UserId1)
@@ -117,6 +120,12 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 AuthUserHelper.IsAdminUserLoggedIn = false;
                 UserId = int.Parse(loginUserId);
                 GuardId = int.Parse(LoginGuardId);
+                if (GuardId != 0)
+                {
+                    Guard = _viewDataService.GetGuards().SingleOrDefault(x => x.Id == GuardId);
+                    
+
+                }
                 HttpContext.Session.SetInt32("GuardId", GuardId);
                 HttpContext.Session.SetInt32("loginUserId", UserId);
                 
@@ -124,9 +133,13 @@ namespace CityWatch.RadioCheck.Pages.Radio
 
                 if (guard != null)
                 {
-                    if (guard.IsAdminPowerUser)
+                    if (guard.IsAdminPowerUser || guard.IsAdminSOPToolsAccess || guard.IsAdminAuditorAccess || guard.IsAdminInvestigatorAccess)
                     {
-                        AuthUserHelper.IsAdminPowerUser = true;
+                        if (guard.IsAdminPowerUser)
+                        {
+                            AuthUserHelper.IsAdminPowerUser = true;
+                        }
+                        return Redirect(Url.Page("/Admin/Settings"));
                     }
                     else
                     {
@@ -140,6 +153,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     {
                         AuthUserHelper.IsAdminGlobal = false;
                     }
+                   
                 }
 
 
