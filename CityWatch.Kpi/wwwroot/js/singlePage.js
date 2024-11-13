@@ -79,10 +79,24 @@ $(function () {
         }
     });
     
+    $('#IsDosDontList').on('change', function () {
+        const isChecked = $(this).is(':checked');
 
+        const filter = isChecked ? 1 : 2;
+        if (filter == 1) {
+           
+            $('#IsDosDontListEnabledHidden').val(true)
+            
+        }
+        if (filter == 2) {
+            $('#IsDosDontListEnabledHidden').val(false)
+          
+        }
+
+    });
     $('#btnSaveGuardSiteSettings').on('click', function () {
         var isUpdateDailyLog = false;        
-        
+        var test = $('#IsDosDontListEnabledHidden').val();
         const token = $('input[name="__RequestVerificationToken"]').val();
         if ($('#enableLogDump').is(":checked")) {
             isUpdateDailyLog = true;
@@ -97,7 +111,8 @@ $(function () {
                 landLine: $('#gs_land_line').val(),
                 guardEmailTo: $('#gs_email_recipients').val(),
                 duressEmail: $('#gs_duress_email').val(),
-                duressSms: $('#gs_duress_sms').val()
+                duressSms: $('#gs_duress_sms').val(),
+                IsDosDontList: $('#IsDosDontListEnabledHidden').val(),
             },
             headers: { 'RequestVerificationToken': token }
         }).done(function () {
@@ -1225,7 +1240,8 @@ $(function () {
                 const duressSms = result[0].duressSms;
                 const landLine = result[0].landLine;
                 const isDataCollectionEnabled = result[0].dataCollectionEnabled;
-
+                const IsDosDontListEnabledHidden = result[0].isDosDontList
+               
                 const guardLogEmailTo = result[0].guardLogEmailTo;
                 const isUpdateDailyLog = result[0].uploadGuardLog;
                 $('#gs_site_email').val(SiteEmail);
@@ -1234,6 +1250,9 @@ $(function () {
                 $('#gs_land_line').val(landLine);
                 $('#gs_email_recipients').val(guardLogEmailTo);
                 $('#enableLogDump').prop('checked', false);
+                $('#IsDosDontListEnabledHidden').val(IsDosDontListEnabledHidden);
+                $('#IsDosDontList').prop('checked', IsDosDontListEnabledHidden);
+
                 $('#cbxDisableDataCollection').prop('checked', !isDataCollectionEnabled);
                 if (isUpdateDailyLog)
                     $('#enableLogDump').prop('checked', true);
