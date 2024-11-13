@@ -80,6 +80,8 @@ namespace CityWatch.Data.Providers
         List<HrSettings> GetHRDescFull();
         public void SaveRecordingFileDetails(AudioRecordingLog audioRecordingLog);
         public int GetGuardID(string LicenseNo);
+
+        List<HrSettingsLockedClientSites> GetHrDocumentLockDetailsForASite(int clientSiteId);
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -821,6 +823,16 @@ namespace CityWatch.Data.Providers
                 }
             }
             _context.SaveChanges();
+
+        }
+
+        public List<HrSettingsLockedClientSites> GetHrDocumentLockDetailsForASite(int clientSiteId)
+        {
+            return _context.HrSettingsLockedClientSites
+        .Where(x => x.ClientSite.Id == clientSiteId && x.HrSettings.HRLock==true) // Filter by ClientSite ID if needed
+        .Include(x => x.ClientSite)
+        .Include(x => x.HrSettings)
+        .ToList();
 
         }
     }

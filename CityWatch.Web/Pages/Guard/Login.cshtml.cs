@@ -403,40 +403,40 @@ namespace CityWatch.Web.Pages.Guard
                         }
 
 
-                        if (HR1 == "Red" || HR2 == "Red" || HR3 == "Red")
-                        {
-                            // Lookup to group items by their ColourCodeStatus
-                            var statusLookupColourCode = hrGroupStatusesNew.ToLookup(x => x.ColourCodeStatus.Trim());
+                        //if (HR1 == "Red" || HR2 == "Red" || HR3 == "Red")
+                        //{
+                        //    // Lookup to group items by their ColourCodeStatus
+                        //    var statusLookupColourCode = hrGroupStatusesNew.ToLookup(x => x.ColourCodeStatus.Trim());
 
-                            // Get the 'Red' status group from the lookup
-                            var redStatuses = statusLookupColourCode["Red"];
+                        //    // Get the 'Red' status group from the lookup
+                        //    var redStatuses = statusLookupColourCode["Red"];
 
-                            // Fetch the HR settings list with the HR Lock enabled
-                            var enabledHrSettingsList = _configDataProvider.GetHRSettingsWithHRLockEnable();
+                        //    // Fetch the HR settings list with the HR Lock enabled
+                        //    var enabledHrSettingsList = _configDataProvider.GetHRSettingsWithHRLockEnable();
 
-                            if (enabledHrSettingsList.Count != 0)
-                            {
-                                foreach (var document in enabledHrSettingsList)
-                                {
-                                    foreach (var redStatus in redStatuses)
-                                    {
-                                        var redDescriptionParts = redStatus.documentDescription.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
+                        //    if (enabledHrSettingsList.Count != 0)
+                        //    {
+                        //        foreach (var document in enabledHrSettingsList)
+                        //        {
+                        //            foreach (var redStatus in redStatuses)
+                        //            {
+                        //                var redDescriptionParts = redStatus.documentDescription.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
 
-                                        if (redDescriptionParts.Length == 2)
-                                        {
-                                            var prefix = redDescriptionParts[0];    // "02c"
-                                            var description = redDescriptionParts[1]; // "VISY - Recycling - QLD - State Specific Induction (600-003)"
+                        //                if (redDescriptionParts.Length == 2)
+                        //                {
+                        //                    var prefix = redDescriptionParts[0];    // "02c"
+                        //                    var description = redDescriptionParts[1]; // "VISY - Recycling - QLD - State Specific Induction (600-003)"
 
-                                            // Now you can compare or perform operations with prefix and description
-                                            if (document.Description == description)
-                                            {
-                                                guardLockStatusBasedOnRedDoc = true;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        //                    // Now you can compare or perform operations with prefix and description
+                        //                    if (document.Description == description)
+                        //                    {
+                        //                        guardLockStatusBasedOnRedDoc = true;
+                        //                    }
+                        //                }
+                        //            }
+                        //        }
+                        //    }
+                        //}
 
 
 
@@ -557,11 +557,12 @@ namespace CityWatch.Web.Pages.Guard
             return new JsonResult(isSmartwandbypass);
         }
 
-        public JsonResult OnGetIsGuardLoginActive(string guardLicNo)
+        public JsonResult OnGetIsGuardLoginActive(string guardLicNo,string clientSiteName)
         {
 
             var thresholdDate = DateTime.Now.AddDays(-120);
             var success = false;
+            var hrdocLockforThisGurad = false;
             var initalsUsed = string.Empty;
             var strResult = string.Empty;
             if (!string.IsNullOrEmpty(guardLicNo))
@@ -607,10 +608,12 @@ namespace CityWatch.Web.Pages.Guard
                         strResult = "You have'nt logged in for a while. Contact your administrator!.";
                         success = true;
                     }
-
+                  hrdocLockforThisGurad= CheckIfGuardNeedToBlockForHRDocumnetLock(guard.Id, clientSiteName);
                 }
             }
-            return new JsonResult(new { success, strResult });
+
+            
+            return new JsonResult(new { success, strResult , hrdocLockforThisGurad });
 
 
 
@@ -618,6 +621,115 @@ namespace CityWatch.Web.Pages.Guard
 
 
 
+
+
+        public bool CheckIfGuardNeedToBlockForHRDocumnetLock(int guardId,string ClientSiteName)
+        {
+            var HR1 = "Grey";
+            var HR2 = "Grey";
+            var HR3 = "Grey";
+            bool guardLockStatusBasedOnRedDoc = false;
+
+            var ClientSiteID = _guardDataProvider.GetClientSiteID(ClientSiteName);
+            if (ClientSiteID != null)
+            {
+                var hrdoumnetWithLockfortheSite = _guardDataProvider.GetHrDocumentLockDetailsForASite(ClientSiteID.Id);
+                // check if lock exist for the curresponding site 
+                if (hrdoumnetWithLockfortheSite.Count != 0)
+                {
+                    //HRList Status start 
+
+                    if (guardId != 0)
+                    {
+                        var hrGroupStatusesNew = LEDStatusForLoginUser(guardId);
+                        if (hrGroupStatusesNew != null && hrGroupStatusesNew.Count > 0)
+                        {
+                            if (hrGroupStatusesNew != null || hrGroupStatusesNew.Count != 0)
+                            {
+
+
+                                // Group document statuses by GroupName for faster lookups
+                                var statusLookup = hrGroupStatusesNew.ToLookup(x => x.GroupName.Trim());
+
+                                // Set HR1Status
+                                var HR1List = statusLookup["HR 1 (C4i)"];
+                                if (HR1List.Any())
+                                {
+                                    HR1 = HR1List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
+                                                      HR1List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
+                                                      "Green";
+                                }
+
+                                // Set HR2Status
+                                var HR2List = statusLookup["HR 2 (Client)"];
+                                if (HR2List.Any())
+                                {
+                                    HR2 = HR2List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
+                                                      HR2List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
+                                                      "Green";
+                                }
+
+                                // Set HR3Status
+                                var HR3List = statusLookup["HR 3 (Special)"];
+                                if (HR3List.Any())
+                                {
+                                    HR3 = HR3List.Any(x => x.ColourCodeStatus == "Red") ? "Red" :
+                                                      HR3List.Any(x => x.ColourCodeStatus == "Yellow") ? "Yellow" :
+                                                      "Green";
+                                }
+
+
+                                if (HR1 == "Red" || HR2 == "Red" || HR3 == "Red")
+                                {
+                                    // Lookup to group items by their ColourCodeStatus
+                                    var statusLookupColourCode = hrGroupStatusesNew.ToLookup(x => x.ColourCodeStatus.Trim());
+
+                                    // Get the 'Red' status group from the lookup
+                                    var redStatuses = statusLookupColourCode["Red"];
+
+                                    // Fetch the HR settings list with the HR Lock enabled
+                                    var enabledHrSettingsList = hrdoumnetWithLockfortheSite;
+
+                                    if (enabledHrSettingsList.Count != 0)
+                                    {
+                                        foreach (var document in enabledHrSettingsList)
+                                        {
+                                            foreach (var redStatus in redStatuses)
+                                            {
+                                                var redDescriptionParts = redStatus.documentDescription.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
+
+                                                if (redDescriptionParts.Length == 2)
+                                                {
+                                                    var prefix = redDescriptionParts[0];    // "02c"
+                                                    var description = redDescriptionParts[1]; // "VISY - Recycling - QLD - State Specific Induction (600-003)"
+
+                                                    // Now you can compare or perform operations with prefix and description
+                                                    if (document.HrSettings.Description == description)
+                                                    {
+                                                        guardLockStatusBasedOnRedDoc = true;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+
+
+                            }
+                        }
+
+
+
+
+                    }
+                }
+
+
+            }
+            return guardLockStatusBasedOnRedDoc;
+
+        }
 
 
         private int GetGuardLoginId(int logBookId)
