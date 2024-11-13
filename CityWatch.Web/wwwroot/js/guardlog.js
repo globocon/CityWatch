@@ -4402,7 +4402,8 @@ $(function () {
         { data: 'provider', width: "13%" },
         { data: 'clientSites', orderable: false, width: "15%" },
         { data: 'pin', width: "1%", visible: false },
-        { data: 'loginDate', visible: false },
+            { data: 'loginDate', visible: false },
+           
         { data: 'gender', width: "5%" },
         {
             data: 'isActive', name: 'isactive', className: "text-center", width: "4%", 'render': function (value, type, data) {
@@ -4434,6 +4435,8 @@ $(function () {
             { data: 'hr2Description', name: 'hr2Description', width: "2%", visible: false, searchable: true },
             { data: 'hr3Description', name: 'hr3Description', width: "2%", visible: false, searchable: true },
 
+           
+
 
         {
             targets: -1,
@@ -4442,7 +4445,8 @@ $(function () {
             orderable: false,
             className: "text-center",
             width: "0%"
-        },
+            },
+             { data: 'dateEnrolled', visible: false },
         ],
         initComplete: function (settings, json) {
             $('#chkbxfilterGuardActive').prop("disabled", false);
@@ -4699,7 +4703,7 @@ $(function () {
         $('#Guard_State').val(data.state);
         $('#Guard_Provider').val(data.provider);
         $('#Guard_Pin').val(data.pin);
-
+        $('#Guard_DOE').val(data.dateEnrolled);
 
         $('#Guard_Mobile').val(data.mobile)
         $('#Guard_Email').val(data.email)
@@ -8293,6 +8297,26 @@ function downloadDailyGuardTimeSheetLogBulkZipFile() {
     });
 }
 
+$('#copyButtonGuard').on('click', function () {
+    /* Copy to clipboard */
+    var textToCopy = "";
+    textToCopy += $('#Guard_Name').val() + "\r\n";
+    textToCopy += $('#Guard_SecurityNo').val() + "\r\n";
+    textToCopy += $('#Guard_State').val() + "\r\n";
+    textToCopy += $('#Guard_Gender').val() + "\r\n";
+    textToCopy += $('#Guard_Provider').val() + "\r\n";
+    var doeValue = $('#Guard_DOE').val();
+    if (doeValue) { // Check if DOE has a value
+        textToCopy += "DOE: " + getFormattedDate(new Date(doeValue), null, ' ') + "\r\n";
+    }
+    else {
+        textToCopy += "DOE: null \r\n";
+    }
+    $(this).focus();
+    navigator.clipboard.writeText(textToCopy)
+        .then(() => { alert('Copied to clipboard.') })
+        .catch((error) => { alert(`Copy failed. Error: ${error}`) }); // Use backticks here
+});
 
 
 
