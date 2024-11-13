@@ -973,22 +973,60 @@ namespace CityWatch.Web.Pages.Incident
 
             if (report.ColourCode!=null || report.IsPatrol==true || StampRcLogbook)
             {
-                var guardLog = new GuardLog()
+
+                if (report.ColourCode == null)
                 {
-                    ClientSiteLogBookId = logBookId,
-                    EventDateTime = DateTime.Now,
-                    Notes = Path.GetFileNameWithoutExtension(report.FileName),
-                    IsSystemEntry = true,
-                    IrEntryType = report.IsEventFireOrAlarm ? IrEntryType.Alarm : IrEntryType.Normal,
-                    EventDateTimeLocal = report.CreatedOnDateTimeLocal,
-                    EventDateTimeLocalWithOffset = report.CreatedOnDateTimeLocalWithOffset,
-                    EventDateTimeZone = report.CreatedOnDateTimeZone,
-                    EventDateTimeZoneShort = report.CreatedOnDateTimeZoneShort,
-                    EventDateTimeUtcOffsetMinute = report.CreatedOnDateTimeUtcOffsetMinute,
-                    IsIRReportTypeEntry = true,
-                    RcLogbookStamp = StampRcLogbook
-                };
-                _guardLogDataProvider.SaveGuardLog(guardLog);
+                    var guardLog = new GuardLog()
+                    {
+                        ClientSiteLogBookId = logBookId,
+                        EventDateTime = DateTime.Now,
+                        Notes = Path.GetFileNameWithoutExtension(report.FileName),
+                        IsSystemEntry = true,
+                        IrEntryType = report.IsEventFireOrAlarm ? IrEntryType.Alarm : IrEntryType.Normal,
+                        EventDateTimeLocal = report.CreatedOnDateTimeLocal,
+                        EventDateTimeLocalWithOffset = report.CreatedOnDateTimeLocalWithOffset,
+                        EventDateTimeZone = report.CreatedOnDateTimeZone,
+                        EventDateTimeZoneShort = report.CreatedOnDateTimeZoneShort,
+                        EventDateTimeUtcOffsetMinute = report.CreatedOnDateTimeUtcOffsetMinute,
+                        IsIRReportTypeEntry = true,
+                        RcLogbookStamp = StampRcLogbook
+                    };
+                    _guardLogDataProvider.SaveGuardLog(guardLog);
+                }
+                else
+                {
+                    var feedbackTypes = _configDataProvider.GetFeedbackTypes().Where(x => x.Name == "Colour Codes").Select(x => x.Id).FirstOrDefault();
+                    var feedbackTemplatesEnabledColourCodes = _configDataProvider.GetFeedbackTemplates().Where(x => x.Type == feedbackTypes && x.SendtoRC==true);
+
+                    var CheckSttaus = feedbackTemplatesEnabledColourCodes.Where(x => x.Id == report.ColourCode).FirstOrDefault();
+                    if(CheckSttaus!=null)
+                    {
+                        if(CheckSttaus.Id!=0)
+                        {
+
+                            var guardLog = new GuardLog()
+                            {
+                                ClientSiteLogBookId = logBookId,
+                                EventDateTime = DateTime.Now,
+                                Notes = Path.GetFileNameWithoutExtension(report.FileName),
+                                IsSystemEntry = true,
+                                IrEntryType = report.IsEventFireOrAlarm ? IrEntryType.Alarm : IrEntryType.Normal,
+                                EventDateTimeLocal = report.CreatedOnDateTimeLocal,
+                                EventDateTimeLocalWithOffset = report.CreatedOnDateTimeLocalWithOffset,
+                                EventDateTimeZone = report.CreatedOnDateTimeZone,
+                                EventDateTimeZoneShort = report.CreatedOnDateTimeZoneShort,
+                                EventDateTimeUtcOffsetMinute = report.CreatedOnDateTimeUtcOffsetMinute,
+                                IsIRReportTypeEntry = true,
+                                RcLogbookStamp = StampRcLogbook
+                            };
+                            _guardLogDataProvider.SaveGuardLog(guardLog);
+
+                        }
+
+                    }
+                }
+
+               
             }
            
         }

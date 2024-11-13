@@ -23,6 +23,7 @@ namespace CityWatch.Data.Models
         public string TextColor { get; set; }
         //Soft delete just change the Status 0 to one for delete
         public int DeleteStatus { get; set; }
+        public bool SendtoRC { get; set; }
     }
     public class FeedbackType
     {

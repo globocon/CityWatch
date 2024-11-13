@@ -2213,6 +2213,7 @@
             $('#FeedbackTemplate_Type').prop('selectedIndex', 0);
             $('#FeedbackTemplate_BackgroundColour').val('#FFFFFF');
             $('#FeedbackTemplate_TextColor').val('#000000');
+            $('#FeedbackTemplate_SendtoRC').prop('checked',false);
             $.ajax({
                 url: '/Admin/Settings?handler=FeedbackTemplate',
                 type: 'GET',
@@ -2222,7 +2223,8 @@
                 $('#FeedbackTemplate_Text').val(data.text);
                 $('#FeedbackTemplate_Type').val(data.type);
                 $('#FeedbackTemplate_BackgroundColour').val(data.backgroundColour);
-                $('#FeedbackTemplate_TextColor').val(data.textColor);
+                $('#FeedbackTemplate_TextColor').val(data.textColor);             
+                $('#FeedbackTemplate_SendtoRC').prop('checked', data.sendtoRC);
             }).fail(function () {
                 showStatusNotification(false, 'Something went wrong');
             });
