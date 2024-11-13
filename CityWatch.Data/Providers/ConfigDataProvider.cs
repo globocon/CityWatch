@@ -144,7 +144,8 @@ namespace CityWatch.Data.Providers
                     Type = template.Type,
                     BackgroundColour = template.BackgroundColour,
                     TextColor = template.TextColor,
-                    DeleteStatus = 0
+                    DeleteStatus = 0,
+                    SendtoRC= template.SendtoRC
                 });
             }
             else
@@ -158,6 +159,7 @@ namespace CityWatch.Data.Providers
                 templateToUpdate.BackgroundColour = template.BackgroundColour;
                 templateToUpdate.TextColor = template.TextColor;
                 templateToUpdate.DeleteStatus = 0;
+                templateToUpdate.SendtoRC = template.SendtoRC;
             }
             _context.SaveChanges();
         }
