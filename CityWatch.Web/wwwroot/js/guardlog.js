@@ -95,18 +95,38 @@ $(function () {
 
     /*P1-203 ADMIN USER PROFILE-START*/
     $('#Guard_Access').on('change', function () {
-
         var newval = $(this).val();
-        var newval1 = newval[newval.length - 1];
         
-        if (parseInt(newval1) == 5) {
+        if (newval.includes('6') && newval.includes('5')) {
+                //yourElement in yourArray
+            alert('Please select only one option among RC or RC-Fusion');
+            $(".multiselect-option input[type=checkbox]:checked").each(function () {
+                        var isChecked1 = $(this).is(':checked');
+                        if (isChecked1 == true) {
+                            var new1 = $(this).val();
+
+                            if (parseInt(new1) == 6 || parseInt(new1) == 5) {
+                                $(".multiselect-option input[type=checkbox][value='" + new1 + "']").prop("checked", false);
+                                newval = newval.filter(function (value) {
+                                    return value !== new1;
+                                });
+                            }
+                        }
+
+                    });
+
+        }
+
+        if (newval.includes('2') && newval.includes('3')) {
+            //yourElement in yourArray
+            alert('Please select only one option among STATS or STATS-CHART ');
             $(".multiselect-option input[type=checkbox]:checked").each(function () {
                 var isChecked1 = $(this).is(':checked');
                 if (isChecked1 == true) {
                     var new1 = $(this).val();
 
-                    if (parseInt(new1) == 6) {
-                        $(".multiselect-option input[type=checkbox][value='" + 6 + "']").prop("checked", false);
+                    if (parseInt(new1) == 2 || parseInt(new1) == 3) {
+                        $(".multiselect-option input[type=checkbox][value='" + new1 + "']").prop("checked", false);
                         newval = newval.filter(function (value) {
                             return value !== new1;
                         });
@@ -114,28 +134,95 @@ $(function () {
                 }
 
             });
+
         }
-        if (parseInt(newval1) == 6) {
-            $(".multiselect-option input[type=checkbox]:checked").each(function () {
-                var isChecked1 = $(this).is(':checked');
-                if (isChecked1 == true) {
-                    var new1 = $(this).val();
-
-                    if (parseInt(new1) == 5) {
-                        $(".multiselect-option input[type=checkbox][value='" + 5 + "']").prop("checked", false);
-                        newval = newval.filter(function (value) {
-                            return value !== new1;
-                        });
-                    }
-                }
-
-            });
-        }
-        $("#Guard_Access").val(newval);
-        //$("#Guard_Access").multiselect();
-       // $("#Guard_Access").multiselect("refresh");
-
+        $('#Guard_Access').val(newval);
     });
+    //$('#Guard_Access').on('change', function () {
+
+    //    var newval = $(this).val();
+    //    var selectrc = 0;
+    //    //var newval1 = newval[newval.length - 1];
+    //    var newval1 = $("#Guard_Access option:selected").last().val()
+    //    if ($.inArray(6, newval) ) {
+    //        //yourElement in yourArray
+    //        alert('hi')
+
+    //    }
+    //    //if (parseInt(newval1) == 5) {
+    //    //    $(".multiselect-option input[type=checkbox]:checked").each(function () {
+    //    //        var isChecked1 = $(this).is(':checked');
+    //    //        if (isChecked1 == true) {
+    //    //            var new1 = $(this).val();
+
+    //    //            if (parseInt(new1) == 6) {
+    //    //                $(".multiselect-option input[type=checkbox][value='" + 6 + "']").prop("checked", false);
+    //    //                newval = newval.filter(function (value) {
+    //    //                    return value !== new1;
+    //    //                });
+    //    //            }
+    //    //        }
+
+    //    //    });
+    //    //}
+    //    if (parseInt(newval1) == 6) {
+    //        $(".multiselect-option input[type=checkbox]:checked").each(function () {
+    //            var isChecked1 = $(this).is(':checked');
+    //            if (isChecked1 == true) {
+    //                var new1 = $(this).val();
+
+    //                if (parseInt(new1) == 5) {
+    //                     $(".multiselect-option input[type=checkbox][value='" + 5 + "']").prop("checked", false);
+    //                       selectrc=1
+    //                    //newval = newval.filter(function (value) {
+    //                    //    return value !== new1;
+    //                    //});
+    //                }
+    //            }
+
+    //        });
+    //    }
+        
+    //    //if (parseInt(newval1) == 2) {
+    //    //    $(".multiselect-option input[type=checkbox]:checked").each(function () {
+    //    //        var isChecked1 = $(this).is(':checked');
+    //    //        if (isChecked1 == true) {
+    //    //            var new1 = $(this).val();
+
+    //    //            if (parseInt(new1) == 3) {
+    //    //                $(".multiselect-option input[type=checkbox][value='" + 3 + "']").prop("checked", false);
+    //    //                newval = newval.filter(function (value) {
+    //    //                    return value !== new1;
+    //    //                });
+    //    //            }
+    //    //        }
+
+    //    //    });
+    //    //}
+    //    //if (parseInt(newval1) == 3) {
+    //    //    $(".multiselect-option input[type=checkbox]:checked").each(function () {
+    //    //        var isChecked1 = $(this).is(':checked');
+    //    //        if (isChecked1 == true) {
+    //    //            var new1 = $(this).val();
+
+    //    //            if (parseInt(new1) == 2) {
+    //    //                $(".multiselect-option input[type=checkbox][value='" + 2 + "']").prop("checked", false);
+    //    //                newval = newval.filter(function (value) {
+    //    //                    return value !== new1;
+    //    //                });
+    //    //            }
+    //    //        }
+
+    //    //    });
+    //    //}
+    //    if (selectrc == 1) {
+    //        alert('Please select only one option among RC or RC-Fusion')
+    //    }
+    //   // $("#Guard_Access").val(newval);
+    //    //$("#Guard_Access").multiselect();
+    //   // $("#Guard_Access").multiselect("refresh");
+
+    //});
     /*P1-203 ADMIN USER PROFILE-END*/
     function getSmartWandOrOfficerPosition(isPosition, clientSiteName, smartWandOrPositionId) {
         const url = isPosition ?
@@ -6628,8 +6715,8 @@ $(function () {
                     $('#Access_permission_RC_status').html('<i class="fa fa-circle-o-notch fa-spin text-primary"></i>Redirecting to Radio Checklist (RC). Please wait...').show();
 
                     /*window.location.href = '/Radio/Check';*/
-                    //window.location.href = 'http://rc.cws-ir.com/RadioCheckV2?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
-                     window.location.href = 'https://localhost:7083/RadioCheckV2?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
+                    window.location.href = 'http://rc.cws-ir.com/RadioCheckV2?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
+                     //window.location.href = 'https://localhost:7083/RadioCheckV2?Sl=' + securityLicenseNo + "&&lud=" + result.loggedInUserId + "&&guid=" + result.guId;
                 }
                 else {
                     $('#txt_securityLicenseNoRC').val('');
