@@ -8482,7 +8482,7 @@ function downloadDailyGuardTimeSheetLogBulkZipFile() {
 }
 
 $('#copyButtonGuard').on('click', function () {
-    /* Copy to clipboard */
+    $(this).focus();
     var textToCopy = "";
     textToCopy += $('#Guard_Name').val() + "\r\n";
     textToCopy += $('#Guard_SecurityNo').val() + "\r\n";
@@ -8490,16 +8490,15 @@ $('#copyButtonGuard').on('click', function () {
     textToCopy += $('#Guard_Gender').val() + "\r\n";
     textToCopy += $('#Guard_Provider').val() + "\r\n";
     var doeValue = $('#Guard_DOE').val();
-    if (doeValue) { // Check if DOE has a value
+    if (doeValue) {
         textToCopy += "DOE: " + getFormattedDate(new Date(doeValue), null, ' ') + "\r\n";
-    }
-    else {
+    } else {
         textToCopy += "DOE: null \r\n";
     }
     $(this).focus();
     navigator.clipboard.writeText(textToCopy)
         .then(() => { alert('Copied to clipboard.') })
-        .catch((error) => { alert(`Copy failed. Error: ${error}`) }); // Use backticks here
+        .catch((error) => { alert(`Copy failed. Error: ${error}`) });
 });
 
 
