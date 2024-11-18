@@ -234,6 +234,36 @@ namespace CityWatch.RadioCheck.Services
 
         private void CreateLogBookReportsFusion(List<ClientSiteRadioChecksActivityStatus_History> logBooksToCreate, string zipFolderPath)
         {
+            //var data = _context.ClientSiteRadioChecksActivityStatus_History
+            // .Where(z => z.ClientSiteId == clientSiteId && z.EventDateTime.Date >= logFromDate && z.EventDateTime.Date <= logToDate)
+            // .ToList();
+            // Modify the  logbook to add the  date EventDateTimeZoneShort Start
+            var checkGMT = logBooksToCreate
+                  .Where(x => x.ActivityType != "SW" && x.EventDateTimeZoneShort != null)
+                  .Select(x => x.EventDateTimeZoneShort)
+                  .FirstOrDefault();
+
+            if (checkGMT != null)
+            {
+                logBooksToCreate.ForEach(x =>
+                {
+                    if (x.EventDateTimeZoneShort == null)
+                    {
+                        x.EventDateTimeZoneShort = checkGMT;
+                        x.EventDateTimeLocal = x.EventDateTime;
+                    }
+                });
+
+            }
+
+            //notificationCreatedTime
+
+            logBooksToCreate.OrderBy(z => z.EventDateTime).ToList();
+
+            // Modify the  logbook to add the  date EventDateTimeZoneShort end
+
+
+
             var distinctDatetoCreate = logBooksToCreate.Select(m => m.EventDateTime.Date).Distinct();
             foreach (var eachdate in distinctDatetoCreate)
             {

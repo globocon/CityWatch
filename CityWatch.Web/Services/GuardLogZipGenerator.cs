@@ -278,6 +278,28 @@ namespace CityWatch.Web.Services
 
         private void CreateLogBookReportsFusion(List<ClientSiteRadioChecksActivityStatus_History> logBooksToCreate, string zipFolderPath)
         {
+
+            var checkGMT = logBooksToCreate
+                 .Where(x => x.ActivityType != "SW" && x.EventDateTimeZoneShort != null)
+                 .Select(x => x.EventDateTimeZoneShort)
+                 .FirstOrDefault();
+
+            if (checkGMT != null)
+            {
+                logBooksToCreate.ForEach(x =>
+                {
+                    if (x.EventDateTimeZoneShort == null)
+                    {
+                        x.EventDateTimeZoneShort = checkGMT;
+                        x.EventDateTimeLocal = x.EventDateTime;
+                    }
+                });
+
+            }
+
+            //notificationCreatedTime
+
+            logBooksToCreate.OrderBy(z => z.EventDateTime).ToList();
             var distinctDatetoCreate = logBooksToCreate.Select(m => m.EventDateTime.Date).Distinct();
             foreach (var eachdate in distinctDatetoCreate)
             {
