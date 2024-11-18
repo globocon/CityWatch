@@ -258,7 +258,7 @@ namespace CityWatch.RadioCheck.Services
 
             //notificationCreatedTime
 
-            logBooksToCreate.OrderBy(z => z.EventDateTime).ToList();
+            logBooksToCreate= logBooksToCreate.OrderBy(z => z.EventDateTimeLocal).ToList();
 
             // Modify the  logbook to add the  date EventDateTimeZoneShort end
 
