@@ -714,8 +714,59 @@ namespace CityWatch.Web.Pages.Guard
                                         }
                                     }
                                 }
+                              
+                                var enabledHrSettingsList2 = hrdoumnetWithLockfortheSite;
+                                if (!guardLockStatusBasedOnRedDoc && enabledHrSettingsList2.Count > 0)
+                                {
+                                    guardLockStatusBasedOnRedDoc = !enabledHrSettingsList2.All(document =>
+                                        hrGroupStatusesNew.Any(redStatus =>
+                                        {
+                                            var redDescriptionParts = redStatus.documentDescription
+                                                                               .Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
 
+                                            return redDescriptionParts.Length == 2 &&
+                                                   redDescriptionParts[1] == document.HrSettings.Description;
+                                        }));
 
+                                   
+                                }
+
+                               
+                                //if(!guardLockStatusBasedOnRedDoc)
+                                //{
+                                //  var  guardLockStatusBasedOnAvaliableDoc2 = false;
+                                //    var enabledHrSettingsList = hrdoumnetWithLockfortheSite;
+                                //    if (enabledHrSettingsList.Count != 0)
+                                //    {
+                                //        foreach (var document in enabledHrSettingsList)
+                                //        {
+
+                                //            foreach (var redStatus in hrGroupStatusesNew)
+                                //            {
+                                //                var redDescriptionParts = redStatus.documentDescription.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
+
+                                //                if (redDescriptionParts.Length == 2)
+                                //                {
+                                //                    var prefix = redDescriptionParts[0];    // "02c"
+                                //                    var description = redDescriptionParts[1]; // "VISY - Recycling - QLD - State Specific Induction (600-003)"
+
+                                //                    // Now you can compare or perform operations with prefix and description
+                                //                    if (document.HrSettings.Description == description)
+                                //                    {
+                                //                        guardLockStatusBasedOnAvaliableDoc2 = true;
+                                //                    }
+                                //                }
+                                //            }
+
+                                //        }
+
+                                //        if(!guardLockStatusBasedOnAvaliableDoc2)
+                                //        {
+                                //            guardLockStatusBasedOnRedDoc = true;
+                                //        }
+
+                                //    }
+                                //}
 
                             }
                         }
