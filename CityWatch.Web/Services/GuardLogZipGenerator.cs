@@ -299,7 +299,7 @@ namespace CityWatch.Web.Services
 
             //notificationCreatedTime
 
-            logBooksToCreate.OrderBy(z => z.EventDateTime).ToList();
+            logBooksToCreate = logBooksToCreate.OrderBy(z => z.EventDateTime).ToList();
             var distinctDatetoCreate = logBooksToCreate.Select(m => m.EventDateTime.Date).Distinct();
             foreach (var eachdate in distinctDatetoCreate)
             {
