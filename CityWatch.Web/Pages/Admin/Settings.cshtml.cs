@@ -159,6 +159,13 @@ namespace CityWatch.Web.Pages.Admin
             var message = "Success";
             try
             {
+                var clientsites = _viewDataService.GetUserClientSitesHavingAccess(null, null, record.Name);
+                if(clientsites.Count()>0)
+                {
+                    status = false;
+                    message = "Error: " +"A profile with same client site name already exists";
+                    return new JsonResult(new { status = status, message = message });
+                }
                 if (string.IsNullOrEmpty(record.Address))
                 {
                     record.Gps = string.Empty;
