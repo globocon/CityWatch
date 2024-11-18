@@ -3333,7 +3333,7 @@ function drawPieChartUsingChartJsChartRCButton(dataValue) {
                         'rgba(153, 102, 255, 1)',
                         'rgba(255, 159, 64, 1)'
                     ],
-                    borderWidth: 0
+                    borderWidth: 0, radius: '80%',
                 }]
             },
             options: {
