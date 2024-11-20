@@ -1892,7 +1892,9 @@
     });
 
     $('#user_settings').on('click', '.activateuser', function () {
-        toggleUserStatus($(this).attr('data-user-id'), false);
+        if (confirm('Are you sure want to Activate this user?')) {
+            toggleUserStatus($(this).attr('data-user-id'), false);
+        }
     });
 
     function toggleUserStatus(userId, deleted) {
