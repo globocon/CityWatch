@@ -5990,7 +5990,7 @@ function drawPieChartUsingChartJsChartRCForWeek(dataValue) {
                         'rgba(153, 102, 255, 1)',
                         'rgba(255, 159, 64, 1)'
                     ],
-                    borderWidth: 0
+                    borderWidth: 0,radius: '80%',
                 }]
             },
             options: {
@@ -6378,7 +6378,7 @@ function drawPieChartUsingChartJsChartRCForMonth(dataValue) {
                         'rgba(153, 102, 255, 1)',
                         'rgba(255, 159, 64, 1)'
                     ],
-                    borderWidth: 0
+                    borderWidth: 0, radius: '80%',
                 }]
             },
             options: {
@@ -6767,7 +6767,7 @@ function drawPieChartUsingChartJsChartRCForYear(dataValue) {
                         'rgba(153, 102, 255, 1)',
                         'rgba(255, 159, 64, 1)'
                     ],
-                    borderWidth: 0
+                    borderWidth: 0,radius: '80%',
                 }]
             },
             options: {
@@ -7158,7 +7158,7 @@ function drawPieChartUsingChartJsChartRCButton(dataValue) {
                         'rgba(153, 102, 255, 1)',
                         'rgba(255, 159, 64, 1)'
                     ],
-                    borderWidth: 0
+                    borderWidth: 0, radius: '80%'
                 }]
             },
             options: {
@@ -7549,7 +7549,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(dataValue) {
                         'rgba(153, 102, 255, 1)',
                         'rgba(255, 159, 64, 1)'
                     ],
-                    borderWidth: 0
+                    borderWidth: 0,radius: '80%',
                 }]
             },
             options: {
@@ -7833,7 +7833,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(dataValue)
                         'rgba(153, 102, 255, 1)',
                         'rgba(255, 159, 64, 1)'
                     ],
-                    borderWidth: 0
+                    borderWidth: 0, radius: '80%',
                 }]
             },
             options: {
@@ -7938,7 +7938,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(dataValue)
                         'rgba(153, 102, 255, 1)',
                         'rgba(255, 159, 64, 1)'
                     ],
-                    borderWidth: 0
+                    borderWidth: 0, radius: '80%'
                 }]
             },
             options: {
