@@ -499,7 +499,8 @@ $(function () {
         $('#cs_client_site_keys').DataTable().destroy();
     }
     let gridClientSiteKeys = $('#cs_client_site_keys').DataTable({
-        lengthMenu: [[10, 25, 50, 100, 1000], [10, 25, 50, 100, 1000]],
+        info: true, // Enable the info display
+        lengthMenu: [[10, 25, 50, 100, 1000, - 1], [10, 25, 50, 100, 1000, "Show All"]],
         paging: true,
         ordering: true,
         order: [[1, "asc"]],
@@ -532,7 +533,7 @@ $(function () {
             {
                 targets: -1,
                 orderable: false,
-                width: '4%',
+                width: '5%',
                 data: null,
                 defaultContent: '<button  class="btn btn-outline-primary mr-2" id="btn_edit_cs_key"><i class="fa fa-pencil mr-2"></i>Edit</button>' +
                  '<button id="btn_delete_cs_key" class="btn btn-outline-danger mr-2 mt-1"><i class="fa fa-trash mr-2"></i>Delete</button>',
@@ -803,57 +804,61 @@ $(function () {
     });
    
     $("#add_Downloadbtn").click(function () {
+                
+        var Key = $('#client_site_name').html();        
+        $('#loader').show(); // Show loader
+        var guardIds = [];
+        // Use the DataTable API to get the instance of the table
+        var table = $('#cs_client_site_keys').DataTable();
 
-        var Key = $('#site-settings-for').html();
+        // Collect filtered row data
+        var rawData = [];
+        table.rows({ filter: 'applied' }).every(function () {
+            var rowData = this.data(); // Get the data for each filtered row
 
-        var type = 'xlsx';
-        var name = Key + '.';
-        var data = document.getElementById('cs_client_site_keys');
-
-        // Check if all columns are empty
-        var isEmptyTable = true;
-        var rows = data.getElementsByTagName('tr');
-        for (var i = 0; i < rows.length; i++) {
-            var cells = rows[i].getElementsByTagName('td');
-            for (var j = 1; j < cells.length; j++) {
-                if (cells[j].textContent.trim() !== '') {
-                    isEmptyTable = false;
-                    break;
-                }
+            // Assuming rowData has properties like id, keyNo, description, imagePathNew
+            if (rowData) {
+                guardIds.push(rowData.id.toString()); // Collect GuardIds
+                rawData.push({
+                    keyNo: rowData.keyNo || '',
+                    description: rowData.description || '',
+                    imagePathNew: rowData.imagePathNew || ''
+                });
             }
+        });
+
+        try {
+            // Define headers and column widths
+            const headers = ['Key #', 'Description', 'Image'];
+            const columnWidths = [20, 50, 20]; // Example widths
+
+            // Prepare data rows
+            const dataRows = [headers, ...rawData.map(item => [
+                item.keyNo,
+                item.description,
+                item.imagePathNew,
+            ])];
+
+            // Create a new worksheet and add data
+            const ws = XLSX.utils.aoa_to_sheet(dataRows);
+
+            // Set column widths
+            ws['!cols'] = columnWidths.map(width => ({ wch: width }));
+
+            // Create a new workbook and append the worksheet
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Keys');
+
+            // Write the file
+            const fileName = 'Keys for ' + Key +'.xlsx';
+            XLSX.writeFile(wb, fileName);
+
+            $('#loader').hide(); // Hide loader after successful export
+        } catch (error) {
+            $('#loader').hide(); // Hide loader in case of error
+            console.error('Error fetching or processing data:', error); // Log error
+            alert("An error occurred while exporting data.");
         }
-
-        if (isEmptyTable) {
-            // Create a message row with the desired text
-            var messageRow = document.createElement('tr');
-            var messageCell = document.createElement('td');
-            messageCell.innerText = 'No data available in table';
-            messageRow.appendChild(messageCell);
-
-            // Create a new table with the message
-            var tableClone = document.createElement('table');
-            var tbody = document.createElement('tbody');
-            tbody.appendChild(messageRow);
-            tableClone.appendChild(tbody);
-        } else {
-            // Clone the table and remove the last column
-            var tableClone = data.cloneNode(true);
-            var rows = tableClone.getElementsByTagName('tr');
-            for (var i = 0; i < rows.length; i++) {
-                var lastCell = rows[i].lastElementChild;
-                if (lastCell) {
-                    rows[i].removeChild(lastCell);
-                }
-            }
-        }
-
-
-
-
-        var excelFile = XLSX.utils.table_to_book(tableClone, { sheet: "Keys" });
-
-        // Use XLSX.writeFile to generate and download the Excel file
-        XLSX.writeFile(excelFile, name + type);
     });
     $('#add_client_site_key').on('click', function () {
        resetClientSiteKeyModal();
