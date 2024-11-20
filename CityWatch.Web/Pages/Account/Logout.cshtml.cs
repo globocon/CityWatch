@@ -12,6 +12,8 @@ namespace CityWatch.Web.Pages.Account
         {
             AuthUserHelper.IsAdminPowerUser = false;
             AuthUserHelper.IsAdminGlobal= false;
+            AuthUserHelper.IsAdminAuditor = false;
+            AuthUserHelper.IsAdminInvestigator = false;
             HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme, 
                 new AuthenticationProperties { RedirectUri = Url.Page("/Index") });
         }

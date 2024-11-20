@@ -92,17 +92,15 @@
             {
               
                 <li class="nav-item">
-                    <a class="nav-link p-2" id="csite-tab" data-toggle="tab" href="#csite" role="tab" aria-controls="csite" aria-selected="false">IR Client Site</a>
+                    <a class="nav-link p-2 active" id="csite-tab" data-toggle="tab" href="#csite" role="tab" aria-controls="csite" aria-selected="false">IR Client Site</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link p-2" id="uca-tab" data-toggle="tab" href="#uca" role="tab" aria-controls="uca" aria-selected="false">C4i Access Control</a>
                 </li>
                   <li class="nav-item">
-                    <a class="nav-link p-2 " id="c4ihr-tab" data-toggle="tab" href="#c4ihr" role="tab" aria-controls="uca" aria-selected="false">C4i HR</a>
+                    <a class="nav-link p-2" id="c4ihr-tab" data-toggle="tab" href="#c4ihr" role="tab" aria-controls="uca" aria-selected="false">C4i HR</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link p-2 active" id="c4isettings-tab" data-toggle="tab" href="#c4isettings" role="tab" aria-controls="c4isettings" aria-selected="false">C4i Core</a>
-            </li>
+              
             }
             //Power User menu end
             //Auditor User menu start
@@ -112,7 +110,7 @@
             {
 
                 <li class="nav-item">
-                    <a class="nav-link p-2" id="csite-tab" data-toggle="tab" href="#csite" role="tab" aria-controls="csite" aria-selected="false">IR Client Site</a>
+                        <a class="nav-link p-2 active" id="csite-tab" data-toggle="tab" href="#csite" role="tab" aria-controls="csite" aria-selected="false">IR Client Site</a>
                 </li>
                     <li class="nav-item">
                         <a class="nav-link p-2" id="irdocs-tab" data-toggle="tab" href="#irdocs" role="tab" aria-controls="irdocs" aria-selected="false">IR Template & Downloads</a>
@@ -124,17 +122,15 @@
                     <a class="nav-link p-2" id="uca-tab" data-toggle="tab" href="#uca" role="tab" aria-controls="uca" aria-selected="false">C4i Access Control</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link p-2 " id="c4ihr-tab" data-toggle="tab" href="#c4ihr" role="tab" aria-controls="uca" aria-selected="false">C4i HR</a>
+                        <a class="nav-link p-2 " id="c4ihr-tab" data-toggle="tab" href="#c4ihr" role="tab" aria-controls="uca" aria-selected="false">C4i HR</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link p-2 active" id="c4isettings-tab" data-toggle="tab" href="#c4isettings" role="tab" aria-controls="c4isettings" aria-selected="false">C4i Core</a>
-                </li>
+               
             }
             if (Model.Guard.IsAdminAuditorAccess)
                 {
 
                     <li class="nav-item">
-                        <a class="nav-link p-2" id="csite-tab" data-toggle="tab" href="#csite" role="tab" aria-controls="csite" aria-selected="false">IR Client Site</a>
+                        <a class="nav-link p-2 active" id="csite-tab" data-toggle="tab" href="#csite" role="tab" aria-controls="csite" aria-selected="false">IR Client Site</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link p-2" id="uca-tab" data-toggle="tab" href="#uca" role="tab" aria-controls="uca" aria-selected="false">C4i Access Control</a>
@@ -142,15 +138,13 @@
                     <li class="nav-item">
                         <a class="nav-link p-2 " id="c4ihr-tab" data-toggle="tab" href="#c4ihr" role="tab" aria-controls="uca" aria-selected="false">C4i HR</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link p-2 active" id="c4isettings-tab" data-toggle="tab" href="#c4isettings" role="tab" aria-controls="c4isettings" aria-selected="false">C4i Core</a>
-                    </li>
+                 
                 }
             if (Model.Guard.IsAdminInvestigatorAccess)
                 {
 
                     <li class="nav-item">
-                        <a class="nav-link p-2" id="csite-tab" data-toggle="tab" href="#csite" role="tab" aria-controls="csite" aria-selected="false">IR Client Site</a>
+                        <a class="nav-link p-2 active" id="csite-tab" data-toggle="tab" href="#csite" role="tab" aria-controls="csite" aria-selected="false">IR Client Site</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link p-2" id="uca-tab" data-toggle="tab" href="#uca" role="tab" aria-controls="uca" aria-selected="false">C4i Access Control</a>
@@ -158,9 +152,7 @@
                     <li class="nav-item">
                         <a class="nav-link p-2 " id="c4ihr-tab" data-toggle="tab" href="#c4ihr" role="tab" aria-controls="uca" aria-selected="false">C4i HR</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link p-2 active" id="c4isettings-tab" data-toggle="tab" href="#c4isettings" role="tab" aria-controls="c4isettings" aria-selected="false">C4i Core</a>
-                    </li>
+                  
                 }
             }
                 //Auditor User menu end
@@ -1365,7 +1357,7 @@
                 </div>
             </div>
 
-            <div class="tab-pane fade py-3" id="csite" role="tabpanel" aria-labelledby="csite-tab">
+            <div class="tab-pane fade show active py-3" id="csite" role="tabpanel" aria-labelledby="csite-tab">
                 <div class="row mb-3">
                     <div class="col-md-10">
                         <div class="form-group row">
@@ -1422,175 +1414,7 @@
                     </div>
                 </div>
             </div>
-            <div class="tab-pane fade show active py-3" id="c4isettings" role="tabpanel" aria-labelledby="c4isettings-tab" >
-                <form id="form_CompanyDetails">
-                    <div class="form-group row">
-
-                        <div class="col-md-4">
-                            <input type="hidden" id="txt_CompanyId" class="form-control" />
-                        </div>
-
-                    </div>
-                    <div class="form-group row">
-                        <label class="col-form-label col-md-2">Company Name</label>
-                        <div class="col-md-4">
-                            <input type="text" id="txt_CompanyName" class="form-control" name="CompanyDetails.Name" />
-                        </div>
-                        <label class="col-form-label col-md-2">Domain</label>
-                        <div class="col-md-4">
-                            <input type="text" id="txt_CompanyDomain" class="form-control" name="CompanyDetails.Domain" />
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label class="col-form-label col-md-2">Primary Logo</label>
-                        <div class="col-md-4">
-                            <a class="navbar-brand" href="https://@companydetail.LogoHyperlink" target="_blank">
-                                @*<img id="img_PrimaryLogo" height="60px" src="CompanyDetails.PrimaryLogoPath" />*@
-                                <img id="img_PrimaryLogo" height="60px" src="" />
-                            </a>
-
-
-                            <label class="btn btn-success mb-0">
-                                <form id="form_cs_primarylogo" method="post">
-                                    <i class="fa fa-upload mr-2"></i>Replace
-                                    <input type="file" id="cr_primarylogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.gif,.GIF" hidden />
-                                </form>
-                            </label>
-                        </div>
-
-
-
-                        <label class="col-form-label col-md-2">Banner Logo</label>
-                        <div style="padding-left: 8px;">
-                            <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
-                                @*<img id="img_BannerLogo" height="60px" src="CompanyDetails.BannerLogoPath" />*@
-                                <img id="img_BannerLogo" height="60px" src="" />
-                            </a>
-                            <label class="btn btn-success mb-0">
-                                <form id="form_cs_primarylogo" method="post">
-                                    <i class="fa fa-upload mr-2"></i>Replace
-                                    <input type="file" id="cr_bannerlogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.GIF,.gif" hidden />
-                                </form>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="form-group row">
-                        <label class="col-form-label col-md-2">Logo Hyperlink</label>
-                        <div class="col-md-4">
-                            <input type="text" id="txt_LogoHyplerLink" class="form-control" />
-                        </div>
-                        <label class="col-form-label col-md-2 pr-0">API Provider (heic to jpg)</label>
-                        <div class="col-md-4">
-                            <input type="text" id="txt_APIProvider" class="form-control" />
-                        </div>
-                    </div>
-
-
-                    @*for logo in report-start*@
-                    <div class="form-group row">
-                        <label class="col-form-label col-md-2">Report Logo</label>
-                        <div class="col-md-4">
-                            <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
-                                @*<img id="img_PrimaryLogo" height="60px" src="CompanyDetails.PrimaryLogoPath" />*@
-                                <img id="img_ReportLogo" height="60px" src="~/images/CWSLogoPdf.png" />
-                            </a>
-
-
-                            <label class="btn btn-success mb-0">
-                                <form id="form_cs_reportlogo" method="post">
-                                    <i class="fa fa-upload mr-2"></i>Replace
-                                    <input type="file" id="cr_reportlogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.gif,.GIF" hidden />
-                                </form>
-                            </label>
-                        </div>
-
-                        <label class="col-form-label col-md-2">API secret key</label>
-                        <div class="col-md-4">
-                            <input type="text" id="txt_APIsecretkey" class="form-control" />
-                        </div>
-                    </div>
-                    @*for logo in report-end*@
-                    <div class="form-group row">
-                        @*  <label class="col-form-label col-md-2">Home Page Message</label>
-                    <div class="col-md-4">
-                    <textarea id="txt_HomePageMessage" class="form-control"></textarea>
-                    </div>*@
-                        <label class="col-form-label col-md-2">Home Page Message1</label>
-                        <div class="col-md-4">
-                            <textarea id="txt_HomePageMessage" class="form-control"></textarea>
-                        </div>
-                        <label class="col-form-label col-md-2">Footer Hyperlink Label</label>
-                        <div class="col-md-4">
-                            <input type="text" id="txt_HyplerLinkLabel" class="form-control" />
-                        </div>
-
-                    </div>
-                    <div class="form-group row">
-                        <label class="col-form-label col-md-2">Banner Message</label>
-                        <div class="col-md-4">
-                            <textarea id="txt_BannerMessage" class="form-control"></textarea>
-                        </div>
-                        <label class="col-form-label col-md-2">Footer Hyperlink</label>
-                        <div class="col-md-4">
-                            <input type="text" id="txt_HyplerLink" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label class="col-form-label col-md-2">Banner Colour</label>
-                        <div class="col-md-4">
-                            <input type="color" id="txt_color" />
-                        </div>
-                        <label class="col-form-label col-md-2">Footer Hyperlink Colour</label>
-                        <div class="col-md-4">
-                            <input type="color" id="txt_HyperlinkColor" />
-                        </div>
-
-                    </div>
-                    <div class="form-group row">
-                        <label class="col-form-label col-md-2">Home Page Message2</label>
-                        <div class="col-md-4">
-                            <textarea id="txt_HomePageMessage2" class="form-control"></textarea>
-                        </div>
-                        <label class="col-form-label col-md-2">Email Message</label>
-                        <div class="col-md-4">
-                            <textarea id="txt_EmailMessage" class=" form-control"></textarea>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label class="col-form-label col-md-2">Software License</label>
-                        <div class="col-md-2">
-                            <select id="drp_swlicense" disabled="disabled">
-                                <option value="1">Gold</option>
-                                <option value="2">Silver</option>
-                                <option value="3">Bronze</option>
-                            </select>
-
-                        </div>
-                        <label class="col-form-label col-md-2">Type</label>
-                        <div class="col-md-2">
-                            <select id="drp_type" disabled="disabled">
-                                <option value="1">Annual</option>
-                                <option value="2">Monthly</option>
-                                <option value="3">Perpectual</option>
-                            </select>
-
-                        </div>
-                        <label class="col-form-label col-md-2">Expires</label>
-                        <div class="col-md-2">
-                            <input type="date" id="txt_ExpiryDate" value="30-06-2050" disabled="disabled" />
-
-                        </div>
-
-                    </div>
-                    <div class="form-group row">
-                        <div class="col-md-10">
-                            <button class="btn btn-success" id="btn_CompanySave">Save</button>
-                        </div>
-
-                    </div>
-                </form>
-                </div>
+           
             }
             //Power User end
             if(Model.Guard!=null)
@@ -1995,7 +1819,7 @@
                 </div>
             </div>
 
-            <div class="tab-pane fade py-3" id="csite" role="tabpanel" aria-labelledby="csite-tab">
+            <div class="tab-pane fade show active py-3" id="csite" role="tabpanel" aria-labelledby="csite-tab">
                 <div class="row mb-3">
                     <div class="col-md-10">
                         <div class="form-group row">
@@ -2052,175 +1876,7 @@
                     </div>
                 </div>
             </div>
-            <div class="tab-pane fade show active py-3" id="c4isettings" role="tabpanel" aria-labelledby="c4isettings-tab" >
-                <form id="form_CompanyDetails">
-                    <div class="form-group row">
-
-                        <div class="col-md-4">
-                            <input type="hidden" id="txt_CompanyId" class="form-control" />
-                        </div>
-
-                    </div>
-                    <div class="form-group row">
-                        <label class="col-form-label col-md-2">Company Name</label>
-                        <div class="col-md-4">
-                            <input type="text" id="txt_CompanyName" class="form-control" name="CompanyDetails.Name" />
-                        </div>
-                        <label class="col-form-label col-md-2">Domain</label>
-                        <div class="col-md-4">
-                            <input type="text" id="txt_CompanyDomain" class="form-control" name="CompanyDetails.Domain" />
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label class="col-form-label col-md-2">Primary Logo</label>
-                        <div class="col-md-4">
-                            <a class="navbar-brand" href="https://@companydetail.LogoHyperlink" target="_blank">
-                                @*<img id="img_PrimaryLogo" height="60px" src="CompanyDetails.PrimaryLogoPath" />*@
-                                <img id="img_PrimaryLogo" height="60px" src="" />
-                            </a>
-
-
-                            <label class="btn btn-success mb-0">
-                                <form id="form_cs_primarylogo" method="post">
-                                    <i class="fa fa-upload mr-2"></i>Replace
-                                    <input type="file" id="cr_primarylogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.gif,.GIF" hidden />
-                                </form>
-                            </label>
-                        </div>
-
-
-
-                        <label class="col-form-label col-md-2">Banner Logo</label>
-                        <div style="padding-left: 8px;">
-                            <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
-                                @*<img id="img_BannerLogo" height="60px" src="CompanyDetails.BannerLogoPath" />*@
-                                <img id="img_BannerLogo" height="60px" src="" />
-                            </a>
-                            <label class="btn btn-success mb-0">
-                                <form id="form_cs_primarylogo" method="post">
-                                    <i class="fa fa-upload mr-2"></i>Replace
-                                    <input type="file" id="cr_bannerlogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.GIF,.gif" hidden />
-                                </form>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="form-group row">
-                        <label class="col-form-label col-md-2">Logo Hyperlink</label>
-                        <div class="col-md-4">
-                            <input type="text" id="txt_LogoHyplerLink" class="form-control" />
-                        </div>
-                        <label class="col-form-label col-md-2 pr-0">API Provider (heic to jpg)</label>
-                        <div class="col-md-4">
-                            <input type="text" id="txt_APIProvider" class="form-control" />
-                        </div>
-                    </div>
-
-
-                    @*for logo in report-start*@
-                    <div class="form-group row">
-                        <label class="col-form-label col-md-2">Report Logo</label>
-                        <div class="col-md-4">
-                            <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
-                                @*<img id="img_PrimaryLogo" height="60px" src="CompanyDetails.PrimaryLogoPath" />*@
-                                <img id="img_ReportLogo" height="60px" src="~/images/CWSLogoPdf.png" />
-                            </a>
-
-
-                            <label class="btn btn-success mb-0">
-                                <form id="form_cs_reportlogo" method="post">
-                                    <i class="fa fa-upload mr-2"></i>Replace
-                                    <input type="file" id="cr_reportlogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.gif,.GIF" hidden />
-                                </form>
-                            </label>
-                        </div>
-
-                        <label class="col-form-label col-md-2">API secret key</label>
-                        <div class="col-md-4">
-                            <input type="text" id="txt_APIsecretkey" class="form-control" />
-                        </div>
-                    </div>
-                    @*for logo in report-end*@
-                    <div class="form-group row">
-                        @*  <label class="col-form-label col-md-2">Home Page Message</label>
-                    <div class="col-md-4">
-                    <textarea id="txt_HomePageMessage" class="form-control"></textarea>
-                    </div>*@
-                        <label class="col-form-label col-md-2">Home Page Message1</label>
-                        <div class="col-md-4">
-                            <textarea id="txt_HomePageMessage" class="form-control"></textarea>
-                        </div>
-                        <label class="col-form-label col-md-2">Footer Hyperlink Label</label>
-                        <div class="col-md-4">
-                            <input type="text" id="txt_HyplerLinkLabel" class="form-control" />
-                        </div>
-
-                    </div>
-                    <div class="form-group row">
-                        <label class="col-form-label col-md-2">Banner Message</label>
-                        <div class="col-md-4">
-                            <textarea id="txt_BannerMessage" class="form-control"></textarea>
-                        </div>
-                        <label class="col-form-label col-md-2">Footer Hyperlink</label>
-                        <div class="col-md-4">
-                            <input type="text" id="txt_HyplerLink" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label class="col-form-label col-md-2">Banner Colour</label>
-                        <div class="col-md-4">
-                            <input type="color" id="txt_color" />
-                        </div>
-                        <label class="col-form-label col-md-2">Footer Hyperlink Colour</label>
-                        <div class="col-md-4">
-                            <input type="color" id="txt_HyperlinkColor" />
-                        </div>
-
-                    </div>
-                    <div class="form-group row">
-                        <label class="col-form-label col-md-2">Home Page Message2</label>
-                        <div class="col-md-4">
-                            <textarea id="txt_HomePageMessage2" class="form-control"></textarea>
-                        </div>
-                        <label class="col-form-label col-md-2">Email Message</label>
-                        <div class="col-md-4">
-                            <textarea id="txt_EmailMessage" class=" form-control"></textarea>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label class="col-form-label col-md-2">Software License</label>
-                        <div class="col-md-2">
-                            <select id="drp_swlicense" disabled="disabled">
-                                <option value="1">Gold</option>
-                                <option value="2">Silver</option>
-                                <option value="3">Bronze</option>
-                            </select>
-
-                        </div>
-                        <label class="col-form-label col-md-2">Type</label>
-                        <div class="col-md-2">
-                            <select id="drp_type" disabled="disabled">
-                                <option value="1">Annual</option>
-                                <option value="2">Monthly</option>
-                                <option value="3">Perpectual</option>
-                            </select>
-
-                        </div>
-                        <label class="col-form-label col-md-2">Expires</label>
-                        <div class="col-md-2">
-                            <input type="date" id="txt_ExpiryDate" value="30-06-2050" disabled="disabled" />
-
-                        </div>
-
-                    </div>
-                    <div class="form-group row">
-                        <div class="col-md-10">
-                            <button class="btn btn-success" id="btn_CompanySave">Save</button>
-                        </div>
-
-                    </div>
-                </form>
-                </div>                    
+                       
                 }
                 if (Model.Guard.IsAdminAuditorAccess)
                 {
@@ -2448,7 +2104,7 @@
                         </div>
                     </div>
 
-                    <div class="tab-pane fade py-3" id="csite" role="tabpanel" aria-labelledby="csite-tab">
+                    <div class="tab-pane fade show active py-3" id="csite" role="tabpanel" aria-labelledby="csite-tab">
                         <div class="row mb-3">
                             <div class="col-md-10">
                                 <div class="form-group row">
@@ -2505,175 +2161,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="tab-pane fade show active py-3" id="c4isettings" role="tabpanel" aria-labelledby="c4isettings-tab">
-                        <form id="form_CompanyDetails">
-                            <div class="form-group row">
-
-                                <div class="col-md-4">
-                                    <input type="hidden" id="txt_CompanyId" class="form-control" />
-                                </div>
-
-                            </div>
-                            <div class="form-group row">
-                                <label class="col-form-label col-md-2">Company Name</label>
-                                <div class="col-md-4">
-                                    <input type="text" id="txt_CompanyName" class="form-control" name="CompanyDetails.Name" />
-                                </div>
-                                <label class="col-form-label col-md-2">Domain</label>
-                                <div class="col-md-4">
-                                    <input type="text" id="txt_CompanyDomain" class="form-control" name="CompanyDetails.Domain" />
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label class="col-form-label col-md-2">Primary Logo</label>
-                                <div class="col-md-4">
-                                    <a class="navbar-brand" href="https://@companydetail.LogoHyperlink" target="_blank">
-                                        @*<img id="img_PrimaryLogo" height="60px" src="CompanyDetails.PrimaryLogoPath" />*@
-                                        <img id="img_PrimaryLogo" height="60px" src="" />
-                                    </a>
-
-
-                                    <label class="btn btn-success mb-0">
-                                        <form id="form_cs_primarylogo" method="post">
-                                            <i class="fa fa-upload mr-2"></i>Replace
-                                            <input type="file" id="cr_primarylogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.gif,.GIF" hidden />
-                                        </form>
-                                    </label>
-                                </div>
-
-
-
-                                <label class="col-form-label col-md-2">Banner Logo</label>
-                                <div style="padding-left: 8px;">
-                                    <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
-                                        @*<img id="img_BannerLogo" height="60px" src="CompanyDetails.BannerLogoPath" />*@
-                                        <img id="img_BannerLogo" height="60px" src="" />
-                                    </a>
-                                    <label class="btn btn-success mb-0">
-                                        <form id="form_cs_primarylogo" method="post">
-                                            <i class="fa fa-upload mr-2"></i>Replace
-                                            <input type="file" id="cr_bannerlogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.GIF,.gif" hidden />
-                                        </form>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="form-group row">
-                                <label class="col-form-label col-md-2">Logo Hyperlink</label>
-                                <div class="col-md-4">
-                                    <input type="text" id="txt_LogoHyplerLink" class="form-control" />
-                                </div>
-                                <label class="col-form-label col-md-2 pr-0">API Provider (heic to jpg)</label>
-                                <div class="col-md-4">
-                                    <input type="text" id="txt_APIProvider" class="form-control" />
-                                </div>
-                            </div>
-
-
-                            @*for logo in report-start*@
-                            <div class="form-group row">
-                                <label class="col-form-label col-md-2">Report Logo</label>
-                                <div class="col-md-4">
-                                    <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
-                                        @*<img id="img_PrimaryLogo" height="60px" src="CompanyDetails.PrimaryLogoPath" />*@
-                                        <img id="img_ReportLogo" height="60px" src="~/images/CWSLogoPdf.png" />
-                                    </a>
-
-
-                                    <label class="btn btn-success mb-0">
-                                        <form id="form_cs_reportlogo" method="post">
-                                            <i class="fa fa-upload mr-2"></i>Replace
-                                            <input type="file" id="cr_reportlogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.gif,.GIF" hidden />
-                                        </form>
-                                    </label>
-                                </div>
-
-                                <label class="col-form-label col-md-2">API secret key</label>
-                                <div class="col-md-4">
-                                    <input type="text" id="txt_APIsecretkey" class="form-control" />
-                                </div>
-                            </div>
-                            @*for logo in report-end*@
-                            <div class="form-group row">
-                                @*  <label class="col-form-label col-md-2">Home Page Message</label>
-                    <div class="col-md-4">
-                    <textarea id="txt_HomePageMessage" class="form-control"></textarea>
-                    </div>*@
-                                <label class="col-form-label col-md-2">Home Page Message1</label>
-                                <div class="col-md-4">
-                                    <textarea id="txt_HomePageMessage" class="form-control"></textarea>
-                                </div>
-                                <label class="col-form-label col-md-2">Footer Hyperlink Label</label>
-                                <div class="col-md-4">
-                                    <input type="text" id="txt_HyplerLinkLabel" class="form-control" />
-                                </div>
-
-                            </div>
-                            <div class="form-group row">
-                                <label class="col-form-label col-md-2">Banner Message</label>
-                                <div class="col-md-4">
-                                    <textarea id="txt_BannerMessage" class="form-control"></textarea>
-                                </div>
-                                <label class="col-form-label col-md-2">Footer Hyperlink</label>
-                                <div class="col-md-4">
-                                    <input type="text" id="txt_HyplerLink" class="form-control" />
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label class="col-form-label col-md-2">Banner Colour</label>
-                                <div class="col-md-4">
-                                    <input type="color" id="txt_color" />
-                                </div>
-                                <label class="col-form-label col-md-2">Footer Hyperlink Colour</label>
-                                <div class="col-md-4">
-                                    <input type="color" id="txt_HyperlinkColor" />
-                                </div>
-
-                            </div>
-                            <div class="form-group row">
-                                <label class="col-form-label col-md-2">Home Page Message2</label>
-                                <div class="col-md-4">
-                                    <textarea id="txt_HomePageMessage2" class="form-control"></textarea>
-                                </div>
-                                <label class="col-form-label col-md-2">Email Message</label>
-                                <div class="col-md-4">
-                                    <textarea id="txt_EmailMessage" class=" form-control"></textarea>
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label class="col-form-label col-md-2">Software License</label>
-                                <div class="col-md-2">
-                                    <select id="drp_swlicense" disabled="disabled">
-                                        <option value="1">Gold</option>
-                                        <option value="2">Silver</option>
-                                        <option value="3">Bronze</option>
-                                    </select>
-
-                                </div>
-                                <label class="col-form-label col-md-2">Type</label>
-                                <div class="col-md-2">
-                                    <select id="drp_type" disabled="disabled">
-                                        <option value="1">Annual</option>
-                                        <option value="2">Monthly</option>
-                                        <option value="3">Perpectual</option>
-                                    </select>
-
-                                </div>
-                                <label class="col-form-label col-md-2">Expires</label>
-                                <div class="col-md-2">
-                                    <input type="date" id="txt_ExpiryDate" value="30-06-2050" disabled="disabled" />
-
-                                </div>
-
-                            </div>
-                            <div class="form-group row">
-                                <div class="col-md-10">
-                                    <button class="btn btn-success" id="btn_CompanySave">Save</button>
-                                </div>
-
-                            </div>
-                        </form>
-                    </div>
+                    
                 }
                 if (Model.Guard.IsAdminInvestigatorAccess)
                 {
@@ -2901,7 +2389,7 @@
                         </div>
                     </div>
 
-                    <div class="tab-pane fade py-3" id="csite" role="tabpanel" aria-labelledby="csite-tab">
+                    <div class="tab-pane fade show active py-3" id="csite" role="tabpanel" aria-labelledby="csite-tab">
                         <div class="row mb-3">
                             <div class="col-md-10">
                                 <div class="form-group row">
@@ -2958,175 +2446,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="tab-pane fade show active py-3" id="c4isettings" role="tabpanel" aria-labelledby="c4isettings-tab">
-                        <form id="form_CompanyDetails">
-                            <div class="form-group row">
-
-                                <div class="col-md-4">
-                                    <input type="hidden" id="txt_CompanyId" class="form-control" />
-                                </div>
-
-                            </div>
-                            <div class="form-group row">
-                                <label class="col-form-label col-md-2">Company Name</label>
-                                <div class="col-md-4">
-                                    <input type="text" id="txt_CompanyName" class="form-control" name="CompanyDetails.Name" />
-                                </div>
-                                <label class="col-form-label col-md-2">Domain</label>
-                                <div class="col-md-4">
-                                    <input type="text" id="txt_CompanyDomain" class="form-control" name="CompanyDetails.Domain" />
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label class="col-form-label col-md-2">Primary Logo</label>
-                                <div class="col-md-4">
-                                    <a class="navbar-brand" href="https://@companydetail.LogoHyperlink" target="_blank">
-                                        @*<img id="img_PrimaryLogo" height="60px" src="CompanyDetails.PrimaryLogoPath" />*@
-                                        <img id="img_PrimaryLogo" height="60px" src="" />
-                                    </a>
-
-
-                                    <label class="btn btn-success mb-0">
-                                        <form id="form_cs_primarylogo" method="post">
-                                            <i class="fa fa-upload mr-2"></i>Replace
-                                            <input type="file" id="cr_primarylogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.gif,.GIF" hidden />
-                                        </form>
-                                    </label>
-                                </div>
-
-
-
-                                <label class="col-form-label col-md-2">Banner Logo</label>
-                                <div style="padding-left: 8px;">
-                                    <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
-                                        @*<img id="img_BannerLogo" height="60px" src="CompanyDetails.BannerLogoPath" />*@
-                                        <img id="img_BannerLogo" height="60px" src="" />
-                                    </a>
-                                    <label class="btn btn-success mb-0">
-                                        <form id="form_cs_primarylogo" method="post">
-                                            <i class="fa fa-upload mr-2"></i>Replace
-                                            <input type="file" id="cr_bannerlogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.GIF,.gif" hidden />
-                                        </form>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="form-group row">
-                                <label class="col-form-label col-md-2">Logo Hyperlink</label>
-                                <div class="col-md-4">
-                                    <input type="text" id="txt_LogoHyplerLink" class="form-control" />
-                                </div>
-                                <label class="col-form-label col-md-2 pr-0">API Provider (heic to jpg)</label>
-                                <div class="col-md-4">
-                                    <input type="text" id="txt_APIProvider" class="form-control" />
-                                </div>
-                            </div>
-
-
-                            @*for logo in report-start*@
-                            <div class="form-group row">
-                                <label class="col-form-label col-md-2">Report Logo</label>
-                                <div class="col-md-4">
-                                    <a class="navbar-brand" href="https://@companydetail.Hyperlink" target="_blank">
-                                        @*<img id="img_PrimaryLogo" height="60px" src="CompanyDetails.PrimaryLogoPath" />*@
-                                        <img id="img_ReportLogo" height="60px" src="~/images/CWSLogoPdf.png" />
-                                    </a>
-
-
-                                    <label class="btn btn-success mb-0">
-                                        <form id="form_cs_reportlogo" method="post">
-                                            <i class="fa fa-upload mr-2"></i>Replace
-                                            <input type="file" id="cr_reportlogo_upload" accept=".jpeg,.JPEG,.PNG,.png,.jpg,.JPEG,.gif,.GIF" hidden />
-                                        </form>
-                                    </label>
-                                </div>
-
-                                <label class="col-form-label col-md-2">API secret key</label>
-                                <div class="col-md-4">
-                                    <input type="text" id="txt_APIsecretkey" class="form-control" />
-                                </div>
-                            </div>
-                            @*for logo in report-end*@
-                            <div class="form-group row">
-                                @*  <label class="col-form-label col-md-2">Home Page Message</label>
-                    <div class="col-md-4">
-                    <textarea id="txt_HomePageMessage" class="form-control"></textarea>
-                    </div>*@
-                                <label class="col-form-label col-md-2">Home Page Message1</label>
-                                <div class="col-md-4">
-                                    <textarea id="txt_HomePageMessage" class="form-control"></textarea>
-                                </div>
-                                <label class="col-form-label col-md-2">Footer Hyperlink Label</label>
-                                <div class="col-md-4">
-                                    <input type="text" id="txt_HyplerLinkLabel" class="form-control" />
-                                </div>
-
-                            </div>
-                            <div class="form-group row">
-                                <label class="col-form-label col-md-2">Banner Message</label>
-                                <div class="col-md-4">
-                                    <textarea id="txt_BannerMessage" class="form-control"></textarea>
-                                </div>
-                                <label class="col-form-label col-md-2">Footer Hyperlink</label>
-                                <div class="col-md-4">
-                                    <input type="text" id="txt_HyplerLink" class="form-control" />
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label class="col-form-label col-md-2">Banner Colour</label>
-                                <div class="col-md-4">
-                                    <input type="color" id="txt_color" />
-                                </div>
-                                <label class="col-form-label col-md-2">Footer Hyperlink Colour</label>
-                                <div class="col-md-4">
-                                    <input type="color" id="txt_HyperlinkColor" />
-                                </div>
-
-                            </div>
-                            <div class="form-group row">
-                                <label class="col-form-label col-md-2">Home Page Message2</label>
-                                <div class="col-md-4">
-                                    <textarea id="txt_HomePageMessage2" class="form-control"></textarea>
-                                </div>
-                                <label class="col-form-label col-md-2">Email Message</label>
-                                <div class="col-md-4">
-                                    <textarea id="txt_EmailMessage" class=" form-control"></textarea>
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label class="col-form-label col-md-2">Software License</label>
-                                <div class="col-md-2">
-                                    <select id="drp_swlicense" disabled="disabled">
-                                        <option value="1">Gold</option>
-                                        <option value="2">Silver</option>
-                                        <option value="3">Bronze</option>
-                                    </select>
-
-                                </div>
-                                <label class="col-form-label col-md-2">Type</label>
-                                <div class="col-md-2">
-                                    <select id="drp_type" disabled="disabled">
-                                        <option value="1">Annual</option>
-                                        <option value="2">Monthly</option>
-                                        <option value="3">Perpectual</option>
-                                    </select>
-
-                                </div>
-                                <label class="col-form-label col-md-2">Expires</label>
-                                <div class="col-md-2">
-                                    <input type="date" id="txt_ExpiryDate" value="30-06-2050" disabled="disabled" />
-
-                                </div>
-
-                            </div>
-                            <div class="form-group row">
-                                <div class="col-md-10">
-                                    <button class="btn btn-success" id="btn_CompanySave">Save</button>
-                                </div>
-
-                            </div>
-                        </form>
-                    </div>
+                    
                 }
             }
             

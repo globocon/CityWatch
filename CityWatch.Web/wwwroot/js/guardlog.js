@@ -99,7 +99,7 @@ $(function () {
         
         if (newval.includes('6') && newval.includes('5')) {
                 //yourElement in yourArray
-            alert('Please select only one option among RC or RC-Fusion');
+            alert('Please select only one option among RC + HR or RC-Fusion');
             $(".multiselect-option input[type=checkbox]:checked").each(function () {
                         var isChecked1 = $(this).is(':checked');
                         if (isChecked1 == true) {
@@ -6975,7 +6975,7 @@ $(function () {
             }).done(function (result) {
                 if (result.accessPermission) {
                     /* $('#txt_securityLicenseNoIR').val('');*/
-                    $('#modelGuardLoginC4iSettingsPatrol').modal('hide');
+                    $('#modelGuardLoginAuditSite').modal('hide');
 
                     clearGuardValidationSummary('GuardLoginValidationSummaryC4iSettings');
                     window.location.href = '/Admin/AuditSiteLog?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
@@ -6984,9 +6984,9 @@ $(function () {
 
                     // $('#txt_securityLicenseNo').val('');
                     /*$('#txt_securityLicenseNoIR').val('');*/
-                    $('#modelGuardLoginC4iSettingsPatrol').modal('show');
+                    $('#modelGuardLoginAuditSite').modal('show');
                     if (result.successCode === 0) {
-                        displayGuardValidationSummary('GuardLoginValidationSummaryC4iSettings', result.successMessage);
+                        displayGuardValidationSummary('GuardLoginValidationSummaryAuditSite', result.successMessage);
                     }
                 }
             });
