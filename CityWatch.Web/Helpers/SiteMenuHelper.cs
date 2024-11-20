@@ -228,18 +228,13 @@ namespace CityWatch.Web.Helpers
             //p1#187 Hyperlink Missing Below lines are commented- Manju - 26-03-2024 --end
             if (pageName == PageNameHelper.DailyGuardLog || pageName == PageNameHelper.GuardSettings || pageName == PageNameHelper.VehicleAndKeyLog)
             {
-                if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminPowerUser || AuthUserHelper.IsAdminGlobal)
+                if (AuthUserHelper.IsAdminUserLoggedIn || AuthUserHelper.IsAdminPowerUser || AuthUserHelper.IsAdminGlobal || AuthUserHelper.IsAdminInvestigator || AuthUserHelper.IsAdminAuditor)
                 {
                     menuHtml.AppendLine("<div>");
                     menuHtml.AppendLine(@"<a href=""/Admin/AuditSiteLog"" class=""nav-link py-0""><i class=""fa fa-list-alt mr-2""></i>Audit Site Logs</a>");
                     menuHtml.AppendLine("</div>");
                 }
-                else
-                {
-                    menuHtml.AppendLine("<div>");
-                    menuHtml.AppendLine(@"<a href=""{0}"" id=""AuditSiteLogsConformationBtnSettings""class=""nav-link py-0""><i class=""fa fa-cog mr-2""></i>Audit Site Logs</a>");
-                    menuHtml.AppendLine("</div>");
-                }
+                
             }
            
 

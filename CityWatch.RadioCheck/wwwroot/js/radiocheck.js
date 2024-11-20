@@ -2176,9 +2176,9 @@ let clientSiteActiveGuardsIncidentReportHistory = $('#clientSiteActiveGuardsInci
 
 $('#clientSiteActiveGuards tbody').on('dblclick', '#btnIrHistoryByGuard', function (value, record) {
     
-    if ($('#txtguardGuardRCAccess').val() == 'False') { 
+   /* if ($('#txtguardGuardRCAccess').val() == 'False') { */
         $('#guardIncidentReportsHistoryModal').modal('show');
-    }
+   /* }*/
     isPaused = true;
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
     var GuardId = $(this).attr("data-guardid");
@@ -5289,11 +5289,11 @@ function format_guard_settings_for_control_room_child_row(d) {
             cellValue = '<i class="fa fa-check-circle text-success"></i>' +
                 '<input type="hidden" id="GuardId" value="' + d.id + '">';
         }
-        if ($('#txtguardGuardRCAccess').val() == 'False') { 
+       /* if ($('#txtguardGuardRCAccess').val() == 'False') { */
         if (d.dateEnrolled) {
             cellValue += '<br/> <span class="small">Enrolled: ' + getFormattedDate(new Date(d.dateEnrolled), null, ' ') + '</span>';
             }
-        }
+       /* }*/
     } else {
 
         cellValue = '<i class="fa fa-times-circle text-danger"></i>';

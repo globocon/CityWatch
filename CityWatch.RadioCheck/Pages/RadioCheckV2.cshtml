@@ -348,7 +348,7 @@
                             </thead>
 
                         </table>
-                        @if (Model.Guard != null)
+                     @*    @if (Model.Guard != null)
                         {
                             @if (Model.Guard.IsRCAccess == false)
                             {
@@ -357,11 +357,11 @@
                             }
                         }
                         else
-                        {
+                        { *@
                              <label class="mt-5"><h5 class="modal-title col-md-12">Last Known IR from this guard</h5></label>
                                 <table id="clientSiteActiveGuardsLastIncidentReportsDetails" class="table table-bordered" style="width:100%;"></table>
                                                         
-                        }
+                        @* } *@
                     </div>
                 </div>
 

@@ -357,7 +357,22 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     AuthUserHelper.IsAdminGlobal = false;
                 }
-               
+                if(guard.IsAdminInvestigatorAccess)
+                {
+                    AuthUserHelper.IsAdminInvestigator = true;
+                }
+                else
+                {
+                    AuthUserHelper.IsAdminInvestigator = false;
+                }
+                if (guard.IsAdminAuditorAccess)
+                {
+                    AuthUserHelper.IsAdminAuditor = true;
+                }
+                else
+                {
+                    AuthUserHelper.IsAdminAuditor = false;
+                }
             }
             //HRList Status start 
             var HR1 = "Grey";

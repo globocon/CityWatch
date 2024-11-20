@@ -50,7 +50,7 @@ namespace CityWatch.RadioCheck.Pages
 
             if (guard != null)
             {
-                if (guard.IsAdminPowerUser || guard.IsAdminGlobal)
+                if (guard.IsAdminPowerUser || guard.IsAdminGlobal || guard.IsRCAccess || guard.IsRCFusionAccess || guard.IsAdminSOPToolsAccess || guard.IsAdminAuditorAccess || guard.IsAdminInvestigatorAccess)
                 {
                     return Page();
                 }

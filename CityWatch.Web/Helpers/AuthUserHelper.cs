@@ -63,5 +63,7 @@ namespace CityWatch.Web.Helpers
 
         public static bool IsAdminPowerUser { get; set; }
         public static bool IsAdminGlobal { get; set; }
+        public static bool IsAdminInvestigator { get; set; }
+        public static bool IsAdminAuditor { get; set; }
     }
 }
