@@ -416,7 +416,7 @@ namespace CityWatch.Kpi.Services
 
                     var shiftFilledVsRoster = clientData.ShiftFilledVsRosterPercentage;
                     var logReportsVsRoster = clientData.LogReportsVsRosterPercentage;
-                    var guardCompetency = "See Excel";
+                    var guardCompetency = "HR Records";
                     var kpiForFlir = clientData.ImageCountPercentage;
                     var kpiForWand = clientData.WandScanPercentage;
                     var irLodged = clientData.IrCountTotal;
@@ -438,6 +438,7 @@ namespace CityWatch.Kpi.Services
                     {
                         var logReportsVsRosterStatus = "N/A";
                         var logReportsVsRosterColor = COLOR_DEFAULT;
+                        var HrRecords= clientData.ClientSiteKpiSetting.Notes?.SingleOrDefault(z => z.ForMonth == new DateTime(fromDate.Year, fromDate.Month, 1))?.HRRecords ?? string.Empty;
                         if (!isHrTimerPaused)
                         {
                             logReportsVsRosterStatus = uploadGuardLogEnabled ? (logReportsVsRoster.HasValue ? (logReportsVsRoster >= 100 ? PASS_TEXT : FAIL_TEXT) : "N/A") : "N/A";
@@ -445,7 +446,7 @@ namespace CityWatch.Kpi.Services
                         }
                         CreateKpiStatusCell(table, shiftFilledVsRoster.HasValue ? (shiftFilledVsRoster >= 100 ? PASS_TEXT : FAIL_TEXT) : "N/A", shiftFilledVsRoster.HasValue ? (shiftFilledVsRoster >= 100 ? COLOR_PASS : COLOR_FAIL) : COLOR_DEFAULT);
                         CreateKpiStatusCell(table, logReportsVsRosterStatus, logReportsVsRosterColor);
-                        CreateKpiStatusCell(table, string.Empty, string.Empty);
+                        CreateKpiStatusCell(table, !string.IsNullOrEmpty(HrRecords) ? HrRecords : "All Ok", !string.IsNullOrEmpty(HrRecords) ? COLOR_FAIL: COLOR_PASS);
                         CreateKpiStatusCell(table, kpiForFlir.HasValue ? (kpiForFlir >= 100 ? PASS_TEXT : FAIL_TEXT) : "N/A", kpiForFlir.HasValue ? (kpiForFlir >= 100 ? COLOR_PASS : COLOR_FAIL) : COLOR_DEFAULT);
                         CreateKpiStatusCell(table, kpiForWand.HasValue ? (kpiForWand >= 100 ? PASS_TEXT : FAIL_TEXT) : "N/A", kpiForWand.HasValue ? (kpiForWand >= 100 ? COLOR_PASS : COLOR_FAIL) : COLOR_DEFAULT);
                     }

@@ -1057,28 +1057,35 @@
                 <div class="tab-pane" id="notes" role="tabpanel" aria-labelledby="notes-tab">
                     <div class="container pt-3">
                         <div class="row mt-3">
-                            <div class="col-md-6">
+                            <div class="col-md-8">
                                 <div class="form-row">
-                                    <div class="form-group col-md-6">
+                                    <div class="form-group col-md-4">
                                         <label for="note_month">Month</label>
                                         <select class="form-control" id="note_month" asp-items="@ViewDataService.GetMonthsInYear()"></select>
                                     </div>
-                                    <div class="form-group col-md-6">
+                                    <div class="form-group col-md-4">
                                         <label for="note_year">Year</label>
                                         <select class="form-control" id="note_year" asp-items="@ViewDataService.GetYears()"></select>
                                     </div>
                                 </div>
+                                <form id="frm_site_note">
                                 <div class="form-row">
-                                    <div class="form-group col-md-12">
-                                        <form id="frm_site_note">
+                                    <div class="form-group col-md-8">
+                                        <label for="note_year">Site Summary</label>
+                                       
                                             <textarea class="form-control" name="ClientSiteKpiNote.Notes" id="ClientSiteKpiNote_Notes" maxlength="512" rows="4">@Model.NotesForThisMonth.Notes</textarea>
                                             <span id="lblSiteNoteRemainingCount" class="mt-2 d-block small"></span>
                                             <input type="hidden" name="ClientSiteKpiNote.Id" id="ClientSiteKpiNote_Id" value="@Model.NotesForThisMonth.Id" />
                                             <input type="hidden" name="ClientSiteKpiNote.SettingsId" id="ClientSiteKpiNote_SettingsId" value="@Model.NotesForThisMonth.SettingsId" />
                                             <input type="hidden" name="ClientSiteKpiNote.ForMonth" id="ClientSiteKpiNote_ForMonth" value="@Model.NotesForThisMonth.ForMonth" />
-                                        </form>
+                                       
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label for="hr_records">HR Records</label>
+                                        <textarea class="form-control" name="ClientSiteKpiNote.HRRecords" id="ClientSiteKpiNote_HRRecords" maxlength="512" rows="4">@Model.NotesForThisMonth.HRRecords</textarea>
                                     </div>
                                 </div>
+                                 </form>
                                 <div class="form-row mt-2">
                                     <button type="button" class="btn btn-outline-danger mr-2" id="delete_site_notes"><i class="fa fa-trash mr-2"></i>Delete</button>
                                     <button type="button" class="btn btn-success" id="save_site_notes"><i class="fa fa-save mr-2"></i>Save Notes</button>

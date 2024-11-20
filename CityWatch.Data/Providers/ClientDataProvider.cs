@@ -611,6 +611,7 @@ namespace CityWatch.Data.Providers
                 if (noteToUpdate != null)
                 {
                     noteToUpdate.Notes = note.Notes;
+                    noteToUpdate.HRRecords = note.HRRecords;
                 }
             }
             _context.SaveChanges();
