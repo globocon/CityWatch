@@ -54,8 +54,8 @@ namespace CityWatch.Web.API
         [Route("[action]", Name = "Upload")]
         public async Task<JsonResult> Upload()
         {
-            if (_webHostEnvironment.IsDevelopment())
-                throw new NotSupportedException("Dropbox upload not supported in development environment");
+            //if (_webHostEnvironment.IsDevelopment())
+            //    throw new NotSupportedException("Dropbox upload not supported in development environment");
 
             await _irUploadService.Process();
 

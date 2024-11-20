@@ -16,6 +16,8 @@ namespace CityWatch.Data.Providers
         void MarkAsUploaded(int id);
         List<IncidentReport> GetIncidentReportsByJobNumber(string jobNumber);
         void UpdateReport(int incidentreportid, int Id);
+
+        public void UpdateTheSiteExpiringToExpired();
     }
 
     public class IrDataProvider : IIrDataProvider
@@ -79,6 +81,38 @@ namespace CityWatch.Data.Providers
             //_dbContext.SaveChanges();
             var updateGuard = _dbContext.IncidentReportsPlatesLoaded.SingleOrDefault(x => x.Id == Id);
             updateGuard.IncidentReportId = incidentreportid;
+            _dbContext.SaveChanges();
+        }
+
+
+        public void UpdateTheSiteExpiringToExpired()
+        {
+            var today = DateTime.Now.Date;
+
+            // Fetch ClientSites that need updating ie expiring to expired
+            var clientSitesToUpdate = _dbContext.ClientSites
+                .Where(x => x.Status == 1 && x.StatusDate < today)
+                .ToList();
+
+            // Fetch corresponding KPI settings
+            var siteIds = clientSitesToUpdate.Select(x => x.Id).ToList();
+            var kpiSettingsToUpdate = _dbContext.ClientSiteKpiSettings
+                .Where(kpi => siteIds.Contains(kpi.ClientSite.Id))
+                .ToList();
+
+            // Update the ClientSites
+            foreach (var site in clientSitesToUpdate)
+            {
+                site.Status = 2;
+            }
+
+            // Update the KPI settings
+            foreach (var kpi in kpiSettingsToUpdate)
+            {
+                kpi.ScheduleisActive = false;
+            }
+
+            // Save all changes in one go
             _dbContext.SaveChanges();
         }
 

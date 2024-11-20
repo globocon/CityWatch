@@ -56,6 +56,10 @@ namespace CityWatch.Web.Services
 
         public async Task Process()
         {
+            /* Update client site expiring to expire automatically Start*/
+            await UpdateExpirySites();
+            /* Update client site expiring to expire automatically end*/
+
             var irsToProcess = _irDataProvider.GetIncidentReports(DateTime.Now.AddDays(-7), DateTime.Today)
                                     .Where(i => !i.DbxUploaded && i.ClientSiteId.HasValue)
                                     .ToList();
@@ -110,6 +114,14 @@ namespace CityWatch.Web.Services
                     _logger.LogError("Error uploading IR {0} to client site folder , Message : {1}", incidentReport.FileName, ex.Message); ;
                 }
             }
+        }
+
+
+
+        private async Task UpdateExpirySites()
+        {
+             _irDataProvider.UpdateTheSiteExpiringToExpired();
+
         }
     }
 }
