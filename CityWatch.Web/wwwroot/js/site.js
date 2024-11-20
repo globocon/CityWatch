@@ -606,9 +606,14 @@
                 data: { record: data },
                 type: 'POST',
                 headers: { 'RequestVerificationToken': token },
-            }).done(function () {
-                gridSite.clear();
-                gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val() });
+            }).done(function (result) {
+                if (result.status == false) {
+                   alert(result.message);
+                }
+                
+                    gridSite.clear();
+                    gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val() });
+                
             }).fail(function () {
                 console.log('error');
             }).always(function () {
