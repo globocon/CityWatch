@@ -146,7 +146,7 @@ namespace CityWatch.Kpi.Services
                         var tableGuardDetailsData = CreateGuardDetailsLicenseAndCompliance(monthlyDataGuard, monthlyDataGuardCompliance, hrGroupName.Name, hrGroupName.Id, clientSiteId, ClientSiteState, IsDownselect, CriticalDocumentID);
                         doc.Add(tableGuardDetailsData);
                         doc.Add(new Paragraph("\n"));
-                        var tableGuardDetailsData1 = CreateGuardDetailsLicenseAndComplianceHR(monthlyDataGuard, monthlyDataGuardCompliance, hrGroupName.Name, hrGroupName.Id, clientSiteId, ClientSiteState, IsDownselect, CriticalDocumentID);
+                        var tableGuardDetailsData1 = CreateGuardDetailsLicenseAndComplianceHR1(monthlyDataGuard, monthlyDataGuardCompliance, hrGroupName.Name, hrGroupName.Id, clientSiteId, ClientSiteState, IsDownselect, CriticalDocumentID);
                         doc.Add(tableGuardDetailsData1);
                     }
                 }
@@ -1084,6 +1084,271 @@ namespace CityWatch.Kpi.Services
             string pattern = @"\[.*?\]|\{.*?\}|\(.*?\)";
             return Regex.Replace(input, pattern, string.Empty);
         }
+       
+        private Table CreateGuardDetailsLicenseAndComplianceHR1(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance, string hrGroupName, int Id, int clientSiteId, string ClientSiteState, bool IsDownselect, int CriticalDocumentID)
+        {
+            int HTListCount = 0;
+            var HTList = new List<HrSettings>();
+            if (IsDownselect == true)
+            {
+                HTList = _viewDataService.GetHRSettingsCriticalDoc(Id, CriticalDocumentID);
+            }
+            else
+            {
+                HTList = _viewDataService.GetHRSettings(Id);
+            }
+            if (HTList.Count > 0)
+            {
+                foreach (var item in HTList)
+                {
+                    var SiteConditions = item.hrSettingsClientSites;
+                    var StateConditions = item.hrSettingsClientStates;
+                    if (SiteConditions.Count != 0 || StateConditions.Count != 0)
+                    {
+                        var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
+                        var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
+                        if (SelctedStateExist.Count != 0 && SelctedSiteExist.Count != 0)
+                        {
+                            HTListCount++;
+                        }
+                        else if (SelctedSiteExist.Count != 0)
+                        {
+                            if (SelctedStateExist.Count != 0)
+                            {
+                                HTListCount++;
+
+                            }
+                            else
+                            {
+                                HTListCount++;
+                            }
+
+                        }
+                    }
+                    else
+                    {
+                        HTListCount++;
+                    }
+
+                }
+
+            }
+            var graphTable = new Table(UnitValue.CreatePercentArray(3)) // Two columns
+       .UseAllAvailableWidth()
+       .SetMarginTop(5)
+       .SetKeepTogether(true);
+
+            // Add first table as a cell
+            graphTable.AddCell(new Cell()
+                .SetPadding(0)
+                .SetBorder(Border.NO_BORDER)
+                .Add(CreateGuardDetailsLicenseAndComplianceHRTbl1(monthlyDataGuard, monthlyDataGuardCompliance, hrGroupName, Id, clientSiteId, ClientSiteState, IsDownselect, CriticalDocumentID)));
+
+            if (HTListCount > 9)
+            {
+                // Add second table as a cell
+                graphTable.AddCell(new Cell()
+                .SetPadding(0)
+                .SetBorder(Border.NO_BORDER)
+                .Add(CreateGuardDetailsLicenseAndComplianceHRTbl2(monthlyDataGuard, monthlyDataGuardCompliance, hrGroupName, Id, clientSiteId, ClientSiteState, IsDownselect, CriticalDocumentID)));
+            }
+            if (HTListCount > 18)
+            {
+                graphTable.AddCell(new Cell()
+                .SetPadding(0)
+                .SetBorder(Border.NO_BORDER)
+                .Add(CreateGuardDetailsLicenseAndComplianceHRTbl3(monthlyDataGuard, monthlyDataGuardCompliance, hrGroupName, Id, clientSiteId, ClientSiteState, IsDownselect, CriticalDocumentID)));
+            }
+            return graphTable;
+        
+    }
+
+        private Table CreateGuardDetailsLicenseAndComplianceHRTbl1(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance, string hrGroupName, int Id, int clientSiteId, string ClientSiteState, bool IsDownselect, int CriticalDocumentID)
+        {
+
+            float[] columnPercentages = new float[2];
+            var kpiGuardTable1 = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
+
+
+            CreateGuardDetailsNewHeaderHR(kpiGuardTable1, monthlyDataGuard, hrGroupName, Id);
+            var HTList = new List<HrSettings>();
+            if (IsDownselect == true)
+            {
+                HTList = _viewDataService.GetHRSettingsCriticalDoc(Id, CriticalDocumentID);
+            }
+            else
+            {
+                HTList = _viewDataService.GetHRSettings(Id);
+            }
+
+            if (HTList.Count > 0)
+            {
+                foreach (var item in HTList.Take(9))
+                {
+                    var SiteConditions = item.hrSettingsClientSites;
+                    var StateConditions = item.hrSettingsClientStates;
+                    if (SiteConditions.Count != 0 || StateConditions.Count != 0)
+                    {
+                        var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
+                        var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
+                        if (SelctedStateExist.Count != 0 && SelctedSiteExist.Count != 0)
+                        {
+                            kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
+                            kpiGuardTable1.AddCell(CreateDataCell(item.Description));
+                        }
+                        else if (SelctedSiteExist.Count != 0)
+                        {
+                            if (SelctedStateExist.Count != 0)
+                            {
+                                kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
+                                kpiGuardTable1.AddCell(CreateDataCell(item.Description));
+
+                            }
+                            else
+                            {
+                                kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
+                                kpiGuardTable1.AddCell(CreateDataCell(item.Description));
+                            }
+
+                        }
+                    }
+                    else
+                    {
+                        kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
+                        kpiGuardTable1.AddCell(CreateDataCell(item.Description));
+                    }
+
+                }
+
+            }
+
+
+            return kpiGuardTable1;
+        }
+        private Table CreateGuardDetailsLicenseAndComplianceHRTbl2(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance, string hrGroupName, int Id, int clientSiteId, string ClientSiteState, bool IsDownselect, int CriticalDocumentID)
+        {
+
+            float[] columnPercentages = new float[2];
+            var kpiGuardTable1 = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
+
+
+            CreateGuardDetailsNewHeaderHR(kpiGuardTable1, monthlyDataGuard, hrGroupName, Id);
+
+            var HTList = new List<HrSettings>();
+            if (IsDownselect == true)
+            {
+                HTList = _viewDataService.GetHRSettingsCriticalDoc(Id, CriticalDocumentID);
+            }
+            else
+            {
+                HTList = _viewDataService.GetHRSettings(Id);
+            }
+
+            if (HTList.Count > 0)
+            {
+                foreach (var item in HTList.Skip(9).Take(9))
+                {
+                    var SiteConditions = item.hrSettingsClientSites;
+                    var StateConditions = item.hrSettingsClientStates;
+                    if (SiteConditions.Count != 0 || StateConditions.Count != 0)
+                    {
+                        var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
+                        var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
+                        if (SelctedStateExist.Count != 0 && SelctedSiteExist.Count != 0)
+                        {
+                            kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
+                            kpiGuardTable1.AddCell(CreateDataCell(item.Description));
+                        }
+                        else if (SelctedSiteExist.Count != 0)
+                        {
+                            if (SelctedStateExist.Count != 0)
+                            {
+                                kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
+                                kpiGuardTable1.AddCell(CreateDataCell(item.Description));
+
+                            }
+                            else
+                            {
+                                kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
+                                kpiGuardTable1.AddCell(CreateDataCell(item.Description));
+                            }
+
+                        }
+                    }
+                    else
+                    {
+                        kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
+                        kpiGuardTable1.AddCell(CreateDataCell(item.Description));
+                    }
+
+                }
+
+            }
+
+            return kpiGuardTable1;
+        }
+        private Table CreateGuardDetailsLicenseAndComplianceHRTbl3(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance, string hrGroupName, int Id, int clientSiteId, string ClientSiteState, bool IsDownselect, int CriticalDocumentID)
+        {
+
+            float[] columnPercentages = new float[2];
+            var kpiGuardTable1 = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
+
+
+            CreateGuardDetailsNewHeaderHR(kpiGuardTable1, monthlyDataGuard, hrGroupName, Id);
+
+            var HTList = new List<HrSettings>();
+            if (IsDownselect == true)
+            {
+                HTList = _viewDataService.GetHRSettingsCriticalDoc(Id, CriticalDocumentID);
+            }
+            else
+            {
+                HTList = _viewDataService.GetHRSettings(Id);
+            }
+
+            if (HTList.Count > 0)
+            {
+                foreach (var item in HTList.Skip(18).Take(9))
+                {
+                    var SiteConditions = item.hrSettingsClientSites;
+                    var StateConditions = item.hrSettingsClientStates;
+                    if (SiteConditions.Count != 0 || StateConditions.Count != 0)
+                    {
+                        var SelctedSiteExist = SiteConditions.Where(x => x.ClientSiteId == clientSiteId).ToList();
+                        var SelctedStateExist = StateConditions.Where(x => x.State == ClientSiteState).ToList();
+                        if (SelctedStateExist.Count != 0 && SelctedSiteExist.Count != 0)
+                        {
+                            kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
+                            kpiGuardTable1.AddCell(CreateDataCell(item.Description));
+                        }
+                        else if (SelctedSiteExist.Count != 0)
+                        {
+                            if (SelctedStateExist.Count != 0)
+                            {
+                                kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
+                                kpiGuardTable1.AddCell(CreateDataCell(item.Description));
+
+                            }
+                            else
+                            {
+                                kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
+                                kpiGuardTable1.AddCell(CreateDataCell(item.Description));
+                            }
+
+                        }
+                    }
+                    else
+                    {
+                        kpiGuardTable1.AddCell(CreateDataCell(item.ReferenceNo));
+                        kpiGuardTable1.AddCell(CreateDataCell(item.Description));
+                    }
+
+                }
+
+            }
+
+            return kpiGuardTable1;
+        }
         private Table CreateGuardDetailsLicenseAndComplianceHR(List<GuardLogin> monthlyDataGuard, List<GuardCompliance> monthlyDataGuardCompliance, string hrGroupName, int Id, int clientSiteId, string ClientSiteState,bool IsDownselect, int CriticalDocumentID)
         {
 
@@ -1304,14 +1569,14 @@ namespace CityWatch.Kpi.Services
         private void CreateGuardDetailsNewHeader(Table table, List<GuardLogin> monthlyDataGuard, string hrGroupname, int id, int clientSiteId, string ClientSiteState,bool IsDownselect,int CriticalDocumentID)
         {
             float[] columnWidths = { 100f, 200f, 100f }; // Adjust these values as needed
-            if (hrGroupname == "HR3 (Special)")
-            {
-                table.SetWidth(UnitValue.CreatePointValue(500));
-            }
-            else
-            {
-                table.SetWidth(UnitValue.CreatePointValue(400));
-            }
+            //if (hrGroupname == "HR3 (Special)")
+            //{
+            //    table.SetWidth(UnitValue.CreatePointValue(500));
+            //}
+            //else
+            //{
+            //    table.SetWidth(UnitValue.CreatePointValue(400));
+            //}
 
             try
             {
@@ -1473,7 +1738,7 @@ namespace CityWatch.Kpi.Services
             try
             {
                 float[] columnWidths = { 100f, 200f, 100f }; // Adjust these values as needed
-                table.SetWidth(UnitValue.CreatePointValue(400)); // Total width of the table in points
+                table.SetWidth(UnitValue.CreatePointValue(250)); // Total width of the table in points
 
 
                 Color CELL_BG_GREY_HEADER = new DeviceRgb(211, 211, 211);
