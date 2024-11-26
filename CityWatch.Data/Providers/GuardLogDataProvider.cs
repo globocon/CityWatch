@@ -5172,6 +5172,8 @@ namespace CityWatch.Data.Providers
                     if (x.EventDateTimeZoneShort == null)
                     {
                         x.EventDateTimeZoneShort = checkGMT;
+                        x.EventDateTime = x.LastSWCreatedTime ?? x.EventDateTime;
+                        x.EventDateTimeLocal = x.LastSWCreatedTime ?? x.EventDateTime;
                     }
                 });
 
