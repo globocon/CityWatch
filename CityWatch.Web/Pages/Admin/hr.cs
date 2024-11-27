@@ -339,29 +339,33 @@ namespace CityWatch.Web.Pages.Admin
                     }
                     else if (val == 6)
                     {
-                        guard.IsRCFusionAccess = true;
+                        guard.IsRCHRAccess = true;
                     }
                     else if (val == 7)
                     {
-                        guard.IsAdminPowerUser = true;
+                        guard.IsRCFusionAccess = true;
                     }
                     else if (val == 8)
                     {
-                        guard.IsAdminSOPToolsAccess = true;
+                        guard.IsAdminPowerUser = true;
                     }
                     else if (val == 9)
                     {
-                        guard.IsAdminAuditorAccess = true;
+                        guard.IsAdminSOPToolsAccess = true;
                     }
                     else if (val == 10)
                     {
-                        guard.IsAdminInvestigatorAccess = true;
+                        guard.IsAdminAuditorAccess = true;
                     }
                     else if (val == 11)
                     {
-                        guard.IsAdminThirdPartyAccess = true;
+                        guard.IsAdminInvestigatorAccess = true;
                     }
                     else if (val == 12)
+                    {
+                        guard.IsAdminThirdPartyAccess = true;
+                    }
+                    else if (val == 13)
                     {
                         guard.IsAdminGlobal = true;
                     }
@@ -1308,7 +1312,7 @@ namespace CityWatch.Web.Pages.Admin
                     {
                         if (guard.IsActive)
                         {
-                            if (guard.IsRCAccess || guard.IsRCFusionAccess)
+                            if (guard.IsRCAccess || guard.IsRCFusionAccess || guard.IsRCHRAccess)
                             {
                                 AccessPermission = true;
                                 GuId = guard.Id;

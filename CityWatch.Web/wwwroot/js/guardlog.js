@@ -4827,10 +4827,10 @@ $(function () {
         // ;
         var selectedValues = [];
         if (data.isAdminGlobal) {
-            selectedValues.push(12);
+            selectedValues.push(13);
         }
         if (data.isAdminPowerUser) {
-            selectedValues.push(7);
+            selectedValues.push(8);
         }
         if (data.isRCAccess) {
             selectedValues.push(5);
@@ -4847,20 +4847,23 @@ $(function () {
         if (data.isSTATSChartsAccess) {
             selectedValues.push(3);
         }
-        if (data.isRCFusionAccess) {
+        if (data.isRCHRAccess) {
             selectedValues.push(6);
         }
-        if (data.isAdminSOPToolsAccess) {
-            selectedValues.push(8);
+        if (data.isRCFusionAccess) {
+            selectedValues.push(7);
         }
-        if (data.isAdminAuditorAccess) {
+        if (data.isAdminSOPToolsAccess) {
             selectedValues.push(9);
         }
-        if (data.isAdminInvestigatorAccess) {
+        if (data.isAdminAuditorAccess) {
             selectedValues.push(10);
         }
-        if (data.isAdminThirdPartyAccess) {
+        if (data.isAdminInvestigatorAccess) {
             selectedValues.push(11);
+        }
+        if (data.isAdminThirdPartyAccess) {
+            selectedValues.push(12);
         }
         selectedValues.forEach(function (value) {
 
