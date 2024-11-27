@@ -517,12 +517,18 @@ $(function () {
                         $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
                         onGuardLoginDutyTimeChange(isOffDutyDateToday);
                     }
+                    if (result.guard.isAdminGlobal || result.guard.isAdminInvestigatorAccess || result.guard.isAdminThirdPartyAccess) {
+                        $('#OtherAdminsAudtiLogAccessButton').attr('hidden', false);
+                    }
+                    else {
+                        $('#OtherAdminsAudtiLogAccessButton').attr('hidden', true);
+                    }
                 }
                 //HRList Status
                 $('#client_status_0').css('color', result.hR1);
                 $('#client_status_1').css('color', result.hR2);
                 $('#client_status_2').css('color', result.hR3);
-
+                
 
             },
             complete: function () {
