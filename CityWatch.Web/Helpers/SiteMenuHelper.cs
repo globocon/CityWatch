@@ -104,7 +104,8 @@ namespace CityWatch.Web.Helpers
 
 
 
-            if (pageName == PageNameHelper.Index || pageName == PageNameHelper.Settings)
+            //if (pageName == PageNameHelper.Index || pageName == PageNameHelper.Settings)
+            if (pageName == PageNameHelper.Index)
             {
                 menuHtml.AppendLine("<div>");
                 if (!AuthUserHelper.IsAdminUserLoggedIn && !AuthUserHelper.IsAdminGlobal)
