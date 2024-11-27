@@ -15,7 +15,7 @@
     {
         IsLB_KV_IR = Model.GuardLogin.Guard.IsLB_KV_IR;
     }
-}
+    }
 <div id="loader"></div>
 <div class="m-auto p-1 main-container">
     <div class="m-auto card p-2 col-sm-10 col-md-9 col-lg-9 mb-0">
@@ -128,7 +128,16 @@
                 <div class="form-row mb-0 mt-0">
                     <div class="form-group col-md-6">
                         <label for="GuardLogin_ClientType">Client Type</label>
-                        <select class="form-control" id="GuardLogin_ClientType" asp-items="@Model.ViewDataService.GetUserClientTypesCount(AuthUserHelper.LoggedInUserId)" asp-for="@Model.GuardLogin.ClientTypeName" disabled></select>
+                             @* <select class="form-control" id="GuardLogin_ClientType" asp-items="@Model.ViewDataService.GetUserClientTypesCount(AuthUserHelper.LoggedInUserId)" asp-for="@Model.GuardLogin.ClientTypeName" disabled></select> *@
+                        @if(Model.ClientTypeId!=0)
+                            {
+                            <select class="form-control" id="GuardLogin_ClientType" asp-items="@Model.ViewDataService.GetUserClientTypesCountWithTypeId(AuthUserHelper.LoggedInUserId,Model.ClientTypeId)" asp-for="@Model.GuardLogin.ClientTypeName" disabled></select>
+                            }
+                            else
+                            {
+                                <select class="form-control" id="GuardLogin_ClientType" asp-items="@Model.ViewDataService.GetUserClientTypesCount(AuthUserHelper.LoggedInUserId)" asp-for="@Model.GuardLogin.ClientTypeName" ></select>
+                            }
+                            
                     </div>
                     <div class="form-group col-md-6">
                         <label asp-for="@Model.GuardLogin.ClientSiteName">Client Site</label>

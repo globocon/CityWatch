@@ -162,6 +162,12 @@
                         <a class="nav-link p-2 active" id="c4isettings-tab" data-toggle="tab" href="#c4isettings" role="tab" aria-controls="c4isettings" aria-selected="false">C4i Core</a>
                     </li>
                 }
+                if(Model.Guard.IsAdminThirdPartyAccess)
+                {
+                    <li class="nav-item">
+                        <a class="nav-link p-2" id="csite-tab" data-toggle="tab" href="#csite" role="tab" aria-controls="csite" aria-selected="false">IR Client Site</a>
+                    </li>
+                }
             }
                 //Auditor User menu end
         }
@@ -200,13 +206,28 @@
                                 <input type="hidden" id="siteGuardSecurityLicenseNo" asp-for="@Model.SecurityLicenseNo" />
                                 <input type="hidden" id="siteGuardId" asp-for="@Model.GuardId" />
                                 <input type="hidden" id="siteloggedInUserId" asp-for="@Model.loggedInUserId" />
+                                @if (Model.ClientTypeId!=0)
+                                {
+                                 <select class="form-control" id="sel_client_type">
+                                   
+                                    
+                                    @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId).Where(x=>x.Id==Model.ClientTypeId))
+                                    {
+                                        <option value="@item.Id" selected>@item.Name</option>
+                                    }
+                                </select>    
+                                }
+                                @if (Model.ClientTypeId==0)
+                                {
                                 <select class="form-control" id="sel_client_type">
                                     <option value="">All</option>
+                                    
                                     @foreach (var item in Model.ViewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId))
                                     {
                                         <option value="@item.Id">@item.Name</option>
                                     }
                                 </select>
+                                }
                             </div>
                             @*p1-192 client email search-start*@
                             <label class="col-form-label">Email</label>

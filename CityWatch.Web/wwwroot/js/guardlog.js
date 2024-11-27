@@ -495,6 +495,8 @@ $(function () {
 
                         $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
                         onGuardLoginDutyTimeChange(isOffDutyDateToday);
+                        if (result.isAdminThirdPartyAccess == true)
+                            $('#LoginConformationBtnC4iSettings').attr('hidden', false);
                     }
                 }
                 //HRList Status

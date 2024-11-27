@@ -387,7 +387,13 @@
             }
         });
     }
+    
+    if ($('#sel_client_type').val() != null && $('#sel_client_type').val() != '' && $('#sel_client_type').val() != undefined)
+        {
 
+    gridSite.clear();
+    gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val() });
+    }
     if (gridType) {
         gridType.on('rowDataChanged', function (e, id, record) {
             const data = $.extend(true, {}, record);

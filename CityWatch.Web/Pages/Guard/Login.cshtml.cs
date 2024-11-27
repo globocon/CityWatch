@@ -48,6 +48,7 @@ namespace CityWatch.Web.Pages.Guard
 
         [BindProperty]
         public LogBookType LogBookType { get; set; }
+        public int ClientTypeId { get; set; }
 
         public IViewDataService ViewDataService { get { return _viewDataService; } }
 
@@ -59,7 +60,44 @@ namespace CityWatch.Web.Pages.Guard
                 "vl" => LogBookType.VehicleAndKeyLog,
                 _ => throw new ArgumentOutOfRangeException("Failed to identify log book type"),
             };
-        }
+            var host = HttpContext.Request.Host.Host;
+            var clientName = string.Empty;
+            var clientLogo = string.Empty;
+            var url = string.Empty;
+
+            // Split the host by dots to separate subdomains and domain name
+            var hostParts = host.Split('.');
+
+            // If the first part is "www", take the second part as the client name
+            if (hostParts.Length > 1 && hostParts[0].Trim().ToLower() == "www")
+            {
+                clientName = hostParts[1];
+            }
+            else
+            {
+                clientName = hostParts[0];
+            }
+            if (!string.IsNullOrEmpty(clientName))
+            {
+                if (
+                    clientName.Trim().ToLower() != "www" &&
+                    clientName.Trim().ToLower() != "cws-ir" &&
+                    clientName.Trim().ToLower() != "test" &&
+                    clientName.Trim().ToLower() != "localhost"
+                )
+                {
+                    int domain = _configDataProvider.GetSubDomainDetails(clientName).TypeId;
+                    if (domain != 0)
+                    {
+                        ClientTypeId = domain;
+                    }
+                    else
+                    {
+                        ClientTypeId = 0;
+                    }
+                }
+            }
+         }
 
         public JsonResult OnPostLoginGuard()
         {
@@ -353,11 +391,20 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     AuthUserHelper.IsAdminGlobal = true;
                 }
+                
                 else
                 {
                     AuthUserHelper.IsAdminGlobal = false;
                 }
-               
+                if (guard.IsAdminThirdPartyAccess)
+                {
+                    AuthUserHelper.IsAdminThirdParty = true;
+                }
+                else
+                {
+                    AuthUserHelper.IsAdminThirdParty = false;
+                }
+
             }
             //HRList Status start 
             var HR1 = "Grey";
