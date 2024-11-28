@@ -361,6 +361,17 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <style>
         #map { height: 100vh; }
+        @keyframes blink {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
     </style>
 </head>
 <body>
@@ -383,6 +394,9 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 const gps = record.gps ? record.gps.trim() : ''; 
                 const address = record.address ? stripHtml(record.address).trim() : ''; 
                 const GuardName=record.guardName;
+                const siteNameParts = record.siteName.split('&nbsp;');
+const siteName = siteNameParts[0].trim(); // "Mercy - VIC - Werribee - ADHOC (Rover)"
+const phoneNumber = siteNameParts.slice(1).join('').trim();
                 
                const alertColor = 'Green'; 
                 
@@ -392,7 +406,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 if (gps) {
                     const [lat, lng] = gps.split(',').map(coord => parseFloat(coord));
                     L.marker([lat, lng], { icon: createCustomIcon(markerColor) })
-                        .bindPopup(record.siteName + '<br>' + address+ '<br>' + GuardName)
+                        .bindPopup('<strong>SiteName:</strong>'+siteName + '<br>' +'<strong>Phone Number:</strong>'+phoneNumber + '<br>'+'<strong>Address:</strong>' + address+ '<br>'+'<strong>GuardName:</strong>' + GuardName)
                         .addTo(map);
                 }
             });
@@ -415,7 +429,7 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
        function createCustomIcon(color) {
     return L.divIcon({
         className: 'custom-marker',
-        html: '<div style="background-color:' + color + '; width: 25px; height: 25px; border-radius: 50%;"></div>',
+        html: '<div style="background-color:' + color + '; width: 25px; height: 25px; border-radius: 50%;animation: blink 1s infinite;"></div>',
         iconSize: [25, 25],  // Increased size
     });
 }
@@ -985,6 +999,17 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <style>
         #map { height: 100vh; }
+        @keyframes blink {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
     </style>
 </head>
 <body>
@@ -1007,7 +1032,10 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                 const gps = record.gps ? record.gps.trim() : ''; // Extract GPS
                 const address = record.address ? stripHtml(record.address).trim() : ''; // Clean up address
                 const GuardName=record.guardName;
-                
+                const siteNameParts = record.siteName.split('&nbsp;');
+                const siteName = siteNameParts[0].trim(); 
+                const phoneNumber = siteNameParts.slice(1).join('').trim();
+
                const alertColor = record.twoHrAlert ? record.twoHrAlert.trim() : 'grey'; // Default to grey if no color
                 
                 // Map alert colors to actual CSS color values
@@ -1016,7 +1044,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                 if (gps) {
                     const [lat, lng] = gps.split(',').map(coord => parseFloat(coord));
                     L.marker([lat, lng], { icon: createCustomIcon(markerColor) })
-                        .bindPopup(record.siteName + '<br>' + address+ '<br>' + GuardName)
+                        .bindPopup('<strong>SiteName:</strong>'+siteName + '<br>' +'<strong>Phone Number:</strong>'+phoneNumber + '<br>'+'<strong>Address:</strong>' + address+ '<br>'+'<strong>GuardName:</strong>' + GuardName)
                         .addTo(map);
                 }
             });
@@ -1039,7 +1067,7 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
        function createCustomIcon(color) {
     return L.divIcon({
         className: 'custom-marker',
-        html: '<div style="background-color:' + color + '; width: 25px; height: 25px; border-radius: 50%;"></div>',
+        html: '<div style="background-color:' + color + '; width: 25px; height: 25px; border-radius: 50%;animation: blink 1s infinite;"></div>',
         iconSize: [25, 25],  // Increased size
     });
 }
