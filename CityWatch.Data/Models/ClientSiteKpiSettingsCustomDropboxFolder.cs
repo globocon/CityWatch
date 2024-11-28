@@ -26,6 +26,6 @@ namespace CityWatch.Data.Models
         public bool KpiTelematicsAndStatistics { get; set; } = true;
         public bool SmartWandPatrolReports { get; set; } = true;
         public bool MonthlyClientReport { get; set; } = false;
-
+        public bool DropboxScheduleisActive { get; set; } = true;
     }
 }

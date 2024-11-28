@@ -2571,6 +2571,7 @@ namespace CityWatch.Data.Providers
                     recordToUpdate.KpiTelematicsAndStatistics = record.KpiTelematicsAndStatistics;
                     recordToUpdate.SmartWandPatrolReports = record.SmartWandPatrolReports;
                     recordToUpdate.MonthlyClientReport = record.MonthlyClientReport;
+                    recordToUpdate.DropboxScheduleisActive= record.DropboxScheduleisActive;
                     _context.SaveChanges();
                 }
                 else
@@ -2801,7 +2802,16 @@ namespace CityWatch.Data.Providers
                         if (kpiSettingsToUpdate != null)
                         {
                             kpiSettingsToUpdate.ScheduleisActive = false;
+                            kpiSettingsToUpdate.DropboxScheduleisActive = false;
                             _context.SaveChanges(); // Save changes for KPI Settings
+                        }
+
+                      
+                        var clientSite = _context.ClientSites.SingleOrDefault(z => z.Id == clientSiteId);
+                        if (clientSite != null)
+                        {
+                            clientSite.UploadGuardLog = false;
+                            _context.SaveChanges();
                         }
                     }
                     else
@@ -2812,6 +2822,13 @@ namespace CityWatch.Data.Providers
                         {
                             kpiSettingsToUpdate.ScheduleisActive = true;
                             _context.SaveChanges(); // Save changes for KPI Settings
+                        }
+
+                        var clientSite = _context.ClientSites.SingleOrDefault(z => z.Id == clientSiteId);
+                        if (clientSite != null)
+                        {
+                            clientSite.UploadGuardLog = true;
+                            _context.SaveChanges();
                         }
 
                     }

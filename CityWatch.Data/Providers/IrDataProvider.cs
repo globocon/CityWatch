@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Policy;
 using static Dropbox.Api.TeamLog.SpaceCapsType;
 
 namespace CityWatch.Data.Providers
@@ -23,10 +24,11 @@ namespace CityWatch.Data.Providers
     public class IrDataProvider : IIrDataProvider
     {
         private readonly CityWatchDbContext _dbContext;
-
-        public IrDataProvider(CityWatchDbContext dbContext)
+        private readonly IClientDataProvider _clientDataProvider;
+        public IrDataProvider(CityWatchDbContext dbContext, IClientDataProvider clientDataProvider )
         {
             _dbContext = dbContext;
+            _clientDataProvider = clientDataProvider;
         }
 
         public List<IncidentReport> GetIncidentReports(DateTime fromReportDate, DateTime toReportDate)
@@ -105,18 +107,42 @@ namespace CityWatch.Data.Providers
             {
                 site.Status = 2;
             }
-
+            _dbContext.SaveChanges();
             // Update the KPI settings
             foreach (var kpi in kpiSettingsToUpdate)
             {
-                kpi.ScheduleisActive = false;
+               
+                updateKpiSettings(kpi.Id);
+                // Save all changes in one go
+                updateClientSite(kpi.ClientSite.Id);
             }
+           
 
-            // Save all changes in one go
+        }
+        public void updateKpiSettings(int kpisettingsId)
+        {
+            var kpisettings = _dbContext.ClientSiteKpiSettings.SingleOrDefault(z => z.Id == kpisettingsId);
+            if (kpisettings != null)
+            {
+                kpisettings.ScheduleisActive = false;
+                kpisettings.DropboxScheduleisActive = false;
+            }
             _dbContext.SaveChanges();
+
         }
 
+        public void updateClientSite(int ClientSite)
+        {
+            var clientSite = _dbContext.ClientSites.SingleOrDefault(z => z.Id == ClientSite);
+            if (clientSite != null)
+            {
+                clientSite.UploadGuardLog = false;
+            }
+            _dbContext.SaveChanges();
 
+        }
 
     }
+
+  
 }

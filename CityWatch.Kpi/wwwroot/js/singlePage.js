@@ -1344,7 +1344,8 @@ $(function () {
             IsWeekendOnlySite: $('#IsWeekendOnlySite').is(":checked"),
             KpiTelematicsAndStatistics: $('#KpiTelematicsAndStatistics').is(":checked"),
             SmartWandPatrolReports: $('#SmartWandPatrolReports').is(":checked"),
-            MonthlyClientReport: $('#MonthlyClientReport').is(":checked")
+            MonthlyClientReport: $('#MonthlyClientReport').is(":checked"),
+            DropboxScheduleisActive: $('#DropboxScheduleisActive').is(":checked")
         };
 
         $.ajax({

@@ -1282,21 +1282,27 @@ namespace CityWatch.Kpi.Pages.Admin
                 var customdropboxfolders = _clientDataProvider.GetKpiSettingsCustomDropboxFolder(clientSiteKpiSetting.ClientSiteId).ToList();
                 if (customdropboxfolders.Count > 0)
                 {
-                    var dropboxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken,
-                                            _settings.DropboxRefreshToken, _settings.DropboxUserEmail);
-                    foreach (var customdropboxfolder in customdropboxfolders)
+                    //This is active only create new folder27/11/2024 Start
+                    if (clientSiteKpiSetting.DropboxScheduleisActive)
                     {
-                        var dbxfldr = $"{customDbxFolderPath}{customdropboxfolder.DropboxFolderName}";
-                        try
+                        //This is active only create new folder27/11/2024 end
+                        var dropboxSettings = new DropboxSettings(_settings.DropboxAppKey, _settings.DropboxAppSecret, _settings.DropboxAccessToken,
+                                                _settings.DropboxRefreshToken, _settings.DropboxUserEmail);
+                        foreach (var customdropboxfolder in customdropboxfolders)
                         {
-                            await _dropboxUploadService.CreateFolder(dropboxSettings, dbxfldr);
-                            _logger.LogInformation($"Custom dropbox folder {dbxfldr} created.");
-                            return true;
-                        }
-                        catch (Exception exp)
-                        {
-                            _logger.LogError(exp.Message);
-                            _logger.LogError(exp.InnerException.ToString());
+                            var dbxfldr = $"{customDbxFolderPath}{customdropboxfolder.DropboxFolderName}";
+                            try
+                            {
+                                await _dropboxUploadService.CreateFolder(dropboxSettings, dbxfldr);
+                                _logger.LogInformation($"Custom dropbox folder {dbxfldr} created.");
+                                return true;
+                            }
+                            catch (Exception exp)
+                            {
+                                _logger.LogError(exp.Message);
+                                _logger.LogError(exp.InnerException.ToString());
+                            }
+
                         }
 
                     }
