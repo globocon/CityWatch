@@ -1135,7 +1135,7 @@ namespace CityWatch.Web.Pages.Admin
         }
         //for adding a report logo-end
 
-        public JsonResult OnGetClientSitesNew1(string typeId)
+        public JsonResult OnGetClientSitesNew(string typeId)
         {
             if (typeId != null)
             {
