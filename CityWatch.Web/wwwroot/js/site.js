@@ -5236,7 +5236,7 @@ $('#clientTypeNameDocHrDoc').on('change', function () {
     //}
 
     $.ajax({
-        url: '/admin/settings?handler=ClientSitesNew',
+        url: '/admin/settings?handler=ClientSitesNew1',
         type: 'GET',
         data: {
             typeId: option
