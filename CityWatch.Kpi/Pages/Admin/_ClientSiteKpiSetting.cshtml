@@ -22,7 +22,7 @@
     var check = count;
     bool isStatusOngoing = @Model.ClientSite.Status != 0;
 
-   
+
 
 }
 
@@ -100,7 +100,7 @@
                                     <label for="gs_duress_email" class="col-md-3 col-form-label">Do's & Don'ts List</label>
                                     <div class="col-md-6">
                                         <div class="custom-control custom-switch custom-control-inline m-0" title="Switch between Patrol Car and Guards" style="padding-bottom:5px">
-                                            <input type="checkbox" class="custom-control-input" id="IsDosDontList"checked>
+                                            <input type="checkbox" class="custom-control-input" id="IsDosDontList" checked>
                                             <label class="custom-control-label" for="IsDosDontList"></label>
                                             <input type="hidden" id="IsDosDontListEnabledHidden" />
                                         </div>
@@ -677,7 +677,7 @@
                                             <option value="Pacific SA Standard Time">(UTC-04:00) Pacific SA Standard Time (Santiago)</option>
                                         </select>
                                     </div>
-                                   
+
                                 </div>
                                 <div class="col-md-3">
                                 </div>
@@ -1105,12 +1105,28 @@
                     <div class="container pt-3">
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="form-row my-1">
-                                    <div class="form-group col-md-12">
+
+                                <div class="form-row my-1 align-items-center">
+                                    <div class="form-group col-md-12 d-flex justify-content-between mb-0">
+                                        <!-- Label for the Dropbox Directory input -->
                                         <label class="form-label font-weight-bold" asp-for="@Model.DropboxImagesDir"></label>
+
+                                        <!-- Move the Label and Checkbox to the Right -->
+                                        <div class="d-flex align-items-center ml-auto">
+                                            <label class="mr-2" for="dropboxScheduleIsActive">Schedule is active</label>
+                                            <div class="custom-control custom-switch">
+                                                <input type="checkbox" class="custom-control-input" asp-for="@Model.DropboxScheduleisActive">
+                                                <label class="custom-control-label" asp-for="@Model.DropboxScheduleisActive"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Text Input -->
+                                    <div class="form-group col-md-12 mt-2">
                                         <input class="form-control" asp-for="@Model.DropboxImagesDir">
                                     </div>
                                 </div>
+
                                 <div class="form-row">
                                     <div class="col-md-12">
                                         <div class="form-check">

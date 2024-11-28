@@ -1672,7 +1672,8 @@ namespace CityWatch.Web.Pages.Guard
             var siteBasePath = clientSiteKpiSettings.DropboxImagesDir;
             if (string.IsNullOrEmpty(siteBasePath))
                 throw new ArgumentException($"Dropbox directory missing for this client site");
-
+            if(!clientSiteKpiSettings.DropboxScheduleisActive)
+                throw new ArgumentException($"DropboxScheduleisActive:Desabled");
             var fileToUpload = Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName);
             var dayPathFormat = clientSiteKpiSettings.IsWeekendOnlySite ? "yyyyMMdd - ddd" : "yyyyMMdd";
             var dbxFilePath = $"{siteBasePath}/FLIR - Wand Recordings - IRs - Daily Logs/{DateTime.Today.Date.Year}/{DateTime.Today.Date:yyyyMM} - {DateTime.Today.Date.ToString("MMMM").ToUpper()} DATA/{DateTime.Today.Date.ToString(dayPathFormat).ToUpper()}/{fileName}";
@@ -1691,7 +1692,8 @@ namespace CityWatch.Web.Pages.Guard
             var siteBasePath = clientSiteKpiSettings.DropboxImagesDir;
             if (string.IsNullOrEmpty(siteBasePath))
                 throw new ArgumentException($"Dropbox directory missing for this client site");
-
+            if (!clientSiteKpiSettings.DropboxScheduleisActive)
+                throw new ArgumentException($"DropboxScheduleisActive:Desabled");
             var fileToUpload = Path.Combine(_WebHostEnvironment.WebRootPath, "Pdf", "Output", fileName);
             var dayPathFormat = clientSiteKpiSettings.IsWeekendOnlySite ? "yyyyMMdd - ddd" : "yyyyMMdd";
             var folderPathToCreate = $"{siteBasePath}/FLIR - Wand Recordings - IRs - Daily Logs/{DateTime.Today.Date.Year}/{DateTime.Today.Date:yyyyMM} - {DateTime.Today.Date.ToString("MMMM").ToUpper()} DATA/{DateTime.Today.Date.ToString(dayPathFormat).ToUpper()}/Dockets - General/{fileName}"; ;

@@ -274,5 +274,8 @@ namespace CityWatch.Data.Models
         public string TimezoneString { get; set; }
 
         public string UTC { get; set; }
+
+        [Display(Name = "")]
+        public bool DropboxScheduleisActive { get; set; } = true;
     }
 }
