@@ -550,14 +550,19 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             className: "text-center",
 
             render: function (value, type, data) {
-                
+                if ($('#txtguardGuardRCAccess').val() == 'False') {
 
-                // Include the sort value as a hidden element and render the color circle
-                return '<span style="display:none;">' + value + '</span>'  +
-                    '<i class="fa fa-circle text-' +
-                    (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
-                        value == 'Yellow' ? 'warning' : 'muted') +
-                    '"></i>';
+
+                    // Include the sort value as a hidden element and render the color circle
+                    return '<span style="display:none;">' + value + '</span>' +
+                        '<i class="fa fa-circle text-' +
+                        (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
+                            value == 'Yellow' ? 'warning' : 'muted') +
+                        '"></i>';
+                }
+                else {
+                    return '<i class="fa fa-circle text-muted"></i>';
+                }
             }
         },
         {
@@ -567,12 +572,17 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
             render: function (value, type, data) {
                
+                if ($('#txtguardGuardRCAccess').val() == 'False' ) {
 
                 return '<span style="display:none;">' + value + '</span>' +
                     '<i class="fa fa-circle text-' +
                     (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
                         value == 'Yellow' ? 'warning' : 'muted') +
-                    '"></i>';
+                        '"></i>';
+                }
+                else {
+                    return '<i class="fa fa-circle text-muted"></i>';
+                }
 
             }
         },
@@ -583,12 +593,17 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
             render: function (value, type, data) {
               
+                if ($('#txtguardGuardRCAccess').val() == 'False' ) {
 
                 return '<span style="display:none;">' + value + '</span>' +
                     '<i class="fa fa-circle text-' +
                     (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
                         value == 'Yellow' ? 'warning' : 'muted') +
                     '"></i>';
+                }
+                else {
+                    return '<i class="fa fa-circle text-muted"></i>';
+                }
             }
         },
        
@@ -2175,10 +2190,10 @@ let clientSiteActiveGuardsIncidentReportHistory = $('#clientSiteActiveGuardsInci
 });
 
 $('#clientSiteActiveGuards tbody').on('dblclick', '#btnIrHistoryByGuard', function (value, record) {
-    
-   /* if ($('#txtguardGuardRCAccess').val() == 'False') { */
+   
+    if ($('#txtguardGuardRCAccess').val() == 'False' && $('#txtguardGuardRCHRAccess').val() == 'False') { 
         $('#guardIncidentReportsHistoryModal').modal('show');
-   /* }*/
+    }
     isPaused = true;
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
     var GuardId = $(this).attr("data-guardid");
@@ -3551,7 +3566,7 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
 
 
 });
-if ($('#txtguardGuardRCAccess').val() == 'True') {
+if ($('#txtguardGuardRCAccess').val() == 'True' || $('#txtguardGuardRCHRAccess').val() == 'True' ) {
 
 
     $("#clientSiteActiveGuards_wrapper .dt-buttons .btn-copy").hide();
@@ -4128,7 +4143,9 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnIncidentReportdeta
 });
 
 $('#clientSiteActiveGuardsSinglePage tbody').on('dblclick', '#btnIrHistoryByGuard', function (value, record) {
-    $('#guardIncidentReportsHistoryModal').modal('show');
+    if ($('#txtguardGuardRCAccess').val() == 'False' && $('#txtguardGuardRCHRAccess').val() == 'False') {
+        $('#guardIncidentReportsHistoryModal').modal('show');
+    }
     isPaused = true;
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
     var GuardId = $(this).attr("data-guardid");
@@ -4890,7 +4907,7 @@ function ShowKpiModelChoice() {
             $('#div_kpi_rc_contractedmanning').html('');
         else if (choice == 'CONTRACTEDMANNING')
             $('#div_kpi_rc_action_list').html('');
-        if ($('#txtguardGuardRCAccess').val() == 'True') { 
+        if ($('#txtguardGuardRCAccess').val() == 'True' || $('#txtguardGuardRCHRAccess').val() == 'True') { 
             $('#div_kpi_rc_contractedmanning #showDivButton').prop('disabled', true);
             $('#div_kpi_rc_contractedmanning #ClientSite_Status').prop('disabled', true);
             $('#div_kpi_rc_contractedmanning #scheduleisActive').prop('disabled', true);
@@ -5289,11 +5306,11 @@ function format_guard_settings_for_control_room_child_row(d) {
             cellValue = '<i class="fa fa-check-circle text-success"></i>' +
                 '<input type="hidden" id="GuardId" value="' + d.id + '">';
         }
-       /* if ($('#txtguardGuardRCAccess').val() == 'False') { */
+        if ($('#txtguardGuardRCAccess').val() == 'False' && $('#txtguardGuardRCHRAccess').val() == 'False') { 
         if (d.dateEnrolled) {
             cellValue += '<br/> <span class="small">Enrolled: ' + getFormattedDate(new Date(d.dateEnrolled), null, ' ') + '</span>';
             }
-       /* }*/
+        }
     } else {
 
         cellValue = '<i class="fa fa-times-circle text-danger"></i>';

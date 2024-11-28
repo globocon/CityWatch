@@ -104,7 +104,8 @@ namespace CityWatch.Web.Helpers
 
 
 
-            if (pageName == PageNameHelper.Index || pageName == PageNameHelper.Settings)
+            //if (pageName == PageNameHelper.Index || pageName == PageNameHelper.Settings)
+            if (pageName == PageNameHelper.Index)
             {
                 menuHtml.AppendLine("<div>");
                 if (!AuthUserHelper.IsAdminUserLoggedIn && !AuthUserHelper.IsAdminGlobal)
@@ -232,6 +233,12 @@ namespace CityWatch.Web.Helpers
                 {
                     menuHtml.AppendLine("<div>");
                     menuHtml.AppendLine(@"<a href=""/Admin/AuditSiteLog"" class=""nav-link py-0""><i class=""fa fa-list-alt mr-2""></i>Audit Site Logs</a>");
+                    menuHtml.AppendLine("</div>");
+                }
+                else
+                {
+                    menuHtml.AppendLine("<div>");
+                    menuHtml.AppendLine(@"<a href=""/Admin/AuditSiteLog"" id=""OtherAdminsAudtiLogAccessButton"" class=""nav-link py-0"" hidden><i class=""fa fa-list-alt mr-2""></i>Audit Site Logs</a>");
                     menuHtml.AppendLine("</div>");
                 }
                 

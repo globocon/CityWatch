@@ -301,11 +301,11 @@
                     </div>
                     <div>
 
-                        @* @if (User.Identity.IsAuthenticated || guard.IsRCFusionAccess)
-                        { *@
+                        @if (User.Identity.IsAuthenticated || guard.IsRCFusionAccess)
+                        {
                             <a href="@Url.Page("/Fusion")" class="nav-link py-0"><i class="fa fa-snowflake-o mr-2"></i>Fusion</a>
 
-                      @*   } *@
+                        }
 
                     </div>
 
