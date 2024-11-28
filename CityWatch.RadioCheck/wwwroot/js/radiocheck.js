@@ -346,6 +346,97 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
         },
         {
+            extend: 'pdf',
+            text: '<i class="fa fa-globe"></i>',
+            titleAttr: 'Globe Map',
+            className: 'btn btn-md mr-2 btn-pdf',
+            action: function (e, dt, node, config) {
+                const newTab = window.open('', '_blank');
+                const mapHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Globe Map</title>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <style>
+        #map { height: 100vh; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        const map = L.map('map').setView([-27.0, 133.0], 5); // Center on Australia
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+        }).addTo(map);
+
+        // Fetching the data
+        fetch('/RadioCheckV2?handler=ClientSiteActivityStatus&clientSiteIds=test,', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);  // Log the data to ensure it is correctly returned
+            data.forEach(record => {
+                const gps = record.gps ? record.gps.trim() : ''; 
+                const address = record.address ? stripHtml(record.address).trim() : ''; 
+                const GuardName=record.guardName;
+                
+               const alertColor = 'Green'; 
+                
+                // Map alert colors to actual CSS color values
+                const markerColor = getColorFromAlert(alertColor);
+
+                if (gps) {
+                    const [lat, lng] = gps.split(',').map(coord => parseFloat(coord));
+                    L.marker([lat, lng], { icon: createCustomIcon(markerColor) })
+                        .bindPopup(record.siteName + '<br>' + address+ '<br>' + GuardName)
+                        .addTo(map);
+                }
+            });
+        })
+        .catch(error => console.error('Error:', error));
+
+        // Function to strip HTML tags
+        function stripHtml(input) {
+            const doc = new DOMParser().parseFromString(input, 'text/html');
+            return doc.body.textContent || "";
+        }
+        function getColorFromAlert(alert) {
+            switch (alert) {
+                case 'Red': return 'red';
+                case 'Green': return 'green';
+                case 'Yellow': return 'yellow';
+                default: return 'grey'; // Default color
+            }
+        }
+       function createCustomIcon(color) {
+    return L.divIcon({
+        className: 'custom-marker',
+        html: '<div style="background-color:' + color + '; width: 25px; height: 25px; border-radius: 50%;"></div>',
+        iconSize: [25, 25],  // Increased size
+    });
+}
+    </script>
+</body>
+</html>
+        `;
+                newTab.document.open();
+                newTab.document.write(mapHTML);
+                newTab.document.close();
+            }
+        },
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
+
+        },
+        {
             text: '<img src="/images/man-climbing-stairs.png" alt="Image" height="16" width="16">',
             titleAttr: 'Steps',
             className: 'btn btn-md mr-2 btn-custom',
@@ -870,7 +961,97 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                 head.appendChild(style);
             }
         },
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
 
+        },
+        {
+            extend: 'pdf',
+            text: '<i class="fa fa-globe"></i>',
+            titleAttr: 'Globe Map',
+            className: 'btn btn-md mr-2 btn-pdf',
+            action: function (e, dt, node, config) {
+                const newTab = window.open('', '_blank');
+                const mapHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Globe Map</title>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <style>
+        #map { height: 100vh; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        const map = L.map('map').setView([-27.0, 133.0], 5); // Center on Australia
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+        }).addTo(map);
+
+        // Fetching the data
+        fetch('/RadioCheckV2?handler=ClientSiteInActivityStatus&clientSiteIds=test,', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);  // Log the data to ensure it is correctly returned
+            data.forEach(record => {
+                const gps = record.gps ? record.gps.trim() : ''; // Extract GPS
+                const address = record.address ? stripHtml(record.address).trim() : ''; // Clean up address
+                const GuardName=record.guardName;
+                
+               const alertColor = record.twoHrAlert ? record.twoHrAlert.trim() : 'grey'; // Default to grey if no color
+                
+                // Map alert colors to actual CSS color values
+                const markerColor = getColorFromAlert(alertColor);
+
+                if (gps) {
+                    const [lat, lng] = gps.split(',').map(coord => parseFloat(coord));
+                    L.marker([lat, lng], { icon: createCustomIcon(markerColor) })
+                        .bindPopup(record.siteName + '<br>' + address+ '<br>' + GuardName)
+                        .addTo(map);
+                }
+            });
+        })
+        .catch(error => console.error('Error:', error));
+
+        // Function to strip HTML tags
+        function stripHtml(input) {
+            const doc = new DOMParser().parseFromString(input, 'text/html');
+            return doc.body.textContent || "";
+        }
+        function getColorFromAlert(alert) {
+            switch (alert) {
+                case 'Red': return 'red';
+                case 'Green': return 'green';
+                case 'Yellow': return 'yellow';
+                default: return 'grey'; // Default color
+            }
+        }
+       function createCustomIcon(color) {
+    return L.divIcon({
+        className: 'custom-marker',
+        html: '<div style="background-color:' + color + '; width: 25px; height: 25px; border-radius: 50%;"></div>',
+        iconSize: [25, 25],  // Increased size
+    });
+}
+    </script>
+</body>
+</html>
+        `;
+                newTab.document.open();
+                newTab.document.write(mapHTML);
+                newTab.document.close();
+            }
+        },
         {
             text: '|',
             titleAttr: 'Space',
@@ -1133,7 +1314,10 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
 });
 
-
+function stripHtml(input) {
+    const doc = new DOMParser().parseFromString(input, 'text/html');
+    return doc.body.textContent || "";
+}
 
 //p4#48 AudioNotification - Binoy - 12-01-2024 -- Start
 function PlayDuressAlarm() {
