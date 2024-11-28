@@ -109,7 +109,16 @@ namespace CityWatch.Data.Providers
             }
             _dbContext.SaveChanges();
             // Update the KPI settings
-            foreach (var kpi in kpiSettingsToUpdate)
+            var clientSitesToUpdate2 = _dbContext.ClientSites
+               .Where(x => x.Status == 2 )
+               .ToList();
+            var siteIds2 = clientSitesToUpdate2.Select(x => x.Id).ToList();
+            var kpiSettingsToUpdate2 = _dbContext.ClientSiteKpiSettings
+                .Where(kpi => siteIds2.Contains(kpi.ClientSite.Id))
+                .ToList();
+
+
+            foreach (var kpi in kpiSettingsToUpdate2)
             {
                
                 updateKpiSettings(kpi.Id);
