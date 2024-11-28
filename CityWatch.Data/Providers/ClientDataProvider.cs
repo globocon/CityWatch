@@ -2822,6 +2822,7 @@ namespace CityWatch.Data.Providers
                         if (kpiSettingsToUpdate != null)
                         {
                             kpiSettingsToUpdate.ScheduleisActive = true;
+                            kpiSettingsToUpdate.DropboxScheduleisActive = true;
                             _context.SaveChanges(); // Save changes for KPI Settings
                         }
 
