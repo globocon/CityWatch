@@ -5124,7 +5124,7 @@ function ShowKpiModelChoice() {
             $('#div_kpi_rc_contractedmanning #ClientSite_Status').prop('disabled', true);
             $('#div_kpi_rc_contractedmanning #scheduleisActive').prop('disabled', true);
             $('#div_kpi_rc_contractedmanning #delete_worker').prop('disabled', true);
-            
+            $('#div_kpi_rc_contractedmanning #save_site_manning_settings').prop('disabled', true);
             
         }
     });
