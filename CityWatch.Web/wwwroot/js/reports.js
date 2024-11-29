@@ -538,6 +538,8 @@
             drawPieChartLargeSize(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site1");
             drawPieChartLargeSizeForPdf(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site3");
             $('#count_by_site3').html(response.chartData.sitePercentage.length);
+            drawPieChartLargeSizeForPdf(response.chartData.areaWardPercentage, response.recordCount, "svg#pie_chart_ir_by_areaward3pdf");
+            drawPieChartLargeSizeForPdf(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode3pdf");
             /* drawPieChartLargeSize(response.chartData.areaWardPercentage, response.recordCount, "svg#pie_chart_ir_by_areaward1");*/
             /* drawPieChartLargeSize(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode1");*/
             drawPieChartLargeSize(response.chartData.eventTypePercentage, response.recordCount, "svg#pie_chart_by_ireventype_quantity1");
