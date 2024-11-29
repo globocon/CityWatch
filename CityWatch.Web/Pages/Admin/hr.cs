@@ -1924,10 +1924,10 @@ namespace CityWatch.Web.Pages.Admin
         }
 
 
-        public JsonResult OnGetKVCompanyDetails(int hrgroupId, string searchKeyNo)
+        public JsonResult OnGetKVCompanyDetails(string clientSiteIds, string searchKeyNo)
         {
-
-            return new JsonResult(_configDataProvider.GetHRSettingsUsingGroupId(hrgroupId, searchKeyNo));
+            var arClientSiteIds = clientSiteIds?.Split(";").Select(z => int.Parse(z)).ToArray() ?? Array.Empty<int>();
+            return new JsonResult(_configDataProvider.GetCompanyDetailsUsingFilter(arClientSiteIds, searchKeyNo));
 
         }
 

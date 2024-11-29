@@ -102,6 +102,7 @@ namespace CityWatch.Data.Providers
         List<HrSettings> GetHRSettingsWithHRLockEnable();
 
         List<HrSettings> GetHRSettingsUsingGroupId(int hrgroupId, string searchKeyNo);
+        List<string> GetCompanyDetailsUsingFilter(int[] clientSiteIds, string searchKeyNo);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -776,6 +777,39 @@ namespace CityWatch.Data.Providers
                  x.ReferenceNo.Contains(searchKeyNo, StringComparison.OrdinalIgnoreCase))).ToList(); // Adding search by ReferenceNoAlphabets
 
         }
+
+
+        public List<string> GetCompanyDetailsUsingFilter(int[] clientSiteIds, string searchKeyNo)
+        {
+            // Initialize the base query
+            var query = _context.KeyVehicleLogs.AsQueryable();
+            query = query.Where(z => z.ClientSiteLogBook.Type == LogBookType.VehicleAndKeyLog);
+
+            // Apply the search key filter if provided
+            if (!string.IsNullOrEmpty(searchKeyNo))
+            {
+
+                query = _context.KeyVehicleLogs.Where(k => string.IsNullOrEmpty(searchKeyNo) ||
+                k.CompanyName.ToLower().Contains(searchKeyNo.ToLower()));
+                //query = query.Where(z => z.CompanyName.Contains(searchKeyNo, StringComparison.OrdinalIgnoreCase));
+            }
+
+            // Apply the client site and log book type filters if client site IDs are provided
+            if (clientSiteIds?.Length > 0)
+            {
+                query = query.Where(z => clientSiteIds.Contains(z.ClientSiteLogBook.ClientSiteId)
+                                      && z.ClientSiteLogBook.Type == LogBookType.VehicleAndKeyLog);
+            }
+
+            // Execute the query and return the results
+            // Select distinct company names and return as a list
+            return query
+                .Select(z => z.CompanyName) // Project only the company name
+                .Distinct()
+                 .OrderBy(name => name)  // Get distinct company names
+                .ToList();
+        }
+
         public List<HrSettings> GetHRSettingsWithHRLockEnable()
         {
             return _context.HrSettings.Where(x => x.HRLock == true).ToList();
