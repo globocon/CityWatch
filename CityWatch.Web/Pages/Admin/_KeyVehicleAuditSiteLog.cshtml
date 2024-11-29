@@ -60,7 +60,10 @@
                     </div>
                     <div class="form-group col-md-2">
                         <label>Company Name</label>
-                        <input type="text" class="form-control" asp-for="@Model.KeyVehicleLogAuditLogRequest.CompanyName" />
+                        <select class="form-control" id="KeyVehicleLogAuditLogRequest_CompanyName" asp-for="@Model.KeyVehicleLogAuditLogRequest.CompanyName">
+                            <option></option>
+                        </select>
+                        @*<input type="text" class="form-control" asp-for="@Model.KeyVehicleLogAuditLogRequest.CompanyName" />*@
                     </div>
                     <div class="form-group col-md-2">
                         <label>Individuals Name</label>

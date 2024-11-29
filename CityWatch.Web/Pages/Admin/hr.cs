@@ -1923,6 +1923,14 @@ namespace CityWatch.Web.Pages.Admin
            
         }
 
+
+        public JsonResult OnGetKVCompanyDetails(int hrgroupId, string searchKeyNo)
+        {
+
+            return new JsonResult(_configDataProvider.GetHRSettingsUsingGroupId(hrgroupId, searchKeyNo));
+
+        }
+
     }
 
 
