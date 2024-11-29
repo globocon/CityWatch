@@ -4800,6 +4800,62 @@ $(function () {
         //$('#list_HrSearchandEdit_keys').select2('open'); // Open the dropdown to reload data
     }
 
+
+
+    $('#KeyVehicleLogAuditLogRequest_CompanyName').select2({
+        placeholder: "Select",
+        theme: 'bootstrap4',
+        allowClear: true,
+        ajax: {
+            url: '/Admin/GuardSettings?handler=HrsettingsUisngHrGroupId',
+            dataType: 'json',
+            delay: 250,
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            data: function (params) {
+                // Determine hrgroupId based on which checkbox is checked
+                let hrgroupId = 1; // default value
+
+                if ($('#chkbxHR1').is(':checked')) {
+                    hrgroupId = 1;
+                } else if ($('#chkbxHR2').is(':checked')) {
+                    hrgroupId = 2;
+                } else if ($('#chkbxHR3').is(':checked')) {
+                    hrgroupId = 3;
+                }
+
+                return {
+                    hrgroupId: hrgroupId,
+                    searchKeyNo: params.term,
+                };
+            },
+            processResults: function (data) {
+                // Store results in the Select2 instance for later filtering
+                $('#KeyVehicleLogAuditLogRequest_CompanyName').data('select2-data', data);
+                return {
+                    results: $.map(data, function (item) {
+                        return {
+                            text: item.referenceNo + ' ' + item.description,
+                            id: item.id,
+                            title: item.description
+                        };
+                    })
+                };
+            },
+            cache: true
+        },
+        // Enable searching through the loaded data
+        minimumInputLength: 0,
+    }).on("select2:select", function (e) {
+
+       
+
+    }).on("select2:clear", function (e) {
+
+        
+
+        // Handle clear event
+    });
+
 // Extend the Select2 search functionality to filter the loaded data
 
     //$('#guard_settings tbody').on('click', 'td.dt-control', function () {
