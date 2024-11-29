@@ -4807,24 +4807,15 @@ $(function () {
         theme: 'bootstrap4',
         allowClear: true,
         ajax: {
-            url: '/Admin/GuardSettings?handler=HrsettingsUisngHrGroupId',
+            url: '/Admin/GuardSettings?handler=KVCompanyDetails',
             dataType: 'json',
             delay: 250,
             headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
             data: function (params) {
-                // Determine hrgroupId based on which checkbox is checked
-                let hrgroupId = 1; // default value
-
-                if ($('#chkbxHR1').is(':checked')) {
-                    hrgroupId = 1;
-                } else if ($('#chkbxHR2').is(':checked')) {
-                    hrgroupId = 2;
-                } else if ($('#chkbxHR3').is(':checked')) {
-                    hrgroupId = 3;
-                }
+              
 
                 return {
-                    hrgroupId: hrgroupId,
+                    clientSiteIds: $('#vklClientSiteId').val().join(';'),
                     searchKeyNo: params.term,
                 };
             },
@@ -4834,9 +4825,9 @@ $(function () {
                 return {
                     results: $.map(data, function (item) {
                         return {
-                            text: item.referenceNo + ' ' + item.description,
-                            id: item.id,
-                            title: item.description
+                            text:item,
+                            id: item,
+                            title: item
                         };
                     })
                 };
