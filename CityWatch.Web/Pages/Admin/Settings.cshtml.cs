@@ -1476,7 +1476,7 @@ namespace CityWatch.Web.Pages.Admin
             try
             {
 
-                fileName = _TimesheetReportGenerator.GeneratePdfTimesheetReport(startdate, endDate, guradid);
+                fileName = _TimesheetReportGenerator.GeneratePdfTimesheetReportCustom(startdate, endDate, guradid);
 
 
 
