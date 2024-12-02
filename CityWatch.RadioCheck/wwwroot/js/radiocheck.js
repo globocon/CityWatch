@@ -168,8 +168,10 @@ $('#clientSiteActivityStatus').on('click', 'button[name="btnRadioCheckStatus"]',
     var data = clientSiteActivityStatus.row($(this).parents('tr')).data();
     var rowClientSiteId = data.activityStatus.clientSiteId;
     var rowGuardId = data.activityStatus.guardId;
+    var nottifcationType = data.notificationType;
     $('#clientSiteId').val(rowClientSiteId);
     $('#guardId').val(rowGuardId);
+    $('#nottifcationType').val(nottifcationType);
     $('#selectRadioCheckStatus').modal('show');
     isPaused = true;
 });
@@ -2500,6 +2502,7 @@ $('#clientSiteInActiveGuards').on('click', 'button[name="btnRadioCheckStatus"]',
     var rowClientSiteId = data.clientSiteId;
     var rowGuardId = data.guardId;
     var rcSatus = data.rcStatus;
+    var nottifcationType = data.notificationType;
 
     var IsEnabled = data.isEnabled;
 
@@ -2516,6 +2519,7 @@ $('#clientSiteInActiveGuards').on('click', 'button[name="btnRadioCheckStatus"]',
 
     $('#clientSiteId').val(rowClientSiteId);
     $('#guardId').val(rowGuardId);
+    $('#nottifcationType').val(nottifcationType);
     $('#selectRadioCheckStatus').modal('show');
     isPaused = true;
 });
@@ -3832,9 +3836,11 @@ $('#clientSiteInActiveGuardsSinglePage').on('click', 'button[name="btnRadioCheck
     var rowClientSiteId = data.clientSiteId;
     var rowGuardId = data.guardId;
     var rcSatus = data.rcStatus;
+    var nottifcationType = data.notificationType;
     $("#selectRadioStatus").val(data.statusId);
     $('#clientSiteId').val(rowClientSiteId);
     $('#guardId').val(rowGuardId);
+    $('#nottifcationType').val(nottifcationType);
     $('#selectRadioCheckStatus').modal('show');
     isPaused = true;
 });
@@ -4777,6 +4783,7 @@ $('#itemList,#itemList2').on('click', '.btn-select-radio-status', function (even
     if (checkedStatus === '') {
         return;
     }
+    var notificationType = $('#nottifcationType').val(); 
     // Task p6#73_TimeZone issue -- added by Binoy - Start   
     fillRefreshLocalTimeZoneDetails(tmzdata, "", false);
     // Task p6#73_TimeZone issue -- added by Binoy - End
@@ -4789,7 +4796,8 @@ $('#itemList,#itemList2').on('click', '.btn-select-radio-status', function (even
             checkedStatus: checkedStatus,
             active: true,
             statusId: statusId,
-            tmzdata: tmzdata
+            tmzdata: tmzdata,
+            notificationType: notificationType
         },
         dataType: 'json',
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
