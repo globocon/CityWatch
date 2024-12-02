@@ -4553,7 +4553,16 @@ namespace CityWatch.Data.Providers
                 {
 
                     var clientsitename = GetClientSites(clientSiteId).FirstOrDefault().Name;
-                    notifications = "Control Room Alert for " + guardInitials + " - " + clientsitename + ": " + notifications;
+                    if (guardInitials != string.Empty)
+                    {
+                        notifications = "Control Room Alert for " + guardInitials + " - " + clientsitename + ": " + notifications;
+
+                    }
+                    else
+                    {
+
+                        notifications = "Control Room Alert for "+ clientsitename + ": " + notifications;
+                    }
                 }
 
 

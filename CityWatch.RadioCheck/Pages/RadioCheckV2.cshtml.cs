@@ -29,6 +29,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Text.Json;
 using CityWatch.Web.Models;
+using CityWatch.Data.Services;
 
 namespace CityWatch.RadioCheck.Pages.Radio
 {
@@ -43,10 +44,11 @@ namespace CityWatch.RadioCheck.Pages.Radio
         private readonly IGuardDataProvider _guardDataProvider;
         private readonly IViewDataService _viewDataService;
         public readonly IConfigDataProvider _configDataProvider;
+        private readonly ILogbookDataService _logbookDataService;
 
         public RadioCheckNewModel(IGuardLogDataProvider guardLogDataProvider, IOptions<EmailOptions> emailOptions,
             IConfiguration configuration, ISmsSenderProvider smsSenderProvider, IClientDataProvider clientDataProvider, IGuardDataProvider guardDataProvider,
-            IOptions<Settings> settings, IViewDataService viewDataService, IConfigDataProvider configDataProvider)
+            IOptions<Settings> settings, IViewDataService viewDataService, IConfigDataProvider configDataProvider, ILogbookDataService logbookDataService)
         {
             _guardLogDataProvider = guardLogDataProvider;
             _EmailOptions = emailOptions.Value;
@@ -57,6 +59,7 @@ namespace CityWatch.RadioCheck.Pages.Radio
             _guardDataProvider = guardDataProvider;
             _viewDataService = viewDataService;
             _configDataProvider = configDataProvider;
+            _logbookDataService = logbookDataService;
         }
         public int UserId { get; set; }
         public int GuardId { get; set; }
@@ -464,7 +467,8 @@ namespace CityWatch.RadioCheck.Pages.Radio
             return new JsonResult(_guardLogDataProvider.GetCompanyDetailsVehLog(name));
         }
         //SaveRadioStatus -start
-        public JsonResult OnPostSaveRadioStatus(int clientSiteId, int guardId, string checkedStatus, bool active, int statusId, GuardLog tmzdata)
+        // New changes int notificationType added for identify the notfication type and  set guard =0
+        public JsonResult OnPostSaveRadioStatus(int clientSiteId, int guardId, string checkedStatus, bool active, int statusId, GuardLog tmzdata,int notificationType)
         {
             var success = true;
             var message = "success";
@@ -482,7 +486,12 @@ namespace CityWatch.RadioCheck.Pages.Radio
                     RadioCheckStatusId = statusId,
                 }, tmzdata, loginguardid);
 
-
+                if(notificationType==1 && guardId==4)
+                {
+                    //Notifcation send to bruno if notfication type=4 
+                    //for avoid this set gaurd =0 for this area02122024
+                    guardId = 0;
+                }
                 _guardLogDataProvider.LogBookEntryFromRcControlRoomMessages(loginguardid, guardId, null, checkedStatus, IrEntryType.Notification, 2, clientSiteId, tmzdata);
             }
             catch (Exception ex)
@@ -509,10 +518,12 @@ namespace CityWatch.RadioCheck.Pages.Radio
                 {
                     var logbookdate = DateTime.Today;
                     var logbooktype = LogBookType.DailyGuardLog;
-                    //var logBookId = _guardLogDataProvider.GetClientSiteLogBookId(clientSiteId, logbooktype, DateTime.Today);
+                    // var logBookId = _guardLogDataProvider.GetClientSiteLogBookId(clientSiteId, logbooktype, DateTime.Today);
                     // Get Last Logbookid and logbook Date by latest logbookid // p6#73 timezone bug - Added by binoy 24-01-2024
-                    var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdByLogBookMaxID(clientSiteId, logbooktype, out logbookdate);
-
+                    //Commneted due to the issue with latest logbook not taking 
+                    //var logBookId = _guardLogDataProvider.GetClientSiteLogBookIdByLogBookMaxID(clientSiteId, logbooktype, out logbookdate);
+                    //Bellow will create a logbook Id if not exist in the current date 02/12/2024
+                    var logBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(clientSiteId, logbooktype);
                     if (guardid != 0)
                     {
                         guardname = _guardLogDataProvider.GetGuards(guardid.Value).Name;
