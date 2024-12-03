@@ -655,7 +655,8 @@ const phoneNumber = siteNameParts.slice(1).join('').trim();
             className: "text-center",
 
             render: function (value, type, data) {
-                if ($('#txtguardGuardRCAccess').val() == 'False') {
+                
+                if ($('#txtguardGuardRCAccess').val() == 'False' || $('#txtguardGuardRCAccess').val()=='') {
 
 
                     // Include the sort value as a hidden element and render the color circle
@@ -677,7 +678,7 @@ const phoneNumber = siteNameParts.slice(1).join('').trim();
 
             render: function (value, type, data) {
                
-                if ($('#txtguardGuardRCAccess').val() == 'False' ) {
+                if ($('#txtguardGuardRCAccess').val() == 'False' || $('#txtguardGuardRCAccess').val() == '') {
 
                 return '<span style="display:none;">' + value + '</span>' +
                     '<i class="fa fa-circle text-' +
@@ -698,7 +699,7 @@ const phoneNumber = siteNameParts.slice(1).join('').trim();
 
             render: function (value, type, data) {
               
-                if ($('#txtguardGuardRCAccess').val() == 'False' ) {
+                if ($('#txtguardGuardRCAccess').val() == 'False' || $('#txtguardGuardRCAccess').val() == '') {
 
                 return '<span style="display:none;">' + value + '</span>' +
                     '<i class="fa fa-circle text-' +
