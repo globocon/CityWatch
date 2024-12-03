@@ -49,7 +49,7 @@ namespace CityWatch.Web.Pages.Guard
         [BindProperty]
         public LogBookType LogBookType { get; set; }
         public int ClientTypeId { get; set; }
-
+        public string ClientTypeName { get; set; }
         public IViewDataService ViewDataService { get { return _viewDataService; } }
 
         public void OnGet(string t)
@@ -82,14 +82,16 @@ namespace CityWatch.Web.Pages.Guard
                 if (
                     clientName.Trim().ToLower() != "www" &&
                     clientName.Trim().ToLower() != "cws-ir" &&
-                    clientName.Trim().ToLower() != "test" &&
-                    clientName.Trim().ToLower() != "localhost"
+                    clientName.Trim().ToLower() != "test" 
+                    //&&
+                    //clientName.Trim().ToLower() != "localhost"
                 )
                 {
                     int domain = _configDataProvider.GetSubDomainDetails(clientName).TypeId;
                     if (domain != 0)
                     {
                         ClientTypeId = domain;
+                        ClientTypeName = _configDataProvider.GetClientTypeNameById(ClientTypeId);
                     }
                     else
                     {

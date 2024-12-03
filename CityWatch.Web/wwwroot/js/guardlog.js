@@ -474,13 +474,24 @@ $(function () {
                     $('#guardLoginDetails').show();
                     $('#GuardLogin_Guard_Id').val(result.guard.id);
                     $('#GuardLogin_Guard_IsLB_KV_IR').val(result.guard.isLB_KV_IR);
+                    var valnewhid = $('#hiddenClientTypeId').val();
+                    if ($('#hiddenClientTypeId').val() != null || $('#hiddenClientTypeId').val() != '') {
+                        $('#GuardLogin_ClientType').val(valnewhid);
+                        populateClientSites();
+                    }
                     
                     if (hasLastLogin) {
                         const lastLogin = result.lastLogin;
 
                         $('#GuardLogin_Id').val(lastLogin.id);
-                        $('#GuardLogin_ClientType').val(lastLogin.clientSite.clientType.name);
-                        populateClientSites(lastLogin.clientSite.name);
+                        if ($('#hiddenClientTypeId').val() == lastLogin.clientSite.clientType.name) {
+                            $('#GuardLogin_ClientType').val(lastLogin.clientSite.clientType.name);
+                            populateClientSites(lastLogin.clientSite.name);
+                        }
+                        else {
+                            $('#GuardLogin_ClientType').val($('#hiddenClientTypeId').val());
+                            populateClientSites();
+                        }
                         const isPosition = lastLogin.smartWandId === null ? true : false;
                         const smartWandOrPositionName = isPosition ? lastLogin.position.name : lastLogin.smartWand.smartWandId;
                         getSmartWandOrOfficerPosition(isPosition, lastLogin.clientSite.name, smartWandOrPositionName);
@@ -495,10 +506,12 @@ $(function () {
 
                         $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
                         onGuardLoginDutyTimeChange(isOffDutyDateToday);
-                        if (result.isAdminThirdPartyAccess == true)
-                            $('#LoginConformationBtnC4iSettings').attr('hidden', false);
+                       
                     }
+                    if (result.guard.isAdminThirdPartyAccess == true)
+                        $('#LoginConformationBtnC4iSettings').attr('hidden', false);
                 }
+               
                 //HRList Status
                 $('#client_status_0').css('color', result.hR1);
                 $('#client_status_1').css('color', result.hR2);

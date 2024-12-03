@@ -1234,6 +1234,15 @@ namespace CityWatch.Web.Pages.Admin
                     {
                         AuthUserHelper.IsAdminGlobal = false;
                     }
+                    if (guard.IsAdminThirdPartyAccess)
+                    {
+                        AuthUserHelper.IsAdminThirdParty = true;
+                    }
+                    else
+                    {
+                        AuthUserHelper.IsAdminThirdParty = false;
+                    }
+
 
                     //code to check the SecurityNo of Type Patrols&Alarm Statics
                     if (type == "Patrols")
@@ -1392,7 +1401,7 @@ namespace CityWatch.Web.Pages.Admin
 
                         if (guard.IsActive)
                         {
-                            if (guard.IsAdminGlobal || guard.IsAdminPowerUser || guard.IsAdminSOPToolsAccess || guard.IsAdminAuditorAccess || guard.IsAdminInvestigatorAccess)
+                            if (guard.IsAdminGlobal || guard.IsAdminPowerUser || guard.IsAdminSOPToolsAccess || guard.IsAdminAuditorAccess || guard.IsAdminInvestigatorAccess || guard.IsAdminThirdPartyAccess)
                             {
                                 AccessPermission = true;
                                 GuId = guard.Id;

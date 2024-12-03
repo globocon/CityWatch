@@ -129,8 +129,10 @@
                     <div class="form-group col-md-6">
                         <label for="GuardLogin_ClientType">Client Type</label>
                              @* <select class="form-control" id="GuardLogin_ClientType" asp-items="@Model.ViewDataService.GetUserClientTypesCount(AuthUserHelper.LoggedInUserId)" asp-for="@Model.GuardLogin.ClientTypeName" disabled></select> *@
-                        @if(Model.ClientTypeId!=0)
+                        <input type="hidden" id="hiddenClientTypeId" asp-for="@Model.ClientTypeName" />
+                             @if(Model.ClientTypeId!=0)
                             {
+                            
                             <select class="form-control" id="GuardLogin_ClientType" asp-items="@Model.ViewDataService.GetUserClientTypesCountWithTypeId(AuthUserHelper.LoggedInUserId,Model.ClientTypeId)" asp-for="@Model.GuardLogin.ClientTypeName" disabled></select>
                             }
                             else
@@ -286,6 +288,42 @@
             <div class="modal-footer" style="display:block">
                 <div class="text-left ml-3">
                     <div asp-validation-summary="All" id="GuardLoginValidationSummaryAuditSite"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="modelGuardLoginC4iSettingsPatrol" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">
+                    Guard Access permission for C4i Settings
+                </h6>
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <form id="frm_GuardLogin" method="post">
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <div class="input-group">
+                                    <label class="mt-2 mr-2">Security License No</label><br />
+                                    <input class="form-control" type="text" id="txt_securityLicenseNoC4iSettings">
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-primary" id="btnGuardLoginC4iSettings" title="Get guard details"><i class="fa fa-sign-in mr-2"></i><span class="d-none d-md-inline-flex">Get access permission</span></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:block">
+                <div class="text-left ml-3">
+                    <div asp-validation-summary="All" id="GuardLoginValidationSummaryC4iSettings"></div>
                 </div>
             </div>
         </div>

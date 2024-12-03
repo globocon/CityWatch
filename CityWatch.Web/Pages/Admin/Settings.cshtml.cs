@@ -111,8 +111,9 @@ namespace CityWatch.Web.Pages.Admin
                 if (
                     clientName.Trim().ToLower() != "www" &&
                     clientName.Trim().ToLower() != "cws-ir" &&
-                    clientName.Trim().ToLower() != "test" &&
-                    clientName.Trim().ToLower() != "localhost"
+                    clientName.Trim().ToLower() != "test" 
+                    //&&
+                    //clientName.Trim().ToLower() != "localhost"
                 )
                 {
                     int domain = _configDataProvider.GetSubDomainDetails(clientName).TypeId;
@@ -131,7 +132,7 @@ namespace CityWatch.Web.Pages.Admin
                 Guard = _viewDataService.GetGuards().SingleOrDefault(x => x.Id == GuardId);
 
             }
-            if (!AuthUserHelper.IsAdminUserLoggedIn && !AuthUserHelper.IsAdminGlobal && !AuthUserHelper.IsAdminPowerUser  && !Guard.IsAdminSOPToolsAccess && !Guard.IsAdminAuditorAccess && !Guard.IsAdminInvestigatorAccess)
+            if (!AuthUserHelper.IsAdminUserLoggedIn && !AuthUserHelper.IsAdminGlobal && !AuthUserHelper.IsAdminPowerUser  && !Guard.IsAdminSOPToolsAccess && !Guard.IsAdminAuditorAccess && !Guard.IsAdminInvestigatorAccess && !Guard.IsAdminThirdPartyAccess)
             {
                 return Redirect(Url.Page("/Account/Unauthorized"));
             }

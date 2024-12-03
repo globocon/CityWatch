@@ -102,6 +102,7 @@ namespace CityWatch.Data.Providers
         List<HrSettings> GetHRSettingsWithHRLockEnable();
 
         List<HrSettings> GetHRSettingsUsingGroupId(int hrgroupId, string searchKeyNo);
+        string GetClientTypeNameById(int id);
     }
 
     public class ConfigDataProvider : IConfigDataProvider
@@ -1056,5 +1057,13 @@ namespace CityWatch.Data.Providers
 
         }
         //p1-213 critical documents stop
+        public string GetClientTypeNameById(int id)
+        {
+
+            return _context.ClientTypes.Where(x => x.Id == id).FirstOrDefault().Name;
+
+
+
+        }
     }
 }
