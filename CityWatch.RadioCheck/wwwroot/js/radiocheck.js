@@ -699,7 +699,7 @@ const phoneNumber = siteNameParts.slice(1).join('').trim();
 
             render: function (value, type, data) {
               
-                if ($('#txtguardGuardRCAccess').val() == 'False' || $('#txtguardGuardRCAccess').val() == '') {
+                 if ($('#txtguardGuardRCAccess').val() == 'False' || $('#txtguardGuardRCAccess').val()=='') {
 
                 return '<span style="display:none;">' + value + '</span>' +
                     '<i class="fa fa-circle text-' +
