@@ -2551,22 +2551,27 @@ namespace CityWatch.Data.Providers
                                         {
                                             if (!CheckIfAnyEntryexistInRadioCheckStatus(manning.ClientSiteKpiSetting.ClientSiteId))
                                             {
-                                                var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                                                /* check if any RC status from CRO for this No Gaurd on duty if exist no need to show 04/12/2024 dileep */
+                                                if (!checkIfStatusUpdatedByCROforNoGaurdOnDuty(manning.ClientSiteKpiSetting.ClientSiteId))
                                                 {
-                                                    ClientSiteId = manning.ClientSiteKpiSetting.ClientSiteId,
-                                                    GuardId = 4,/* temp Guard(bruno) Id because forgin key  is set*/
-                                                    GuardLoginTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None),/* Expected Time for Login
+                                                    var clientsiteRadioCheck = new ClientSiteRadioChecksActivityStatus()
+                                                    {
+                                                        ClientSiteId = manning.ClientSiteKpiSetting.ClientSiteId,
+                                                        GuardId = 4,/* temp Guard(bruno) Id because forgin key  is set*/
+                                                        GuardLoginTime = DateTime.ParseExact(manning.EmpHoursStart, "H:mm", null, System.Globalization.DateTimeStyles.None),/* Expected Time for Login
                                                 /* New Field Added for NotificationType only for manning notification*/
-                                                    NotificationType = 1,
-                                                    /* added for show the crm CrmSupplier deatils in the 'no guard on duty' */
-                                                    CRMSupplier = manning.CrmSupplier,
-                                                    UTCOffset = "ETA was "+ manning.EmpHoursStart+ " GMT ("+ offsetString.ToString() + ")",
-                                                    GuardLoginTimeZoneShort= offsetString.ToString(),
-                                                };
-                                                _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
-                                                _context.SaveChanges();
+                                                        NotificationType = 1,
+                                                        /* added for show the crm CrmSupplier deatils in the 'no guard on duty' */
+                                                        CRMSupplier = manning.CrmSupplier,
+                                                        UTCOffset = "ETA was " + manning.EmpHoursStart + " GMT (" + offsetString.ToString() + ")",
+                                                        GuardLoginTimeZoneShort = offsetString.ToString(),
+                                                    };
+                                                    _context.ClientSiteRadioChecksActivityStatus.Add(clientsiteRadioCheck);
+                                                    _context.SaveChanges();
 
-                                                CreateLogBookStampForNoGuard(manning.ClientSiteKpiSetting.ClientSiteId, dateTime, dateendTime);
+                                                    CreateLogBookStampForNoGuard(manning.ClientSiteKpiSetting.ClientSiteId, dateTime, dateendTime);
+
+                                                }
 
                                             }
 
@@ -2642,6 +2647,22 @@ namespace CityWatch.Data.Providers
         {
             var numberofactiveRowExistintheRadioStatus = _context.ClientSiteRadioChecksActivityStatus.Where(x => x.ClientSiteId == ClientSiteId && x.GuardLoginTime == null).ToList();
             if (numberofactiveRowExistintheRadioStatus.Count != 0)
+            {
+                return true;
+
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+
+        /* if cro maid any commnents no need to show */
+        public bool checkIfStatusUpdatedByCROforNoGaurdOnDuty(int ClientSiteId)
+        {
+            var numberofRcStatusExistForThisSite= _context.ClientSiteRadioChecks.Where(x => x.ClientSiteId == ClientSiteId && x.GuardId == 4).ToList();
+            if (numberofRcStatusExistForThisSite.Count != 0)
             {
                 return true;
 
