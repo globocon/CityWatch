@@ -6841,6 +6841,37 @@ $(function () {
     });
     
     /* p1-203 Admin User Profile -start */
+    
+    //$("#OtherAdminsAudtiLogAccessButton").on('click', function () {
+    //    const securityLicenseNo = $('#GuardLogin_Guard_SecurityNo').val();
+       
+     
+
+
+    //        /* $('#txt_securityLicenseNoIR').val('');*/
+
+
+    //        $.ajax({
+    //            url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+    //            type: 'POST',
+    //            data: {
+    //                securityLicenseNo: securityLicenseNo,
+    //                type: 'Settings'
+    //            },
+    //            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    //        }).done(function (result) {
+    //            if (result.accessPermission) {
+    //                /* $('#txt_securityLicenseNoIR').val('');*/
+                   
+
+    //                window.location.href = '/Admin/AuditSiteLog?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
+    //            }
+               
+    //        });
+
+
+            
+    //});
     /* Check if Guard can access the KPI */
     $('#btnGuardLoginKPI').on('click', function () {
         const securityLicenseNo = $('#txt_securityLicenseNo').val();
