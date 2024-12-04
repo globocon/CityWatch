@@ -3803,11 +3803,18 @@
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
-    if ($('#sel_client_type').val() != null && $('#sel_client_type').val() != '' && $('#sel_client_type').val() != undefined) {
+    //if ($('#sel_client_type').val() != null && $('#sel_client_type').val() != '' && $('#sel_client_type').val() != undefined) {
 
-        gridSchedules.clear();
-        gridSchedules.reload({ clientTypeName: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val() });
-    }
+    //    //keyVehicleLog.search(item).draw();
+    //    //gridSchedules.clear();
+    //    //gridSchedules.search($('#sel_client_type').val()).draw();
+    //    var value = $('#sel_client_type option:selected').text();
+    //    alert(value);
+    //    $("#staff_document_siteSOP tbody tr").filter(function () {
+    //        $(this).toggle(value)
+    //    });
+        //gridSchedules.reload({ clientTypeName: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val() });
+    //}
     function schButtonRenderer(value, record) {
         let buttonHtml = '';
         buttonHtml = '<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary m-1" target="_blank"><i class="fa fa-download"></i></a>';

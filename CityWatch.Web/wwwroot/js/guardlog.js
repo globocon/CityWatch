@@ -509,7 +509,7 @@ $(function () {
                        
                     }
                     if (result.guard.isAdminThirdPartyAccess == true)
-                        $('#LoginConformationBtnC4iSettings').attr('hidden', false);
+                        $('#LoginConformationBtnC4iSettingsThirdParty').attr('hidden', false);
                 }
                
                 //HRList Status
@@ -6770,6 +6770,43 @@ $(function () {
         $('#txt_securityLicenseNoC4iSettings').val('');
         $("#modelGuardLoginC4iSettingsPatrol").modal("show");
         return false;
+    });
+    $("#LoginConformationBtnC4iSettingsThirdParty").on('click', function () {
+        const securityLicenseNo = $('#GuardLogin_Guard_SecurityNo').val();
+     
+      
+
+
+            /* $('#txt_securityLicenseNoIR').val('');*/
+
+
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+                type: 'POST',
+                data: {
+                    securityLicenseNo: securityLicenseNo,
+                    type: 'Settings'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.accessPermission) {
+                    /* $('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginC4iSettingsPatrol').modal('hide');
+
+                    clearGuardValidationSummary('GuardLoginValidationSummaryC4iSettings');
+                    window.location.href = '/Admin/Settings?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
+                }
+                else {
+
+                    // $('#txt_securityLicenseNo').val('');
+                    /*$('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginC4iSettingsPatrol').modal('show');
+                    if (result.successCode === 0) {
+                        displayGuardValidationSummary('GuardLoginValidationSummaryC4iSettings', result.successMessage);
+                    }
+                }
+            });
+
     });
     $("#AuditSiteLogsConformationBtnSettings").on('click', function () {
         clearGuardValidationSummary('GuardLoginValidationSummary');
