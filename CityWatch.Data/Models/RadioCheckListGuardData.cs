@@ -32,6 +32,7 @@ namespace CityWatch.Data.Models
         public string HR1 { get; set; }
         public string HR2 { get; set; }
         public string HR3 { get; set; }
+        public string State { get; set; }
 
     }
 
