@@ -353,95 +353,10 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
             titleAttr: 'Globe Map',
             className: 'btn btn-md mr-2 btn-pdf',
             action: function (e, dt, node, config) {
-                const newTab = window.open('', '_blank');
-                const mapHTML = `
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Globe Map</title>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-    <style>
-        #map { height: 100vh; }
-        @keyframes blink {
-    0% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0;
-    }
-    100% {
-        opacity: 1;
-    }
-}
-    </style>
-</head>
-<body>
-    <div id="map"></div>
-    <script>
-        const map = L.map('map').setView([-27.0, 133.0], 5); // Center on Australia
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-        }).addTo(map);
-
-        // Fetching the data
-        fetch('/RadioCheckV2?handler=ClientSiteActivityStatus&clientSiteIds=test,', {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data);  // Log the data to ensure it is correctly returned
-            data.forEach(record => {
-                const gps = record.gps ? record.gps.trim() : ''; 
-                const address = record.address ? stripHtml(record.address).trim() : ''; 
-                const GuardName=record.guardName;
-                const siteNameParts = record.siteName.split('&nbsp;');
-const siteName = siteNameParts[0].trim(); // "Mercy - VIC - Werribee - ADHOC (Rover)"
-const phoneNumber = siteNameParts.slice(1).join('').trim();
-                
-               const alertColor = 'Green'; 
-                
-                // Map alert colors to actual CSS color values
-                const markerColor = getColorFromAlert(alertColor);
-
-                if (gps) {
-                    const [lat, lng] = gps.split(',').map(coord => parseFloat(coord));
-                    L.marker([lat, lng], { icon: createCustomIcon(markerColor) })
-                        .bindPopup('<strong>SiteName:</strong>'+siteName + '<br>' +'<strong>Phone Number:</strong>'+phoneNumber + '<br>'+'<strong>Address:</strong>' + address+ '<br>'+'<strong>GuardName:</strong>' + GuardName)
-                        .addTo(map);
-                }
-            });
-        })
-        .catch(error => console.error('Error:', error));
-
-        // Function to strip HTML tags
-        function stripHtml(input) {
-            const doc = new DOMParser().parseFromString(input, 'text/html');
-            return doc.body.textContent || "";
-        }
-        function getColorFromAlert(alert) {
-            switch (alert) {
-                case 'Red': return 'red';
-                case 'Green': return 'green';
-                case 'Yellow': return 'yellow';
-                default: return 'grey'; // Default color
-            }
-        }
-       function createCustomIcon(color) {
-    return L.divIcon({
-        className: 'custom-marker',
-        html: '<div style="background-color:' + color + '; width: 25px; height: 25px; border-radius: 50%;animation: blink 1s infinite;"></div>',
-        iconSize: [25, 25],  // Increased size
-    });
-}
-    </script>
-</body>
-</html>
-        `;
-                newTab.document.open();
-                newTab.document.write(mapHTML);
-                newTab.document.close();
+                // Redirect to the new page with query parameters
+                const clientSiteIds = 'test'; // Replace this with dynamic values if needed
+                const newPageUrl = '/GlobeMap';
+                window.open(newPageUrl, '_blank');
             }
         },
         {
@@ -992,95 +907,10 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
             titleAttr: 'Globe Map',
             className: 'btn btn-md mr-2 btn-pdf',
             action: function (e, dt, node, config) {
-                const newTab = window.open('', '_blank');
-                const mapHTML = `
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Globe Map</title>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-    <style>
-        #map { height: 100vh; }
-        @keyframes blink {
-    0% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0;
-    }
-    100% {
-        opacity: 1;
-    }
-}
-    </style>
-</head>
-<body>
-    <div id="map"></div>
-    <script>
-        const map = L.map('map').setView([-27.0, 133.0], 5); // Center on Australia
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-        }).addTo(map);
-
-        // Fetching the data
-        fetch('/RadioCheckV2?handler=ClientSiteInActivityStatus&clientSiteIds=test,', {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data);  // Log the data to ensure it is correctly returned
-            data.forEach(record => {
-                const gps = record.gps ? record.gps.trim() : ''; // Extract GPS
-                const address = record.address ? stripHtml(record.address).trim() : ''; // Clean up address
-                const GuardName=record.guardName;
-                const siteNameParts = record.siteName.split('&nbsp;');
-                const siteName = siteNameParts[0].trim(); 
-                const phoneNumber = siteNameParts.slice(1).join('').trim();
-
-               const alertColor = record.twoHrAlert ? record.twoHrAlert.trim() : 'grey'; // Default to grey if no color
-                
-                // Map alert colors to actual CSS color values
-                const markerColor = getColorFromAlert(alertColor);
-
-                if (gps) {
-                    const [lat, lng] = gps.split(',').map(coord => parseFloat(coord));
-                    L.marker([lat, lng], { icon: createCustomIcon(markerColor) })
-                        .bindPopup('<strong>SiteName:</strong>'+siteName + '<br>' +'<strong>Phone Number:</strong>'+phoneNumber + '<br>'+'<strong>Address:</strong>' + address+ '<br>'+'<strong>GuardName:</strong>' + GuardName)
-                        .addTo(map);
-                }
-            });
-        })
-        .catch(error => console.error('Error:', error));
-
-        // Function to strip HTML tags
-        function stripHtml(input) {
-            const doc = new DOMParser().parseFromString(input, 'text/html');
-            return doc.body.textContent || "";
-        }
-        function getColorFromAlert(alert) {
-            switch (alert) {
-                case 'Red': return 'red';
-                case 'Green': return 'green';
-                case 'Yellow': return 'yellow';
-                default: return 'grey'; // Default color
-            }
-        }
-       function createCustomIcon(color) {
-    return L.divIcon({
-        className: 'custom-marker',
-        html: '<div style="background-color:' + color + '; width: 25px; height: 25px; border-radius: 50%;animation: blink 1s infinite;"></div>',
-        iconSize: [25, 25],  // Increased size
-    });
-}
-    </script>
-</body>
-</html>
-        `;
-                newTab.document.open();
-                newTab.document.write(mapHTML);
-                newTab.document.close();
+                // Redirect to the new page with query parameters
+                const clientSiteIds = 'test'; // Replace this with dynamic values if needed
+                const newPageUrl = '/GlobeMapNoActivity';
+                window.open(newPageUrl, '_blank');
             }
         },
         {
@@ -8611,4 +8441,69 @@ $('.btn-delete-dgl-attachment1').on('click', function (event) {
 
 });
 
+$('#StateDrp').on('change', function () {
+    const selectedState = $(this).val(); // Get the selected state
+    if (selectedState) {
+        updateMap(selectedState);
+    }
+});
+function updateMap(state) {
+    fetch(`/RadioCheckV2?handler=ClientSiteActivityStatusState&state=${state}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+    })
+        .then(response => response.json())
+        .then(data => {
+            clearMarkers();
+            data.forEach(record => {
+                const gps = record.gps ? record.gps.trim() : '';
+                const address = record.address ? stripHtml(record.address).trim() : '';
+                const GuardName = record.guardName;
+                const siteNameParts = record.siteName.split('&nbsp;');
+                const siteName = siteNameParts[0].trim();
+                const phoneNumber = siteNameParts.slice(1).join('').trim();
+                const alertColor = 'Green';
+                const markerColor = getColorFromAlert(alertColor);
 
+                if (gps) {
+                    const [lat, lng] = gps.split(',').map(coord => parseFloat(coord));
+                    L.marker([lat, lng], { icon: createCustomIcon(markerColor) })
+                        .bindPopup(`<strong>SiteName:</strong> ${siteName} <br>
+                                    <strong>Phone Number:</strong> ${phoneNumber} <br>
+                                    <strong>Address:</strong> ${address} <br>
+                                    <strong>GuardName:</strong> ${GuardName}`)
+                        .addTo(map);
+                }
+            });
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function clearMarkers() {
+    map.eachLayer(function (layer) {
+        if (layer instanceof L.Marker) {
+            map.removeLayer(layer);
+        }
+    });
+}
+function stripHtml(input) {
+    const doc = new DOMParser().parseFromString(input, 'text/html');
+    return doc.body.textContent || "";
+}
+
+function getColorFromAlert(alert) {
+    switch (alert) {
+        case 'Red': return 'red';
+        case 'Green': return 'green';
+        case 'Yellow': return 'yellow';
+        default: return 'grey';
+    }
+}
+
+function createCustomIcon(color) {
+    return L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="background-color:${color}; width: 25px; height: 25px; border-radius: 50%; animation: blink 1s infinite;"></div>`,
+        iconSize: [25, 25],
+    });
+}
