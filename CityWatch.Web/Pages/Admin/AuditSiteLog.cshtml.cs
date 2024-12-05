@@ -59,7 +59,7 @@ namespace CityWatch.Web.Pages.Admin
             }
             /* Normal admin,PowerAdmin and AdminGlobal can access this page */
 
-            if (!AuthUserHelper.IsAdminUserLoggedIn && !AuthUserHelper.IsAdminGlobal && !AuthUserHelper.IsAdminPowerUser && !AuthUserHelper.IsAdminThirdParty && !Guard.IsAdminInvestigatorAccess && !Guard.IsAdminAuditorAccess)
+            if (!AuthUserHelper.IsAdminUserLoggedIn && !AuthUserHelper.IsAdminGlobal && !AuthUserHelper.IsAdminPowerUser && !AuthUserHelper.IsAdminThirdParty && !AuthUserHelper.IsAdminInvestigator)
 
     
                 return Redirect(Url.Page("/Account/Unauthorized"));
