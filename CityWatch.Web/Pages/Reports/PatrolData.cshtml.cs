@@ -98,6 +98,7 @@ namespace CityWatch.Web.Pages.Reports
             var today = ReportRequest.FromDate;
             
             var rcChartTypesForWeekNew = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
+            var rcChartTypesForWeekNewPercent = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
             int rcChartTypesForWeekNewCountnew = 0;
             TimeSpan ts = ReportRequest.ToDate.Subtract(today);
             int dateDiff = ts.Days;
@@ -121,12 +122,21 @@ namespace CityWatch.Web.Pages.Reports
                 ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
                 obj.DateRange = newdaterange;
                 obj.RecordCount = rcChartTypesForWeek.Count();
-                rcChartTypesForWeekNew.Add(obj);
+                rcChartTypesForWeekNewPercent.Add(obj);
                 rcChartTypesForWeekNewCountnew = rcChartTypesForWeekNewCountnew + obj.RecordCount;
                 today = thisWeekEnd.AddDays(1);
 
             }
             var rcChartTypesForWeekNewCount = rcChartTypesForWeekNewCountnew;
+            foreach(var item in rcChartTypesForWeekNewPercent)
+            {
+                ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
+                obj.DateRange = item.DateRange;
+                obj.RecordCount = item.RecordCount;
+                var newc= (double)item.RecordCount/rcChartTypesForWeekNewCount;
+                obj.RecordCountNew = Math.Round(newc * 100, 1) ;
+                rcChartTypesForWeekNew.Add(obj);
+            }
             //duress entries per week-end
 
 
@@ -134,6 +144,7 @@ namespace CityWatch.Web.Pages.Reports
              today = ReportRequest.FromDate;
 
             var rcChartTypesForMonthNew = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
+            var rcChartTypesForMonthNewPercent = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
             int rcChartTypesForMonthNewCountnew = 0;
 
             //int months = (int)(ReportRequest.ToDate.Month) - (ReportRequest.FromDate.Month);
@@ -157,18 +168,28 @@ namespace CityWatch.Web.Pages.Reports
                 ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
                 obj.DateRange = newdaterange;
                 obj.RecordCount = rcChartTypesForMonth.Count();
-                rcChartTypesForMonthNew.Add(obj);
+                rcChartTypesForMonthNewPercent.Add(obj);
                 rcChartTypesForMonthNewCountnew = rcChartTypesForMonthNewCountnew + obj.RecordCount;
                 today = thisMonthEnd.AddDays(1);
 
             }
             var rcChartTypesForMonthNewCount = rcChartTypesForMonthNewCountnew;
+            foreach (var item in rcChartTypesForMonthNewPercent)
+            {
+                ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
+                obj.DateRange = item.DateRange;
+                obj.RecordCount = item.RecordCount;
+                var newc = (double)item.RecordCount / rcChartTypesForMonthNewCount;
+                obj.RecordCountNew = Math.Round(newc * 100, 1);
+                rcChartTypesForMonthNew.Add(obj);
+            }
             //duress entries per month-end
 
             //duress entries per year-start
             today = ReportRequest.FromDate;
 
             var rcChartTypesForYearNew = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
+            var rcChartTypesForYearNewPercent = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
             int rcChartTypesForYearNewCountnew = 0;
 
             int years = (int)(ReportRequest.ToDate.Year - ReportRequest.FromDate.Year  ) +
@@ -194,17 +215,27 @@ namespace CityWatch.Web.Pages.Reports
                 ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
                 obj.DateRange = newdaterange;
                 obj.RecordCount = rcChartTypesForYear.Count();
-                rcChartTypesForYearNew.Add(obj);
+                rcChartTypesForYearNewPercent.Add(obj);
                 rcChartTypesForYearNewCountnew = rcChartTypesForYearNewCountnew + obj.RecordCount;
                 today = new DateTime(today.Year + 1, 1, 1);
 
             }
             var rcChartTypesForYearNewCount = rcChartTypesForYearNewCountnew;
+            foreach (var item in rcChartTypesForYearNewPercent)
+            {
+                ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
+                obj.DateRange = item.DateRange;
 
+                obj.RecordCount = item.RecordCount;
+                var newc = (double)item.RecordCount / rcChartTypesForYearNewCount;
+                obj.RecordCountNew = Math.Round(newc * 100, 1);
+                rcChartTypesForYearNew.Add(obj);
+            }
 
             //duress entries per year-end
             //no of guards went to prelarm-start
             var rcChartTypesGuardsPrealarmNew = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
+            var rcChartTypesGuardsPrealarmNewPercent = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
             int rcChartTypesGuardsPrealarmCountnew = 0;
             var rcChartTypesGuardsPrealarm = _irChartDataService.GetAuditGuardFusionLogs(ReportRequest, ReportRequest.FromDate, ReportRequest.ToDate).Where(z => z.NotificationType == 1).GroupBy(z=>z.ClientSiteId); ;
             foreach (var item in rcChartTypesGuardsPrealarm)
@@ -217,18 +248,27 @@ namespace CityWatch.Web.Pages.Reports
                     obj.DateRange = newdaterange;
                     obj.RecordCount = item.Count();
 
-                    rcChartTypesGuardsPrealarmNew.Add(obj);
+                rcChartTypesGuardsPrealarmNewPercent.Add(obj);
 
                     rcChartTypesGuardsPrealarmCountnew = rcChartTypesGuardsPrealarmCountnew + obj.RecordCount;
                 
 
             }
-
+            foreach (var item in rcChartTypesGuardsPrealarmNewPercent)
+            {
+                ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
+                obj.DateRange = item.DateRange;
+                obj.RecordCount = item.RecordCount;
+                var newc = (double)item.RecordCount / rcChartTypesGuardsPrealarmCountnew;
+                obj.RecordCountNew = Math.Round(newc * 100, 1);
+                rcChartTypesGuardsPrealarmNew.Add(obj);
+            }
 
 
             //no of guards went to prealram-end
             //no of guards went from prelarm-start
             var rcChartTypesGuardsFromPrealarmNew = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
+            var rcChartTypesGuardsFromPrealarmNewPercent = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
             int rcChartTypesGuardsFromPrealarmCountnew = 0;
             var rcChartTypesGuardsFromPrealarm = _irChartDataService.GetAuditGuardFusionLogs(ReportRequest, ReportRequest.FromDate, ReportRequest.ToDate).Where(z => (z.LogBookNotes != null && z.LogBookNotes.Contains("Guard Off Duty (NOTE: CRO did manual stamp as Guard went home without hitting OFF DUTY which is a breach of SOP"))).GroupBy(z => z.ClientSiteId); ;
             foreach (var item in rcChartTypesGuardsFromPrealarm)
@@ -240,18 +280,27 @@ namespace CityWatch.Web.Pages.Reports
                     obj.DateRange = newdaterange;
                     obj.RecordCount = item.Count();
 
-                    rcChartTypesGuardsFromPrealarmNew.Add(obj);
+                rcChartTypesGuardsFromPrealarmNewPercent.Add(obj);
 
                     rcChartTypesGuardsFromPrealarmCountnew = rcChartTypesGuardsFromPrealarmCountnew + obj.RecordCount;
                 
 
             }
-
+            foreach (var item in rcChartTypesGuardsFromPrealarmNewPercent)
+            {
+                ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
+                obj.DateRange = item.DateRange;
+                obj.RecordCount = item.RecordCount;
+                var newc = (double)item.RecordCount / rcChartTypesGuardsFromPrealarmCountnew;
+                obj.RecordCountNew = Math.Round(newc * 100, 1);
+                rcChartTypesGuardsFromPrealarmNew.Add(obj);
+            }
 
 
             //no of guards went to prealram-end
             //no of tomes cro pushed radio button -start
             var rcChartTypesCRONew = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
+            var rcChartTypesCRONewPercent = new List<ClientSiteRadioChecksActivityStatus_HistoryReport>();
             int rcChartTypesCROCountnew = 0;
             var rcChartTypesGuardsFromCRO = _irChartDataService.GetAuditGuardFusionLogs(ReportRequest, ReportRequest.FromDate, ReportRequest.ToDate).Where(z => (z.Notes != null && z.Notes.Contains("Control Room Alert"))).GroupBy(z => z.ClientSiteId); ;
 
@@ -263,12 +312,20 @@ namespace CityWatch.Web.Pages.Reports
                 
                     obj.DateRange = newdaterange;
                     obj.RecordCount = item.Count();
-                    rcChartTypesCRONew.Add(obj);
+                rcChartTypesCRONewPercent.Add(obj);
                     rcChartTypesCROCountnew = rcChartTypesCROCountnew + obj.RecordCount;
                 
             }
 
-
+            foreach (var item in rcChartTypesCRONewPercent)
+            {
+                ClientSiteRadioChecksActivityStatus_HistoryReport obj = new ClientSiteRadioChecksActivityStatus_HistoryReport();
+                obj.DateRange = item.DateRange;
+                obj.RecordCount = item.RecordCount;
+                var newc = (double)item.RecordCount / rcChartTypesCROCountnew;
+                obj.RecordCountNew = Math.Round(newc * 100, 1);
+                rcChartTypesCRONew.Add(obj);
+            }
 
             //no of tomes cro pushed radio button-end
             //p4 - 73 new piechart- end
