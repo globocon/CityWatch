@@ -32,6 +32,7 @@
 <input type="hidden" asp-for="@guardid" id="GuardLog_GuardLogin_GuardId" />
 <input type="hidden" asp-for="@loginUserId" id="loginUserId" />
 <input type="hidden" id="txtguardGuardRCAccess" asp-for="@Model.Guard.IsRCAccess" />
+<input type="hidden" id="txtguardGuardRCHRAccess" asp-for="@Model.Guard.IsRCHRAccess" />
 <!-----------------In Acive List -------------------->
 
 <div class="card">
@@ -350,7 +351,7 @@
                         </table>
                         @if (Model.Guard != null)
                         {
-                            @if (Model.Guard.IsRCAccess == false)
+                            @if (Model.Guard.IsRCAccess == false && Model.Guard.IsRCHRAccess == false)
                             {
                                 <label class="mt-5"><h5 class="modal-title col-md-12">Last Known IR from this guard</h5></label>
                                 <table id="clientSiteActiveGuardsLastIncidentReportsDetails" class="table table-bordered" style="width:100%;"></table>
@@ -526,6 +527,7 @@
                 <div class="form-group">
                     <input type="hidden" id="clientSiteId" value="" />
                     <input type="hidden" id="guardId" value="" />
+                    <input type="hidden" id="nottifcationType" value="" />
                     <ul id="itemList" class="list-group">
                         @if (@configDataProvider.GetRadioCheckStatusForDropDown() != null)
                         {

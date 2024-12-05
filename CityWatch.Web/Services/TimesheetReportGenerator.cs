@@ -46,6 +46,7 @@ namespace CityWatch.Web.Services
     {
 
         public string GeneratePdfTimesheetReport(string startdate, string endDate, int guradid);
+        public string GeneratePdfTimesheetReportCustom(string startdate, string endDate, int guradid);
         Task<string> GenerateTimesheetZipFile(int[] clientSiteIds, string startdate, string endDate);
         Task<string> GenerateTimesheetZipFileFrequency(int[] clientSiteIds, string startdate, string endDate);
         public string GeneratePdfTimesheetReportBulk(string startdate, string endDate, int guradid, string fileNamePart);
@@ -385,6 +386,61 @@ namespace CityWatch.Web.Services
             return reportFileName;
         }
 
+        public string GeneratePdfTimesheetReportCustom(string startdate, string endDate, int guradid)
+        {
+            DateTime startdateTime = DateTime.Parse(startdate);
+            DateTime dateTime = DateTime.Parse(endDate);
+            var LoginDetails = _clientDataProvider.GetLoginDetailsGuard(guradid, startdateTime, dateTime);
+            var Name = _clientDataProvider.GetGuardlogName(guradid, dateTime);
+            var LicenseNo = _clientDataProvider.GetGuardLicenseNo(guradid, dateTime);
+            var SiteName = _clientDataProvider.GetGuardlogSite(guradid, dateTime);
+            var reportFileName = $"{DateTime.Now.ToString("yyyyMMdd")} - {FileNameHelper.GetSanitizedFileNamePart(Name)} - Time Sheet -_{new Random().Next()}.pdf";
+            var reportPdf = IO.Path.Combine(_reportRootDir, REPORT_DIR, reportFileName);
+            var TimesheetDetails = _clientDataProvider.GetTimesheetDetails();
+
+            var pdfDoc = new PdfDocument(new PdfWriter(reportPdf));
+            pdfDoc.SetDefaultPageSize(PageSize.A4.Rotate());
+            var doc = new Document(pdfDoc);
+            doc.SetMargins(PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN, PDF_DOC_MARGIN);
+
+
+            var headerTable = CreateReportHeader();
+            doc.Add(headerTable);
+
+            doc.Add(CreateNameTable(Name));
+            doc.Add(CreateLicenseTable(LicenseNo));
+            doc.Add(CreateDateTable(dateTime));
+            // doc.Add(CreateSiteTable(SiteName));
+            doc.Add(new Paragraph("\n"));
+            var (GuardLoginTables, totalHours) = CreateGuardLoginDetails1(startdateTime, dateTime, LoginDetails, TimesheetDetails.weekName);
+            bool hasContentOnCurrentPage = false;
+            for (int i = 0; i < GuardLoginTables.Count; i++)
+            {
+                var GuardLoginTable = GuardLoginTables[i];
+                if (GuardLoginTable.GetNumberOfRows() > 0)
+                {
+                    doc.Add(GuardLoginTable);
+                    hasContentOnCurrentPage = true;
+                    if (i < GuardLoginTables.Count - 1) // Only add space if it's not the last table
+                    {
+                        doc.Add(new Paragraph("\n"));
+                        doc.Add(new Paragraph("\n")); // Add a space between tables
+                    }
+                }
+
+
+            }
+            if (hasContentOnCurrentPage)
+            {
+                doc.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+            }
+            var commentTable = GetCommentTable(totalHours);
+            doc.Add(commentTable);
+            doc.Close();
+            pdfDoc.Close();
+
+            return reportFileName;
+        }
         private static Table CreateNameTable(string Name)
         {
             var siteDataTable = new Table(UnitValue.CreatePercentArray(new float[] { 5, 11 })).UseAllAvailableWidth().SetMarginTop(10);
@@ -714,6 +770,171 @@ namespace CityWatch.Web.Services
             return (weeklyTables, TotalWeeklyHrs);
         }
 
+
+        private (List<Table> weeklyTables, int totalHours) CreateGuardLoginDetails1(
+  DateTime startDate,
+  DateTime endDate,
+  List<GuardLogin> LoginDetails,
+  string weekname)
+        {
+            // Method to create a new table with headers
+            Table CreateNewGuardTable()
+            {
+                float[] columnPercentages = new float[6];
+                var GuardTable = new Table(UnitValue.CreatePercentArray(columnPercentages)).UseAllAvailableWidth();
+                CreateGuardDetailsHeader(GuardTable);
+                return GuardTable;
+            }
+
+            var SiteName = LoginDetails.Select(x => x.ClientSite.Name).FirstOrDefault();
+
+            // Handle single-day logic
+            if (startDate.Date == endDate.Date)
+            {
+                var GuardTable = CreateNewGuardTable();
+                int dailyTotalHours = 0;
+
+                // Only create a table for the specific day
+                string dayName = startDate.ToString("dddd");
+                GuardTable.AddCell(GetSiteValueCell(dayName));
+                GuardTable.AddCell(GetSiteValueCell(startDate.ToString("dd/MM/yyyy")));
+
+                var start = LoginDetails.FirstOrDefault(x => x.LoginDate.Date == startDate.Date);
+                if (start != null)
+                {
+                    GuardTable.AddCell(GetSiteValueCell(start.OnDuty.ToString("HH:mm")));
+
+                    TimeSpan? endDateDifference = start.OffDuty.HasValue ? start.OffDuty.Value - start.OnDuty : null;
+                    if (endDateDifference.HasValue)
+                    {
+                        string enddate1 = string.Format("{0:D2}:{1:D2}",
+                                                        (int)endDateDifference.Value.TotalHours,
+                                                        endDateDifference.Value.Minutes);
+                        GuardTable.AddCell(GetSiteValueCell(enddate1));
+
+                        DateTime enddate = DateTime.ParseExact(enddate1, "HH:mm", CultureInfo.InvariantCulture);
+                        DateTime startd = DateTime.ParseExact(start.OnDuty.ToString("HH:mm"), "HH:mm", CultureInfo.InvariantCulture);
+
+                        TimeSpan TotalHrs = (enddate - startd).Duration();
+                        int totalHrs = (int)TotalHrs.TotalMinutes;
+                        dailyTotalHours += totalHrs;
+                        int hoursDail = totalHrs / 60;
+                        int minutesDail = totalHrs % 60;
+                        GuardTable.AddCell(GetSiteValueCell($"{hoursDail}:{minutesDail}"));
+                    }
+                    GuardTable.AddCell(GetSiteValueCell(start.ClientSite.Name ?? ""));
+                }
+                else
+                {
+                    GuardTable.AddCell(GetSiteValueCell(""));
+                    GuardTable.AddCell(GetSiteValueCell(""));
+                    GuardTable.AddCell(GetSiteValueCell(""));
+                    GuardTable.AddCell(GetSiteValueCell(start?.ClientSite.Name ?? ""));
+                }
+
+                return (new List<Table> { GuardTable }, dailyTotalHours);
+            }
+
+            // Weekly logic for a range of dates
+            DateTime currentDate = startDate;
+            int totalDays = (endDate - startDate).Days + 1;
+            int startDayIndex = Array.IndexOf(CultureInfo.CurrentCulture.DateTimeFormat.DayNames, weekname);
+
+            // Adjust the currentDate to start on the specified day of the week
+            //while ((int)currentDate.DayOfWeek != startDayIndex && currentDate <= endDate)
+            //{
+            //    currentDate = currentDate.AddDays(1);
+            //}
+           
+
+
+            // Ensure endDate is exactly one week after startDate for single-week mode
+            //if ((endDate - startDate).Days >= 7)
+            //{
+            //    endDate = startDate.AddDays(6);
+            //}
+
+            List<Table> weeklyTables = new List<Table>();
+            int TotalWeeklyHrs = 0;
+            int daysProcessed = 0;
+
+            while (daysProcessed < totalDays)
+            {
+                var GuardTable = CreateNewGuardTable();
+                int weeklyTotalHours = 0;
+
+                // Process each day in the week (up to 7 days or remaining days)
+                for (int j = 0; j < 7 && daysProcessed < totalDays; j++)
+                {
+                    string dayName = currentDate.ToString("dddd");
+                    GuardTable.AddCell(GetSiteValueCellHeader(dayName));
+
+                    if (currentDate > endDate)
+                    {
+                        GuardTable.AddCell(GetSiteValueCell(""));
+                    }
+                    else
+                    {
+                        GuardTable.AddCell(GetSiteValueCell(currentDate.ToString("dd/MM/yyyy")));
+                    }
+
+                    var start = LoginDetails.FirstOrDefault(x => x.LoginDate.Date == currentDate.Date);
+                    if (start != null)
+                    {
+                        GuardTable.AddCell(GetSiteValueCell(start.OnDuty.ToString("HH:mm")));
+
+                        TimeSpan? endDateDifference = start.OffDuty?.TimeOfDay;
+                        if (endDateDifference.HasValue)
+                        {
+                            string enddate1 = string.Format("{0:D2}:{1:D2}", (int)endDateDifference.Value.TotalHours, endDateDifference.Value.Minutes);
+                            GuardTable.AddCell(GetSiteValueCell(enddate1));
+
+                            TimeSpan enddate = TimeSpan.Parse(enddate1);
+                            TimeSpan startd = TimeSpan.ParseExact(start.OnDuty.ToString("HH:mm"), "hh\\:mm", CultureInfo.InvariantCulture);
+
+                            TimeSpan TotalHrs = (enddate - startd).Duration();
+                            int totalHrs = (int)TotalHrs.TotalMinutes;
+                            weeklyTotalHours += totalHrs;
+
+                            string formattedTotalHrs = string.Format("{0:D2}:{1:D2}", TotalHrs.Hours, TotalHrs.Minutes);
+                            GuardTable.AddCell(GetSiteValueCell(formattedTotalHrs));
+                        }
+                        else
+                        {
+                            GuardTable.AddCell(GetSiteValueCell(""));
+                            GuardTable.AddCell(GetSiteValueCell(""));
+                        }
+
+                        GuardTable.AddCell(GetSiteValueCell(start.ClientSite?.Name ?? ""));
+                    }
+                    else
+                    {
+                        GuardTable.AddCell(GetSiteValueCell(""));
+                        GuardTable.AddCell(GetSiteValueCell(""));
+                        GuardTable.AddCell(GetSiteValueCell(""));
+                        GuardTable.AddCell(GetSiteValueCell(""));
+                    }
+
+                    currentDate = currentDate.AddDays(1);
+                    daysProcessed++;
+                }
+
+                GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
+                GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
+                GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
+                GuardTable.AddCell(GetNoBorderTotalHrsCell(""));
+
+                int hours1 = weeklyTotalHours / 60;
+                int minutes1 = weeklyTotalHours % 60;
+                GuardTable.AddCell(GetSiteValueCell($"{hours1:D2}:{minutes1:D2}"));
+
+                GuardTable.AddCell(GetNoBorderTotalHrsCell(SiteName));
+                TotalWeeklyHrs += weeklyTotalHours;
+                weeklyTables.Add(GuardTable);
+            }
+
+            return (weeklyTables, TotalWeeklyHrs);
+        }
 
 
 

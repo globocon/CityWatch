@@ -85,10 +85,13 @@ namespace CityWatch.Web.Services
             {
                 try
                 {
-                    var isFolderExists = await CheckFolderExists(dbx, nsId, folderPath);
-                    if (!isFolderExists)
+                    if (clientSiteKpiSetting.DropboxScheduleisActive)
                     {
-                        folderPathsToCreate.Add(folderPath);
+                        var isFolderExists = await CheckFolderExists(dbx, nsId, folderPath);
+                        if (!isFolderExists)
+                        {
+                            folderPathsToCreate.Add(folderPath);
+                        }
                     }
                 }
                 catch (Exception ex)

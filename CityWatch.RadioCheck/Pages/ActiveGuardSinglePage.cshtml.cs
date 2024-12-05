@@ -19,6 +19,7 @@ using MailKit.Net.Smtp;
 using CityWatch.RadioCheck.Models;
 using System.Net.Http;
 using System.Threading.Tasks;
+using CityWatch.Data.Services;
 
 namespace CityWatch.Web.Pages.Radio
 {
@@ -30,13 +31,15 @@ namespace CityWatch.Web.Pages.Radio
         private readonly IGuardLogDataProvider _guardLogDataProvider;
         private readonly EmailOptions _EmailOptions;
         private readonly IConfiguration _configuration;
+        private readonly ILogbookDataService _logbookDataService;
         public ActiveGuardSinglePage(IGuardLogDataProvider guardLogDataProvider, IOptions<EmailOptions> emailOptions,
-            IConfiguration configuration)
+            IConfiguration configuration,ILogbookDataService logbookDataService)
         {
 
             _guardLogDataProvider = guardLogDataProvider;
             _EmailOptions = emailOptions.Value;
             _configuration = configuration;
+            _logbookDataService = logbookDataService;
         }
         public int UserId { get; set; }
         public int GuardId { get; set; }
@@ -227,7 +230,9 @@ namespace CityWatch.Web.Pages.Radio
                 if (checkedLB == true)
                 {
                     var logbooktype = LogBookType.DailyGuardLog;
-                    var logBookId = _guardLogDataProvider.GetClientSiteLogBookId(clientSiteId, logbooktype, DateTime.Today);
+                    //var logBookId = _guardLogDataProvider.GetClientSiteLogBookId(clientSiteId, logbooktype, DateTime.Today);
+                    //Bellow will create a logbook Id if not exist in the current date 02/12/2024
+                    var logBookId = _logbookDataService.GetNewOrExistingClientSiteLogBookId(clientSiteId, logbooktype);
                     var guardid = HttpContext.Session.GetInt32("GuardId");
                     if (guardid != 0)
                     {

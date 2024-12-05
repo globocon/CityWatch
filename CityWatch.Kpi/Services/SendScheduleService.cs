@@ -260,17 +260,21 @@ namespace CityWatch.Kpi.Services
             var success = false;
             foreach (var settings in ClientSiteKpiSettings)
             {
-                if (settings != null && !string.IsNullOrEmpty(settings.DropboxImagesDir))
+                //This is active only upload new folder 27112024
+                if (settings.DropboxScheduleisActive)
                 {
-                    try
+                    if (settings != null && !string.IsNullOrEmpty(settings.DropboxImagesDir))
                     {
-                        var dbxFilePath = $"{settings.DropboxImagesDir}/FLIR - Wand Recordings - IRs - Daily Logs/{reportDate.Date.Year}/{reportDate.Date:yyyyMM} - {reportDate.Date.ToString("MMMM").ToUpper()} DATA/x - Site KPI Telematics & Statistics/" + Path.GetFileName(reportFileName);
-                        success = Task.Run(() => UploadDailyLogToDropbox(reportFileName, dbxFilePath)).Result;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError($"KPI Report Upload | Failed | Schedule Id: {schedule.Id} Client Site Id: {settings.ClientSiteId}. Error: {ex.Message}");
-                        _logger.LogError(ex.StackTrace);
+                        try
+                        {
+                            var dbxFilePath = $"{settings.DropboxImagesDir}/FLIR - Wand Recordings - IRs - Daily Logs/{reportDate.Date.Year}/{reportDate.Date:yyyyMM} - {reportDate.Date.ToString("MMMM").ToUpper()} DATA/x - Site KPI Telematics & Statistics/" + Path.GetFileName(reportFileName);
+                            success = Task.Run(() => UploadDailyLogToDropbox(reportFileName, dbxFilePath)).Result;
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError($"KPI Report Upload | Failed | Schedule Id: {schedule.Id} Client Site Id: {settings.ClientSiteId}. Error: {ex.Message}");
+                            _logger.LogError(ex.StackTrace);
+                        }
                     }
                 }
             }
@@ -285,18 +289,22 @@ namespace CityWatch.Kpi.Services
             var success = false;
             foreach (var settings in ClientSiteKpiSettings)
             {
-                if (settings != null && !string.IsNullOrEmpty(settings.DropboxImagesDir))
+                if (settings.DropboxScheduleisActive)
                 {
-                    try
+                    if (settings != null && !string.IsNullOrEmpty(settings.DropboxImagesDir))
                     {
-                        var dbxFilePath = $"{settings.DropboxImagesDir}/FLIR - Wand Recordings - IRs - Daily Logs/{reportDate.Date.Year}/{reportDate.Date:yyyyMM} - {reportDate.Date.ToString("MMMM").ToUpper()} DATA/x - Site KPI Telematics & Statistics/" + Path.GetFileName(reportFileName);
-                        success = Task.Run(() => UploadDailyLogToDropbox(reportFileName, dbxFilePath)).Result;
+                        try
+                        {
+                            var dbxFilePath = $"{settings.DropboxImagesDir}/FLIR - Wand Recordings - IRs - Daily Logs/{reportDate.Date.Year}/{reportDate.Date:yyyyMM} - {reportDate.Date.ToString("MMMM").ToUpper()} DATA/x - Site KPI Telematics & Statistics/" + Path.GetFileName(reportFileName);
+                            success = Task.Run(() => UploadDailyLogToDropbox(reportFileName, dbxFilePath)).Result;
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError($"KPI Report Upload | Failed | Schedule Id: {schedule.Id} Client Site Id: {settings.ClientSiteId}. Error: {ex.Message}");
+                            _logger.LogError(ex.StackTrace);
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError($"KPI Report Upload | Failed | Schedule Id: {schedule.Id} Client Site Id: {settings.ClientSiteId}. Error: {ex.Message}");
-                        _logger.LogError(ex.StackTrace);
-                    }
+
                 }
             }
 

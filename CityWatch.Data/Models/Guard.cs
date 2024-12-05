@@ -131,5 +131,6 @@ namespace CityWatch.Data.Models
 
         public bool IsAdminThirdPartyAccess { get; set; }
         //p1-273 access level- end
+        public bool IsRCHRAccess { get; set; }
     }
 }

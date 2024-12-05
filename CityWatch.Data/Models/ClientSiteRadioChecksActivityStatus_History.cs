@@ -103,8 +103,9 @@ namespace CityWatch.Data.Models
     }
     public class ClientSiteRadioChecksActivityStatus_HistoryReport
     {
+        [NotMapped]
+        public double RecordCountNew { get; set; }
 
-        
         [NotMapped]
         public int RecordCount { get; set; }
         [NotMapped]

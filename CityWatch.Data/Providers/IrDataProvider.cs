@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Policy;
 using static Dropbox.Api.TeamLog.SpaceCapsType;
 
 namespace CityWatch.Data.Providers
@@ -16,15 +17,18 @@ namespace CityWatch.Data.Providers
         void MarkAsUploaded(int id);
         List<IncidentReport> GetIncidentReportsByJobNumber(string jobNumber);
         void UpdateReport(int incidentreportid, int Id);
+
+        public void UpdateTheSiteExpiringToExpired();
     }
 
     public class IrDataProvider : IIrDataProvider
     {
         private readonly CityWatchDbContext _dbContext;
-
-        public IrDataProvider(CityWatchDbContext dbContext)
+        private readonly IClientDataProvider _clientDataProvider;
+        public IrDataProvider(CityWatchDbContext dbContext, IClientDataProvider clientDataProvider )
         {
             _dbContext = dbContext;
+            _clientDataProvider = clientDataProvider;
         }
 
         public List<IncidentReport> GetIncidentReports(DateTime fromReportDate, DateTime toReportDate)
@@ -83,6 +87,71 @@ namespace CityWatch.Data.Providers
         }
 
 
+        public void UpdateTheSiteExpiringToExpired()
+        {
+            var today = DateTime.Now.Date;
+
+            // Fetch ClientSites that need updating ie expiring to expired
+            var clientSitesToUpdate = _dbContext.ClientSites
+                .Where(x => x.Status == 1 && x.StatusDate < today)
+                .ToList();
+
+            // Fetch corresponding KPI settings
+            var siteIds = clientSitesToUpdate.Select(x => x.Id).ToList();
+            var kpiSettingsToUpdate = _dbContext.ClientSiteKpiSettings
+                .Where(kpi => siteIds.Contains(kpi.ClientSite.Id))
+                .ToList();
+
+            // Update the ClientSites
+            foreach (var site in clientSitesToUpdate)
+            {
+                site.Status = 2;
+            }
+            _dbContext.SaveChanges();
+            // Update the KPI settings
+            var clientSitesToUpdate2 = _dbContext.ClientSites
+               .Where(x => x.Status == 2 )
+               .ToList();
+            var siteIds2 = clientSitesToUpdate2.Select(x => x.Id).ToList();
+            var kpiSettingsToUpdate2 = _dbContext.ClientSiteKpiSettings
+                .Where(kpi => siteIds2.Contains(kpi.ClientSite.Id))
+                .ToList();
+
+
+            foreach (var kpi in kpiSettingsToUpdate2)
+            {
+               
+                updateKpiSettings(kpi.Id);
+                // Save all changes in one go
+                updateClientSite(kpi.ClientSite.Id);
+            }
+           
+
+        }
+        public void updateKpiSettings(int kpisettingsId)
+        {
+            var kpisettings = _dbContext.ClientSiteKpiSettings.SingleOrDefault(z => z.Id == kpisettingsId);
+            if (kpisettings != null)
+            {
+                kpisettings.ScheduleisActive = false;
+                kpisettings.DropboxScheduleisActive = false;
+            }
+            _dbContext.SaveChanges();
+
+        }
+
+        public void updateClientSite(int ClientSite)
+        {
+            var clientSite = _dbContext.ClientSites.SingleOrDefault(z => z.Id == ClientSite);
+            if (clientSite != null)
+            {
+                clientSite.UploadGuardLog = false;
+            }
+            _dbContext.SaveChanges();
+
+        }
 
     }
+
+  
 }

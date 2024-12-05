@@ -22,7 +22,7 @@ namespace CityWatch.Web.Services
         void ProcessDailyGuardLogsSecondRun();
         public void ProcessDailyGuardLogsNew();
         public void ProcessDailyGuardLogsSecondRunNew();
-       
+
     }
 
     public class SiteLogUploadService : ISiteLogUploadService
@@ -112,7 +112,7 @@ namespace CityWatch.Web.Services
                         //_clientDataProvider.MarkClientSiteLogBookAsUploaded(siteLogBook.Id, logFileName);
                     }
 
-                  
+
                 }
                 catch (Exception ex)
                 {
@@ -126,7 +126,7 @@ namespace CityWatch.Web.Services
         public void ProcessDailyGuardLogsNew()
         {
 
-            _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "---Scheduler Start---" }); 
+            _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "---Scheduler Start---" });
             // Retrieve and filter the log books to upload only once.
             var yesterday = DateTime.Now.AddDays(-1).Date;
             var siteLogBooksToUpload = _clientDataProvider.GetClientSiteLogBooks()
@@ -140,19 +140,19 @@ namespace CityWatch.Web.Services
             // Cache the report directory path.
             var outputDirectory = Path.Combine(_reportRootDir, "Output");
 
-           
-            _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "Number of logbook to upload "+ siteLogBooksToUpload.Count.ToString() });
+
+            _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "Number of logbook to upload " + siteLogBooksToUpload.Count.ToString() });
 
             foreach (var siteLogBook in siteLogBooksToUpload)
             {
                 try
                 {
-                    _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "----- Start "+siteLogBook.ClientSite.Name+"----" });
+                    _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "----- Start " + siteLogBook.ClientSite.Name + "----" });
 
                     string logFileName = GetLogFilePath(siteLogBook);
                     if (string.IsNullOrEmpty(logFileName))
                         continue;
-                    _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "logBook :"+ siteLogBook.ClientSite.Name+"LogBookId"+ siteLogBook.Id });
+                    _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "logBook :" + siteLogBook.ClientSite.Name + "LogBookId" + siteLogBook.Id });
                     var fileToUpload = Path.Combine(outputDirectory, logFileName);
                     _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "File to upload Site : " + siteLogBook.ClientSite.Name + "File" + fileToUpload });
                     var uploaded = ProcessDailyGuardLogUploadNew(siteLogBook, fileToUpload);
@@ -163,7 +163,7 @@ namespace CityWatch.Web.Services
                     // Send email if there is a valid email address.
                     if (!string.IsNullOrEmpty(fileToUpload) && siteLogBook != null)
                     {
-                        _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "Upload Status for Site : " + siteLogBook.ClientSite.Name + "---Mail send Start--"  });
+                        _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "Upload Status for Site : " + siteLogBook.ClientSite.Name + "---Mail send Start--" });
                         if (!string.IsNullOrEmpty(siteLogBook.ClientSite.GuardLogEmailTo))
                             SendEmail(fileToUpload, siteLogBook);
 
@@ -171,11 +171,11 @@ namespace CityWatch.Web.Services
 
                     }
 
-                        // Mark the log book as uploaded.
-                        _clientDataProvider.MarkClientSiteLogBookAsUploaded(siteLogBook.Id, logFileName);
+                    // Mark the log book as uploaded.
+                    _clientDataProvider.MarkClientSiteLogBookAsUploaded(siteLogBook.Id, logFileName);
 
 
-                    
+
                     // Delete the file after processing.
                     if (File.Exists(fileToUpload))
                         File.Delete(fileToUpload);
@@ -183,7 +183,7 @@ namespace CityWatch.Web.Services
                 }
                 catch (Exception ex)
                 {
-                    _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "Error Message : " + siteLogBook.ClientSite.Name + "---message--"+ex.Message });
+                    _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "Error Message : " + siteLogBook.ClientSite.Name + "---message--" + ex.Message });
                     _logger.LogError($"Daily Guard Log Upload | Failed | Log Book Id: {siteLogBook.Id}. Error: {ex.Message}");
                 }
                 _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "----- end " + siteLogBook.ClientSite.Name + "----" });
@@ -281,7 +281,7 @@ namespace CityWatch.Web.Services
             try
             {
 
-                
+
                 var fromAddress = _emailOptions.FromAddress.Split('|');
                 var subject = siteLogBook.Type.ToDisplayName();
                 var messageHtml = $"Dear Citywatch Security Client; <br><br>Please find attached {subject.ToLower()}.";
@@ -291,34 +291,34 @@ namespace CityWatch.Web.Services
                 {
                     //to avoid duplicate emails sending-end
                     var message = new MimeMessage();
-                message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
-                foreach (var email in siteLogBook.ClientSite.GuardLogEmailTo.Split(","))
-                {
-                    if (CommonHelper.IsValidEmail(email))
-                        message.To.Add(new MailboxAddress(string.Empty, email.Trim()));
-                }
-                /* Mail Id added Bcc globoconsoftware for checking LB,KV Mail not getting Issue Start(date 17,01,2024) */
-                message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
-              //  message.Bcc.Add(new MailboxAddress("globoconsoftware2", "jishakallani@gmail.com"));
-                /* Mail Id added Bcc globoconsoftware end */
-                message.Subject = $"{subject} - {siteLogBook.ClientSite.Name} - {siteLogBook.Date: yyyyMMdd}";
+                    message.From.Add(new MailboxAddress(fromAddress[1], fromAddress[0]));
+                    foreach (var email in siteLogBook.ClientSite.GuardLogEmailTo.Split(","))
+                    {
+                        if (CommonHelper.IsValidEmail(email))
+                            message.To.Add(new MailboxAddress(string.Empty, email.Trim()));
+                    }
+                    /* Mail Id added Bcc globoconsoftware for checking LB,KV Mail not getting Issue Start(date 17,01,2024) */
+                    message.Bcc.Add(new MailboxAddress("globoconsoftware", "globoconsoftware@gmail.com"));
+                    //  message.Bcc.Add(new MailboxAddress("globoconsoftware2", "jishakallani@gmail.com"));
+                    /* Mail Id added Bcc globoconsoftware end */
+                    message.Subject = $"{subject} - {siteLogBook.ClientSite.Name} - {siteLogBook.Date: yyyyMMdd}";
 
-                var builder = new BodyBuilder()
-                {
-                    HtmlBody = messageHtml
-                };
-                builder.Attachments.Add(fileName);
-                message.Body = builder.ToMessageBody();
+                    var builder = new BodyBuilder()
+                    {
+                        HtmlBody = messageHtml
+                    };
+                    builder.Attachments.Add(fileName);
+                    message.Body = builder.ToMessageBody();
 
-                using var client = new MailKit.Net.Smtp.SmtpClient();
-                client.Connect(_emailOptions.SmtpServer, _emailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
-                if (!string.IsNullOrEmpty(_emailOptions.SmtpUserName) &&
-                    !string.IsNullOrEmpty(_emailOptions.SmtpPassword))
-                    client.Authenticate(_emailOptions.SmtpUserName, _emailOptions.SmtpPassword);
+                    using var client = new MailKit.Net.Smtp.SmtpClient();
+                    client.Connect(_emailOptions.SmtpServer, _emailOptions.SmtpPort, MailKit.Security.SecureSocketOptions.None);
+                    if (!string.IsNullOrEmpty(_emailOptions.SmtpUserName) &&
+                        !string.IsNullOrEmpty(_emailOptions.SmtpPassword))
+                        client.Authenticate(_emailOptions.SmtpUserName, _emailOptions.SmtpPassword);
 
                     _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "logBook :" + siteLogBook.ClientSite.Name + "mail to address" + message.To });
                     client.Send(message);
-                client.Disconnect(true);
+                    client.Disconnect(true);
                     //to avoid duplicate emails sending-start
                     flag = true;
                     //to avoid duplicate emails sending-end
@@ -347,16 +347,21 @@ namespace CityWatch.Web.Services
 
             if (!File.Exists(fileToUpload))
                 throw new ArgumentException($"File not found: {fileToUpload} for IR id: {clientSiteLogBook.Id}");
-
+            //27/11/2024
+            if (!clientSiteKpiSettings.DropboxScheduleisActive)
+            {
+                throw new ArgumentException($"DropboxScheduleisActive: not enabled");
+            }
             try
             {
+
                 var dayPathFormat = clientSiteKpiSettings.IsWeekendOnlySite ? "yyyyMMdd - ddd" : "yyyyMMdd";
                 var dbxFilePath = $"{siteBasePath}/FLIR - Wand Recordings - IRs - Daily Logs/{clientSiteLogBook.Date.Year}/{clientSiteLogBook.Date:yyyyMM} - {clientSiteLogBook.Date.ToString("MMMM").ToUpper()} DATA/{clientSiteLogBook.Date.ToString(dayPathFormat).ToUpper()}/" + Path.GetFileName(fileToUpload);
                 return Task.Run(() => _dropboxUploadService.Upload(dropboxSettings, fileToUpload, dbxFilePath)).Result;
             }
             catch (Exception ex)
             {
-                _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils ="ClientSite: "+ clientSiteLogBook .ClientSite.Name + " Dropbox Fileupload Error:"+ ex.Message});
+                _clientDataProvider.SaveSiteLogUploadHistory(new SiteLogUploadHistory { LogDeatils = "ClientSite: " + clientSiteLogBook.ClientSite.Name + " Dropbox Fileupload Error:" + ex.Message });
                 _logger.LogError(ex.StackTrace);
                 throw;
             }
@@ -380,7 +385,11 @@ namespace CityWatch.Web.Services
 
             //if (!File.Exists(fileToUpload))
             //    throw new ArgumentException($"File not found: {fileToUpload} for IR id: {clientSiteLogBook.Id}");
-
+            //27/11/2024
+            if (!clientSiteKpiSettings.DropboxScheduleisActive)
+            {
+                throw new ArgumentException($"DropboxScheduleisActive: not enabled");
+            }
             try
             {
                 if (clientSiteKpiSettings != null && (!string.IsNullOrEmpty(siteBasePath)) && File.Exists(fileToUpload))

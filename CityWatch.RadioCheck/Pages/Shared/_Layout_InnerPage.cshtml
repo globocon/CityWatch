@@ -293,9 +293,10 @@
 
                     @*   }*@
                     <div>
-
-                        <a href="@Url.Page("/GuardDetails")" class="nav-link py-0"><i class="fa fa-user mr-2"></i>Guards & CRM</a>
-
+                         @if (User.Identity.IsAuthenticated || guard.IsRCFusionAccess)
+                        {
+                            <a href="@Url.Page("/GuardDetails")" class="nav-link py-0"><i class="fa fa-user mr-2"></i>Guards & CRM</a>
+                        }
 
 
                     </div>

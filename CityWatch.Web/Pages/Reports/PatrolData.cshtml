@@ -308,8 +308,7 @@
         @* } *@
     </div>
     @*/*html to PDF content for the download PDF Start*/*@
-    <div style="width: 1px;height: 1px; border: 0px none;position: relative ;overflow: hidden; ">
-
+   <div style="width: 1px;height: 1px; border: 0px none;position: relative ;overflow: hidden; ">
         <div id="content-to-pdf" style="width:99%">
             <div class="page-break">
                 <div class="row pt-1">
@@ -341,12 +340,15 @@
                                 IR Records Percentage By Area/Ward (Count :<span id="count_by_area_ward3" class="p-0 b-0"></span>)
                             </div>
                             <div class="card-body">
-                                @*<div style="height:750px ;width:1200px">*@
-                                <div style="height:260px ;width:490px">
-                                    <canvas id="pie_chart_ir_by_areaward3"></canvas>
-                                </div>
-                                @* </div>*@
+                                <svg width="600" height="260" id="pie_chart_ir_by_areaward3pdf"></svg>
                             </div>
+                           @* <div class="card-body"> Old Code withChart js*@
+                                @*<div style="height:750px ;width:1200px">*@
+                            @* Old Code withChart js Start<div style="height:260px ;width:490px">
+                                    <canvas id="pie_chart_ir_by_areaward3"></canvas>
+                                </div>*@
+                            @*Old Code withChart js end </div>*@
+                            @*</div>*@
                         </div>
                     </div>
                 </div>
@@ -358,10 +360,14 @@
                             </div>
                             <div class="card-body">
                                 @*<div style="height:750px ;width:1200px">*@
-                                <div style="height:260px ;width:532px">
+                              @* Old Code with Chart js Start  <div style="height:260px ;width:532px">
                                     <canvas id="pie_chart_ir_by_colorcode3"></canvas>
-                                </div>
+                                </div>Old Code with Chart js end*@
                                 @* </div>*@
+
+                                
+                                    <svg width="600" height="260" id="pie_chart_ir_by_colorcode3pdf"></svg>
+                               
                             </div>
                         </div>
                     </div>

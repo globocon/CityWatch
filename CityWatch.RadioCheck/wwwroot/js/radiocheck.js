@@ -168,8 +168,10 @@ $('#clientSiteActivityStatus').on('click', 'button[name="btnRadioCheckStatus"]',
     var data = clientSiteActivityStatus.row($(this).parents('tr')).data();
     var rowClientSiteId = data.activityStatus.clientSiteId;
     var rowGuardId = data.activityStatus.guardId;
+    var nottifcationType = data.notificationType;
     $('#clientSiteId').val(rowClientSiteId);
     $('#guardId').val(rowGuardId);
+    $('#nottifcationType').val(nottifcationType);
     $('#selectRadioCheckStatus').modal('show');
     isPaused = true;
 });
@@ -335,6 +337,111 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
                 }
 
                 head.appendChild(style);
+            }
+        },
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
+
+        },
+        {
+            extend: 'pdf',
+            text: '<i class="fa fa-globe"></i>',
+            titleAttr: 'Globe Map',
+            className: 'btn btn-md mr-2 btn-pdf',
+            action: function (e, dt, node, config) {
+                const newTab = window.open('', '_blank');
+                const mapHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Globe Map</title>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <style>
+        #map { height: 100vh; }
+        @keyframes blink {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        const map = L.map('map').setView([-27.0, 133.0], 5); // Center on Australia
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+        }).addTo(map);
+
+        // Fetching the data
+        fetch('/RadioCheckV2?handler=ClientSiteActivityStatus&clientSiteIds=test,', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);  // Log the data to ensure it is correctly returned
+            data.forEach(record => {
+                const gps = record.gps ? record.gps.trim() : ''; 
+                const address = record.address ? stripHtml(record.address).trim() : ''; 
+                const GuardName=record.guardName;
+                const siteNameParts = record.siteName.split('&nbsp;');
+const siteName = siteNameParts[0].trim(); // "Mercy - VIC - Werribee - ADHOC (Rover)"
+const phoneNumber = siteNameParts.slice(1).join('').trim();
+                
+               const alertColor = 'Green'; 
+                
+                // Map alert colors to actual CSS color values
+                const markerColor = getColorFromAlert(alertColor);
+
+                if (gps) {
+                    const [lat, lng] = gps.split(',').map(coord => parseFloat(coord));
+                    L.marker([lat, lng], { icon: createCustomIcon(markerColor) })
+                        .bindPopup('<strong>SiteName:</strong>'+siteName + '<br>' +'<strong>Phone Number:</strong>'+phoneNumber + '<br>'+'<strong>Address:</strong>' + address+ '<br>'+'<strong>GuardName:</strong>' + GuardName)
+                        .addTo(map);
+                }
+            });
+        })
+        .catch(error => console.error('Error:', error));
+
+        // Function to strip HTML tags
+        function stripHtml(input) {
+            const doc = new DOMParser().parseFromString(input, 'text/html');
+            return doc.body.textContent || "";
+        }
+        function getColorFromAlert(alert) {
+            switch (alert) {
+                case 'Red': return 'red';
+                case 'Green': return 'green';
+                case 'Yellow': return 'yellow';
+                default: return 'grey'; // Default color
+            }
+        }
+       function createCustomIcon(color) {
+    return L.divIcon({
+        className: 'custom-marker',
+        html: '<div style="background-color:' + color + '; width: 25px; height: 25px; border-radius: 50%;animation: blink 1s infinite;"></div>',
+        iconSize: [25, 25],  // Increased size
+    });
+}
+    </script>
+</body>
+</html>
+        `;
+                newTab.document.open();
+                newTab.document.write(mapHTML);
+                newTab.document.close();
             }
         },
         {
@@ -551,13 +658,19 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
             render: function (value, type, data) {
                 
+                if ($('#txtguardGuardRCAccess').val() == 'False' || $('#txtguardGuardRCAccess').val()=='') {
 
-                // Include the sort value as a hidden element and render the color circle
-                return '<span style="display:none;">' + value + '</span>'  +
-                    '<i class="fa fa-circle text-' +
-                    (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
-                        value == 'Yellow' ? 'warning' : 'muted') +
-                    '"></i>';
+
+                    // Include the sort value as a hidden element and render the color circle
+                    return '<span style="display:none;">' + value + '</span>' +
+                        '<i class="fa fa-circle text-' +
+                        (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
+                            value == 'Yellow' ? 'warning' : 'muted') +
+                        '"></i>';
+                }
+                else {
+                    return '<i class="fa fa-circle text-muted"></i>';
+                }
             }
         },
         {
@@ -567,12 +680,17 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
             render: function (value, type, data) {
                
+                if ($('#txtguardGuardRCAccess').val() == 'False' || $('#txtguardGuardRCAccess').val() == '') {
 
                 return '<span style="display:none;">' + value + '</span>' +
                     '<i class="fa fa-circle text-' +
                     (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
                         value == 'Yellow' ? 'warning' : 'muted') +
-                    '"></i>';
+                        '"></i>';
+                }
+                else {
+                    return '<i class="fa fa-circle text-muted"></i>';
+                }
 
             }
         },
@@ -583,12 +701,17 @@ let clientSiteActiveGuards = $('#clientSiteActiveGuards').DataTable({
 
             render: function (value, type, data) {
               
+                 if ($('#txtguardGuardRCAccess').val() == 'False' || $('#txtguardGuardRCAccess').val()=='') {
 
                 return '<span style="display:none;">' + value + '</span>' +
                     '<i class="fa fa-circle text-' +
                     (value == 'Green' ? 'success' : value == 'Red' ? 'danger' :
                         value == 'Yellow' ? 'warning' : 'muted') +
                     '"></i>';
+                }
+                else {
+                    return '<i class="fa fa-circle text-muted"></i>';
+                }
             }
         },
        
@@ -855,7 +978,111 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
                 head.appendChild(style);
             }
         },
+        {
+            text: '|',
+            titleAttr: 'Space',
+            className: 'btn-hidden',
+            enabled: false,
+            name: 'Space',
 
+        },
+        {
+            extend: 'pdf',
+            text: '<i class="fa fa-globe"></i>',
+            titleAttr: 'Globe Map',
+            className: 'btn btn-md mr-2 btn-pdf',
+            action: function (e, dt, node, config) {
+                const newTab = window.open('', '_blank');
+                const mapHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Globe Map</title>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <style>
+        #map { height: 100vh; }
+        @keyframes blink {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        const map = L.map('map').setView([-27.0, 133.0], 5); // Center on Australia
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+        }).addTo(map);
+
+        // Fetching the data
+        fetch('/RadioCheckV2?handler=ClientSiteInActivityStatus&clientSiteIds=test,', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);  // Log the data to ensure it is correctly returned
+            data.forEach(record => {
+                const gps = record.gps ? record.gps.trim() : ''; // Extract GPS
+                const address = record.address ? stripHtml(record.address).trim() : ''; // Clean up address
+                const GuardName=record.guardName;
+                const siteNameParts = record.siteName.split('&nbsp;');
+                const siteName = siteNameParts[0].trim(); 
+                const phoneNumber = siteNameParts.slice(1).join('').trim();
+
+               const alertColor = record.twoHrAlert ? record.twoHrAlert.trim() : 'grey'; // Default to grey if no color
+                
+                // Map alert colors to actual CSS color values
+                const markerColor = getColorFromAlert(alertColor);
+
+                if (gps) {
+                    const [lat, lng] = gps.split(',').map(coord => parseFloat(coord));
+                    L.marker([lat, lng], { icon: createCustomIcon(markerColor) })
+                        .bindPopup('<strong>SiteName:</strong>'+siteName + '<br>' +'<strong>Phone Number:</strong>'+phoneNumber + '<br>'+'<strong>Address:</strong>' + address+ '<br>'+'<strong>GuardName:</strong>' + GuardName)
+                        .addTo(map);
+                }
+            });
+        })
+        .catch(error => console.error('Error:', error));
+
+        // Function to strip HTML tags
+        function stripHtml(input) {
+            const doc = new DOMParser().parseFromString(input, 'text/html');
+            return doc.body.textContent || "";
+        }
+        function getColorFromAlert(alert) {
+            switch (alert) {
+                case 'Red': return 'red';
+                case 'Green': return 'green';
+                case 'Yellow': return 'yellow';
+                default: return 'grey'; // Default color
+            }
+        }
+       function createCustomIcon(color) {
+    return L.divIcon({
+        className: 'custom-marker',
+        html: '<div style="background-color:' + color + '; width: 25px; height: 25px; border-radius: 50%;animation: blink 1s infinite;"></div>',
+        iconSize: [25, 25],  // Increased size
+    });
+}
+    </script>
+</body>
+</html>
+        `;
+                newTab.document.open();
+                newTab.document.write(mapHTML);
+                newTab.document.close();
+            }
+        },
         {
             text: '|',
             titleAttr: 'Space',
@@ -1118,7 +1345,10 @@ let clientSiteInActiveGuards = $('#clientSiteInActiveGuards').DataTable({
 
 });
 
-
+function stripHtml(input) {
+    const doc = new DOMParser().parseFromString(input, 'text/html');
+    return doc.body.textContent || "";
+}
 
 //p4#48 AudioNotification - Binoy - 12-01-2024 -- Start
 function PlayDuressAlarm() {
@@ -2175,8 +2405,8 @@ let clientSiteActiveGuardsIncidentReportHistory = $('#clientSiteActiveGuardsInci
 });
 
 $('#clientSiteActiveGuards tbody').on('dblclick', '#btnIrHistoryByGuard', function (value, record) {
-    
-    if ($('#txtguardGuardRCAccess').val() == 'False') { 
+   
+    if (($('#txtguardGuardRCAccess').val() == 'False' && $('#txtguardGuardRCHRAccess').val() == 'False') || ($('#txtguardGuardRCAccess').val() == '' && $('#txtguardGuardRCHRAccess').val() == '')) { 
         $('#guardIncidentReportsHistoryModal').modal('show');
     }
     isPaused = true;
@@ -2273,6 +2503,7 @@ $('#clientSiteInActiveGuards').on('click', 'button[name="btnRadioCheckStatus"]',
     var rowClientSiteId = data.clientSiteId;
     var rowGuardId = data.guardId;
     var rcSatus = data.rcStatus;
+    var nottifcationType = data.notificationType;
 
     var IsEnabled = data.isEnabled;
 
@@ -2289,6 +2520,7 @@ $('#clientSiteInActiveGuards').on('click', 'button[name="btnRadioCheckStatus"]',
 
     $('#clientSiteId').val(rowClientSiteId);
     $('#guardId').val(rowGuardId);
+    $('#nottifcationType').val(nottifcationType);
     $('#selectRadioCheckStatus').modal('show');
     isPaused = true;
 });
@@ -3551,7 +3783,7 @@ let clientSiteInActiveGuardsSinglePage = $('#clientSiteInActiveGuardsSinglePage'
 
 
 });
-if ($('#txtguardGuardRCAccess').val() == 'True') {
+if ($('#txtguardGuardRCAccess').val() == 'True' || $('#txtguardGuardRCHRAccess').val() == 'True' ) {
 
 
     $("#clientSiteActiveGuards_wrapper .dt-buttons .btn-copy").hide();
@@ -3605,9 +3837,11 @@ $('#clientSiteInActiveGuardsSinglePage').on('click', 'button[name="btnRadioCheck
     var rowClientSiteId = data.clientSiteId;
     var rowGuardId = data.guardId;
     var rcSatus = data.rcStatus;
+    var nottifcationType = data.notificationType;
     $("#selectRadioStatus").val(data.statusId);
     $('#clientSiteId').val(rowClientSiteId);
     $('#guardId').val(rowGuardId);
+    $('#nottifcationType').val(nottifcationType);
     $('#selectRadioCheckStatus').modal('show');
     isPaused = true;
 });
@@ -4128,7 +4362,9 @@ $('#clientSiteActiveGuardsSinglePage tbody').on('click', '#btnIncidentReportdeta
 });
 
 $('#clientSiteActiveGuardsSinglePage tbody').on('dblclick', '#btnIrHistoryByGuard', function (value, record) {
-    $('#guardIncidentReportsHistoryModal').modal('show');
+    //if (($('#txtguardGuardRCAccess').val() == 'False' && $('#txtguardGuardRCHRAccess').val() == 'False') || ($('#txtguardGuardRCAccess').val() == '' && $('#txtguardGuardRCHRAccess').val() == '')) {
+        $('#guardIncidentReportsHistoryModal').modal('show');
+    //}
     isPaused = true;
     var GuardName = $(this).closest("tr").find("td").eq(0).text();
     var GuardId = $(this).attr("data-guardid");
@@ -4548,6 +4784,7 @@ $('#itemList,#itemList2').on('click', '.btn-select-radio-status', function (even
     if (checkedStatus === '') {
         return;
     }
+    var notificationType = $('#nottifcationType').val(); 
     // Task p6#73_TimeZone issue -- added by Binoy - Start   
     fillRefreshLocalTimeZoneDetails(tmzdata, "", false);
     // Task p6#73_TimeZone issue -- added by Binoy - End
@@ -4560,7 +4797,8 @@ $('#itemList,#itemList2').on('click', '.btn-select-radio-status', function (even
             checkedStatus: checkedStatus,
             active: true,
             statusId: statusId,
-            tmzdata: tmzdata
+            tmzdata: tmzdata,
+            notificationType: notificationType
         },
         dataType: 'json',
         headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
@@ -4890,12 +5128,12 @@ function ShowKpiModelChoice() {
             $('#div_kpi_rc_contractedmanning').html('');
         else if (choice == 'CONTRACTEDMANNING')
             $('#div_kpi_rc_action_list').html('');
-        if ($('#txtguardGuardRCAccess').val() == 'True') { 
+        if ($('#txtguardGuardRCAccess').val() == 'True' || $('#txtguardGuardRCHRAccess').val() == 'True') { 
             $('#div_kpi_rc_contractedmanning #showDivButton').prop('disabled', true);
             $('#div_kpi_rc_contractedmanning #ClientSite_Status').prop('disabled', true);
             $('#div_kpi_rc_contractedmanning #scheduleisActive').prop('disabled', true);
             $('#div_kpi_rc_contractedmanning #delete_worker').prop('disabled', true);
-            
+            $('#div_kpi_rc_contractedmanning #save_site_manning_settings').prop('disabled', true);
             
         }
     });
@@ -5289,7 +5527,7 @@ function format_guard_settings_for_control_room_child_row(d) {
             cellValue = '<i class="fa fa-check-circle text-success"></i>' +
                 '<input type="hidden" id="GuardId" value="' + d.id + '">';
         }
-        if ($('#txtguardGuardRCAccess').val() == 'False') { 
+        if (($('#txtguardGuardRCAccess').val() == 'False' && $('#txtguardGuardRCHRAccess').val() == 'False') || ($('#txtguardGuardRCAccess').val() == '' && $('#txtguardGuardRCHRAccess').val() == '')) { 
         if (d.dateEnrolled) {
             cellValue += '<br/> <span class="small">Enrolled: ' + getFormattedDate(new Date(d.dateEnrolled), null, ' ') + '</span>';
             }
@@ -5846,7 +6084,7 @@ function drawPieChartUsingChartJsChartRCForWeek(dataValue) {
         return e.dateRange;
     });
     var data2 = dataValue.map(function (e) {
-        return e.recordCount;
+        return e.recordCountNew;
     });
     // Data for the pie chart
     const data = {
@@ -5903,7 +6141,7 @@ function drawPieChartUsingChartJsChartRCForWeek(dataValue) {
                         enabled: true,
                         callbacks: {
                             label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
+                                let label = context.label + '(' + context.formattedValue + '%)'
                                 return label;
                             }
                         }
@@ -5950,7 +6188,7 @@ function drawPieChartUsingChartJsChartRCForWeek(dataValue) {
                         /* render:"value",*/
                         render: (args) => {
 
-                            return args.value;
+                            return args.value + '%';
 
                         },
 
@@ -6008,7 +6246,7 @@ function drawPieChartUsingChartJsChartRCForWeek(dataValue) {
                         enabled: true,
                         callbacks: {
                             label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
+                                let label = context.label + '(' + context.formattedValue + '%)'
                                 return label;
                             }
                         }
@@ -6234,7 +6472,7 @@ function drawPieChartUsingChartJsChartRCForMonth(dataValue) {
         return e.dateRange;
     });
     var data2 = dataValue.map(function (e) {
-        return e.recordCount;
+        return e.recordCountNew;
     });
     // Data for the pie chart
     const data = {
@@ -6291,7 +6529,7 @@ function drawPieChartUsingChartJsChartRCForMonth(dataValue) {
                         enabled: true,
                         callbacks: {
                             label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
+                                let label = context.label + '(' + context.formattedValue + '%)'
                                 return label;
                             }
                         }
@@ -6338,7 +6576,7 @@ function drawPieChartUsingChartJsChartRCForMonth(dataValue) {
                         /* render:"value",*/
                         render: (args) => {
 
-                            return args.value;
+                            return args.value +'%';
 
                         },
 
@@ -6396,7 +6634,7 @@ function drawPieChartUsingChartJsChartRCForMonth(dataValue) {
                         enabled: true,
                         callbacks: {
                             label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
+                                let label = context.label + '(' + context.formattedValue + '%)'
                                 return label;
                             }
                         }
@@ -6622,7 +6860,7 @@ function drawPieChartUsingChartJsChartRCForYear(dataValue) {
         return e.dateRange;
     });
     var data2 = dataValue.map(function (e) {
-        return e.recordCount;
+        return e.recordCountNew;
     });
     // Data for the pie chart
     const data = {
@@ -6680,7 +6918,7 @@ function drawPieChartUsingChartJsChartRCForYear(dataValue) {
                         enabled: true,
                         callbacks: {
                             label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
+                                let label = context.label + '(' + context.formattedValue + '%)'
                                 return label;
                             }
                         }
@@ -6727,7 +6965,7 @@ function drawPieChartUsingChartJsChartRCForYear(dataValue) {
                         /* render:"value",*/
                         render: (args) => {
 
-                            return args.value;
+                            return args.value + '%';
 
                         },
 
@@ -6785,7 +7023,7 @@ function drawPieChartUsingChartJsChartRCForYear(dataValue) {
                         enabled: true,
                         callbacks: {
                             label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
+                                let label = context.label + '(' + context.formattedValue + '%)'
                                 return label;
                             }
                         }
@@ -7013,7 +7251,7 @@ function drawPieChartUsingChartJsChartRCButton(dataValue) {
         return e.dateRange;
     });
     var data2 = dataValue.map(function (e) {
-        return e.recordCount;
+        return e.recordCountNew;
     });
     // Data for the pie chart
     const data = {
@@ -7071,7 +7309,7 @@ function drawPieChartUsingChartJsChartRCButton(dataValue) {
                         enabled: true,
                         callbacks: {
                             label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
+                                let label = context.label + '(' + context.formattedValue + '%)'
                                 return label;
                             }
                         }
@@ -7118,7 +7356,7 @@ function drawPieChartUsingChartJsChartRCButton(dataValue) {
                         /* render:"value",*/
                         render: (args) => {
 
-                            return args.value;
+                            return args.value +'%';
 
                         },
 
@@ -7176,7 +7414,7 @@ function drawPieChartUsingChartJsChartRCButton(dataValue) {
                         enabled: true,
                         callbacks: {
                             label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
+                                let label = context.label + '(' + context.formattedValue + '%)'
                                 return label;
                             }
                         }
@@ -7404,7 +7642,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(dataValue) {
         return e.dateRange;
     });
     var data2 = dataValue.map(function (e) {
-        return e.recordCount;
+        return e.recordCountNew;
     });
     // Data for the pie chart
     const data = {
@@ -7462,7 +7700,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(dataValue) {
                         enabled: true,
                         callbacks: {
                             label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
+                                let label = context.label + '(' + context.formattedValue + '%)'
                                 return label;
                             }
                         }
@@ -7509,7 +7747,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(dataValue) {
                         /* render:"value",*/
                         render: (args) => {
 
-                            return args.value;
+                            return args.value +'%';
 
                         },
 
@@ -7567,7 +7805,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(dataValue) {
                         enabled: true,
                         callbacks: {
                             label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
+                                let label = context.label + '(' + context.formattedValue + '%)'
                                 return label;
                             }
                         }
@@ -7793,7 +8031,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(dataValue)
         return e.dateRange;
     });
     var data2 = dataValue.map(function (e) {
-        return e.recordCount;
+        return e.recordCountNew;
     });
     // Data for the pie chart
     const data = {
@@ -7851,7 +8089,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(dataValue)
                         enabled: true,
                         callbacks: {
                             label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
+                                let label = context.label + '(' + context.formattedValue + '%)'
                                 return label;
                             }
                         }
@@ -7898,7 +8136,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(dataValue)
                         /* render:"value",*/
                         render: (args) => {
 
-                            return args.value;
+                            return args.value +'%';
 
                         },
 
@@ -7956,7 +8194,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(dataValue)
                         enabled: true,
                         callbacks: {
                             label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
+                                let label = context.label + '(' + context.formattedValue + '%)'
                                 return label;
                             }
                         }

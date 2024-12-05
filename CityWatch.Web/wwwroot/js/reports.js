@@ -538,6 +538,8 @@
             drawPieChartLargeSize(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site1");
             drawPieChartLargeSizeForPdf(response.chartData.sitePercentage, response.recordCount, "svg#pie_chart_ir_by_site3");
             $('#count_by_site3').html(response.chartData.sitePercentage.length);
+            drawPieChartLargeSizeForPdf(response.chartData.areaWardPercentage, response.recordCount, "svg#pie_chart_ir_by_areaward3pdf");
+            drawPieChartLargeSizeForPdf(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode3pdf");
             /* drawPieChartLargeSize(response.chartData.areaWardPercentage, response.recordCount, "svg#pie_chart_ir_by_areaward1");*/
             /* drawPieChartLargeSize(response.chartData.colorCodePercentage, response.recordCount, "svg#pie_chart_ir_by_colorcode1");*/
             drawPieChartLargeSize(response.chartData.eventTypePercentage, response.recordCount, "svg#pie_chart_by_ireventype_quantity1");
@@ -2126,7 +2128,7 @@ function drawPieChartUsingChartJsChartRCForWeek(dataValue) {
         return e.dateRange;
     });
     var data2 = dataValue.map(function (e) {
-        return e.recordCount;
+        return e.recordCountNew;
     });
     // Data for the pie chart
     const data = {
@@ -2183,7 +2185,7 @@ function drawPieChartUsingChartJsChartRCForWeek(dataValue) {
                         enabled: true,
                         callbacks: {
                             label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
+                                let label = context.label + '(' + context.formattedValue + '%)'
                                 return label;
                             }
                         }
@@ -2209,7 +2211,7 @@ function drawPieChartUsingChartJsChartRCForWeek(dataValue) {
                                         const style = meta.controller.getStyle(i);
 
                                         return {
-                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
                                             fillStyle: style.backgroundColor,
                                             strokeStyle: style.borderColor,
                                             lineWidth: style.borderWidth,
@@ -2230,7 +2232,7 @@ function drawPieChartUsingChartJsChartRCForWeek(dataValue) {
                         /* render:"value",*/
                         render: (args) => {
 
-                            return args.value;
+                            return args.value + '%';
 
                         },
 
@@ -2288,7 +2290,7 @@ function drawPieChartUsingChartJsChartRCForWeek(dataValue) {
                         enabled: true,
                         callbacks: {
                             label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
+                                let label = context.label + '(' + context.formattedValue + '%)'
                                 return label;
                             }
                         }
@@ -2313,7 +2315,7 @@ function drawPieChartUsingChartJsChartRCForWeek(dataValue) {
                                         const style = meta.controller.getStyle(i);
 
                                         return {
-                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
                                             fillStyle: style.backgroundColor,
                                             strokeStyle: style.borderColor,
                                             lineWidth: style.borderWidth,
@@ -2514,7 +2516,7 @@ function drawPieChartUsingChartJsChartRCForMonth(dataValue) {
         return e.dateRange;
     });
     var data2 = dataValue.map(function (e) {
-        return e.recordCount;
+        return e.recordCountNew;
     });
     // Data for the pie chart
     const data = {
@@ -2571,7 +2573,7 @@ function drawPieChartUsingChartJsChartRCForMonth(dataValue) {
                         enabled: true,
                         callbacks: {
                             label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
+                                let label = context.label + '(' + context.formattedValue + '%)'
                                 return label;
                             }
                         }
@@ -2597,7 +2599,7 @@ function drawPieChartUsingChartJsChartRCForMonth(dataValue) {
                                         const style = meta.controller.getStyle(i);
 
                                         return {
-                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
                                             fillStyle: style.backgroundColor,
                                             strokeStyle: style.borderColor,
                                             lineWidth: style.borderWidth,
@@ -2618,7 +2620,7 @@ function drawPieChartUsingChartJsChartRCForMonth(dataValue) {
                         /* render:"value",*/
                         render: (args) => {
 
-                            return args.value;
+                            return args.value + '%';
 
                         },
 
@@ -2676,7 +2678,7 @@ function drawPieChartUsingChartJsChartRCForMonth(dataValue) {
                         enabled: true,
                         callbacks: {
                             label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
+                                let label = context.label + '(' + context.formattedValue + '%)'
                                 return label;
                             }
                         }
@@ -2701,7 +2703,7 @@ function drawPieChartUsingChartJsChartRCForMonth(dataValue) {
                                         const style = meta.controller.getStyle(i);
 
                                         return {
-                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
                                             fillStyle: style.backgroundColor,
                                             strokeStyle: style.borderColor,
                                             lineWidth: style.borderWidth,
@@ -2902,7 +2904,7 @@ function drawPieChartUsingChartJsChartRCForYear(dataValue) {
         return e.dateRange;
     });
     var data2 = dataValue.map(function (e) {
-        return e.recordCount;
+        return e.recordCountNew;
     });
     // Data for the pie chart
     const data = {
@@ -2960,7 +2962,7 @@ function drawPieChartUsingChartJsChartRCForYear(dataValue) {
                         enabled: true,
                         callbacks: {
                             label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
+                                let label = context.label + '(' + context.formattedValue + '%)'
                                 return label;
                             }
                         }
@@ -2986,7 +2988,7 @@ function drawPieChartUsingChartJsChartRCForYear(dataValue) {
                                         const style = meta.controller.getStyle(i);
 
                                         return {
-                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
                                             fillStyle: style.backgroundColor,
                                             strokeStyle: style.borderColor,
                                             lineWidth: style.borderWidth,
@@ -3007,7 +3009,7 @@ function drawPieChartUsingChartJsChartRCForYear(dataValue) {
                         /* render:"value",*/
                         render: (args) => {
 
-                            return args.value;
+                            return args.value + '%';
 
                         },
 
@@ -3065,7 +3067,7 @@ function drawPieChartUsingChartJsChartRCForYear(dataValue) {
                         enabled: true,
                         callbacks: {
                             label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
+                                let label = context.label + '(' + context.formattedValue + '%)'
                                 return label;
                             }
                         }
@@ -3090,7 +3092,7 @@ function drawPieChartUsingChartJsChartRCForYear(dataValue) {
                                         const style = meta.controller.getStyle(i);
 
                                         return {
-                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
                                             fillStyle: style.backgroundColor,
                                             strokeStyle: style.borderColor,
                                             lineWidth: style.borderWidth,
@@ -3293,7 +3295,7 @@ function drawPieChartUsingChartJsChartRCButton(dataValue) {
         return e.dateRange;
     });
     var data2 = dataValue.map(function (e) {
-        return e.recordCount;
+        return e.recordCountNew;
     });
     // Data for the pie chart
     const data = {
@@ -3351,7 +3353,7 @@ function drawPieChartUsingChartJsChartRCButton(dataValue) {
                         enabled: true,
                         callbacks: {
                             label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
+                                let label = context.label + '(' + context.formattedValue + '%)'
                                 return label;
                             }
                         }
@@ -3377,7 +3379,7 @@ function drawPieChartUsingChartJsChartRCButton(dataValue) {
                                         const style = meta.controller.getStyle(i);
 
                                         return {
-                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
                                             fillStyle: style.backgroundColor,
                                             strokeStyle: style.borderColor,
                                             lineWidth: style.borderWidth,
@@ -3398,7 +3400,7 @@ function drawPieChartUsingChartJsChartRCButton(dataValue) {
                         /* render:"value",*/
                         render: (args) => {
 
-                            return args.value;
+                            return args.value + '%';
 
                         },
 
@@ -3456,7 +3458,7 @@ function drawPieChartUsingChartJsChartRCButton(dataValue) {
                         enabled: true,
                         callbacks: {
                             label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
+                                let label = context.label + '(' + context.formattedValue + '%)'
                                 return label;
                             }
                         }
@@ -3481,7 +3483,7 @@ function drawPieChartUsingChartJsChartRCButton(dataValue) {
                                         const style = meta.controller.getStyle(i);
 
                                         return {
-                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
                                             fillStyle: style.backgroundColor,
                                             strokeStyle: style.borderColor,
                                             lineWidth: style.borderWidth,
@@ -3684,7 +3686,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(dataValue) {
         return e.dateRange;
     });
     var data2 = dataValue.map(function (e) {
-        return e.recordCount;
+        return e.recordCountNew;
     });
     // Data for the pie chart
     const data = {
@@ -3742,7 +3744,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(dataValue) {
                         enabled: true,
                         callbacks: {
                             label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
+                                let label = context.label + '(' + context.formattedValue + '%)'
                                 return label;
                             }
                         }
@@ -3768,7 +3770,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(dataValue) {
                                         const style = meta.controller.getStyle(i);
 
                                         return {
-                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
                                             fillStyle: style.backgroundColor,
                                             strokeStyle: style.borderColor,
                                             lineWidth: style.borderWidth,
@@ -3789,7 +3791,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(dataValue) {
                         /* render:"value",*/
                         render: (args) => {
 
-                            return args.value;
+                            return args.value + '%';
 
                         },
                         
@@ -3847,7 +3849,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(dataValue) {
                         enabled: true,
                         callbacks: {
                             label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
+                                let label = context.label + '(' + context.formattedValue + '%)'
                                 return label;
                             }
                         }
@@ -3872,7 +3874,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardstoPrealarm(dataValue) {
                                         const style = meta.controller.getStyle(i);
 
                                         return {
-                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
                                             fillStyle: style.backgroundColor,
                                             strokeStyle: style.borderColor,
                                             lineWidth: style.borderWidth,
@@ -4073,7 +4075,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(dataValue)
         return e.dateRange;
     });
     var data2 = dataValue.map(function (e) {
-        return e.recordCount;
+        return e.recordCountNew;
     });
     // Data for the pie chart
     const data = {
@@ -4131,7 +4133,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(dataValue)
                         enabled: true,
                         callbacks: {
                             label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
+                                let label = context.label + '(' + context.formattedValue + '%)'
                                 return label;
                             }
                         }
@@ -4157,7 +4159,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(dataValue)
                                         const style = meta.controller.getStyle(i);
 
                                         return {
-                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
                                             fillStyle: style.backgroundColor,
                                             strokeStyle: style.borderColor,
                                             lineWidth: style.borderWidth,
@@ -4178,7 +4180,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(dataValue)
                         /* render:"value",*/
                         render: (args) => {
 
-                            return args.value;
+                            return args.value + '%';
 
                         },
 
@@ -4236,7 +4238,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(dataValue)
                         enabled: true,
                         callbacks: {
                             label: function (context) {
-                                let label = context.label + '(' + context.formattedValue + ')'
+                                let label = context.label + '(' + context.formattedValue + '%)'
                                 return label;
                             }
                         }
@@ -4261,7 +4263,7 @@ function drawPieChartUsingChartJsChartRCForNumberofGuardsFromPrealarm(dataValue)
                                         const style = meta.controller.getStyle(i);
 
                                         return {
-                                            text: `${label} (${data['datasets'][0].data[i]})`,
+                                            text: `${label} (${data['datasets'][0].data[i]}%)`,
                                             fillStyle: style.backgroundColor,
                                             strokeStyle: style.borderColor,
                                             lineWidth: style.borderWidth,

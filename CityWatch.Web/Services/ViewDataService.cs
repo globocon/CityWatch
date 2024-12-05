@@ -851,7 +851,7 @@ namespace CityWatch.Web.Services
         {
             var dt = new DataTable("IR Statistics");
             dt.Columns.Add("Day");
-            dt.Columns.Add("Date");
+            dt.Columns.Add("Date", typeof(string)); // Use string to hold formatted date
             //  dt.Columns.Add("IR S/No");
             dt.Columns.Add("Control Room Job No.");
             dt.Columns.Add("Site");
@@ -876,7 +876,7 @@ namespace CityWatch.Web.Services
             {
                 var row = dt.NewRow();
                 row["Day"] = data.NameOfDay;
-                row["Date"] = data.Date;
+                row["Date"] = data.Date; 
                 //row["IR S/No"] = data.SerialNo;
                 row["Control Room Job No."] = data.ControlRoomJobNo;
                 row["Site"] = data.SiteName;
@@ -900,7 +900,14 @@ namespace CityWatch.Web.Services
                 dt.Rows.Add(row);
             }
 
-            return dt;
+            var sortedRows = dt.AsEnumerable()
+                      .OrderBy(row => DateTime.ParseExact(row.Field<string>("Date"), "dd MMM yyyy", null));
+
+            // Create a new sorted DataTable
+            DataTable sortedTable = sortedRows.Any() ? sortedRows.CopyToDataTable() : dt.Clone();
+
+            return sortedTable;
+            //return dt;
         }
 
         private string GetFormattedClientSites(IEnumerable<UserClientSiteAccess> userClientSiteAccess)

@@ -727,9 +727,10 @@
             value = clientSiteStatuses.getValue(value);
             if (value === -1) value = 0;
         }
-
-        if (value === 1 && record.formattedStatusDate && new Date(record.formattedStatusDate) < new Date())
-            value = 2;
+        //27/11/2027 commneted for expireing sites shows expired based on the date here
+        // so the status not same in every area.So Commneted
+        //if (value === 1 && record.formattedStatusDate && new Date(record.formattedStatusDate) < new Date())
+        //   value = 2;
 
         const statusText = clientSiteStatuses.getText(value);
         const color = clientSiteStatuses.getColorByText(statusText);
@@ -5253,7 +5254,7 @@ $('#clientTypeNameDocHrDoc').on('change', function () {
     //}
 
     $.ajax({
-        url: '/admin/settings?handler=ClientSitesNew',
+        url: '/admin/settings?handler=ClientSitesNew1',
         type: 'GET',
         data: {
             typeId: option

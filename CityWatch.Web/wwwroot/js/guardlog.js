@@ -97,15 +97,15 @@ $(function () {
     $('#Guard_Access').on('change', function () {
         var newval = $(this).val();
         
-        if (newval.includes('6') && newval.includes('5')) {
+        if ((newval.includes('6') && newval.includes('5')) || (newval.includes('6') && newval.includes('7')) || (newval.includes('7') && newval.includes('5'))) {
                 //yourElement in yourArray
-            alert('Please select only one option among RC or RC-Fusion');
+            alert('Please select only one option among RC + HR or RC-Fusion or RC');
             $(".multiselect-option input[type=checkbox]:checked").each(function () {
                         var isChecked1 = $(this).is(':checked');
                         if (isChecked1 == true) {
                             var new1 = $(this).val();
 
-                            if (parseInt(new1) == 6 || parseInt(new1) == 5) {
+                            if (parseInt(new1) == 6 || parseInt(new1) == 5 || parseInt(new1) == 7) {
                                 $(".multiselect-option input[type=checkbox][value='" + new1 + "']").prop("checked", false);
                                 newval = newval.filter(function (value) {
                                     return value !== new1;
@@ -117,6 +117,7 @@ $(function () {
 
         }
 
+
         if (newval.includes('2') && newval.includes('3')) {
             //yourElement in yourArray
             alert('Please select only one option among STATS or STATS-CHART ');
@@ -126,6 +127,26 @@ $(function () {
                     var new1 = $(this).val();
 
                     if (parseInt(new1) == 2 || parseInt(new1) == 3) {
+                        $(".multiselect-option input[type=checkbox][value='" + new1 + "']").prop("checked", false);
+                        newval = newval.filter(function (value) {
+                            return value !== new1;
+                        });
+                    }
+                }
+
+            });
+
+        }
+
+        if ((newval.includes('8') && newval.includes('9')) || (newval.includes('8') && newval.includes('10')) || (newval.includes('8') && newval.includes('11')) || (newval.includes('9') && newval.includes('10')) || (newval.includes('9') && newval.includes('11')) || (newval.includes('10') && newval.includes('11'))) {
+            //yourElement in yourArray
+            alert('Please select only one option among Admin-PowerUser or SOP or Auditor or Investigator');
+            $(".multiselect-option input[type=checkbox]:checked").each(function () {
+                var isChecked1 = $(this).is(':checked');
+                if (isChecked1 == true) {
+                    var new1 = $(this).val();
+
+                    if (parseInt(new1) == 8 || parseInt(new1) == 9 || parseInt(new1) == 10 || parseInt(new1) == 11) {
                         $(".multiselect-option input[type=checkbox][value='" + new1 + "']").prop("checked", false);
                         newval = newval.filter(function (value) {
                             return value !== new1;
@@ -508,15 +529,24 @@ $(function () {
                         onGuardLoginDutyTimeChange(isOffDutyDateToday);
                        
                     }
+
                     if (result.guard.isAdminThirdPartyAccess == true)
                         $('#LoginConformationBtnC4iSettingsThirdParty').attr('hidden', false);
+
+                    if (result.guard.isAdminGlobal || result.guard.isAdminInvestigatorAccess || result.guard.isAdminThirdPartyAccess) {
+                        $('#OtherAdminsAudtiLogAccessButton').attr('hidden', false);
+                    }
+                    else {
+                        $('#OtherAdminsAudtiLogAccessButton').attr('hidden', true);
+                    }
+
                 }
                
                 //HRList Status
                 $('#client_status_0').css('color', result.hR1);
                 $('#client_status_1').css('color', result.hR2);
                 $('#client_status_2').css('color', result.hR3);
-
+                
 
             },
             complete: function () {
@@ -4788,6 +4818,53 @@ $(function () {
         //$('#list_HrSearchandEdit_keys').select2('open'); // Open the dropdown to reload data
     }
 
+
+
+    $('#KeyVehicleLogAuditLogRequest_CompanyName').select2({
+        placeholder: "Select",
+        theme: 'bootstrap4',
+        allowClear: true,
+        ajax: {
+            url: '/Admin/GuardSettings?handler=KVCompanyDetails',
+            dataType: 'json',
+            delay: 250,
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            data: function (params) {
+              
+
+                return {
+                    clientSiteIds: $('#vklClientSiteId').val().join(';'),
+                    searchKeyNo: params.term,
+                };
+            },
+            processResults: function (data) {
+                // Store results in the Select2 instance for later filtering
+                $('#KeyVehicleLogAuditLogRequest_CompanyName').data('select2-data', data);
+                return {
+                    results: $.map(data, function (item) {
+                        return {
+                            text:item,
+                            id: item,
+                            title: item
+                        };
+                    })
+                };
+            },
+            cache: true
+        },
+        // Enable searching through the loaded data
+        minimumInputLength: 0,
+    }).on("select2:select", function (e) {
+
+       
+
+    }).on("select2:clear", function (e) {
+
+        
+
+        // Handle clear event
+    });
+
 // Extend the Select2 search functionality to filter the loaded data
 
     //$('#guard_settings tbody').on('click', 'td.dt-control', function () {
@@ -4842,10 +4919,10 @@ $(function () {
         // ;
         var selectedValues = [];
         if (data.isAdminGlobal) {
-            selectedValues.push(12);
+            selectedValues.push(13);
         }
         if (data.isAdminPowerUser) {
-            selectedValues.push(7);
+            selectedValues.push(8);
         }
         if (data.isRCAccess) {
             selectedValues.push(5);
@@ -4862,20 +4939,23 @@ $(function () {
         if (data.isSTATSChartsAccess) {
             selectedValues.push(3);
         }
-        if (data.isRCFusionAccess) {
+        if (data.isRCHRAccess) {
             selectedValues.push(6);
         }
-        if (data.isAdminSOPToolsAccess) {
-            selectedValues.push(8);
+        if (data.isRCFusionAccess) {
+            selectedValues.push(7);
         }
-        if (data.isAdminAuditorAccess) {
+        if (data.isAdminSOPToolsAccess) {
             selectedValues.push(9);
         }
-        if (data.isAdminInvestigatorAccess) {
+        if (data.isAdminAuditorAccess) {
             selectedValues.push(10);
         }
-        if (data.isAdminThirdPartyAccess) {
+        if (data.isAdminInvestigatorAccess) {
             selectedValues.push(11);
+        }
+        if (data.isAdminThirdPartyAccess) {
+            selectedValues.push(12);
         }
         selectedValues.forEach(function (value) {
 
@@ -6816,6 +6896,37 @@ $(function () {
     });
     
     /* p1-203 Admin User Profile -start */
+    
+    //$("#OtherAdminsAudtiLogAccessButton").on('click', function () {
+    //    const securityLicenseNo = $('#GuardLogin_Guard_SecurityNo').val();
+       
+     
+
+
+    //        /* $('#txt_securityLicenseNoIR').val('');*/
+
+
+    //        $.ajax({
+    //            url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+    //            type: 'POST',
+    //            data: {
+    //                securityLicenseNo: securityLicenseNo,
+    //                type: 'Settings'
+    //            },
+    //            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+    //        }).done(function (result) {
+    //            if (result.accessPermission) {
+    //                /* $('#txt_securityLicenseNoIR').val('');*/
+                   
+
+    //                window.location.href = '/Admin/AuditSiteLog?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
+    //            }
+               
+    //        });
+
+
+            
+    //});
     /* Check if Guard can access the KPI */
     $('#btnGuardLoginKPI').on('click', function () {
         const securityLicenseNo = $('#txt_securityLicenseNo').val();
@@ -7027,7 +7138,7 @@ $(function () {
             }).done(function (result) {
                 if (result.accessPermission) {
                     /* $('#txt_securityLicenseNoIR').val('');*/
-                    $('#modelGuardLoginC4iSettingsPatrol').modal('hide');
+                    $('#modelGuardLoginAuditSite').modal('hide');
 
                     clearGuardValidationSummary('GuardLoginValidationSummaryC4iSettings');
                     window.location.href = '/Admin/AuditSiteLog?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
@@ -7036,9 +7147,9 @@ $(function () {
 
                     // $('#txt_securityLicenseNo').val('');
                     /*$('#txt_securityLicenseNoIR').val('');*/
-                    $('#modelGuardLoginC4iSettingsPatrol').modal('show');
+                    $('#modelGuardLoginAuditSite').modal('show');
                     if (result.successCode === 0) {
-                        displayGuardValidationSummary('GuardLoginValidationSummaryC4iSettings', result.successMessage);
+                        displayGuardValidationSummary('GuardLoginValidationSummaryAuditSite', result.successMessage);
                     }
                 }
             });

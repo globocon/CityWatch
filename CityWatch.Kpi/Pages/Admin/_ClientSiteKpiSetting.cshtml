@@ -22,7 +22,7 @@
     var check = count;
     bool isStatusOngoing = @Model.ClientSite.Status != 0;
 
-   
+
 
 }
 
@@ -100,7 +100,7 @@
                                     <label for="gs_duress_email" class="col-md-3 col-form-label">Do's & Don'ts List</label>
                                     <div class="col-md-6">
                                         <div class="custom-control custom-switch custom-control-inline m-0" title="Switch between Patrol Car and Guards" style="padding-bottom:5px">
-                                            <input type="checkbox" class="custom-control-input" id="IsDosDontList"checked>
+                                            <input type="checkbox" class="custom-control-input" id="IsDosDontList" checked>
                                             <label class="custom-control-label" for="IsDosDontList"></label>
                                             <input type="hidden" id="IsDosDontListEnabledHidden" />
                                         </div>
@@ -677,7 +677,7 @@
                                             <option value="Pacific SA Standard Time">(UTC-04:00) Pacific SA Standard Time (Santiago)</option>
                                         </select>
                                     </div>
-                                   
+
                                 </div>
                                 <div class="col-md-3">
                                 </div>
@@ -1057,28 +1057,35 @@
                 <div class="tab-pane" id="notes" role="tabpanel" aria-labelledby="notes-tab">
                     <div class="container pt-3">
                         <div class="row mt-3">
-                            <div class="col-md-6">
+                            <div class="col-md-8">
                                 <div class="form-row">
-                                    <div class="form-group col-md-6">
+                                    <div class="form-group col-md-4">
                                         <label for="note_month">Month</label>
                                         <select class="form-control" id="note_month" asp-items="@ViewDataService.GetMonthsInYear()"></select>
                                     </div>
-                                    <div class="form-group col-md-6">
+                                    <div class="form-group col-md-4">
                                         <label for="note_year">Year</label>
                                         <select class="form-control" id="note_year" asp-items="@ViewDataService.GetYears()"></select>
                                     </div>
                                 </div>
+                                <form id="frm_site_note">
                                 <div class="form-row">
-                                    <div class="form-group col-md-12">
-                                        <form id="frm_site_note">
+                                    <div class="form-group col-md-8">
+                                        <label for="note_year">Site Summary</label>
+                                       
                                             <textarea class="form-control" name="ClientSiteKpiNote.Notes" id="ClientSiteKpiNote_Notes" maxlength="512" rows="4">@Model.NotesForThisMonth.Notes</textarea>
                                             <span id="lblSiteNoteRemainingCount" class="mt-2 d-block small"></span>
                                             <input type="hidden" name="ClientSiteKpiNote.Id" id="ClientSiteKpiNote_Id" value="@Model.NotesForThisMonth.Id" />
                                             <input type="hidden" name="ClientSiteKpiNote.SettingsId" id="ClientSiteKpiNote_SettingsId" value="@Model.NotesForThisMonth.SettingsId" />
                                             <input type="hidden" name="ClientSiteKpiNote.ForMonth" id="ClientSiteKpiNote_ForMonth" value="@Model.NotesForThisMonth.ForMonth" />
-                                        </form>
+                                       
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label for="hr_records">HR Records</label>
+                                        <textarea class="form-control" name="ClientSiteKpiNote.HRRecords" id="ClientSiteKpiNote_HRRecords" maxlength="512" rows="4">@Model.NotesForThisMonth.HRRecords</textarea>
                                     </div>
                                 </div>
+                                 </form>
                                 <div class="form-row mt-2">
                                     <button type="button" class="btn btn-outline-danger mr-2" id="delete_site_notes"><i class="fa fa-trash mr-2"></i>Delete</button>
                                     <button type="button" class="btn btn-success" id="save_site_notes"><i class="fa fa-save mr-2"></i>Save Notes</button>
@@ -1098,12 +1105,28 @@
                     <div class="container pt-3">
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="form-row my-1">
-                                    <div class="form-group col-md-12">
+
+                                <div class="form-row my-1 align-items-center">
+                                    <div class="form-group col-md-12 d-flex justify-content-between mb-0">
+                                        <!-- Label for the Dropbox Directory input -->
                                         <label class="form-label font-weight-bold" asp-for="@Model.DropboxImagesDir"></label>
+
+                                        <!-- Move the Label and Checkbox to the Right -->
+                                        <div class="d-flex align-items-center ml-auto">
+                                            <label class="mr-2" for="dropboxScheduleIsActive">Schedule is active</label>
+                                            <div class="custom-control custom-switch">
+                                                <input type="checkbox" class="custom-control-input" asp-for="@Model.DropboxScheduleisActive">
+                                                <label class="custom-control-label" asp-for="@Model.DropboxScheduleisActive"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Text Input -->
+                                    <div class="form-group col-md-12 mt-2">
                                         <input class="form-control" asp-for="@Model.DropboxImagesDir">
                                     </div>
                                 </div>
+
                                 <div class="form-row">
                                     <div class="col-md-12">
                                         <div class="form-check">

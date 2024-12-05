@@ -397,6 +397,7 @@ namespace CityWatch.Web.Pages.Guard
                 {
                     AuthUserHelper.IsAdminGlobal = false;
                 }
+
                 if (guard.IsAdminThirdPartyAccess)
                 {
                     AuthUserHelper.IsAdminThirdParty = true;
@@ -404,6 +405,24 @@ namespace CityWatch.Web.Pages.Guard
                 else
                 {
                     AuthUserHelper.IsAdminThirdParty = false;
+                }
+
+
+                if(guard.IsAdminInvestigatorAccess)
+                {
+                    AuthUserHelper.IsAdminInvestigator = true;
+                }
+                else
+                {
+                    AuthUserHelper.IsAdminInvestigator = false;
+                }
+                if (guard.IsAdminAuditorAccess)
+                {
+                    AuthUserHelper.IsAdminAuditor = true;
+                }
+                else
+                {
+                    AuthUserHelper.IsAdminAuditor = false;
                 }
 
             }

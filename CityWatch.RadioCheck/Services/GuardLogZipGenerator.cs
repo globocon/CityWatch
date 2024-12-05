@@ -250,7 +250,8 @@ namespace CityWatch.RadioCheck.Services
                     if (x.EventDateTimeZoneShort == null)
                     {
                         x.EventDateTimeZoneShort = checkGMT;
-                        x.EventDateTimeLocal = x.EventDateTime;
+                        x.EventDateTime = x.LastSWCreatedTime ?? x.EventDateTime;
+                        x.EventDateTimeLocal = x.LastSWCreatedTime ?? x.EventDateTime;
                     }
                 });
 

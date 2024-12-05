@@ -106,5 +106,6 @@ namespace CityWatch.Web.Models
 
 
         public bool IsAdminThirdPartyAccess { get { return _guard.IsAdminThirdPartyAccess; } }
+        public bool IsRCHRAccess { get { return _guard.IsRCHRAccess; } }
     }
 }
