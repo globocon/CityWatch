@@ -5377,7 +5377,7 @@ $(function () {
             }
 
             // Define headers and column widths
-            const headers = ['Name', 'Security No', 'Initial', 'State', 'Provider', 'Mobile', 'Email', 'Client Sites', 'Gender', 'Is Active', 'HR1 Status', 'HR2 Status', 'HR3 Status'];
+            const headers = ['Name', 'Security No', 'Initial', 'State', 'Provider', 'Mobile', 'Email', 'Client Sites', 'Gender', 'Is Active','DOE', 'HR1 Status', 'HR2 Status', 'HR3 Status'];
             const columnWidths = [20, 20, 10, 10, 20, 20, 20, 25, 15, 15, 10, 10, 10]; // Example widths
 
 
@@ -5419,6 +5419,7 @@ $(function () {
                 item.clientSites.replace('<br />', ' '),
                 item.gender,
                 item.isActive ? 'TRUE' : 'FALSE', // Ensure values are strings
+                item.dateEnrolled ? item.dateEnrolled.split('T')[0] : '',
                 item.hR1Status,
                 item.hR2Status,
                 item.hR3Status
