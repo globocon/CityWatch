@@ -149,6 +149,7 @@ namespace CityWatch.Web.Services
          public ANPR GetANPR(int clientSiteId);
 
         List<object> GetHrSettingsClientSiteLockStatus(int hrSettingsId);
+        List<SelectListItem> GetUserClientTypesCountWithTypeId(int? userId, int? clienttypeid);
     }
 
     public class ViewDataService : IViewDataService
@@ -430,6 +431,20 @@ namespace CityWatch.Web.Services
             {
                 var countClientType = GetClientTypeCount(item.Id);
                 items.Add(new SelectListItem($"{item.Name} ({countClientType})", item.Name));
+            }
+
+            return items;
+        }
+        public List<SelectListItem> GetUserClientTypesCountWithTypeId(int? userId,int? clienttypeid)
+        {
+            var clientTypes = GetUserClientTypesHavingAccess(userId).Where(x=>x.Id==clienttypeid);
+            var sortedClientTypes = clientTypes.OrderByDescending(clientType => GetClientTypeCount(clientType.Id));
+            sortedClientTypes = sortedClientTypes.OrderBy(clientType => clientType.Name);
+            var items = new List<SelectListItem>() { new SelectListItem("Select", "") };
+            foreach (var item in sortedClientTypes)
+            {
+                var countClientType = GetClientTypeCount(item.Id);
+                items.Add(new SelectListItem($"{item.Name} ({countClientType})", item.Name, true));
             }
 
             return items;

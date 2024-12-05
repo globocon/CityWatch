@@ -495,13 +495,24 @@ $(function () {
                     $('#guardLoginDetails').show();
                     $('#GuardLogin_Guard_Id').val(result.guard.id);
                     $('#GuardLogin_Guard_IsLB_KV_IR').val(result.guard.isLB_KV_IR);
+                    var valnewhid = $('#hiddenClientTypeId').val();
+                    if ($('#hiddenClientTypeId').val() != null || $('#hiddenClientTypeId').val() != '') {
+                        $('#GuardLogin_ClientType').val(valnewhid);
+                        populateClientSites();
+                    }
                     
                     if (hasLastLogin) {
                         const lastLogin = result.lastLogin;
 
                         $('#GuardLogin_Id').val(lastLogin.id);
-                        $('#GuardLogin_ClientType').val(lastLogin.clientSite.clientType.name);
-                        populateClientSites(lastLogin.clientSite.name);
+                        if ($('#hiddenClientTypeId').val() == lastLogin.clientSite.clientType.name) {
+                            $('#GuardLogin_ClientType').val(lastLogin.clientSite.clientType.name);
+                            populateClientSites(lastLogin.clientSite.name);
+                        }
+                        else {
+                            $('#GuardLogin_ClientType').val($('#hiddenClientTypeId').val());
+                            populateClientSites();
+                        }
                         const isPosition = lastLogin.smartWandId === null ? true : false;
                         const smartWandOrPositionName = isPosition ? lastLogin.position.name : lastLogin.smartWand.smartWandId;
                         getSmartWandOrOfficerPosition(isPosition, lastLogin.clientSite.name, smartWandOrPositionName);
@@ -516,14 +527,21 @@ $(function () {
 
                         $('#GuardLogin_SmartWandOrPosition').prop('disabled', false);
                         onGuardLoginDutyTimeChange(isOffDutyDateToday);
+                       
                     }
+
+                    if (result.guard.isAdminThirdPartyAccess == true)
+                        $('#LoginConformationBtnC4iSettingsThirdParty').attr('hidden', false);
+
                     if (result.guard.isAdminGlobal || result.guard.isAdminInvestigatorAccess || result.guard.isAdminThirdPartyAccess) {
                         $('#OtherAdminsAudtiLogAccessButton').attr('hidden', false);
                     }
                     else {
                         $('#OtherAdminsAudtiLogAccessButton').attr('hidden', true);
                     }
+
                 }
+               
                 //HRList Status
                 $('#client_status_0').css('color', result.hR1);
                 $('#client_status_1').css('color', result.hR2);
@@ -6832,6 +6850,43 @@ $(function () {
         $('#txt_securityLicenseNoC4iSettings').val('');
         $("#modelGuardLoginC4iSettingsPatrol").modal("show");
         return false;
+    });
+    $("#LoginConformationBtnC4iSettingsThirdParty").on('click', function () {
+        const securityLicenseNo = $('#GuardLogin_Guard_SecurityNo').val();
+     
+      
+
+
+            /* $('#txt_securityLicenseNoIR').val('');*/
+
+
+            $.ajax({
+                url: '/Admin/GuardSettings?handler=GuardDetailsForRCLogin',
+                type: 'POST',
+                data: {
+                    securityLicenseNo: securityLicenseNo,
+                    type: 'Settings'
+                },
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.accessPermission) {
+                    /* $('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginC4iSettingsPatrol').modal('hide');
+
+                    clearGuardValidationSummary('GuardLoginValidationSummaryC4iSettings');
+                    window.location.href = '/Admin/Settings?Sl=' + securityLicenseNo + "&lud=" + result.loggedInUserId + "&guid=" + result.guId;
+                }
+                else {
+
+                    // $('#txt_securityLicenseNo').val('');
+                    /*$('#txt_securityLicenseNoIR').val('');*/
+                    $('#modelGuardLoginC4iSettingsPatrol').modal('show');
+                    if (result.successCode === 0) {
+                        displayGuardValidationSummary('GuardLoginValidationSummaryC4iSettings', result.successMessage);
+                    }
+                }
+            });
+
     });
     $("#AuditSiteLogsConformationBtnSettings").on('click', function () {
         clearGuardValidationSummary('GuardLoginValidationSummary');

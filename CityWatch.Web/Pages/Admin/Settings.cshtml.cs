@@ -80,18 +80,58 @@ namespace CityWatch.Web.Pages.Admin
         public string loggedInUserId { get; set; }
         public int GuardId { get; set; }
         public GuardViewModel Guard { get; set; }
+        
+         public int ClientTypeId { get; set; }
+
         public IActionResult OnGet()
         {
             string securityLicenseNonew = Request.Query["Sl"];
             string guid = Request.Query["guid"];
             string luid = Request.Query["lud"];
             GuardId = Convert.ToInt32(guid);
-            if (GuardId != 0)
+            var host = HttpContext.Request.Host.Host;
+            var clientName = string.Empty;
+            var clientLogo = string.Empty;
+            var url = string.Empty;
+
+            // Split the host by dots to separate subdomains and domain name
+            var hostParts = host.Split('.');
+
+            // If the first part is "www", take the second part as the client name
+            if (hostParts.Length > 1 && hostParts[0].Trim().ToLower() == "www")
+            {
+                clientName = hostParts[1];
+            }
+            else
+            {
+                clientName = hostParts[0];
+            }
+            if (!string.IsNullOrEmpty(clientName))
+            {
+                if (
+                    clientName.Trim().ToLower() != "www" &&
+                    clientName.Trim().ToLower() != "cws-ir" &&
+                    clientName.Trim().ToLower() != "test" &&
+                    clientName.Trim().ToLower() != "localhost"
+                )
+                {
+                    int domain = _configDataProvider.GetSubDomainDetails(clientName).TypeId;
+                    if (domain != 0)
+                    {
+                        ClientTypeId = domain;
+                    }
+                    else
+                    {
+                        ClientTypeId = 0;
+                    }
+                }
+            }
+                if (GuardId != 0)
             {
                 Guard = _viewDataService.GetGuards().SingleOrDefault(x => x.Id == GuardId);
 
             }
-            if (!AuthUserHelper.IsAdminUserLoggedIn && !AuthUserHelper.IsAdminGlobal && !AuthUserHelper.IsAdminPowerUser  && !Guard.IsAdminSOPToolsAccess && !Guard.IsAdminAuditorAccess && !Guard.IsAdminInvestigatorAccess)
+            if (!AuthUserHelper.IsAdminUserLoggedIn && !AuthUserHelper.IsAdminGlobal && !AuthUserHelper.IsAdminPowerUser  && !Guard.IsAdminSOPToolsAccess && !Guard.IsAdminAuditorAccess && !Guard.IsAdminInvestigatorAccess && !Guard.IsAdminThirdPartyAccess)
             {
                 return Redirect(Url.Page("/Account/Unauthorized"));
             }

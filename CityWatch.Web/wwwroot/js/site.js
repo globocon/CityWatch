@@ -387,7 +387,8 @@
             }
         });
     }
-
+    
+   
     if (gridType) {
         gridType.on('rowDataChanged', function (e, id, record) {
             const data = $.extend(true, {}, record);
@@ -559,6 +560,12 @@
             /*p1-245 jump button-end*/
         }
     });
+    if ($('#sel_client_type').val() != null && $('#sel_client_type').val() != '' && $('#sel_client_type').val() != undefined)
+        {
+
+    gridSite.clear();
+    gridSite.reload({ typeId: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val() });
+    }
     function renderSiteTelematicsview(value, record, $cell, $displayEl) {
         //let $editBtn = $('<button id="btnEditClientSiteTelematicslink" class="btn btn-outline-primary mr-2" data-cs-typeid="' + record.typeId + '" data-cs-siteid="' + record.id + '" ><i class="fa fa-pencil">Edit</i></button>'
         //        );
@@ -3797,7 +3804,18 @@
             $(e.target).find('thead tr th:last').addClass('text-center').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
         }
     });
+    //if ($('#sel_client_type').val() != null && $('#sel_client_type').val() != '' && $('#sel_client_type').val() != undefined) {
 
+    //    //keyVehicleLog.search(item).draw();
+    //    //gridSchedules.clear();
+    //    //gridSchedules.search($('#sel_client_type').val()).draw();
+    //    var value = $('#sel_client_type option:selected').text();
+    //    alert(value);
+    //    $("#staff_document_siteSOP tbody tr").filter(function () {
+    //        $(this).toggle(value)
+    //    });
+        //gridSchedules.reload({ clientTypeName: $('#sel_client_type').val(), searchTerm: $('#search_kw_client_site').val() });
+    //}
     function schButtonRenderer(value, record) {
         let buttonHtml = '';
         buttonHtml = '<a href="/StaffDocs/' + record.fileName + '" class="btn btn-outline-primary m-1" target="_blank"><i class="fa fa-download"></i></a>';

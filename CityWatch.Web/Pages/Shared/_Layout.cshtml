@@ -77,7 +77,7 @@
              clientName.Trim() != "www" 
             && clientName.Trim() != "cws-ir" 
           && clientName.Trim() != "test"
-         && clientName.Trim() != "localhost"
+        && clientName.Trim() != "localhost"
         )
         {
             var domain = dataProvider.GetSubDomainDetails(clientName);
@@ -325,6 +325,7 @@
                         {
                             <div><a href="/Guard/Login?t=gl" class="nav-link py-0"><i class="fa fa-list-alt mr-2"></i>Daily Log Book (LB)</a></div>
                             <div><a href="/Incident/ToolSelecter" class="nav-link py-0"><i class="fa fa-wrench mr-2"></i>Tools</a></div>
+                            <div><a href="" id="LoginConformationBtnC4iSettingsThirdParty" class="nav-link py-0" hidden><i class="fa fa-cog mr-2"></i>C4i System Settings</a></div>
                         }
                     }
 
