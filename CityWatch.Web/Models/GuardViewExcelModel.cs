@@ -140,6 +140,7 @@ namespace CityWatch.Web.Models
             get
             {
                 int totalhours = 0;
+                
                 // var Q1JantoMarch2023hours = _guardLogins.Where(x=> x.LoginDate.Date >= Convert.ToDateTime("01-Jan-2023").Date && x.LoginDate.Date<= Convert.ToDateTime("31-March-2023").Date).OrderByDescending(gl => gl.LoginDate).ToList();
                 var Q1JantoMarch2023hours = _guardDataProvider.GetGuardLoginsByGuardIdAndDate(_guard.Id, Convert.ToDateTime("01-Jan-2023"), Convert.ToDateTime("31-March-2023")).ToList();
                 var result = Q1JantoMarch2023hours
