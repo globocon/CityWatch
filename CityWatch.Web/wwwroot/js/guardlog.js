@@ -5365,7 +5365,7 @@ $(function () {
             });
 
             $('#loader').hide(); // Hide loader
-
+            console.log(response.data);
 
             //const filteredData = response.data.filter(item => guardIds.includes(item.id));
             // Ensure response contains data
@@ -5378,8 +5378,8 @@ $(function () {
 
             // Define headers and column widths
 
-            const headers = ['Name', 'Security No', 'Initial', 'State', 'Provider', 'Mobile', 'Email', 'Client Sites', 'Gender', 'Is Active','DOE', 'HR1 Status', 'HR2 Status', 'HR3 Status', 'Security Hours Worked Q1 1Jan - 31March 2023', 'Security Hours Worked Q2 1Apr - 30June 2023',  'Security Hours Worked Q3 1July - 30Sep 2023', 'Security Hours Worked Q4 1Oct - 31Dec 2023', 'Security Hours Worked Q1 1Jan - 31March 2024', 'Security Hours Worked Q2 1Apr - 30June 2024',  'Security Hours Worked Q3 1July - 31Sept 2024'];
-            const columnWidths = [20, 20, 10, 10, 20, 20, 20, 25, 15, 15, 10, 10, 10, 10, 10, 10, 10, 10, 10,10,10]; // Example widths
+            const headers = ['Name', 'Security No', 'Initial', 'State', 'Provider', 'Mobile', 'Email', 'Client Sites', 'Gender', 'Is Active', 'DOE', 'HR1 Status', 'HR2 Status', 'HR3 Status', 'Security Hours Worked Q1 1Jan - 31March 2023', 'Security Hours Worked Q2 1Apr - 30June 2023', 'Security Hours Worked Q3 1July - 30Sep 2023', 'Security Hours Worked Q4 1Oct - 31Dec 2023', 'Security Hours Worked Q1 1Jan - 31March 2024', 'Security Hours Worked Q2 1Apr - 30June 2024', 'Security Hours Worked Q3 1July - 31Sept 2024', 'Q1HRS2023', 'Q2HRS2023', 'Q3HRS2023', 'Q4HRS2023', 'Q1HRS2024', 'Q2HRS2024', 'Q3HRS2024', 'Q4HRS2024'];
+            const columnWidths = [20, 20, 10, 10, 20, 20, 20, 25, 15, 15, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]; // Example widths
 
 
 
@@ -5431,7 +5431,15 @@ $(function () {
                 item.q4OcttoDec2023,
                 item.q1JantoMarch2024,
                 item.q2AprtoJune2024,
-                item.q3JulytoSept2024
+                item.q3JulytoSept2024,
+                item.q1HRS2023,
+                item.q2HRS2023,
+                item.q3HRS2023,
+                item.q4HRS2023,
+                item.q1HRS2024,
+                item.q2HRS2024,
+                item.q3HRS2024,
+                item.q4HRS2024,
             ])];
 
             // Update the worksheet with headers and data

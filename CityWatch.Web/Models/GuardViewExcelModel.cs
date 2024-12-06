@@ -328,6 +328,14 @@ namespace CityWatch.Web.Models
             return colourCode; // Default return is green
         }
 
+        public int Q1HRS2023 { get; set; }
+        public int Q2HRS2023 { get; set; }
+        public int Q3HRS2023 { get; set; }
+        public int Q4HRS2023 { get; set; }
+        public int Q1HRS2024 { get; set; }
+        public int Q2HRS2024 { get; set; }
+        public int Q3HRS2024 { get; set; }
+        public int Q4HRS2024 { get; set; }
         public class HRGroupStatusNew
         {
             public int Status { get; set; }

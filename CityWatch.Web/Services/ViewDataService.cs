@@ -769,6 +769,8 @@ namespace CityWatch.Web.Services
                                                 .Where(x => guardIds.Contains(x.Id))
                                                 .ToList(); // Materialize the query
 
+                var quaterDeatils = _guardLogDataProvider.GetGuardWorkingHoursInQuater();
+
                 // If there are no guards found, return an empty list
                 if (!guards.Any())
                     return listGuardExcel;
@@ -785,6 +787,19 @@ namespace CityWatch.Web.Services
 
                 foreach (var item in listGuardExcel)
                 {
+                    var guardQuaterDeatils = quaterDeatils.Where(x => x.GuardId == item.Id).FirstOrDefault();
+                    if(guardQuaterDeatils!=null)
+                    {
+                        item.Q1HRS2023 = guardQuaterDeatils.Q1HRS2023;
+                        item.Q2HRS2023 = guardQuaterDeatils.Q2HRS2023;
+                        item.Q3HRS2023 = guardQuaterDeatils.Q3HRS2023;
+                        item.Q4HRS2023 = guardQuaterDeatils.Q3HRS2023;
+
+                        item.Q1HRS2024 = guardQuaterDeatils.Q1HRS2024;
+                        item.Q2HRS2024 = guardQuaterDeatils.Q2HRS2024;
+                        item.Q3HRS2024 = guardQuaterDeatils.Q3HRS2024;
+                        item.Q4HRS2024 = guardQuaterDeatils.Q3HRS2024;
+                    }
                     // Assuming GuardViewExcelModel has a string property called 'ColumnName'
                     if (!string.IsNullOrEmpty(item.ClientSites))
                     {

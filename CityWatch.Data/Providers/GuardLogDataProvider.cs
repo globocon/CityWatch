@@ -318,6 +318,8 @@ namespace CityWatch.Data.Providers
 
         public int GetDosandDontsFieldsCount(int type);
 
+        public List<GuardHoursByQuarterViewModel> GetGuardWorkingHoursInQuater();
+
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -5351,6 +5353,16 @@ namespace CityWatch.Data.Providers
                 .OrderByDescending(x => x.CreatedOn)
                 .Take(1).ToList();
             return irh;
+        }
+
+
+        public List<GuardHoursByQuarterViewModel> GetGuardWorkingHoursInQuater()
+        {
+            ////var param1 = new SqlParameter();
+            ////param1.ParameterName = "@pattern";
+            ////param1.SqlDbType = SqlDbType.VarChar;
+            ////param1.SqlValue = pattern;
+            return _context.GuardHoursByQuarterViewModel.FromSqlRaw($"EXEC GetGuardHoursByQuarter").ToList();
         }
     }
 
