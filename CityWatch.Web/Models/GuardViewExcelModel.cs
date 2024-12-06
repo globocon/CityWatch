@@ -127,11 +127,40 @@ namespace CityWatch.Web.Models
                 int totalhours = 0;
                 // var Q1JantoMarch2023hours = _guardLogins.Where(x=> x.LoginDate.Date >= Convert.ToDateTime("01-Jan-2023").Date && x.LoginDate.Date<= Convert.ToDateTime("31-March-2023").Date).OrderByDescending(gl => gl.LoginDate).ToList();
                 var Q1JantoMarch2023hours = _guardDataProvider.GetGuardLoginsByGuardIdAndDate(_guard.Id, Convert.ToDateTime("01-Jan-2023"), Convert.ToDateTime("31-March-2023")).ToList();
-                foreach (var item in Q1JantoMarch2023hours)
+                var result = Q1JantoMarch2023hours
+    .Select(gl => new
+    {
+        gl.GuardId,
+        gl.ClientSiteId,
+        gl.LoginDate,
+        gl.OnDuty,
+        gl.OffDuty,
+        // Calculate DurationInSeconds
+        DurationInSeconds = Convert.ToDateTime(gl.OffDuty).Month == gl.OnDuty.Month && Convert.ToDateTime(gl.OffDuty).Year == gl.OnDuty.Year
+        ? (int)(Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalSeconds
+        //(int)(gl.OffDuty - gl.OnDuty).TotalSeconds
+        : (int)(gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalSeconds,
+        // Calculate DurationInHours
+        DurationInHours = (Convert.ToDateTime(gl.OffDuty).Month != gl.OnDuty.Month || Convert.ToDateTime(gl.OffDuty).Year != gl.OnDuty.Year)
+        ? (gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalHours
+        //: (gl.OffDuty - gl.OnDuty).TotalHours
+        : (Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalHours
+    })
+.OrderBy(gl => gl.LoginDate).ToList();
+                var resultnew = result
+    .GroupBy(x => x.LoginDate.Date) // Group by the date part
+    .Select(g => new
+    {
+        Date = g.Key,                // The date
+        MaxValue = Convert.ToInt32(g.Max(x => x.DurationInHours)) // Maximum value in the group
+    })
+    .OrderBy(x => x.Date)           // Order by date
+    .ToList();
+                foreach (var item in resultnew)
                 {
                     
-                    TimeSpan ts = Convert.ToDateTime(item.OffDuty).Subtract(Convert.ToDateTime(item.OnDuty));
-                    totalhours = totalhours + Math.Abs(ts.Hours);
+
+                    totalhours = totalhours + Convert.ToInt32(item.MaxValue);
                 }
                 return totalhours;
             }
@@ -143,11 +172,40 @@ namespace CityWatch.Web.Models
                 int totalhours = 0;
                 //var Q2AprtoJune2023hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-Apr-2023") && x.LoginDate <= Convert.ToDateTime("30-June-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
                 var Q2AprtoJune2023hours = _guardDataProvider.GetGuardLoginsByGuardIdAndDate(_guard.Id, Convert.ToDateTime("01-Apr-2023"), Convert.ToDateTime("30-June-2023")).ToList();
-                foreach (var item in Q2AprtoJune2023hours)
+                var result = Q2AprtoJune2023hours
+    .Select(gl => new
+    {
+        gl.GuardId,
+        gl.ClientSiteId,
+        gl.LoginDate,
+        gl.OnDuty,
+        gl.OffDuty,
+        // Calculate DurationInSeconds
+        DurationInSeconds = Convert.ToDateTime(gl.OffDuty).Month == gl.OnDuty.Month && Convert.ToDateTime(gl.OffDuty).Year == gl.OnDuty.Year
+        ? (int)(Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalSeconds
+        //(int)(gl.OffDuty - gl.OnDuty).TotalSeconds
+        : (int)(gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalSeconds,
+        // Calculate DurationInHours
+        DurationInHours = (Convert.ToDateTime(gl.OffDuty).Month != gl.OnDuty.Month || Convert.ToDateTime(gl.OffDuty).Year != gl.OnDuty.Year)
+        ? (gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalHours
+        //: (gl.OffDuty - gl.OnDuty).TotalHours
+        : (Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalHours
+    })
+.OrderBy(gl => gl.LoginDate).ToList();
+                var resultnew = result
+    .GroupBy(x => x.LoginDate.Date) // Group by the date part
+    .Select(g => new
+    {
+        Date = g.Key,                // The date
+        MaxValue = Convert.ToInt32(g.Max(x => x.DurationInHours)) // Maximum value in the group
+    })
+    .OrderBy(x => x.Date)           // Order by date
+    .ToList();
+                foreach (var item in resultnew)
                 {
 
-                    TimeSpan ts = Convert.ToDateTime(item.OffDuty).Subtract(Convert.ToDateTime(item.OnDuty));
-                    totalhours = totalhours + Math.Abs(ts.Hours);
+
+                    totalhours = totalhours + item.MaxValue;
                 }
                 return totalhours;
             }
@@ -159,11 +217,40 @@ namespace CityWatch.Web.Models
                 int totalhours = 0;
                 // var Q3JulytoSept2023hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-July-2023") && x.LoginDate <= Convert.ToDateTime("30-Sep-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
                 var Q3JulytoSept2023hours = _guardDataProvider.GetGuardLoginsByGuardIdAndDate(_guard.Id, Convert.ToDateTime("01-July-2023"), Convert.ToDateTime("30-Sep-2023")).ToList();
-                foreach (var item in Q3JulytoSept2023hours)
+                var result = Q3JulytoSept2023hours
+    .Select(gl => new
+    {
+        gl.GuardId,
+        gl.ClientSiteId,
+        gl.LoginDate,
+        gl.OnDuty,
+        gl.OffDuty,
+        // Calculate DurationInSeconds
+        DurationInSeconds = Convert.ToDateTime(gl.OffDuty).Month == gl.OnDuty.Month && Convert.ToDateTime(gl.OffDuty).Year == gl.OnDuty.Year
+        ? (int)(Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalSeconds
+        //(int)(gl.OffDuty - gl.OnDuty).TotalSeconds
+        : (int)(gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalSeconds,
+        // Calculate DurationInHours
+        DurationInHours = (Convert.ToDateTime(gl.OffDuty).Month != gl.OnDuty.Month || Convert.ToDateTime(gl.OffDuty).Year != gl.OnDuty.Year)
+        ? (gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalHours
+        //: (gl.OffDuty - gl.OnDuty).TotalHours
+        : (Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalHours
+    })
+.OrderBy(gl => gl.LoginDate).ToList();
+                var resultnew = result
+    .GroupBy(x => x.LoginDate.Date) // Group by the date part
+    .Select(g => new
+    {
+        Date = g.Key,                // The date
+        MaxValue = Convert.ToInt32(g.Max(x => x.DurationInHours)) // Maximum value in the group
+    })
+    .OrderBy(x => x.Date)           // Order by date
+    .ToList();
+                foreach (var item in resultnew)
                 {
 
-                    TimeSpan ts = Convert.ToDateTime(item.OffDuty).Subtract(Convert.ToDateTime(item.OnDuty));
-                    totalhours = totalhours + Math.Abs(ts.Hours);
+
+                    totalhours = totalhours + item.MaxValue;
                 }
                 return totalhours;
             }
@@ -175,12 +262,40 @@ namespace CityWatch.Web.Models
                 int totalhours = 0;
                 // var Q4OcttoDec2023hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-Oct-2023") && x.LoginDate <= Convert.ToDateTime("31-Dec-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
                 var Q4OcttoDec2023hours = _guardDataProvider.GetGuardLoginsByGuardIdAndDate(_guard.Id, Convert.ToDateTime("01-Oct-2023"), Convert.ToDateTime("31-Dec-2023")).ToList();
-
-                foreach (var item in Q4OcttoDec2023hours)
+                var result = Q4OcttoDec2023hours
+    .Select(gl => new
+    {
+        gl.GuardId,
+        gl.ClientSiteId,
+        gl.LoginDate,
+        gl.OnDuty,
+        gl.OffDuty,
+        // Calculate DurationInSeconds
+        DurationInSeconds = Convert.ToDateTime(gl.OffDuty).Month == gl.OnDuty.Month && Convert.ToDateTime(gl.OffDuty).Year == gl.OnDuty.Year
+        ? (int)(Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalSeconds
+        //(int)(gl.OffDuty - gl.OnDuty).TotalSeconds
+        : (int)(gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalSeconds,
+        // Calculate DurationInHours
+        DurationInHours = (Convert.ToDateTime(gl.OffDuty).Month != gl.OnDuty.Month || Convert.ToDateTime(gl.OffDuty).Year != gl.OnDuty.Year)
+        ? (gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalHours
+        //: (gl.OffDuty - gl.OnDuty).TotalHours
+        : (Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalHours
+    })
+.OrderBy(gl => gl.LoginDate).ToList();
+                var resultnew = result
+    .GroupBy(x => x.LoginDate.Date) // Group by the date part
+    .Select(g => new
+    {
+        Date = g.Key,                // The date
+        MaxValue = Convert.ToInt32(g.Max(x => x.DurationInHours)) // Maximum value in the group
+    })
+    .OrderBy(x => x.Date)           // Order by date
+    .ToList();
+                foreach (var item in resultnew)
                 {
 
-                    TimeSpan ts = Convert.ToDateTime(item.OffDuty).Subtract(Convert.ToDateTime(item.OnDuty));
-                    totalhours = totalhours + Math.Abs(ts.Hours);
+
+                    totalhours = totalhours + item.MaxValue;
                 }
                 return totalhours;
             }
@@ -192,12 +307,40 @@ namespace CityWatch.Web.Models
                 int totalhours = 0;
                 //var Q1JantoMarch2024hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-Jan-2024") && x.LoginDate <= Convert.ToDateTime("31-Mar-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
                 var Q1JantoMarch2024hours = _guardDataProvider.GetGuardLoginsByGuardIdAndDate(_guard.Id, Convert.ToDateTime("01-Jan-2024"), Convert.ToDateTime("31-Mar-2024")).ToList();
-
-                foreach (var item in Q1JantoMarch2024hours)
+                var result = Q1JantoMarch2024hours
+                    .Select(gl => new
+                    {
+                        gl.GuardId,
+                        gl.ClientSiteId,
+                        gl.LoginDate,
+                        gl.OnDuty,
+                        gl.OffDuty,
+                        // Calculate DurationInSeconds
+                        DurationInSeconds = Convert.ToDateTime(gl.OffDuty).Month == gl.OnDuty.Month && Convert.ToDateTime(gl.OffDuty).Year == gl.OnDuty.Year
+                        ? (int)(Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalSeconds
+                        //(int)(gl.OffDuty - gl.OnDuty).TotalSeconds
+                        : (int)(gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalSeconds,
+                        // Calculate DurationInHours
+                        DurationInHours = (Convert.ToDateTime(gl.OffDuty).Month != gl.OnDuty.Month || Convert.ToDateTime(gl.OffDuty).Year != gl.OnDuty.Year)
+                        ? (gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalHours
+                        //: (gl.OffDuty - gl.OnDuty).TotalHours
+                        : (Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalHours
+                    })
+                .OrderBy(gl => gl.LoginDate).ToList();
+                var resultnew = result
+    .GroupBy(x => x.LoginDate.Date) // Group by the date part
+    .Select(g => new
+    {
+        Date = g.Key,                // The date
+        MaxValue = Convert.ToInt32(g.Max(x => x.DurationInHours)) // Maximum value in the group
+    })
+    .OrderBy(x => x.Date)           // Order by date
+    .ToList();
+                foreach (var item in resultnew)
                 {
 
-                    TimeSpan ts = Convert.ToDateTime(item.OffDuty).Subtract(Convert.ToDateTime(item.OnDuty));
-                    totalhours = totalhours + Math.Abs(ts.Hours);
+
+                    totalhours = totalhours + item.MaxValue;
                 }
                 return totalhours;
             }
@@ -210,11 +353,40 @@ namespace CityWatch.Web.Models
                 //var Q2AprtoJune2024hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-Apr-2024") && x.LoginDate <= Convert.ToDateTime("30-June-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
                 var Q2AprtoJune2024hours = _guardDataProvider.GetGuardLoginsByGuardIdAndDate(_guard.Id, Convert.ToDateTime("01-Apr-2024"), Convert.ToDateTime("30-June-2024")).ToList();
 
-                foreach (var item in Q2AprtoJune2024hours)
+                var result = Q2AprtoJune2024hours
+                    .Select(gl => new
+                    {
+                        gl.GuardId,
+                        gl.ClientSiteId,
+                        gl.LoginDate,
+                        gl.OnDuty,
+                        gl.OffDuty,
+                        // Calculate DurationInSeconds
+                        DurationInSeconds = Convert.ToDateTime(gl.OffDuty).Month == gl.OnDuty.Month && Convert.ToDateTime(gl.OffDuty).Year == gl.OnDuty.Year
+                        ? (int)(Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalSeconds
+                        //(int)(gl.OffDuty - gl.OnDuty).TotalSeconds
+                        : (int)(gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalSeconds,
+                        // Calculate DurationInHours
+                        DurationInHours = (Convert.ToDateTime(gl.OffDuty).Month != gl.OnDuty.Month || Convert.ToDateTime(gl.OffDuty).Year != gl.OnDuty.Year)
+                        ? (gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalHours
+                        //: (gl.OffDuty - gl.OnDuty).TotalHours
+                        : (Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalHours
+                    })
+                .OrderBy(gl => gl.LoginDate).ToList();
+                var resultnew = result
+    .GroupBy(x => x.LoginDate.Date) // Group by the date part
+    .Select(g => new
+    {
+        Date = g.Key,                // The date
+        MaxValue = Convert.ToInt32(g.Max(x => x.DurationInHours)) // Maximum value in the group
+    })
+    .OrderBy(x => x.Date)           // Order by date
+    .ToList();
+                foreach (var item in resultnew)
                 {
 
-                    TimeSpan ts = Convert.ToDateTime(item.OffDuty).Subtract(Convert.ToDateTime(item.OnDuty));
-                    totalhours = totalhours + Math.Abs(ts.Hours);
+
+                    totalhours = totalhours + item.MaxValue;
                 }
                 return totalhours;
             }
@@ -227,11 +399,40 @@ namespace CityWatch.Web.Models
                 // var Q3JulytoSept2024hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-July-2024") && x.LoginDate <= Convert.ToDateTime("30-Sep-2024")).OrderByDescending(gl => gl.LoginDate).ToList();
                 var Q3JulytoSept2024hours = _guardDataProvider.GetGuardLoginsByGuardIdAndDate(_guard.Id, Convert.ToDateTime("01-July-2024"), Convert.ToDateTime("30-Sep-2024")).ToList();
 
-                foreach (var item in Q3JulytoSept2024hours)
+                var result = Q3JulytoSept2024hours
+                    .Select(gl => new
+                    {
+                        gl.GuardId,
+                        gl.ClientSiteId,
+                        gl.LoginDate,
+                        gl.OnDuty,
+                        gl.OffDuty,
+                        // Calculate DurationInSeconds
+                        DurationInSeconds = Convert.ToDateTime(gl.OffDuty).Month == gl.OnDuty.Month && Convert.ToDateTime(gl.OffDuty).Year == gl.OnDuty.Year
+                        ? (int)(Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalSeconds
+                        //(int)(gl.OffDuty - gl.OnDuty).TotalSeconds
+                        : (int)(gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalSeconds,
+                        // Calculate DurationInHours
+                        DurationInHours = (Convert.ToDateTime(gl.OffDuty).Month != gl.OnDuty.Month || Convert.ToDateTime(gl.OffDuty).Year != gl.OnDuty.Year)
+                        ? (gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalHours
+                        //: (gl.OffDuty - gl.OnDuty).TotalHours
+                        : (Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalHours
+                    })
+                .OrderBy(gl => gl.LoginDate).ToList();
+                var resultnew = result
+    .GroupBy(x => x.LoginDate.Date) // Group by the date part
+    .Select(g => new
+    {
+        Date = g.Key,                // The date
+        MaxValue = Convert.ToInt32(g.Max(x => x.DurationInHours)) // Maximum value in the group
+    })
+    .OrderBy(x => x.Date)           // Order by date
+    .ToList();
+                foreach (var item in resultnew)
                 {
 
-                    TimeSpan ts = Convert.ToDateTime(item.OffDuty).Subtract(Convert.ToDateTime(item.OnDuty));
-                    totalhours = totalhours + Math.Abs(ts.Hours);
+
+                    totalhours = totalhours + item.MaxValue;
                 }
                 return totalhours;
             }
