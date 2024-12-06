@@ -120,6 +120,111 @@ namespace CityWatch.Web.Models
                 return latestLogin?.LoginDate;
             }
         }
+        public int? Q1JantoMarch2023
+        {
+            get
+            {
+                int totalhours = 0;
+                var Q1JantoMarch2023hours = _guardLogins.Where(x=> x.LoginDate >= Convert.ToDateTime("01-Jan-2023") && x.LoginDate<= Convert.ToDateTime("31-March-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
+                foreach(var item in Q1JantoMarch2023hours)
+                {
+                    
+                    TimeSpan ts = Convert.ToDateTime(item.OffDuty).Subtract(Convert.ToDateTime(item.OnDuty));
+                    totalhours = totalhours + Math.Abs(ts.Hours);
+                }
+                return totalhours;
+            }
+        }
+        public int? Q2AprtoJune2023
+        {
+            get
+            {
+                int totalhours = 0;
+                var Q2AprtoJune2023hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-Apr-2023") && x.LoginDate <= Convert.ToDateTime("30-June-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
+                foreach (var item in Q2AprtoJune2023hours)
+                {
+
+                    TimeSpan ts = Convert.ToDateTime(item.OffDuty).Subtract(Convert.ToDateTime(item.OnDuty));
+                    totalhours = totalhours + Math.Abs(ts.Hours);
+                }
+                return totalhours;
+            }
+        }
+        public int? Q3JulytoSept2023
+        {
+            get
+            {
+                int totalhours = 0;
+                var Q3JulytoSept2023hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-July-2023") && x.LoginDate <= Convert.ToDateTime("30-Sep-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
+                foreach (var item in Q3JulytoSept2023hours)
+                {
+
+                    TimeSpan ts = Convert.ToDateTime(item.OffDuty).Subtract(Convert.ToDateTime(item.OnDuty));
+                    totalhours = totalhours + Math.Abs(ts.Hours);
+                }
+                return totalhours;
+            }
+        }
+        public int? Q4OcttoDec2023
+        {
+            get
+            {
+                int totalhours = 0;
+                var Q4OcttoDec2023hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-Oct-2023") && x.LoginDate <= Convert.ToDateTime("31-Dec-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
+                foreach (var item in Q4OcttoDec2023hours)
+                {
+
+                    TimeSpan ts = Convert.ToDateTime(item.OffDuty).Subtract(Convert.ToDateTime(item.OnDuty));
+                    totalhours = totalhours + Math.Abs(ts.Hours);
+                }
+                return totalhours;
+            }
+        }
+        public int? Q1JantoMarch2024
+        {
+            get
+            {
+                int totalhours = 0;
+                var Q1JantoMarch2024hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-Jan-2024") && x.LoginDate <= Convert.ToDateTime("31-Mar-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
+                foreach (var item in Q1JantoMarch2024hours)
+                {
+
+                    TimeSpan ts = Convert.ToDateTime(item.OffDuty).Subtract(Convert.ToDateTime(item.OnDuty));
+                    totalhours = totalhours + Math.Abs(ts.Hours);
+                }
+                return totalhours;
+            }
+        }
+        public int? Q2AprtoJune2024
+        {
+            get
+            {
+                int totalhours = 0;
+                var Q2AprtoJune2024hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-Apr-2024") && x.LoginDate <= Convert.ToDateTime("30-June-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
+                foreach (var item in Q2AprtoJune2024hours)
+                {
+
+                    TimeSpan ts = Convert.ToDateTime(item.OffDuty).Subtract(Convert.ToDateTime(item.OnDuty));
+                    totalhours = totalhours + Math.Abs(ts.Hours);
+                }
+                return totalhours;
+            }
+        }
+        public int? Q3JulytoSept2024
+        {
+            get
+            {
+                int totalhours = 0;
+                var Q3JulytoSept2024hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-July-2024") && x.LoginDate <= Convert.ToDateTime("30-Sep-2024")).OrderByDescending(gl => gl.LoginDate).ToList();
+                foreach (var item in Q3JulytoSept2024hours)
+                {
+
+                    TimeSpan ts = Convert.ToDateTime(item.OffDuty).Subtract(Convert.ToDateTime(item.OnDuty));
+                    totalhours = totalhours + Math.Abs(ts.Hours);
+                }
+                return totalhours;
+            }
+        }
         public bool IsActive { get { return _guard.IsActive; } }
         public string Email { get { return _guard.Email; } }
         public string Mobile { get { return _guard.Mobile; } }
