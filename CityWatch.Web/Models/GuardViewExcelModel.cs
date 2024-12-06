@@ -138,6 +138,9 @@ namespace CityWatch.Web.Models
         public string HR1Status { get; set; }
         public string HR2Status { get; set; }
         public string HR3Status { get; set; }
+
+        public DateTime? DOE { get { return _guard.DateEnrolled; } }
+
         private List<HRGroupStatusNew> LEDStatusForLoginUser(int GuardID)
         {
             // Retrieve guard document details in one call
