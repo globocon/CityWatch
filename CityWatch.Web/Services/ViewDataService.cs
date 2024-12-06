@@ -20,6 +20,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Security.Policy;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static iText.Kernel.Pdf.Colorspace.PdfSpecialCs;
 
@@ -781,6 +782,17 @@ namespace CityWatch.Web.Services
                                                     guardLogins.Where(y => y.GuardId == z.Id),
                                                     _guardDataProvider))
                                        .ToList();
+
+                foreach (var item in listGuardExcel)
+                {
+                    // Assuming GuardViewExcelModel has a string property called 'ColumnName'
+                    if (!string.IsNullOrEmpty(item.ClientSites))
+                    {
+                        var test = Regex.Replace(item.ClientSites, @"<br\s*/?>", "", RegexOptions.IgnoreCase);
+                        if (!string.IsNullOrEmpty(test))
+                        item.ClientSites = test;
+                    }
+                }
             }
 
             return listGuardExcel;

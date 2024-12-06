@@ -327,6 +327,16 @@ namespace CityWatch.Web.Pages.Reports
                 rcChartTypesCRONew.Add(obj);
             }
 
+
+            var activeAndInActive = GetActiveAndInactiveGuardHrReport().ToArray();
+            var activeAndInActiveCount = activeAndInActive.Length;
+            var yearOfOnBoarding = GetYearofOnBoardingGuardHrReport().ToArray();
+            var yearOfOnBoardingcount = yearOfOnBoarding.Length;
+
+            var yearOfOnBoradingBarChart = GetYearofOnBoardingGuardHrReportBarchart().ToArray();
+
+            var genderReport = GetGenderBasedGuardHrReport().ToArray(); ;
+            var genderReportCount = genderReport.Length;
             //no of tomes cro pushed radio button-end
             //p4 - 73 new piechart- end
 
@@ -336,8 +346,8 @@ namespace CityWatch.Web.Pages.Reports
                 Directory.CreateDirectory(excelFileDir);
             var fileName = $"IR Statistics {ReportRequest.FromDate:ddMMyyyy} - {ReportRequest.ToDate:ddMMyyyy}.xlsx";
             PatrolReportGenerator.CreateExcelFile(dataTable, Path.Combine(excelFileDir, fileName));
-
-            return new JsonResult(new { results, fileName, chartData = new { sitePercentage, areaWardPercentage, eventTypePercentage, eventTypeCount, colorCodePercentage, feedbackTemplatesColour, rcChartTypesForWeekNew, rcChartTypesForMonthNew, rcChartTypesForYearNew, rcChartTypesGuardsPrealarmNew, rcChartTypesCRONew, rcChartTypesGuardsFromPrealarmNew }, recordCount, rcChartTypesForWeekNewCount, rcChartTypesForMonthNewCount, rcChartTypesForYearNewCount, rcChartTypesGuardsPrealarmCountnew, rcChartTypesCROCountnew, rcChartTypesGuardsFromPrealarmCountnew });
+           
+            return new JsonResult(new { results, fileName, chartData = new { sitePercentage, areaWardPercentage, eventTypePercentage, eventTypeCount, colorCodePercentage, feedbackTemplatesColour, rcChartTypesForWeekNew, rcChartTypesForMonthNew, rcChartTypesForYearNew, rcChartTypesGuardsPrealarmNew, rcChartTypesCRONew, rcChartTypesGuardsFromPrealarmNew }, recordCount, rcChartTypesForWeekNewCount, rcChartTypesForMonthNewCount, rcChartTypesForYearNewCount, rcChartTypesGuardsPrealarmCountnew, rcChartTypesCROCountnew, rcChartTypesGuardsFromPrealarmCountnew, yearOfOnBoarding, yearOfOnBoardingcount, activeAndInActive, activeAndInActiveCount, genderReport, genderReportCount, yearOfOnBoradingBarChart });
         }
 
         public List<string> ArrageColurCode(KeyValuePair<string, double>[] ColourCodeName, List<FeedbackTemplate> FeedBackTempletes)
@@ -544,5 +554,111 @@ namespace CityWatch.Web.Pages.Reports
         {
             return new JsonResult(_guardLogDataProvider.GetCompanyDetailsVehLog(companyName));
         }
+
+        public IEnumerable<KeyValuePair<string, double>> GetYearofOnBoardingGuardHrReport()
+        {
+            var guards = _guardDataProvider.GetGuards();
+
+            // Set all blank/null DateEnrolled to 01-Jan-2022
+            foreach (var guard in guards)
+            {
+                if (!guard.DateEnrolled.HasValue)
+                {
+                    guard.DateEnrolled = new DateTime(2022, 1, 1);
+                }
+            }
+
+            // Total count of guards
+            int totalGuards = guards.Count();
+
+            // Group, count, and calculate percentages for pie chart
+            var groupedByYear = guards
+                .GroupBy(g => g.DateEnrolled.Value.Year.ToString()) // Convert year to string
+                .Select(g => new KeyValuePair<string, double>(
+                    g.Key,
+                    Math.Round((double)g.Count() / totalGuards * 100, 2) // Calculate percentage and round to 2 decimals
+                ))
+                .OrderBy(kvp => kvp.Key); // Sort by year (string representation)
+
+            return groupedByYear;
+        }
+
+        public IEnumerable<KeyValuePair<string, double>> GetActiveAndInactiveGuardHrReport()
+        {
+            var guards = _guardDataProvider.GetGuards();
+
+            int totalGuards = guards.Count();
+
+            if (totalGuards == 0)
+                return Enumerable.Empty<KeyValuePair<string, double>>();
+
+            // Group, count, and calculate percentages for active and inactive guards
+            var groupedByStatus = guards
+                .GroupBy(g => g.IsActive ? "Active" : "Inactive") // Group by IsActive field
+                .Select(g => new KeyValuePair<string, double>(
+                    g.Key,
+                    Math.Round((double)g.Count() / totalGuards * 100, 2) // Calculate percentage and round to 2 decimals
+                ))
+                .OrderBy(kvp => kvp.Key); // Sort alphabetically (Active first)
+
+            return groupedByStatus;
+        }
+
+
+        public IEnumerable<KeyValuePair<string, double>> GetGenderBasedGuardHrReport()
+        {
+            var guards = _guardDataProvider.GetGuards();
+
+            int totalGuards = guards.Count();
+
+            if (totalGuards == 0)
+                return Enumerable.Empty<KeyValuePair<string, double>>();
+
+            // Group, count, and calculate percentages for each gender
+            var groupedByGender = guards
+                .GroupBy(g => g.Gender ?? "Unknown") // Use "Unknown" for null or unspecified gender
+                .Select(g => new KeyValuePair<string, double>(
+                    g.Key,
+                    Math.Round((double)g.Count() / totalGuards * 100, 2) // Calculate percentage and round to 2 decimals
+                ))
+                .OrderBy(kvp => kvp.Key); // Sort alphabetically
+
+            return groupedByGender;
+        }
+
+
+        public IEnumerable<KeyValuePair<string, int>> GetYearofOnBoardingGuardHrReportBarchart()
+        {
+            var guards = _guardDataProvider.GetGuards();
+
+            // Set all blank/null DateEnrolled to 01-Jan-2022
+            foreach (var guard in guards)
+            {
+                if (!guard.DateEnrolled.HasValue)
+                {
+                    guard.DateEnrolled = new DateTime(2022, 1, 1);
+                }
+            }
+
+            // Group, count, and return the number of guards for each year
+            var groupedByYear = guards
+                .GroupBy(g => g.DateEnrolled.Value.Year.ToString()) // Convert year to string
+                .Select(g => new KeyValuePair<string, int>(
+                    g.Key,
+                    g.Count() // Return count directly
+                ))
+                .OrderBy(kvp => kvp.Key); // Sort by year (string representation)
+
+            return groupedByYear;
+        }
     }
+
+
+   
+
+
+
+
 }
+
+
