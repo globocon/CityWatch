@@ -324,7 +324,7 @@ namespace CityWatch.Data.Providers
         public List<GuardLogin> GetGuardLoginsByGuardIdAndDate(int guardIds,DateTime startdate,DateTime endDate)
         {
             List<GuardLogin> guardLogins = new List<GuardLogin>();
-            
+          
                 guardLogins.AddRange(_context.GuardLogins
                 .Where(z => z.GuardId == guardIds && z.ClientSite.IsActive == true && z.LoginDate.Date>= startdate.Date && z.LoginDate.Date<=endDate.Date)
                     .Include(z => z.ClientSite)
