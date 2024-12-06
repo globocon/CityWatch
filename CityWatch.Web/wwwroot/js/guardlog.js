@@ -5377,8 +5377,10 @@ $(function () {
             }
 
             // Define headers and column widths
-            const headers = ['Name', 'Security No', 'Initial', 'State', 'Provider', 'Mobile', 'Email', 'Client Sites', 'Gender', 'Is Active','DOE', 'HR1 Status', 'HR2 Status', 'HR3 Status'];
-            const columnWidths = [20, 20, 10, 10, 20, 20, 20, 25, 15, 15, 10, 10, 10]; // Example widths
+
+            const headers = ['Name', 'Security No', 'Initial', 'State', 'Provider', 'Mobile', 'Email', 'Client Sites', 'Gender', 'Is Active','DOE', 'HR1 Status', 'HR2 Status', 'HR3 Status', 'Security Hours Worked Q1 1Jan - 31March 2023', 'Security Hours Worked Q2 1Apr - 30June 2023',  'Security Hours Worked Q3 1July - 30Sep 2023', 'Security Hours Worked Q4 1Oct - 31Dec 2023', 'Security Hours Worked Q1 1Jan - 31March 2024', 'Security Hours Worked Q2 1Apr - 30June 2024',  'Security Hours Worked Q3 1July - 31Sept 2024'];
+            const columnWidths = [20, 20, 10, 10, 20, 20, 20, 25, 15, 15, 10, 10, 10, 10, 10, 10, 10, 10, 10,10,10]; // Example widths
+
 
 
 
@@ -5422,7 +5424,14 @@ $(function () {
                 item.dateEnrolled ? item.dateEnrolled.split('T')[0] : '',
                 item.hR1Status,
                 item.hR2Status,
-                item.hR3Status
+                item.hR3Status,
+                item.q1JantoMarch2023,
+                item.q2AprtoJune2023,
+                item.q3JulytoSept2023,
+                item.q4OcttoDec2023,
+                item.q1JantoMarch2024,
+                item.q2AprtoJune2024,
+                item.q3JulytoSept2024
             ])];
 
             // Update the worksheet with headers and data
