@@ -125,8 +125,9 @@ namespace CityWatch.Web.Models
             get
             {
                 int totalhours = 0;
-                var Q1JantoMarch2023hours = _guardLogins.Where(x=> x.LoginDate >= Convert.ToDateTime("01-Jan-2023") && x.LoginDate<= Convert.ToDateTime("31-March-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
-                foreach(var item in Q1JantoMarch2023hours)
+                // var Q1JantoMarch2023hours = _guardLogins.Where(x=> x.LoginDate.Date >= Convert.ToDateTime("01-Jan-2023").Date && x.LoginDate.Date<= Convert.ToDateTime("31-March-2023").Date).OrderByDescending(gl => gl.LoginDate).ToList();
+                var Q1JantoMarch2023hours = _guardDataProvider.GetGuardLoginsByGuardIdAndDate(_guard.Id, Convert.ToDateTime("01-Jan-2023"), Convert.ToDateTime("31-March-2023")).ToList();
+                foreach (var item in Q1JantoMarch2023hours)
                 {
                     
                     TimeSpan ts = Convert.ToDateTime(item.OffDuty).Subtract(Convert.ToDateTime(item.OnDuty));
@@ -140,7 +141,8 @@ namespace CityWatch.Web.Models
             get
             {
                 int totalhours = 0;
-                var Q2AprtoJune2023hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-Apr-2023") && x.LoginDate <= Convert.ToDateTime("30-June-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
+                //var Q2AprtoJune2023hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-Apr-2023") && x.LoginDate <= Convert.ToDateTime("30-June-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
+                var Q2AprtoJune2023hours = _guardDataProvider.GetGuardLoginsByGuardIdAndDate(_guard.Id, Convert.ToDateTime("01-Apr-2023"), Convert.ToDateTime("30-June-2023")).ToList();
                 foreach (var item in Q2AprtoJune2023hours)
                 {
 
@@ -155,7 +157,8 @@ namespace CityWatch.Web.Models
             get
             {
                 int totalhours = 0;
-                var Q3JulytoSept2023hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-July-2023") && x.LoginDate <= Convert.ToDateTime("30-Sep-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
+                // var Q3JulytoSept2023hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-July-2023") && x.LoginDate <= Convert.ToDateTime("30-Sep-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
+                var Q3JulytoSept2023hours = _guardDataProvider.GetGuardLoginsByGuardIdAndDate(_guard.Id, Convert.ToDateTime("01-July-2023"), Convert.ToDateTime("30-Sep-2023")).ToList();
                 foreach (var item in Q3JulytoSept2023hours)
                 {
 
@@ -170,7 +173,9 @@ namespace CityWatch.Web.Models
             get
             {
                 int totalhours = 0;
-                var Q4OcttoDec2023hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-Oct-2023") && x.LoginDate <= Convert.ToDateTime("31-Dec-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
+                // var Q4OcttoDec2023hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-Oct-2023") && x.LoginDate <= Convert.ToDateTime("31-Dec-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
+                var Q4OcttoDec2023hours = _guardDataProvider.GetGuardLoginsByGuardIdAndDate(_guard.Id, Convert.ToDateTime("01-Oct-2023"), Convert.ToDateTime("31-Dec-2023")).ToList();
+
                 foreach (var item in Q4OcttoDec2023hours)
                 {
 
@@ -185,7 +190,9 @@ namespace CityWatch.Web.Models
             get
             {
                 int totalhours = 0;
-                var Q1JantoMarch2024hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-Jan-2024") && x.LoginDate <= Convert.ToDateTime("31-Mar-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
+                //var Q1JantoMarch2024hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-Jan-2024") && x.LoginDate <= Convert.ToDateTime("31-Mar-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
+                var Q1JantoMarch2024hours = _guardDataProvider.GetGuardLoginsByGuardIdAndDate(_guard.Id, Convert.ToDateTime("01-Jan-2024"), Convert.ToDateTime("31-Mar-2024")).ToList();
+
                 foreach (var item in Q1JantoMarch2024hours)
                 {
 
@@ -200,7 +207,9 @@ namespace CityWatch.Web.Models
             get
             {
                 int totalhours = 0;
-                var Q2AprtoJune2024hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-Apr-2024") && x.LoginDate <= Convert.ToDateTime("30-June-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
+                //var Q2AprtoJune2024hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-Apr-2024") && x.LoginDate <= Convert.ToDateTime("30-June-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
+                var Q2AprtoJune2024hours = _guardDataProvider.GetGuardLoginsByGuardIdAndDate(_guard.Id, Convert.ToDateTime("01-Apr-2024"), Convert.ToDateTime("30-June-2024")).ToList();
+
                 foreach (var item in Q2AprtoJune2024hours)
                 {
 
@@ -215,7 +224,9 @@ namespace CityWatch.Web.Models
             get
             {
                 int totalhours = 0;
-                var Q3JulytoSept2024hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-July-2024") && x.LoginDate <= Convert.ToDateTime("30-Sep-2024")).OrderByDescending(gl => gl.LoginDate).ToList();
+                // var Q3JulytoSept2024hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-July-2024") && x.LoginDate <= Convert.ToDateTime("30-Sep-2024")).OrderByDescending(gl => gl.LoginDate).ToList();
+                var Q3JulytoSept2024hours = _guardDataProvider.GetGuardLoginsByGuardIdAndDate(_guard.Id, Convert.ToDateTime("01-July-2024"), Convert.ToDateTime("30-Sep-2024")).ToList();
+
                 foreach (var item in Q3JulytoSept2024hours)
                 {
 

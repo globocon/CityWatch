@@ -82,6 +82,7 @@ namespace CityWatch.Data.Providers
         public int GetGuardID(string LicenseNo);
 
         List<HrSettingsLockedClientSites> GetHrDocumentLockDetailsForASite(int clientSiteId);
+        List<GuardLogin> GetGuardLoginsByGuardIdAndDate(int guardIds,DateTime startdate,DateTime enddate);
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -320,7 +321,32 @@ namespace CityWatch.Data.Providers
 
 
         }
+        public List<GuardLogin> GetGuardLoginsByGuardIdAndDate(int guardIds,DateTime startdate,DateTime endDate)
+        {
+            List<GuardLogin> guardLogins = new List<GuardLogin>();
+            
+                guardLogins.AddRange(_context.GuardLogins
+                .Where(z => z.GuardId == guardIds && z.ClientSite.IsActive == true && z.LoginDate.Date>= startdate.Date && z.LoginDate.Date<=endDate.Date)
+                    .Include(z => z.ClientSite)
+                    .Include(z => z.Guard)
+                    .ToList());
+            
+            //for query optimization Comment the old code
+            //var guardLogins = _context.GuardLogins
+            //    .Where(z => guardIds.Contains(z.GuardId))
 
+            //    .Include(z => z.Guard)
+            //    .Include(z => z.ClientSite)
+            //    .ToList();
+
+
+            return guardLogins
+             
+                .ToList();
+
+
+        }
+        
         public List<GuardLogin> GetGuardLoginsBySmartWandId(int smartWandId)
         {
             return _context.GuardLogins
