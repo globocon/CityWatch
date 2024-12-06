@@ -139,7 +139,9 @@ namespace CityWatch.Data
         public DbSet<SubDomain> SubDomain { get; set; }
         public DbSet<HrSettingsLockedClientSites> HrSettingsLockedClientSites { get; set; }
 
-        
+        public DbSet<GuardHoursByQuarterViewModel> GuardHoursByQuarterViewModel { get; set; }
+
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
