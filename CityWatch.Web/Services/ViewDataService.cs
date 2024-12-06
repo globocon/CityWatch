@@ -793,12 +793,12 @@ namespace CityWatch.Web.Services
                         item.Q1HRS2023 = guardQuaterDeatils.Q1HRS2023;
                         item.Q2HRS2023 = guardQuaterDeatils.Q2HRS2023;
                         item.Q3HRS2023 = guardQuaterDeatils.Q3HRS2023;
-                        item.Q4HRS2023 = guardQuaterDeatils.Q3HRS2023;
+                        item.Q4HRS2023 = guardQuaterDeatils.Q4HRS2023;
 
                         item.Q1HRS2024 = guardQuaterDeatils.Q1HRS2024;
                         item.Q2HRS2024 = guardQuaterDeatils.Q2HRS2024;
                         item.Q3HRS2024 = guardQuaterDeatils.Q3HRS2024;
-                        item.Q4HRS2024 = guardQuaterDeatils.Q3HRS2024;
+                        item.Q4HRS2024 = guardQuaterDeatils.Q4HRS2024;
                     }
                     // Assuming GuardViewExcelModel has a string property called 'ColumnName'
                     if (!string.IsNullOrEmpty(item.ClientSites))
