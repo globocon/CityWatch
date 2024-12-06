@@ -102,14 +102,29 @@ namespace CityWatch.Web.Models
         }
 
         public string Provider { get { return _guard.Provider; } }
+        private string _clientSitesString;
 
         public string ClientSites
         {
             get
             {
-                return string.Join(",<br />", _clientSites.Select(z => z.Name).Distinct().OrderBy(z => z));
+                return string.IsNullOrEmpty(_clientSitesString)
+                    ? string.Join(",<br />", _clientSites.Select(z => z.Name).Distinct().OrderBy(z => z))
+                    : _clientSitesString;
+            }
+            set
+            {
+                _clientSitesString = value;
             }
         }
+        //public string ClientSites
+        //{
+        //    get
+        //    {
+        //        return string.Join(",<br />", _clientSites.Select(z => z.Name).Distinct().OrderBy(z => z));
+        //    }
+        //    set { }
+        //}
 
         public DateTime? DateEnrolled { get { return _guard.DateEnrolled; } }
         public DateTime? LoginDate
