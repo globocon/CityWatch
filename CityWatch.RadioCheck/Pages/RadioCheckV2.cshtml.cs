@@ -245,6 +245,68 @@ namespace CityWatch.RadioCheck.Pages.Radio
             }).ToList();
             return new JsonResult(activeGuardDetailModels);
         }
+        public IActionResult OnGetClientSiteActivityStatusState(string State)
+        {
+            var activeGuardDetails = _guardLogDataProvider.GetActiveGuardDetails();
+            var activeGuardDetailModels = activeGuardDetails.Select(detail => new RadioCheckListGuardData
+            {
+                ClientSiteId = detail.ClientSiteId,
+                GuardId = detail.GuardId,
+                SiteName = detail.SiteName,
+                Address = detail.Address,
+                GPS = detail.GPS,
+                GuardName = detail.GuardName,
+                LogBook = detail.LogBook,
+                KeyVehicle = detail.KeyVehicle,
+                IncidentReport = detail.IncidentReport,
+                SmartWands = detail.SmartWands,
+                RcStatus = detail.RcStatus,
+                RcColor = detail.RcColor,
+                Status = detail.Status,
+                RcColorId = detail.RcColorId,
+                OnlySiteName = detail.OnlySiteName,
+                LatestDate = detail.LatestDate,
+                ShowColor = detail.ShowColor,
+                hasmartwand = detail.hasmartwand,
+                HR1 = CalculateHr1GroupStatus(detail.GuardId),
+                HR2 = CalculateHr2GroupStatus(detail.GuardId),
+                HR3 = CalculateHr3GroupStatus(detail.GuardId),
+                State=detail.State
+                // Map other properties as needed
+            }).ToList().Where(x=>x.State== State);
+            return new JsonResult(activeGuardDetailModels);
+        }
+        public IActionResult OnGetClientSiteActivityStatusClientSite(int ClientSiteId)
+        {
+            var activeGuardDetails = _guardLogDataProvider.GetActiveGuardDetails();
+            var activeGuardDetailModels = activeGuardDetails.Select(detail => new RadioCheckListGuardData
+            {
+                ClientSiteId = detail.ClientSiteId,
+                GuardId = detail.GuardId,
+                SiteName = detail.SiteName,
+                Address = detail.Address,
+                GPS = detail.GPS,
+                GuardName = detail.GuardName,
+                LogBook = detail.LogBook,
+                KeyVehicle = detail.KeyVehicle,
+                IncidentReport = detail.IncidentReport,
+                SmartWands = detail.SmartWands,
+                RcStatus = detail.RcStatus,
+                RcColor = detail.RcColor,
+                Status = detail.Status,
+                RcColorId = detail.RcColorId,
+                OnlySiteName = detail.OnlySiteName,
+                LatestDate = detail.LatestDate,
+                ShowColor = detail.ShowColor,
+                hasmartwand = detail.hasmartwand,
+                HR1 = CalculateHr1GroupStatus(detail.GuardId),
+                HR2 = CalculateHr2GroupStatus(detail.GuardId),
+                HR3 = CalculateHr3GroupStatus(detail.GuardId),
+                State = detail.State
+                // Map other properties as needed
+            }).ToList().Where(x => x.ClientSiteId == ClientSiteId);
+            return new JsonResult(activeGuardDetailModels);
+        }
         //code added for HR LED Start
         public string CalculateHr1GroupStatus(int guardId)
         {
@@ -410,6 +472,18 @@ namespace CityWatch.RadioCheck.Pages.Radio
         public IActionResult OnGetClientSiteInActivityStatus(string clientSiteIds)
         {
             var inActiveGuardDetails = _guardLogDataProvider.GetInActiveGuardDetails();
+            return new JsonResult(inActiveGuardDetails);
+        }
+        public IActionResult OnGetClientSiteInActivityStatusState(string State)
+        {
+            var inActiveGuardDetails = _guardLogDataProvider.GetInActiveGuardDetails();
+            inActiveGuardDetails = inActiveGuardDetails.Where(x => x.State == State).ToList();
+            return new JsonResult(inActiveGuardDetails);
+        }
+        public IActionResult OnGetClientSiteInActivityStatusClientSite(int ClientSiteId)
+        {
+            var inActiveGuardDetails = _guardLogDataProvider.GetInActiveGuardDetails();
+            inActiveGuardDetails = inActiveGuardDetails.Where(x => x.ClientSiteId == ClientSiteId).ToList();
             return new JsonResult(inActiveGuardDetails);
         }
         //for getting logBookDetails of Guards-start
