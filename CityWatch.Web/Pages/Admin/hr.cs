@@ -399,7 +399,11 @@ namespace CityWatch.Web.Pages.Admin
                     message = "A guard with same name or security number already exists";
                 }
             }
-
+            if (guardId > 0)
+            {
+                guard.Id = guardId;
+                _guardDataProvider.SaveGuardLotes(guard);
+            }
             return new JsonResult(new
             {
                 status,
