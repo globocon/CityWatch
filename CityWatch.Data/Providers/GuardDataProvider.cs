@@ -83,6 +83,7 @@ namespace CityWatch.Data.Providers
 
         List<HrSettingsLockedClientSites> GetHrDocumentLockDetailsForASite(int clientSiteId);
         List<GuardLogin> GetGuardLoginsByGuardIdAndDate(int guardIds,DateTime startdate,DateTime enddate);
+        public List<LanguageDetails> GetGuardLanguages(int[] guardIds);
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -317,6 +318,24 @@ namespace CityWatch.Data.Providers
             return guardLogins
                 .GroupBy(z => new { z.GuardId, z.ClientSiteId })
                 .Select(z => z.Last())
+                .ToList();
+
+
+        }
+        public List<LanguageDetails> GetGuardLanguages(int[] guardIds)
+        {
+            List<LanguageDetails> language = new List<LanguageDetails>();
+            foreach (int guardId in guardIds)
+            {
+               
+                language.AddRange(_context.LanguageDetails
+                .Where(z => z.GuardId == guardId && z.IsDeleted == false)
+                    .Include(z => z.LanguageMaster)
+                    .ToList());
+            }
+           
+            return language
+               
                 .ToList();
 
 

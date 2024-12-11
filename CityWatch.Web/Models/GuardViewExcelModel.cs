@@ -1,5 +1,6 @@
 ﻿using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
+using DocumentFormat.OpenXml.Wordprocessing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,14 +11,18 @@ namespace CityWatch.Web.Models
     {
         private readonly Guard _guard;
         private readonly IEnumerable<GuardLogin> _guardLogins;
+        private readonly IEnumerable<LanguageDetails> _languagedetails;
         private readonly IEnumerable<ClientSite> _clientSites;
+        private readonly IEnumerable<LanguageMaster> _languages;
         private readonly IGuardDataProvider _guardDataProvider;
-        public GuardViewExcelModel(Guard guard, IEnumerable<GuardLogin> guardLogins, IGuardDataProvider guardDataProvider)
+        public GuardViewExcelModel(Guard guard, IEnumerable<GuardLogin> guardLogins, IEnumerable<LanguageDetails> languageDetails, IGuardDataProvider guardDataProvider)
         {
             _guard = guard;
             _guardLogins = guardLogins;
+            _languagedetails = languageDetails;
             _clientSites = _guardLogins.Select(z => z.ClientSite);
             _guardDataProvider = guardDataProvider;
+            _languages = _languagedetails.Select(z => z.LanguageMaster);
 
             // Get HR statuses
             var documentStatuses = LEDStatusForLoginUser(_guard.Id);
@@ -115,6 +120,21 @@ namespace CityWatch.Web.Models
             set
             {
                 _clientSitesString = value;
+            }
+        }
+        private string _languageString;
+
+        public string GuardLanguage
+        {
+            get
+            {
+                return string.IsNullOrEmpty(_languageString)
+                    ? string.Join(",<br />", _languages.Select(z => z.Language).Distinct().OrderBy(z => z))
+                    : _languageString;
+            }
+            set
+            {
+                _languageString = value;
             }
         }
         //public string ClientSites

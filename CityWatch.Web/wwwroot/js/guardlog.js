@@ -5378,7 +5378,7 @@ $(function () {
 
             // Define headers and column widths
 
-            const headers = ['Name', 'Security No', 'Initial', 'State', 'Provider', 'Mobile', 'Email', 'Client Sites', 'Gender', 'Is Active', 'DOE', 'HR1 Status', 'HR2 Status', 'HR3 Status',
+            const headers = ['Name', 'Security No', 'Initial', 'State', 'Provider', 'Mobile', 'Email', 'Client Sites', 'Gender','LOTE', 'Is Active', 'DOE', 'HR1 Status', 'HR2 Status', 'HR3 Status',
                /* 'Security Hours Worked Q1 1Jan - 31March 2023', 'Security Hours Worked Q2 1Apr - 30June 2023', 'Security Hours Worked Q3 1July - 30Sep 2023', 'Security Hours Worked Q4 1Oct - 31Dec 2023', 'Security Hours Worked Q1 1Jan - 31March 2024', 'Security Hours Worked Q2 1Apr - 30June 2024', 'Security Hours Worked Q3 1July - 31Sept 2024',*/
                 'Q1 HRS 2023', 'Q2 HRS 2023', 'Q3 HRS 2023', 'Q4 HRS 2023', 'Q1 HRS 2024', 'Q2 HRS 2024', 'Q3 HRS 2024', 'Q4 HRS 2024'];
             const columnWidths = [20, 20, 10, 10, 20, 20, 20, 25, 15, 15, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]; // Example widths
@@ -5422,6 +5422,7 @@ $(function () {
                 item.email,
                 item.clientSites.replace('<br />', ' '),
                 item.gender,
+                item.guardLanguage.replace('<br />', ' '),
                 item.isActive ? 'TRUE' : 'FALSE', // Ensure values are strings
                 item.dateEnrolled ? item.dateEnrolled.split('T')[0] : '',
                 item.hR1Status,

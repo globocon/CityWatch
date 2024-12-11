@@ -37,7 +37,9 @@ namespace CityWatch.Data.Models
         public bool IsSTATS { get; set; }
         [NotMapped]
         public List<string> GuardAccess { get;  set; }
-      
+        [NotMapped]
+        public List<string> LanguageDetails { get; set; }
+
         [NotMapped]
         public string? ProviderNo
         {
