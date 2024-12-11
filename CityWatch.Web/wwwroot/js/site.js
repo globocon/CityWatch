@@ -266,7 +266,7 @@
         });
     });
 
-
+   
     $('#Report_DateLocation_ClientTypePosition').on('change', function () {
         $('#Report_DateLocation_ClientSitePosition').val('');
         //$('#Report_DateLocation_ClientAddress').val('');
@@ -4284,6 +4284,7 @@ function hrgroupButtonRenderer(value, record) {
         '</div>'
 }
 let isHrSettingsAdding = false
+let isLoteAdding = false
 //$('#user_settings').on('click', '.deleteuser', function () {
 //    if (confirm('Are you sure want to delete this user?')) {
 //        toggleUserStatus($(this).attr('data-user-id'), true);
@@ -4527,7 +4528,63 @@ if (gridLicenseTypes) {
     });
 }
 
+let gridLanguage
+gridLanguage = $('#tbl_language').grid({
+    dataSource: '/Admin/GuardSettings?handler=Languages',
+    uiLibrary: 'bootstrap4',
+    iconsLibrary: 'fontawesome',
+    primaryKey: 'id',
+    inlineEditing: { mode: 'command' },
+    columns: [
+        { field: 'id', hidden: true },
+        { field: 'language', title: 'Language', width: '100%', editor: true },
 
+
+    ],
+
+    initialized: function (e) {
+        $(e.target).find('thead tr th:last').html('<i class="fa fa-cogs" aria-hidden="true"></i>');
+    },
+
+});
+if (gridLanguage) {
+    gridLanguage.on('rowDataChanged', function (e, id, record) {
+        const data = $.extend(true, {}, record);
+        $.ajax({
+            url: '/Admin/Settings?handler=Savelanguages',
+            data: { record: data },
+            type: 'POST',
+            headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+        }).done(function (result) {
+            if (result.success) gridLicenseTypes.reload();
+            else alert(result.message);
+        }).fail(function () {
+            console.log('error');
+        }).always(function () {
+            if (isLoteAdding)
+                isLoteAdding = false;
+        });
+    });
+
+    gridLanguage.on('rowRemoving', function (e, id, record) {
+        if (confirm('Are you sure want to delete this field?')) {
+            $.ajax({
+                url: '/Admin/Settings?handler=DeleteLanguage',
+                data: { id: record },
+                type: 'POST',
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+            }).done(function (result) {
+                if (result.success) gridLanguage.reload();
+                else alert(result.message);
+            }).fail(function () {
+                console.log('error');
+            }).always(function () {
+                if (isLoteAdding)
+                    isLoteAdding = false;
+            });
+        }
+    });
+}
 
 $('#hr_settings_fields_types').on('change', function () {
     const selHTSettingsFieldTypeId = $('#hr_settings_fields_types').val();
@@ -4537,10 +4594,12 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHrSettings.reload();
         gridLicenseTypes.hide();
         gridCriticalDocument.hide();
+        gridLanguage.hide();
         $('#add_criticalDocuments').hide();
         $('#add_hr_settings').show();
         $('#SettingsDiv').hide();
         $('#TimesheetDiv').hide();
+        $('#add_lote').hide();
     }
 
     else if ($('#hr_settings_fields_types').val() == 2) {
@@ -4549,10 +4608,12 @@ $('#hr_settings_fields_types').on('change', function () {
         gridLicenseTypes.clear();
         gridLicenseTypes.reload();
         gridCriticalDocument.hide();
+        gridLanguage.hide();
         $('#add_criticalDocuments').hide();
         $('#add_hr_settings').show();
         $('#SettingsDiv').hide();
         $('#TimesheetDiv').hide();
+        $('#add_lote').hide();
     }
     else if ($('#hr_settings_fields_types').val() == 3) {
         $('#add_criticalDocuments').show();
@@ -4561,9 +4622,11 @@ $('#hr_settings_fields_types').on('change', function () {
         gridLicenseTypes.hide();
         gridCriticalDocument.show();
         gridCriticalDocument.reload();
+        gridLanguage.hide();
         $('#add_hr_settings').hide();
         $('#SettingsDiv').hide();
         $('#TimesheetDiv').hide();
+        $('#add_lote').hide();
     }
     else if ($('#hr_settings_fields_types').val() == 4) {
         $('#add_criticalDocuments').hide();
@@ -4571,8 +4634,10 @@ $('#hr_settings_fields_types').on('change', function () {
         gridHrSettings.hide();
         gridLicenseTypes.hide();
         gridCriticalDocument.hide();
+        gridLanguage.hide();
         $('#add_hr_settings').hide();
         $('#SettingsDiv').show();
+        $('#add_lote').hide();
         $.ajax({
             url: '/Admin/Settings?handler=SettingsDetails',
             type: 'GET',
@@ -4592,6 +4657,8 @@ $('#hr_settings_fields_types').on('change', function () {
         gridLicenseTypes.hide();
         gridCriticalDocument.hide();
         gridCriticalDocument.reload();
+        gridLanguage.hide();
+        $('#add_lote').hide();
         $('#add_hr_settings').hide();
         $('#SettingsDiv').hide();
         $.ajax({
@@ -4606,9 +4673,22 @@ $('#hr_settings_fields_types').on('change', function () {
             }
         });
     }
+    else if ($('#hr_settings_fields_types').val() == 6) {
+       
+        gridHrSettings.hide();
+        gridLicenseTypes.hide();
+        gridCriticalDocument.hide();
+        gridLanguage.show();
+        $('#add_criticalDocuments').hide();
+        $('#add_hr_settings').hide();
+        $('#add_lote').show();
+        $('#SettingsDiv').hide();
+        $('#TimesheetDiv').hide();
+    }
     else {
         gridLicenseTypes.hide();
         gridHrSettings.hide();
+        gridLanguage.hide();
     }
 });
 if ($('#report_module_types_irtemplate').val() == 1) {
@@ -4718,6 +4798,19 @@ $('#add_hr_settings').on('click', function () {
 });
 
 //p1-213 critical Document start
+$('#add_lote').on('click', function () {
+    if ($('#hr_settings_fields_types').val() == 6) {
+        if (isLoteAdding) {
+            alert('Unsaved changes in the grid. Refresh the page');
+        } else {
+            isLoteAdding = true;
+            gridLanguage.addRow({
+                'id': -1,
+                'language': '',
+            }).edit(-1);
+        }
+    }
+});
 $('#add_criticalDocuments').on('click', function () {
     $('#clientSitesDoc').html('');
     $('#Critical-modal').modal('show');
@@ -4941,6 +5034,7 @@ if ($('#hr_settings_fields_types').val() == '') {
     gridHrSettings.hide();
     gridLicenseTypes.hide();
     gridCriticalDocument.hide();
+    gridLanguage.hide();
 }
 
 $('#Critical-modal').on('shown.bs.modal', function (event) {

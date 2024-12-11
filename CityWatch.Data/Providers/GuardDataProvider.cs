@@ -82,6 +82,7 @@ namespace CityWatch.Data.Providers
         public int GetGuardID(string LicenseNo);
 
         List<HrSettingsLockedClientSites> GetHrDocumentLockDetailsForASite(int clientSiteId);
+        public int SaveLanguageDetails(Guard guard);
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -846,6 +847,43 @@ namespace CityWatch.Data.Providers
         .Include(x => x.HrSettings)
         .ToList();
 
+        }
+
+        public int SaveLanguageDetails(Guard guard)
+        {
+            var getGuardsLotes = _context.LanguageDetails.Where(x => x.GuardId == guard.Id).ToList();
+            if (getGuardsLotes.Count() > 0)
+            {
+                DeleteGuardLotes(guard.Id);
+            }
+            LanguageDetails languageDetails = new LanguageDetails();
+            if (guard.LanguageDetails != null)
+            {
+                foreach (var item in guard.LanguageDetails)
+                {
+                    languageDetails.Id = 0;
+                    languageDetails.LanguageID = Convert.ToInt32(item);
+                    languageDetails.CreatedDate = DateTime.Now;
+                    languageDetails.GuardId = guard.Id;
+                    languageDetails.IsDeleted = false;
+                    _context.LanguageDetails.Add(languageDetails);
+                    _context.SaveChanges();
+                }
+            }
+            
+            return guard.Id;
+
+        }
+        public void DeleteGuardLotes(int guardid)
+        {
+            var guardLotesToDelete = _context.LanguageDetails.Where(x => x.GuardId == guardid).ToList();
+            if (guardLotesToDelete == null)
+                throw new InvalidOperationException();
+            foreach (var item in guardLotesToDelete)
+            {
+                _context.Remove(item);
+                _context.SaveChanges();
+            }
         }
     }
 }

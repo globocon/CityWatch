@@ -150,6 +150,7 @@ namespace CityWatch.Web.Services
 
         List<object> GetHrSettingsClientSiteLockStatus(int hrSettingsId);
         List<SelectListItem> GetUserClientTypesCountWithTypeId(int? userId, int? clienttypeid);
+        public List<SelectListItem> GetLanguageMaster(bool withoutSelect = true);
     }
 
     public class ViewDataService : IViewDataService
@@ -1774,6 +1775,24 @@ namespace CityWatch.Web.Services
 
 
 
+            }
+
+            return items;
+        }
+
+        public List<SelectListItem> GetLanguageMaster(bool withoutSelect = true)
+        {
+            var Access = _guardLogDataProvider.GetLanguages();
+            var items = new List<SelectListItem>();
+
+            if (!withoutSelect)
+            {
+                items.Add(new SelectListItem("Select", "", false));
+            }
+
+            foreach (var item in Access)
+            {
+                items.Add(new SelectListItem(item.Language, item.Id.ToString()));
             }
 
             return items;

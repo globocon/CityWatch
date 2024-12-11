@@ -1876,10 +1876,48 @@ namespace CityWatch.Web.Pages.Admin
 
             return new JsonResult(clientIncidentReports);
         }
+
+        public JsonResult OnGetLanguages()
+        {
+            return new JsonResult(_guardLogDataProvider.GetLanguages());
+        }
+        public JsonResult OnPostSavelanguages(LanguageMaster record)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+
+                _guardLogDataProvider.SaveLanguages(record);
+
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
+        public JsonResult OnPostDeleteLanguage(int id)
+        {
+            var success = false;
+            var message = string.Empty;
+            try
+            {
+                _guardLogDataProvider.DeleteLanguage(id);
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new JsonResult(new { success, message });
+        }
     }
     public class helpDocttype
     {
         public string Id { get; set; }
         public string Name { get; set; }
     }
+    
 }
