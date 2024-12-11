@@ -1,0 +1,12 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+
+namespace CityWatch.RadioCheck.Pages
+{
+    public class testPageModel : PageModel
+    {
+        public void OnGet()
+        {
+        }
+    }
+}
