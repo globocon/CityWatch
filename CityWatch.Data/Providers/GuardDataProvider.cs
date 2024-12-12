@@ -66,12 +66,12 @@ namespace CityWatch.Data.Providers
 
         //p1-191 hr files task 3-end
         List<LicenseTypes> GetLicenseTypes();
-        GuardComplianceAndLicense GetDescriptionList(HrGroup hrGroup, string Description,int GuardID);
+        GuardComplianceAndLicense GetDescriptionList(HrGroup hrGroup, string Description, int GuardID);
         List<GuardComplianceAndLicense> GetGuardCompliancesAndLicense(int guardId);
         List<GuardComplianceAndLicense> GetGuardCompliancesAndLicenseList(string hrGroup);
         List<GuardComplianceAndLicense> GetGuardCompliancesAndLicenseHR(int guardId, HrGroup hrGroup);
         List<CriticalDocumentsClientSites> GetCriticalDocs(int clientSiteID);
-         ClientSite GetClientSiteID(string ClientSite);
+        ClientSite GetClientSiteID(string ClientSite);
         public DropboxDirectory GetDrobox();
         public GuardComplianceAndLicense GetDescriptionUsed(HrGroup hrGroup, string Description, int GuardID);
 
@@ -83,7 +83,7 @@ namespace CityWatch.Data.Providers
 
         List<HrSettingsLockedClientSites> GetHrDocumentLockDetailsForASite(int clientSiteId);
         public int SaveLanguageDetails(Guard guard);
-        List<GuardLogin> GetGuardLoginsByGuardIdAndDate(int guardIds,DateTime startdate,DateTime enddate);
+        List<GuardLogin> GetGuardLoginsByGuardIdAndDate(int guardIds, DateTime startdate, DateTime enddate);
         public void SaveGuardLotes(Guard guard);
         public void DeleteGuardLotes(int guardid);
         List<LanguageDetails> GetGuardLotes(int[] guardIds);
@@ -114,7 +114,7 @@ namespace CityWatch.Data.Providers
 
         }
 
-        public void  SetGuardNewPIN(int guardId,string NewPIN)
+        public void SetGuardNewPIN(int guardId, string NewPIN)
         {
             var updateGuard = _context.Guards.SingleOrDefault(x => x.Id == guardId);
             if (updateGuard != null)
@@ -130,7 +130,7 @@ namespace CityWatch.Data.Providers
         //P4#70 to display only active guards PartB-C -x => x.IsActive == true-Added by Manju -start
 
         public List<Guard> GetActiveGuards()
-        { 
+        {
             return _context.Guards.Where(x => x.IsActive == true).OrderBy(x => x.Name).ToList();
         }
         public List<CriticalDocumentsClientSites> GetCriticalDocs(int clientSiteID)
@@ -142,7 +142,7 @@ namespace CityWatch.Data.Providers
                 // .ThenInclude(z => z.ReferenceNoAlphabets)
                 // .Include(x => x.HRSettings)
                 // .ThenInclude(z => z.HRGroups)
-                .Where(x=>x.ClientSiteId== clientSiteID).ToList();
+                .Where(x => x.ClientSiteId == clientSiteID).ToList();
         }
         public ClientSite GetClientSiteID(string ClientSite)
         {
@@ -154,32 +154,32 @@ namespace CityWatch.Data.Providers
         //    foreach (var guard in guards)
         //    {
 
-    //        guard.IsActiveCount = CalculateIsActiveCountForGuard(guard.Id); 
-    //    }
+        //        guard.IsActiveCount = CalculateIsActiveCountForGuard(guard.Id); 
+        //    }
 
-    //    return guards;
-    //}
-    //public int CalculateIsActiveCountForGuard(int GuradID)
-    //{
-    //    var guardLoginsForId = _context.GuardLogins
-    //            .Where(z => z.GuardId == GuradID && z.ClientSite.IsActive && z.GuardLogs.Notes== "Logbook Logged In")
-    //            .Include(z => z.ClientSite)
-    //            .Include(z => z.Guard)
-    //            .Include(z => z.GuardLogs)
-    //            .ToList();
+        //    return guards;
+        //}
+        //public int CalculateIsActiveCountForGuard(int GuradID)
+        //{
+        //    var guardLoginsForId = _context.GuardLogins
+        //            .Where(z => z.GuardId == GuradID && z.ClientSite.IsActive && z.GuardLogs.Notes== "Logbook Logged In")
+        //            .Include(z => z.ClientSite)
+        //            .Include(z => z.Guard)
+        //            .Include(z => z.GuardLogs)
+        //            .ToList();
 
-    //    int isActiveCount = guardLoginsForId.Count;
-    //    return isActiveCount;
-    //}
+        //    int isActiveCount = guardLoginsForId.Count;
+        //    return isActiveCount;
+        //}
 
-    public Guard GetGuardDetailsbySecurityLicenseNo(string securityLicenseNo)
+        public Guard GetGuardDetailsbySecurityLicenseNo(string securityLicenseNo)
         {
             return _context.Guards.SingleOrDefault(x => x.SecurityNo.Trim() == securityLicenseNo.Trim());
         }
 
         public int GetGuardID(string LicenseNo)
         {
-            var Number= _context.Guards.Where(x => x.SecurityNo == LicenseNo).Select(x => x.Id);
+            var Number = _context.Guards.Where(x => x.SecurityNo == LicenseNo).Select(x => x.Id);
             return Number.FirstOrDefault();
         }
 
@@ -193,7 +193,7 @@ namespace CityWatch.Data.Providers
                 guard.IsActive = true;
                 initalsUsed = MakeGuardInitials(guard.Initial);
                 guard.Initial = initalsUsed;
-                guard.DateEnrolled = DateTime.Today;                
+                guard.DateEnrolled = DateTime.Today;
                 _context.Guards.Add(guard);
             }
             else
@@ -270,7 +270,7 @@ namespace CityWatch.Data.Providers
                 //P1-273 access levels-start
                 guard.IsSTATSChartsAccess = false;
                 guard.IsRCFusionAccess = false;
-                
+
                 //P1-273 access levels-end
                 _context.Guards.Add(guard);
             }
@@ -337,11 +337,11 @@ namespace CityWatch.Data.Providers
             {
 
                 guardLogins.AddRange(_context.LanguageDetails
-                .Where(z => z.GuardId == guardId )
-                    
+                .Where(z => z.GuardId == guardId)
+
                     .ToList());
             }
-           
+
 
             return guardLogins;
         }
@@ -351,31 +351,31 @@ namespace CityWatch.Data.Providers
             List<LanguageDetails> language = new List<LanguageDetails>();
             foreach (int guardId in guardIds)
             {
-               
+
                 language.AddRange(_context.LanguageDetails
                 .Where(z => z.GuardId == guardId && z.IsDeleted == false)
                     .Include(z => z.LanguageMaster)
                     .ToList());
             }
-           
-            return language;
-               
 
-              
+            return language;
+
+
+
 
 
         }
 
-        public List<GuardLogin> GetGuardLoginsByGuardIdAndDate(int guardIds,DateTime startdate,DateTime endDate)
+        public List<GuardLogin> GetGuardLoginsByGuardIdAndDate(int guardIds, DateTime startdate, DateTime endDate)
         {
             List<GuardLogin> guardLogins = new List<GuardLogin>();
-          
-                guardLogins.AddRange(_context.GuardLogins
-                .Where(z => z.GuardId == guardIds && z.ClientSite.IsActive == true && z.LoginDate.Date>= startdate.Date && z.LoginDate.Date<=endDate.Date)
-                    .Include(z => z.ClientSite)
-                    .Include(z => z.Guard)
-                    .ToList());
-            
+
+            guardLogins.AddRange(_context.GuardLogins
+            .Where(z => z.GuardId == guardIds && z.ClientSite.IsActive == true && z.LoginDate.Date >= startdate.Date && z.LoginDate.Date <= endDate.Date)
+                .Include(z => z.ClientSite)
+                .Include(z => z.Guard)
+                .ToList());
+
             //for query optimization Comment the old code
             //var guardLogins = _context.GuardLogins
             //    .Where(z => guardIds.Contains(z.GuardId))
@@ -386,12 +386,12 @@ namespace CityWatch.Data.Providers
 
 
             return guardLogins
-             
+
                 .ToList();
 
 
         }
-        
+
         public List<GuardLogin> GetGuardLoginsBySmartWandId(int smartWandId)
         {
             return _context.GuardLogins
@@ -487,7 +487,7 @@ namespace CityWatch.Data.Providers
                     guardLoginToUpdate.SmartWandId = guardLogin.SmartWandId;
                     guardLoginToUpdate.PositionId = guardLogin.PositionId;
                     guardLoginToUpdate.OnDuty = guardLogin.OnDuty;
-                    guardLoginToUpdate.IPAddress= guardLogin.IPAddress;
+                    guardLoginToUpdate.IPAddress = guardLogin.IPAddress;
                 }
             }
             _context.SaveChanges();
@@ -609,8 +609,8 @@ namespace CityWatch.Data.Providers
                 HrGroup = x.HrGroup,
                 CurrentDateTime = x.CurrentDateTime,
                 LicenseNo = x.Guard.SecurityNo,
-                DateType=x.DateType,
-            }).OrderBy(x=>x.FileName)
+                DateType = x.DateType,
+            }).OrderBy(x => x.FileName)
             .ToList();
 
 
@@ -725,11 +725,11 @@ namespace CityWatch.Data.Providers
         {
             var ddd = _context.GuardComplianceLicense
                 .Include(z => z.Guard)
-                .Where(x => x.ExpiryDate != null && x.HrGroupText==hrGroup)
+                .Where(x => x.ExpiryDate != null && x.HrGroupText == hrGroup)
                 .ToList();
             return _context.GuardComplianceLicense
                 .Include(z => z.Guard)
-                .Where(x =>x.ExpiryDate != null && x.HrGroupText == hrGroup)
+                .Where(x => x.ExpiryDate != null && x.HrGroupText == hrGroup)
                 .ToList();
         }
         public List<GuardComplianceAndLicense> GetGuardCompliancesAndLicenseHR(int guardId, HrGroup hrGroup)
@@ -755,18 +755,18 @@ namespace CityWatch.Data.Providers
           .FirstOrDefault();
             return valueReturn;
         }
-        public GuardComplianceAndLicense GetDescriptionList(HrGroup hrGroup, string Description,int GuardID)
+        public GuardComplianceAndLicense GetDescriptionList(HrGroup hrGroup, string Description, int GuardID)
         {
             var guardAddedDoc = _context.GuardComplianceLicense
-        .Where(x => x.HrGroup == hrGroup &&  x.GuardId == GuardID).ToList();
+        .Where(x => x.HrGroup == hrGroup && x.GuardId == GuardID).ToList();
 
             var valueReturn = _context.GuardComplianceLicense
           .Where(x => x.HrGroup == hrGroup && x.Description == Description && x.GuardId == 0)
           .FirstOrDefault();
 
-            if (guardAddedDoc!=null)
+            if (guardAddedDoc != null)
             {
-                foreach(var doc in guardAddedDoc)
+                foreach (var doc in guardAddedDoc)
                 {
                     var s = doc.Description.Trim();
                     var firstSpaceIndex = s.IndexOf(' ');
@@ -790,18 +790,18 @@ namespace CityWatch.Data.Providers
 
 
             return valueReturn;
-        //    return _context.GuardComplianceLicense
-        //.Where(x => x.HrGroup == hrGroup && x.Description== Description && x.GuardId==GuardID)
-        //.FirstOrDefault();
+            //    return _context.GuardComplianceLicense
+            //.Where(x => x.HrGroup == hrGroup && x.Description== Description && x.GuardId==GuardID)
+            //.FirstOrDefault();
         }
-            public HrSettings GetHRRefernceNo(int HRid,string Description)
+        public HrSettings GetHRRefernceNo(int HRid, string Description)
         {
-            
+
             return _context.HrSettings.Include(z => z.HRGroups)
                 .Include(z => z.ReferenceNoNumbers)
                 .Include(z => z.ReferenceNoAlphabets)
                 .OrderBy(x => x.HRGroups.Name).ThenBy(x => x.ReferenceNoNumbers.Name).
-                ThenBy(x => x.ReferenceNoAlphabets.Name).Where(z => z.HRGroups.Id == HRid && z.Description== Description).FirstOrDefault();
+                ThenBy(x => x.ReferenceNoAlphabets.Name).Where(z => z.HRGroups.Id == HRid && z.Description == Description).FirstOrDefault();
 
         }
         public List<GuardCompliance> GetGuardCompliancesList(int[] guardIds)
@@ -889,7 +889,7 @@ namespace CityWatch.Data.Providers
             return descriptions;
         }
 
-        public void SaveRecordingFileDetails( AudioRecordingLog audioRecordingLog)
+        public void SaveRecordingFileDetails(AudioRecordingLog audioRecordingLog)
         {
             if (audioRecordingLog.Id == 0)
             {
@@ -901,8 +901,8 @@ namespace CityWatch.Data.Providers
                 var audioRecordingLogToUpdate = _context.AudioRecordingLog.SingleOrDefault(x => x.Id == audioRecordingLog.Id);
                 if (audioRecordingLogToUpdate != null)
                 {
-                    audioRecordingLogToUpdate.FileName= audioRecordingLog.FileName;
-                    audioRecordingLogToUpdate.BlobUrl= audioRecordingLog.BlobUrl;
+                    audioRecordingLogToUpdate.FileName = audioRecordingLog.FileName;
+                    audioRecordingLogToUpdate.BlobUrl = audioRecordingLog.BlobUrl;
                 }
             }
             _context.SaveChanges();
@@ -912,7 +912,7 @@ namespace CityWatch.Data.Providers
         public List<HrSettingsLockedClientSites> GetHrDocumentLockDetailsForASite(int clientSiteId)
         {
             return _context.HrSettingsLockedClientSites
-        .Where(x => x.ClientSite.Id == clientSiteId && x.HrSettings.HRLock==true) // Filter by ClientSite ID if needed
+        .Where(x => x.ClientSite.Id == clientSiteId && x.HrSettings.HRLock == true) // Filter by ClientSite ID if needed
         .Include(x => x.ClientSite)
         .Include(x => x.HrSettings)
         .ToList();
@@ -928,7 +928,7 @@ namespace CityWatch.Data.Providers
                 DeleteGuardLotes(guard.Id);
             }
             LanguageDetails languageDetails = new LanguageDetails();
-             foreach(var item in guard.LanguageDetails)
+            foreach (var item in guard.LanguageDetails)
             {
                 languageDetails.Id = 0;
                 languageDetails.LanguageID = Convert.ToInt32(item);
@@ -938,12 +938,12 @@ namespace CityWatch.Data.Providers
                 _context.LanguageDetails.Add(languageDetails);
                 _context.SaveChanges();
             }
-              return guard.Id;
-         }
+            return guard.Id;
+        }
 
         public void SaveGuardLotes(Guard guard)
         {
-          
+
             if (guard.LanguageDetails != null)
             {
                 LanguageDetails languageDetails = new LanguageDetails();
