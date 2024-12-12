@@ -89,7 +89,13 @@ $(function () {
         buttonTextAlignment: 'left',
         includeSelectAllOption: true,
     });
-
+    $('#Guard_Lote').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
     $("#fileUpload").fileUpload();
 
 
@@ -4995,6 +5001,24 @@ $(function () {
                 $('#cbIsActive').prop('disabled', false);
             }
         }
+        var selectedlanguages = [];
+        data.languageDetails1.forEach(function (value) {
+            selectedlanguages.push(value.languageID)
+        })
+        var deletelanguagevalue = 1;
+        $(".guardlote .multiselect-option input[type=checkbox][value='" + deletelanguagevalue + "']").prop("checked", false);
+        if (selectedlanguages.length == 0) {
+            deletelanguagevalue = 4;
+            selectedlanguages.push(deletelanguagevalue);
+            //$(".guardlote .multiselect-option input[type=checkbox][value='" + deletelanguagevalue + "']").prop("checked", true);
+        }
+        selectedlanguages.forEach(function (value) {
+
+            $(".guardlote .multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+        });
+        $("#Guard_Lote").multiselect();
+        $("#Guard_Lote").val(selectedlanguages);
+        $("#Guard_Lote").multiselect("refresh");
     });
     $('#guard_settings tbody').on('click', 'img[name=btn_timesheet]', function () {
         $('#TimesheetGuard_Id').val('-1');
@@ -5671,11 +5695,14 @@ $(function () {
         resetGuardDetailsModal();
         let value = 1;
         $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
-
+        $(".guardlote .multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", false);
         // Initialize the multiselect dropdown
         $("#Guard_Access").multiselect();
         $("#Guard_Access").val(value);
         $("#Guard_Access").multiselect("refresh");
+        $("#Guard_Lote").multiselect();
+        $("#Guard_Lote").val('');
+        $("#Guard_Lote").multiselect("refresh");
         $('#addGuardModal').modal('show');
 
     });

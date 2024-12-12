@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Org.BouncyCastle.Asn1.Esf;
+using Org.BouncyCastle.Crypto.Macs;
 using Org.BouncyCastle.Utilities;
 using SMSGlobal.Response;
 using System;
@@ -237,6 +238,9 @@ namespace CityWatch.Data.Providers
         public GuardLogin GetGuardDetailsAllTimesheet1(int clientSiteIds, DateTime startdate, DateTime endDate);
 
         public List<GuardLogin> GetGuardDetailsAllTimesheetList(int[] clientSiteIds, DateTime startdate, DateTime endDate);
+        //p1-287 A to E-start
+         List<LanguageMaster> GetLanguages();
+        //p1-287 A to E-end
 
     }
 
@@ -2837,6 +2841,12 @@ namespace CityWatch.Data.Providers
                 }
             }
         }
+        //p1-287 A to E-start
+        public List<LanguageMaster> GetLanguages()
+        {
+            return _context.LanguageMaster.Where(x=>x.IsDeleted==false).OrderBy(x => x.Language).ToList();
+        }
+        //p1-287 A to E-end
     }
 
 

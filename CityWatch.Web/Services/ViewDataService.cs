@@ -151,6 +151,9 @@ namespace CityWatch.Web.Services
 
         List<object> GetHrSettingsClientSiteLockStatus(int hrSettingsId);
         List<SelectListItem> GetUserClientTypesCountWithTypeId(int? userId, int? clienttypeid);
+        //p1-287 A to E-start
+        List<SelectListItem> GetLanguages(bool withoutSelect = true);
+        //p1-287 A to E-end
     }
 
     public class ViewDataService : IViewDataService
@@ -681,10 +684,10 @@ namespace CityWatch.Web.Services
 
             // Retrieve guard logins in one call
             var guardLogins = _guardDataProvider.GetGuardLogins(guardIds).ToList();
-
+            var guardLotes = _guardDataProvider.GetGuardLotes(guardIds).ToList();
             // Create GuardViewModel list in one query
             var guardViewModels = guards.Select(guard =>
-                new GuardViewModel(guard, guardLogins.Where(login => login.GuardId == guard.Id).ToList())).ToList();
+                new GuardViewModel(guard, guardLogins.Where(login => login.GuardId == guard.Id).ToList(), guardLotes.ToList())).ToList();
 
             // Retrieve all document statuses for guard IDs at once
             var documentStatusesByGuard = guardIds.ToDictionary(
@@ -1808,6 +1811,25 @@ namespace CityWatch.Web.Services
 
             return items;
         }
+        //p1-287 A to E-start
+        public List<SelectListItem> GetLanguages(bool withoutSelect = true)
+        {
+            var Access = _clientDataProvider.GetLanguages();
+            var items = new List<SelectListItem>();
+
+            if (!withoutSelect)
+            {
+                items.Add(new SelectListItem("Select", "",true));
+            }
+
+            foreach (var item in Access)
+            {
+                items.Add(new SelectListItem(item.Language, item.Id.ToString()));
+            }
+
+            return items;
+        }
+        //p1-287 A to E-end
     }
 
 }

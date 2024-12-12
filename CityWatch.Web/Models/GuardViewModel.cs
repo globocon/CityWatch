@@ -10,13 +10,16 @@ namespace CityWatch.Web.Models
         private readonly Guard _guard;
         private readonly IEnumerable<GuardLogin> _guardLogins;
         private readonly IEnumerable<ClientSite> _clientSites;
-       
-        public GuardViewModel(Guard guard, IEnumerable<GuardLogin> guardLogins)
+        private readonly List<LanguageDetails> _languageDetails;
+
+        public GuardViewModel(Guard guard, IEnumerable<GuardLogin> guardLogins, List<LanguageDetails> languageDetails)
         {
             _guard = guard;
             _guardLogins = guardLogins;
             _clientSites = _guardLogins.Select(z => z.ClientSite);
-           
+            _languageDetails = languageDetails;
+
+
 
 
         }
@@ -107,5 +110,6 @@ namespace CityWatch.Web.Models
 
         public bool IsAdminThirdPartyAccess { get { return _guard.IsAdminThirdPartyAccess; } }
         public bool IsRCHRAccess { get { return _guard.IsRCHRAccess; } }
+        public List<LanguageDetails> languageDetails1 { get { return _languageDetails.Where(x => x.GuardId == _guard.Id).ToList(); } }
     }
 }
