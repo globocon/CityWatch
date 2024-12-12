@@ -781,10 +781,13 @@ namespace CityWatch.Web.Services
                 // Fetch guard logins for the found guards in a single call
                 var guardLogins = _guardDataProvider.GetGuardLogins(guards.Select(z => z.Id).ToArray())
                                                      .ToList(); // Materialize the query
+                var GuardLanguages= _guardDataProvider.GetGuardLanguages(guards.Select(z => z.Id).ToArray())
+                                                     .ToList();
 
                 // Create the list of GuardViewExcelModel objects using a single Select
                 listGuardExcel = guards.Select(z => new GuardViewExcelModel(z,
                                                     guardLogins.Where(y => y.GuardId == z.Id),
+                                                    GuardLanguages.Where(y => y.GuardId == z.Id),
                                                     _guardDataProvider))
                                        .ToList();
 

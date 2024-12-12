@@ -140,10 +140,12 @@ namespace CityWatch.Data
         public DbSet<HrSettingsLockedClientSites> HrSettingsLockedClientSites { get; set; }
 
         public DbSet<GuardHoursByQuarterViewModel> GuardHoursByQuarterViewModel { get; set; }
-        //p1-287 A to E-start
+
         public DbSet<LanguageMaster> LanguageMaster { get; set; }
         public DbSet<LanguageDetails> LanguageDetails { get; set; }
-        //p1-287 A to E-end
+
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<GuardLog>()

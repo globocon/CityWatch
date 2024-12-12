@@ -1,25 +1,45 @@
 ﻿@using CityWatch.Web.Helpers;
 @using CityWatch.Web.Services;
 @inject IViewDataService viewDataService
+@model CityWatch.Web.Pages.Admin.AuditSiteLogModel
 <div class="row">
     <div class="col-md-12">
         <form method="post" class="border-bottom">
             <div class="form-row">
                 <div class="form-group col-md-2">
                     <label class="mx-1" for="fusionClientType">Client Type</label>
+                       @if (Model.ClientTypeId != 0)
+                                        {
                     <select class="form-control" id="fusionClientType">
                         <option value="">Select</option>
                         @{
-                            var userClientTypes = viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId);
+                                var userClientTypes = viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId).Where(x => x.Id == Model.ClientTypeId);
                             var sortedClientTypes = userClientTypes.OrderByDescending(clientType => viewDataService.GetClientTypeCount(clientType.Id));
                             sortedClientTypes = userClientTypes.OrderBy(clientType => clientType.Name);
                             foreach (var clientType in sortedClientTypes)
                             {
                                 var countClientType = viewDataService.GetClientTypeCount(clientType.Id);
-                                <option value="@clientType.Id">@clientType.Name (@countClientType)</option>
+                                <option value="@clientType.Id" selected>@clientType.Name (@countClientType)</option>
                             }
                         }
                     </select>
+                                        }
+                    @if (Model.ClientTypeId == 0)
+                    {
+                        <select class="form-control" id="fusionClientType">
+                            <option value="">Select</option>
+                            @{
+                                var userClientTypes = viewDataService.GetUserClientTypesHavingAccess(AuthUserHelper.LoggedInUserId);
+                                var sortedClientTypes = userClientTypes.OrderByDescending(clientType => viewDataService.GetClientTypeCount(clientType.Id));
+                                sortedClientTypes = userClientTypes.OrderBy(clientType => clientType.Name);
+                                foreach (var clientType in sortedClientTypes)
+                                {
+                                    var countClientType = viewDataService.GetClientTypeCount(clientType.Id);
+                                    <option value="@clientType.Id">@clientType.Name (@countClientType)</option>
+                                }
+                            }
+                        </select>
+                    }
                 </div>
                 <div class="form-group col-md-3">
                     <label class="mx-1" for="fusionClientSiteId">Client Site</label>

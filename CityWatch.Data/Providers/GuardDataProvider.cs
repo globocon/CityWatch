@@ -83,11 +83,11 @@ namespace CityWatch.Data.Providers
 
         List<HrSettingsLockedClientSites> GetHrDocumentLockDetailsForASite(int clientSiteId);
         List<GuardLogin> GetGuardLoginsByGuardIdAndDate(int guardIds,DateTime startdate,DateTime enddate);
-        //p1-287 A to E-start
         public void SaveGuardLotes(Guard guard);
         public void DeleteGuardLotes(int guardid);
         List<LanguageDetails> GetGuardLotes(int[] guardIds);
-        //p1-287 A to E-end
+        public List<LanguageDetails> GetGuardLanguages(int[] guardIds);
+
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -327,7 +327,7 @@ namespace CityWatch.Data.Providers
 
 
         }
-        //p1-287 A to E-start
+
         public List<LanguageDetails> GetGuardLotes(int[] guardIds)
         {
             List<LanguageDetails> guardLogins = new List<LanguageDetails>();
@@ -339,22 +339,31 @@ namespace CityWatch.Data.Providers
                     
                     .ToList());
             }
-            //for query optimization Comment the old code
-            //var guardLogins = _context.GuardLogins
-            //    .Where(z => guardIds.Contains(z.GuardId))
+           
 
-            //    .Include(z => z.Guard)
-            //    .Include(z => z.ClientSite)
-            //    .ToList();
+            return guardLogins;
+        }
 
+        public List<LanguageDetails> GetGuardLanguages(int[] guardIds)
+        {
+            List<LanguageDetails> language = new List<LanguageDetails>();
+            foreach (int guardId in guardIds)
+            {
+               
+                language.AddRange(_context.LanguageDetails
+                .Where(z => z.GuardId == guardId && z.IsDeleted == false)
+                    .Include(z => z.LanguageMaster)
+                    .ToList());
+            }
+           
+            return language;
+               
 
-            return guardLogins
               
-                .ToList();
 
 
         }
-        //p1-287 A to E-end
+
         public List<GuardLogin> GetGuardLoginsByGuardIdAndDate(int guardIds,DateTime startdate,DateTime endDate)
         {
             List<GuardLogin> guardLogins = new List<GuardLogin>();

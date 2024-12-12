@@ -37,6 +37,8 @@
 	  <Folder Include="wwwroot\Pdf\Archive\" />
 	</ItemGroup>
 	<ItemGroup>
+	  <None Include="wwwroot\jsJotform\script.js" />
+	  <None Include="wwwroot\jsJotform\service-worker.js" />
 	  <None Include="wwwroot\Pdf\Template\IR_Form_Template.pdf" />
 	</ItemGroup>
 	<ItemGroup>

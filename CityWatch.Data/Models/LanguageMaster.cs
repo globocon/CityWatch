@@ -10,12 +10,13 @@ namespace CityWatch.Data.Models
 {
     public class LanguageMaster
     {
+
         [Key]
         public int Id { get; set; }
-        
-
         public string Language { get; set; }
-
+        public bool IsDeleted { get; set; }
+        public int Id { get; set; }
+        public string Language { get; set; }
         public bool IsDeleted { get; set; }
 
     }
