@@ -147,13 +147,13 @@ namespace CityWatch.Web.Services
         IEnumerable<string> GetDailyGuardLogAttachments(string uploadsDir, string reportReference);
         List<SelectListItem> GetOfficerPositionsNew(OfficerPositionFilter positionFilter);
         ClientSiteKey GetClientSiteKeyDescriptionAndImage(int keyId, int clientSiteId);
-         public ANPR GetANPR(int clientSiteId);
+        public ANPR GetANPR(int clientSiteId);
 
         List<object> GetHrSettingsClientSiteLockStatus(int hrSettingsId);
         List<SelectListItem> GetUserClientTypesCountWithTypeId(int? userId, int? clienttypeid);
-        public List<SelectListItem> GetLanguageMaster(bool withoutSelect = true); 
+        public List<SelectListItem> GetLanguageMaster(bool withoutSelect = true);
         List<SelectListItem> GetLanguages(bool withoutSelect = true);
-    
+
     }
 
     public class ViewDataService : IViewDataService
@@ -439,9 +439,9 @@ namespace CityWatch.Web.Services
 
             return items;
         }
-        public List<SelectListItem> GetUserClientTypesCountWithTypeId(int? userId,int? clienttypeid)
+        public List<SelectListItem> GetUserClientTypesCountWithTypeId(int? userId, int? clienttypeid)
         {
-            var clientTypes = GetUserClientTypesHavingAccess(userId).Where(x=>x.Id==clienttypeid);
+            var clientTypes = GetUserClientTypesHavingAccess(userId).Where(x => x.Id == clienttypeid);
             var sortedClientTypes = clientTypes.OrderByDescending(clientType => GetClientTypeCount(clientType.Id));
             sortedClientTypes = sortedClientTypes.OrderBy(clientType => clientType.Name);
             var items = new List<SelectListItem>() { new SelectListItem("Select", "") };
@@ -747,15 +747,15 @@ namespace CityWatch.Web.Services
                 {
                     if (desc.GroupName == "HR 1 (C4i)")
                     {
-                        guard.hr1Description = guard.hr1Description+desc.Description+" ";
+                        guard.hr1Description = guard.hr1Description + desc.Description + " ";
                     }
                     else if (desc.GroupName == "HR 2 (Client)")
                     {
-                        guard.hr2Description = guard.hr2Description+desc.Description + " ";
+                        guard.hr2Description = guard.hr2Description + desc.Description + " ";
                     }
                     else if (desc.GroupName == "HR 3 (Special)")
                     {
-                        guard.hr3Description = guard.hr3Description+desc.Description + " ";
+                        guard.hr3Description = guard.hr3Description + desc.Description + " ";
                     }
                 }
             }
@@ -781,7 +781,7 @@ namespace CityWatch.Web.Services
                 // Fetch guard logins for the found guards in a single call
                 var guardLogins = _guardDataProvider.GetGuardLogins(guards.Select(z => z.Id).ToArray())
                                                      .ToList(); // Materialize the query
-                var GuardLanguages= _guardDataProvider.GetGuardLanguages(guards.Select(z => z.Id).ToArray())
+                var GuardLanguages = _guardDataProvider.GetGuardLanguages(guards.Select(z => z.Id).ToArray())
                                                      .ToList();
 
                 // Create the list of GuardViewExcelModel objects using a single Select
@@ -794,7 +794,7 @@ namespace CityWatch.Web.Services
                 foreach (var item in listGuardExcel)
                 {
                     var guardQuaterDeatils = quaterDeatils.Where(x => x.GuardId == item.Id).FirstOrDefault();
-                    if(guardQuaterDeatils!=null)
+                    if (guardQuaterDeatils != null)
                     {
                         item.Q1HRS2023 = guardQuaterDeatils.Q1HRS2023;
                         item.Q2HRS2023 = guardQuaterDeatils.Q2HRS2023;
@@ -811,7 +811,7 @@ namespace CityWatch.Web.Services
                     {
                         var test = Regex.Replace(item.ClientSites, @"<br\s*/?>", "", RegexOptions.IgnoreCase);
                         if (!string.IsNullOrEmpty(test))
-                        item.ClientSites = test;
+                            item.ClientSites = test;
                     }
                 }
             }
@@ -837,7 +837,7 @@ namespace CityWatch.Web.Services
                     GroupName = item.HrGroupText.Trim(), // Assuming HrGroupText replaces GroupName
                                                          // Generate the color code based on the current item
                     ColourCodeStatus = GuardledColourCodeGenerator(new List<GuardComplianceAndLicense> { item }),
-                    Description=item.Description,
+                    Description = item.Description,
                 });
             }
 
@@ -909,7 +909,7 @@ namespace CityWatch.Web.Services
             {
                 var row = dt.NewRow();
                 row["Day"] = data.NameOfDay;
-                row["Date"] = data.Date; 
+                row["Date"] = data.Date;
                 //row["IR S/No"] = data.SerialNo;
                 row["Control Room Job No."] = data.ControlRoomJobNo;
                 row["Site"] = data.SiteName;
@@ -1815,12 +1815,12 @@ namespace CityWatch.Web.Services
 
         public List<SelectListItem> GetLanguageMaster(bool withoutSelect = true)
         {
-            var Access = _guardLogDataProvider.GetLanguages();
+            var Access = _clientDataProvider.GetLanguages();
             var items = new List<SelectListItem>();
             if (!withoutSelect)
             {
-                items.Add(new SelectListItem("Select", "",true));
-            
+                items.Add(new SelectListItem("Select", "", true));
+
             }
             foreach (var item in Access)
             {
@@ -1828,10 +1828,10 @@ namespace CityWatch.Web.Services
             }
 
             return items;
-            
-           }
-           
-           }
+
+        }
+
+
 
         public List<SelectListItem> GetLanguages(bool withoutSelect = true)
         {
@@ -1844,7 +1844,7 @@ namespace CityWatch.Web.Services
 
                 items.Add(new SelectListItem("Select", "", false));
 
-            
+
 
             }
 
@@ -1856,13 +1856,14 @@ namespace CityWatch.Web.Services
             return items;
         }
 
-    
 
-}
-public class HRGroupStatusNew
-{
-    public int Status { get; set; }
-    public string GroupName { get; set; }
-    public string ColourCodeStatus { get; set; }
-    public string Description { get; set; }
+
+    }
+    public class HRGroupStatusNew
+    {
+        public int Status { get; set; }
+        public string GroupName { get; set; }
+        public string ColourCodeStatus { get; set; }
+        public string Description { get; set; }
+    }
 }

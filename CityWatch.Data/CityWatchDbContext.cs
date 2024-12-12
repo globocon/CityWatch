@@ -16,7 +16,7 @@ namespace CityWatch.Data
             Database.SetCommandTimeout(TimeSpan.FromMinutes(5));
         }
 
-       
+
         public DbSet<User> Users { get; set; }
         public DbSet<ClientType> ClientTypes { get; set; }
         public DbSet<GuardAccess> GuardAccess { get; set; }
@@ -65,10 +65,10 @@ namespace CityWatch.Data
         public DbSet<GuardLicense> GuardLicenses { get; set; }
         public DbSet<GuardComplianceAndLicense> GuardComplianceLicense { get; set; }
         public DbSet<GuardCompliance> GuardCompliances { get; set; }
-        public DbSet<ClientSiteActivityStatus> ClientSiteActivityStatus { get; set;}
+        public DbSet<ClientSiteActivityStatus> ClientSiteActivityStatus { get; set; }
         public DbSet<ClientSiteRadioCheck> ClientSiteRadioChecks { get; set; }
         public DbSet<CompanyDetails> CompanyDetails { get; set; }
-        public DbSet<ClientSiteManningKpiSetting> ClientSiteManningKpiSettings { get; set; }         
+        public DbSet<ClientSiteManningKpiSetting> ClientSiteManningKpiSettings { get; set; }
         public DbSet<IncidentReportsPlatesLoaded> IncidentReportsPlatesLoaded { get; set; }
         public DbSet<ClientSiteDuress> ClientSiteDuress { get; set; }
         public DbSet<ClientSiteLinksPageType> ClientSiteLinksPageType { get; set; }
@@ -144,8 +144,7 @@ namespace CityWatch.Data
 
         public DbSet<GuardHoursByQuarterViewModel> GuardHoursByQuarterViewModel { get; set; }
 
-        public DbSet<LanguageMaster> LanguageMaster { get; set; }
-        public DbSet<LanguageDetails> LanguageDetails { get; set; }
+    
 
 
 

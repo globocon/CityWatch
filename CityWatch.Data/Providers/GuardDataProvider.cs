@@ -946,6 +946,7 @@ namespace CityWatch.Data.Providers
           
             if (guard.LanguageDetails != null)
             {
+                LanguageDetails languageDetails = new LanguageDetails();
                 foreach (var item in guard.LanguageDetails)
                 {
                     languageDetails.Id = 0;
