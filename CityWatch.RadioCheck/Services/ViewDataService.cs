@@ -54,7 +54,9 @@ namespace CityWatch.RadioCheck.Services
         {
             var guards = _guardDataProvider.GetGuards();
             var guardLogins = _guardDataProvider.GetGuardLogins(guards.Select(z => z.Id).ToArray());
-            return guards.Select(z => new GuardViewModel(z, guardLogins.Where(y => y.GuardId == z.Id))).ToList();
+            var guardLanuages= _guardDataProvider.GetGuardLanguages(guards.Select(z => z.Id).ToArray());
+
+            return guards.Select(z => new GuardViewModel(z, guardLogins.Where(y => y.GuardId == z.Id), guardLanuages.Where(y => y.GuardId == z.Id).ToList())).ToList();
         }
 
         public List<SelectListItem> ClientTypes
@@ -250,7 +252,8 @@ namespace CityWatch.RadioCheck.Services
         {
             var guards = _guardDataProvider.GetActiveGuards();
             var guardLogins = _guardDataProvider.GetGuardLogins(guards.Select(z => z.Id).ToArray());
-            return guards.Select(z => new GuardViewModel(z, guardLogins.Where(y => y.GuardId == z.Id))).ToList();
+            var guardLanuages = _guardDataProvider.GetGuardLanguages(guards.Select(z => z.Id).ToArray());
+            return guards.Select(z => new GuardViewModel(z, guardLogins.Where(y => y.GuardId == z.Id), guardLanuages.Where(y => y.GuardId == z.Id).ToList())).ToList();
         }
         //public List<KeyVehicleLog> GetCompanyDetails()
         //{
