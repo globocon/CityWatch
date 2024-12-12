@@ -600,7 +600,8 @@ namespace CityWatch.Kpi.Pages.Admin
             {
                 ForMonth = new DateTime(year, month, 1),
                 SettingsId = kpiSetting.Id,
-                Notes = string.Empty
+                Notes = string.Empty,
+                HRRecords= string.Empty
             };
             return new JsonResult(clientSiteKpiNote);
         }

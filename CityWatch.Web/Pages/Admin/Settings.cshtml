@@ -3517,7 +3517,7 @@
                                         {
                                             @foreach (var AccessType in viewDataServiceNew.GetAccessTypes(true))
                                             {
-                                                if (@AccessType.Value != "8" && @AccessType.Value != "9" && @AccessType.Value != "10" && @AccessType.Value != "11" && @AccessType.Value != "12" && @AccessType.Value != "2" && @AccessType.Value != "3" && @AccessType.Value != "4" && @AccessType.Value != "5" && @AccessType.Value != "6")
+                                                if ( @AccessType.Value != "9" && @AccessType.Value != "10" && @AccessType.Value != "11" && @AccessType.Value != "12" && @AccessType.Value != "2" && @AccessType.Value != "3" && @AccessType.Value != "4" && @AccessType.Value != "5" && @AccessType.Value != "6" && @AccessType.Value != "13")
                                                 {
                                                     <option value="@AccessType.Value">@AccessType.Text</option>
                                                 }
@@ -3545,10 +3545,20 @@
                                         <option value="Other">Other</option>
                                     </select>
                                 </div>
-                                <label class="form-check-label pl-3 pr-4">RC Bypass</label>
-                                <div style="padding-left: 18px;">
-                                    <input type="checkbox" class="form-check" id="cbIsRCBypass">
-                                    <input type="hidden" id="Guard_IsRCBypass" name="Guard.IsRCBypass">
+                                <label class="form-check-label pl-3 pr-5">Lote</label>
+                                <div style="width: 274px;padding-left: 19px;" class="guardlote pl-5">
+                                    <select class="form-control" multiple="multiple" id="Guard_Lote" name="Guard.LanguageDetails">
+                                       
+                                            @foreach (var AccessType in viewDataServiceNew.GetLanguages(true))
+                                            {
+
+                                                <option value="@AccessType.Value">@AccessType.Text</option>
+                                            }
+                                      
+                                       
+                                    </select>
+
+
                                 </div>
                             </div>
                             <div class="form-group row">
@@ -3573,14 +3583,19 @@
                                 </div>
 
 
-                                <label class="form-check-label pl-3 pr-5">Is Active</label>
-                                <div class="pl-3">
+                                <label class="form-check-label pl-3 pr-3">Is Active</label>
+                                <div class="pl-3 pr-3 mt-1">
                                     <input type="checkbox" class="form-check" id="cbIsActive">
                                     <input type="hidden" id="Guard_IsActive" name="Guard.IsActive">
                                 </div>
+                                <label class="form-check-label pl-3 ">RC Bypass</label>
+                                <div style="padding-left: 18px;" class="mt-1">
+                                    <input type="checkbox" class="form-check" id="cbIsRCBypass">
+                                    <input type="hidden" id="Guard_IsRCBypass" name="Guard.IsRCBypass">
+                                </div>
                                 <div class="pl-3">
                                     <input type="hidden" id="Guard_DOE">
-                                <button type="button" class="btn p-0 mb-3" style="margin-left:150px" title="Copy to Clipboard" id="copyButtonGuard"><i class="fa fa-clipboard fa-2x" aria-hidden="true"></i></button>
+                                <button type="button" class="btn p-0 mb-3" style="margin-left:80px" title="Copy to Clipboard" id="copyButtonGuard"><i class="fa fa-clipboard fa-2x" aria-hidden="true"></i></button>
                                 </div>
                                 @*<label class="form-label text-right" style="width: 164px;">CRM (Supplier)</label>*@
                                 @*<div class="col-md-3">*@

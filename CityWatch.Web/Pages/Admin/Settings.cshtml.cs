@@ -111,7 +111,8 @@ namespace CityWatch.Web.Pages.Admin
                 if (
                     clientName.Trim().ToLower() != "www" &&
                     clientName.Trim().ToLower() != "cws-ir" &&
-                    clientName.Trim().ToLower() != "test" &&
+                    clientName.Trim().ToLower() != "test"
+                    &&
                     clientName.Trim().ToLower() != "localhost"
                 )
                 {

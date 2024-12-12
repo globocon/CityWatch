@@ -322,6 +322,8 @@ namespace CityWatch.Data.Providers
         public void DeleteLanguage(int id);
         public List<LanguageDetails> GetLanguageDetails(int GuardID);
 
+        public List<GuardHoursByQuarterViewModel> GetGuardWorkingHoursInQuater();
+
     }
 
     public class GuardLogDataProvider : IGuardLogDataProvider
@@ -5356,6 +5358,7 @@ namespace CityWatch.Data.Providers
                 .Take(1).ToList();
             return irh;
         }
+
         public List<LanguageMaster> GetLanguages()
         {
             return _context.LanguageMaster.Where(x => x.IsDeleted == false)
@@ -5393,6 +5396,17 @@ namespace CityWatch.Data.Providers
             if (languageToDelete != null)
                 languageToDelete.IsDeleted = true;
             _context.SaveChanges();
+        }
+
+
+        public List<GuardHoursByQuarterViewModel> GetGuardWorkingHoursInQuater()
+        {
+            ////var param1 = new SqlParameter();
+            ////param1.ParameterName = "@pattern";
+            ////param1.SqlDbType = SqlDbType.VarChar;
+            ////param1.SqlValue = pattern;
+            return _context.GuardHoursByQuarterViewModel.FromSqlRaw($"EXEC GetGuardHoursByQuarter").ToList();
+
         }
     }
 

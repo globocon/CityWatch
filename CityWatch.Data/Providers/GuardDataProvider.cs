@@ -83,6 +83,13 @@ namespace CityWatch.Data.Providers
 
         List<HrSettingsLockedClientSites> GetHrDocumentLockDetailsForASite(int clientSiteId);
         public int SaveLanguageDetails(Guard guard);
+        List<GuardLogin> GetGuardLoginsByGuardIdAndDate(int guardIds,DateTime startdate,DateTime enddate);
+        public void SaveGuardLotes(Guard guard);
+        public void DeleteGuardLotes(int guardid);
+        List<LanguageDetails> GetGuardLotes(int[] guardIds);
+        public List<LanguageDetails> GetGuardLanguages(int[] guardIds);
+
+
     }
 
     public class GuardDataProvider : IGuardDataProvider
@@ -242,6 +249,7 @@ namespace CityWatch.Data.Providers
                 _context.SaveChanges();
             }
 
+
             return guard.Id;
         }
         public int UpdateGuard(Guard guard, string state, out string initalsUsed)
@@ -322,6 +330,68 @@ namespace CityWatch.Data.Providers
 
         }
 
+        public List<LanguageDetails> GetGuardLotes(int[] guardIds)
+        {
+            List<LanguageDetails> guardLogins = new List<LanguageDetails>();
+            foreach (int guardId in guardIds)
+            {
+
+                guardLogins.AddRange(_context.LanguageDetails
+                .Where(z => z.GuardId == guardId )
+                    
+                    .ToList());
+            }
+           
+
+            return guardLogins;
+        }
+
+        public List<LanguageDetails> GetGuardLanguages(int[] guardIds)
+        {
+            List<LanguageDetails> language = new List<LanguageDetails>();
+            foreach (int guardId in guardIds)
+            {
+               
+                language.AddRange(_context.LanguageDetails
+                .Where(z => z.GuardId == guardId && z.IsDeleted == false)
+                    .Include(z => z.LanguageMaster)
+                    .ToList());
+            }
+           
+            return language;
+               
+
+              
+
+
+        }
+
+        public List<GuardLogin> GetGuardLoginsByGuardIdAndDate(int guardIds,DateTime startdate,DateTime endDate)
+        {
+            List<GuardLogin> guardLogins = new List<GuardLogin>();
+          
+                guardLogins.AddRange(_context.GuardLogins
+                .Where(z => z.GuardId == guardIds && z.ClientSite.IsActive == true && z.LoginDate.Date>= startdate.Date && z.LoginDate.Date<=endDate.Date)
+                    .Include(z => z.ClientSite)
+                    .Include(z => z.Guard)
+                    .ToList());
+            
+            //for query optimization Comment the old code
+            //var guardLogins = _context.GuardLogins
+            //    .Where(z => guardIds.Contains(z.GuardId))
+
+            //    .Include(z => z.Guard)
+            //    .Include(z => z.ClientSite)
+            //    .ToList();
+
+
+            return guardLogins
+             
+                .ToList();
+
+
+        }
+        
         public List<GuardLogin> GetGuardLoginsBySmartWandId(int smartWandId)
         {
             return _context.GuardLogins
@@ -849,6 +919,7 @@ namespace CityWatch.Data.Providers
 
         }
 
+
         public int SaveLanguageDetails(Guard guard)
         {
             var getGuardsLotes = _context.LanguageDetails.Where(x => x.GuardId == guard.Id).ToList();
@@ -857,6 +928,22 @@ namespace CityWatch.Data.Providers
                 DeleteGuardLotes(guard.Id);
             }
             LanguageDetails languageDetails = new LanguageDetails();
+             foreach(var item in guard.LanguageDetails)
+            {
+                languageDetails.Id = 0;
+                languageDetails.LanguageID = Convert.ToInt32(item);
+                languageDetails.CreatedDate = DateTime.Now;
+                languageDetails.GuardId = guard.Id;
+                languageDetails.IsDeleted = false;
+                _context.LanguageDetails.Add(languageDetails);
+                _context.SaveChanges();
+            }
+              return guard.Id;
+         }
+
+        public void SaveGuardLotes(Guard guard)
+        {
+          
             if (guard.LanguageDetails != null)
             {
                 foreach (var item in guard.LanguageDetails)
@@ -870,8 +957,6 @@ namespace CityWatch.Data.Providers
                     _context.SaveChanges();
                 }
             }
-            
-            return guard.Id;
 
         }
         public void DeleteGuardLotes(int guardid)
@@ -885,5 +970,6 @@ namespace CityWatch.Data.Providers
                 _context.SaveChanges();
             }
         }
+
     }
 }

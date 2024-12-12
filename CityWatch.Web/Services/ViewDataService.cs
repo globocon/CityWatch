@@ -20,6 +20,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Security.Policy;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static iText.Kernel.Pdf.Colorspace.PdfSpecialCs;
 
@@ -150,7 +151,9 @@ namespace CityWatch.Web.Services
 
         List<object> GetHrSettingsClientSiteLockStatus(int hrSettingsId);
         List<SelectListItem> GetUserClientTypesCountWithTypeId(int? userId, int? clienttypeid);
-        public List<SelectListItem> GetLanguageMaster(bool withoutSelect = true);
+        public List<SelectListItem> GetLanguageMaster(bool withoutSelect = true); 
+        List<SelectListItem> GetLanguages(bool withoutSelect = true);
+    
     }
 
     public class ViewDataService : IViewDataService
@@ -681,10 +684,10 @@ namespace CityWatch.Web.Services
 
             // Retrieve guard logins in one call
             var guardLogins = _guardDataProvider.GetGuardLogins(guardIds).ToList();
-
+            var guardLotes = _guardDataProvider.GetGuardLotes(guardIds).ToList();
             // Create GuardViewModel list in one query
             var guardViewModels = guards.Select(guard =>
-                new GuardViewModel(guard, guardLogins.Where(login => login.GuardId == guard.Id).ToList())).ToList();
+                new GuardViewModel(guard, guardLogins.Where(login => login.GuardId == guard.Id).ToList(), guardLotes.ToList())).ToList();
 
             // Retrieve all document statuses for guard IDs at once
             var documentStatusesByGuard = guardIds.ToDictionary(
@@ -769,6 +772,8 @@ namespace CityWatch.Web.Services
                                                 .Where(x => guardIds.Contains(x.Id))
                                                 .ToList(); // Materialize the query
 
+                var quaterDeatils = _guardLogDataProvider.GetGuardWorkingHoursInQuater();
+
                 // If there are no guards found, return an empty list
                 if (!guards.Any())
                     return listGuardExcel;
@@ -776,12 +781,39 @@ namespace CityWatch.Web.Services
                 // Fetch guard logins for the found guards in a single call
                 var guardLogins = _guardDataProvider.GetGuardLogins(guards.Select(z => z.Id).ToArray())
                                                      .ToList(); // Materialize the query
+                var GuardLanguages= _guardDataProvider.GetGuardLanguages(guards.Select(z => z.Id).ToArray())
+                                                     .ToList();
 
                 // Create the list of GuardViewExcelModel objects using a single Select
                 listGuardExcel = guards.Select(z => new GuardViewExcelModel(z,
                                                     guardLogins.Where(y => y.GuardId == z.Id),
+                                                    GuardLanguages.Where(y => y.GuardId == z.Id),
                                                     _guardDataProvider))
                                        .ToList();
+
+                foreach (var item in listGuardExcel)
+                {
+                    var guardQuaterDeatils = quaterDeatils.Where(x => x.GuardId == item.Id).FirstOrDefault();
+                    if(guardQuaterDeatils!=null)
+                    {
+                        item.Q1HRS2023 = guardQuaterDeatils.Q1HRS2023;
+                        item.Q2HRS2023 = guardQuaterDeatils.Q2HRS2023;
+                        item.Q3HRS2023 = guardQuaterDeatils.Q3HRS2023;
+                        item.Q4HRS2023 = guardQuaterDeatils.Q4HRS2023;
+
+                        item.Q1HRS2024 = guardQuaterDeatils.Q1HRS2024;
+                        item.Q2HRS2024 = guardQuaterDeatils.Q2HRS2024;
+                        item.Q3HRS2024 = guardQuaterDeatils.Q3HRS2024;
+                        item.Q4HRS2024 = guardQuaterDeatils.Q4HRS2024;
+                    }
+                    // Assuming GuardViewExcelModel has a string property called 'ColumnName'
+                    if (!string.IsNullOrEmpty(item.ClientSites))
+                    {
+                        var test = Regex.Replace(item.ClientSites, @"<br\s*/?>", "", RegexOptions.IgnoreCase);
+                        if (!string.IsNullOrEmpty(test))
+                        item.ClientSites = test;
+                    }
+                }
             }
 
             return listGuardExcel;
@@ -1780,14 +1812,40 @@ namespace CityWatch.Web.Services
             return items;
         }
 
+
         public List<SelectListItem> GetLanguageMaster(bool withoutSelect = true)
         {
             var Access = _guardLogDataProvider.GetLanguages();
             var items = new List<SelectListItem>();
+            if (!withoutSelect)
+            {
+                items.Add(new SelectListItem("Select", "",true));
+            
+            }
+            foreach (var item in Access)
+            {
+                items.Add(new SelectListItem(item.Language, item.Id.ToString()));
+            }
+
+            return items;
+            
+           }
+           
+           }
+
+        public List<SelectListItem> GetLanguages(bool withoutSelect = true)
+        {
+            var Access = _clientDataProvider.GetLanguages();
+
+            var items = new List<SelectListItem>();
 
             if (!withoutSelect)
             {
+
                 items.Add(new SelectListItem("Select", "", false));
+
+            
+
             }
 
             foreach (var item in Access)
@@ -1797,7 +1855,8 @@ namespace CityWatch.Web.Services
 
             return items;
         }
-    }
+
+    
 
 }
 public class HRGroupStatusNew

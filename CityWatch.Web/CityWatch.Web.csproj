@@ -4,7 +4,7 @@
     <TargetFramework>net7.0</TargetFramework>
 
 
-    <AssemblyVersion>1.97.0.0</AssemblyVersion>
+    <AssemblyVersion>1.98.0.0</AssemblyVersion>
 
     <UserSecretsId>76f13c08-5e97-4538-8a73-379b3dd62110</UserSecretsId>
   </PropertyGroup>

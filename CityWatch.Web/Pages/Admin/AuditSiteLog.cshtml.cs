@@ -24,13 +24,15 @@ namespace CityWatch.Web.Pages.Admin
         private readonly IAuditLogViewDataService _auditLogViewDataService;
         private readonly IClientSiteViewDataService _clientViewDataService;
         private readonly ITimesheetReportGenerator _TimesheetReportGenerator;
+        public readonly IConfigDataProvider _configDataProvider;
+
 
         public AuditSiteLogModel(IViewDataService viewDataService,
             IGuardLogDataProvider guardLogDataProvider,
             IGuardLogZipGenerator guardLogZipGenerator,
             IAuditLogViewDataService auditLogViewDataService,
             IClientSiteViewDataService clientViewDataService,
-            ITimesheetReportGenerator TimesheetReportGenerator)
+            ITimesheetReportGenerator TimesheetReportGenerator, IConfigDataProvider configDataProvider)
         {
             _viewDataService = viewDataService;
             _guardLogDataProvider = guardLogDataProvider;
@@ -38,13 +40,14 @@ namespace CityWatch.Web.Pages.Admin
             _auditLogViewDataService = auditLogViewDataService;
             _clientViewDataService = clientViewDataService;
             _TimesheetReportGenerator = TimesheetReportGenerator;
+            _configDataProvider = configDataProvider;
         }
 
         public KeyVehicleLogAuditLogRequest KeyVehicleLogAuditLogRequest { get; set; }
         public string loggedInUserId { get; set; }
         public int GuardId { get; set; }
         public GuardViewModel Guard { get; set; }
-
+        public int ClientTypeId { get; set; }
         public ActionResult OnGet()
         {
             string securityLicenseNonew = Request.Query["Sl"];
@@ -52,7 +55,45 @@ namespace CityWatch.Web.Pages.Admin
             string luid = Request.Query["lud"];
             GuardId = Convert.ToInt32(guid);
             loggedInUserId = luid;
-            if (GuardId != 0)
+            var host = HttpContext.Request.Host.Host;
+            var clientName = string.Empty;
+            var clientLogo = string.Empty;
+            var url = string.Empty;
+
+            // Split the host by dots to separate subdomains and domain name
+            var hostParts = host.Split('.');
+
+            // If the first part is "www", take the second part as the client name
+            if (hostParts.Length > 1 && hostParts[0].Trim().ToLower() == "www")
+            {
+                clientName = hostParts[1];
+            }
+            else
+            {
+                clientName = hostParts[0];
+            }
+            if (!string.IsNullOrEmpty(clientName))
+            {
+                if (
+                    clientName.Trim().ToLower() != "www" &&
+                    clientName.Trim().ToLower() != "cws-ir" &&
+                    clientName.Trim().ToLower() != "test"
+                &&
+                clientName.Trim().ToLower() != "localhost"
+                )
+                {
+                    int domain = _configDataProvider.GetSubDomainDetails(clientName).TypeId;
+                    if (domain != 0)
+                    {
+                        ClientTypeId = domain;
+                    }
+                    else
+                    {
+                        ClientTypeId = 0;
+                    }
+                }
+            }
+                if (GuardId != 0)
             {
                 Guard = _viewDataService.GetGuards().SingleOrDefault(x => x.Id == GuardId);
 

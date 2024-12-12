@@ -142,6 +142,13 @@ namespace CityWatch.Data
         public DbSet<LanguageDetails> LanguageDetails { get; set; }
 
 
+        public DbSet<GuardHoursByQuarterViewModel> GuardHoursByQuarterViewModel { get; set; }
+
+        public DbSet<LanguageMaster> LanguageMaster { get; set; }
+        public DbSet<LanguageDetails> LanguageDetails { get; set; }
+
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<GuardLog>()

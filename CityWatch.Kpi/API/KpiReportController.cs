@@ -43,8 +43,9 @@ namespace CityWatch.Kpi.API
             var prevJob = _kpiSchedulesDataProvider.GetAllKpiSendScheduleJobs().FirstOrDefault(z => !z.CompletedDate.HasValue);
             if (prevJob != null)
             {
-                _logger.LogWarning($"KpiSendJob: Another job ({prevJob.Id}) is in progress.");
-                return false;
+                _kpiSchedulesDataProvider.RemoveAllKpiSendScheduleJobsOldNotComplete();
+                //_logger.LogWarning($"KpiSendJob: Another job ({prevJob.Id}) is in progress.");
+                //return false;
             }
 
             var pendingSchedules = _kpiSchedulesDataProvider.GetAllSendSchedules()

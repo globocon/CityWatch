@@ -89,7 +89,13 @@ $(function () {
         buttonTextAlignment: 'left',
         includeSelectAllOption: true,
     });
-
+    $('#Guard_Lote').multiselect({
+        maxHeight: 400,
+        buttonWidth: '100%',
+        nonSelectedText: 'Select',
+        buttonTextAlignment: 'left',
+        includeSelectAllOption: true,
+    });
     $("#fileUpload").fileUpload();
 
 
@@ -1560,6 +1566,21 @@ $(function () {
 
 
     //p6-102 Add Photo -end
+    
+    //if ($('#vklClientType').val() != null && $('#vklClientType').val() != '' && $('#vklClientType').val() != undefined) {
+
+    //    $('#vklClientType').change();
+    //}
+    
+    if ($('#fusionClientType').val() != null && $('#fusionClientType').val() != '' && $('#fusionClientType').val() != undefined) {
+
+        $('#fusionClientType').change();
+    }
+    
+    if ($('#vklClientTypeTimesheet').val() != null && $('#vklClientTypeTimesheet').val() != '' && $('#vklClientTypeTimesheet').val() != undefined) {
+
+        $('#vklClientTypeTimesheet').change();
+    }
     /*to display the popup to acknowledge the message-start*/
     $('#guard_daily_log tbody').on('click', '#btnAcknowledgeButton', function (value, record) {
         /*timer pause while editing*/
@@ -1966,7 +1987,11 @@ $(function () {
 
     });
 
-
+    //if ($('#dglClientType').val() != null && $('#dglClientType').val() != '' && $('#dglClientType').val() != undefined) {
+    //    var value = $('#dglClientType').val()
+    //    $('#dglClientType').val(value)
+    //    $('#dglClientType').change();
+    //}
     $('#dglClientSiteId').on('change', function () {
         const clientTypeId = $(this).val();
         $("#vklClientSiteId").val(clientTypeId);
@@ -1976,7 +2001,7 @@ $(function () {
 
 
     });
-
+   
     $('#btnGenerateDglAuditReport').on('click', function () {
 
         if ($('#dglClientSiteId').val() === '') {
@@ -4976,6 +5001,24 @@ $(function () {
                 $('#cbIsActive').prop('disabled', false);
             }
         }
+        var selectedlanguages = [];
+        data.languageDetails1.forEach(function (value) {
+            selectedlanguages.push(value.languageID)
+        })
+        var deletelanguagevalue = 1;
+        $(".guardlote .multiselect-option input[type=checkbox][value='" + deletelanguagevalue + "']").prop("checked", false);
+        if (selectedlanguages.length == 0) {
+            deletelanguagevalue = 4;
+            selectedlanguages.push(deletelanguagevalue);
+            //$(".guardlote .multiselect-option input[type=checkbox][value='" + deletelanguagevalue + "']").prop("checked", true);
+        }
+        selectedlanguages.forEach(function (value) {
+
+            $(".guardlote .multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
+        });
+        $("#Guard_Lote").multiselect();
+        $("#Guard_Lote").val(selectedlanguages);
+        $("#Guard_Lote").multiselect("refresh");
     });
     $('#guard_settings tbody').on('click', 'img[name=btn_timesheet]', function () {
         $('#TimesheetGuard_Id').val('-1');
@@ -5365,7 +5408,7 @@ $(function () {
             });
 
             $('#loader').hide(); // Hide loader
-
+            console.log(response.data);
 
             //const filteredData = response.data.filter(item => guardIds.includes(item.id));
             // Ensure response contains data
@@ -5377,8 +5420,12 @@ $(function () {
             }
 
             // Define headers and column widths
-            const headers = ['Name', 'Security No', 'Initial', 'State', 'Provider', 'Mobile', 'Email', 'Client Sites', 'Gender', 'Is Active','DOE', 'HR1 Status', 'HR2 Status', 'HR3 Status'];
-            const columnWidths = [20, 20, 10, 10, 20, 20, 20, 25, 15, 15, 10, 10, 10]; // Example widths
+
+            const headers = ['Name', 'Security No', 'Initial', 'State', 'Provider', 'Mobile', 'Email', 'Client Sites', 'Gender','LOTE', 'Is Active', 'DOE', 'HR1 Status', 'HR2 Status', 'HR3 Status',
+               /* 'Security Hours Worked Q1 1Jan - 31March 2023', 'Security Hours Worked Q2 1Apr - 30June 2023', 'Security Hours Worked Q3 1July - 30Sep 2023', 'Security Hours Worked Q4 1Oct - 31Dec 2023', 'Security Hours Worked Q1 1Jan - 31March 2024', 'Security Hours Worked Q2 1Apr - 30June 2024', 'Security Hours Worked Q3 1July - 31Sept 2024',*/
+                'Q1 HRS 2023', 'Q2 HRS 2023', 'Q3 HRS 2023', 'Q4 HRS 2023', 'Q1 HRS 2024', 'Q2 HRS 2024', 'Q3 HRS 2024', 'Q4 HRS 2024'];
+            const columnWidths = [20, 20, 10, 10, 20, 20, 20, 25, 15, 15, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]; // Example widths
+
 
 
 
@@ -5418,11 +5465,27 @@ $(function () {
                 item.email,
                 item.clientSites.replace('<br />', ' '),
                 item.gender,
+                item.guardLanguage.replace('<br />', ' '),
                 item.isActive ? 'TRUE' : 'FALSE', // Ensure values are strings
                 item.dateEnrolled ? item.dateEnrolled.split('T')[0] : '',
                 item.hR1Status,
                 item.hR2Status,
-                item.hR3Status
+                item.hR3Status,
+                //item.q1JantoMarch2023,
+                //item.q2AprtoJune2023,
+                //item.q3JulytoSept2023,
+                //item.q4OcttoDec2023,
+                //item.q1JantoMarch2024,
+                //item.q2AprtoJune2024,
+                //item.q3JulytoSept2024,
+                item.q1HRS2023,
+                item.q2HRS2023,
+                item.q3HRS2023,
+                item.q4HRS2023,
+                item.q1HRS2024,
+                item.q2HRS2024,
+                item.q3HRS2024,
+                item.q4HRS2024,
             ])];
 
             // Update the worksheet with headers and data
@@ -5632,11 +5695,14 @@ $(function () {
         resetGuardDetailsModal();
         let value = 1;
         $(".multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", true);
-
+        $(".guardlote .multiselect-option input[type=checkbox][value='" + value + "']").prop("checked", false);
         // Initialize the multiselect dropdown
         $("#Guard_Access").multiselect();
         $("#Guard_Access").val(value);
         $("#Guard_Access").multiselect("refresh");
+        $("#Guard_Lote").multiselect();
+        $("#Guard_Lote").val('');
+        $("#Guard_Lote").multiselect("refresh");
         $('#addGuardModal').modal('show');
 
     });

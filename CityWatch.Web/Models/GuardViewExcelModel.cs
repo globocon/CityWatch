@@ -1,5 +1,6 @@
 ﻿using CityWatch.Data.Models;
 using CityWatch.Data.Providers;
+using DocumentFormat.OpenXml.Wordprocessing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,14 +11,18 @@ namespace CityWatch.Web.Models
     {
         private readonly Guard _guard;
         private readonly IEnumerable<GuardLogin> _guardLogins;
+        private readonly IEnumerable<LanguageDetails> _languagedetails;
         private readonly IEnumerable<ClientSite> _clientSites;
+        private readonly IEnumerable<LanguageMaster> _languages;
         private readonly IGuardDataProvider _guardDataProvider;
-        public GuardViewExcelModel(Guard guard, IEnumerable<GuardLogin> guardLogins, IGuardDataProvider guardDataProvider)
+        public GuardViewExcelModel(Guard guard, IEnumerable<GuardLogin> guardLogins, IEnumerable<LanguageDetails> languageDetails, IGuardDataProvider guardDataProvider)
         {
             _guard = guard;
             _guardLogins = guardLogins;
+            _languagedetails = languageDetails;
             _clientSites = _guardLogins.Select(z => z.ClientSite);
             _guardDataProvider = guardDataProvider;
+            _languages = _languagedetails.Select(z => z.LanguageMaster);
 
             // Get HR statuses
             var documentStatuses = LEDStatusForLoginUser(_guard.Id);
@@ -102,14 +107,44 @@ namespace CityWatch.Web.Models
         }
 
         public string Provider { get { return _guard.Provider; } }
+        private string _clientSitesString;
 
         public string ClientSites
         {
             get
             {
-                return string.Join(",<br />", _clientSites.Select(z => z.Name).Distinct().OrderBy(z => z));
+                return string.IsNullOrEmpty(_clientSitesString)
+                    ? string.Join(",<br />", _clientSites.Select(z => z.Name).Distinct().OrderBy(z => z))
+                    : _clientSitesString;
+            }
+            set
+            {
+                _clientSitesString = value;
             }
         }
+        private string _languageString;
+
+        public string GuardLanguage
+        {
+            get
+            {
+                return string.IsNullOrEmpty(_languageString)
+                    ? string.Join(",", _languages.Select(z => z.Language).Distinct().OrderBy(z => z))
+                    : _languageString;
+            }
+            set
+            {
+                _languageString = value;
+            }
+        }
+        //public string ClientSites
+        //{
+        //    get
+        //    {
+        //        return string.Join(",<br />", _clientSites.Select(z => z.Name).Distinct().OrderBy(z => z));
+        //    }
+        //    set { }
+        //}
 
         public DateTime? DateEnrolled { get { return _guard.DateEnrolled; } }
         public DateTime? LoginDate
@@ -118,6 +153,324 @@ namespace CityWatch.Web.Models
             {
                 var latestLogin = _guardLogins.OrderByDescending(gl => gl.LoginDate).FirstOrDefault();
                 return latestLogin?.LoginDate;
+            }
+        }
+        public int? Q1JantoMarch2023
+        {
+            get
+            {
+                int totalhours = 0;
+                
+                // var Q1JantoMarch2023hours = _guardLogins.Where(x=> x.LoginDate.Date >= Convert.ToDateTime("01-Jan-2023").Date && x.LoginDate.Date<= Convert.ToDateTime("31-March-2023").Date).OrderByDescending(gl => gl.LoginDate).ToList();
+                var Q1JantoMarch2023hours = _guardDataProvider.GetGuardLoginsByGuardIdAndDate(_guard.Id, Convert.ToDateTime("01-Jan-2023"), Convert.ToDateTime("31-March-2023")).ToList();
+                var result = Q1JantoMarch2023hours
+    .Select(gl => new
+    {
+        gl.GuardId,
+        gl.ClientSiteId,
+        gl.LoginDate,
+        gl.OnDuty,
+        gl.OffDuty,
+        // Calculate DurationInSeconds
+        DurationInSeconds = Convert.ToDateTime(gl.OffDuty).Month == gl.OnDuty.Month && Convert.ToDateTime(gl.OffDuty).Year == gl.OnDuty.Year
+        ? (int)(Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalSeconds
+        //(int)(gl.OffDuty - gl.OnDuty).TotalSeconds
+        : (int)(gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalSeconds,
+        // Calculate DurationInHours
+        DurationInHours = (Convert.ToDateTime(gl.OffDuty).Month != gl.OnDuty.Month || Convert.ToDateTime(gl.OffDuty).Year != gl.OnDuty.Year)
+        ? (gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalHours
+        //: (gl.OffDuty - gl.OnDuty).TotalHours
+        : (Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalHours
+    })
+.OrderBy(gl => gl.LoginDate).ToList();
+                var resultnew = result
+    .GroupBy(x => x.LoginDate.Date) // Group by the date part
+    .Select(g => new
+    {
+        Date = g.Key,                // The date
+        MaxValue = Convert.ToInt32(g.Max(x => x.DurationInHours)) // Maximum value in the group
+    })
+    .OrderBy(x => x.Date)           // Order by date
+    .ToList();
+                foreach (var item in resultnew)
+                {
+                    
+
+                    totalhours = totalhours + Convert.ToInt32(item.MaxValue);
+                }
+                return totalhours;
+            }
+        }
+        public int? Q2AprtoJune2023
+        {
+            get
+            {
+                int totalhours = 0;
+                //var Q2AprtoJune2023hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-Apr-2023") && x.LoginDate <= Convert.ToDateTime("30-June-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
+                var Q2AprtoJune2023hours = _guardDataProvider.GetGuardLoginsByGuardIdAndDate(_guard.Id, Convert.ToDateTime("01-Apr-2023"), Convert.ToDateTime("30-June-2023")).ToList();
+                var result = Q2AprtoJune2023hours
+    .Select(gl => new
+    {
+        gl.GuardId,
+        gl.ClientSiteId,
+        gl.LoginDate,
+        gl.OnDuty,
+        gl.OffDuty,
+        // Calculate DurationInSeconds
+        DurationInSeconds = Convert.ToDateTime(gl.OffDuty).Month == gl.OnDuty.Month && Convert.ToDateTime(gl.OffDuty).Year == gl.OnDuty.Year
+        ? (int)(Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalSeconds
+        //(int)(gl.OffDuty - gl.OnDuty).TotalSeconds
+        : (int)(gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalSeconds,
+        // Calculate DurationInHours
+        DurationInHours = (Convert.ToDateTime(gl.OffDuty).Month != gl.OnDuty.Month || Convert.ToDateTime(gl.OffDuty).Year != gl.OnDuty.Year)
+        ? (gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalHours
+        //: (gl.OffDuty - gl.OnDuty).TotalHours
+        : (Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalHours
+    })
+.OrderBy(gl => gl.LoginDate).ToList();
+                var resultnew = result
+    .GroupBy(x => x.LoginDate.Date) // Group by the date part
+    .Select(g => new
+    {
+        Date = g.Key,                // The date
+        MaxValue = Convert.ToInt32(g.Max(x => x.DurationInHours)) // Maximum value in the group
+    })
+    .OrderBy(x => x.Date)           // Order by date
+    .ToList();
+                foreach (var item in resultnew)
+                {
+
+
+                    totalhours = totalhours + item.MaxValue;
+                }
+                return totalhours;
+            }
+        }
+        public int? Q3JulytoSept2023
+        {
+            get
+            {
+                int totalhours = 0;
+                // var Q3JulytoSept2023hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-July-2023") && x.LoginDate <= Convert.ToDateTime("30-Sep-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
+                var Q3JulytoSept2023hours = _guardDataProvider.GetGuardLoginsByGuardIdAndDate(_guard.Id, Convert.ToDateTime("01-July-2023"), Convert.ToDateTime("30-Sep-2023")).ToList();
+                var result = Q3JulytoSept2023hours
+    .Select(gl => new
+    {
+        gl.GuardId,
+        gl.ClientSiteId,
+        gl.LoginDate,
+        gl.OnDuty,
+        gl.OffDuty,
+        // Calculate DurationInSeconds
+        DurationInSeconds = Convert.ToDateTime(gl.OffDuty).Month == gl.OnDuty.Month && Convert.ToDateTime(gl.OffDuty).Year == gl.OnDuty.Year
+        ? (int)(Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalSeconds
+        //(int)(gl.OffDuty - gl.OnDuty).TotalSeconds
+        : (int)(gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalSeconds,
+        // Calculate DurationInHours
+        DurationInHours = (Convert.ToDateTime(gl.OffDuty).Month != gl.OnDuty.Month || Convert.ToDateTime(gl.OffDuty).Year != gl.OnDuty.Year)
+        ? (gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalHours
+        //: (gl.OffDuty - gl.OnDuty).TotalHours
+        : (Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalHours
+    })
+.OrderBy(gl => gl.LoginDate).ToList();
+                var resultnew = result
+    .GroupBy(x => x.LoginDate.Date) // Group by the date part
+    .Select(g => new
+    {
+        Date = g.Key,                // The date
+        MaxValue = Convert.ToInt32(g.Max(x => x.DurationInHours)) // Maximum value in the group
+    })
+    .OrderBy(x => x.Date)           // Order by date
+    .ToList();
+                foreach (var item in resultnew)
+                {
+
+
+                    totalhours = totalhours + item.MaxValue;
+                }
+                return totalhours;
+            }
+        }
+        public int? Q4OcttoDec2023
+        {
+            get
+            {
+                int totalhours = 0;
+                // var Q4OcttoDec2023hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-Oct-2023") && x.LoginDate <= Convert.ToDateTime("31-Dec-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
+                var Q4OcttoDec2023hours = _guardDataProvider.GetGuardLoginsByGuardIdAndDate(_guard.Id, Convert.ToDateTime("01-Oct-2023"), Convert.ToDateTime("31-Dec-2023")).ToList();
+                var result = Q4OcttoDec2023hours
+    .Select(gl => new
+    {
+        gl.GuardId,
+        gl.ClientSiteId,
+        gl.LoginDate,
+        gl.OnDuty,
+        gl.OffDuty,
+        // Calculate DurationInSeconds
+        DurationInSeconds = Convert.ToDateTime(gl.OffDuty).Month == gl.OnDuty.Month && Convert.ToDateTime(gl.OffDuty).Year == gl.OnDuty.Year
+        ? (int)(Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalSeconds
+        //(int)(gl.OffDuty - gl.OnDuty).TotalSeconds
+        : (int)(gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalSeconds,
+        // Calculate DurationInHours
+        DurationInHours = (Convert.ToDateTime(gl.OffDuty).Month != gl.OnDuty.Month || Convert.ToDateTime(gl.OffDuty).Year != gl.OnDuty.Year)
+        ? (gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalHours
+        //: (gl.OffDuty - gl.OnDuty).TotalHours
+        : (Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalHours
+    })
+.OrderBy(gl => gl.LoginDate).ToList();
+                var resultnew = result
+    .GroupBy(x => x.LoginDate.Date) // Group by the date part
+    .Select(g => new
+    {
+        Date = g.Key,                // The date
+        MaxValue = Convert.ToInt32(g.Max(x => x.DurationInHours)) // Maximum value in the group
+    })
+    .OrderBy(x => x.Date)           // Order by date
+    .ToList();
+                foreach (var item in resultnew)
+                {
+
+
+                    totalhours = totalhours + item.MaxValue;
+                }
+                return totalhours;
+            }
+        }
+        public int? Q1JantoMarch2024
+        {
+            get
+            {
+                int totalhours = 0;
+                //var Q1JantoMarch2024hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-Jan-2024") && x.LoginDate <= Convert.ToDateTime("31-Mar-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
+                var Q1JantoMarch2024hours = _guardDataProvider.GetGuardLoginsByGuardIdAndDate(_guard.Id, Convert.ToDateTime("01-Jan-2024"), Convert.ToDateTime("31-Mar-2024")).ToList();
+                var result = Q1JantoMarch2024hours
+                    .Select(gl => new
+                    {
+                        gl.GuardId,
+                        gl.ClientSiteId,
+                        gl.LoginDate,
+                        gl.OnDuty,
+                        gl.OffDuty,
+                        // Calculate DurationInSeconds
+                        DurationInSeconds = Convert.ToDateTime(gl.OffDuty).Month == gl.OnDuty.Month && Convert.ToDateTime(gl.OffDuty).Year == gl.OnDuty.Year
+                        ? (int)(Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalSeconds
+                        //(int)(gl.OffDuty - gl.OnDuty).TotalSeconds
+                        : (int)(gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalSeconds,
+                        // Calculate DurationInHours
+                        DurationInHours = (Convert.ToDateTime(gl.OffDuty).Month != gl.OnDuty.Month || Convert.ToDateTime(gl.OffDuty).Year != gl.OnDuty.Year)
+                        ? (gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalHours
+                        //: (gl.OffDuty - gl.OnDuty).TotalHours
+                        : (Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalHours
+                    })
+                .OrderBy(gl => gl.LoginDate).ToList();
+                var resultnew = result
+    .GroupBy(x => x.LoginDate.Date) // Group by the date part
+    .Select(g => new
+    {
+        Date = g.Key,                // The date
+        MaxValue = Convert.ToInt32(g.Max(x => x.DurationInHours)) // Maximum value in the group
+    })
+    .OrderBy(x => x.Date)           // Order by date
+    .ToList();
+                foreach (var item in resultnew)
+                {
+
+
+                    totalhours = totalhours + item.MaxValue;
+                }
+                return totalhours;
+            }
+        }
+        public int? Q2AprtoJune2024
+        {
+            get
+            {
+                int totalhours = 0;
+                //var Q2AprtoJune2024hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-Apr-2024") && x.LoginDate <= Convert.ToDateTime("30-June-2023")).OrderByDescending(gl => gl.LoginDate).ToList();
+                var Q2AprtoJune2024hours = _guardDataProvider.GetGuardLoginsByGuardIdAndDate(_guard.Id, Convert.ToDateTime("01-Apr-2024"), Convert.ToDateTime("30-June-2024")).ToList();
+
+                var result = Q2AprtoJune2024hours
+                    .Select(gl => new
+                    {
+                        gl.GuardId,
+                        gl.ClientSiteId,
+                        gl.LoginDate,
+                        gl.OnDuty,
+                        gl.OffDuty,
+                        // Calculate DurationInSeconds
+                        DurationInSeconds = Convert.ToDateTime(gl.OffDuty).Month == gl.OnDuty.Month && Convert.ToDateTime(gl.OffDuty).Year == gl.OnDuty.Year
+                        ? (int)(Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalSeconds
+                        //(int)(gl.OffDuty - gl.OnDuty).TotalSeconds
+                        : (int)(gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalSeconds,
+                        // Calculate DurationInHours
+                        DurationInHours = (Convert.ToDateTime(gl.OffDuty).Month != gl.OnDuty.Month || Convert.ToDateTime(gl.OffDuty).Year != gl.OnDuty.Year)
+                        ? (gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalHours
+                        //: (gl.OffDuty - gl.OnDuty).TotalHours
+                        : (Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalHours
+                    })
+                .OrderBy(gl => gl.LoginDate).ToList();
+                var resultnew = result
+    .GroupBy(x => x.LoginDate.Date) // Group by the date part
+    .Select(g => new
+    {
+        Date = g.Key,                // The date
+        MaxValue = Convert.ToInt32(g.Max(x => x.DurationInHours)) // Maximum value in the group
+    })
+    .OrderBy(x => x.Date)           // Order by date
+    .ToList();
+                foreach (var item in resultnew)
+                {
+
+
+                    totalhours = totalhours + item.MaxValue;
+                }
+                return totalhours;
+            }
+        }
+        public int? Q3JulytoSept2024
+        {
+            get
+            {
+                int totalhours = 0;
+                // var Q3JulytoSept2024hours = _guardLogins.Where(x => x.LoginDate >= Convert.ToDateTime("01-July-2024") && x.LoginDate <= Convert.ToDateTime("30-Sep-2024")).OrderByDescending(gl => gl.LoginDate).ToList();
+                var Q3JulytoSept2024hours = _guardDataProvider.GetGuardLoginsByGuardIdAndDate(_guard.Id, Convert.ToDateTime("01-July-2024"), Convert.ToDateTime("30-Sep-2024")).ToList();
+
+                var result = Q3JulytoSept2024hours
+                    .Select(gl => new
+                    {
+                        gl.GuardId,
+                        gl.ClientSiteId,
+                        gl.LoginDate,
+                        gl.OnDuty,
+                        gl.OffDuty,
+                        // Calculate DurationInSeconds
+                        DurationInSeconds = Convert.ToDateTime(gl.OffDuty).Month == gl.OnDuty.Month && Convert.ToDateTime(gl.OffDuty).Year == gl.OnDuty.Year
+                        ? (int)(Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalSeconds
+                        //(int)(gl.OffDuty - gl.OnDuty).TotalSeconds
+                        : (int)(gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalSeconds,
+                        // Calculate DurationInHours
+                        DurationInHours = (Convert.ToDateTime(gl.OffDuty).Month != gl.OnDuty.Month || Convert.ToDateTime(gl.OffDuty).Year != gl.OnDuty.Year)
+                        ? (gl.OnDuty.Date.AddDays(1) - gl.OnDuty).TotalHours
+                        //: (gl.OffDuty - gl.OnDuty).TotalHours
+                        : (Convert.ToDateTime(gl.OffDuty).Subtract(Convert.ToDateTime(gl.OnDuty))).TotalHours
+                    })
+                .OrderBy(gl => gl.LoginDate).ToList();
+                var resultnew = result
+    .GroupBy(x => x.LoginDate.Date) // Group by the date part
+    .Select(g => new
+    {
+        Date = g.Key,                // The date
+        MaxValue = Convert.ToInt32(g.Max(x => x.DurationInHours)) // Maximum value in the group
+    })
+    .OrderBy(x => x.Date)           // Order by date
+    .ToList();
+                foreach (var item in resultnew)
+                {
+
+
+                    totalhours = totalhours + item.MaxValue;
+                }
+                return totalhours;
             }
         }
         public bool IsActive { get { return _guard.IsActive; } }
@@ -197,6 +550,14 @@ namespace CityWatch.Web.Models
             return colourCode; // Default return is green
         }
 
+        public int Q1HRS2023 { get; set; }
+        public int Q2HRS2023 { get; set; }
+        public int Q3HRS2023 { get; set; }
+        public int Q4HRS2023 { get; set; }
+        public int Q1HRS2024 { get; set; }
+        public int Q2HRS2024 { get; set; }
+        public int Q3HRS2024 { get; set; }
+        public int Q4HRS2024 { get; set; }
         public class HRGroupStatusNew
         {
             public int Status { get; set; }
