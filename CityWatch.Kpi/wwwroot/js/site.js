@@ -1450,6 +1450,9 @@ $(function () {
             $("textarea[id='ClientSiteKpiNote_Notes']").val(result.notes);
             $('#lblSiteNoteRemainingCount').html(getSiteNoteLength(result.notes));
             $("#ClientSiteKpiNote_ForMonth").val(result.forMonth);
+            $("#ClientSiteKpiNote_HRRecords").val(result.hrRecords);
+            
+
         }).fail(function () { });
     }
 
