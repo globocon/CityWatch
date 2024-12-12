@@ -311,7 +311,7 @@ namespace CityWatch.Web.Pages.Admin
             {
                 var userClientSiteIds = _clientDataProvider.GetUserClientSiteAccess(AuthUserHelper.LoggedInUserId).Where(x => x.ClientSite.TypeId == ClientTypeId).Select(x=>x.ClientSiteId).Distinct().ToList();
 
-                return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego, poi).Where(x => userClientSiteIds.Contains(x.ClientSiteId));
+                return new JsonResult(_viewDataService.GetKeyVehicleLogProfilesByRego(truckRego, poi).Where(x => userClientSiteIds.Contains((int)x.ClientSiteId)));
             }
         }
         //to check with bdm-end
