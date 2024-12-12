@@ -77,7 +77,7 @@
              clientName.Trim() != "www" 
             && clientName.Trim() != "cws-ir" 
           && clientName.Trim() != "test"
-       // && clientName.Trim() != "localhost"
+       && clientName.Trim() != "localhost"
         )
         {
             var domain = dataProvider.GetSubDomainDetails(clientName);
